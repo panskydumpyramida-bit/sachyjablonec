@@ -1,0 +1,8 @@
+[phases.setup]
+aptPkgs = ["libvips-dev"]
+
+[phases.build]
+cmds = ["npm ci", "npx prisma generate"]
+
+[start]
+cmd = "npx prisma db push && npm start"
