@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="cs">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>2. kolo - Report z utkání - Šachový oddíl TJ Bižuterie Jablonec</title>
+    <meta name="description" content="Report z 2. kola Krajského přeboru - A tým vs Tanvald, B tým vs Desko Liberec">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@400;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        /* Custom styles for game viewer */
+        .game-viewer-container {
+            background-color: var(--card-bg);
+            border-radius: var(--border-radius);
+            padding: 1.5rem;
+            margin: 2rem 0;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .game-viewer-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .game-viewer-title h2 {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .game-viewer-title p {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        .report-buttons {
+            display: flex;
+            gap: 0.75rem;
+        }
+
+        .report-btn {
+            padding: 0.5rem 1rem;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s;
+            font-size: 0.9rem;
+        }
+
+        .report-btn:hover {
+            background-color: var(--accent-color);
+            transform: translateY(-2px);
+        }
+
+        .viewer-main {
+            display: flex;
+            gap: 1.5rem;
+        }
+
+        .game-sidebar {
+            width: 350px;
+            background-color: rgba(255, 255, 255, 0.05);
+            border-radius: var(--border-radius);
+            padding: 1rem;
+            max-height: 600px;
+            overflow-y: auto;
+        }
+
+        .game-sidebar h3 {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.75rem;
+        }
+
+        .game-list-viewer {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .game-item-viewer {
+            padding: 0.5rem 0.75rem;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        .game-item-viewer:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+            color: var(--text-main);
+        }
+
+        .game-item-viewer.active {
+            background-color: var(--primary-color);
+            color: white;
+            font-weight: 500;
+        }
+
+        .team-header-viewer {
+            padding: 0.5rem 0.75rem 0.25rem;
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-top: 0.5rem;
+        }
+
+        .team-header-viewer:first-child {
+            margin-top: 0;
+        }
+
+        .game-display {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .iframe-viewer {
+            width: 100%;
+            height: 480px;
+            background-color: #000;
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            box-shadow: var(--box-shadow);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .iframe-viewer iframe {
+            width: 100%;
+            height: 100%;
+            display: block;
+            border: none;
+        }
+
+        .viewer-controls {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            justify-content: space-between;
+            background-color: rgba(255, 255, 255, 0.05);
+            padding: 0.75rem 1rem;
+            border-radius: var(--border-radius);
+        }
+
+        .control-btn-viewer {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            background-color: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: var(--text-main);
+            padding: 0.4rem 0.8rem;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s;
+            font-size: 0.85rem;
+        }
+
+        .control-btn-viewer:hover:not(:disabled) {
+            background-color: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.4);
+        }
+
+        .control-btn-viewer:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .current-game {
+            font-weight: 600;
+            font-size: 1rem;
+            text-align: center;
+        }
+
+        /* Modal Styles */
+        .modal-report {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(4px);
+            overflow-y: auto;
+        }
+
+        .modal-content-report {
+            background-color: var(--card-bg);
+            margin: 2rem auto;
+            padding: 2rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: var(--border-radius);
+            width: 90%;
+            max-width: 700px;
+            position: relative;
+            box-shadow: var(--box-shadow);
+        }
+
+        .close-modal-report {
+            color: var(--text-muted);
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            line-height: 1;
+            padding: 0.5rem;
+        }
+
+        .close-modal-report:hover {
+            color: var(--text-main);
+        }
+
+        .report-text {
+            margin-top: 1.5rem;
+            line-height: 1.8;
+            color: var(--text-light);
+            font-size: 0.95rem;
+        }
+
+        .report-text p {
+            margin-bottom: 1rem;
+        }
+
+        .report-text img {
+            width: 100%;
+            border-radius: var(--border-radius);
+            margin-bottom: 1rem;
+        }
+
+        .highlight-name {
+            font-weight: 600;
+            color: var(--text-main);
+        }
+
+        .highlight-score {
+            font-weight: 700;
+            color: var(--primary-color);
+            background-color: rgba(59, 130, 246, 0.1);
+            padding: 0 4px;
+            border-radius: 4px;
+        }
+
+        /* Mobile Responsive */
+        @media (max-width: 768px) {
+            .viewer-main {
+                flex-direction: column;
+            }
+
+            .game-sidebar {
+                width: 100%;
+                height: 200px;
+                order: 1;
+            }
+
+            .game-display {
+                order: 2;
+            }
+
+            .iframe-viewer {
+                height: 600px;
+            }
+
+            .game-viewer-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .report-buttons {
+                width: 100%;
+            }
+
+            .report-btn {
+                flex: 1;
+            }
+
+            .control-btn-viewer {
+                flex: 1;
+                justify-content: center;
+                font-size: 0.75rem;
+                padding: 0.4rem 0.5rem;
+            }
+
+            .viewer-controls {
+                padding: 0.5rem 0.75rem;
+                gap: 0.5rem;
+            }
+
+            .current-game {
+                font-size: 0.85rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <div class="container">
+            <nav>
+                <a href="index.html" class="logo">
+                    <i class="fa-solid fa-chess-knight"></i>
+                    TJ Bižuterie Jablonec
+                </a>
+                <div class="menu-toggle">
+                    <i class="fa-solid fa-bars"></i>
+                </div>
+                <ul class="nav-links">
+                    <li><a href="index.html">Domů</a></li>
+                    <li><a href="about.html">O nás</a></li>
+                    <li><a href="teams.html">Soutěže družstev</a></li>
+                    <li><a href="club-tournaments.html">Oddílový přebor</a></li>
+                    <li><a href="youth.html">Mládež</a></li>
+                    <li><a href="gallery.html">Galerie</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        <section class="container" style="margin-top: 80px;">
+            <!-- Report Navigation -->
+            <nav class="report-nav"
+                style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; padding: 1rem; background: rgba(255,255,255,0.03); border-radius: var(--border-radius); border: 1px solid rgba(255,255,255,0.1);">
+                <a href="report_1kolo.html"
+                    style="color: var(--text-color); text-decoration: none; font-size: 0.9rem; transition: color 0.2s;">
+                    <span style="color: var(--primary-color);">1. kolo</span> ← Předchozí report
+                </a>
+                <a href="teams.html" style="color: var(--primary-color); text-decoration: none; font-size: 0.9rem;">
+                    <i class="fa-solid fa-list"></i> Všechny reporty
+                </a>
+                <span style="color: var(--text-muted); font-size: 0.9rem;">Žádný další report →</span>
+            </nav>
+
+            <h1 class="section-title">2. kolo Krajský přebor - Report</h1>
+
+            <div class="game-viewer-container">
+                <div class="game-viewer-header">
+                    <div class="game-viewer-title">
+                        <h2>Přehrávač partií</h2>
+                        <p>A tým vs Tanvald (4:4) • B tým vs Desko Liberec (3:5)</p>
+                    </div>
+                    <div class="report-buttons">
+                        <button id="reportBtnA" class="report-btn">Report A tým</button>
+                        <button id="reportBtnB" class="report-btn">Report B tým</button>
+                    </div>
+                </div>
+
+                <div class="viewer-main">
+                    <aside class="game-sidebar">
+                        <h3>Seznam partií</h3>
+                        <div class="game-list-viewer" id="gameList">
+                            <!-- Games will be populated here by JS -->
+                        </div>
+                    </aside>
+
+                    <div class="game-display">
+                        <div class="iframe-viewer">
+                            <iframe id="chessFrame" src="" allowtransparency="true"></iframe>
+                        </div>
+                        <div class="viewer-controls">
+                            <button id="prevBtn" class="control-btn-viewer" aria-label="Předchozí partie">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
+                                    fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                    stroke-linejoin="round">
+                                    <path d="M15 18l-6-6 6-6" />
+                                </svg>
+                                Předchozí
+                            </button>
+                            <span id="currentGameTitle" class="current-game">Vyberte partii</span>
+                            <button id="nextBtn" class="control-btn-viewer" aria-label="Další partie">
+                                Další
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
+                                    fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                    stroke-linejoin="round">
+                                    <path d="M9 18l6-6-6-6" />
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Modal A -->
+    <div id="reportModalA" class="modal-report">
+        <div class="modal-content-report">
+            <span class="close-modal-report" data-modal="reportModalA">&times;</span>
+            <h2>Report z utkání A týmu</h2>
+            <div class="report-text">
+                <img src="https://i.ibb.co/twbZWXzm/IMG-3192.jpg" alt="Zápas s Tanvaldem">
+                <p>Áčko nastoupilo proti tradičnímu soupeři z Tanvaldu a oba týmy dorazily v poměrně silných sestavách.
+                </p>
+                <p>Na 4. šachovnici sehráli <span class="highlight-name">Tomáš Duran</span> s <span
+                        class="highlight-name">Vláďou Jedličkou</span> velmi plochou variantu Philidorovy obrany. Ani
+                    jeden nebyl příliš bojovně naladěn, takže zapisujeme první remízu: <span class="highlight-score">0,5
+                        : 0,5</span>.</p>
+                <p>Na 3. šachovnici skončil rychlou remízou i duel <span class="highlight-name">Vládi Vltavského</span>
+                    s <span class="highlight-name">Ondrou Pražákem</span>, který se odehrál v symetrické pěšcové
+                    struktuře. Stav tedy <span class="highlight-score">1 : 1</span>.</p>
+                <p><span class="highlight-name">Lukáš Sivák</span> na 5. šachovnici získal s <span
+                        class="highlight-name">Zdeňkem Jouklem</span> slibnou pozici s možností útoku, ale pokračoval
+                    nepřesně. Nakonec mohl být rád, že mu koryfej jizerského šachu nabídl remízu – <span
+                        class="highlight-score">1,5 : 1,5</span>.</p>
+                <p>Na první desce sehrál <span class="highlight-name">Marek Sýkora</span> riskantní partii. Sezobl
+                    pěšce, za kterého měl černý (<span class="highlight-name">Tomáš Fraňa</span>) kompenzaci, ale soupeř
+                    poté příliš ambiciózně a neuváženě „daroval" celou figuru – střelce na a6. Marek materiál beze
+                    strachu přijal, přešel do protiútoku a partii rychle a pěkně vyhrál. Stav <span
+                        class="highlight-score">2,5 : 1,5</span>.</p>
+                <p>Na 2. šachovnici jsem nastoupil proti někdejšímu elitnímu mládežníkovi <span
+                        class="highlight-name">Marku Přiborskému</span>. Hrál se výměnný Caro–Kann a bílý pokračoval
+                    urychleným f4. To mi poskytlo poměrně snadnou, i když objektivně vyrovnanou pozici. Získal jsem
+                    velký časový náskok a dostal nabídku remízy. Chvíli jsem váhal, ale pozice na 6. a 7. šachovnici
+                    vypadaly pro nás nadějně. Po zvážení situace jsem remízu přijal, protože nás výrazně přiblížila k
+                    zápasové výhře – <span class="highlight-score">3 : 2</span>.</p>
+                <p>Na 8. šachovnici měl <span class="highlight-name">Miloš Fila</span> proti <span
+                        class="highlight-name">Toljovi Falesovi</span> šanci na protihru, pokud by sebral pěšce na a2.
+                    Zalekl se však a soupeř ho postupně „umačkal". Stav <span class="highlight-score">3 : 3</span>.</p>
+                <p><span class="highlight-name">Libor Titěra</span> sehrál černými v Blumenfeldově gambitu ukázkovou
+                    partii proti <span class="highlight-name">Romanu Žambochovi</span> a zcela ho přehrál. Kvůli
+                    nedostatku času ale promarnil několik cest k výhře a po 40. tahu partie skončila vyrovnaně – <span
+                        class="highlight-score">3,5 : 3,5</span>.</p>
+                <p>Zápas se tedy snažil zlomit v náš prospěch <span class="highlight-name">Mirek Žídek</span>. Měl
+                    partii s <span class="highlight-name">Břéťou Tejským</span> dobře rozehranou, ale v časové tísni se
+                    začaly kupit chyby na obou stranách. Přesto si udržel nějakou výhodu, jenže materiál už byl velmi
+                    zredukovaný. Mirek bojoval dlouho, ale vítězství z toho bohužel nevytěžil.</p>
+                <p>Zápas s Tanvaldem tak končí <span class="highlight-score">4 : 4</span>.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal B -->
+    <div id="reportModalB" class="modal-report">
+        <div class="modal-content-report">
+            <span class="close-modal-report" data-modal="reportModalB">&times;</span>
+            <h2>Report z utkání B týmu</h2>
+            <div class="report-text">
+                <img src="https://i.ibb.co/wZ1wgcRT/IMG-3196.jpg" alt="Zápas s Deskem Liberec">
+                <p>Béčko nastoupilo k zápasu s favorizovaným Deskem Liberec v téměř nejsilnější možné sestavě, ale ani
+                    to bohužel na body nestačilo. Utkání našeho béčka s béčkem českolipským skončilo porážkou <span
+                        class="highlight-score">3:5</span>. Někteří naši hráči si uhráli pěkné výsledky, ale jako tým
+                    jsme tentokrát k bodům měli daleko.</p>
+                <p>Na osmé šachovnici jsme měli jako na jediné elově navrch, ale <span class="highlight-name">Alešovi
+                        Červeňovi</span> se partie nepovedla, a tak jsme brzy prohrávali <span
+                        class="highlight-score">0:1</span>. Na to ještě dokázal odpovědět <span
+                        class="highlight-name">Zdeněk Němec</span>, když na sedmičce srovnal na <span
+                        class="highlight-score">1:1</span>, jenže v dalších pěti minutách už to bylo <span
+                        class="highlight-score">1:3</span>, když se <span class="highlight-name">Vojta Holeš</span>
+                    zamotal bílými ve francouzské s <span class="highlight-name">p. Jínovou</span> a <span
+                        class="highlight-name">Luděk Cyhelský</span> podcenil nebezpečí subjektivně vyrovnané pozice.
+                </p>
+                <p>Ve čtvrté hodině hry přidali cenné remízy po kvalitních výkonech s <span class="highlight-name">p.
+                        Völflem</span>, respektive <span class="highlight-name">p. Halamou</span> <span
+                        class="highlight-name">Kosťa Tsantsala</span> s <span class="highlight-name">Kristiánem
+                        Kotenem</span> <span class="highlight-score">2:4</span>.</p>
+                <p>Teprve pak jsem dohrál na čtyřce já, i když zdechlý proti <span
+                        class="highlight-name">Frantsevovi</span> jsem byl už dlouho. Paradoxně jsem se vzdal v momentě,
+                    kdy jsem krásným Vxg2 s patovým motivem mohl remízu přeci jen vybojovat. <span
+                        class="highlight-score">2:5</span>.</p>
+                <p>Poctivý výkon na jedničce na závěr předvedl <span class="highlight-name">pan Vacek</span>, který po
+                    pěti hodinách korigoval na konečných <span class="highlight-score">3:5</span>.</p>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3>TJ Bižuterie Jablonec</h3>
+                    <p>Šachový oddíl s dlouholetou tradicí v Jablonci nad Nisou.</p>
+                </div>
+                <div class="footer-section">
+                    <h3>Rychlé odkazy</h3>
+                    <ul class="footer-links">
+                        <li><a href="index.html">Domů</a></li>
+                        <li><a href="about.html">O nás</a></li>
+                        <li><a href="teams.html">Soutěže družstev</a></li>
+                        <li><a href="club-tournaments.html">Oddílový přebor</a></li>
+                        <li><a href="youth.html">Mládež</a></li>
+                        <li><a href="gallery.html">Galerie</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h3>Kontakt</h3>
+                    <ul class="footer-links">
+                        <li><a href="mailto:info@sachyjablonec.cz">info@sachyjablonec.cz</a></li>
+                        <li><a href="https://www.facebook.com/profile.php?id=61570518746221"
+                                target="_blank">Facebook</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="copyright">
+                &copy; 2025 Šachový oddíl TJ Bižuterie Jablonec nad Nisou. Všechna práva vyhrazena.
+            </div>
+        </div>
+    </footer>
+
+    <script src="js/main.js"></script>
+    <script>
+        const games = [
+            { "title": "1. Sýkora - Fraňa", "src": "https://www.chess.com/emboard?id=14190545" },
+            { "title": "2. Přiborský - Duda", "src": "https://www.chess.com/emboard?id=14190547", "commented": true },
+            { "title": "3. Vltavský - Pražák", "src": "https://www.chess.com/emboard?id=14190553" },
+            { "title": "4. Jedlička - Durán", "src": "https://www.chess.com/emboard?id=14190555" },
+            { "title": "5. Sivák - Joukl", "src": "https://www.chess.com/emboard?id=14190557" },
+            { "title": "6. Žamboch - Titěra", "src": "https://www.chess.com/emboard?id=14190559" },
+            { "title": "7. Žídek - Tejnský", "src": "https://www.chess.com/emboard?id=14190561" },
+            { "title": "8. Faleš - Fila", "src": "https://www.chess.com/emboard?id=14190565" },
+            { "title": "1. Vacek - Jina", "src": "https://www.chess.com/emboard?id=14190569" },
+            { "title": "2. Völfl - Tsantsala", "src": "https://www.chess.com/emboard?id=14190571" },
+            { "title": "3. Holeč - Jínová", "src": "https://www.chess.com/emboard?id=14190575" },
+            { "title": "4. Frantsev - Zadražil", "src": "https://www.chess.com/emboard?id=14190577" },
+            { "title": "5. Koten - Halama", "src": "https://www.chess.com/emboard?id=14190579" },
+            { "title": "6. Sichrovský - Cyhelský", "src": "https://www.chess.com/emboard?id=14190581" },
+            { "title": "7. Němec - Drvota", "src": "https://www.chess.com/emboard?id=14190585" },
+            { "title": "8. Jína - Červen", "src": "https://www.chess.com/emboard?id=14190589" }
+        ];
+
+        let currentIndex = 0;
+
+        const gameList = document.getElementById('gameList');
+        const chessFrame = document.getElementById('chessFrame');
+        const currentGameTitle = document.getElementById('currentGameTitle');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+
+        function loadGame(index) {
+            if (index < 0 || index >= games.length) return;
+
+            currentIndex = index;
+            const game = games[currentIndex];
+
+            chessFrame.src = game.src;
+            currentGameTitle.textContent = game.title;
+
+            document.querySelectorAll('.game-item-viewer').forEach((item, idx) => {
+                if (idx === currentIndex) {
+                    item.classList.add('active');
+                    item.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                } else {
+                    item.classList.remove('active');
+                }
+            });
+
+            prevBtn.disabled = currentIndex === 0;
+            nextBtn.disabled = currentIndex === games.length - 1;
+        }
+
+        function renderGameList() {
+            gameList.innerHTML = '';
+
+            games.forEach((game, index) => {
+                if (index === 0) {
+                    const header = document.createElement('div');
+                    header.className = 'team-header-viewer';
+                    header.textContent = 'A Tým';
+                    gameList.appendChild(header);
+                } else if (index === 8) {
+                    const header = document.createElement('div');
+                    header.className = 'team-header-viewer';
+                    header.textContent = 'B Tým';
+                    gameList.appendChild(header);
+                }
+
+                const item = document.createElement('div');
+                item.className = 'game-item-viewer';
+                item.textContent = game.title;
+                if (game.commented) {
+                    const icon = document.createElement('span');
+                    icon.innerHTML = '&nbsp;💬';
+                    icon.title = 'Okomentováno';
+                    item.appendChild(icon);
+                }
+                item.onclick = () => loadGame(index);
+                gameList.appendChild(item);
+            });
+        }
+
+        prevBtn.onclick = () => loadGame(currentIndex - 1);
+        nextBtn.onclick = () => loadGame(currentIndex + 1);
+
+        // Modal Logic
+        const modalA = document.getElementById("reportModalA");
+        const modalB = document.getElementById("reportModalB");
+        const btnA = document.getElementById("reportBtnA");
+        const btnB = document.getElementById("reportBtnB");
+        const closeButtons = document.getElementsByClassName("close-modal-report");
+
+        btnA.onclick = function () {
+            modalA.style.display = "block";
+        }
+
+        btnB.onclick = function () {
+            modalB.style.display = "block";
+        }
+
+        Array.from(closeButtons).forEach(btn => {
+            btn.onclick = function () {
+                const modalId = this.getAttribute('data-modal');
+                document.getElementById(modalId).style.display = "none";
+            }
+        });
+
+        window.onclick = function (event) {
+            if (event.target == modalA) {
+                modalA.style.display = "none";
+            }
+            if (event.target == modalB) {
+                modalB.style.display = "none";
+            }
+        }
+
+        // Initialize
+        renderGameList();
+        loadGame(0);
+    </script>
+</body>
+
+</html>
