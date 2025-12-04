@@ -139,6 +139,18 @@ app.post('/api/seed', async (req, res) => {
                 publishedDate: new Date('2025-10-25'),
                 isPublished: true,
                 authorId: admin.id
+            },
+            {
+                title: 'Velká cena Libereckého kraje',
+                slug: 'velka-cena-libereckeho-kraje',
+                category: 'Mládež',
+                excerpt: 'Aleš Červeň a Roman Tsantsala zvítězili ve svých kategoriích na turnaji v ZŠ Liberecká.',
+                content: '<p>Aleš Červeň a Roman Tsantsala zvítězili ve svých kategoriích na turnaji v ZŠ Liberecká.</p>',
+                thumbnailUrl: 'images/youth_tournament.png',
+                linkUrl: 'youth.html',
+                publishedDate: new Date('2025-09-27'),
+                isPublished: true,
+                authorId: admin.id
             }
         ];
 
