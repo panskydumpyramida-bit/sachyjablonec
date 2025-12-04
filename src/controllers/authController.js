@@ -4,6 +4,44 @@ import jwt from 'jsonwebtoken';
 
 const prisma = new PrismaClient();
 
+export const register = async (req, res) => {
+    try {
+        const { username, email, password } = req.body;
+
+        if (!username || !email || !password) {
+            return res.status(400).json({ error: 'Username, email and password required' });
+        }
+
+        // Check if user exists
+        const existingUser = await prisma.user.findFirst({
+            where: { OR: [{ username }, { email }] }
+        });
+
+        if (existingUser) {
+            return res.status(400).json({ error: 'User already exists' });
+        }
+
+        const passwordHash = await bcrypt.hash(password, 10);
+
+        const user = await prisma.user.create({
+            data: {
+                username,
+                email,
+                passwordHash,
+                role: 'admin'
+            }
+        });
+
+        res.status(201).json({
+            message: 'User created',
+            user: { id: user.id, username: user.username, email: user.email, role: user.role }
+        });
+    } catch (error) {
+        console.error('Register error:', error);
+        res.status(500).json({ error: 'Registration failed' });
+    }
+};
+
 export const login = async (req, res) => {
     try {
         const { username, password } = req.body;
