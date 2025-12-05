@@ -1,0 +1,89 @@
+// This is your Prisma schema file for LOCAL DEVELOPMENT (SQLite)
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           Int      @id @default(autoincrement())
+  username     String   @unique
+  email        String   @unique
+  passwordHash String   @map("password_hash")
+  role         String   @default("admin")
+  createdAt    DateTime @default(now()) @map("created_at")
+  
+  news         News[]
+  
+  @@map("users")
+}
+
+model News {
+  id            Int       @id @default(autoincrement())
+  title         String
+  slug          String    @unique
+  category      String
+  excerpt       String
+  content       String?
+  thumbnailUrl  String?   @map("thumbnail_url")
+  linkUrl       String?   @map("link_url")
+  gamesJson     String?   @map("games_json")
+  teamsJson     String?   @map("teams_json")
+  galleryJson   String?   @map("gallery_json")
+  publishedDate DateTime  @map("published_date")
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+  isPublished   Boolean   @default(false) @map("is_published")
+  authorId      Int?      @map("author_id")
+  
+  author        User?     @relation(fields: [authorId], references: [id])
+  matchReport   MatchReport?
+  
+  @@map("news")
+}
+
+model MatchReport {
+  id          Int      @id @default(autoincrement())
+  newsId      Int      @unique @map("news_id")
+  matchDate   DateTime @map("match_date")
+  teamAName   String   @map("team_a_name")
+  teamBName   String   @map("team_b_name")
+  scoreA      Int?     @map("score_a")
+  scoreB      Int?     @map("score_b")
+  reportText  String?  @map("report_text")
+  createdAt   DateTime @default(now()) @map("created_at")
+  
+  news        News     @relation(fields: [newsId], references: [id], onDelete: Cascade)
+  games       Game[]
+  
+  @@map("match_reports")
+}
+
+model Game {
+  id            Int      @id @default(autoincrement())
+  reportId      Int      @map("report_id")
+  gameTitle     String   @map("game_title")
+  chessComId    String   @map("chess_com_id")
+  team          String
+  positionOrder Int      @map("position_order")
+  isCommented   Boolean  @default(false) @map("is_commented")
+  
+  report        MatchReport @relation(fields: [reportId], references: [id], onDelete: Cascade)
+  
+  @@map("games")
+}
+
+model Image {
+  id           Int      @id @default(autoincrement())
+  filename     String
+  originalName String?  @map("original_name")
+  url          String
+  altText      String?  @map("alt_text")
+  uploadedAt   DateTime @default(now()) @map("uploaded_at")
+  
+  @@map("images")
+}

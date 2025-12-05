@@ -585,10 +585,12 @@
                                 <button type="button" onclick="formatText('underline')" title="Podtržení"><i
                                         class="fa-solid fa-underline"></i></button>
                                 <div class="divider"></div>
-                                <button type="button" onclick="insertHighlight('name')" title="Zvýraznit jméno"
-                                    style="color: #60a5fa;"><i class="fa-solid fa-user"></i> Jméno</button>
-                                <button type="button" onclick="insertHighlight('score')" title="Zvýraznit skóre"
-                                    style="color: #4ade80;"><i class="fa-solid fa-trophy"></i> Skóre</button>
+                                <button type="button" id="btnHighlightName" onclick="insertHighlight('name')"
+                                    title="Zvýraznit jméno" style="color: #60a5fa;"><i class="fa-solid fa-user"></i>
+                                    Jméno</button>
+                                <button type="button" id="btnHighlightScore" onclick="insertHighlight('score')"
+                                    title="Zvýraznit skóre" style="color: #4ade80;"><i class="fa-solid fa-trophy"></i>
+                                    Skóre</button>
                                 <div class="divider"></div>
                                 <button type="button" onclick="formatText('insertUnorderedList')"><i
                                         class="fa-solid fa-list-ul"></i></button>
@@ -598,9 +600,15 @@
                                 <button type="button" onclick="insertHeading()"><i
                                         class="fa-solid fa-heading"></i></button>
                                 <button type="button" onclick="insertLink()"><i class="fa-solid fa-link"></i></button>
+                                <div class="divider"></div>
+                                <button type="button" onclick="toggleSource()" title="Zobrazit HTML" id="btnSource"><i
+                                        class="fa-solid fa-code"></i></button>
                             </div>
                             <div class="wysiwyg-content" id="articleContent" contenteditable="true"
                                 oninput="updatePreview()"></div>
+                            <textarea id="articleSource" class="wysiwyg-content hidden"
+                                style="font-family: monospace; font-size: 0.9rem;"
+                                oninput="updateContentFromSource()"></textarea>
                         </div>
 
                         <!-- Games Panel -->
@@ -972,16 +980,91 @@
             document.getElementById('articleContent').focus();
         }
 
+        function toggleSource() {
+            const contentDiv = document.getElementById('articleContent');
+            const sourceArea = document.getElementById('articleSource');
+            const btn = document.getElementById('btnSource');
+
+            if (sourceArea.classList.contains('hidden')) {
+                // Switch to Source
+                sourceArea.value = contentDiv.innerHTML;
+                contentDiv.classList.add('hidden');
+                sourceArea.classList.remove('hidden');
+                btn.classList.add('active');
+            } else {
+                // Switch to WYSIWYG
+                contentDiv.innerHTML = sourceArea.value;
+                sourceArea.classList.add('hidden');
+                contentDiv.classList.remove('hidden');
+                btn.classList.remove('active');
+                updatePreview();
+            }
+        }
+
+        function updateContentFromSource() {
+            const contentDiv = document.getElementById('articleContent');
+            const sourceArea = document.getElementById('articleSource');
+            contentDiv.innerHTML = sourceArea.value;
+            updatePreview();
+        }
+
         function insertHighlight(type) {
             const selection = window.getSelection();
-            if (selection.rangeCount > 0 && !selection.isCollapsed) {
-                const range = selection.getRangeAt(0);
-                const span = document.createElement('span');
-                span.className = type === 'name' ? 'highlight-name' : 'highlight-score';
-                range.surroundContents(span);
+            if (!selection.rangeCount) return;
+
+            const range = selection.getRangeAt(0);
+            const parent = selection.anchorNode.parentElement;
+            const className = type === 'name' ? 'highlight-name' : 'highlight-score';
+
+            // Check if already highlighted
+            if (parent.classList.contains(className)) {
+                // Unwrap
+                const text = document.createTextNode(parent.textContent);
+                parent.parentNode.replaceChild(text, parent);
+            } else if (parent.classList.contains('highlight-name') || parent.classList.contains('highlight-score')) {
+                // Change type (e.g. from name to score)
+                parent.className = className;
+            } else {
+                // Wrap
+                if (!selection.isCollapsed) {
+                    const span = document.createElement('span');
+                    span.className = className;
+                    try {
+                        range.surroundContents(span);
+                    } catch (e) {
+                        alert('Nelze zvýraznit přes více bloků. Vyberte pouze text uvnitř odstavce.');
+                    }
+                }
             }
             document.getElementById('articleContent').focus();
+            updatePreview();
+            checkToolbarState();
         }
+
+        function checkToolbarState() {
+            const selection = window.getSelection();
+            if (!selection.rangeCount) return;
+
+            const parent = selection.anchorNode.parentElement;
+
+            // Reset buttons
+            document.getElementById('btnHighlightName').style.background = 'transparent';
+            document.getElementById('btnHighlightScore').style.background = 'transparent';
+
+            // Set active state
+            if (parent.classList.contains('highlight-name')) {
+                document.getElementById('btnHighlightName').style.background = 'rgba(96, 165, 250, 0.2)';
+            } else if (parent.classList.contains('highlight-score')) {
+                document.getElementById('btnHighlightScore').style.background = 'rgba(74, 222, 128, 0.2)';
+            }
+        }
+
+        // Add event listeners for toolbar state
+        document.addEventListener('DOMContentLoaded', () => {
+            const content = document.getElementById('articleContent');
+            content.addEventListener('mouseup', checkToolbarState);
+            content.addEventListener('keyup', checkToolbarState);
+        });
 
         function insertHeading() { document.execCommand('formatBlock', false, 'h3'); }
         function insertLink() { const url = prompt('Zadejte URL:'); if (url) document.execCommand('createLink', false, url); }
