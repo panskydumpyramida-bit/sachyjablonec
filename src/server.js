@@ -45,7 +45,7 @@ app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 const allowedHtmlFiles = [
     'index.html', 'about.html', 'teams.html', 'club-tournaments.html',
     'youth.html', 'gallery.html', 'admin.html', 'article.html',
-    'report_1kolo.html', 'report_2kolo.html'
+    'members.html'
 ];
 
 // Middleware to serve static files from root safely
