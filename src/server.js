@@ -86,7 +86,12 @@ app.post('/api/standings/update', async (req, res) => {
 
         // Competition IDs to scrape (main page has the standings table)
         const competitions = [
-            { id: '3255', name: '1. liga mládeže A', chessczUrl: 'https://www.chess.cz/soutez/3255/' },
+            {
+                id: '3255',
+                name: '1. liga mládeže A',
+                type: 'chess-results',
+                url: 'https://s3.chess-results.com/tnr1243811.aspx?lan=5&art=46&SNode=S0'
+            },
             { id: '3363', name: 'Krajský přebor st. žáků', chessczUrl: 'https://www.chess.cz/soutez/3363/' },
             // New Chess-Results competition
             {
