@@ -267,9 +267,9 @@
                                     </table>
                                 ` : '<p style="color: var(--text-muted);">Žádná data</p>'
                     }
-                            ${comp.chessczUrl ? `
-                                <a href="${comp.chessczUrl}" target="_blank" class="read-more" style="margin-top: 1rem; display: inline-block;">
-                                    Kompletní výsledky na chess.cz <i class="fa-solid fa-external-link-alt"></i>
+                            ${comp.url || comp.chessczUrl ? `
+                                <a href="${comp.url || comp.chessczUrl}" target="_blank" class="read-more" style="margin-top: 1rem; display: inline-block;">
+                                    Kompletní výsledky <i class="fa-solid fa-external-link-alt"></i>
                                 </a>
                             ` : ''}
                             ${data.lastUpdated ? `
