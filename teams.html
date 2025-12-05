@@ -82,6 +82,9 @@
                             </div>
                         </div>
 
+                        <!-- Standings Placeholder KP -->
+                        <div id="standings-kp-liberec" style="margin-top: 2rem;"></div>
+
                         <div style="margin-top: 2rem;">
                             <h3 style="color: var(--text-light); margin-bottom: 1rem;">Reporty ze zápasů</h3>
                             <div id="teamsNewsList" data-news-category="Soutěže družstev" data-news-display="list">
@@ -201,6 +204,7 @@
         // Standings Loader Logic (similar to youth.html)
         document.addEventListener('DOMContentLoaded', () => {
             loadNews('Soutěže družstev', 'teamsNewsList', 'list');
+            loadStandings('kp-liberec', 'standings-kp-liberec');
             loadStandings('ks-vychod', 'standings-ks-vychod');
         });
 

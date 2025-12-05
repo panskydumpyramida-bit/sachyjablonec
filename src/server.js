@@ -94,6 +94,12 @@ app.post('/api/standings/update', async (req, res) => {
                 name: 'Krajská soutěž východ',
                 type: 'chess-results',
                 url: 'https://s2.chess-results.com/tnr1278502.aspx?lan=5&art=46&SNode=S0'
+            },
+            {
+                id: 'kp-liberec',
+                name: 'Krajský přebor',
+                type: 'chess-results',
+                url: 'https://chess-results.com/tnr1276470.aspx?lan=5&art=46'
             }
         ];
 
