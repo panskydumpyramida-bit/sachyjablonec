@@ -34,6 +34,7 @@ model News {
   gamesJson     String?   @map("games_json")
   teamsJson     String?   @map("teams_json")
   galleryJson   String?   @map("gallery_json")
+  introJson     String?   @map("intro_json")
   publishedDate DateTime  @map("published_date")
   createdAt     DateTime  @default(now()) @map("created_at")
   updatedAt     DateTime  @updatedAt @map("updated_at")

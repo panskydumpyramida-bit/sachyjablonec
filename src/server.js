@@ -120,7 +120,24 @@ app.post('/api/seed', async (req, res) => {
                 slug: '1-kolo-derby-bizuterie',
                 category: 'Soutěže družstev',
                 excerpt: 'Derby mezi týmy Bižuterie. Áčko zvítězilo 6,5:1,5.',
-                content: '<p>Derby mezi týmy Bižuterie. Áčko zvítězilo 6,5:1,5 v prvním kole soutěže.</p>',
+                content: `<div class="puzzle-section">
+    <p style="font-size: 1.1rem; margin-bottom: 1rem;">
+        🧩 <strong>Pozice z partie Šalanda – Žídek</strong><br>
+        Bílý je na tahu a mohl rozhodnout partii ve svůj prospěch.<br>
+        Najdete vítězný tah? ♟️
+    </p>
+    <img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhU8z8yMLXbAZ_6tpOqOElzKBW5KyhvFynQP1n8BdLvv2yqLWF0FW4UwsFMQeKyEhHaaPUX9RsmGJtDFQ9uaeL34O69dy99inypBZncg_jgILJ_BHSn_cI902hOsoEQKyTwOfLwwUgKDskwjZ4ySuRS9rkSE5fnTEn0w9U9m92x-yjWvalAoWcebFNVCCPz/s320/board-2.jpeg" alt="Pozice z partie Šalanda – Žídek" style="max-width: 320px; display: block; margin: 1rem auto;">
+</div>
+<div class="card" style="margin: 2rem 0;">
+    <div class="card-content">
+        <p style="font-size: 1.1rem; line-height: 1.8;">
+            Derby Bižuterie mělo tentokrát jasného favorita a Áčko to na úvod soutěže potvrdilo, i přesto že se partie často otáčeli vícekrát než jedou. <strong>Bižu A – Bižu B 6,5 : 1,5</strong> (9. 11. 2025).
+        </p>
+        <p style="font-size: 1.1rem; line-height: 1.8; margin-top: 1rem;">
+            Body vítězů obstarali Antonín Duda, Vladimír Vltavský, Lukáš Sivák, Miroslav Žídek, Miloš Fila a František Mlot, půl bodu přidal Jonáš Chvátal. Za béčko se radovala jen Ema Brehmová na 8. šachovnici.
+        </p>
+    </div>
+</div>`,
                 thumbnailUrl: 'https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhU8z8yMLXbAZ_6tpOqOElzKBW5KyhvFynQP1n8BdLvv2yqLWF0FW4UwsFMQeKyEhHaaPUX9RsmGJtDFQ9uaeL34O69dy99inypBZncg_jgILJ_BHSn_cI902hOsoEQKyTwOfLwwUgKDskwjZ4ySuRS9rkSE5fnTEn0w9U9m92x-yjWvalAoWcebFNVCCPz/s320/board-2.jpeg',
                 linkUrl: 'report_1kolo.html',
                 gamesJson: JSON.stringify(games1kolo),
