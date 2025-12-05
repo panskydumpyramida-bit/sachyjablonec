@@ -146,7 +146,8 @@ async function loadNews(options = {}) {
 }
 
 function getArticleUrl(item) {
-    if (item.linkUrl && item.linkUrl !== '#') {
+    // Ignore legacy static files that have been deleted
+    if (item.linkUrl && !item.linkUrl.includes('report_1kolo.html') && !item.linkUrl.includes('report_2kolo.html') && item.linkUrl !== '#') {
         return item.linkUrl;
     }
     return `article.html?id=${item.id}`;
