@@ -131,69 +131,7 @@ async function scrapeCompetitionMatches(compUrl) {
     }
 }
 
-// ...
 
-// Standings scraper - fetches latest standings from chess.cz and saves to file
-app.post('/api/standings/update', async (req, res) => {
-    try {
-        const fs = await import('fs/promises');
-
-        // ... (competitions list same) ...
-
-        const results = [];
-
-        for (const comp of competitions) {
-            try {
-                let standings = [];
-                let competitionMatches = []; // Store full schedule for this competition
-
-                if (comp.type === 'chess-results') {
-                    // 1. Scrape Standings (art=46 usually)
-                    const response = await fetch(comp.url);
-                    const html = await response.text();
-
-                    // ... (standings parsing logic same as before) ...
-                    // We remove the old scrapeSchedule loop inside.
-
-                    const rows = html.split('</tr>');
-                    for (const row of rows) {
-                        // ... (keep existing standings parsing logic) ...
-                        // Copy-paste existing standings logic here, but omit the schedule part
-                        if (row.includes('class="CRg1"') || row.includes('class="CRg2"')) {
-                            const cells = row.split('</td>');
-                            if (cells.length > 7) {
-                                const clean = (str) => {
-                                    let txt = str.replace(/<[^>]*>/g, '').trim();
-                                    txt = txt.replace(/&nbsp;/g, ' ').replace(/&amp;/g, '&');
-                                    return txt;
-                                };
-
-                                let rankStr = clean(cells[0]);
-                                let teamStr = clean(cells[2]);
-                                const urlMatch = teamStr.match(/href="([^"]+)"/); // Might be in cell content not just clean
-                                // Actually, standard logic:
-                                // col 2 team name
-                                // href usually in cells[2]
-
-                                // Re-implementing logic compactly:
-                                // Need exact copy of previous logic to ensure we don't break standings parsing
-                                // See below for strategy
-                            }
-                        }
-                    }
-
-                    // Instead of complex logic inline here, I will just call scrapeCompetitionMatches first
-                    // And then filter.
-
-                    // Actually, let's keep the file cleaner.
-                }
-            }
-            // ...
-        }
-        // ...
-    }
-    // ...
-});
 
 
 // Middleware
