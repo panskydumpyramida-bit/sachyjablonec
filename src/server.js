@@ -324,8 +324,15 @@ const seedDatabase = async () => {
                 slug: 'mistrovstvi-cech-harrachov',
                 category: 'Mládež',
                 excerpt: 'Úspěchy našich mladých šachistů na Mistrovství Čech.',
-                thumbnailUrl: 'https://blogger.googleusercontent.com/img/a/AVvXsEjJ8B0e9gRNW0Sp2GwMUI3AYxaBzSZE5d9lvjNq1CMHVmwN1aHlSQHcOTL5z-9wIBOoaRwBZimEtF3IlGh61mhFbUUkRMoESgB1eq5hSig9kmrmelvThdTWk1lN-mjmZABjlnu_ljZiDeRzXDD1JRgYDRScKjukllHF4BenjKldVLe6qolzZNWvUj2yWFfh',
-                linkUrl: 'youth.html',
+                content: `<p style="margin-bottom: 1.5rem;">V prosinci 2025 se naši mládežníci zúčastnili Mistrovství Čech v rapid šachu v Harrachově. Turnaj se konal v krásném prostředí Krkonoš a přilákal desítky nadějných šachistů z celé republiky.</p>
+<p style="margin-bottom: 1.5rem;">Naši hráči předvedli vynikající výkony a reprezentovali oddíl se ctí. Atmosféra turnaje byla skvělá a všichni si odvezli cenné zkušenosti.</p>`,
+                thumbnailUrl: 'https://blogger.googleusercontent.com/img/a/AVvXsEjJ8B0e9gRNW0Sp2GwMUI3AYxaBzSZE5d9lvjNq1CMHVmwN1aHlSQHcOTL5z-9wIBOoaRwBZimEtF3IlGh61mhFbUUkRMoESgB1eq5hSig9kmrmelvThdTWk1lN-mjmZABjlnu_ljZiDeRzXDD1JRgYDRScKjukllHF4BenjKldVLe6qolzZNWxUj2yWFfh',
+                galleryJson: JSON.stringify([
+                    'https://blogger.googleusercontent.com/img/a/AVvXsEjJ8B0e9gRNW0Sp2GwMUI3AYxaBzSZE5d9lvjNq1CMHVmwN1aHlSQHcOTL5z-9wIBOoaRwBZimEtF3IlGh61mhFbUUkRMoESgB1eq5hSig9kmrmelvThdTWk1lN-mjmZABjlnu_ljZiDeRzXDD1JRgYDRScKjukllHF4BenjKldVLe6qolzZNWxUj2yWFfh',
+                    'https://blogger.googleusercontent.com/img/a/AVvXsEj6hZaHt57il2zLx53Ghi1HdethKcZMvEPeWsiCAv705hspIViBpNwr42h_9XMU2M_qqwPbm7k8U0sk0P7Z3FLUNZr4nvy11LsTkyYgBUSER2M7PVJJQUPpKs1Xt7lH1w4PldaAOesTwYuhfS604wdzu-fElXhoXjB1shW6CcK6I-FdzzeEQawLsw-tZiYN',
+                    'https://blogger.googleusercontent.com/img/a/AVvXsEilHUjvMIQ6ncFfGSurDge1M8A4qceK2KvE9mA24en0J1NsOk95vL7f7CUG4m5GGh_NVhzq16ut9-qq6_hg1BUePZs1Cp0Dxbe7jhd6EMCxp1drqqD_1YylDacp-hqRpQPb_CRyT8-NVB2ooovrtc1nK_uqgG2P2qbQqVgdVQvp_oTSIMlprlOih5-SyHno',
+                    'https://blogger.googleusercontent.com/img/a/AVvXsEi5N9PChSstZeutWot9LwVxNtAs5eSdbukW9_wEkX3D-vBAe-A0dYluneLmbCZwRSNIr3KsfQDP2C86n3nt2DmOTlvEMo3fUfMPQ1rq9-Pby9gJRT1Deq-7PySsSGye8zjxgyebWfWZMQZRTTTJCX2OzDB6jz4lhyBhFXiUTyCru3bjISaun5DdQ-5W_x4L'
+                ]),
                 publishedDate: new Date('2025-10-25'),
                 isPublished: true,
                 authorId: admin.id
@@ -335,9 +342,41 @@ const seedDatabase = async () => {
                 slug: 'velka-cena-libereckeho-kraje',
                 category: 'Mládež',
                 excerpt: 'Aleš Červeň a Roman Tsantsala zvítězili ve svých kategoriích na turnaji v ZŠ Liberecká.',
-                content: '<p>Aleš Červeň a Roman Tsantsala zvítězili ve svých kategoriích na turnaji v ZŠ Liberecká.</p>',
+                content: `<p style="margin-bottom: 1rem; font-style: italic;">Jablonec nad Nisou – ZŠ Liberecká, sobota 27. září 2025</p>
+<p style="margin-bottom: 1rem;">Osm desítek nadějných šachistů se o víkendu utkalo v prvním dílu seriálu Velké ceny Libereckého kraje v rapid šachu mládeže. Hrálo se ve čtyřech kategoriích tempem 15 minut + 5 sekund za tah, systémem 7, resp. 9 kol.</p>
+<p style="margin-bottom: 1rem;">Turnaj do 10 let ovládl Ondřej Nožička (ŠK ZIKUDA Turnov), kategorii do 14 let jeho oddílový kolega Michal Král a do 18 let zvítězil turnovský Ondřej Svoboda. Elitní otevřený turnaj bez rozdílu věku vyhrál Jonáš Zeman (TJ Desko Liberec).</p>
+<p style="margin-bottom: 1.5rem;">Dařilo se i domácím. Z hráčů TJ Bižuterie Jablonec n. N. nastoupilo přes dvacet účastníků; <strong>Aleš Červeň zvítězil ve věkové kategorii do 16 let</strong> a <strong>Roman Tsantsala v kategorii do 8 let</strong>. Romanovi mohla pomoci i „domácí půda", je totiž žákem ZŠ Liberecká.</p>
+
+<h3 style="color: var(--primary-color); margin: 2rem 0 1rem;">Výsledky podle kategorií</h3>
+
+<h4 style="margin-bottom: 0.5rem;">ELITE (každý s každým, 9 kol)</h4>
+<ol style="padding-left: 1.5rem; margin-bottom: 1.5rem; color: var(--text-muted);">
+    <li>Jonáš Zeman (TJ Desko Liberec) – 6,5 b.</li>
+    <li>Ivan Bureha (TJ Lokomotiva Liberec) – 6 b.</li>
+    <li>Vojta Holeš (TJ Desko Liberec) – 5,5 b.</li>
+</ol>
+
+<h4 style="margin-bottom: 0.5rem;">U16, U18 (každý s každým, 7 kol)</h4>
+<ol style="padding-left: 1.5rem; margin-bottom: 1.5rem; color: var(--text-muted);">
+    <li>Ondřej Svoboda (ŠK ZIKUDA Turnov) – 6,5 b.</li>
+    <li>Valentina Mohylová (TJ Lokomotiva Liberec) – 5,5 b.</li>
+    <li><strong>Aleš Červeň (TJ Bižuterie Jablonec n. N.) – 4,5 b.</strong></li>
+</ol>
+
+<h4 style="margin-bottom: 0.5rem;">U12, U14 (švýcarský systém, 7 kol)</h4>
+<ol style="padding-left: 1.5rem; margin-bottom: 1.5rem; color: var(--text-muted);">
+    <li>Michal Král (ŠK ZIKUDA Turnov) – 6,5 b.</li>
+    <li>Jonáš Roubíček (ŠK ZIKUDA Turnov) – 6 b.</li>
+    <li>Vojtěch Horáček (ŠK ZIKUDA Turnov) – 5,5 b.</li>
+</ol>
+
+<h4 style="margin-bottom: 0.5rem;">U08, U10 (švýcarský systém, 7 kol)</h4>
+<ol style="padding-left: 1.5rem; margin-bottom: 1.5rem; color: var(--text-muted);">
+    <li>Ondřej Nožička (ŠK ZIKUDA Turnov) – 7 b.</li>
+    <li>David Krejčí (ŠK ZIKUDA Turnov) – 6 b.</li>
+    <li><strong>Roman Tsantsala (TJ Bižuterie Jablonec n. N.) – 5,5 b.</strong></li>
+</ol>`,
                 thumbnailUrl: 'images/youth_tournament.png',
-                linkUrl: 'youth.html',
                 publishedDate: new Date('2025-09-27'),
                 isPublished: true,
                 authorId: admin.id
