@@ -120,6 +120,9 @@
                                 </div>
                             </div>
                         </div>
+
+                        <!-- Standings Placeholder -->
+                        <div id="standings-ks-vychod" style="margin-top: 2rem;"></div>
                     </div>
                 </div>
 
@@ -194,6 +197,108 @@
     <script src="js/config.js"></script>
     <script src="js/main.js"></script>
     <script src="js/news-loader.js"></script>
-</body>
+    <script>
+        // Standings Loader Logic (similar to youth.html)
+        document.addEventListener('DOMContentLoaded', () => {
+            loadNews('Soutěže družstev', 'teamsNewsList', 'list');
+            loadStandings('ks-vychod', 'standings-ks-vychod');
+        });
+
+        async function loadStandings(competitionId, containerId) {
+            const container = document.getElementById(containerId);
+            if (!container) return;
+
+            // Loading state
+            container.innerHTML = `
+                <div style="text-align: center; padding: 2rem; color: var(--text-muted);">
+                    <i class="fa-solid fa-spinner fa-spin"></i> Načítám tabulku...
+                </div>
+            `;
+
+            try {
+                // Determine API URL - in this case we use the main standings endpoint which returns ALL competitions
+                // We need to filter for the specific one on the client side since our backend returns a list
+                // OR we can rely on the fact that /api/standings (GET) usually serves a JSON file with all data.
+                // Wait, server.js exports /api/standings/update (POST). Where is the GET endpoint?
+                // Step 1209 summary says youth.html calls /api/standings.
+                // I need to check if /api/standings exists as a static file server or GET route.
+                // Assuming it serves the 'data/standings.json' file or similar.
+
+                // Let's assume there is an endpoint or file. 
+                // Based on youth.html context (Step 225 from previous conv), it fetches './data/standings.json' or '/api/standings'.
+                // I will use fetch('/api/standings') if it exists, or check how youth.html does it exactly.
+
+                // Correction: The backend code showed app.post('/api/standings/update').
+                // It usually saves to a file. I assumed there is a GET route serving it.
+                // If not, I should add it or use the static file if exposed.
+                // Let's assume '/data/standings.json' is available if static folder is mapped?
+                // Or I can add a GET route in server.js to be safe. 
+                // But for now, let's look at youth.html lines 220-302 (viewed in Step 1378).
+                // It calls `/api/standings`.
+
+                const res = await fetch(`${API_URL}/standings`);
+                if (!res.ok) throw new Error('Failed to load standings');
+
+                const data = await res.json();
+                const competition = data.find(c => c.competitionId === competitionId);
+
+                if (!competition || !competition.standings || competition.standings.length === 0) {
+                    container.innerHTML = `
+                        <div style="text-align: center; padding: 1rem; color: var(--text-muted); font-style: italic;">
+                            Tabulka zatím není k dispozici.
+                        </div>
+                    `;
+                    return;
+                }
+
+                // Render Table
+                let html = `
+                    <div class="standings-wrapper">
+                        <table class="standings-table">
+                            <thead>
+                                <tr>
+                                    <th>Poř.</th>
+                                    <th>Tým</th>
+                                    <th>Body</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                `;
+
+                competition.standings.forEach(s => {
+                    const isBizuterie = s.isBizuterie || s.team.toLowerCase().includes('bižuterie');
+                    // Style adjustments for Bižuterie
+                    const rowStyle = isBizuterie ? 'font-weight: bold; color: var(--primary-color); background: rgba(212, 175, 55, 0.05);' : '';
+
+                    html += `
+                        <tr style="${rowStyle}">
+                            <td>${s.rank}.</td>
+                            <td>${s.team}</td>
+                            <td><strong>${s.points !== null ? s.points : '-'}</strong></td>
+                        </tr>
+                    `;
+                });
+
+                html += `
+                            </tbody>
+                        </table>
+                        <div style="margin-top: 0.5rem; font-size: 0.8rem; text-align: right; color: var(--text-muted);">
+                            Zdroj: ${(competition.url && competition.url.includes('chess-results')) ? 'Chess-Results.com' : 'ŠSČR'}
+                        </div>
+                    </div>
+                `;
+
+                container.innerHTML = html;
+
+            } catch (e) {
+                console.error(e);
+                container.innerHTML = `
+                    <div style="text-align: center; padding: 1rem; color: var(--text-muted);">
+                        Nepodařilo se načíst tabulku.
+                    </div>
+                `;
+            }
+        }
+    </script>
 
 </html>
