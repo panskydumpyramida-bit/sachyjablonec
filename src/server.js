@@ -199,10 +199,10 @@ app.post('/api/seed', async (req, res) => {
 
         // Games data
         const games1kolo = [
-            { title: "1. Duda - Vacek", gameId: "14096201", team: "A tým" },
+            { title: "1. Duda - Vacek", gameId: "14096201", team: "A tým", commented: true },
             { title: "2. Völfl - Vltavský", gameId: "14102243", team: "A tým" },
             { title: "3. Chvátal - Zadražil", gameId: "14096241", team: "A tým" },
-            { title: "4. Šalanda - Žídek", gameId: "14102245", team: "A tým" },
+            { title: "4. Šalanda - Žídek", gameId: "14102245", team: "A tým", commented: true },
             { title: "5. Sivák - Tsantsala", gameId: "14102271", team: "A tým" },
             { title: "6. Koten - Fila", gameId: "14096321", team: "A tým" },
             { title: "7. Mlot - Cyhelský", gameId: "14096309", team: "A tým" },
@@ -211,7 +211,7 @@ app.post('/api/seed', async (req, res) => {
 
         const games2kolo = [
             { title: "1. Sýkora - Fraňa", gameId: "14190545", team: "A tým" },
-            { title: "2. Přiborský - Duda", gameId: "14190547", team: "A tým" },
+            { title: "2. Přiborský - Duda", gameId: "14190547", team: "A tým", commented: true },
             { title: "3. Vltavský - Pražák", gameId: "14190553", team: "A tým" },
             { title: "4. Jedlička - Durán", gameId: "14190555", team: "A tým" },
             { title: "5. Sivák - Joukl", gameId: "14190557", team: "A tým" },
@@ -219,7 +219,7 @@ app.post('/api/seed', async (req, res) => {
             { title: "7. Žídek - Tejnský", gameId: "14190561", team: "A tým" },
             { title: "8. Faleš - Fila", gameId: "14190565", team: "A tým" },
             { title: "1. Vacek - Jina", gameId: "14190569", team: "B tým" },
-            { title: "2. Völfl - Tsantsala", gameId: "14190571", team: "B tým" },
+            { title: "2. Völfl - Tsantsala", gameId: "14190571", team: "B tým", commented: true },
             { title: "3. Holeč - Jínová", gameId: "14190575", team: "B tým" },
             { title: "4. Frantsev - Zadražil", gameId: "14190577", team: "B tým" },
             { title: "5. Koten - Halama", gameId: "14190579", team: "B tým" },
@@ -276,6 +276,10 @@ app.post('/api/seed', async (req, res) => {
                 linkUrl: 'report_2kolo.html',
                 gamesJson: JSON.stringify(games2kolo),
                 teamsJson: JSON.stringify({ all: ['A tým', 'B tým'], selected: ['A tým', 'B tým'] }),
+                galleryJson: JSON.stringify([
+                    'https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhU8z8yMLXbAZ_6tpOqOElzKBW5KyhvFynQP1n8BdLvv2yqLWF0FW4UwsFMQeKyEhHaaPUX9RsmGJtDFQ9uaeL34O69dy99inypBZncg_jgILJ_BHSn_cI902hOsoEQKyTwOfLwwUgKDskwjZ4ySuRS9rkSE5fnTEn0w9U9m92x-yjWvalAoWcebFNVCCPz/s1600/IMG-3192.jpg',
+                    'https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEj7o1c8q8e6yXj9y6b4z3g2f1d5e6h7i8j9k0l1m2n3o4p5q6r7s8t9u0v/s1600/IMG-3196.jpg'
+                ]),
                 publishedDate: new Date('2025-12-03'),
                 isPublished: true,
                 authorId: admin.id
