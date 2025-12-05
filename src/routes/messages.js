@@ -1,5 +1,5 @@
 import express from 'express';
-import { getMessages, createMessage, checkClubPassword } from '../controllers/messageController.js';
+import { getMessages, createMessage, deleteMessage, checkClubPassword } from '../controllers/messageController.js';
 
 const router = express.Router();
 
@@ -8,5 +8,6 @@ router.use(checkClubPassword);
 
 router.get('/', getMessages);
 router.post('/', createMessage);
+router.delete('/:id', deleteMessage);
 
 export default router;
