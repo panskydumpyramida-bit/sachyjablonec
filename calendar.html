@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="cs">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kalendář zápasů - Šachový oddíl TJ Bižuterie Jablonec</title>
+    <meta name="description"
+        content="Kalendář zápasů a akcí šachového oddílu TJ Bižuterie Jablonec. Přehled všech utkání v sezóně.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@400;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .calendar-month {
+            margin-bottom: 3rem;
+        }
+
+        .month-title {
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+            border-bottom: 1px solid rgba(212, 175, 55, 0.2);
+            padding-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .match-card {
+            background: var(--surface-color);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: var(--border-radius);
+            padding: 1rem;
+            margin-bottom: 1rem;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 1rem;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .match-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            border-color: var(--primary-color);
+        }
+
+        .match-date {
+            flex: 0 0 100px;
+            text-align: center;
+            padding-right: 1rem;
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .match-day {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text-color);
+        }
+
+        .match-month {
+            font-size: 0.9rem;
+            color: var(--primary-color);
+            text-transform: uppercase;
+        }
+
+        .match-details {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .match-competition {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-bottom: 0.25rem;
+        }
+
+        .match-teams {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text-color);
+        }
+
+        .match-result {
+            font-weight: 700;
+            color: var(--primary-color);
+            margin-left: 0.5rem;
+        }
+
+        .match-actions {
+            margin-left: auto;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+
+        .status-upcoming {
+            background: rgba(59, 130, 246, 0.1);
+            color: #60a5fa;
+            border: 1px solid rgba(59, 130, 246, 0.2);
+        }
+
+        .status-finished {
+            background: rgba(16, 185, 129, 0.1);
+            color: #34d399;
+            border: 1px solid rgba(16, 185, 129, 0.2);
+        }
+
+        .status-today {
+            background: rgba(212, 175, 55, 0.1);
+            color: var(--primary-color);
+            border: 1px solid rgba(212, 175, 55, 0.2);
+        }
+
+        @media (max-width: 600px) {
+            .match-card {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 0.5rem;
+            }
+
+            .match-date {
+                border-right: none;
+                border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+                padding-right: 0;
+                padding-bottom: 0.5rem;
+                width: 100%;
+                text-align: left;
+                display: flex;
+                align-items: baseline;
+                gap: 0.5rem;
+            }
+
+            .match-month {
+                font-size: 1rem;
+            }
+
+            .match-actions {
+                margin-left: 0;
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <div class="container">
+            <nav>
+                <a href="index.html" class="logo">
+                    <i class="fa-solid fa-chess-knight"></i>
+                    TJ Bižuterie Jablonec
+                </a>
+                <div class="menu-toggle">
+                    <i class="fa-solid fa-bars"></i>
+                </div>
+                <ul class="nav-links">
+                    <li><a href="index.html">Domů</a></li>
+                    <li><a href="about.html">O nás</a></li>
+                    <li><a href="calendar.html" class="active">Kalendář</a></li>
+                    <li class="dropdown">
+                        <a href="#">Soutěže <i class="fa-solid fa-caret-down"></i></a>
+                        <ul class="dropdown-menu">
+                            <li><a href="teams.html">Soutěže družstev</a></li>
+                            <li><a href="club-tournaments.html">Oddílový přebor</a></li>
+                        </ul>
+                    </li>
+                    <li><a href="youth.html">Mládež</a></li>
+                    <li><a href="members.html">Členové</a></li>
+                    <li><a href="gallery.html">Galerie</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        <section class="container" style="margin-top: 80px;">
+            <h1 class="section-title">Kalendář zápasů</h1>
+            <p
+                style="margin-bottom: 2rem; color: var(--text-muted); text-align: center; max-width: 600px; margin-left: auto; margin-right: auto;">
+                Přehled všech plánovaných utkání a turnajů našich družstev v aktuální sezóně.
+            </p>
+
+            <div id="calendar-container">
+                <div style="text-align: center; padding: 3rem;">
+                    <i class="fa-solid fa-spinner fa-spin fa-2x" style="color: var(--primary-color);"></i>
+                    <p style="margin-top: 1rem;">Načítám kalendář...</p>
+                </div>
+            </div>
+
+            <div id="calendar-error" style="display: none; text-align: center; color: #fca5a5; padding: 2rem;">
+                <p>Nepodařilo se načíst data z kalendáře.</p>
+                <button onclick="loadCalendar()" class="btn" style="margin-top: 1rem; font-size: 0.9rem;">Zkusit
+                    znovu</button>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3>TJ Bižuterie Jablonec</h3>
+                    <p>Šachový oddíl s dlouholetou tradicí v Jablonci nad Nisou.</p>
+                </div>
+                <div class="footer-section">
+                    <h3>Rychlé odkazy</h3>
+                    <ul class="footer-links">
+                        <li><a href="index.html">Domů</a></li>
+                        <li><a href="calendar.html">Kalendář</a></li>
+                        <li><a href="teams.html">Soutěže družstev</a></li>
+                        <li><a href="club-tournaments.html">Oddílový přebor</a></li>
+                        <li><a href="youth.html">Mládež</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h3>Kontakt</h3>
+                    <ul class="footer-links">
+                        <li><a href="mailto:info@sachyjablonec.cz">info@sachyjablonec.cz</a></li>
+                        <li><a href="https://www.facebook.com/profile.php?id=61570518746221"
+                                target="_blank">Facebook</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="copyright">
+                &copy; 2025 Šachový oddíl TJ Bižuterie Jablonec nad Nisou. Všechna práva vyhrazena.
+            </div>
+        </div>
+    </footer>
+
+    <script src="js/config.js"></script>
+    <script src="js/main.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', loadCalendar);
+
+        async function loadCalendar() {
+            const container = document.getElementById('calendar-container');
+            const errorDiv = document.getElementById('calendar-error');
+
+            try {
+                // Fetch standings data which contains schedules
+                const response = await fetch(`${API_URL}/standings`);
+                if (!response.ok) throw new Error('Failed to fetch data');
+
+                const data = await response.json();
+                const competitions = data.standings || [];
+
+                let allMatches = [];
+
+                // Extract all matches
+                competitions.forEach(comp => {
+                    const compName = comp.name;
+                    if (comp.standings && Array.isArray(comp.standings)) {
+                        comp.standings.forEach(teamData => {
+                            if (teamData.isBizuterie && teamData.schedule && Array.isArray(teamData.schedule)) {
+                                const teamName = teamData.team;
+                                teamData.schedule.forEach(match => {
+                                    // Parse date
+                                    // match.date format usually "YYYY/MM/DD" or "DD.MM.YYYY"
+                                    let dateObj = null;
+                                    let dateStr = match.date.replace(/\s/g, ''); // remove spaces
+
+                                    if (dateStr.includes('/')) {
+                                        dateObj = new Date(dateStr);
+                                    } else if (dateStr.includes('.')) {
+                                        const parts = dateStr.split('.');
+                                        // Assume DD.MM.YYYY
+                                        if (parts.length === 3) {
+                                            dateObj = new Date(`${parts[2]}-${parts[1]}-${parts[0]}`);
+                                        }
+                                    }
+
+                                    if (dateObj && !isNaN(dateObj.getTime())) {
+                                        allMatches.push({
+                                            date: dateObj,
+                                            originalDate: match.date,
+                                            competition: compName,
+                                            myTeam: teamName,
+                                            opponent: match.opponent,
+                                            result: match.result,
+                                            round: match.round
+                                        });
+                                    }
+                                });
+                            }
+                        });
+                    }
+                });
+
+                // Sort by date
+                allMatches.sort((a, b) => a.date - b.date);
+
+                // Filter out past matches if desired? 
+                // For now, let's show all but maybe style past ones differently or scroll to nearest upcoming.
+                // Or maybe just filter for current season (which the data likely represents).
+
+                // Group by Month
+                const matchesByMonth = {};
+                allMatches.forEach(match => {
+                    const monthKey = match.date.toLocaleString('cs-CZ', { month: 'long', year: 'numeric' });
+                    // Use a sortable key for object but render readable
+                    // Actually, let's keep array and group manually to preserve order
+                });
+
+                if (allMatches.length === 0) {
+                    container.innerHTML = `
+                        <div style="text-align: center; padding: 2rem; color: var(--text-muted);">
+                            V kalendáři nejsou žádné naplánované zápasy.
+                        </div>
+                    `;
+                    return;
+                }
+
+                let html = '';
+                let currentMonth = '';
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+
+                allMatches.forEach(match => {
+                    const monthName = match.date.toLocaleString('cs-CZ', { month: 'long', year: 'numeric' });
+                    const capitalMonth = monthName.charAt(0).toUpperCase() + monthName.slice(1);
+
+                    if (monthName !== currentMonth) {
+                        if (currentMonth !== '') html += '</div>'; // Close previous month div
+                        html += `
+                            <div class="calendar-month">
+                                <h2 class="month-title"><i class="fa-regular fa-calendar"></i> ${capitalMonth}</h2>
+                        `;
+                        currentMonth = monthName;
+                    }
+
+                    const isPast = match.date < today;
+                    const isToday = match.date.getTime() === today.getTime();
+
+                    let statusClass = 'status-upcoming';
+                    let statusText = 'Nadcházející';
+
+                    if (isPast) {
+                        statusClass = 'status-finished';
+                        statusText = 'Odehráno';
+                    }
+                    if (isToday) {
+                        statusClass = 'status-today';
+                        statusText = 'Dnes';
+                    }
+
+                    // Format day
+                    const day = match.date.getDate();
+                    const dayName = match.date.toLocaleString('cs-CZ', { weekday: 'short' });
+
+                    html += `
+                        <div class="match-card ${isPast ? 'past-match' : ''}" style="${isPast ? 'opacity: 0.7;' : ''}">
+                            <div class="match-date">
+                                <div class="match-day">${day}.</div>
+                                <div class="match-month">${dayName}</div>
+                            </div>
+                            <div class="match-details">
+                                <div class="match-competition">${match.competition} • ${match.round}. kolo</div>
+                                <div class="match-teams">
+                                    <span style="color: var(--primary-color);">${match.myTeam}</span> vs ${match.opponent}
+                                    ${match.result && match.result !== '-' ? `<span class="match-result">${match.result}</span>` : ''}
+                                </div>
+                            </div>
+                            <div class="match-actions">
+                                <span class="status-badge ${statusClass}">${statusText}</span>
+                            </div>
+                        </div>
+                    `;
+                });
+
+                html += '</div>'; // Close last month
+                container.innerHTML = html;
+
+                // Optionally scroll to first upcoming match
+                // window.scrollTo(...) 
+
+            } catch (err) {
+                console.error('Error loading calendar:', err);
+                container.style.display = 'none';
+                errorDiv.style.display = 'block';
+            }
+        }
+    </script>
+</body>
+
+</html>
