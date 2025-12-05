@@ -48,6 +48,104 @@ app.get('/api/health', (req, res) => {
     res.json({ status: 'ok', message: 'Server is running' });
 });
 
+// Standings scraper - fetches latest standings from chess.cz and saves to file
+app.post('/api/standings/update', async (req, res) => {
+    try {
+        const fs = await import('fs/promises');
+
+        // Competition IDs to scrape
+        const competitions = [
+            { id: '3255', name: '1. liga mládeže A', chessczUrl: 'https://www.chess.cz/soutez/3255/' },
+            { id: '3363', name: 'Krajský přebor st. žáků', chessczUrl: 'https://www.chess.cz/soutez/3363/' }
+        ];
+
+        const results = [];
+
+        for (const comp of competitions) {
+            try {
+                const response = await fetch(`https://www.chess.cz/soutez/vysledky/${comp.id}/`);
+                const html = await response.text();
+
+                // Parse standings from HTML (simple regex extraction)
+                const standings = [];
+
+                // Match table rows with standings data
+                // Pattern: looks for team links and extracts ranking info
+                const teamPattern = /<a[^>]*href="[^"]*druzstvo[^"]*"[^>]*>([^<]+)<\/a>/gi;
+                const matches = [...html.matchAll(teamPattern)];
+
+                // Get unique teams (first occurrence usually is in standings order)
+                const seenTeams = new Set();
+                let rank = 1;
+
+                for (const match of matches) {
+                    const teamName = match[1].trim();
+                    if (!seenTeams.has(teamName) && rank <= 12) {
+                        seenTeams.add(teamName);
+                        standings.push({
+                            rank,
+                            team: teamName,
+                            isBizuterie: teamName.toLowerCase().includes('bižuterie')
+                        });
+                        rank++;
+                    }
+                }
+
+                results.push({
+                    competitionId: comp.id,
+                    name: comp.name,
+                    chessczUrl: comp.chessczUrl,
+                    standings: standings.slice(0, 6), // Top 6 teams
+                    updatedAt: new Date().toISOString()
+                });
+            } catch (err) {
+                console.error(`Error fetching ${comp.name}:`, err.message);
+                results.push({
+                    competitionId: comp.id,
+                    name: comp.name,
+                    chessczUrl: comp.chessczUrl,
+                    error: err.message,
+                    standings: []
+                });
+            }
+        }
+
+        // Save to JSON file
+        const standingsData = {
+            standings: results,
+            lastUpdated: new Date().toISOString()
+        };
+
+        const dataPath = path.join(__dirname, '../data');
+        try {
+            await fs.mkdir(dataPath, { recursive: true });
+        } catch (e) { }
+
+        await fs.writeFile(
+            path.join(dataPath, 'standings.json'),
+            JSON.stringify(standingsData, null, 2)
+        );
+
+        res.json({ success: true, ...standingsData });
+    } catch (error) {
+        console.error('Standings update error:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// Get cached standings from file
+app.get('/api/standings', async (req, res) => {
+    try {
+        const fs = await import('fs/promises');
+        const dataPath = path.join(__dirname, '../data/standings.json');
+        const data = await fs.readFile(dataPath, 'utf-8');
+        res.json(JSON.parse(data));
+    } catch (err) {
+        // Return empty if file doesn't exist
+        res.json({ standings: [], lastUpdated: null });
+    }
+});
+
 // Seed endpoint - run once to populate database
 app.post('/api/seed', async (req, res) => {
     try {
