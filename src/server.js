@@ -71,8 +71,14 @@ async function scrapeCompetitionMatches(compUrl) {
                 const roundMatch = text.match(/(\d+)\.\s*(Runde|Round|Kolo)/i);
                 if (roundMatch) {
                     currentRound = roundMatch[1];
-                    // Create approximate date scraper from same line
-                    const dateMatch = text.match(/(\d{1,2}\.\d{1,2}\.\d{4})/);
+
+                    // Try to find date with "Datum kola" prefix (common in Czech)
+                    let dateMatch = text.match(/Datum kola\s*([\d\/.]+)/);
+                    if (!dateMatch) {
+                        // Fallback to searching for DD.MM.YYYY or YYYY/MM/DD matches
+                        dateMatch = text.match(/(\d{1,2}\.\d{1,2}\.\d{4}|\d{4}\/\d{1,2}\/\d{1,2})/);
+                    }
+
                     if (dateMatch) currentDate = dateMatch[1];
                 }
             }
