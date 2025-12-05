@@ -48,9 +48,10 @@ export const getAllNews = async (req, res) => {
 export const getNewsById = async (req, res) => {
     try {
         const { id } = req.params;
+        const currentId = parseInt(id);
 
         const news = await prisma.news.findUnique({
-            where: { id: parseInt(id) },
+            where: { id: currentId },
             include: {
                 author: {
                     select: {
@@ -74,7 +75,37 @@ export const getNewsById = async (req, res) => {
             return res.status(404).json({ error: 'News not found' });
         }
 
-        res.json(news);
+        // Fetch Next Article (Newer)
+        const nextArticle = await prisma.news.findFirst({
+            where: {
+                category: news.category,
+                isPublished: true,
+                publishedDate: {
+                    gt: news.publishedDate
+                }
+            },
+            orderBy: {
+                publishedDate: 'asc'
+            },
+            select: { id: true, title: true }
+        });
+
+        // Fetch Previous Article (Older)
+        const prevArticle = await prisma.news.findFirst({
+            where: {
+                category: news.category,
+                isPublished: true,
+                publishedDate: {
+                    lt: news.publishedDate
+                }
+            },
+            orderBy: {
+                publishedDate: 'desc'
+            },
+            select: { id: true, title: true }
+        });
+
+        res.json({ ...news, nextArticle, prevArticle });
     } catch (error) {
         console.error('Get news by ID error:', error);
         res.status(500).json({ error: 'Failed to get news' });
