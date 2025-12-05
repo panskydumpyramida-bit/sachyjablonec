@@ -100,17 +100,16 @@ app.post('/api/standings/update', async (req, res) => {
 
                 const standings = [];
 
-                // Parse standings table - look for table rows with rank, team name, and points
-                // Pattern: <tr>...<td>rank</td>...<a href="...druzstvo...">TeamName</a>...<td>points</td>...</tr>
-                const tableRowPattern = /<tr[^>]*>(?:(?!<\/tr>).)*?<td[^>]*>\s*(\d+)\s*<\/td>(?:(?!<\/tr>).)*?<a[^>]*href="[^"]*druzstvo[^"]*"[^>]*>([^<]+)<\/a>(?:(?!<\/tr>).)*?<\/tr>/gis;
+                // Parse standings table - simple pattern: <tr><td>rank</td><td><a>team</a></td>
+                // Match: <tr><td>1</td><td><a href="...druzstvo...">TeamName</a></td>
+                const tableRowPattern = /<tr>\s*<td>(\d+)<\/td>\s*<td>\s*<a[^>]*href="[^"]*druzstvo[^"]*"[^>]*>([^<]+)<\/a>/gi;
 
                 let match;
                 while ((match = tableRowPattern.exec(html)) !== null && standings.length < 12) {
                     const rank = parseInt(match[1]);
                     const teamName = match[2].trim();
 
-                    // Only add if it looks like a valid rank (1-20)
-                    if (rank > 0 && rank <= 20 && teamName && !standings.find(s => s.team === teamName)) {
+                    if (rank > 0 && rank <= 20 && teamName) {
                         standings.push({
                             rank,
                             team: teamName,
