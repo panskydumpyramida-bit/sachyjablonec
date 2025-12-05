@@ -252,6 +252,7 @@
                                             <tr style="border-bottom: 2px solid var(--primary-color);">
                                                 <th style="padding: 0.5rem; text-align: left;">#</th>
                                                 <th style="padding: 0.5rem; text-align: left;">Družstvo</th>
+                                                <th style="padding: 0.5rem; text-align: right;">Body</th>
                                             </tr>
                                         </thead>
                                         <tbody style="color: var(--text-light);">
@@ -259,6 +260,7 @@
                                                 <tr style="${s.isBizuterie ? 'background: rgba(212, 175, 55, 0.1);' : ''}">
                                                     <td style="padding: 0.5rem;">${s.rank}</td>
                                                     <td style="padding: 0.5rem;">${s.isBizuterie ? '<strong>' + s.team + '</strong>' : s.team}</td>
+                                                    <td style="padding: 0.5rem; text-align: right; font-weight: 600;">${s.points || '-'}</td>
                                                 </tr>
                                             `).join('')}
                                         </tbody>

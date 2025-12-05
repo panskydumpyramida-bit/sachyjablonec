@@ -100,19 +100,21 @@ app.post('/api/standings/update', async (req, res) => {
 
                 const standings = [];
 
-                // Parse standings table - simple pattern: <tr><td>rank</td><td><a>team</a></td>
-                // Match: <tr><td>1</td><td><a href="...druzstvo...">TeamName</a></td>
-                const tableRowPattern = /<tr>\s*<td>(\d+)<\/td>\s*<td>\s*<a[^>]*href="[^"]*druzstvo[^"]*"[^>]*>([^<]+)<\/a>/gi;
+                // Parse standings table - capture rank, team, and points (in <b> tag)
+                // Structure: <tr><td>rank</td><td><a>team</a></td>...<td><b>points</b></td>...
+                const tableRowPattern = /<tr>\s*<td>(\d+)<\/td>\s*<td>\s*<a[^>]*href="[^"]*druzstvo[^"]*"[^>]*>([^<]+)<\/a><\/td>(?:[^<]*<td[^>]*>[^<]*<\/td>)*[^<]*<td[^>]*>\s*<b>(\d+)<\/b>/gi;
 
                 let match;
                 while ((match = tableRowPattern.exec(html)) !== null && standings.length < 12) {
                     const rank = parseInt(match[1]);
                     const teamName = match[2].trim();
+                    const points = parseInt(match[3]);
 
                     if (rank > 0 && rank <= 20 && teamName) {
                         standings.push({
                             rank,
                             team: teamName,
+                            points,
                             isBizuterie: teamName.toLowerCase().includes('bižuterie')
                         });
                     }
