@@ -22,6 +22,56 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const PORT = process.env.PORT || 3001;
 
+// Helper to scrape team schedule (art=23)
+async function scrapeSchedule(scheduleUrl) {
+    try {
+        console.log(`Scraping schedule: ${scheduleUrl}`);
+        const response = await fetch(scheduleUrl);
+        const html = await response.text();
+        const rows = html.split('</tr>');
+        const matches = [];
+        let currentRound = null;
+        let currentDate = null;
+
+        for (const row of rows) {
+            const clean = (s) => s.replace(/<[^>]*>/g, '').trim().replace(/&nbsp;/g, ' ');
+
+            if (row.includes('Datum kola')) {
+                const text = clean(row);
+                const roundMatch = text.match(/(\d+)\.\s*Kolo/);
+                const dateMatch = text.match(/Datum kola\s*([\d\/.]+)/);
+                if (roundMatch) currentRound = roundMatch[1];
+                if (dateMatch) currentDate = dateMatch[1];
+            }
+
+            if (row.includes('class="CRg1b"') || row.includes('class="CRg2b"')) {
+                const cells = row.split('</th>');
+                if (cells.length > 5) {
+                    const col1 = clean(cells[1]).replace(/<[^>]*>/g, '');
+                    // Look for result in row text to be safe
+                    const cleanRow = clean(row);
+                    // Format: 4 : 4 or 3,5 : 4,5
+                    const resultMatch = cleanRow.match(/(\d+[,.]?\d*)\s*:\s*(\d+[,.]?\d*)/);
+
+                    if (col1 !== 'Jméno' && col1 !== '' && currentRound) {
+                        matches.push({
+                            round: currentRound,
+                            date: currentDate || '-',
+                            opponent: col1,
+                            result: resultMatch ? resultMatch[0] : '-'
+                        });
+                        currentRound = null;
+                    }
+                }
+            }
+        }
+        return matches;
+    } catch (e) {
+        console.error('Error scraping schedule:', e.message);
+        return [];
+    }
+}
+
 // Middleware
 app.use(cors({
     origin: true, // Allow all origins
@@ -157,6 +207,17 @@ app.post('/api/standings/update', async (req, res) => {
 
                                 // Col 2: Team (contains <a>)
                                 let teamStr = cells[2];
+
+                                // Capture URL before cleaning
+                                const urlMatch = teamStr.match(/href="([^"]+)"/);
+                                let teamDetailsUrl = urlMatch ? urlMatch[1] : null;
+                                // Handle relative URL
+                                if (teamDetailsUrl && !teamDetailsUrl.startsWith('http')) {
+                                    // Use origin from comp.url
+                                    const origin = new URL(comp.url).origin;
+                                    teamDetailsUrl = teamDetailsUrl.startsWith('/') ? origin + teamDetailsUrl : origin + '/' + teamDetailsUrl;
+                                }
+
                                 teamStr = clean(teamStr);
 
                                 // Col 7: Points (PH1) or Col 8 (PH2 - Matchpoints)
@@ -169,13 +230,29 @@ app.post('/api/standings/update', async (req, res) => {
                                 const points = parseFloat(pointsStr);
 
                                 if (!isNaN(rank) && teamStr) {
+                                    const isBizuterie = teamStr.toLowerCase().includes('bižuterie');
+
                                     standings.push({
                                         rank,
                                         team: teamStr,
                                         points: isNaN(points) ? 0 : points,
-                                        isBizuterie: teamStr.toLowerCase().includes('bižuterie')
+                                        isBizuterie: isBizuterie,
+                                        url: teamDetailsUrl
                                     });
                                 }
+                            }
+                        }
+                    }
+
+                    // Post-processing: Fetch schedule for Bizuterie teams
+                    for (const team of standings) {
+                        if (team.isBizuterie && team.url) {
+                            // Convert URL to art=23 (Team Schedule)
+                            try {
+                                const scheduleUrl = team.url.replace(/art=\d+/, 'art=23');
+                                team.schedule = await scrapeSchedule(scheduleUrl);
+                            } catch (err) {
+                                console.error('Failed to fetch schedule for', team.team);
                             }
                         }
                     }
