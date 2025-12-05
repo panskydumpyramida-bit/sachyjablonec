@@ -571,10 +571,14 @@
             document.getElementById('articleBody').innerHTML = article.content || '';
 
             // Handle Games
-            if (article.gamesJson) {
-                const games = JSON.parse(article.gamesJson);
-                if (games.length > 0) {
-                    renderGames(games, article.teamsJson ? JSON.parse(article.teamsJson) : null);
+            if (article.gamesJson && article.gamesJson !== '[]' && article.gamesJson !== 'null') {
+                try {
+                    const games = JSON.parse(article.gamesJson);
+                    if (games && games.length > 0) {
+                        renderGames(games, article.teamsJson ? JSON.parse(article.teamsJson) : null);
+                    }
+                } catch (e) {
+                    console.log('No games data');
                 }
             }
 
