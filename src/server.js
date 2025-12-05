@@ -393,8 +393,4 @@ app.use((err, req, res, next) => {
 app.listen(PORT, async () => {
     console.log(`🚀 Server running on http://localhost:${PORT}`);
     console.log(`📝 Environment: ${process.env.NODE_ENV}`);
-
-    // Auto-seed on startup to ensure data freshness on deployment
-    console.log('🌱 starting auto-seed...');
-    await seedDatabase();
 });
