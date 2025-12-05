@@ -39,3 +39,15 @@ export const createMessage = async (req, res) => {
         res.status(500).json({ error: 'Error creating message' });
     }
 };
+
+export const deleteMessage = async (req, res) => {
+    try {
+        const { id } = req.params;
+        await prisma.message.delete({
+            where: { id: parseInt(id) }
+        });
+        res.json({ success: true });
+    } catch (error) {
+        res.status(500).json({ error: 'Error deleting message' });
+    }
+};
