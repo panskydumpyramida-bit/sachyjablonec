@@ -84,7 +84,7 @@ app.post('/api/standings/update', async (req, res) => {
     try {
         const fs = await import('fs/promises');
 
-        // Competition IDs to scrape
+        // Competition IDs to scrape (main page has the standings table)
         const competitions = [
             { id: '3255', name: '1. liga mládeže A', chessczUrl: 'https://www.chess.cz/soutez/3255/' },
             { id: '3363', name: 'Krajský přebor st. žáků', chessczUrl: 'https://www.chess.cz/soutez/3363/' }
@@ -94,39 +94,39 @@ app.post('/api/standings/update', async (req, res) => {
 
         for (const comp of competitions) {
             try {
-                const response = await fetch(`https://www.chess.cz/soutez/vysledky/${comp.id}/`);
+                // Fetch from main competition page which has the standings table
+                const response = await fetch(`https://www.chess.cz/soutez/${comp.id}/`);
                 const html = await response.text();
 
-                // Parse standings from HTML (simple regex extraction)
                 const standings = [];
 
-                // Match table rows with standings data
-                // Pattern: looks for team links and extracts ranking info
-                const teamPattern = /<a[^>]*href="[^"]*druzstvo[^"]*"[^>]*>([^<]+)<\/a>/gi;
-                const matches = [...html.matchAll(teamPattern)];
+                // Parse standings table - look for table rows with rank, team name, and points
+                // Pattern: <tr>...<td>rank</td>...<a href="...druzstvo...">TeamName</a>...<td>points</td>...</tr>
+                const tableRowPattern = /<tr[^>]*>(?:(?!<\/tr>).)*?<td[^>]*>\s*(\d+)\s*<\/td>(?:(?!<\/tr>).)*?<a[^>]*href="[^"]*druzstvo[^"]*"[^>]*>([^<]+)<\/a>(?:(?!<\/tr>).)*?<\/tr>/gis;
 
-                // Get unique teams (first occurrence usually is in standings order)
-                const seenTeams = new Set();
-                let rank = 1;
+                let match;
+                while ((match = tableRowPattern.exec(html)) !== null && standings.length < 12) {
+                    const rank = parseInt(match[1]);
+                    const teamName = match[2].trim();
 
-                for (const match of matches) {
-                    const teamName = match[1].trim();
-                    if (!seenTeams.has(teamName) && rank <= 12) {
-                        seenTeams.add(teamName);
+                    // Only add if it looks like a valid rank (1-20)
+                    if (rank > 0 && rank <= 20 && teamName && !standings.find(s => s.team === teamName)) {
                         standings.push({
                             rank,
                             team: teamName,
                             isBizuterie: teamName.toLowerCase().includes('bižuterie')
                         });
-                        rank++;
                     }
                 }
+
+                // Sort by rank and take top 8
+                standings.sort((a, b) => a.rank - b.rank);
 
                 results.push({
                     competitionId: comp.id,
                     name: comp.name,
                     chessczUrl: comp.chessczUrl,
-                    standings: standings.slice(0, 6), // Top 6 teams
+                    standings: standings.slice(0, 8),
                     updatedAt: new Date().toISOString()
                 });
             } catch (err) {
