@@ -4,16 +4,71 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Členové - Šachový oddíl TJ Bižuterie Jablonec</title>
-    <meta name="description"
-        content="Seznam členů šachového oddílu TJ Bižuterie Jablonec nad Nisou, ELO rating, soupisky.">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <title>Členové (Vzkazovník) - Šachový oddíl TJ Bižuterie Jablonec</title>
     <link
-        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@400;700&display=swap"
+        href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Open+Sans:wght@400;600&display=swap"
         rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="css/style.css">
+    <style>
+        .auth-container {
+            max-width: 400px;
+            margin: 4rem auto;
+            background: var(--card-bg);
+            padding: 2rem;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            text-align: center;
+        }
+
+        .messages-container {
+            max-width: 800px;
+            margin: 2rem auto;
+        }
+
+        .message-form {
+            background: var(--card-bg);
+            padding: 1.5rem;
+            border-radius: var(--border-radius);
+            margin-bottom: 2rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .message-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .message-card {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 1rem 1.5rem;
+            border-radius: var(--border-radius);
+            border-left: 3px solid var(--primary-color);
+        }
+
+        .message-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+            color: var(--text-muted);
+        }
+
+        .message-author {
+            font-weight: 700;
+            color: var(--primary-color);
+        }
+
+        .message-content {
+            font-size: 1rem;
+            line-height: 1.6;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+    </style>
 </head>
 
 <body>
@@ -46,78 +101,64 @@
     </header>
 
     <main>
-        <section class="container" style="margin-top: 80px;">
-            <h1 class="section-title">Členská základna</h1>
-
-            <div class="card" style="margin-bottom: 2rem;">
-                <div class="card-content">
-                    <p style="font-size: 1.1rem; line-height: 1.6; text-align: center;">
-                        Vítáme všechny příznivce šachu. Náš oddíl má dlouholetou tradici a širokou členskou základnu
-                        zahrnující hráče všech výkonnostních úrovní i věkových kategorií.
-                    </p>
-                </div>
+        <section class="hero-small">
+            <div class="container hero-content">
+                <h1>Členská sekce</h1>
+                <p>Interní vzkazovník pro členy oddílu</p>
             </div>
+        </section>
 
+        <section class="section">
+            <div class="container">
+                <!-- Login View -->
+                <div id="loginView" class="auth-container">
+                    <i class="fa-solid fa-lock"
+                        style="font-size: 3rem; color: var(--primary-color); margin-bottom: 1rem;"></i>
+                    <h2 style="margin-bottom: 1.5rem;">Vstup pro členy</h2>
+                    <div style="margin-bottom: 1rem;">
+                        <input type="password" id="clubPassword" placeholder="Zadejte heslo oddílu"
+                            style="width: 100%; padding: 0.8rem; border-radius: 4px; border: 1px solid var(--border-color); background: var(--input-bg); color: var(--text-main);">
+                    </div>
+                    <button class="btn-primary" onclick="login()" style="width: 100%;">Vstoupit</button>
+                    <p id="loginError" style="color: #fca5a5; margin-top: 1rem; display: none;">Nesprávné heslo</p>
+                </div>
 
-            <!-- Members List -->
-            <div id="membersContainer">
-                <div class="card-grid">
-                    <div class="card" style="text-align: center; padding: 2rem;">
-                        <i class="fa-solid fa-spinner fa-spin"
-                            style="font-size: 3rem; color: var(--primary-color); opacity: 0.5; margin-bottom: 1rem;"></i>
-                        <h3 style="color: var(--text-color);">Načítání seznamu členů...</h3>
+                <!-- Messages View -->
+                <div id="messagesView" class="messages-container hidden">
+                    <div style="display: flex; justify-content: flex-end; margin-bottom: 1rem;">
+                        <button onclick="logout()"
+                            style="background: none; border: none; color: var(--text-muted); cursor: pointer; display: flex; align-items: center; gap: 0.5rem;">
+                            <i class="fa-solid fa-sign-out-alt"></i> Odhlásit se
+                        </button>
+                    </div>
+
+                    <div class="message-form">
+                        <h3 style="margin-bottom: 1rem; color: var(--primary-color);">Napsat vzkaz</h3>
+                        <div style="display: grid; gap: 1rem;">
+                            <input type="text" id="msgAuthor" placeholder="Vaše jméno"
+                                style="padding: 0.8rem; border-radius: 4px; border: 1px solid var(--border-color); background: var(--input-bg); color: var(--text-main);">
+                            <textarea id="msgContent" rows="3" placeholder="Napište vzkaz..."
+                                style="padding: 0.8rem; border-radius: 4px; border: 1px solid var(--border-color); background: var(--input-bg); color: var(--text-main); font-family: inherit;"></textarea>
+                            <button class="btn-primary" onclick="postMessage()"
+                                style="width: auto; justify-self: start;">Odeslat vzkaz</button>
+                        </div>
+                    </div>
+
+                    <h3 style="margin-bottom: 1.5rem;">Poslední vzkazy</h3>
+                    <div id="messageList" class="message-list">
+                        <!-- Messages will be loaded here -->
+                        <div style="text-align: center; color: var(--text-muted); padding: 2rem;">Načítám vzkazy...
+                        </div>
                     </div>
                 </div>
             </div>
-
-            <div id="membersTableContainer" class="card" style="margin-top: 2rem; overflow-x: auto; display: none;">
-                <table style="width: 100%; border-collapse: collapse; min-width: 600px;">
-                    <thead style="background: rgba(255,255,255,0.05); color: var(--primary-color);">
-                        <tr>
-                            <th style="padding: 1rem; text-align: left;">Jméno</th>
-                            <th style="padding: 1rem; text-align: center;">ELO</th>
-                            <th style="padding: 1rem; text-align: center;">Titul</th>
-                            <th style="padding: 1rem; text-align: center;">Narození</th>
-                        </tr>
-                    </thead>
-                    <tbody style="color: var(--text-light);" id="membersTableBody">
-                        <!-- Dynamic content -->
-                    </tbody>
-                </table>
-            </div>
-
         </section>
     </main>
 
     <footer>
         <div class="container">
-            <div class="footer-content">
-                <div class="footer-section">
-                    <h3>TJ Bižuterie Jablonec</h3>
-                    <p>Šachový oddíl s dlouholetou tradicí v Jablonci nad Nisou.</p>
-                </div>
-                <div class="footer-section">
-                    <h3>Rychlé odkazy</h3>
-                    <ul class="footer-links">
-                        <li><a href="index.html">Domů</a></li>
-                        <li><a href="about.html">O nás</a></li>
-                        <li><a href="teams.html">Soutěže družstev</a></li>
-                        <li><a href="club-tournaments.html">Oddílový přebor</a></li>
-                        <li><a href="members.html">Členové</a></li>
-                        <li><a href="gallery.html">Galerie</a></li>
-                    </ul>
-                </div>
-                <div class="footer-section">
-                    <h3>Kontakt</h3>
-                    <ul class="footer-links">
-                        <li><a href="mailto:info@sachyjablonec.cz">info@sachyjablonec.cz</a></li>
-                        <li><a href="https://www.facebook.com/profile.php?id=61570518746221"
-                                target="_blank">Facebook</a></li>
-                    </ul>
-                </div>
-            </div>
             <div class="copyright">
-                &copy; 2025 Šachový oddíl TJ Bižuterie Jablonec nad Nisou. Všechna práva vyhrazena.
+                &copy; 2025 Šachový oddíl TJ Bižuterie Jablonec nad Nisou.
             </div>
         </div>
     </footer>
@@ -125,55 +166,113 @@
     <script src="js/config.js"></script>
     <script src="js/main.js"></script>
     <script>
-        document.addEventListener('DOMContentLoaded', loadMembers);
+        // Simple Auth Logic
+        const PASSWORD_KEY = 'club_auth_token'; // storing password directly for simple auth
 
-        async function loadMembers() {
-            const container = document.getElementById('membersContainer');
-            const tableContainer = document.getElementById('membersTableContainer');
-            const tableBody = document.getElementById('membersTableBody');
+        document.addEventListener('DOMContentLoaded', () => {
+            const savedPassword = localStorage.getItem(PASSWORD_KEY);
+            if (savedPassword) {
+                verifyAccess(savedPassword);
+            }
+
+            // Allow enter key to submit password
+            document.getElementById('clubPassword').addEventListener('keypress', function (e) {
+                if (e.key === 'Enter') {
+                    login();
+                }
+            });
+        });
+
+        async function login() {
+            const password = document.getElementById('clubPassword').value;
+            if (!password) return;
+            verifyAccess(password);
+        }
+
+        async function verifyAccess(password) {
+            try {
+                const res = await fetch(`${API_URL}/messages`, {
+                    headers: { 'X-Club-Password': password }
+                });
+
+                if (res.ok) {
+                    localStorage.setItem(PASSWORD_KEY, password);
+                    document.getElementById('loginView').classList.add('hidden');
+                    document.getElementById('messagesView').classList.remove('hidden');
+                    loadMessages(await res.json());
+                } else {
+                    document.getElementById('loginError').style.display = 'block';
+                    localStorage.removeItem(PASSWORD_KEY);
+                }
+            } catch (e) {
+                console.error(e);
+                alert('Chyba spojení se serverem');
+            }
+        }
+
+        function logout() {
+            localStorage.removeItem(PASSWORD_KEY);
+            location.reload();
+        }
+
+        function loadMessages(messages) {
+            const container = document.getElementById('messageList');
+            if (messages.length === 0) {
+                container.innerHTML = '<div style="text-align: center; color: var(--text-muted);">Zatím žádné vzkazy. Buďte první!</div>';
+                return;
+            }
+
+            container.innerHTML = messages.map(msg => `
+                <div class="message-card">
+                    <div class="message-header">
+                        <span class="message-author">${escapeHtml(msg.author)}</span>
+                        <span>${new Date(msg.createdAt).toLocaleString('cs-CZ')}</span>
+                    </div>
+                    <div class="message-content">${escapeHtml(msg.content)}</div>
+                </div>
+            `).join('');
+        }
+
+        async function postMessage() {
+            const author = document.getElementById('msgAuthor').value;
+            const content = document.getElementById('msgContent').value;
+            const password = localStorage.getItem(PASSWORD_KEY);
+
+            if (!author || !content) {
+                alert('Vyplňte prosím jméno a vzkaz.');
+                return;
+            }
 
             try {
-                const response = await fetch(`${API_URL}/members`);
-                if (!response.ok) throw new Error('Failed to fetch members');
+                const res = await fetch(`${API_URL}/messages`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Club-Password': password
+                    },
+                    body: JSON.stringify({ author, content })
+                });
 
-                const members = await response.json();
-
-                if (members.length === 0) {
-                    container.innerHTML = `
-                         <div class="card" style="text-align: center; padding: 2rem;">
-                            <i class="fa-solid fa-users-slash" style="font-size: 3rem; color: var(--text-muted); margin-bottom: 1rem;"></i>
-                            <h3>Zatím zde nejsou žádní členové.</h3>
-                        </div>
-                    `;
-                    return;
+                if (res.ok) {
+                    document.getElementById('msgContent').value = ''; // Keep author name
+                    // Reload messages
+                    const listRes = await fetch(`${API_URL}/messages`, {
+                        headers: { 'X-Club-Password': password }
+                    });
+                    loadMessages(await listRes.json());
+                } else {
+                    alert('Chyba při odesílání vzkazu.');
                 }
-
-                tableBody.innerHTML = members.map(member => `
-                    <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
-                        <td style="padding: 1rem;">
-                            ${member.title ? `<span style="color: var(--primary-color); font-weight: bold; margin-right: 0.5rem;">${member.title}</span>` : ''} 
-                            ${member.lastName} ${member.firstName}
-                            ${member.role ? `<span style="font-size: 0.8em; opacity: 0.7; margin-left: 0.5rem;">(${member.role})</span>` : ''}
-                        </td>
-                        <td style="padding: 1rem; text-align: center;">${member.elo || '-'}</td>
-                        <td style="padding: 1rem; text-align: center;">${member.title || '-'}</td>
-                        <td style="padding: 1rem; text-align: center;">${member.birthYear || '-'}</td>
-                    </tr>
-                `).join('');
-
-                container.style.display = 'none';
-                tableContainer.style.display = 'block';
-
-            } catch (error) {
-                console.error('Error:', error);
-                container.innerHTML = `
-                    <div class="card" style="text-align: center; padding: 2rem; border-color: #ef4444;">
-                        <i class="fa-solid fa-triangle-exclamation" style="font-size: 3rem; color: #ef4444; margin-bottom: 1rem;"></i>
-                        <h3 style="color: #ef4444;">Chyba při načítání členů</h3>
-                        <p>${error.message}</p>
-                    </div>
-                `;
+            } catch (e) {
+                console.error(e);
+                alert('Chyba spojení.');
             }
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
         }
     </script>
 </body>

@@ -11,6 +11,7 @@ import reportsRoutes from './routes/reports.js';
 import imagesRoutes from './routes/images.js';
 import userRoutes from './routes/users.js';
 import memberRoutes from './routes/members.js';
+import messageRoutes from './routes/messages.js';
 
 // Load environment variables
 dotenv.config();
@@ -71,6 +72,7 @@ app.use('/api/reports', reportsRoutes);
 app.use('/api/images', imagesRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/members', memberRoutes);
+app.use('/api/messages', messageRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {
