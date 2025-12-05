@@ -267,12 +267,12 @@
                 // Render Table
                 let html = `
                     <div class="standings-wrapper">
-                        <table class="standings-table">
+                        <table class="standings-table" style="width: 100%; border-collapse: collapse;">
                             <thead>
-                                <tr>
-                                    <th>Poř.</th>
-                                    <th>Tým</th>
-                                    <th>Body</th>
+                                <tr style="border-bottom: 1px solid rgba(255,255,255,0.1); color: var(--text-muted);">
+                                    <th style="text-align: left; padding: 0.5rem;">Poř.</th>
+                                    <th style="text-align: left; padding: 0.5rem;">Tým</th>
+                                    <th style="text-align: right; padding: 0.5rem;">Body</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -281,22 +281,25 @@
                 competition.standings.forEach(s => {
                     const isBizuterie = s.isBizuterie || s.team.toLowerCase().includes('bižuterie');
                     // Style adjustments for Bižuterie
-                    const rowStyle = isBizuterie ? 'font-weight: bold; color: var(--primary-color); background: rgba(212, 175, 55, 0.05);' : '';
+                    const rowStyle = isBizuterie ? 'font-weight: bold; color: var(--primary-color); background: rgba(212, 175, 55, 0.1);' : '';
 
                     html += `
-                        <tr style="${rowStyle}">
-                            <td>${s.rank}.</td>
-                            <td>${s.team}</td>
-                            <td><strong>${s.points !== null ? s.points : '-'}</strong></td>
+                        <tr style="border-bottom: 1px solid rgba(255,255,255,0.05); ${rowStyle}">
+                            <td style="padding: 0.5rem;">${s.rank}.</td>
+                            <td style="padding: 0.5rem;">${s.team}</td>
+                            <td style="padding: 0.5rem; text-align: right;"><strong>${s.points !== null ? s.points : '-'}</strong></td>
                         </tr>
                     `;
                 });
+
+                const sourceName = (competition.url && competition.url.includes('chess-results')) ? 'Chess-Results.com' : 'ŠSČR';
+                const sourceUrl = competition.url || competition.chessczUrl || '#';
 
                 html += `
                             </tbody>
                         </table>
                         <div style="margin-top: 0.5rem; font-size: 0.8rem; text-align: right; color: var(--text-muted);">
-                            Zdroj: ${(competition.url && competition.url.includes('chess-results')) ? 'Chess-Results.com' : 'ŠSČR'}
+                            Zdroj: <a href="${sourceUrl}" target="_blank" style="color: var(--text-muted); text-decoration: underline;">${sourceName} <i class="fa-solid fa-external-link-alt"></i></a>
                         </div>
                     </div>
                 `;
