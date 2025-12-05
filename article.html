@@ -161,6 +161,12 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+            /* Reset global header styles */
+            position: relative;
+            top: auto;
+            width: auto;
+            z-index: 1;
+            backdrop-filter: none;
         }
 
         .app-header h1 {
@@ -367,6 +373,20 @@
             </div>
 
             <article id="article" class="hidden">
+                <!-- Article Navigation -->
+                <nav class="article-nav" id="articleNav"
+                    style="display: flex; justify-content: space-between; margin-bottom: 2rem; padding-bottom: 1rem; border-bottom: 1px solid var(--border-color); font-size: 0.9rem;">
+                    <a id="prevArticleLink" href="#"
+                        style="display: none; align-items: center; gap: 0.5rem; color: var(--text-muted);">
+                        <i class="fa-solid fa-arrow-left"></i> <span id="prevArticleTitle">Předchozí</span>
+                    </a>
+                    <span style="flex: 1;"></span> <!-- Spacer -->
+                    <a id="nextArticleLink" href="#"
+                        style="display: none; align-items: center; gap: 0.5rem; color: var(--text-muted); text-align: right;">
+                        <span id="nextArticleTitle">Další</span> <i class="fa-solid fa-arrow-right"></i>
+                    </a>
+                </nav>
+
                 <div class="article-header">
                     <div class="article-meta">
                         <span id="articleDate"><i class="fa-regular fa-calendar"></i> </span>
@@ -511,9 +531,32 @@
         function renderArticle(article) {
             document.title = `${article.title} - Šachový oddíl TJ Bižuterie Jablonec`;
 
+            // Navigation Links
+            const prevLink = document.getElementById('prevArticleLink');
+            const nextLink = document.getElementById('nextArticleLink');
+
+            if (article.prevArticle) {
+                prevLink.href = `article.html?id=${article.prevArticle.id}`;
+                document.getElementById('prevArticleTitle').textContent = article.prevArticle.title;
+                prevLink.style.display = 'flex';
+                prevLink.title = article.prevArticle.title;
+            } else {
+                prevLink.style.display = 'none';
+            }
+
+            if (article.nextArticle) {
+                nextLink.href = `article.html?id=${article.nextArticle.id}`;
+                document.getElementById('nextArticleTitle').textContent = article.nextArticle.title;
+                nextLink.style.display = 'flex';
+                nextLink.title = article.nextArticle.title;
+            } else {
+                nextLink.style.display = 'none';
+            }
+
+            // Article Content
             document.getElementById('articleTitle').textContent = article.title;
-            document.getElementById('articleDate').innerHTML += new Date(article.publishedDate).toLocaleDateString('cs-CZ');
-            document.getElementById('articleCategory').innerHTML += article.category;
+            document.getElementById('articleDate').innerHTML = `<i class="fa-regular fa-calendar"></i> ${new Date(article.publishedDate).toLocaleDateString('cs-CZ')}`;
+            document.getElementById('articleCategory').innerHTML = `<i class="fa-solid fa-tag"></i> ${article.category}`;
             document.getElementById('articleExcerpt').textContent = article.excerpt;
             document.getElementById('articleBody').innerHTML = article.content || '';
 
