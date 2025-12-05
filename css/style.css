@@ -125,6 +125,68 @@ nav {
     width: 100%;
 }
 
+/* Dropdown Menu */
+.dropdown {
+    position: relative;
+    padding: 0.5rem 0;
+}
+
+.dropdown-menu {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    background-color: var(--surface-color);
+    min-width: 220px;
+    box-shadow: 0 8px 16px rgba(0,0,0,0.3);
+    border-radius: var(--border-radius);
+    padding: 0.5rem 0;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(10px);
+    transition: all 0.3s ease;
+    border: 1px solid rgba(255,255,255,0.05);
+    z-index: 1000;
+}
+
+.dropdown:hover .dropdown-menu {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+.dropdown-menu li {
+    margin: 0;
+}
+
+.dropdown-menu a {
+    display: block;
+    padding: 0.75rem 1.5rem;
+    font-size: 1rem;
+    font-weight: 400;
+    color: var(--text-color);
+    white-space: nowrap;
+}
+
+.dropdown-menu a:hover {
+    background-color: rgba(212, 175, 55, 0.1);
+    color: var(--primary-color);
+}
+
+.dropdown-menu a::after {
+    display: none; /* No underline for dropdown items */
+}
+
+/* Arrow rotation */
+.dropdown:hover .fa-caret-down {
+    transform: rotate(180deg);
+}
+
+.fa-caret-down {
+    transition: transform 0.3s;
+    font-size: 0.8rem;
+    margin-left: 0.25rem;
+}
+
 .menu-toggle {
     display: none;
     font-size: 1.5rem;

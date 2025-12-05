@@ -10,6 +10,7 @@ import newsRoutes from './routes/news.js';
 import reportsRoutes from './routes/reports.js';
 import imagesRoutes from './routes/images.js';
 import userRoutes from './routes/users.js';
+import memberRoutes from './routes/members.js';
 
 // Load environment variables
 dotenv.config();
@@ -31,10 +32,37 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Serve uploaded files
+// Serve uploaded files
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
-// Serve static frontend files from root
-app.use(express.static(path.join(__dirname, '../')));
+// Serve specific static directories
+['css', 'js', 'images', 'data'].forEach(dir => {
+    app.use(`/${dir}`, express.static(path.join(__dirname, `../${dir}`)));
+});
+
+// Serve HTML files from root
+const allowedHtmlFiles = [
+    'index.html', 'about.html', 'teams.html', 'club-tournaments.html',
+    'youth.html', 'gallery.html', 'admin.html', 'article.html',
+    'report_1kolo.html', 'report_2kolo.html'
+];
+
+// Middleware to serve static files from root safely
+app.use((req, res, next) => {
+    // skip api routes
+    if (req.path.startsWith('/api')) return next();
+
+    // clean path
+    const reqPath = req.path === '/' ? '/index.html' : req.path;
+
+    // check if it's an allowed html file
+    const filename = reqPath.split('/').pop();
+    if (allowedHtmlFiles.includes(filename) && reqPath.split('/').length === 2) {
+        return res.sendFile(path.join(__dirname, `../${filename}`));
+    }
+
+    next();
+});
 
 // API Routes
 app.use('/api/auth', authRoutes);
@@ -42,6 +70,7 @@ app.use('/api/news', newsRoutes);
 app.use('/api/reports', reportsRoutes);
 app.use('/api/images', imagesRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api/members', memberRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {
