@@ -34,7 +34,16 @@ async function scrapeSchedule(scheduleUrl) {
         let currentDate = null;
 
         for (const row of rows) {
-            const clean = (s) => s.replace(/<[^>]*>/g, '').trim().replace(/&nbsp;/g, ' ');
+            const clean = (s) => {
+                let txt = s.replace(/<[^>]*>/g, '').trim();
+                txt = txt.replace(/&nbsp;/g, ' ')
+                    .replace(/&amp;/g, '&')
+                    .replace(/&lt;/g, '<')
+                    .replace(/&gt;/g, '>')
+                    .replace(/&quot;/g, '"')
+                    .replace(/&#(\d+);/g, (match, dec) => String.fromCharCode(dec));
+                return txt;
+            };
 
             if (row.includes('Datum kola')) {
                 const text = clean(row);
@@ -44,16 +53,28 @@ async function scrapeSchedule(scheduleUrl) {
                 if (dateMatch) currentDate = dateMatch[1];
             }
 
-            if (row.includes('class="CRg1b"') || row.includes('class="CRg2b"')) {
-                const cells = row.split('</th>');
+            // Match generic CRg rows (CRg1, CRg2, CRg1b, CRg2b)
+            if (row.match(/class="CRg[12]b?"/)) {
+                let cells = row.split('</th>');
+                if (cells.length < 3) cells = row.split('</td>'); // Fallback to td
+
                 if (cells.length > 5) {
-                    const col1 = clean(cells[1]).replace(/<[^>]*>/g, '');
+                    const col1 = clean(cells[1]);
                     // Look for result in row text to be safe
                     const cleanRow = clean(row);
                     // Format: 4 : 4 or 3,5 : 4,5
-                    const resultMatch = cleanRow.match(/(\d+[,.]?\d*)\s*:\s*(\d+[,.]?\d*)/);
+                    let resultMatch = cleanRow.match(/(\d+[,.]?\d*)\s*[:]\s*(\d+[,.]?\d*)/);
 
-                    if (col1 !== 'Jméno' && col1 !== '' && currentRound) {
+                    // Fallback for cell-based result (e.g. <td>4</td><td>5</td>)
+                    if (!resultMatch && cells.length > 7) {
+                        const r1 = clean(cells[6] || ''); // Usually col 6
+                        const r2 = clean(cells[7] || ''); // Usually col 7
+                        if (r1.match(/^\d+([,.]\d+)?$/) && r2.match(/^\d+([,.]\d+)?$/)) {
+                            resultMatch = [`${r1} : ${r2}`];
+                        }
+                    }
+
+                    if (col1 !== 'Jméno' && col1 !== '' && col1 !== 'Družstvo' && currentRound) {
                         matches.push({
                             round: currentRound,
                             date: currentDate || '-',
