@@ -244,7 +244,16 @@
                 if (!res.ok) throw new Error('Failed to load standings');
 
                 const data = await res.json();
-                const competition = data.find(c => c.competitionId === competitionId);
+
+                // Compatibility check: server might return { standings: [...] } or just [...]
+                const competitions = data.standings || data;
+
+                // Check if competitions is an array
+                if (!Array.isArray(competitions)) {
+                    throw new Error('Invalid data format');
+                }
+
+                const competition = competitions.find(c => c.competitionId === competitionId);
 
                 if (!competition || !competition.standings || competition.standings.length === 0) {
                     container.innerHTML = `

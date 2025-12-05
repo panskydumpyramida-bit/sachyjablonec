@@ -125,7 +125,17 @@ app.post('/api/standings/update', async (req, res) => {
 
                             if (cells.length > 7) {
                                 // Clean cell content function
-                                const clean = (str) => str.replace(/<[^>]*>/g, '').trim();
+                                const clean = (str) => {
+                                    let txt = str.replace(/<[^>]*>/g, '').trim();
+                                    // Basic entity decoding
+                                    txt = txt.replace(/&nbsp;/g, ' ')
+                                        .replace(/&amp;/g, '&')
+                                        .replace(/&lt;/g, '<')
+                                        .replace(/&gt;/g, '>')
+                                        .replace(/&quot;/g, '"')
+                                        .replace(/&#(\d+);/g, (match, dec) => String.fromCharCode(dec));
+                                    return txt;
+                                };
 
                                 // Col 0: Rank (need to find the last part after >)
                                 let rankStr = cells[0];
