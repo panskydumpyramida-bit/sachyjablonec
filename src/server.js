@@ -177,18 +177,21 @@ app.get('/api/standings', async (req, res) => {
     }
 });
 
-// Seed endpoint - run once to populate database
-app.post('/api/seed', async (req, res) => {
+// Seed Function
+const seedDatabase = async () => {
     try {
         const { PrismaClient } = await import('@prisma/client');
         const bcrypt = await import('bcrypt');
         const prisma = new PrismaClient();
 
+        // Check if admin exists to avoid re-hashing password unnecessarily (optional optimization but safe to upsert)
+        // Actually, upsert is fine.
+
         // Create admin user if not exists
         const hashedPassword = await bcrypt.default.hash('admin123', 10);
         const admin = await prisma.user.upsert({
             where: { username: 'admin' },
-            update: {},
+            update: {}, // Don't update password if exists
             create: {
                 username: 'admin',
                 email: 'admin@sachyjablonec.cz',
@@ -320,7 +323,7 @@ app.post('/api/seed', async (req, res) => {
                 slug: 'mistrovstvi-cech-harrachov',
                 category: 'Mládež',
                 excerpt: 'Úspěchy našich mladých šachistů na Mistrovství Čech.',
-                thumbnailUrl: 'https://blogger.googleusercontent.com/img/a/AVvXsEjJ8B0e9gRNW0Sp2GwMUI3AYxaBzSZE5d9lvjNq1CMHVmwN1aHlSQHcOTL5z-9wIBOoaRwBZimEtF3IlGh61mhFbUUkRMoESgB1eq5hSig9kmrmelvThdTWk1lN-mjmZABjlnu_ljZiDeRzXDD1JRgYDRScKjukllHF4BenjKldVLe6qolzZNWxUj2yWFfh',
+                thumbnailUrl: 'https://blogger.googleusercontent.com/img/a/AVvXsEjJ8B0e9gRNW0Sp2GwMUI3AYxaBzSZE5d9lvjNq1CMHVmwN1aHlSQHcOTL5z-9wIBOoaRwBZimEtF3IlGh61mhFbUUkRMoESgB1eq5hSig9kmrmelvThdTWk1lN-mjmZABjlnu_ljZiDeRzXDD1JRgYDRScKjukllHF4BenjKldVLe6qolzZNWvUj2yWFfh',
                 linkUrl: 'youth.html',
                 publishedDate: new Date('2025-10-25'),
                 isPublished: true,
@@ -349,10 +352,21 @@ app.post('/api/seed', async (req, res) => {
         }
 
         await prisma.$disconnect();
-        res.json({ success: true, message: 'Database seeded successfully!' });
+        console.log('Database seeded successfully');
+        return { success: true };
     } catch (error) {
         console.error('Seed error:', error);
-        res.status(500).json({ error: 'Seed failed', details: error.message });
+        return { error: error.message };
+    }
+};
+
+// Seed endpoint - run once to populate database
+app.post('/api/seed', async (req, res) => {
+    const result = await seedDatabase();
+    if (result.error) {
+        res.status(500).json({ error: 'Seed failed', details: result.error });
+    } else {
+        res.json({ success: true, message: 'Database seeded successfully!' });
     }
 });
 
@@ -375,7 +389,11 @@ app.use((err, req, res, next) => {
 });
 
 // Start server
-app.listen(PORT, () => {
+app.listen(PORT, async () => {
     console.log(`🚀 Server running on http://localhost:${PORT}`);
     console.log(`📝 Environment: ${process.env.NODE_ENV}`);
+
+    // Auto-seed on startup to ensure data freshness on deployment
+    console.log('🌱 starting auto-seed...');
+    await seedDatabase();
 });
