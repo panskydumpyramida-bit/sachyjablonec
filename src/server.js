@@ -100,9 +100,9 @@ app.post('/api/standings/update', async (req, res) => {
 
                 const standings = [];
 
-                // Parse standings table - capture rank, team, and points (in <b> tag)
-                // Structure: <tr><td>rank</td><td><a>team</a></td>...<td><b>points</b></td>...
-                const tableRowPattern = /<tr>\s*<td>(\d+)<\/td>\s*<td>\s*<a[^>]*href="[^"]*druzstvo[^"]*"[^>]*>([^<]+)<\/a><\/td>(?:[^<]*<td[^>]*>[^<]*<\/td>)*[^<]*<td[^>]*>\s*<b>(\d+)<\/b>/gi;
+                // Parse standings table - capture rank, team, and points
+                // Structure: <tr><td>rank</td><td><a>team</a></td>...<td class="..."><b>points</b></td>
+                const tableRowPattern = /<tr>\s*<td>(\d+)<\/td>\s*<td>\s*<a[^>]*href="[^"]*druzstvo[^"]*"[^>]*>([^<]+)<\/a><\/td>(?:<td[^>]*>[^<]*<\/td>)*<td[^>]*>\s*<b>(\d+)<\/b>/gi;
 
                 let match;
                 while ((match = tableRowPattern.exec(html)) !== null && standings.length < 12) {
