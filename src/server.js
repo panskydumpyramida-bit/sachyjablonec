@@ -87,51 +87,109 @@ app.post('/api/standings/update', async (req, res) => {
         // Competition IDs to scrape (main page has the standings table)
         const competitions = [
             { id: '3255', name: '1. liga mládeže A', chessczUrl: 'https://www.chess.cz/soutez/3255/' },
-            { id: '3363', name: 'Krajský přebor st. žáků', chessczUrl: 'https://www.chess.cz/soutez/3363/' }
+            { id: '3363', name: 'Krajský přebor st. žáků', chessczUrl: 'https://www.chess.cz/soutez/3363/' },
+            // New Chess-Results competition
+            {
+                id: 'ks-vychod',
+                name: 'Krajská soutěž východ',
+                type: 'chess-results',
+                url: 'https://s2.chess-results.com/tnr1278502.aspx?lan=5&art=46&SNode=S0'
+            }
         ];
 
         const results = [];
 
         for (const comp of competitions) {
             try {
-                // Fetch from main competition page which has the standings table
-                const response = await fetch(`https://www.chess.cz/soutez/${comp.id}/`);
-                const html = await response.text();
+                let standings = [];
 
-                const standings = [];
+                if (comp.type === 'chess-results') {
+                    const response = await fetch(comp.url);
+                    const html = await response.text();
 
-                // Split HTML into lines and find table rows with standings
-                const lines = html.split('\n');
-                for (const line of lines) {
-                    // Match lines with standings: <tr><td>1</td><td><a...druzstvo...>Team</a></td>...<b>12</b>
-                    if (line.includes('druzstvo') && line.includes('<tr>')) {
-                        const rankMatch = line.match(/<tr>\s*<td>(\d+)<\/td>/);
-                        const teamMatch = line.match(/<a[^>]*druzstvo[^>]*>([^<]+)<\/a>/);
-                        const pointsMatch = line.match(/<b>(\d+)<\/b>/);
+                    // Chess-Results often has minified HTML, split by row tags
+                    // We look for rows with class CRg1 or CRg2
+                    const rows = html.split('</tr>');
 
-                        if (rankMatch && teamMatch && standings.length < 12) {
-                            const rank = parseInt(rankMatch[1]);
-                            const teamName = teamMatch[1].trim();
-                            const points = pointsMatch ? parseInt(pointsMatch[1]) : null;
+                    for (const row of rows) {
+                        // Simple regex check for row class
+                        if (row.includes('class="CRg1"') || row.includes('class="CRg2"')) {
+                            // Split into cells
+                            const cells = row.split('</td>');
 
-                            standings.push({
-                                rank,
-                                team: teamName,
-                                points,
-                                isBizuterie: teamName.toLowerCase().includes('bižuterie')
-                            });
+                            if (cells.length > 7) {
+                                // Clean cell content function
+                                const clean = (str) => str.replace(/<[^>]*>/g, '').trim();
+
+                                // Col 0: Rank (need to find the last part after >)
+                                let rankStr = cells[0];
+                                // The cell might start with <tr...><td...>1
+                                rankStr = clean(rankStr);
+
+                                // Col 2: Team (contains <a>)
+                                let teamStr = cells[2];
+                                teamStr = clean(teamStr);
+
+                                // Col 7: Points (PH1) or Col 8 (PH2 - Matchpoints)
+                                // In user dump, Col 7 was PH1 (9 pts vs 3 wins), Col 8 was PH2 (6 pts)
+                                // Usually we visualize strictly points. If PH1 is primary sort, use it.
+                                let pointsStr = cells[7];
+                                pointsStr = clean(pointsStr).replace(',', '.'); // Handle 6,5
+
+                                const rank = parseInt(rankStr);
+                                const points = parseFloat(pointsStr);
+
+                                if (!isNaN(rank) && teamStr) {
+                                    standings.push({
+                                        rank,
+                                        team: teamStr,
+                                        points: isNaN(points) ? 0 : points,
+                                        isBizuterie: teamStr.toLowerCase().includes('bižuterie')
+                                    });
+                                }
+                            }
                         }
                     }
-                }
 
-                // Sort by rank and take top 8
+                } else {
+                    // Start of chess.cz logic
+                    // Fetch from main competition page which has the standings table
+                    const response = await fetch(`https://www.chess.cz/soutez/${comp.id}/`);
+                    const html = await response.text();
+
+                    // Split HTML into lines and find table rows with standings
+                    const lines = html.split('\n');
+                    for (const line of lines) {
+                        // Match lines with standings: <tr><td>1</td><td><a...druzstvo...>Team</a></td>...<b>12</b>
+                        if (line.includes('druzstvo') && line.includes('<tr>')) {
+                            const rankMatch = line.match(/<tr>\s*<td>(\d+)<\/td>/);
+                            const teamMatch = line.match(/<a[^>]*druzstvo[^>]*>([^<]+)<\/a>/);
+                            const pointsMatch = line.match(/<b>(\d+)<\/b>/);
+
+                            if (rankMatch && teamMatch && standings.length < 12) {
+                                const rank = parseInt(rankMatch[1]);
+                                const teamName = teamMatch[1].trim();
+                                const points = pointsMatch ? parseInt(pointsMatch[1]) : null;
+
+                                standings.push({
+                                    rank,
+                                    team: teamName,
+                                    points,
+                                    isBizuterie: teamName.toLowerCase().includes('bižuterie')
+                                });
+                            }
+                        }
+                    }
+                } // End of chess.cz logic
+
+                // Sort by rank
                 standings.sort((a, b) => a.rank - b.rank);
 
                 results.push({
                     competitionId: comp.id,
                     name: comp.name,
-                    chessczUrl: comp.chessczUrl,
-                    standings: standings.slice(0, 8),
+                    url: comp.url || comp.chessczUrl,
+                    standings: standings, // Keep all or limit? usually top 8-12 is fine. Chess-results table might be long.
                     updatedAt: new Date().toISOString()
                 });
             } catch (err) {
