@@ -82,6 +82,36 @@ async function loadNews(options = {}) {
                     </div>
                 </article>
             `).join('');
+        } else if (displayMode === 'full') {
+            // Full content display mode - shows entire article content with thumbnail
+            container.innerHTML = news.map(item => `
+                <article class="card">
+                    <div class="card-content">
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+                            <div style="flex: 1; min-width: 250px;">
+                                <h2 style="font-family: 'Playfair Display', serif; margin: 0 0 0.5rem 0;">${escapeHtml(item.title)}</h2>
+                                <span style="color: var(--text-muted); font-size: 0.9rem;">${formatDate(item.publishedDate)}</span>
+                            </div>
+                            ${item.thumbnailUrl ? `
+                                <img src="${item.thumbnailUrl}" 
+                                     alt="${escapeHtml(item.title)}"
+                                     style="max-width: 200px; max-height: 150px; border-radius: 8px; object-fit: cover;"
+                                     onerror="this.style.display='none'">
+                            ` : ''}
+                        </div>
+                        <div style="line-height: 1.8; color: var(--text-light);">
+                            ${item.content || `<p>${escapeHtml(item.excerpt || '')}</p>`}
+                        </div>
+                        ${item.linkUrl && item.linkUrl !== '#' ? `
+                            <div style="margin-top: 1.5rem;">
+                                <a href="${item.linkUrl}" class="read-more">
+                                    Zobrazit detail <i class="fa-solid fa-arrow-right"></i>
+                                </a>
+                            </div>
+                        ` : ''}
+                    </div>
+                </article>
+            `).join('');
         } else {
             // List display mode
             container.innerHTML = `

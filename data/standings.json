@@ -1,0 +1,81 @@
+{
+  "standings": [
+    {
+      "competitionId": "3255",
+      "name": "1. liga mládeže A",
+      "chessczUrl": "https://www.chess.cz/soutez/3255/",
+      "standings": [
+        {
+          "rank": 1,
+          "team": "Desko Liberec",
+          "isBizuterie": false
+        },
+        {
+          "rank": 2,
+          "team": "TJ Bižuterie Jablonec",
+          "isBizuterie": true
+        },
+        {
+          "rank": 3,
+          "team": "ŠK Česká Lípa",
+          "isBizuterie": false
+        },
+        {
+          "rank": 4,
+          "team": "ŠK ZIKUDA Turnov",
+          "isBizuterie": false
+        },
+        {
+          "rank": 5,
+          "team": "ŠK Teplice",
+          "isBizuterie": false
+        },
+        {
+          "rank": 6,
+          "team": "ŠK Slavoj Litoměřice",
+          "isBizuterie": false
+        }
+      ],
+      "updatedAt": "2025-12-05T12:14:51.362Z"
+    },
+    {
+      "competitionId": "3363",
+      "name": "Krajský přebor st. žáků",
+      "chessczUrl": "https://www.chess.cz/soutez/3363/",
+      "standings": [
+        {
+          "rank": 1,
+          "team": "Desko Liberec B",
+          "isBizuterie": false
+        },
+        {
+          "rank": 2,
+          "team": "ŠK ZIKUDA Turnov \"C\"",
+          "isBizuterie": false
+        },
+        {
+          "rank": 3,
+          "team": "Šachový klub Frýdlant",
+          "isBizuterie": false
+        },
+        {
+          "rank": 4,
+          "team": "ŠK ZIKUDA Turnov \"B\"",
+          "isBizuterie": false
+        },
+        {
+          "rank": 5,
+          "team": "TJ Slovan Varnsdorf",
+          "isBizuterie": false
+        },
+        {
+          "rank": 6,
+          "team": "TJ Bižuterie Jablonec nad Nisou \"B\"",
+          "isBizuterie": true
+        }
+      ],
+      "updatedAt": "2025-12-05T12:14:51.677Z"
+    }
+  ],
+  "lastUpdated": "2025-12-05T12:14:51.677Z"
+}

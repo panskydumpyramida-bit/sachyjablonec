@@ -586,6 +586,24 @@
 
             <!-- DASHBOARD -->
             <div id="dashboardView">
+                <!-- Standings Update Section -->
+                <div class="card"
+                    style="margin-bottom: 2rem; padding: 1.5rem; background: linear-gradient(135deg, var(--card-bg), rgba(59, 130, 246, 0.1)); border-left: 4px solid #3b82f6;">
+                    <div
+                        style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+                        <div>
+                            <h3 style="margin: 0 0 0.5rem 0; color: #3b82f6;"><i class="fa-solid fa-table"></i> Tabulky
+                                mládeže</h3>
+                            <p style="margin: 0; color: var(--text-muted); font-size: 0.9rem;">Aktualizovat výsledky ze
+                                chess.cz</p>
+                        </div>
+                        <button class="btn-secondary" onclick="updateStandings()" id="updateStandingsBtn">
+                            <i class="fa-solid fa-sync"></i> Aktualizovat tabulky
+                        </button>
+                    </div>
+                    <div id="standingsResult" style="margin-top: 1rem; display: none;"></div>
+                </div>
+
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
                     <h2 style="margin: 0;">Seznam novinek</h2>
                     <button class="btn-primary" onclick="switchTab('editor')"><i class="fa-solid fa-plus"></i> Nová
@@ -1692,6 +1710,69 @@
 
         function logout() { localStorage.removeItem('authToken'); location.reload(); }
         function showAlert(msg, type) { const div = document.createElement('div'); div.className = `alert alert-${type}`; div.textContent = msg; document.getElementById('alertContainer').appendChild(div); setTimeout(() => div.remove(), 3000); }
+
+        // Update standings from chess.cz
+        async function updateStandings() {
+            const btn = document.getElementById('updateStandingsBtn');
+            const resultDiv = document.getElementById('standingsResult');
+
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Načítám...';
+            resultDiv.style.display = 'block';
+            resultDiv.innerHTML = '<p style="color: var(--text-muted);">Stahují se data z chess.cz...</p>';
+
+            try {
+                const res = await fetch(`${API_URL}/standings/update`, {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+
+                if (res.ok) {
+                    const data = await res.json();
+
+                    let html = '<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1rem;">';
+
+                    for (const comp of data.standings) {
+                        html += `
+                            <div style="background: var(--card-bg); padding: 1rem; border-radius: 8px;">
+                                <h4 style="margin: 0 0 0.5rem 0; color: var(--primary-color);">${comp.name}</h4>
+                                ${comp.error ? `<p style="color: #fca5a5;">Chyba: ${comp.error}</p>` :
+                                comp.standings.length > 0 ? `
+                                        <table style="width: 100%; font-size: 0.85rem;">
+                                            <tr style="color: var(--text-muted);">
+                                                <th style="text-align: left; padding: 0.25rem;">#</th>
+                                                <th style="text-align: left; padding: 0.25rem;">Družstvo</th>
+                                            </tr>
+                                            ${comp.standings.map(s => `
+                                                <tr style="${s.isBizuterie ? 'background: rgba(212, 175, 55, 0.2);' : ''}">
+                                                    <td style="padding: 0.25rem;">${s.rank}</td>
+                                                    <td style="padding: 0.25rem;">${s.isBizuterie ? '<strong>' + s.team + '</strong>' : s.team}</td>
+                                                </tr>
+                                            `).join('')}
+                                        </table>
+                                    ` : '<p style="color: var(--text-muted);">Žádná data</p>'
+                            }
+                            </div>
+                        `;
+                    }
+
+                    html += '</div>';
+                    html += '<p style="margin-top: 1rem; color: var(--text-muted); font-size: 0.85rem;"><i class="fa-solid fa-check" style="color: #86efac;"></i> Aktualizováno. Zkopírujte výsledky do youth.html ručně.</p>';
+
+                    resultDiv.innerHTML = html;
+                    showAlert('Tabulky načteny!', 'success');
+                } else {
+                    throw new Error('Server error');
+                }
+            } catch (e) {
+                resultDiv.innerHTML = '<p style="color: #fca5a5;"><i class="fa-solid fa-exclamation-triangle"></i> Nepodařilo se načíst tabulky</p>';
+                showAlert('Chyba při načítání tabulek', 'error');
+            }
+
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fa-solid fa-sync"></i> Aktualizovat tabulky';
+        }
+
 
         async function handleImageUpload(event) {
             const file = event.target.files[0]; if (!file) return;
