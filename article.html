@@ -43,23 +43,45 @@
             margin: 1rem 0;
         }
 
-        /* Game Viewer Styles */
+        /* Custom styles for game viewer */
         .game-viewer-container {
             background-color: var(--card-bg);
             border-radius: var(--border-radius);
             padding: 1.5rem;
             margin: 2rem 0;
             border: 1px solid rgba(255, 255, 255, 0.1);
-            display: grid;
-            grid-template-columns: 300px 1fr;
-            gap: 2rem;
+        }
+
+        .game-viewer-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .game-viewer-title h2 {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .game-viewer-title p {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        .viewer-main {
+            display: flex;
+            gap: 1.5rem;
         }
 
         .game-sidebar {
+            width: 350px;
             background-color: rgba(255, 255, 255, 0.05);
             border-radius: var(--border-radius);
             padding: 1rem;
-            max-height: 500px;
+            max-height: 600px;
             overflow-y: auto;
         }
 
@@ -72,27 +94,42 @@
             margin-bottom: 0.75rem;
         }
 
-        .game-list-item {
-            padding: 0.75rem;
-            border-bottom: 1px solid var(--border-color);
+        .game-list-viewer {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .game-item-viewer {
+            padding: 0.5rem 0.75rem;
+            border-radius: 0.5rem;
             cursor: pointer;
-            transition: background 0.2s;
+            transition: all 0.2s ease;
+            color: var(--text-muted);
             font-size: 0.9rem;
         }
 
-        .game-list-item:hover {
-            background: rgba(255, 255, 255, 0.05);
+        .game-item-viewer:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+            color: var(--text-main);
         }
 
-        .game-list-item.active {
-            background: rgba(212, 175, 55, 0.1);
-            border-left: 3px solid var(--primary-color);
-            font-weight: 600;
+        .game-item-viewer.active {
+            background-color: var(--primary-color);
+            color: var(--secondary-color);
+            font-weight: 500;
+        }
+
+        .game-display {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
         }
 
         .iframe-viewer {
             width: 100%;
-            aspect-ratio: 1;
+            height: 480px;
             background-color: #000;
             border-radius: var(--border-radius);
             overflow: hidden;
@@ -103,41 +140,75 @@
         .iframe-viewer iframe {
             width: 100%;
             height: 100%;
+            display: block;
             border: none;
         }
 
-        .article-gallery {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        .viewer-controls {
+            display: flex;
+            align-items: center;
             gap: 1rem;
-            margin-top: 2rem;
-        }
-
-        .gallery-item {
-            aspect-ratio: 1;
-            overflow: hidden;
+            justify-content: space-between;
+            background-color: rgba(255, 255, 255, 0.05);
+            padding: 0.75rem 1rem;
             border-radius: var(--border-radius);
+        }
+
+        .control-btn-viewer {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            background-color: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: var(--text-main);
+            padding: 0.4rem 0.8rem;
+            border-radius: 0.5rem;
             cursor: pointer;
-            transition: transform 0.2s;
+            font-weight: 500;
+            transition: all 0.2s;
+            font-size: 0.85rem;
         }
 
-        .gallery-item:hover {
-            transform: scale(1.02);
+        .control-btn-viewer:hover:not(:disabled) {
+            background-color: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.4);
         }
 
-        .gallery-item img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
+        .control-btn-viewer:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
         }
 
+        .current-game {
+            font-weight: 600;
+            font-size: 1rem;
+            text-align: center;
+        }
+
+        /* Mobile Responsive */
         @media (max-width: 768px) {
-            .game-viewer-container {
-                grid-template-columns: 1fr;
+            .viewer-main {
+                flex-direction: column;
             }
 
             .game-sidebar {
-                max-height: 200px;
+                width: 100%;
+                height: 200px;
+                order: 1;
+            }
+
+            .game-display {
+                order: 2;
+            }
+
+            .iframe-viewer {
+                height: 400px;
+                /* Adjusted for reliability */
+            }
+
+            .game-viewer-header {
+                flex-direction: column;
+                align-items: flex-start;
             }
         }
     </style>
@@ -207,16 +278,34 @@
 
                             <!-- Games List -->
                             <div class="game-viewer-container" id="gamesContainer">
-                                <div class="game-sidebar">
-                                    <h3>Seznam partií</h3>
-                                    <div id="gamesList"></div>
+                                <div class="game-viewer-header">
+                                    <div class="game-viewer-title">
+                                        <h2>Přehrávač partií</h2>
+                                        <p id="gameViewerSubtitle"></p>
+                                    </div>
                                 </div>
-                                <div class="game-display">
-                                    <h3 id="currentGameTitle"
-                                        style="text-align: center; margin-bottom: 1rem; color: var(--primary-color);">
-                                    </h3>
-                                    <div class="iframe-viewer">
-                                        <iframe id="chessIframe" src=""></iframe>
+
+                                <div class="viewer-main">
+                                    <aside class="game-sidebar">
+                                        <h3>Seznam partií</h3>
+                                        <div class="game-list-viewer" id="gamesList"></div>
+                                    </aside>
+
+                                    <div class="game-display">
+                                        <div class="iframe-viewer">
+                                            <iframe id="chessIframe" src="" allowtransparency="true"></iframe>
+                                        </div>
+                                        <div class="viewer-controls">
+                                            <button id="prevBtn" class="control-btn-viewer"
+                                                aria-label="Předchozí partie" onclick="prevGame()">
+                                                <i class="fa-solid fa-chevron-left"></i> Předchozí
+                                            </button>
+                                            <span id="currentGameTitle" class="current-game">Vyberte partii</span>
+                                            <button id="nextBtn" class="control-btn-viewer" aria-label="Další partie"
+                                                onclick="nextGame()">
+                                                Další <i class="fa-solid fa-chevron-right"></i>
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -340,31 +429,59 @@
             const container = document.getElementById('gamesSection');
             container.classList.remove('hidden');
 
+            const subtitle = document.getElementById('gameViewerSubtitle');
+            if (teamsData && teamsData.selected) {
+                subtitle.textContent = teamsData.selected.join(' vs ');
+            } else {
+                subtitle.textContent = 'Partie z článku';
+            }
+
             // Initial render
             const list = document.getElementById('gamesList');
-            const iframe = document.getElementById('chessIframe');
-            const title = document.getElementById('currentGameTitle');
 
             // Render list
             list.innerHTML = games.map((g, i) => `
-                <div class="game-list-item ${i === 0 ? 'active' : ''}" onclick="loadGame(${i})">
+                <div class="game-item-viewer ${i === 0 ? 'active' : ''}" onclick="loadGame(${i})">
                     ${g.title}
                 </div>
             `).join('');
 
             // Load first game
             window.games = games;
+            window.currentGameIndex = 0;
             loadGame(0);
         }
 
         window.loadGame = function (index) {
+            if (index < 0 || index >= window.games.length) return;
+
+            window.currentGameIndex = index;
             const game = window.games[index];
-            document.querySelectorAll('.game-list-item').forEach((el, i) => {
+
+            document.querySelectorAll('.game-item-viewer').forEach((el, i) => {
                 el.classList.toggle('active', i === index);
+                if (i === index) el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
             });
 
             document.getElementById('currentGameTitle').textContent = game.title;
-            document.getElementById('chessIframe').src = game.gameId.includes('http') ? game.gameId : `https://www.chess.com/emboard?id=${game.gameId}`;
+            // Ensure URL has https if missing (common manual entry error)
+            let src = game.gameId;
+            if (!src.startsWith('http')) {
+                src = `https://www.chess.com/emboard?id=${game.gameId}`;
+            }
+            document.getElementById('chessIframe').src = src;
+
+            // Update buttons
+            document.getElementById('prevBtn').disabled = index === 0;
+            document.getElementById('nextBtn').disabled = index === window.games.length - 1;
+        }
+
+        window.prevGame = function () {
+            loadGame(window.currentGameIndex - 1);
+        }
+
+        window.nextGame = function () {
+            loadGame(window.currentGameIndex + 1);
         }
 
         function renderGallery(images) {
