@@ -43,25 +43,32 @@
             margin: 1rem 0;
         }
 
-        /* Game Viewer App Styles */
+        /* Game Viewer App Styles & Collapsible Sections */
         :root {
-            --viewer-bg: #0f172a;
-            --viewer-sidebar: #1e293b;
-            --viewer-text: #f8fafc;
-            --viewer-text-muted: #94a3b8;
-            --viewer-accent: #3b82f6;
-            --viewer-border: #334155;
-            --viewer-hover: #334155;
-            --viewer-active-bg: #3b82f6;
-            --viewer-active-text: #ffffff;
+            /* Map viewer colors to site variables */
+            --viewer-bg: var(--surface-color, #1e1e1e);
+            --viewer-sidebar: var(--background-color, #121212);
+            --viewer-text: var(--text-color, #e0e0e0);
+            --viewer-text-muted: var(--text-muted, #a0a0a0);
+            --viewer-accent: var(--primary-color, #d4af37);
+            --viewer-border: rgba(255, 255, 255, 0.1);
+            --viewer-hover: rgba(255, 255, 255, 0.05);
+            --viewer-active-bg: var(--primary-color, #d4af37);
+            --viewer-active-text: var(--secondary-color, #1a1a1a);
+        }
+
+        /* Ensure header stays on top */
+        header {
+            z-index: 10000 !important;
         }
 
         .viewer-wrapper {
             margin: 2rem 0;
-            border: 1px solid var(--border-color);
+            border: 1px solid var(--viewer-border);
             border-radius: var(--border-radius);
             overflow: hidden;
-            background: var(--card-bg);
+            background: var(--viewer-bg);
+            box-shadow: var(--shadow);
         }
 
         .viewer-toggle-bar {
@@ -73,6 +80,11 @@
             align-items: center;
             cursor: pointer;
             user-select: none;
+            transition: background 0.3s;
+        }
+
+        .viewer-toggle-bar:hover {
+            filter: brightness(110%);
         }
 
         .viewer-toggle-bar h3 {
@@ -81,6 +93,51 @@
             display: flex;
             align-items: center;
             gap: 0.5rem;
+            color: var(--secondary-color);
+            /* Ensure text is readable on gold */
+            font-weight: 700;
+        }
+
+        /* Generic Collapsible Sections (for Reports) */
+        .collapsible-wrapper {
+            margin: 1.5rem 0;
+            border: 1px solid var(--viewer-border);
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            background: var(--viewer-bg);
+        }
+
+        .collapsible-header {
+            padding: 1rem 1.5rem;
+            background-color: var(--viewer-sidebar);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            user-select: none;
+            border-bottom: 1px solid var(--viewer-border);
+            transition: background 0.2s;
+        }
+
+        .collapsible-header:hover {
+            background-color: var(--viewer-hover);
+        }
+
+        .collapsible-header h3 {
+            margin: 0;
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--primary-color);
+        }
+
+        .collapsible-content {
+            padding: 1.5rem;
+            display: block;
+            border-top: 1px solid var(--viewer-border);
+        }
+
+        .collapsible-content.hidden {
+            display: none;
         }
 
         .app-container {
@@ -89,7 +146,6 @@
             height: 700px;
             background-color: var(--viewer-bg);
             color: var(--viewer-text);
-            /* Hidden by default if toggled? No, let's keep it visible by default */
             transition: height 0.3s ease-out;
         }
 
@@ -111,7 +167,8 @@
             font-size: 1.25rem;
             font-weight: 700;
             margin: 0;
-            color: var(--viewer-text);
+            color: var(--primary-color);
+            /* Match site heading color */
         }
 
         .main-content {
@@ -606,6 +663,26 @@
                 container.classList.add('collapsed');
                 icon.classList.remove('fa-chevron-up');
                 icon.classList.add('fa-chevron-down');
+            }
+        }
+
+        // Generic Toggle for Reports (or any section)
+        window.toggleSection = function (id, iconId) {
+            const content = document.getElementById(id);
+            const icon = document.getElementById(iconId);
+
+            if (content.classList.contains('hidden')) {
+                content.classList.remove('hidden');
+                if (icon) {
+                    icon.classList.remove('fa-chevron-down');
+                    icon.classList.add('fa-chevron-up');
+                }
+            } else {
+                content.classList.add('hidden');
+                if (icon) {
+                    icon.classList.remove('fa-chevron-up');
+                    icon.classList.add('fa-chevron-down');
+                }
             }
         }
 

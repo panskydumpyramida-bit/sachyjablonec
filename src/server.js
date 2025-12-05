@@ -235,7 +235,43 @@ app.post('/api/seed', async (req, res) => {
                 slug: '2-kolo-krajsky-prebor-report',
                 category: 'Soutěže družstev',
                 excerpt: 'Report z utkání A a B týmu v 2. kole Krajského přeboru.',
-                content: '<p>Report z utkání A a B týmu v 2. kole Krajského přeboru.</p><p>A tým remizoval 4:4 s Tanvaldem, B tým prohrál 3:5 s Deskem Liberec.</p>',
+                content: `<p style="margin-bottom: 2rem;">Report z utkání A a B týmu v 2. kole Krajského přeboru. A tým remizoval 4:4 s Tanvaldem, B tým prohrál 3:5 s Deskem Liberec.</p>
+                
+                <!-- Report A Tým -->
+                <div class="collapsible-wrapper">
+                    <div class="collapsible-header" onclick="toggleSection('reportA', 'iconA')">
+                        <h3><i class="fa-solid fa-chess-king"></i> Report z utkání A týmu</h3>
+                        <i id="iconA" class="fa-solid fa-chevron-up"></i>
+                    </div>
+                    <div id="reportA" class="collapsible-content">
+                        <img src="https://i.ibb.co/twbZWXzm/IMG-3192.jpg" alt="Zápas s Tanvaldem" style="width: 100%; border-radius: var(--border-radius); margin-bottom: 1rem;">
+                        <p>Áčko nastoupilo proti tradičnímu soupeři z Tanvaldu a oba týmy dorazily v poměrně silných sestavách.</p>
+                        <p>Na 4. šachovnici sehráli <span style="font-weight:700; color:var(--primary-color);">Tomáš Duran</span> s <span style="font-weight:700; color:var(--primary-color);">Vláďou Jedličkou</span> velmi plochou variantu Philidorovy obrany. Ani jeden nebyl příliš bojovně naladěn, takže zapisujeme první remízu: <strong>0,5 : 0,5</strong>.</p>
+                        <p>Na 3. šachovnici skončil rychlou remízou i duel <span style="font-weight:700; color:var(--primary-color);">Vládi Vltavského</span> s <span style="font-weight:700; color:var(--primary-color);">Ondrou Pražákem</span>. Stav tedy <strong>1 : 1</strong>.</p>
+                        <p><span style="font-weight:700; color:var(--primary-color);">Lukáš Sivák</span> na 5. šachovnici získal s <span style="font-weight:700; color:var(--primary-color);">Zdeňkem Jouklem</span> slibnou pozici, ale nakonec mohl být rád za remízu – <strong>1,5 : 1,5</strong>.</p>
+                        <p>Na první desce sehrál <span style="font-weight:700; color:var(--primary-color);">Marek Sýkora</span> riskantní partii. Soupeř (<span style="font-weight:700; color:var(--primary-color);">Tomáš Fraňa</span>) chyboval a daroval figuru. Marek materiál beze strachu přijal a partii vyhrál. Stav <strong>2,5 : 1,5</strong>.</p>
+                        <p>Na 2. šachovnici jsem nastoupil proti <span style="font-weight:700; color:var(--primary-color);">Marku Přiborskému</span>. Po zvážení situace jsem remízu přijal, protože nás výrazně přiblížila k zápasové výhře – <strong>3 : 2</strong>.</p>
+                        <p>Na 8. šachovnici měl <span style="font-weight:700; color:var(--primary-color);">Miloš Fila</span> proti <span style="font-weight:700; color:var(--primary-color);">Toljovi Falesovi</span> šanci, ale zalekl se a prohrál. Stav <strong>3 : 3</strong>.</p>
+                        <p><span style="font-weight:700; color:var(--primary-color);">Libor Titěra</span> sehrál ukázkovou partii, ale v časové tísni remizoval – <strong>3,5 : 3,5</strong>.</p>
+                        <p>Zápas s Tanvaldem tak končí <strong>4 : 4</strong>.</p>
+                    </div>
+                </div>
+
+                <!-- Report B Tým -->
+                <div class="collapsible-wrapper">
+                    <div class="collapsible-header" onclick="toggleSection('reportB', 'iconB')">
+                        <h3><i class="fa-solid fa-chess-pawn"></i> Report z utkání B týmu</h3>
+                        <i id="iconB" class="fa-solid fa-chevron-up"></i>
+                    </div>
+                    <div id="reportB" class="collapsible-content">
+                        <img src="https://i.ibb.co/wZ1wgcRT/IMG-3196.jpg" alt="Zápas s Deskem Liberec" style="width: 100%; border-radius: var(--border-radius); margin-bottom: 1rem;">
+                        <p>Béčko nastoupilo k zápasu s favorizovaným Deskem Liberec v téměř nejsilnější možné sestavě, ale ani to bohužel nestačilo. Konečný výsledek <strong>3:5</strong>.</p>
+                        <p>Na osmé šachovnici se <span style="font-weight:700; color:var(--primary-color);">Alešovi Červeňovi</span> partie nepovedla (0:1). Na to odpověděl <span style="font-weight:700; color:var(--primary-color);">Zdeněk Němec</span> výhrou (1:1).</p>
+                        <p>Bohužel <span style="font-weight:700; color:var(--primary-color);">Vojta Holeš</span> i <span style="font-weight:700; color:var(--primary-color);">Luděk Cyhelský</span> své partie prohráli – <strong>1:3</strong>.</p>
+                        <p>Remízy přidali <span style="font-weight:700; color:var(--primary-color);">Kosťa Tsantsala</span> a <span style="font-weight:700; color:var(--primary-color);">Kristián Koten</span> – <strong>2:4</strong>.</p>
+                        <p>Poctivý výkon na jedničce na závěr předvedl <span style="font-weight:700; color:var(--primary-color);">pan Vacek</span>, který korigoval na konečných <strong>3:5</strong>.</p>
+                    </div>
+                </div>`,
                 thumbnailUrl: 'https://i.ibb.co/twbZWXzm/IMG-3192.jpg',
                 linkUrl: 'report_2kolo.html',
                 gamesJson: JSON.stringify(games2kolo),
