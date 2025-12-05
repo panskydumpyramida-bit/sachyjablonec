@@ -1891,30 +1891,46 @@
                 if (res.ok) {
                     const data = await res.json();
 
+                    const youthComps = data.standings.filter(c => c.category === 'youth');
+                    const teamComps = data.standings.filter(c => c.category === 'teams');
+
+                    const renderGroup = (title, comps, color) => {
+                        if (comps.length === 0) return '';
+                        let html = `<h3 style="grid-column: 1/-1; color: ${color}; margin-top: 1rem; border-bottom: 2px solid ${color}; padding-bottom: 0.5rem;">${title}</h3>`;
+
+                        for (const comp of comps) {
+                            html += `
+                                <div style="background: var(--card-bg); padding: 1rem; border-radius: 8px;">
+                                    <h4 style="margin: 0 0 0.5rem 0; color: var(--primary-color);">${comp.name}</h4>
+                                    ${comp.error ? `<p style="color: #fca5a5;">Chyba: ${comp.error}</p>` :
+                                    comp.standings.length > 0 ? `
+                                            <table style="width: 100%; font-size: 0.85rem;">
+                                                <tr style="color: var(--text-muted);">
+                                                    <th style="text-align: left; padding: 0.25rem;">#</th>
+                                                    <th style="text-align: left; padding: 0.25rem;">Družstvo</th>
+                                                </tr>
+                                                ${comp.standings.map(s => `
+                                                    <tr style="${s.isBizuterie ? 'background: rgba(212, 175, 55, 0.2);' : ''}">
+                                                        <td style="padding: 0.25rem;">${s.rank}</td>
+                                                        <td style="padding: 0.25rem;">${s.isBizuterie ? '<strong>' + s.team + '</strong>' : s.team}</td>
+                                                    </tr>
+                                                `).join('')}
+                                            </table>
+                                        ` : '<p style="color: var(--text-muted);">Žádná data</p>'
+                                }
+                                </div>`;
+                        }
+                        return html;
+                    };
+
                     let html = '<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1rem;">';
 
-                    for (const comp of data.standings) {
-                        html += `
-                            <div style="background: var(--card-bg); padding: 1rem; border-radius: 8px;">
-                                <h4 style="margin: 0 0 0.5rem 0; color: var(--primary-color);">${comp.name}</h4>
-                                ${comp.error ? `<p style="color: #fca5a5;">Chyba: ${comp.error}</p>` :
-                                comp.standings.length > 0 ? `
-                                        <table style="width: 100%; font-size: 0.85rem;">
-                                            <tr style="color: var(--text-muted);">
-                                                <th style="text-align: left; padding: 0.25rem;">#</th>
-                                                <th style="text-align: left; padding: 0.25rem;">Družstvo</th>
-                                            </tr>
-                                            ${comp.standings.map(s => `
-                                                <tr style="${s.isBizuterie ? 'background: rgba(212, 175, 55, 0.2);' : ''}">
-                                                    <td style="padding: 0.25rem;">${s.rank}</td>
-                                                    <td style="padding: 0.25rem;">${s.isBizuterie ? '<strong>' + s.team + '</strong>' : s.team}</td>
-                                                </tr>
-                                            `).join('')}
-                                        </table>
-                                    ` : '<p style="color: var(--text-muted);">Žádná data</p>'
-                            }
-                            </div>
-                        `;
+                    html += renderGroup('Mládež', youthComps, '#4ade80'); // Green
+                    html += renderGroup('Soutěže družstev', teamComps, '#60a5fa'); // Blue
+
+                    if (youthComps.length === 0 && teamComps.length === 0 && data.standings.length > 0) {
+                        // Fallback if no categories matched (legacy)
+                        html += renderGroup('Ostatní', data.standings, '#9ca3af');
                     }
 
                     html += '</div>';

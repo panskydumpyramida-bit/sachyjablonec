@@ -231,17 +231,21 @@
                 const res = await fetch(`${API_URL}/standings`);
                 const data = await res.json();
 
-                if (!data.standings || data.standings.length === 0) {
+                const allStandings = data.standings || data; // handle object/array
+                // Filter only Youth
+                const youthStandings = Array.isArray(allStandings) ? allStandings.filter(c => c.category === 'youth') : [];
+
+                if (youthStandings.length === 0) {
                     container.innerHTML = `
                         <div style="grid-column: 1 / -1; text-align: center; padding: 2rem;">
                             <i class="fa-solid fa-table" style="font-size: 2rem; color: var(--text-muted); opacity: 0.3;"></i>
-                            <p style="margin-top: 1rem; color: var(--text-muted);">Tabulky zatím nejsou k dispozici.</p>
+                            <p style="margin-top: 1rem; color: var(--text-muted);">Tabulky mládeže zatím nejsou k dispozici.</p>
                         </div>
                     `;
                     return;
                 }
 
-                container.innerHTML = data.standings.map(comp => `
+                container.innerHTML = youthStandings.map(comp => `
                     <div class="card">
                         <div class="card-content">
                             <h3 style="color: var(--primary-color); margin-bottom: 1rem;">${comp.name}</h3>
