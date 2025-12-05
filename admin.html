@@ -271,6 +271,50 @@
             border-radius: 6px;
         }
 
+        /* Styles for content blocks in editor */
+        .wysiwyg-content .puzzle-section {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: var(--border-radius);
+            padding: 1.5rem;
+            margin: 1rem 0;
+            border-left: 4px solid var(--primary-color);
+        }
+
+        .wysiwyg-content .puzzle-section img {
+            max-width: 320px;
+            margin: 1rem auto;
+            display: block;
+        }
+
+        .wysiwyg-content .card {
+            background: var(--card-bg);
+            border-radius: var(--border-radius);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .wysiwyg-content .card-content {
+            padding: 1.5rem;
+        }
+
+        #articlePreview .puzzle-section {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: var(--border-radius);
+            padding: 1.5rem;
+            margin: 1rem 0;
+            border-left: 4px solid var(--primary-color);
+        }
+
+        #articlePreview .card {
+            background: var(--card-bg);
+            border-radius: var(--border-radius);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            margin: 1rem 0;
+        }
+
+        #articlePreview .card-content {
+            padding: 1.5rem;
+        }
+
         .panel-section {
             margin-top: 1.5rem;
             padding: 1rem;
@@ -578,12 +622,12 @@
                         <div class="form-group">
                             <label>Obsah článku *</label>
                             <div class="wysiwyg-toolbar">
-                                <button type="button" onclick="formatText('bold')" title="Tučně"><i
-                                        class="fa-solid fa-bold"></i></button>
-                                <button type="button" onclick="formatText('italic')" title="Kurzíva"><i
-                                        class="fa-solid fa-italic"></i></button>
-                                <button type="button" onclick="formatText('underline')" title="Podtržení"><i
-                                        class="fa-solid fa-underline"></i></button>
+                                <button type="button" id="btnBold" onclick="formatText('bold')"
+                                    title="Tučně (Ctrl+B)"><i class="fa-solid fa-bold"></i></button>
+                                <button type="button" id="btnItalic" onclick="formatText('italic')"
+                                    title="Kurzíva (Ctrl+I)"><i class="fa-solid fa-italic"></i></button>
+                                <button type="button" id="btnUnderline" onclick="formatText('underline')"
+                                    title="Podtržení (Ctrl+U)"><i class="fa-solid fa-underline"></i></button>
                                 <div class="divider"></div>
                                 <button type="button" id="btnHighlightName" onclick="insertHighlight('name')"
                                     title="Zvýraznit jméno" style="color: #60a5fa;"><i class="fa-solid fa-user"></i>
@@ -592,22 +636,32 @@
                                     title="Zvýraznit skóre" style="color: #4ade80;"><i class="fa-solid fa-trophy"></i>
                                     Skóre</button>
                                 <div class="divider"></div>
-                                <button type="button" onclick="formatText('insertUnorderedList')"><i
+                                <button type="button" onclick="insertList('ul')" title="Odrážkový seznam"><i
                                         class="fa-solid fa-list-ul"></i></button>
-                                <button type="button" onclick="formatText('insertOrderedList')"><i
+                                <button type="button" onclick="insertList('ol')" title="Číslovaný seznam"><i
                                         class="fa-solid fa-list-ol"></i></button>
                                 <div class="divider"></div>
-                                <button type="button" onclick="insertHeading()"><i
-                                        class="fa-solid fa-heading"></i></button>
-                                <button type="button" onclick="insertLink()"><i class="fa-solid fa-link"></i></button>
+                                <select id="headingSelect" onchange="applyHeading(this.value)" title="Formát"
+                                    style="background: var(--surface-color); color: var(--text-main); border: 1px solid rgba(255,255,255,0.2); border-radius: 4px; padding: 0.2rem; font-size: 0.75rem; width: 55px;">
+                                    <option value="p">P</option>
+                                    <option value="h1">H1</option>
+                                    <option value="h2">H2</option>
+                                    <option value="h3">H3</option>
+                                </select>
+                                <button type="button" onclick="insertLink()" title="Odkaz"><i
+                                        class="fa-solid fa-link"></i></button>
                                 <div class="divider"></div>
-                                <button type="button" onclick="toggleSource()" title="Zobrazit HTML" id="btnSource"><i
+                                <button type="button" onclick="insertIntroBlock()" title="Puzzle blok"
+                                    style="color: #fbbf24;"><i class="fa-solid fa-lightbulb"></i></button>
+                                <button type="button" onclick="insertImage()" title="Obrázek" style="color: #f472b6;"><i
+                                        class="fa-solid fa-image"></i></button>
+                                <div class="divider"></div>
+                                <button type="button" onclick="toggleSource()" title="HTML" id="btnSource"><i
                                         class="fa-solid fa-code"></i></button>
                             </div>
                             <div class="wysiwyg-content" id="articleContent" contenteditable="true"
                                 oninput="updatePreview()"></div>
                             <textarea id="articleSource" class="wysiwyg-content hidden"
-                                style="font-family: monospace; font-size: 0.9rem;"
                                 oninput="updateContentFromSource()"></textarea>
                         </div>
 
@@ -691,6 +745,19 @@
                                     <p class="card-excerpt" id="previewExcerpt"
                                         style="font-size: 0.85rem; color: var(--text-muted);">Krátký popis...</p>
                                 </div>
+                            </div>
+                        </div>
+
+                        <div class="preview-card" style="margin-top: 1rem;">
+                            <div class="preview-title"
+                                style="display: flex; justify-content: space-between; align-items: center;">
+                                <span>Náhled článku</span>
+                                <button type="button" class="btn-secondary btn-small" onclick="toggleFullPreview()"><i
+                                        class="fa-solid fa-expand"></i></button>
+                            </div>
+                            <div id="articlePreview"
+                                style="padding: 1rem; max-height: 400px; overflow-y: auto; background: var(--card-bg); border-radius: var(--border-radius);">
+                                <p style="color: var(--text-muted); text-align: center;">Začněte psát obsah...</p>
                             </div>
                         </div>
 
@@ -925,6 +992,7 @@
                     galleryImages = [];
                 }
 
+
                 renderTeamCheckboxes();
                 renderGames();
                 renderGallery();
@@ -978,6 +1046,7 @@
         function formatText(command) {
             document.execCommand(command, false, null);
             document.getElementById('articleContent').focus();
+            checkToolbarState();
         }
 
         function toggleSource() {
@@ -1045,17 +1114,47 @@
             const selection = window.getSelection();
             if (!selection.rangeCount) return;
 
-            const parent = selection.anchorNode.parentElement;
+            const anchorNode = selection.anchorNode;
+            if (!anchorNode) return;
 
-            // Reset buttons
+            // Check B/I/U states using queryCommandState
+            const isBold = document.queryCommandState('bold');
+            const isItalic = document.queryCommandState('italic');
+            const isUnderline = document.queryCommandState('underline');
+
+            // Update B/I/U button styles
+            document.getElementById('btnBold').style.background = isBold ? 'rgba(255,255,255,0.2)' : 'transparent';
+            document.getElementById('btnItalic').style.background = isItalic ? 'rgba(255,255,255,0.2)' : 'transparent';
+            document.getElementById('btnUnderline').style.background = isUnderline ? 'rgba(255,255,255,0.2)' : 'transparent';
+
+            // Reset highlight buttons
             document.getElementById('btnHighlightName').style.background = 'transparent';
             document.getElementById('btnHighlightScore').style.background = 'transparent';
 
-            // Set active state
-            if (parent.classList.contains('highlight-name')) {
-                document.getElementById('btnHighlightName').style.background = 'rgba(96, 165, 250, 0.2)';
-            } else if (parent.classList.contains('highlight-score')) {
-                document.getElementById('btnHighlightScore').style.background = 'rgba(74, 222, 128, 0.2)';
+            // Walk up DOM to find highlight span
+            let el = anchorNode.nodeType === 3 ? anchorNode.parentElement : anchorNode;
+            while (el && el.id !== 'articleContent') {
+                if (el.classList?.contains('highlight-name')) {
+                    document.getElementById('btnHighlightName').style.background = 'rgba(96, 165, 250, 0.2)';
+                    break;
+                } else if (el.classList?.contains('highlight-score')) {
+                    document.getElementById('btnHighlightScore').style.background = 'rgba(74, 222, 128, 0.2)';
+                    break;
+                }
+                el = el.parentElement;
+            }
+
+            // Detect heading level
+            const headingSelect = document.getElementById('headingSelect');
+            const blockValue = document.queryCommandValue('formatBlock');
+            if (blockValue.toLowerCase() === 'h1') {
+                headingSelect.value = 'h1';
+            } else if (blockValue.toLowerCase() === 'h2') {
+                headingSelect.value = 'h2';
+            } else if (blockValue.toLowerCase() === 'h3') {
+                headingSelect.value = 'h3';
+            } else {
+                headingSelect.value = 'p';
             }
         }
 
@@ -1064,10 +1163,224 @@
             const content = document.getElementById('articleContent');
             content.addEventListener('mouseup', checkToolbarState);
             content.addEventListener('keyup', checkToolbarState);
+            content.addEventListener('click', checkToolbarState);
         });
 
-        function insertHeading() { document.execCommand('formatBlock', false, 'h3'); }
+        function applyHeading(tag) {
+            document.execCommand('formatBlock', false, tag);
+            document.getElementById('articleContent').focus();
+            checkToolbarState();
+        }
+
+        function insertList(type) {
+            const command = type === 'ul' ? 'insertUnorderedList' : 'insertOrderedList';
+            document.execCommand(command, false, null);
+            document.getElementById('articleContent').focus();
+            updatePreview();
+        }
+
         function insertLink() { const url = prompt('Zadejte URL:'); if (url) document.execCommand('createLink', false, url); }
+
+        function insertIntroBlock() {
+            const content = document.getElementById('articleContent');
+            const introHtml = `<div class="puzzle-section">
+    <p style="font-size: 1.1rem; margin-bottom: 1rem;">
+        🧩 <strong>Pozice z partie...</strong><br>
+        Popis pozice nebo úkolu.<br>
+        Najdete vítězný tah? ♟️
+    </p>
+</div>`;
+            document.execCommand('insertHTML', false, introHtml);
+            content.focus();
+            updatePreview();
+        }
+
+        // Image insertion with modal
+        let selectedImage = null;
+        let savedRange = null;
+
+        function insertImage() {
+            // Save current selection/cursor position
+            const sel = window.getSelection();
+            if (sel.rangeCount > 0) {
+                savedRange = sel.getRangeAt(0).cloneRange();
+            }
+            showImageModal();
+        }
+
+        function showImageModal(existingImg = null) {
+            selectedImage = existingImg;
+
+            // Create modal
+            let modal = document.getElementById('imageModal');
+            if (!modal) {
+                modal = document.createElement('div');
+                modal.id = 'imageModal';
+                modal.innerHTML = `
+                    <div class="modal-overlay" onclick="closeImageModal()"></div>
+                    <div class="modal-content">
+                        <h3 style="margin-bottom: 1rem;">${existingImg ? 'Upravit obrázek' : 'Vložit obrázek'}</h3>
+                        <div style="display: flex; gap: 0.5rem; margin-bottom: 1rem;">
+                            <input type="text" id="imgUrlInput" placeholder="URL obrázku" style="flex: 1;">
+                            <button type="button" class="btn-secondary" onclick="document.getElementById('imgFileInput').click()">
+                                <i class="fa-solid fa-upload"></i> Nahrát
+                            </button>
+                            <input type="file" id="imgFileInput" accept="image/*" style="display: none;" onchange="handleImageFile(event)">
+                        </div>
+                        <div id="imgPreviewArea" style="text-align: center; margin-bottom: 1rem; min-height: 100px; border: 1px dashed rgba(255,255,255,0.2); border-radius: 8px; padding: 1rem;">
+                            <p style="color: var(--text-muted);">Náhled obrázku</p>
+                        </div>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+                            <div>
+                                <label style="font-size: 0.85rem;">Zarovnání</label>
+                                <select id="imgAlign" style="width: 100%; margin-top: 0.25rem;">
+                                    <option value="center">Na střed</option>
+                                    <option value="left">Vlevo</option>
+                                    <option value="right">Vpravo</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label style="font-size: 0.85rem;">Velikost</label>
+                                <select id="imgSize" style="width: 100%; margin-top: 0.25rem;">
+                                    <option value="100%">Plná šířka</option>
+                                    <option value="75%">75%</option>
+                                    <option value="50%">50%</option>
+                                    <option value="320px">Malá (320px)</option>
+                                    <option value="200px">Mini (200px)</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div style="display: flex; gap: 0.5rem; justify-content: flex-end;">
+                            ${existingImg ? '<button type="button" class="btn-danger" onclick="deleteImage()"><i class="fa-solid fa-trash"></i> Smazat</button>' : ''}
+                            <button type="button" class="btn-secondary" onclick="closeImageModal()">Zrušit</button>
+                            <button type="button" class="btn-primary" onclick="applyImage()">Použít</button>
+                        </div>
+                    </div>
+                `;
+                modal.style.cssText = 'position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 2000; display: flex; align-items: center; justify-content: center;';
+                document.body.appendChild(modal);
+
+                // Add modal styles if not present
+                if (!document.getElementById('imageModalStyles')) {
+                    const style = document.createElement('style');
+                    style.id = 'imageModalStyles';
+                    style.textContent = `
+                        #imageModal .modal-overlay { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); }
+                        #imageModal .modal-content { position: relative; background: var(--surface-color); padding: 1.5rem; border-radius: var(--border-radius); width: 90%; max-width: 500px; max-height: 90vh; overflow-y: auto; }
+                        #imageModal select, #imageModal input[type="text"] { background: var(--background-color); color: var(--text-main); border: 1px solid rgba(255,255,255,0.2); border-radius: 4px; padding: 0.5rem; }
+                        #imageModal .btn-danger { background: #ef4444; color: white; border: none; padding: 0.5rem 1rem; border-radius: 4px; cursor: pointer; }
+                        #imageModal #imgPreviewArea img { max-width: 100%; max-height: 200px; border-radius: 4px; }
+                    `;
+                    document.head.appendChild(style);
+                }
+            } else {
+                modal.style.display = 'flex';
+                modal.querySelector('h3').textContent = existingImg ? 'Upravit obrázek' : 'Vložit obrázek';
+            }
+
+            // If editing existing image
+            if (existingImg) {
+                document.getElementById('imgUrlInput').value = existingImg.src;
+                document.getElementById('imgPreviewArea').innerHTML = `<img src="${existingImg.src}">`;
+
+                // Parse current styles
+                const style = existingImg.style;
+                if (style.marginLeft === 'auto' && style.marginRight === 'auto') {
+                    document.getElementById('imgAlign').value = 'center';
+                } else if (style.float === 'left') {
+                    document.getElementById('imgAlign').value = 'left';
+                } else if (style.float === 'right') {
+                    document.getElementById('imgAlign').value = 'right';
+                }
+
+                document.getElementById('imgSize').value = style.maxWidth || '100%';
+            } else {
+                document.getElementById('imgUrlInput').value = '';
+                document.getElementById('imgPreviewArea').innerHTML = '<p style="color: var(--text-muted);">Náhled obrázku</p>';
+            }
+        }
+
+        function handleImageFile(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                document.getElementById('imgUrlInput').value = e.target.result;
+                document.getElementById('imgPreviewArea').innerHTML = `<img src="${e.target.result}">`;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function closeImageModal() {
+            const modal = document.getElementById('imageModal');
+            if (modal) modal.style.display = 'none';
+            selectedImage = null;
+            savedRange = null;
+        }
+
+        function applyImage() {
+            const url = document.getElementById('imgUrlInput').value;
+            if (!url) return closeImageModal();
+
+            const align = document.getElementById('imgAlign').value;
+            const size = document.getElementById('imgSize').value;
+
+            let style = `max-width: ${size}; border-radius: 8px; cursor: pointer;`;
+            if (align === 'center') {
+                style += ' display: block; margin: 1rem auto;';
+            } else if (align === 'left') {
+                style += ' float: left; margin: 0 1rem 1rem 0;';
+            } else if (align === 'right') {
+                style += ' float: right; margin: 0 0 1rem 1rem;';
+            }
+
+            if (selectedImage) {
+                // Update existing image
+                selectedImage.src = url;
+                selectedImage.style.cssText = style;
+            } else {
+                // Create new image element
+                const img = document.createElement('img');
+                img.src = url;
+                img.alt = 'Obrázek';
+                img.style.cssText = style;
+
+                const content = document.getElementById('articleContent');
+
+                // Insert at saved position or at end
+                if (savedRange) {
+                    const sel = window.getSelection();
+                    sel.removeAllRanges();
+                    sel.addRange(savedRange);
+                    savedRange.insertNode(img);
+                    savedRange.collapse(false);
+                } else {
+                    content.appendChild(img);
+                }
+            }
+
+            updatePreview();
+            closeImageModal();
+        }
+
+        function deleteImage() {
+            if (selectedImage) {
+                selectedImage.remove();
+                updatePreview();
+            }
+            closeImageModal();
+        }
+
+        // Click handler for images in editor
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('articleContent').addEventListener('click', (e) => {
+                if (e.target.tagName === 'IMG') {
+                    e.preventDefault();
+                    showImageModal(e.target);
+                }
+            });
+        });
 
         // Team Checkboxes
         function renderTeamCheckboxes() {
@@ -1388,7 +1701,77 @@
 
         function handleImageUrl() { const url = document.getElementById('imageUrl').value; if (url) { uploadedImageData = url; displayImage(url); } }
         function displayImage(src) { document.getElementById('uploadArea').classList.add('has-image'); document.getElementById('uploadPlaceholder').style.display = 'none'; const img = document.getElementById('uploadedImage'); img.src = src; img.style.display = 'block'; document.getElementById('previewImage').innerHTML = `<img src="${src}">`; }
-        function updatePreview() { document.getElementById('previewTitle').textContent = document.getElementById('newsTitle').value || 'Nadpis'; document.getElementById('previewCategory').textContent = document.getElementById('newsCategory').value; document.getElementById('previewExcerpt').textContent = document.getElementById('newsExcerpt').value || 'Krátký popis...'; const date = document.getElementById('newsDate').value; document.getElementById('previewDate').textContent = date ? new Date(date).toLocaleDateString('cs-CZ') : 'Datum'; }
+        function updatePreview() {
+            document.getElementById('previewTitle').textContent = document.getElementById('newsTitle').value || 'Nadpis';
+            document.getElementById('previewCategory').textContent = document.getElementById('newsCategory').value;
+            document.getElementById('previewExcerpt').textContent = document.getElementById('newsExcerpt').value || 'Krátký popis...';
+            const date = document.getElementById('newsDate').value;
+            document.getElementById('previewDate').textContent = date ? new Date(date).toLocaleDateString('cs-CZ') : 'Datum';
+
+            // Render full article preview - content is now directly from editor
+            const articlePreview = document.getElementById('articlePreview');
+            const title = document.getElementById('newsTitle').value || 'Nadpis článku';
+            const content = document.getElementById('articleContent').innerHTML;
+
+            let html = `<h1 style="font-size: 1.5rem; margin-bottom: 1rem; color: var(--primary-color);">${title}</h1>`;
+
+            // Main content directly from editor
+            if (content && content !== '<br>') {
+                html += `<div style="font-size: 0.95rem; line-height: 1.6;">${content}</div>`;
+            }
+
+            // Games list preview
+            if (games.length > 0) {
+                html += `<div style="background: var(--card-bg); border-radius: var(--border-radius); padding: 1rem; margin-top: 1rem; border: 1px solid rgba(255,255,255,0.1);">
+                    <h3 style="font-size: 1rem; margin-bottom: 0.75rem;"><i class="fa-solid fa-chess-board"></i> Přehrávač partií (${games.length})</h3>
+                    <ul style="list-style: none; padding: 0; margin: 0;">
+                        ${games.map(g => `<li style="padding: 0.25rem 0; font-size: 0.85rem; color: var(--text-muted);">${g.title} ${g.commented ? '💬' : ''}</li>`).join('')}
+                    </ul>
+                </div>`;
+            }
+
+            articlePreview.innerHTML = html || '<p style="color: var(--text-muted); text-align: center;">Začněte psát obsah...</p>';
+        }
+
+        let previewExpanded = false;
+        function toggleFullPreview() {
+            const preview = document.getElementById('articlePreview');
+            previewExpanded = !previewExpanded;
+
+            if (previewExpanded) {
+                // Create overlay
+                const overlay = document.createElement('div');
+                overlay.id = 'previewOverlay';
+                overlay.style.cssText = 'position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); z-index: 999;';
+                overlay.onclick = toggleFullPreview;
+                document.body.appendChild(overlay);
+
+                // Expand preview
+                preview.style.cssText = `
+                    position: fixed !important;
+                    top: 50% !important;
+                    left: 50% !important;
+                    transform: translate(-50%, -50%) !important;
+                    width: 90% !important;
+                    max-width: 900px !important;
+                    height: 80vh !important;
+                    max-height: none !important;
+                    z-index: 1000 !important;
+                    overflow-y: auto !important;
+                    background: var(--card-bg) !important;
+                    border-radius: var(--border-radius) !important;
+                    padding: 2rem !important;
+                    box-shadow: 0 0 50px rgba(0,0,0,0.5) !important;
+                `;
+            } else {
+                // Remove overlay
+                const overlay = document.getElementById('previewOverlay');
+                if (overlay) overlay.remove();
+
+                // Reset preview
+                preview.style.cssText = 'padding: 1rem; max-height: 400px; overflow-y: auto; background: var(--card-bg); border-radius: var(--border-radius);';
+            }
+        }
     </script>
 </body>
 
