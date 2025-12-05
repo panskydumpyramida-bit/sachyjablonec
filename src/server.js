@@ -100,23 +100,27 @@ app.post('/api/standings/update', async (req, res) => {
 
                 const standings = [];
 
-                // Parse standings table - capture rank, team, and points
-                // Structure: <tr><td>rank</td><td><a>team</a></td>...<td class="..."><b>points</b></td>
-                const tableRowPattern = /<tr>\s*<td>(\d+)<\/td>\s*<td>\s*<a[^>]*href="[^"]*druzstvo[^"]*"[^>]*>([^<]+)<\/a><\/td>(?:<td[^>]*>[^<]*<\/td>)*<td[^>]*>\s*<b>(\d+)<\/b>/gi;
+                // Split HTML into lines and find table rows with standings
+                const lines = html.split('\n');
+                for (const line of lines) {
+                    // Match lines with standings: <tr><td>1</td><td><a...druzstvo...>Team</a></td>...<b>12</b>
+                    if (line.includes('druzstvo') && line.includes('<tr>')) {
+                        const rankMatch = line.match(/<tr>\s*<td>(\d+)<\/td>/);
+                        const teamMatch = line.match(/<a[^>]*druzstvo[^>]*>([^<]+)<\/a>/);
+                        const pointsMatch = line.match(/<b>(\d+)<\/b>/);
 
-                let match;
-                while ((match = tableRowPattern.exec(html)) !== null && standings.length < 12) {
-                    const rank = parseInt(match[1]);
-                    const teamName = match[2].trim();
-                    const points = parseInt(match[3]);
+                        if (rankMatch && teamMatch && standings.length < 12) {
+                            const rank = parseInt(rankMatch[1]);
+                            const teamName = teamMatch[1].trim();
+                            const points = pointsMatch ? parseInt(pointsMatch[1]) : null;
 
-                    if (rank > 0 && rank <= 20 && teamName) {
-                        standings.push({
-                            rank,
-                            team: teamName,
-                            points,
-                            isBizuterie: teamName.toLowerCase().includes('bižuterie')
-                        });
+                            standings.push({
+                                rank,
+                                team: teamName,
+                                points,
+                                isBizuterie: teamName.toLowerCase().includes('bižuterie')
+                            });
+                        }
                     }
                 }
 
