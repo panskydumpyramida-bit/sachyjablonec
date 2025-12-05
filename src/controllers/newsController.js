@@ -83,7 +83,7 @@ export const getNewsById = async (req, res) => {
 
 export const createNews = async (req, res) => {
     try {
-        const { title, category, excerpt, content, thumbnailUrl, linkUrl, publishedDate, isPublished } = req.body;
+        const { title, category, excerpt, content, thumbnailUrl, linkUrl, publishedDate, isPublished, gamesJson, teamsJson, galleryJson } = req.body;
 
         if (!title || !category || !excerpt || !publishedDate) {
             return res.status(400).json({ error: 'Required fields missing' });
@@ -102,7 +102,10 @@ export const createNews = async (req, res) => {
                 linkUrl,
                 publishedDate: new Date(publishedDate),
                 isPublished: isPublished || false,
-                authorId: req.user.id
+                authorId: req.user.id,
+                gamesJson,
+                teamsJson,
+                galleryJson
             }
         });
 
@@ -116,7 +119,7 @@ export const createNews = async (req, res) => {
 export const updateNews = async (req, res) => {
     try {
         const { id } = req.params;
-        const { title, category, excerpt, content, thumbnailUrl, linkUrl, publishedDate, isPublished } = req.body;
+        const { title, category, excerpt, content, thumbnailUrl, linkUrl, publishedDate, isPublished, gamesJson, teamsJson, galleryJson } = req.body;
 
         const updateData = {};
         if (title) {
@@ -130,6 +133,9 @@ export const updateNews = async (req, res) => {
         if (linkUrl !== undefined) updateData.linkUrl = linkUrl;
         if (publishedDate) updateData.publishedDate = new Date(publishedDate);
         if (isPublished !== undefined) updateData.isPublished = isPublished;
+        if (gamesJson !== undefined) updateData.gamesJson = gamesJson;
+        if (teamsJson !== undefined) updateData.teamsJson = teamsJson;
+        if (galleryJson !== undefined) updateData.galleryJson = galleryJson;
 
         const news = await prisma.news.update({
             where: { id: parseInt(id) },

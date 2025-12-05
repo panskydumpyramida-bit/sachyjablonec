@@ -88,3 +88,15 @@ model Image {
   
   @@map("images")
 }
+
+model Member {
+  id        Int     @id @default(autoincrement())
+  firstName String  @map("first_name")
+  lastName  String  @map("last_name")
+  elo       Int?
+  title     String?
+  birthYear Int?    @map("birth_year")
+  role      String?
+  
+  @@map("members")
+}

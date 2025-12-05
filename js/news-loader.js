@@ -76,7 +76,7 @@ async function loadNews(options = {}) {
                         <span class="card-date">${formatDate(item.publishedDate)}</span>
                         <h3 class="card-title">${escapeHtml(item.title)}</h3>
                         <p class="card-excerpt">${item.excerpt}</p>
-                        <a href="${item.linkUrl || '#'}" class="read-more">
+                        <a href="${getArticleUrl(item)}" class="read-more">
                             Číst více <i class="fa-solid fa-arrow-right"></i>
                         </a>
                     </div>
@@ -102,13 +102,11 @@ async function loadNews(options = {}) {
                         <div style="line-height: 1.8; color: var(--text-light);">
                             ${item.content || `<p>${escapeHtml(item.excerpt || '')}</p>`}
                         </div>
-                        ${item.linkUrl && item.linkUrl !== '#' ? `
-                            <div style="margin-top: 1.5rem;">
-                                <a href="${item.linkUrl}" class="read-more">
-                                    Zobrazit detail <i class="fa-solid fa-arrow-right"></i>
-                                </a>
-                            </div>
-                        ` : ''}
+                        <div style="margin-top: 1.5rem;">
+                            <a href="${getArticleUrl(item)}" class="read-more">
+                                Zobrazit detail <i class="fa-solid fa-arrow-right"></i>
+                            </a>
+                        </div>
                     </div>
                 </article>
             `).join('');
@@ -118,7 +116,7 @@ async function loadNews(options = {}) {
                 <ul class="news-list">
                     ${news.map(item => `
                         <li>
-                            <a href="${item.linkUrl || '#'}" class="news-link">
+                            <a href="${getArticleUrl(item)}" class="news-link">
                                 <span class="news-date">${formatDate(item.publishedDate)}</span>
                                 <span class="news-title">${escapeHtml(item.title)}</span>
                             </a>
@@ -127,7 +125,6 @@ async function loadNews(options = {}) {
                 </ul>
             `;
         }
-
     } catch (error) {
         console.error('Error loading news:', error);
         if (displayMode === 'cards') {
@@ -147,6 +144,14 @@ async function loadNews(options = {}) {
         }
     }
 }
+
+function getArticleUrl(item) {
+    if (item.linkUrl && item.linkUrl !== '#') {
+        return item.linkUrl;
+    }
+    return `article.html?id=${item.id}`;
+}
+
 
 // Format date to Czech format
 function formatDate(dateString) {

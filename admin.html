@@ -578,6 +578,8 @@
                 <div class="nav-tab active" onclick="switchTab('dashboard')"><i class="fa-solid fa-list"></i> Přehled
                 </div>
                 <div class="nav-tab" onclick="switchTab('editor')"><i class="fa-solid fa-plus"></i> Nová novinka</div>
+                <div class="nav-tab" onclick="switchTab('members')"><i class="fa-solid fa-address-book"></i> Členové
+                </div>
                 <div class="nav-tab hidden" id="usersTab" onclick="switchTab('users')"><i class="fa-solid fa-users"></i>
                     Uživatelé</div>
             </div>
@@ -825,6 +827,29 @@
             </div>
 
             <!-- USERS -->
+            <!-- MEMBERS -->
+            <div id="membersView" class="hidden">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                    <h2 style="margin: 0;">Seznam členů</h2>
+                    <button class="btn-primary" onclick="openMemberModal()"><i class="fa-solid fa-user-plus"></i> Nový
+                        člen</button>
+                </div>
+
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Jméno</th>
+                            <th>ELO</th>
+                            <th>Titul</th>
+                            <th>Narození</th>
+                            <th>Role</th>
+                            <th>Akce</th>
+                        </tr>
+                    </thead>
+                    <tbody id="membersTableBody"></tbody>
+                </table>
+            </div>
+
             <div id="usersView" class="hidden">
                 <div class="editor-layout">
                     <div>
@@ -853,6 +878,46 @@
                         <button class="btn-primary" onclick="createUser()">Vytvořit</button>
                     </div>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Member Modal -->
+    <div id="memberModal" class="modal-overlay" style="display: none;">
+        <div class="modal-content" style="width: 500px;">
+            <h2 id="memberModalTitle" style="margin-top: 0;">Nový člen</h2>
+            <input type="hidden" id="memberId">
+            <div class="form-group">
+                <label>Jméno *</label>
+                <input type="text" id="memberFirstName" placeholder="Jan">
+            </div>
+            <div class="form-group">
+                <label>Příjmení *</label>
+                <input type="text" id="memberLastName" placeholder="Novák">
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                <div class="form-group">
+                    <label>ELO</label>
+                    <input type="number" id="memberElo">
+                </div>
+                <div class="form-group">
+                    <label>Titul</label>
+                    <input type="text" id="memberTitle" placeholder="Např. FM">
+                </div>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                <div class="form-group">
+                    <label>Rok narození</label>
+                    <input type="number" id="memberBirthYear">
+                </div>
+                <div class="form-group">
+                    <label>Role</label>
+                    <input type="text" id="memberRole" placeholder="Např. Předseda">
+                </div>
+            </div>
+            <div style="display: flex; gap: 1rem; justify-content: flex-end; margin-top: 1rem;">
+                <button class="btn-secondary" onclick="closeMemberModal()">Zrušit</button>
+                <button class="btn-primary" onclick="saveMember()">Uložit</button>
             </div>
         </div>
     </div>
@@ -900,14 +965,21 @@
 
         function switchTab(tab) {
             document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
-            event?.target?.closest('.nav-tab')?.classList.add('active');
+            if (event && event.target) {
+                event.target.closest('.nav-tab')?.classList.add('active');
+            }
             document.getElementById('dashboardView').classList.add('hidden');
             document.getElementById('editorView').classList.add('hidden');
             document.getElementById('usersView').classList.add('hidden');
-            document.getElementById(tab + 'View').classList.remove('hidden');
+            document.getElementById('membersView').classList.add('hidden');
+
+            const view = document.getElementById(tab + 'View');
+            if (view) view.classList.remove('hidden');
+
             if (tab === 'dashboard') loadDashboard();
             if (tab === 'users') loadUsers();
             if (tab === 'editor') resetEditor();
+            if (tab === 'members') loadMembers();
         }
 
         // Dashboard
@@ -1544,11 +1616,16 @@
 
         function updateGameTitle(index, newTitle) {
             games[index].title = newTitle;
+            updatePreview();
         }
 
         function updateGameId(index, newId) {
             games[index].gameId = newId;
             games[index].src = `https://www.chess.com/emboard?id=${newId}`;
+            // If dragging, we might lose focus if we re-render whole section, 
+            // but updatePreview helps right sidebar.
+            // renderGames(); <- Don't re-render entire list on keypress, it kills focus!
+            updatePreview();
         }
 
         // Drag and Drop
@@ -1851,6 +1928,136 @@
 
                 // Reset preview
                 preview.style.cssText = 'padding: 1rem; max-height: 400px; overflow-y: auto; background: var(--card-bg); border-radius: var(--border-radius);';
+            }
+        }
+
+        // Members Management
+        let allMembers = [];
+
+        async function loadMembers() {
+            try {
+                const res = await fetch(`${API_URL}/members`);
+                allMembers = await res.json();
+                renderMembersTable();
+            } catch (e) {
+                console.error(e);
+                showAlert('Chyba při načítání členů', 'error');
+            }
+        }
+
+        function renderMembersTable() {
+            const tbody = document.getElementById('membersTableBody');
+            tbody.innerHTML = allMembers.map(m => `
+                <tr>
+                    <td>${m.lastName} ${m.firstName}</td>
+                    <td>${m.elo || '-'}</td>
+                    <td>${m.title || '-'}</td>
+                    <td>${m.birthYear || '-'}</td>
+                    <td>${m.role || '-'}</td>
+                    <td>
+                        <button class="action-btn btn-edit" onclick="editMember(${m.id})"><i class="fa-solid fa-edit"></i></button>
+                        <button class="action-btn btn-delete" onclick="deleteMember(${m.id})"><i class="fa-solid fa-trash"></i></button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function openMemberModal(member = null) {
+            const modal = document.getElementById('memberModal');
+            const title = document.getElementById('memberModalTitle');
+
+            if (member) {
+                title.textContent = 'Upravit člena';
+                document.getElementById('memberId').value = member.id;
+                document.getElementById('memberFirstName').value = member.firstName;
+                document.getElementById('memberLastName').value = member.lastName;
+                document.getElementById('memberElo').value = member.elo || '';
+                document.getElementById('memberTitle').value = member.title || '';
+                document.getElementById('memberBirthYear').value = member.birthYear || '';
+                document.getElementById('memberRole').value = member.role || '';
+            } else {
+                title.textContent = 'Nový člen';
+                document.getElementById('memberId').value = '';
+                document.getElementById('memberFirstName').value = '';
+                document.getElementById('memberLastName').value = '';
+                document.getElementById('memberElo').value = '';
+                document.getElementById('memberTitle').value = '';
+                document.getElementById('memberBirthYear').value = '';
+                document.getElementById('memberRole').value = '';
+            }
+
+            modal.style.display = 'flex';
+        }
+
+        function closeMemberModal() {
+            document.getElementById('memberModal').style.display = 'none';
+        }
+
+        async function saveMember() {
+            const id = document.getElementById('memberId').value;
+            const method = id ? 'PUT' : 'POST';
+            const url = id ? `${API_URL}/members/${id}` : `${API_URL}/members`;
+
+            const data = {
+                firstName: document.getElementById('memberFirstName').value.trim(),
+                lastName: document.getElementById('memberLastName').value.trim(),
+                elo: document.getElementById('memberElo').value,
+                title: document.getElementById('memberTitle').value,
+                birthYear: document.getElementById('memberBirthYear').value,
+                role: document.getElementById('memberRole').value
+            };
+
+            if (!data.firstName || !data.lastName) {
+                alert('Jméno a příjmení jsou povinné.');
+                return;
+            }
+
+            try {
+                const res = await fetch(url, {
+                    method,
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                if (res.ok) {
+                    showAlert('Uloženo!', 'success');
+                    closeMemberModal();
+                    loadMembers();
+                } else {
+                    showAlert('Chyba při ukládání', 'error');
+                }
+            } catch (e) {
+                console.error(e);
+                showAlert('Chyba spojení', 'error');
+            }
+        }
+
+        function editMember(id) {
+            const member = allMembers.find(m => m.id === id);
+            if (member) openMemberModal(member);
+        }
+
+        async function deleteMember(id) {
+            if (!confirm('Opravdu smazat tohoto člena?')) return;
+
+            try {
+                const res = await fetch(`${API_URL}/members/${id}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+
+                if (res.ok) {
+                    showAlert('Smazáno!', 'success');
+                    loadMembers();
+                } else {
+                    showAlert('Chyba při mazání', 'error');
+                }
+            } catch (e) {
+                console.error(e);
+                showAlert('Chyba spojení', 'error');
             }
         }
     </script>
