@@ -270,7 +270,9 @@ app.post('/api/standings/update', async (req, res) => {
                         if (team.isBizuterie && team.url) {
                             // Convert URL to art=23 (Team Schedule)
                             try {
-                                const scheduleUrl = team.url.replace(/art=\d+/, 'art=23');
+                                // Decode entities in URL before changing mode
+                                const cleanUrl = team.url.replace(/&amp;/g, '&');
+                                const scheduleUrl = cleanUrl.replace(/art=\d+/, 'art=23');
                                 team.schedule = await scrapeSchedule(scheduleUrl);
                             } catch (err) {
                                 console.error('Failed to fetch schedule for', team.team);
