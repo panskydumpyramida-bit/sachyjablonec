@@ -58,6 +58,7 @@ async function scrapeCompetitionMatches(compUrl) {
                 .replace(/&lt;/g, '<')
                 .replace(/&gt;/g, '>')
                 .replace(/&quot;/g, '"')
+                .replace(/&frac12;/g, '½')
                 .replace(/&#(\d+);/g, (match, dec) => String.fromCharCode(dec));
             return txt;
         };
@@ -89,10 +90,12 @@ async function scrapeCompetitionMatches(compUrl) {
                 if (cells.length < 3) cells = row.split('</td>');
 
                 // art=2 columns:
-                // Col 0: Match No (integer)
+                // Col 0: Match No
                 // Col 1: Home Team
                 // Col 2: Away Team
-                // Col 3+: Result
+                // Col 3: Home Result (can be 1½)
+                // Col 4: : 
+                // Col 5: Away Result
 
                 if (cells.length > 5) {
                     const col0 = clean(cells[0]); // match no
@@ -106,24 +109,26 @@ async function scrapeCompetitionMatches(compUrl) {
 
                         // Result finding
                         const cleanRow = clean(row);
-                        let resultMatch = cleanRow.match(/(\d+[,.]?\d*)\s*[:]\s*(\d+[,.]?\d*)/);
+                        // Regex now needs to support ½ (unicode)
+                        let resultMatch = cleanRow.match(/(\d*[,.]?\d*[½]?)\s*[:]\s*(\d*[,.]?\d*[½]?)/);
 
                         // Fallback result cells (3, 4, 5 usually)
-                        // In art=2: Col 3 (Home pts), Col 4 (:), Col 5 (Away pts) usually? 
-                        // Let's trust regex from row primarily.
-
-                        // If we didn't identify round from header, art=2 usually groups by round tables.
-                        // But verifying exact round might be tricky if we missed the header.
-                        // However, we MUST have round for calendar.
-                        // Assuming the header parser works.
+                        if (!resultMatch || !resultMatch[1] || !resultMatch[2]) {
+                            const r1 = clean(cells[3]);
+                            const r2 = clean(cells[5]);
+                            // If both resemble scores (digits or ½)
+                            if ((r1.match(/[\d½]/) && r2.match(/[\d½]/)) || (r1 === '½' || r2 === '½')) {
+                                resultMatch = [`${r1} : ${r2}`, r1, r2];
+                            }
+                        }
 
                         if (currentRound && homeTeam && awayTeam) {
                             allMatches.push({
                                 round: currentRound,
-                                date: currentDate, // Might be null if not found
+                                date: currentDate,
                                 home: homeTeam,
                                 away: awayTeam,
-                                result: resultMatch ? resultMatch[0] : '-'
+                                result: resultMatch ? `${resultMatch[1]} : ${resultMatch[2]}` : '-'
                             });
                         }
                     }
