@@ -75,12 +75,23 @@
             width: 100%;
             box-sizing: border-box;
             margin: 2rem 0;
-            padding: 2rem;
             border: 1px solid var(--viewer-border);
             border-radius: var(--border-radius);
             background: var(--viewer-bg);
             box-shadow: var(--shadow);
             line-height: 1.8;
+        }
+
+        .article-content>* {
+            padding: 0 2rem;
+        }
+
+        .article-content>*:first-child {
+            padding-top: 2rem;
+        }
+
+        .article-content>*:last-child {
+            padding-bottom: 2rem;
         }
 
         .viewer-toggle-bar {
