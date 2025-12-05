@@ -59,7 +59,16 @@ async function scrapeSchedule(scheduleUrl) {
                 if (cells.length < 3) cells = row.split('</td>'); // Fallback to td
 
                 if (cells.length > 5) {
-                    const col1 = clean(cells[1]);
+                    let col1 = clean(cells[1]);
+
+                    // Fix: If col1 is just a number (SNo), try next column for Team Name
+                    if (col1.match(/^\d+$/) && cells.length > 2) {
+                        const col2 = clean(cells[2]);
+                        if (col2 && isNaN(parseInt(col2))) {
+                            col1 = col2;
+                        }
+                    }
+
                     // Look for result in row text to be safe
                     const cleanRow = clean(row);
                     // Format: 4 : 4 or 3,5 : 4,5
