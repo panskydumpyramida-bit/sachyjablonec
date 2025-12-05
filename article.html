@@ -385,31 +385,30 @@
             </div>
 
             <article id="article" class="hidden">
-                <!-- Article Navigation -->
-                <nav class="article-nav" id="articleNav"
-                    style="display: flex; justify-content: space-between; margin-bottom: 2rem; padding-bottom: 1rem; border-bottom: 1px solid var(--border-color); font-size: 0.9rem;">
-                    <a id="prevArticleLink" href=""
-                        style="display: none; align-items: center; gap: 0.5rem; color: var(--text-muted);">
-                        <i class="fa-solid fa-arrow-left"></i> <span id="prevArticleTitle">Předchozí</span>
-                    </a>
-                    <span style="flex: 1;"></span> <!-- Spacer -->
-                    <a id="nextArticleLink" href=""
-                        style="display: none; align-items: center; gap: 0.5rem; color: var(--text-muted); text-align: right;">
-                        <span id="nextArticleTitle">Další</span> <i class="fa-solid fa-arrow-right"></i>
-                    </a>
-                </nav>
-
-                <div class="article-header">
-                    <div class="article-meta">
+                <!-- Compact Header Row: Nav + Meta -->
+                <div
+                    style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.5rem; padding-bottom: 1rem; border-bottom: 1px solid var(--border-color); font-size: 0.9rem;">
+                    <!-- Navigation -->
+                    <div style="display: flex; gap: 1.5rem;">
+                        <a id="prevArticleLink" href=""
+                            style="display: none; align-items: center; gap: 0.5rem; color: var(--text-muted);">
+                            <i class="fa-solid fa-arrow-left"></i> <span id="prevArticleTitle">Předchozí</span>
+                        </a>
+                        <a id="nextArticleLink" href=""
+                            style="display: none; align-items: center; gap: 0.5rem; color: var(--text-muted);">
+                            <span id="nextArticleTitle">Další</span> <i class="fa-solid fa-arrow-right"></i>
+                        </a>
+                    </div>
+                    <!-- Meta -->
+                    <div style="display: flex; gap: 1.5rem; color: var(--text-muted);">
                         <span id="articleDate"><i class="fa-regular fa-calendar"></i> </span>
                         <span id="articleCategory"><i class="fa-solid fa-tag"></i> </span>
                     </div>
-                    <h1 id="articleTitle" style="font-size: 2.5rem; margin-bottom: 1rem;"></h1>
-                    <p id="articleExcerpt" style="font-size: 1.25rem; color: var(--text-light); font-style: italic;">
-                    </p>
                 </div>
 
-                <div class="article-content" id="articleBody"></div>
+                <h1 id="articleTitle" style="font-size: 2.25rem; margin-bottom: 1.5rem;"></h1>
+
+                <div class="article-content" id="articleBody" style="width: 100%;"></div>
 
                 <!-- Games Section -->
                 <!-- Games Section - App Style -->
@@ -569,7 +568,6 @@
             document.getElementById('articleTitle').textContent = article.title;
             document.getElementById('articleDate').innerHTML = `<i class="fa-regular fa-calendar"></i> ${new Date(article.publishedDate).toLocaleDateString('cs-CZ')}`;
             document.getElementById('articleCategory').innerHTML = `<i class="fa-solid fa-tag"></i> ${article.category}`;
-            document.getElementById('articleExcerpt').textContent = article.excerpt;
             document.getElementById('articleBody').innerHTML = article.content || '';
 
             // Handle Games
