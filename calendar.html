@@ -286,7 +286,8 @@
                                             myTeam: teamName,
                                             opponent: match.opponent,
                                             result: match.result,
-                                            round: match.round
+                                            round: match.round,
+                                            isHome: match.isHome
                                         });
                                     }
                                 });
@@ -298,22 +299,13 @@
                 // Sort by date
                 allMatches.sort((a, b) => a.date - b.date);
 
-                // Filter out past matches if desired? 
-                // For now, let's show all but maybe style past ones differently or scroll to nearest upcoming.
-                // Or maybe just filter for current season (which the data likely represents).
-
-                // Group by Month
-                const matchesByMonth = {};
-                allMatches.forEach(match => {
-                    const monthKey = match.date.toLocaleString('cs-CZ', { month: 'long', year: 'numeric' });
-                    // Use a sortable key for object but render readable
-                    // Actually, let's keep array and group manually to preserve order
-                });
+                // Group by Month (keep existing logic...)
 
                 if (allMatches.length === 0) {
                     container.innerHTML = `
                         <div style="text-align: center; padding: 2rem; color: var(--text-muted);">
-                            V kalendáři nejsou žádné naplánované zápasy.
+                            V kalendáři nejsou žádné naplánované zápasy.<br>
+                            <small>(Pokud zde nic nevidíte, zkuste aktualizovat data v administraci)</small>
                         </div>
                     `;
                     return;
@@ -356,6 +348,15 @@
                     const day = match.date.getDate();
                     const dayName = match.date.toLocaleString('cs-CZ', { weekday: 'short' });
 
+                    // Determine display order based on Home/Away
+                    let team1 = match.isHome !== false ? match.myTeam : match.opponent;
+                    let team2 = match.isHome !== false ? match.opponent : match.myTeam;
+
+                    // Highlight my team
+                    const highlightStyle = 'color: var(--primary-color); font-weight: 700;';
+                    const t1Style = (team1 === match.myTeam) ? highlightStyle : '';
+                    const t2Style = (team2 === match.myTeam) ? highlightStyle : '';
+
                     html += `
                         <div class="match-card ${isPast ? 'past-match' : ''}" style="${isPast ? 'opacity: 0.7;' : ''}">
                             <div class="match-date">
@@ -365,7 +366,7 @@
                             <div class="match-details">
                                 <div class="match-competition">${match.competition} • ${match.round}. kolo</div>
                                 <div class="match-teams">
-                                    <span style="color: var(--primary-color);">${match.myTeam}</span> vs ${match.opponent}
+                                    <span style="${t1Style}">${team1}</span> - <span style="${t2Style}">${team2}</span>
                                     ${match.result && match.result !== '-' ? `<span class="match-result">${match.result}</span>` : ''}
                                 </div>
                             </div>

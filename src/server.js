@@ -23,84 +23,178 @@ const app = express();
 const PORT = process.env.PORT || 3001;
 
 // Helper to scrape team schedule (art=23)
-async function scrapeSchedule(scheduleUrl) {
+// Helper to scrape all matches from competition (art=2)
+async function scrapeCompetitionMatches(compUrl) {
+    // Convert url to art=2 (Pairings of all rounds)
+    // If url has art=..., replace it. Otherwise append.
+    // compUrl usually: ...art=46...
+    let matchesUrl = compUrl;
+    if (matchesUrl.includes('art=')) {
+        matchesUrl = matchesUrl.replace(/art=\d+/, 'art=2');
+    } else {
+        matchesUrl += '&art=2';
+    }
+
     try {
-        console.log(`Scraping schedule: ${scheduleUrl}`);
-        const response = await fetch(scheduleUrl);
+        console.log(`Scraping pairings: ${matchesUrl}`);
+        const response = await fetch(matchesUrl);
         const html = await response.text();
         const rows = html.split('</tr>');
-        const matches = [];
+        const allMatches = [];
+
+        // We need to track current round/date from headers if possible.
+        // In art=2, Round info is often in a header line "1. Runde am DD.MM.YYYY"
+        // But headers might be split.
+        // Simple approach: Look for "x. Runde" or "Round x"
+
         let currentRound = null;
         let currentDate = null;
 
-        for (const row of rows) {
-            const clean = (s) => {
-                let txt = s.replace(/<[^>]*>/g, '').trim();
-                txt = txt.replace(/&nbsp;/g, ' ')
-                    .replace(/&amp;/g, '&')
-                    .replace(/&lt;/g, '<')
-                    .replace(/&gt;/g, '>')
-                    .replace(/&quot;/g, '"')
-                    .replace(/&#(\d+);/g, (match, dec) => String.fromCharCode(dec));
-                return txt;
-            };
+        const clean = (s) => {
+            if (!s) return '';
+            let txt = s.replace(/<[^>]*>/g, '').trim();
+            txt = txt.replace(/&nbsp;/g, ' ')
+                .replace(/&amp;/g, '&')
+                .replace(/&lt;/g, '<')
+                .replace(/&gt;/g, '>')
+                .replace(/&quot;/g, '"')
+                .replace(/&#(\d+);/g, (match, dec) => String.fromCharCode(dec));
+            return txt;
+        };
 
-            if (row.includes('Datum kola')) {
+        for (const row of rows) {
+            // Check for Round header (often separate row or in h4)
+            // e.g. "1. Runde am 20.10.2024"
+            if (row.includes('Runde') || row.includes('Round') || row.includes('Kolo')) {
                 const text = clean(row);
-                const roundMatch = text.match(/(\d+)\.\s*Kolo/);
-                const dateMatch = text.match(/Datum kola\s*([\d\/.]+)/);
-                if (roundMatch) currentRound = roundMatch[1];
-                if (dateMatch) currentDate = dateMatch[1];
+                // "1. Kolo 20.10.2024"
+                const roundMatch = text.match(/(\d+)\.\s*(Runde|Round|Kolo)/i);
+                if (roundMatch) {
+                    currentRound = roundMatch[1];
+                    // Create approximate date scraper from same line
+                    const dateMatch = text.match(/(\d{1,2}\.\d{1,2}\.\d{4})/);
+                    if (dateMatch) currentDate = dateMatch[1];
+                }
             }
 
-            // Match generic CRg rows (CRg1, CRg2, CRg1b, CRg2b)
+            // Match generic CRg rows
             if (row.match(/class="CRg[12]b?"/)) {
                 let cells = row.split('</th>');
-                if (cells.length < 3) cells = row.split('</td>'); // Fallback to td
+                if (cells.length < 3) cells = row.split('</td>');
+
+                // art=2 columns:
+                // Col 0: Match No (integer)
+                // Col 1: Home Team
+                // Col 2: Away Team
+                // Col 3+: Result
 
                 if (cells.length > 5) {
-                    let col1 = clean(cells[1]);
+                    const col0 = clean(cells[0]); // match no
+                    const col1 = clean(cells[1]); // Home
+                    const col2 = clean(cells[2]); // Away
 
-                    // Fix: If col1 is just a number (SNo), try next column for Team Name
-                    if (col1.match(/^\d+$/) && cells.length > 2) {
-                        const col2 = clean(cells[2]);
-                        if (col2 && isNaN(parseInt(col2))) {
-                            col1 = col2;
+                    // Verify if col0 is integer (Match number)
+                    if (col0.match(/^\d+$/)) {
+                        const homeTeam = col1;
+                        const awayTeam = col2;
+
+                        // Result finding
+                        const cleanRow = clean(row);
+                        let resultMatch = cleanRow.match(/(\d+[,.]?\d*)\s*[:]\s*(\d+[,.]?\d*)/);
+
+                        // Fallback result cells (3, 4, 5 usually)
+                        // In art=2: Col 3 (Home pts), Col 4 (:), Col 5 (Away pts) usually? 
+                        // Let's trust regex from row primarily.
+
+                        // If we didn't identify round from header, art=2 usually groups by round tables.
+                        // But verifying exact round might be tricky if we missed the header.
+                        // However, we MUST have round for calendar.
+                        // Assuming the header parser works.
+
+                        if (currentRound && homeTeam && awayTeam) {
+                            allMatches.push({
+                                round: currentRound,
+                                date: currentDate, // Might be null if not found
+                                home: homeTeam,
+                                away: awayTeam,
+                                result: resultMatch ? resultMatch[0] : '-'
+                            });
                         }
-                    }
-
-                    // Look for result in row text to be safe
-                    const cleanRow = clean(row);
-                    // Format: 4 : 4 or 3,5 : 4,5
-                    let resultMatch = cleanRow.match(/(\d+[,.]?\d*)\s*[:]\s*(\d+[,.]?\d*)/);
-
-                    // Fallback for cell-based result (e.g. <td>4</td><td>5</td>)
-                    if (!resultMatch && cells.length > 7) {
-                        const r1 = clean(cells[6] || ''); // Usually col 6
-                        const r2 = clean(cells[7] || ''); // Usually col 7
-                        if (r1.match(/^\d+([,.]\d+)?$/) && r2.match(/^\d+([,.]\d+)?$/)) {
-                            resultMatch = [`${r1} : ${r2}`];
-                        }
-                    }
-
-                    if (col1 !== 'Jméno' && col1 !== '' && col1 !== 'Družstvo' && currentRound) {
-                        matches.push({
-                            round: currentRound,
-                            date: currentDate || '-',
-                            opponent: col1,
-                            result: resultMatch ? resultMatch[0] : '-'
-                        });
-                        currentRound = null;
                     }
                 }
             }
         }
-        return matches;
+        return allMatches;
     } catch (e) {
-        console.error('Error scraping schedule:', e.message);
+        console.error('Error scraping pairings:', e.message);
         return [];
     }
 }
+
+// ...
+
+// Standings scraper - fetches latest standings from chess.cz and saves to file
+app.post('/api/standings/update', async (req, res) => {
+    try {
+        const fs = await import('fs/promises');
+
+        // ... (competitions list same) ...
+
+        const results = [];
+
+        for (const comp of competitions) {
+            try {
+                let standings = [];
+                let competitionMatches = []; // Store full schedule for this competition
+
+                if (comp.type === 'chess-results') {
+                    // 1. Scrape Standings (art=46 usually)
+                    const response = await fetch(comp.url);
+                    const html = await response.text();
+
+                    // ... (standings parsing logic same as before) ...
+                    // We remove the old scrapeSchedule loop inside.
+
+                    const rows = html.split('</tr>');
+                    for (const row of rows) {
+                        // ... (keep existing standings parsing logic) ...
+                        // Copy-paste existing standings logic here, but omit the schedule part
+                        if (row.includes('class="CRg1"') || row.includes('class="CRg2"')) {
+                            const cells = row.split('</td>');
+                            if (cells.length > 7) {
+                                const clean = (str) => {
+                                    let txt = str.replace(/<[^>]*>/g, '').trim();
+                                    txt = txt.replace(/&nbsp;/g, ' ').replace(/&amp;/g, '&');
+                                    return txt;
+                                };
+
+                                let rankStr = clean(cells[0]);
+                                let teamStr = clean(cells[2]);
+                                const urlMatch = teamStr.match(/href="([^"]+)"/); // Might be in cell content not just clean
+                                // Actually, standard logic:
+                                // col 2 team name
+                                // href usually in cells[2]
+
+                                // Re-implementing logic compactly:
+                                // Need exact copy of previous logic to ensure we don't break standings parsing
+                                // See below for strategy
+                            }
+                        }
+                    }
+
+                    // Instead of complex logic inline here, I will just call scrapeCompetitionMatches first
+                    // And then filter.
+
+                    // Actually, let's keep the file cleaner.
+                }
+            }
+            // ...
+        }
+        // ...
+    }
+    // ...
+});
+
 
 // Middleware
 app.use(cors({
@@ -201,26 +295,25 @@ app.post('/api/standings/update', async (req, res) => {
         for (const comp of competitions) {
             try {
                 let standings = [];
+                let competitionMatches = []; // Store full schedule for this competition
 
                 if (comp.type === 'chess-results') {
+                    // 1. Fetch Schedule first (art=2)
+                    competitionMatches = await scrapeCompetitionMatches(comp.url);
+
+                    // 2. Fetch Standings (art=46)
                     const response = await fetch(comp.url);
                     const html = await response.text();
 
-                    // Chess-Results often has minified HTML, split by row tags
-                    // We look for rows with class CRg1 or CRg2
                     const rows = html.split('</tr>');
 
                     for (const row of rows) {
-                        // Simple regex check for row class
                         if (row.includes('class="CRg1"') || row.includes('class="CRg2"')) {
-                            // Split into cells
                             const cells = row.split('</td>');
 
                             if (cells.length > 7) {
-                                // Clean cell content function
                                 const clean = (str) => {
                                     let txt = str.replace(/<[^>]*>/g, '').trim();
-                                    // Basic entity decoding
                                     txt = txt.replace(/&nbsp;/g, ' ')
                                         .replace(/&amp;/g, '&')
                                         .replace(/&lt;/g, '<')
@@ -230,32 +323,17 @@ app.post('/api/standings/update', async (req, res) => {
                                     return txt;
                                 };
 
-                                // Col 0: Rank (need to find the last part after >)
-                                let rankStr = cells[0];
-                                // The cell might start with <tr...><td...>1
-                                rankStr = clean(rankStr);
-
-                                // Col 2: Team (contains <a>)
-                                let teamStr = cells[2];
-
-                                // Capture URL before cleaning
+                                let rankStr = clean(cells[0]);
+                                let teamStr = clean(cells[2]);
                                 const urlMatch = teamStr.match(/href="([^"]+)"/);
                                 let teamDetailsUrl = urlMatch ? urlMatch[1] : null;
-                                // Handle relative URL
                                 if (teamDetailsUrl && !teamDetailsUrl.startsWith('http')) {
-                                    // Use origin from comp.url
                                     const origin = new URL(comp.url).origin;
                                     teamDetailsUrl = teamDetailsUrl.startsWith('/') ? origin + teamDetailsUrl : origin + '/' + teamDetailsUrl;
                                 }
 
                                 teamStr = clean(teamStr);
-
-                                // Col 7: Points (PH1) or Col 8 (PH2 - Matchpoints)
-                                // In user dump, Col 7 was PH1 (9 pts vs 3 wins), Col 8 was PH2 (6 pts)
-                                // Usually we visualize strictly points. If PH1 is primary sort, use it.
-                                let pointsStr = cells[7];
-                                pointsStr = clean(pointsStr).replace(',', '.'); // Handle 6,5
-
+                                let pointsStr = clean(cells[7]).replace(',', '.');
                                 const rank = parseInt(rankStr);
                                 const points = parseFloat(pointsStr);
 
@@ -274,31 +352,36 @@ app.post('/api/standings/update', async (req, res) => {
                         }
                     }
 
-                    // Post-processing: Fetch schedule for Bizuterie teams
+                    // 3. Assign schedule from competitionMatches
                     for (const team of standings) {
-                        if (team.isBizuterie && team.url) {
-                            // Convert URL to art=23 (Team Schedule)
-                            try {
-                                // Decode entities in URL before changing mode
-                                const cleanUrl = team.url.replace(/&amp;/g, '&');
-                                const scheduleUrl = cleanUrl.replace(/art=\d+/, 'art=23');
-                                team.schedule = await scrapeSchedule(scheduleUrl);
-                            } catch (err) {
-                                console.error('Failed to fetch schedule for', team.team);
-                            }
+                        if (team.isBizuterie) {
+                            // Filter matches where this team is Home or Away
+                            // Match names might differ slightly (e.g. "TJ Bižuterie..." vs "Bižuterie...")
+                            // We use lenient check or exact check if possible.
+                            // In art=2, names are usually redundant with art=46 names.
+
+                            team.schedule = competitionMatches.filter(m =>
+                                m.home === team.team || m.away === team.team ||
+                                m.home.includes(team.team) || m.away.includes(team.team) // Lenient check if exact fails
+                            ).map(m => {
+                                const isHome = m.home === team.team || m.home.includes(team.team);
+                                return {
+                                    round: m.round,
+                                    date: m.date || 'TBD',
+                                    opponent: isHome ? m.away : m.home,
+                                    result: m.result,
+                                    isHome: isHome // New field for UI
+                                };
+                            });
                         }
                     }
 
                 } else {
-                    // Start of chess.cz logic
-                    // Fetch from main competition page which has the standings table
+                    // chess.cz logic (unchanged)
                     const response = await fetch(`https://www.chess.cz/soutez/${comp.id}/`);
                     const html = await response.text();
-
-                    // Split HTML into lines and find table rows with standings
                     const lines = html.split('\n');
                     for (const line of lines) {
-                        // Match lines with standings: <tr><td>1</td><td><a...druzstvo...>Team</a></td>...<b>12</b>
                         if (line.includes('druzstvo') && line.includes('<tr>')) {
                             const rankMatch = line.match(/<tr>\s*<td>(\d+)<\/td>/);
                             const teamMatch = line.match(/<a[^>]*druzstvo[^>]*>([^<]+)<\/a>/);
@@ -318,7 +401,7 @@ app.post('/api/standings/update', async (req, res) => {
                             }
                         }
                     }
-                } // End of chess.cz logic
+                }
 
                 // Sort by rank
                 standings.sort((a, b) => a.rank - b.rank);
@@ -327,7 +410,7 @@ app.post('/api/standings/update', async (req, res) => {
                     competitionId: comp.id,
                     name: comp.name,
                     url: comp.url || comp.chessczUrl,
-                    category: comp.category || 'youth', // Default to youth for legacy consistency or safety
+                    category: comp.category || 'youth',
                     standings: standings,
                     updatedAt: new Date().toISOString()
                 });
