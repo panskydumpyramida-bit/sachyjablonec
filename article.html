@@ -741,6 +741,10 @@
 
         function renderGallery(images) {
             const container = document.getElementById('gallerySection');
+            if (!images || images.length === 0) {
+                container.classList.add('hidden');
+                return;
+            }
             container.classList.remove('hidden');
             document.getElementById('galleryGrid').innerHTML = images.map(img => `
                 <div class="gallery-item" onclick="openLightbox('${img}')">
