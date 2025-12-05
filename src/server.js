@@ -90,21 +90,29 @@ app.post('/api/standings/update', async (req, res) => {
                 id: '3255',
                 name: '1. liga mládeže A',
                 type: 'chess-results',
-                url: 'https://s3.chess-results.com/tnr1243811.aspx?lan=5&art=46&SNode=S0'
+                url: 'https://s3.chess-results.com/tnr1243811.aspx?lan=5&art=46&SNode=S0',
+                category: 'youth'
             },
-            { id: '3363', name: 'Krajský přebor st. žáků', chessczUrl: 'https://www.chess.cz/soutez/3363/' },
+            {
+                id: '3363',
+                name: 'Krajský přebor st. žáků',
+                chessczUrl: 'https://www.chess.cz/soutez/3363/',
+                category: 'youth'
+            },
             // New Chess-Results competition
             {
                 id: 'ks-vychod',
                 name: 'Krajská soutěž východ',
                 type: 'chess-results',
-                url: 'https://s2.chess-results.com/tnr1278502.aspx?lan=5&art=46&SNode=S0'
+                url: 'https://s2.chess-results.com/tnr1278502.aspx?lan=5&art=46&SNode=S0',
+                category: 'teams'
             },
             {
                 id: 'kp-liberec',
                 name: 'Krajský přebor',
                 type: 'chess-results',
-                url: 'https://chess-results.com/tnr1276470.aspx?lan=5&art=46'
+                url: 'https://chess-results.com/tnr1276470.aspx?lan=5&art=46',
+                category: 'teams'
             }
         ];
 
@@ -210,7 +218,8 @@ app.post('/api/standings/update', async (req, res) => {
                     competitionId: comp.id,
                     name: comp.name,
                     url: comp.url || comp.chessczUrl,
-                    standings: standings, // Keep all or limit? usually top 8-12 is fine. Chess-results table might be long.
+                    category: comp.category || 'youth', // Default to youth for legacy consistency or safety
+                    standings: standings,
                     updatedAt: new Date().toISOString()
                 });
             } catch (err) {
@@ -219,6 +228,7 @@ app.post('/api/standings/update', async (req, res) => {
                     competitionId: comp.id,
                     name: comp.name,
                     chessczUrl: comp.chessczUrl,
+                    category: comp.category,
                     error: err.message,
                     standings: []
                 });
