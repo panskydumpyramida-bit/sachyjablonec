@@ -14,9 +14,80 @@
         rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="css/style.css">
+    <style>
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 2000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-content {
+            background-color: var(--surface-color);
+            margin: 10% auto;
+            padding: 20px;
+            border: 1px solid var(--primary-color);
+            width: 90%;
+            max-width: 600px;
+            border-radius: 8px;
+            position: relative;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+        }
+
+        .close-modal {
+            color: var(--text-muted);
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .close-modal:hover,
+        .close-modal:focus {
+            color: var(--primary-color);
+            text-decoration: none;
+        }
+
+        .schedule-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+            font-size: 0.9rem;
+        }
+
+        .schedule-table th,
+        .schedule-table td {
+            padding: 0.5rem;
+            text-align: left;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .schedule-table th {
+            color: var(--primary-color);
+            font-weight: 600;
+        }
+    </style>
 </head>
 
 <body>
+
+    <!-- Schedule Modal -->
+    <div id="scheduleModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal"
+                onclick="document.getElementById('scheduleModal').style.display='none'">&times;</span>
+            <h3 id="modalTeamName" style="border-bottom: 1px solid var(--primary-color); padding-bottom: 0.5rem;">Rozpis
+                Zápasů</h3>
+            <div id="modalBody"></div>
+        </div>
+    </div>
     <header>
         <div class="container">
             <nav>
@@ -283,10 +354,17 @@
                     // Style adjustments for Bižuterie
                     const rowStyle = isBizuterie ? 'font-weight: bold; color: var(--primary-color); background: rgba(212, 175, 55, 0.1);' : '';
 
+                    // Schedule Button
+                    let scheduleBtn = '';
+                    if (s.schedule && s.schedule.length > 0) {
+                        const scheduleJson = encodeURIComponent(JSON.stringify(s.schedule));
+                        scheduleBtn = `<button onclick="openScheduleModal('${scheduleJson}', '${s.team}')" style="background:none; border:none; cursor:pointer; margin-left:0.5rem; color: #fff;" title="Rozpis zápasů"><i class="fa-regular fa-calendar-days"></i></button>`;
+                    }
+
                     html += `
                         <tr style="border-bottom: 1px solid rgba(255,255,255,0.05); ${rowStyle}">
                             <td style="padding: 0.5rem;">${s.rank}.</td>
-                            <td style="padding: 0.5rem;">${s.team}</td>
+                            <td style="padding: 0.5rem;">${s.team} ${scheduleBtn}</td>
                             <td style="padding: 0.5rem; text-align: right;"><strong>${s.points !== null ? s.points : '-'}</strong></td>
                         </tr>
                     `;
@@ -309,10 +387,52 @@
             } catch (e) {
                 console.error(e);
                 container.innerHTML = `
-                    <div style="text-align: center; padding: 1rem; color: var(--text-muted);">
-                        Nepodařilo se načíst tabulku.
+                    <div style="text-align: center; padding: 1rem; color: #fca5a5;">
+                        Chyba při načítání dat.
                     </div>
                 `;
+            }
+        }
+
+        function openScheduleModal(scheduleData, teamName) {
+            const schedule = (typeof scheduleData === 'string') ? JSON.parse(decodeURIComponent(scheduleData)) : scheduleData;
+            const modalBody = document.getElementById('modalBody');
+            document.getElementById('modalTeamName').textContent = teamName;
+
+            let html = `
+                <table class="schedule-table">
+                    <thead>
+                        <tr>
+                            <th>Kolo</th>
+                            <th>Datum</th>
+                            <th>Soupeř</th>
+                            <th style="text-align:right;">Výsledek</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+
+            schedule.forEach(m => {
+                html += `
+                    <tr>
+                        <td>${m.round}.</td>
+                        <td>${m.date}</td>
+                        <td>${m.opponent}</td>
+                        <td style="text-align:right; font-weight:bold;">${m.result}</td>
+                    </tr>
+                `;
+            });
+
+            html += '</tbody></table>';
+            modalBody.innerHTML = html;
+            document.getElementById('scheduleModal').style.display = 'block';
+        }
+
+        // Close modal when clicking outside
+        window.onclick = function (event) {
+            const modal = document.getElementById('scheduleModal');
+            if (event.target == modal) {
+                modal.style.display = "none";
             }
         }
     </script>
