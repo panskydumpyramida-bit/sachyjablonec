@@ -544,9 +544,167 @@
             color: #86efac;
         }
 
+        /* Tablet and smaller desktop */
         @media (max-width: 1200px) {
             .editor-layout {
                 grid-template-columns: 1fr;
+            }
+
+            .editor-sidebar {
+                order: -1;
+                margin-bottom: 1rem;
+            }
+        }
+
+        /* Tablet */
+        @media (max-width: 992px) {
+            .admin-container {
+                padding: 1rem;
+            }
+
+            .admin-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 0.5rem;
+                padding: 1rem;
+            }
+
+            .admin-header h1 {
+                font-size: 1.25rem !important;
+            }
+
+            .admin-nav {
+                flex-wrap: nowrap;
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+                scrollbar-width: none;
+                gap: 0.25rem;
+                padding-bottom: 0.5rem;
+            }
+
+            .admin-nav::-webkit-scrollbar {
+                display: none;
+            }
+
+            .nav-tab {
+                white-space: nowrap;
+                flex-shrink: 0;
+                padding: 0.5rem 0.75rem;
+                font-size: 0.75rem;
+            }
+
+            .nav-tab i {
+                display: none;
+            }
+        }
+
+        /* Mobile */
+        @media (max-width: 768px) {
+            header nav {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+
+            header .nav-links {
+                gap: 1rem;
+            }
+
+            .admin-header {
+                padding: 0.75rem;
+                border-radius: 8px;
+                margin-bottom: 1rem;
+            }
+
+            .admin-header h1 {
+                font-size: 1rem !important;
+                color: #000;
+                text-shadow: none;
+            }
+
+            .admin-header p {
+                font-size: 0.75rem !important;
+            }
+
+            .nav-tab {
+                padding: 0.4rem 0.6rem;
+                font-size: 0.7rem;
+            }
+
+            .form-group label {
+                font-size: 0.8rem;
+            }
+
+            .form-group input,
+            .form-group select,
+            .form-group textarea {
+                font-size: 0.85rem;
+                padding: 0.5rem;
+            }
+
+            .btn-primary,
+            .btn-secondary {
+                font-size: 0.85rem;
+                padding: 0.6rem 1rem;
+            }
+
+            .data-table th,
+            .data-table td {
+                padding: 0.5rem;
+                font-size: 0.75rem;
+            }
+
+            .wysiwyg-toolbar {
+                gap: 0.25rem;
+                padding: 0.5rem;
+            }
+
+            .wysiwyg-toolbar button {
+                padding: 0.4rem 0.5rem;
+                font-size: 0.7rem;
+            }
+
+            .wysiwyg-content {
+                min-height: 200px;
+                font-size: 0.9rem;
+            }
+
+            .preview-card {
+                margin-bottom: 0.75rem;
+            }
+
+            .panel-section {
+                padding: 0.75rem;
+                margin-bottom: 0.75rem;
+            }
+
+            .panel-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 0.5rem;
+            }
+        }
+
+        /* Small mobile */
+        @media (max-width: 480px) {
+            body {
+                font-size: 14px;
+            }
+
+            .admin-container {
+                padding: 0.5rem;
+            }
+
+            .admin-header h1 {
+                font-size: 0.9rem !important;
+            }
+
+            .nav-tab {
+                padding: 0.35rem 0.5rem;
+                font-size: 0.65rem;
+            }
+
+            .editor-sidebar {
+                padding: 0.75rem;
             }
         }
     </style>
