@@ -546,7 +546,13 @@
             <div id="loginError"></div>
             <form id="loginForm">
                 <div class="form-group"><label>Uživatelské jméno</label><input type="text" id="username" required></div>
-                <div class="form-group"><label>Heslo</label><input type="password" id="password" required></div>
+                <div class="form-group"><label>Heslo</label>
+                    <div style="position: relative;">
+                        <input type="password" id="password" required style="padding-right: 40px;">
+                        <i class="fa-solid fa-eye" id="togglePassword"
+                            style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); cursor: pointer; color: var(--text-muted);"></i>
+                    </div>
+                </div>
                 <button type="submit" class="btn-primary" style="width: 100%">Přihlásit se</button>
             </form>
         </div>
@@ -1974,6 +1980,16 @@
                 if (res.ok) { const data = await res.json(); authToken = data.token; currentUser = data.user; localStorage.setItem('authToken', authToken); showAdmin(); }
                 else { document.getElementById('loginError').innerHTML = '<div class="alert alert-error">Chybné údaje</div>'; }
             } catch (e) { document.getElementById('loginError').innerHTML = '<div class="alert alert-error">Chyba spojení</div>'; }
+        });
+
+        // Password Toggle
+        const togglePassword = document.querySelector('#togglePassword');
+        const password = document.querySelector('#password');
+        togglePassword.addEventListener('click', function () {
+            const type = password.getAttribute('type') === 'password' ? 'text' : 'password';
+            password.setAttribute('type', type);
+            this.classList.toggle('fa-eye');
+            this.classList.toggle('fa-eye-slash');
         });
 
         function logout() { localStorage.removeItem('authToken'); location.reload(); }
