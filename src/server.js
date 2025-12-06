@@ -143,6 +143,9 @@ async function scrapeMatchDetails(compUrl, round, homeTeam, awayTeam) {
                     // Cell 8: Result (e.g. "1 - 0")
 
                     if (cells.length > 5) {
+                        // Board number (e.g. "1", "2.1")
+                        const board = clean(cells[0]);
+
                         // White/Black variable names were misleading. 
                         // Col 3 is Home Team Player. Col (Find Comma) is Guest Team Player.
                         const homePlayer = clean(cells[3]);
