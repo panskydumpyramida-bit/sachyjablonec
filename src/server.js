@@ -948,7 +948,8 @@ const seedCompetitions = async () => {
                 id: "3363",
                 name: "Krajský přebor st. žáků",
                 type: "chess-results",
-                url: "https://s1.chess-results.com/tnr1310849.aspx?lan=5&art=46&SNode=S0",
+                // This competition doesn't have art=46, only art=0 (round standings)
+                url: "https://s1.chess-results.com/tnr1310849.aspx?lan=5&art=0&SNode=S0",
                 category: "youth"
             },
             {
