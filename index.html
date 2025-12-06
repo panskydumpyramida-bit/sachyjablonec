@@ -17,35 +17,7 @@
 </head>
 
 <body>
-    <header>
-        <div class="container">
-            <nav>
-                <a href="index.html" class="logo">
-                    <i class="fa-solid fa-chess-knight"></i>
-                    TJ Bižuterie Jablonec
-                </a>
-                <div class="menu-toggle">
-                    <i class="fa-solid fa-bars"></i>
-                </div>
-                <ul class="nav-links">
-                    <li><a href="index.html" class="active">Domů</a></li>
-                    <li><a href="about.html">O nás</a></li>
-                    <li><a href="calendar.html">Kalendář</a></li>
-                    <li class="dropdown">
-                        <a href="#">Soutěže <i class="fa-solid fa-caret-down"></i></a>
-                        <ul class="dropdown-menu">
-                            <li><a href="blicak.html">Vánoční Blesk</a></li>
-                            <li><a href="teams.html">Soutěže družstev</a></li>
-                            <li><a href="club-tournaments.html">Oddílový přebor</a></li>
-                        </ul>
-                    </li>
-                    <li><a href="youth.html">Mládež</a></li>
-                    <li><a href="members.html">Členové</a></li>
-                    <li><a href="gallery.html">Galerie</a></li>
-                </ul>
-            </nav>
-        </div>
-    </header>
+    <header id="global-header"></header>
 
     <main>
         <section class="hero">
@@ -64,62 +36,10 @@
         </section>
     </main>
 
-    <footer>
-        <div class="container">
-            <!-- Sponsors Section -->
-            <div style="text-align: center; padding: 2rem 0; border-bottom: 1px solid rgba(255, 255, 255, 0.05);">
-                <h3 style="margin-bottom: 1.5rem; font-size: 1.2rem;">Naši partneři</h3>
-                <div style="display: flex; justify-content: center; align-items: center; gap: 3rem; flex-wrap: wrap;">
-                    <a href="https://www.kraj-lbc.cz/" target="_blank" style="opacity: 0.8; transition: opacity 0.3s;"
-                        onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.8'">
-                        <img src="images/liberecky_kraj_logo.png" alt="Liberecký kraj" style="height: 80px;">
-                    </a>
-                    <a href="https://www.mestojablonec.cz/" target="_blank"
-                        style="opacity: 0.8; transition: opacity 0.3s;" onmouseover="this.style.opacity='1'"
-                        onmouseout="this.style.opacity='0.8'">
-                        <img src="images/jablonec_logo.png" alt="Město Jablonec nad Nisou" style="height: 60px;">
-                    </a>
-                    <a href="https://www.tjbizuterie.cz/" target="_blank"
-                        style="opacity: 0.8; transition: opacity 0.3s;" onmouseover="this.style.opacity='1'"
-                        onmouseout="this.style.opacity='0.8'">
-                        <img src="https://www.tjbizuterie.cz/system/images/logo_tjbizuterie.png"
-                            alt="TJ Bižuterie Jablonec" style="height: 60px;">
-                    </a>
-                </div>
-            </div>
-            <div class="footer-content">
-                <div class="footer-section">
-                    <h3>TJ Bižuterie Jablonec</h3>
-                    <p>Šachový oddíl s dlouholetou tradicí v Jablonci nad Nisou.</p>
-                </div>
-                <div class="footer-section">
-                    <h3>Rychlé odkazy</h3>
-                    <ul class="footer-links">
-                        <li><a href="index.html">Domů</a></li>
-                        <li><a href="about.html">O nás</a></li>
-                        <li><a href="calendar.html">Kalendář</a></li>
-                        <li><a href="teams.html">Soutěže družstev</a></li>
-                        <li><a href="club-tournaments.html">Oddílový přebor</a></li>
-                        <li><a href="youth.html">Mládež</a></li>
-                        <li><a href="gallery.html">Galerie</a></li>
-                    </ul>
-                </div>
-                <div class="footer-section">
-                    <h3>Kontakt</h3>
-                    <ul class="footer-links">
-                        <li><a href="mailto:info@sachyjablonec.cz">info@sachyjablonec.cz</a></li>
-                        <li><a href="https://www.facebook.com/profile.php?id=61570518746221"
-                                target="_blank">Facebook</a></li>
-                    </ul>
-                </div>
-            </div>
-            <div class="copyright">
-                &copy; 2025 Šachový oddíl TJ Bižuterie Jablonec nad Nisou. Všechna práva vyhrazena.
-            </div>
-        </div>
-    </footer>
+    <footer id="global-footer"></footer>
 
     <script src="js/config.js"></script>
+    <script src="js/layout-loader.js"></script>
     <script src="js/main.js"></script>
     <script src="js/news-loader.js"></script>
 </body>
