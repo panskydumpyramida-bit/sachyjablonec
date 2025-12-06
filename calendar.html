@@ -226,30 +226,79 @@
                 Přehled všech plánovaných utkání a turnajů našich družstev v aktuální sezóně.
             </p>
 
-            <!-- Filters -->
+            <!-- Premium Filter Bar -->
             <div class="calendar-filters"
-                style="margin-bottom: 2rem; display: flex; flex-wrap: wrap; gap: 1rem; align-items: flex-end; justify-content: space-between; background: var(--surface-color); padding: 1.5rem; border-radius: var(--border-radius); border: 1px solid rgba(255, 255, 255, 0.05); box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
-                <div style="flex: 1; min-width: 250px;">
-                    <label for="competitionFilter"
-                        style="display: block; margin-bottom: 0.5rem; color: var(--text-muted); font-size: 0.85rem; font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px;">Filtrovat
-                        soutěž</label>
-                    <div style="position: relative;">
-                        <select id="competitionFilter"
-                            style="width: 100%; padding: 0.75rem 1rem; appearance: none; background: rgba(0, 0, 0, 0.2); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 8px; color: var(--text-color); font-family: inherit; font-size: 0.95rem; cursor: pointer; transition: all 0.2s;">
-                            <option value="all">Všechny soutěže</option>
-                        </select>
-                        <i class="fa-solid fa-chevron-down"
-                            style="position: absolute; right: 1rem; top: 50%; transform: translateY(-50%); color: var(--text-muted); pointer-events: none;"></i>
+                style="margin-bottom: 2rem; background: linear-gradient(135deg, rgba(30, 30, 50, 0.9), rgba(20, 20, 35, 0.95)); backdrop-filter: blur(10px); padding: 1.5rem; border-radius: 16px; border: 1px solid rgba(255, 255, 255, 0.08); box-shadow: 0 8px 32px rgba(0,0,0,0.3);">
+
+                <!-- Top Row: Competition Filter + Category Toggles -->
+                <div style="display: flex; flex-wrap: wrap; gap: 1.5rem; align-items: center; margin-bottom: 1rem;">
+                    <!-- Competition Dropdown -->
+                    <div style="flex: 1; min-width: 220px;">
+                        <div style="position: relative;">
+                            <select id="competitionFilter"
+                                style="width: 100%; padding: 0.875rem 2.5rem 0.875rem 1rem; appearance: none; background: rgba(255, 215, 0, 0.08); border: 1px solid rgba(255, 215, 0, 0.2); border-radius: 12px; color: var(--text-color); font-family: inherit; font-size: 0.95rem; cursor: pointer; transition: all 0.3s ease;">
+                                <option value="all">🏆 Všechny soutěže</option>
+                            </select>
+                            <i class="fa-solid fa-chevron-down"
+                                style="position: absolute; right: 1rem; top: 50%; transform: translateY(-50%); color: var(--primary-color); pointer-events: none; font-size: 0.8rem;"></i>
+                        </div>
+                    </div>
+
+                    <!-- Category Pill Toggles -->
+                    <div
+                        style="display: flex; background: rgba(0,0,0,0.3); border-radius: 50px; padding: 4px; gap: 4px;">
+                        <button id="catAll" onclick="filterByCategory('all')" class="cat-pill active"
+                            style="padding: 0.5rem 1.25rem; border-radius: 50px; border: none; background: var(--primary-color); color: #000; font-weight: 600; font-size: 0.85rem; cursor: pointer; transition: all 0.3s ease;">
+                            Vše
+                        </button>
+                        <button id="catTeams" onclick="filterByCategory('teams')" class="cat-pill"
+                            style="padding: 0.5rem 1.25rem; border-radius: 50px; border: none; background: transparent; color: var(--text-muted); font-weight: 500; font-size: 0.85rem; cursor: pointer; transition: all 0.3s ease;">
+                            <i class="fa-solid fa-chess-knight"
+                                style="margin-right: 0.3rem; color: #FFD700;"></i>Dospělí
+                        </button>
+                        <button id="catYouth" onclick="filterByCategory('youth')" class="cat-pill"
+                            style="padding: 0.5rem 1.25rem; border-radius: 50px; border: none; background: transparent; color: var(--text-muted); font-weight: 500; font-size: 0.85rem; cursor: pointer; transition: all 0.3s ease;">
+                            <i class="fa-solid fa-child" style="margin-right: 0.3rem; color: #4ade80;"></i>Mládež
+                        </button>
                     </div>
                 </div>
-                <div style="display: flex; gap: 0.5rem; align-items: center;">
-                    <select id="monthJump" onchange="jumpToMonth(this.value)"
-                        style="padding: 0.75rem 1rem; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: var(--border-radius); color: var(--text-color); font-size: 0.9rem; cursor: pointer;">
-                        <option value="">Přeskočit na měsíc...</option>
-                    </select>
-                    <button id="togglePastBtn" class="btn-secondary active" onclick="togglePastMatches()">
-                        <i class="fa-solid fa-eye-slash"></i> Skrýt uplynulé
-                    </button>
+
+                <!-- Bottom Row: Month Navigation + Past Toggle -->
+                <div
+                    style="display: flex; flex-wrap: wrap; gap: 1rem; align-items: center; justify-content: space-between;">
+                    <!-- Month Navigation -->
+                    <div
+                        style="display: flex; align-items: center; gap: 0.5rem; background: rgba(0,0,0,0.2); border-radius: 12px; padding: 0.25rem;">
+                        <button onclick="navigateMonth(-1)"
+                            style="width: 36px; height: 36px; border-radius: 10px; border: none; background: rgba(255,255,255,0.05); color: var(--text-color); cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center;">
+                            <i class="fa-solid fa-chevron-left"></i>
+                        </button>
+                        <select id="monthJump" onchange="jumpToMonth(this.value)"
+                            style="padding: 0.5rem 1rem; min-width: 160px; appearance: none; background: transparent; border: none; color: var(--text-color); font-size: 0.95rem; font-weight: 500; cursor: pointer; text-align: center;">
+                            <option value="">Vyberte měsíc...</option>
+                        </select>
+                        <button onclick="navigateMonth(1)"
+                            style="width: 36px; height: 36px; border-radius: 10px; border: none; background: rgba(255,255,255,0.05); color: var(--text-color); cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center;">
+                            <i class="fa-solid fa-chevron-right"></i>
+                        </button>
+                    </div>
+
+                    <!-- Past Matches Toggle -->
+                    <label
+                        style="display: flex; align-items: center; gap: 0.75rem; cursor: pointer; user-select: none;">
+                        <span style="color: var(--text-muted); font-size: 0.9rem;">Uplynulé zápasy</span>
+                        <div style="position: relative; width: 48px; height: 26px;">
+                            <input type="checkbox" id="togglePastSwitch" onchange="togglePastMatches()" checked
+                                style="opacity: 0; width: 100%; height: 100%; position: absolute; cursor: pointer; z-index: 2;">
+                            <div id="toggleTrack"
+                                style="position: absolute; inset: 0; background: var(--primary-color); border-radius: 13px; transition: all 0.3s;">
+                            </div>
+                            <div id="toggleThumb"
+                                style="position: absolute; top: 3px; left: 25px; width: 20px; height: 20px; background: white; border-radius: 50%; transition: all 0.3s; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">
+                            </div>
+                        </div>
+                        <i id="toggleIcon" class="fa-solid fa-eye" style="color: var(--primary-color);"></i>
+                    </label>
                 </div>
             </div>
 
@@ -276,6 +325,7 @@
     <script>
         let allMatchesData = [];
         let showingPast = true; // Show past matches by default
+        let selectedCategory = 'all'; // 'all', 'teams', 'youth'
 
         document.addEventListener('DOMContentLoaded', loadCalendar);
 
@@ -412,16 +462,58 @@
         }
 
         function togglePastMatches() {
-            showingPast = !showingPast;
-            const btn = document.getElementById('togglePastBtn');
-            btn.classList.toggle('active');
+            const checkbox = document.getElementById('togglePastSwitch');
+            showingPast = checkbox ? checkbox.checked : !showingPast;
+
+            // Update toggle switch visuals
+            const track = document.getElementById('toggleTrack');
+            const thumb = document.getElementById('toggleThumb');
+            const icon = document.getElementById('toggleIcon');
 
             if (showingPast) {
-                btn.innerHTML = '<i class="fa-solid fa-eye-slash"></i> Skrýt uplynulé';
+                if (track) track.style.background = 'var(--primary-color)';
+                if (thumb) thumb.style.left = '25px';
+                if (icon) { icon.className = 'fa-solid fa-eye'; icon.style.color = 'var(--primary-color)'; }
             } else {
-                btn.innerHTML = '<i class="fa-solid fa-history"></i> Zobrazit uplynulé';
+                if (track) track.style.background = 'rgba(255,255,255,0.2)';
+                if (thumb) thumb.style.left = '3px';
+                if (icon) { icon.className = 'fa-solid fa-eye-slash'; icon.style.color = 'var(--text-muted)'; }
             }
             renderCalendar();
+        }
+
+        function filterByCategory(category) {
+            selectedCategory = category;
+
+            // Update pill button styles
+            document.querySelectorAll('.cat-pill').forEach(btn => {
+                btn.style.background = 'transparent';
+                btn.style.color = 'var(--text-muted)';
+            });
+
+            const activeBtn = document.getElementById(category === 'all' ? 'catAll' : category === 'teams' ? 'catTeams' : 'catYouth');
+            if (activeBtn) {
+                activeBtn.style.background = 'var(--primary-color)';
+                activeBtn.style.color = '#000';
+            }
+
+            renderCalendar();
+        }
+
+        function navigateMonth(direction) {
+            const monthJump = document.getElementById('monthJump');
+            const options = [...monthJump.options].filter(o => o.value);
+            if (options.length === 0) return;
+
+            const currentIndex = options.findIndex(o => o.value === monthJump.value);
+            let newIndex = currentIndex + direction;
+
+            // Wrap around or clamp
+            if (newIndex < 0) newIndex = 0;
+            if (newIndex >= options.length) newIndex = options.length - 1;
+
+            monthJump.value = options[newIndex].value;
+            jumpToMonth(options[newIndex].value);
         }
 
         function renderCalendar() {
@@ -432,6 +524,11 @@
             let filteredMatches = allMatchesData;
             if (filterValue !== 'all') {
                 filteredMatches = allMatchesData.filter(m => m.competition === filterValue);
+            }
+
+            // Filter by category (teams/youth)
+            if (selectedCategory !== 'all') {
+                filteredMatches = filteredMatches.filter(m => m.category === selectedCategory);
             }
 
             if (filteredMatches.length === 0) {
