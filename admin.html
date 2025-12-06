@@ -1162,6 +1162,9 @@
             renderGames();
             document.getElementById('galleryPreview').innerHTML = '';
             updatePreview();
+
+            // Clear auto-saved draft
+            localStorage.removeItem('newsDraft');
         }
 
         async function editNews(id) {
@@ -1450,6 +1453,58 @@
             content.addEventListener('mouseup', checkToolbarState);
             content.addEventListener('keyup', checkToolbarState);
             content.addEventListener('click', checkToolbarState);
+
+            // Auto-save setup
+            let saveTimeout;
+            const autoSave = () => {
+                clearTimeout(saveTimeout);
+                saveTimeout = setTimeout(() => {
+                    const draft = {
+                        title: document.getElementById('newsTitle')?.value || '',
+                        content: document.getElementById('articleContent')?.innerHTML || '',
+                        excerpt: document.getElementById('newsExcerpt')?.value || '',
+                        editId: document.getElementById('editNewsId')?.value || '',
+                        savedAt: new Date().toISOString()
+                    };
+                    if (draft.title || draft.content) {
+                        localStorage.setItem('newsDraft', JSON.stringify(draft));
+                        console.log('Draft auto-saved');
+                    }
+                }, 2000); // Save 2s after last change
+            };
+
+            content.addEventListener('input', autoSave);
+            document.getElementById('newsTitle')?.addEventListener('input', autoSave);
+            document.getElementById('newsExcerpt')?.addEventListener('input', autoSave);
+
+            // Restore draft on load
+            const savedDraft = localStorage.getItem('newsDraft');
+            if (savedDraft) {
+                try {
+                    const draft = JSON.parse(savedDraft);
+                    const savedTime = new Date(draft.savedAt).toLocaleString('cs-CZ');
+                    if ((draft.title || draft.content) && !draft.editId) {
+                        if (confirm(`Máte rozepsanou novinku z ${savedTime}. Chcete ji obnovit?`)) {
+                            document.getElementById('newsTitle').value = draft.title || '';
+                            document.getElementById('articleContent').innerHTML = draft.content || '';
+                            document.getElementById('newsExcerpt').value = draft.excerpt || '';
+                            updatePreview();
+                        } else {
+                            localStorage.removeItem('newsDraft');
+                        }
+                    }
+                } catch (e) { console.error('Draft restore error:', e); }
+            }
+
+            // Warn before leaving with unsaved changes
+            window.addEventListener('beforeunload', (e) => {
+                const title = document.getElementById('newsTitle')?.value;
+                const content = document.getElementById('articleContent')?.innerHTML;
+                if (title || (content && content !== '<br>' && content !== '')) {
+                    e.preventDefault();
+                    e.returnValue = '';
+                }
+            });
         });
 
         function applyHeading(tag) {
