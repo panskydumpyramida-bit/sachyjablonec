@@ -1026,8 +1026,16 @@ const seedCompetitions = async () => {
                 category: "youth"
             },
             {
-                id: "3363",
-                name: "Krajský přebor st. žáků",
+                id: "kp-mladez",
+                name: "Krajský přebor mládeže",
+                type: "chess-cz", // No chess-results yet, only chess.cz
+                chessczUrl: "https://www.chess.cz/soutez/3363/",
+                url: "", // Will be updated when chess-results becomes available
+                category: "youth"
+            },
+            {
+                id: "ks-st-zaku",
+                name: "Krajská soutěž st. žáků",
                 type: "chess-results",
                 // This competition doesn't have art=46, only art=0 (round standings)
                 url: "https://s1.chess-results.com/tnr1310849.aspx?lan=5&art=0&SNode=S0",
@@ -1053,7 +1061,11 @@ const seedCompetitions = async () => {
             await prisma.competition.upsert({
                 where: { id: comp.id },
                 update: {
-                    url: comp.url // Always update URL to ensure correct format
+                    name: comp.name,
+                    url: comp.url,
+                    chessczUrl: comp.chessczUrl || null,
+                    type: comp.type,
+                    category: comp.category
                 },
                 create: comp
             });
