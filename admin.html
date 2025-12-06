@@ -2068,13 +2068,21 @@
                 let node = selection.getRangeAt(0).commonAncestorContainer;
                 while (node && node !== content) {
                     if (node.nodeType === 1 && node.classList?.contains('puzzle-section')) {
-                        // Already inside - move cursor after the block
+                        // Already inside - insert new paragraph after block and move cursor there
+                        let afterBlock = node.nextElementSibling;
+                        if (!afterBlock || afterBlock.tagName !== 'P') {
+                            afterBlock = document.createElement('p');
+                            afterBlock.innerHTML = '<br>'; // Empty paragraph needs br to be clickable
+                            node.parentNode.insertBefore(afterBlock, node.nextSibling);
+                        }
+                        // Position cursor at start of the paragraph
                         const newRange = document.createRange();
-                        newRange.setStartAfter(node);
+                        newRange.setStart(afterBlock, 0);
                         newRange.collapse(true);
                         selection.removeAllRanges();
                         selection.addRange(newRange);
                         content.focus();
+                        updatePreview();
                         return;
                     }
                     node = node.parentNode;
