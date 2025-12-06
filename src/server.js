@@ -394,21 +394,14 @@ app.get('/api/health', (req, res) => {
     res.json({ status: 'ok', message: 'Server is running' });
 });
 
+const { PrismaClient } = await import('@prisma/client');
+const prisma = new PrismaClient();
+
 // Standings scraper - fetches latest standings from chess.cz and saves to file
 app.post('/api/standings/update', async (req, res) => {
     try {
-        // Load competitions from file
-        const COMPETITIONS_FILE = path.join(DATA_DIR, 'competitions.json');
-
-        let competitions = [];
-        try {
-            const data = await fs.readFile(COMPETITIONS_FILE, 'utf8');
-            competitions = JSON.parse(data);
-        } catch (err) {
-            console.error('Error reading competitions config:', err);
-            // Fallback or empty if file missing (should be there)
-            return res.status(500).json({ success: false, error: 'Configuration missing' });
-        }
+        // Load competitions from DB
+        const competitions = await prisma.competition.findMany();
 
         const results = [];
 
@@ -485,6 +478,7 @@ app.post('/api/standings/update', async (req, res) => {
                                 m.home.includes(team.team) || m.away.includes(team.team) // Lenient check if exact fails
                             ).map(m => {
                                 const isHome = m.home === team.team || m.home.includes(team.team);
+                                // Normalize date format if needed
                                 return {
                                     round: m.round,
                                     date: m.date || 'TBD',
@@ -573,10 +567,10 @@ app.post('/api/standings/update', async (req, res) => {
 // Get competition sources
 app.get('/api/competitions', async (req, res) => {
     try {
-        const dataPath = path.join(DATA_DIR, 'competitions.json');
-        const data = await fs.readFile(dataPath, 'utf8');
-        res.json(JSON.parse(data));
+        const competitions = await prisma.competition.findMany();
+        res.json(competitions);
     } catch (err) {
+        console.error('Error loading competitions:', err);
         res.status(500).json({ error: 'Failed to load competitions' });
     }
 });
@@ -589,24 +583,12 @@ app.put('/api/competitions/:id/url', async (req, res) => {
 
         if (!url) return res.status(400).json({ error: 'URL is required' });
 
-        const dataPath = path.join(DATA_DIR, 'competitions.json');
+        const updated = await prisma.competition.update({
+            where: { id },
+            data: { url }
+        });
 
-        const data = await fs.readFile(dataPath, 'utf8');
-        let competitions = JSON.parse(data);
-
-        const index = competitions.findIndex(c => c.id === id);
-        if (index === -1) return res.status(404).json({ error: 'Competition not found' });
-
-        competitions[index].url = url;
-
-        // If there was a chessczUrl field (backward compat), remove it or sync it if needed, 
-        // but for now we just update 'url' which is what our new logic uses.
-        // If the object has 'chessczUrl' and we are switching types, we might need more complex logic.
-        // For simple URL updates on existing structure, this is fine.
-
-        await fs.writeFile(dataPath, JSON.stringify(competitions, null, 2));
-
-        res.json({ success: true, competition: competitions[index] });
+        res.json({ success: true, competition: updated });
     } catch (err) {
         console.error('Error updating competition URL:', err);
         res.status(500).json({ error: 'Failed to update URL' });
@@ -887,8 +869,58 @@ app.use((err, req, res, next) => {
     });
 });
 
+// Seed Competitions Function
+const seedCompetitions = async () => {
+    try {
+        const count = await prisma.competition.count();
+        if (count === 0) {
+            console.log('Seeding competitions...');
+            const initialCompetitions = [
+                {
+                    id: "3255",
+                    name: "1. liga mládeže A",
+                    type: "chess-results",
+                    url: "https://s3.chess-results.com/tnr1243811.aspx?lan=5&art=46&SNode=S0",
+                    category: "youth"
+                },
+                {
+                    id: "3363",
+                    name: "Krajský přebor st. žáků",
+                    type: "chess-results",
+                    url: "https://s1.chess-results.com/tnr1310849.aspx?lan=5&art=46&SNode=S0",
+                    category: "youth"
+                },
+                {
+                    id: "ks-vychod",
+                    name: "Krajská soutěž východ",
+                    type: "chess-results",
+                    url: "https://s2.chess-results.com/tnr1278502.aspx?lan=5&art=46&SNode=S0",
+                    category: "teams"
+                },
+                {
+                    id: "kp-liberec",
+                    name: "Krajský přebor",
+                    type: "chess-results",
+                    url: "https://chess-results.com/tnr1276470.aspx?lan=5&art=46",
+                    category: "teams"
+                }
+            ];
+
+            for (const comp of initialCompetitions) {
+                await prisma.competition.create({ data: comp });
+            }
+            console.log('Competitions seeded.');
+        }
+    } catch (e) {
+        console.error('Error seeding competitions:', e);
+    }
+};
+
 // Start server
 app.listen(PORT, async () => {
     console.log(`🚀 Server running on http://localhost:${PORT}`);
     console.log(`📝 Environment: ${process.env.NODE_ENV}`);
+
+    // Attempt to seed competitions on startup
+    await seedCompetitions();
 });
