@@ -1026,7 +1026,7 @@ const seedCompetitions = async () => {
                 category: "youth"
             },
             {
-                id: "kp-mladez",
+                id: "3363",
                 name: "Krajský přebor mládeže",
                 type: "chess-cz", // No chess-results yet, only chess.cz
                 chessczUrl: "https://www.chess.cz/soutez/3363/",
