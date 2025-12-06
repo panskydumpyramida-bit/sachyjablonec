@@ -589,352 +589,361 @@
                     Vzkazovník</div>
                 <div class="nav-tab" id="blicakTab" onclick="switchTab('blicak')"><i class="fa-solid fa-bolt"></i>
                     Vánoční blesk</div>
+                <div class="nav-tab" id="competitionsTab" onclick="switchTab('competitions')"><i
+                        class="fa-solid fa-table"></i>
+                    Tabulky družstva</div>
             </div>
 
             <div id="alertContainer"></div>
 
             <!-- DASHBOARD -->
             <div id="dashboardView">
-                <!-- Standings Update Section -->
-                <div class="card"
-                    style="margin-bottom: 2rem; padding: 1.5rem; background: linear-gradient(135deg, var(--card-bg), rgba(59, 130, 246, 0.1)); border-left: 4px solid #3b82f6;">
-                    <div
-                        style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
-                        <div>
-                            <h3 style="margin: 0 0 0.5rem 0; color: #3b82f6;"><i class="fa-solid fa-table"></i> Tabulky
-                                mládeže</h3>
-                            <p style="margin: 0; color: var(--text-muted); font-size: 0.9rem;">Aktualizovat výsledky
-                                soutěží (Chess-results, Chess.cz)</p>
-                            <div id="competitionsList" style="margin-top: 1rem;"></div>
-                        </div>
-                        <button class="btn-secondary" onclick="updateStandings()" id="updateStandingsBtn">
-                            <i class="fa-solid fa-sync"></i> Aktualizovat tabulky
-                        </button>
-                    </div>
-                    <div id="standingsResult" style="margin-top: 1rem; display: none;"></div>
-                </div>
-
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
                     <h2 style="margin: 0;">Seznam novinek</h2>
                     <button class="btn-primary" onclick="switchTab('editor')"><i class="fa-solid fa-plus"></i> Nová
                         novinka</button>
                 </div>
-                <table class="data-table">
-                    <thead>
-                        <tr>
-                            <th>Datum</th>
-                            <th>Název</th>
-                            <th>Kategorie</th>
-                            <th>Stav</th>
-                            <th>Akce</th>
-                        </tr>
-                    </thead>
-                    <tbody id="newsTableBody"></tbody>
-                </table>
             </div>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Datum</th>
+                        <th>Název</th>
+                        <th>Kategorie</th>
+                        <th>Stav</th>
+                        <th>Akce</th>
+                    </tr>
+                </thead>
+                <tbody id="newsTableBody"></tbody>
+            </table>
+        </div>
 
-            <!-- EDITOR -->
-            <div id="editorView" class="hidden">
-                <div class="editor-layout">
-                    <!-- Main Editor (70%) -->
-                    <div class="editor-main">
-                        <h2 style="margin-top: 0;" id="editorTitle">Nová novinka</h2>
-                        <input type="hidden" id="editNewsId">
+        <!-- EDITOR -->
+        <div id="editorView" class="hidden">
+            <div class="editor-layout">
+                <!-- Main Editor (70%) -->
+                <div class="editor-main">
+                    <h2 style="margin-top: 0;" id="editorTitle">Nová novinka</h2>
+                    <input type="hidden" id="editNewsId">
 
-                        <div class="form-group">
-                            <label>Nadpis článku *</label>
-                            <input type="text" id="newsTitle" placeholder="Zadejte nadpis..." oninput="updatePreview()">
-                        </div>
-
-                        <!-- WYSIWYG Editor -->
-                        <div class="form-group">
-                            <label>Obsah článku *</label>
-                            <div class="wysiwyg-toolbar">
-                                <button type="button" id="btnBold" onclick="formatText('bold')"
-                                    title="Tučně (Ctrl+B)"><i class="fa-solid fa-bold"></i></button>
-                                <button type="button" id="btnItalic" onclick="formatText('italic')"
-                                    title="Kurzíva (Ctrl+I)"><i class="fa-solid fa-italic"></i></button>
-                                <button type="button" id="btnUnderline" onclick="formatText('underline')"
-                                    title="Podtržení (Ctrl+U)"><i class="fa-solid fa-underline"></i></button>
-                                <div class="divider"></div>
-                                <button type="button" id="btnHighlightName" onclick="insertHighlight('name')"
-                                    title="Zvýraznit jméno" style="color: #60a5fa;"><i class="fa-solid fa-user"></i>
-                                    Jméno</button>
-                                <button type="button" id="btnHighlightScore" onclick="insertHighlight('score')"
-                                    title="Zvýraznit skóre" style="color: #4ade80;"><i class="fa-solid fa-trophy"></i>
-                                    Skóre</button>
-                                <div class="divider"></div>
-                                <button type="button" onclick="insertList('ul')" title="Odrážkový seznam"><i
-                                        class="fa-solid fa-list-ul"></i></button>
-                                <button type="button" onclick="insertList('ol')" title="Číslovaný seznam"><i
-                                        class="fa-solid fa-list-ol"></i></button>
-                                <div class="divider"></div>
-                                <select id="headingSelect" onchange="applyHeading(this.value)" title="Formát"
-                                    style="background: var(--surface-color); color: var(--text-main); border: 1px solid rgba(255,255,255,0.2); border-radius: 4px; padding: 0.2rem; font-size: 0.75rem; width: 55px;">
-                                    <option value="p">P</option>
-                                    <option value="h1">H1</option>
-                                    <option value="h2">H2</option>
-                                    <option value="h3">H3</option>
-                                </select>
-                                <button type="button" onclick="insertLink()" title="Odkaz"><i
-                                        class="fa-solid fa-link"></i></button>
-                                <div class="divider"></div>
-                                <button type="button" onclick="insertIntroBlock()" title="Puzzle blok"
-                                    style="color: #fbbf24;"><i class="fa-solid fa-lightbulb"></i></button>
-                                <button type="button" onclick="insertImage()" title="Obrázek" style="color: #f472b6;"><i
-                                        class="fa-solid fa-image"></i></button>
-                                <button type="button" onclick="insertCollapsibleBlock()" title="Rozbalovací sekce"
-                                    style="color: #8b5cf6;"><i class="fa-solid fa-layer-group"></i></button>
-                                <div class="divider"></div>
-                                <button type="button" onclick="toggleSource()" title="HTML" id="btnSource"><i
-                                        class="fa-solid fa-code"></i></button>
-                            </div>
-                            <div class="wysiwyg-content" id="articleContent" contenteditable="true"
-                                oninput="updatePreview()"></div>
-                            <textarea id="articleSource" class="wysiwyg-content hidden"
-                                oninput="updateContentFromSource()"></textarea>
-                        </div>
-
-                        <!-- Games Panel -->
-                        <div class="panel-section">
-                            <div class="panel-header">
-                                <label style="margin: 0;"><i class="fa-solid fa-chess-board"></i> Přehrávač
-                                    partií</label>
-                                <button type="button" class="btn-secondary btn-small" onclick="toggleGamesInput()"><i
-                                        class="fa-solid fa-plus"></i> Přidat</button>
-                            </div>
-
-                            <!-- Team Checkboxes -->
-                            <div class="team-checkbox-list" id="teamCheckboxes"></div>
-                            <div class="add-team-input">
-                                <input type="text" id="newTeamName" placeholder="Název nového týmu (např. C tým)">
-                                <button type="button" class="btn-secondary btn-small" onclick="addTeam()"><i
-                                        class="fa-solid fa-plus"></i></button>
-                            </div>
-
-                            <div id="gamesInputPanel" class="hidden" style="margin-top: 1rem;">
-                                <div
-                                    style="display: grid; grid-template-columns: 2fr 1fr auto auto; gap: 0.5rem; align-items: center;">
-                                    <input type="text" id="gameTitle" placeholder="Název (např. 1. Novák - Svoboda)">
-                                    <input type="text" id="gameId" placeholder="Chess.com ID">
-                                    <label
-                                        style="display: flex; align-items: center; gap: 0.25rem; font-size: 0.85rem; color: var(--text-muted); cursor: pointer;">
-                                        <input type="checkbox" id="gameCommented" style="width: auto;"> 💬
-                                    </label>
-                                    <button type="button" class="btn-primary btn-small"
-                                        onclick="addGame()">Přidat</button>
-                                </div>
-                            </div>
-                            <div id="gamesList" style="margin-top: 1rem;"></div>
-                        </div>
-
-                        <!-- Gallery Panel -->
-                        <div class="panel-section">
-                            <div class="panel-header">
-                                <label style="margin: 0;"><i class="fa-solid fa-images"></i> Galerie</label>
-                                <div style="display: flex; gap: 0.5rem;">
-                                    <button type="button" class="btn-secondary btn-small"
-                                        onclick="document.getElementById('galleryInput').click()"><i
-                                            class="fa-solid fa-upload"></i> Nahrát</button>
-                                    <button type="button" class="btn-secondary btn-small"
-                                        onclick="toggleGalleryUrlInput()"><i class="fa-solid fa-link"></i> URL</button>
-                                </div>
-                                <input type="file" id="galleryInput" accept="image/*" multiple style="display: none;"
-                                    onchange="addGalleryImages(event)">
-                            </div>
-                            <div id="galleryUrlInput" class="hidden" style="margin-bottom: 0.75rem;">
-                                <div style="display: flex; gap: 0.5rem;">
-                                    <input type="text" id="galleryImageUrl" placeholder="URL obrázku (https://...)"
-                                        style="flex: 1; font-size: 0.85rem;">
-                                    <button type="button" class="btn-primary btn-small"
-                                        onclick="addGalleryFromUrl()">Přidat</button>
-                                </div>
-                            </div>
-                            <div id="galleryPreview" style="display: flex; flex-wrap: wrap; gap: 0.5rem;"></div>
-                        </div>
-
-                        <div style="margin-top: 2rem; display: flex; gap: 1rem;">
-                            <button class="btn-primary" onclick="saveNews()"><i class="fa-solid fa-save"></i>
-                                Uložit</button>
-                            <button class="btn-secondary" onclick="switchTab('dashboard')">Zrušit</button>
-                        </div>
+                    <div class="form-group">
+                        <label>Nadpis článku *</label>
+                        <input type="text" id="newsTitle" placeholder="Zadejte nadpis..." oninput="updatePreview()">
                     </div>
 
-                    <!-- Sidebar (30%) -->
-                    <div class="editor-sidebar">
-                        <div class="preview-card">
-                            <div class="preview-title">Náhled karty</div>
-                            <div class="news-preview">
-                                <div class="preview-image" id="previewImage"><i class="fa-solid fa-image"
-                                        style="font-size: 2rem; color: var(--text-muted);"></i></div>
-                                <div class="card-content" style="padding: 1rem;">
-                                    <span class="card-category" id="previewCategory">Kategorie</span>
-                                    <span class="card-date" id="previewDate">Datum</span>
-                                    <h3 class="card-title" id="previewTitle" style="font-size: 1rem; margin: 0.5rem 0;">
-                                        Nadpis</h3>
-                                    <p class="card-excerpt" id="previewExcerpt"
-                                        style="font-size: 0.85rem; color: var(--text-muted);">Krátký popis...</p>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="preview-card" style="margin-top: 1rem;">
-                            <div class="preview-title"
-                                style="display: flex; justify-content: space-between; align-items: center;">
-                                <span>Náhled článku</span>
-                                <button type="button" class="btn-secondary btn-small" onclick="toggleFullPreview()"><i
-                                        class="fa-solid fa-expand"></i></button>
-                            </div>
-                            <div id="articlePreview"
-                                style="padding: 1rem; max-height: 400px; overflow-y: auto; background: var(--card-bg); border-radius: var(--border-radius);">
-                                <p style="color: var(--text-muted); text-align: center;">Začněte psát obsah...</p>
-                            </div>
-                        </div>
-
-                        <div class="form-group">
-                            <label>Náhledový obrázek *</label>
-                            <div class="image-upload" id="uploadArea"
-                                onclick="document.getElementById('imageInput').click()">
-                                <div id="uploadPlaceholder"><i class="fa-solid fa-cloud-upload-alt"
-                                        style="font-size: 1.5rem; color: var(--primary-color);"></i>
-                                    <p style="margin: 0.5rem 0 0 0; font-size: 0.9rem;">Klikněte pro nahrání</p>
-                                </div>
-                                <img id="uploadedImage" class="uploaded-thumb" style="display: none;">
-                            </div>
-                            <input type="file" id="imageInput" accept="image/*" style="display: none;"
-                                onchange="handleImageUpload(event)">
-                            <input type="text" id="imageUrl" placeholder="nebo URL obrázku"
-                                style="margin-top: 0.5rem; font-size: 0.85rem;" oninput="handleImageUrl()">
-                        </div>
-
-                        <div class="form-group">
-                            <label>Kategorie *</label>
-                            <select id="newsCategory" onchange="updatePreview()">
-                                <option value="Soutěže družstev">Soutěže družstev</option>
-                                <option value="Oddílový přebor">Oddílový přebor</option>
-                                <option value="Mládež">Mládež</option>
-                                <option value="O nás">O nás</option>
+                    <!-- WYSIWYG Editor -->
+                    <div class="form-group">
+                        <label>Obsah článku *</label>
+                        <div class="wysiwyg-toolbar">
+                            <button type="button" id="btnBold" onclick="formatText('bold')" title="Tučně (Ctrl+B)"><i
+                                    class="fa-solid fa-bold"></i></button>
+                            <button type="button" id="btnItalic" onclick="formatText('italic')"
+                                title="Kurzíva (Ctrl+I)"><i class="fa-solid fa-italic"></i></button>
+                            <button type="button" id="btnUnderline" onclick="formatText('underline')"
+                                title="Podtržení (Ctrl+U)"><i class="fa-solid fa-underline"></i></button>
+                            <div class="divider"></div>
+                            <button type="button" id="btnHighlightName" onclick="insertHighlight('name')"
+                                title="Zvýraznit jméno" style="color: #60a5fa;"><i class="fa-solid fa-user"></i>
+                                Jméno</button>
+                            <button type="button" id="btnHighlightScore" onclick="insertHighlight('score')"
+                                title="Zvýraznit skóre" style="color: #4ade80;"><i class="fa-solid fa-trophy"></i>
+                                Skóre</button>
+                            <div class="divider"></div>
+                            <button type="button" onclick="insertList('ul')" title="Odrážkový seznam"><i
+                                    class="fa-solid fa-list-ul"></i></button>
+                            <button type="button" onclick="insertList('ol')" title="Číslovaný seznam"><i
+                                    class="fa-solid fa-list-ol"></i></button>
+                            <div class="divider"></div>
+                            <select id="headingSelect" onchange="applyHeading(this.value)" title="Formát"
+                                style="background: var(--surface-color); color: var(--text-main); border: 1px solid rgba(255,255,255,0.2); border-radius: 4px; padding: 0.2rem; font-size: 0.75rem; width: 55px;">
+                                <option value="p">P</option>
+                                <option value="h1">H1</option>
+                                <option value="h2">H2</option>
+                                <option value="h3">H3</option>
                             </select>
+                            <button type="button" onclick="insertLink()" title="Odkaz"><i
+                                    class="fa-solid fa-link"></i></button>
+                            <div class="divider"></div>
+                            <button type="button" onclick="insertIntroBlock()" title="Puzzle blok"
+                                style="color: #fbbf24;"><i class="fa-solid fa-lightbulb"></i></button>
+                            <button type="button" onclick="insertImage()" title="Obrázek" style="color: #f472b6;"><i
+                                    class="fa-solid fa-image"></i></button>
+                            <button type="button" onclick="insertCollapsibleBlock()" title="Rozbalovací sekce"
+                                style="color: #8b5cf6;"><i class="fa-solid fa-layer-group"></i></button>
+                            <div class="divider"></div>
+                            <button type="button" onclick="toggleSource()" title="HTML" id="btnSource"><i
+                                    class="fa-solid fa-code"></i></button>
+                        </div>
+                        <div class="wysiwyg-content" id="articleContent" contenteditable="true"
+                            oninput="updatePreview()"></div>
+                        <textarea id="articleSource" class="wysiwyg-content hidden"
+                            oninput="updateContentFromSource()"></textarea>
+                    </div>
+
+                    <!-- Games Panel -->
+                    <div class="panel-section">
+                        <div class="panel-header">
+                            <label style="margin: 0;"><i class="fa-solid fa-chess-board"></i> Přehrávač
+                                partií</label>
+                            <button type="button" class="btn-secondary btn-small" onclick="toggleGamesInput()"><i
+                                    class="fa-solid fa-plus"></i> Přidat</button>
                         </div>
 
-                        <div class="form-group">
-                            <label>Datum publikace *</label>
-                            <input type="date" id="newsDate" oninput="updatePreview()">
+                        <!-- Team Checkboxes -->
+                        <div class="team-checkbox-list" id="teamCheckboxes"></div>
+                        <div class="add-team-input">
+                            <input type="text" id="newTeamName" placeholder="Název nového týmu (např. C tým)">
+                            <button type="button" class="btn-secondary btn-small" onclick="addTeam()"><i
+                                    class="fa-solid fa-plus"></i></button>
                         </div>
 
-                        <div class="form-group">
-                            <label>Krátký popis *</label>
-                            <textarea id="newsExcerpt" rows="3" placeholder="Zobrazí se na kartě novinky..."
-                                oninput="updatePreview()"></textarea>
+                        <div id="gamesInputPanel" class="hidden" style="margin-top: 1rem;">
+                            <div
+                                style="display: grid; grid-template-columns: 2fr 1fr auto auto; gap: 0.5rem; align-items: center;">
+                                <input type="text" id="gameTitle" placeholder="Název (např. 1. Novák - Svoboda)">
+                                <input type="text" id="gameId" placeholder="Chess.com ID">
+                                <label
+                                    style="display: flex; align-items: center; gap: 0.25rem; font-size: 0.85rem; color: var(--text-muted); cursor: pointer;">
+                                    <input type="checkbox" id="gameCommented" style="width: auto;"> 💬
+                                </label>
+                                <button type="button" class="btn-primary btn-small" onclick="addGame()">Přidat</button>
+                            </div>
                         </div>
+                        <div id="gamesList" style="margin-top: 1rem;"></div>
+                    </div>
 
-                        <div class="form-group">
-                            <label><input type="checkbox" id="publishCheck" style="width: auto; margin-right: 0.5rem;">
-                                Publikovat ihned</label>
+                    <!-- Gallery Panel -->
+                    <div class="panel-section">
+                        <div class="panel-header">
+                            <label style="margin: 0;"><i class="fa-solid fa-images"></i> Galerie</label>
+                            <div style="display: flex; gap: 0.5rem;">
+                                <button type="button" class="btn-secondary btn-small"
+                                    onclick="document.getElementById('galleryInput').click()"><i
+                                        class="fa-solid fa-upload"></i> Nahrát</button>
+                                <button type="button" class="btn-secondary btn-small"
+                                    onclick="toggleGalleryUrlInput()"><i class="fa-solid fa-link"></i> URL</button>
+                            </div>
+                            <input type="file" id="galleryInput" accept="image/*" multiple style="display: none;"
+                                onchange="addGalleryImages(event)">
                         </div>
+                        <div id="galleryUrlInput" class="hidden" style="margin-bottom: 0.75rem;">
+                            <div style="display: flex; gap: 0.5rem;">
+                                <input type="text" id="galleryImageUrl" placeholder="URL obrázku (https://...)"
+                                    style="flex: 1; font-size: 0.85rem;">
+                                <button type="button" class="btn-primary btn-small"
+                                    onclick="addGalleryFromUrl()">Přidat</button>
+                            </div>
+                        </div>
+                        <div id="galleryPreview" style="display: flex; flex-wrap: wrap; gap: 0.5rem;"></div>
+                    </div>
+
+                    <div style="margin-top: 2rem; display: flex; gap: 1rem;">
+                        <button class="btn-primary" onclick="saveNews()"><i class="fa-solid fa-save"></i>
+                            Uložit</button>
+                        <button class="btn-secondary" onclick="switchTab('dashboard')">Zrušit</button>
                     </div>
                 </div>
-            </div>
 
-            <!-- USERS -->
-            <!-- MEMBERS -->
-            <div id="membersView" class="hidden">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-                    <h2 style="margin: 0;">Seznam členů</h2>
-                    <button class="btn-primary" onclick="openMemberModal()"><i class="fa-solid fa-user-plus"></i> Nový
-                        člen</button>
-                </div>
-
-                <table class="data-table">
-                    <thead>
-                        <tr>
-                            <th>Jméno</th>
-                            <th>ELO</th>
-                            <th>Titul</th>
-                            <th>Narození</th>
-                            <th>Role</th>
-                            <th>Akce</th>
-                        </tr>
-                    </thead>
-                    <tbody id="membersTableBody"></tbody>
-                </table>
-            </div>
-
-            <div id="usersView" class="hidden">
-                <div class="editor-layout">
-                    <div>
-                        <h2>Seznam uživatelů</h2>
-                        <table class="data-table">
-                            <thead>
-                                <tr>
-                                    <th>Username</th>
-                                    <th>Email</th>
-                                    <th>Role</th>
-                                    <th>Akce</th>
-                                </tr>
-                            </thead>
-                            <tbody id="usersTableBody"></tbody>
-                        </table>
+                <!-- Sidebar (30%) -->
+                <div class="editor-sidebar">
+                    <div class="preview-card">
+                        <div class="preview-title">Náhled karty</div>
+                        <div class="news-preview">
+                            <div class="preview-image" id="previewImage"><i class="fa-solid fa-image"
+                                    style="font-size: 2rem; color: var(--text-muted);"></i></div>
+                            <div class="card-content" style="padding: 1rem;">
+                                <span class="card-category" id="previewCategory">Kategorie</span>
+                                <span class="card-date" id="previewDate">Datum</span>
+                                <h3 class="card-title" id="previewTitle" style="font-size: 1rem; margin: 0.5rem 0;">
+                                    Nadpis</h3>
+                                <p class="card-excerpt" id="previewExcerpt"
+                                    style="font-size: 0.85rem; color: var(--text-muted);">Krátký popis...</p>
+                            </div>
+                        </div>
                     </div>
-                    <div class="editor-sidebar">
-                        <h3>Přidat uživatele</h3>
-                        <div class="form-group"><label>Username</label><input type="text" id="newUsername"></div>
-                        <div class="form-group"><label>Email</label><input type="email" id="newEmail"></div>
-                        <div class="form-group"><label>Heslo</label><input type="password" id="newPassword"></div>
-                        <div class="form-group"><label>Role</label><select id="newRole">
-                                <option value="admin">Admin</option>
-                                <option value="superadmin">Superadmin</option>
-                            </select></div>
-                        <button class="btn-primary" onclick="createUser()">Vytvořit</button>
+
+                    <div class="preview-card" style="margin-top: 1rem;">
+                        <div class="preview-title"
+                            style="display: flex; justify-content: space-between; align-items: center;">
+                            <span>Náhled článku</span>
+                            <button type="button" class="btn-secondary btn-small" onclick="toggleFullPreview()"><i
+                                    class="fa-solid fa-expand"></i></button>
+                        </div>
+                        <div id="articlePreview"
+                            style="padding: 1rem; max-height: 400px; overflow-y: auto; background: var(--card-bg); border-radius: var(--border-radius);">
+                            <p style="color: var(--text-muted); text-align: center;">Začněte psát obsah...</p>
+                        </div>
                     </div>
-                </div>
-            </div>
 
-            <div id="messagesView" class="hidden">
-                <h2><i class="fa-solid fa-comments"></i> Správa vzkazovníku</h2>
-                <p style="color: var(--text-muted); margin-bottom: 1.5rem;">Zde můžete mazat nevhodné příspěvky ze
-                    vzkazovníku.</p>
-                <table class="data-table">
-                    <thead>
-                        <tr>
-                            <th>Autor</th>
-                            <th>Obsah</th>
-                            <th>Datum</th>
-                            <th>Akce</th>
-                        </tr>
-                    </thead>
-                    <tbody id="messagesTableBody"></tbody>
-                </table>
-                <div id="noMessagesInfo"
-                    style="text-align: center; padding: 2rem; color: var(--text-muted); display: none;">
-                    Žádné vzkazy k zobrazení.
-                </div>
-            </div>
+                    <div class="form-group">
+                        <label>Náhledový obrázek *</label>
+                        <div class="image-upload" id="uploadArea"
+                            onclick="document.getElementById('imageInput').click()">
+                            <div id="uploadPlaceholder"><i class="fa-solid fa-cloud-upload-alt"
+                                    style="font-size: 1.5rem; color: var(--primary-color);"></i>
+                                <p style="margin: 0.5rem 0 0 0; font-size: 0.9rem;">Klikněte pro nahrání</p>
+                            </div>
+                            <img id="uploadedImage" class="uploaded-thumb" style="display: none;">
+                        </div>
+                        <input type="file" id="imageInput" accept="image/*" style="display: none;"
+                            onchange="handleImageUpload(event)">
+                        <input type="text" id="imageUrl" placeholder="nebo URL obrázku"
+                            style="margin-top: 0.5rem; font-size: 0.85rem;" oninput="handleImageUrl()">
+                    </div>
 
-            <!-- Blicak Registrations View -->
-            <div id="blicakView" class="hidden">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-                    <h2 style="margin: 0;"><i class="fa-solid fa-bolt"></i> Registrace - Vánoční blesk</h2>
-                    <button class="btn-primary" onclick="loadBlicakRegistrations()"><i class="fa-solid fa-sync"></i>
-                        Obnovit</button>
-                </div>
-                <table class="data-table">
-                    <thead>
-                        <tr>
-                            <th>Jméno</th>
-                            <th>ELO</th>
-                            <th>Rok narození</th>
-                            <th>Datum registrace</th>
-                        </tr>
-                    </thead>
-                    <tbody id="blicakTableBody"></tbody>
-                </table>
-                <div id="noBlicakInfo"
-                    style="text-align: center; padding: 2rem; color: var(--text-muted); display: none;">
-                    Žádné registrace.
+                    <div class="form-group">
+                        <label>Kategorie *</label>
+                        <select id="newsCategory" onchange="updatePreview()">
+                            <option value="Soutěže družstev">Soutěže družstev</option>
+                            <option value="Oddílový přebor">Oddílový přebor</option>
+                            <option value="Mládež">Mládež</option>
+                            <option value="O nás">O nás</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Datum publikace *</label>
+                        <input type="date" id="newsDate" oninput="updatePreview()">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Krátký popis *</label>
+                        <textarea id="newsExcerpt" rows="3" placeholder="Zobrazí se na kartě novinky..."
+                            oninput="updatePreview()"></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label><input type="checkbox" id="publishCheck" style="width: auto; margin-right: 0.5rem;">
+                            Publikovat ihned</label>
+                    </div>
                 </div>
             </div>
         </div>
+
+        <!-- USERS -->
+        <!-- MEMBERS -->
+        <div id="membersView" class="hidden">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <h2 style="margin: 0;">Seznam členů</h2>
+                <button class="btn-primary" onclick="openMemberModal()"><i class="fa-solid fa-user-plus"></i> Nový
+                    člen</button>
+            </div>
+
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Jméno</th>
+                        <th>ELO</th>
+                        <th>Titul</th>
+                        <th>Narození</th>
+                        <th>Role</th>
+                        <th>Akce</th>
+                    </tr>
+                </thead>
+                <tbody id="membersTableBody"></tbody>
+            </table>
+        </div>
+
+        <div id="usersView" class="hidden">
+            <div class="editor-layout">
+                <div>
+                    <h2>Seznam uživatelů</h2>
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Username</th>
+                                <th>Email</th>
+                                <th>Role</th>
+                                <th>Akce</th>
+                            </tr>
+                        </thead>
+                        <tbody id="usersTableBody"></tbody>
+                    </table>
+                </div>
+                <div class="editor-sidebar">
+                    <h3>Přidat uživatele</h3>
+                    <div class="form-group"><label>Username</label><input type="text" id="newUsername"></div>
+                    <div class="form-group"><label>Email</label><input type="email" id="newEmail"></div>
+                    <div class="form-group"><label>Heslo</label><input type="password" id="newPassword"></div>
+                    <div class="form-group"><label>Role</label><select id="newRole">
+                            <option value="admin">Admin</option>
+                            <option value="superadmin">Superadmin</option>
+                        </select></div>
+                    <button class="btn-primary" onclick="createUser()">Vytvořit</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="messagesView" class="hidden">
+            <h2><i class="fa-solid fa-comments"></i> Správa vzkazovníku</h2>
+            <p style="color: var(--text-muted); margin-bottom: 1.5rem;">Zde můžete mazat nevhodné příspěvky ze
+                vzkazovníku.</p>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Autor</th>
+                        <th>Obsah</th>
+                        <th>Datum</th>
+                        <th>Akce</th>
+                    </tr>
+                </thead>
+                <tbody id="messagesTableBody"></tbody>
+            </table>
+            <div id="noMessagesInfo"
+                style="text-align: center; padding: 2rem; color: var(--text-muted); display: none;">
+                Žádné vzkazy k zobrazení.
+            </div>
+        </div>
+
+        <!-- Blicak Registrations View -->
+        <div id="blicakView" class="hidden">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <h2 style="margin: 0;"><i class="fa-solid fa-bolt"></i> Registrace - Vánoční blesk</h2>
+                <button class="btn-primary" onclick="loadBlicakRegistrations()"><i class="fa-solid fa-sync"></i>
+                    Obnovit</button>
+            </div>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Jméno</th>
+                        <th>ELO</th>
+                        <th>Rok narození</th>
+                        <th>Datum registrace</th>
+                    </tr>
+                </thead>
+                <tbody id="blicakTableBody"></tbody>
+            </table>
+            <div id="noBlicakInfo" style="text-align: center; padding: 2rem; color: var(--text-muted); display: none;">
+                Žádné registrace.
+            </div>
+        </div>
+
+        <!-- Competitions View -->
+        <div id="competitionsView" class="hidden">
+            <div class="card"
+                style="margin-bottom: 2rem; padding: 1.5rem; background: linear-gradient(135deg, var(--card-bg), rgba(59, 130, 246, 0.1)); border-left: 4px solid #3b82f6;">
+                <div
+                    style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+                    <div style="width: 100%;">
+                        <h3 style="margin: 0 0 0.5rem 0; color: #3b82f6;"><i class="fa-solid fa-table"></i> Tabulky
+                            družstva</h3>
+                        <p style="margin: 0; color: var(--text-muted); font-size: 0.9rem;">Správa zdrojů dat pro
+                            soutěže. Změny se projeví po kliknutí na "Aktualizovat tabulky".</p>
+
+                        <div style="display: flex; justify-content: flex-end; margin-top: 1rem;">
+                            <button class="btn-secondary" onclick="updateStandings()" id="updateStandingsBtn">
+                                <i class="fa-solid fa-sync"></i> Aktualizovat tabulky
+                            </button>
+                        </div>
+
+                        <div id="competitionsList" style="margin-top: 1rem;"></div>
+                    </div>
+
+                </div>
+                <div id="standingsResult" style="margin-top: 1rem; display: none;"></div>
+            </div>
+        </div>
+    </div>
     </div>
 
     <!-- Member Modal -->
@@ -1020,30 +1029,24 @@
 
         function switchTab(tab) {
             document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
-            if (event && event.target) {
-                event.target.closest('.nav-tab')?.classList.add('active');
-            }
-            document.getElementById('dashboardView').classList.add('hidden');
-            document.getElementById('editorView').classList.add('hidden');
-            document.getElementById('usersView').classList.add('hidden');
-            document.getElementById('membersView').classList.add('hidden');
-            document.getElementById('messagesView').classList.add('hidden');
-            document.getElementById('blicakView').classList.add('hidden');
+            const activeTab = document.querySelector(`.nav-tab[onclick="switchTab('${tab}')"]`);
+            if (activeTab) activeTab.classList.add('active');
 
-            const view = document.getElementById(tab + 'View');
-            if (view) view.classList.remove('hidden');
+            ['dashboard', 'editor', 'members', 'users', 'messages', 'blicak', 'competitions'].forEach(v => {
+                document.getElementById(v + 'View').classList.add('hidden');
+            });
+            document.getElementById(tab + 'View').classList.remove('hidden');
 
             if (tab === 'dashboard') loadDashboard();
-            if (tab === 'users') loadUsers();
-            if (tab === 'editor') resetEditor();
             if (tab === 'members') loadMembers();
+            if (tab === 'users') loadUsers();
             if (tab === 'messages') loadAdminMessages();
             if (tab === 'blicak') loadBlicakRegistrations();
+            if (tab === 'competitions') loadCompetitions();
         }
 
         // Dashboard
         async function loadDashboard() {
-            loadCompetitions();
             try {
                 const res = await fetch(`${API_URL}/news`, { headers: { 'Authorization': `Bearer ${authToken}` } });
                 const news = await res.json();
