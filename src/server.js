@@ -54,7 +54,8 @@ async function scrapeCompetitionMatches(compUrl) {
 
         const clean = (s) => {
             if (!s) return '';
-            let txt = s.replace(/<[^>]*>/g, '').trim();
+            // Replace tags with space to prevent merging text (e.g. "Name</td><td>Score")
+            let txt = s.replace(/<[^>]*>/g, ' ').trim();
             txt = txt.replace(/&nbsp;/g, ' ')
                 .replace(/&amp;/g, '&')
                 .replace(/&lt;/g, '<')
@@ -62,7 +63,8 @@ async function scrapeCompetitionMatches(compUrl) {
                 .replace(/&quot;/g, '"')
                 .replace(/&frac12;/g, '½')
                 .replace(/&#(\d+);/g, (match, dec) => String.fromCharCode(dec));
-            return txt;
+            // Collapse multiple spaces
+            return txt.replace(/\s+/g, ' ').trim();
         };
 
         for (const row of rows) {
@@ -109,19 +111,23 @@ async function scrapeCompetitionMatches(compUrl) {
                         const homeTeam = col1;
                         const awayTeam = col2;
 
-                        // Result finding
-                        const cleanRow = clean(row);
-                        // Regex now needs to support ½ (unicode)
-                        let resultMatch = cleanRow.match(/(\d*[,.]?\d*[½]?)\s*[:]\s*(\d*[,.]?\d*[½]?)/);
+                        let resultMatch = null;
 
-                        // Fallback result cells (3, 4, 5 usually)
-                        if (!resultMatch || !resultMatch[1] || !resultMatch[2]) {
-                            const r1 = clean(cells[3]);
-                            const r2 = clean(cells[5]);
-                            // If both resemble scores (digits or ½)
-                            if ((r1.match(/[\d½]/) && r2.match(/[\d½]/)) || (r1 === '½' || r2 === '½')) {
-                                resultMatch = [`${r1} : ${r2}`, r1, r2];
-                            }
+                        // Priority 1: Extract from specific cells (3 and 5)
+                        const r1 = clean(cells[3]);
+                        const r2 = clean(cells[5]);
+                        // If both resemble scores (digits or ½) or are empty/dash
+                        // Note: sometimes "-" is used for not played
+                        if ((r1.match(/[\d½]/) && r2.match(/[\d½]/)) || (r1 === '½' || r2 === '½')) {
+                            resultMatch = [`${r1} : ${r2}`, r1, r2];
+                        } else if (r1 === '' && r2 === '') {
+                            // Maybe empty cells means not played?
+                        }
+
+                        // Priority 2: Fallback to regex on row (safer now with space injection)
+                        if (!resultMatch) {
+                            const cleanRow = clean(row);
+                            resultMatch = cleanRow.match(/(\d*[,.]?\d*[½]?)\s*[:]\s*(\d*[,.]?\d*[½]?)/);
                         }
 
                         if (currentRound && homeTeam && awayTeam) {
