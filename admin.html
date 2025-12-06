@@ -1632,13 +1632,23 @@
             let parentSpan = range.commonAncestorContainer;
             while (parentSpan && parentSpan !== editor) {
                 if (parentSpan.nodeType === 1 && (parentSpan.classList.contains('highlight-name') || parentSpan.classList.contains('highlight-score'))) {
-                    // Toggle off or change type
                     if (parentSpan.classList.contains(className)) {
-                        // Unwrap
-                        const text = document.createTextNode(parentSpan.textContent);
-                        parentSpan.parentNode.replaceChild(text, parentSpan);
+                        // SAME TYPE: Move cursor AFTER the span (escape from formatting)
+                        // Add space after span if not already there
+                        let spaceAfter = parentSpan.nextSibling;
+                        if (!spaceAfter || spaceAfter.nodeType !== 3) {
+                            spaceAfter = document.createTextNode('\u00A0');
+                            parentSpan.parentNode.insertBefore(spaceAfter, parentSpan.nextSibling);
+                        }
+                        // Move cursor after the space
+                        const newRange = document.createRange();
+                        newRange.setStartAfter(spaceAfter);
+                        newRange.collapse(true);
+                        selection.removeAllRanges();
+                        selection.addRange(newRange);
+                        editor.focus();
                     } else {
-                        // Change type
+                        // DIFFERENT TYPE: Change type
                         parentSpan.className = className;
                     }
                     updatePreview();
