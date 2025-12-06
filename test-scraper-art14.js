@@ -1,44 +1,50 @@
 
-async function testScraper() {
-    // Krajsky prebor art=14
+// MOCK SERVER LOGIC
+async function testServerLogic() {
     const url = 'https://s2.chess-results.com/tnr1278502.aspx?lan=5&art=2';
     console.log(`Fetching ${url}...`);
-    try {
-        const response = await fetch(url);
-        const html = await response.text();
+    const response = await fetch(url);
+    const html = await response.text();
+    const rows = html.split('</tr>');
 
-        const rows = html.split('</tr>');
-        console.log(`Found ${rows.length} rows.`);
+    let allMatches = [];
 
-        let count = 0;
-        for (const row of rows) {
-            const clean = row.replace(/<[^>]*>/g, '').trim();
-            // Check if row contains date-like string
-            if (clean.match(/\d{1,2}\.\d{1,2}\.\d{4}/)) {
-                console.log(`Potential Date Row: ${clean}`);
-            }
+    const clean = (s) => {
+            if (!s) return '';
+            // Replace tags with space to prevent merging text (e.g. "Name</td><td>Score")
+            let txt = s.replace(/<[^>]*>/g, ' ').trim();
+            txt = txt.replace(/&nbsp;/g, ' ')
+                .replace(/&amp;/g, '&')
+                .replace(/&lt;/g, '<')
+                .replace(/&gt;/g, '>')
+                .replace(/&quot;/g, '"')
+                .replace(/&frac12;/g, '½')
+                .replace(/&#(\d+);/g, (match, dec) => String.fromCharCode(dec));
+            // Collapse multiple spaces
+            return txt.replace(/\s+/g, ' ').trim();
+        };
 
-            if (row.includes('class="CRg1"') || row.includes('class="CRg2"')) {
-                const cells = row.split('</td>');
-                const col0 = cells[0].replace(/<[^>]*>/g, '').trim();
-
-                // If it looks like a match row (starts with number)
+    for (const row of rows) {
+        if (row.match(/class="CRg[12]b?"/)) {
+            let cells = row.split('</th>');
+            if (cells.length < 3) cells = row.split('</td>');
+            if (cells.length > 5) {
+                const col0 = clean(cells[0]); // match no
+                    const col1 = clean(cells[1]); // Home
+                    const col2 = clean(cells[2]); // Away
                 if (col0.match(/^\d+$/)) {
-                    console.log(`Match Row (No ${col0}):`);
-                    cells.forEach((cell, idx) => {
-                        // Minimal cleaning to see entities
-                        const rawClean = cell.replace(/<[^>]*>/g, '').trim();
-                        console.log(`  Col ${idx}: ${rawClean}`);
-                    });
-                    if (count++ > 5) break;
+                    console.log(`Row ${col0}:`);
+                     const r1 = clean(cells[3]);
+                    const r2 = clean(cells[5]);
+                    console.log(`  Cells 3/5: "${r1}" : "${r2}"`);
+                    
+                    const cleanRow = clean(row);
+                    const resultMatch = cleanRow.match(/(\d*[,.]?\d*[½]?)\s*[:]\s*(\d*[,.]?\d*[½]?)/);
+                    console.log(`  Regex Row: ${resultMatch ? resultMatch[0] : 'No match'}`);
                 }
             }
         }
-        console.log('Done.');
-
-    } catch (err) {
-        console.error('Error:', err);
     }
 }
 
-testScraper();
+testServerLogic();

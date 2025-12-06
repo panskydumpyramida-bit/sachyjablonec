@@ -107,3 +107,14 @@ model Member {
   
   @@map("members")
 }
+
+model Competition {
+  id        String   @id @default(uuid())
+  name      String
+  type      String   @default("chess-results")
+  url       String
+  category  String
+  createdAt DateTime @default(now()) @map("created_at")
+  
+  @@map("competitions")
+}
