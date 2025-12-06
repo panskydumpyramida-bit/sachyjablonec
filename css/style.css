@@ -242,6 +242,30 @@ nav {
     color: var(--secondary-color);
 }
 
+.btn-secondary {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.8rem 1.5rem;
+    background-color: rgba(212, 175, 55, 0.1);
+    color: var(--primary-color);
+    border: 1px solid rgba(212, 175, 55, 0.3);
+    border-radius: 50px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--transition-speed);
+    height: 46px;
+    white-space: nowrap;
+}
+
+.btn-secondary:hover,
+.btn-secondary.active {
+    background-color: rgba(212, 175, 55, 0.2);
+    border-color: var(--primary-color);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
 /* Sections */
 section {
     padding: 5rem 0;

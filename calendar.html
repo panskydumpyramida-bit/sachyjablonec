@@ -180,8 +180,7 @@
                     </div>
                 </div>
                 <div>
-                    <button id="togglePastBtn" class="btn-secondary" onclick="togglePastMatches()"
-                        style="white-space: nowrap; height: 46px; display: flex; align-items: center; gap: 0.5rem; background: rgba(59, 130, 246, 0.1); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.2);">
+                    <button id="togglePastBtn" class="btn-secondary" onclick="togglePastMatches()">
                         <i class="fa-solid fa-history"></i> Zobrazit uplynulé
                     </button>
                 </div>
@@ -295,12 +294,12 @@
         function togglePastMatches() {
             showingPast = !showingPast;
             const btn = document.getElementById('togglePastBtn');
+            btn.classList.toggle('active');
+
             if (showingPast) {
                 btn.innerHTML = '<i class="fa-solid fa-eye-slash"></i> Skrýt uplynulé';
-                btn.style.background = 'rgba(255,255,255,0.15)';
             } else {
                 btn.innerHTML = '<i class="fa-solid fa-history"></i> Zobrazit uplynulé';
-                btn.style.background = '';
             }
             renderCalendar();
         }
