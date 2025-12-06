@@ -24,6 +24,101 @@ const DATA_DIR = path.join(__dirname, '../data');
 const app = express();
 const PORT = process.env.PORT || 3001;
 
+// Helper: Clean HTML text
+const clean = (s) => {
+    if (!s) return '';
+    // Replace tags with space to prevent merging text (e.g. "Name</td><td>Score")
+    let txt = s.replace(/<[^>]*>/g, ' ').trim();
+    txt = txt.replace(/&nbsp;/g, ' ')
+        .replace(/&amp;/g, '&')
+        .replace(/&lt;/g, '<')
+        .replace(/&gt;/g, '>')
+        .replace(/&quot;/g, '"')
+        .replace(/&frac12;/g, '½')
+        .replace(/&#(\d+);/g, (match, dec) => String.fromCharCode(dec));
+    // Collapse multiple spaces
+    return txt.replace(/\s+/g, ' ').trim();
+};
+
+// Helper to scrape match details (art=3)
+async function scrapeMatchDetails(compUrl, round, homeTeam, awayTeam) {
+    let detailsUrl = compUrl;
+    if (detailsUrl.includes('art=')) {
+        detailsUrl = detailsUrl.replace(/art=\d+/, 'art=3');
+    } else {
+        detailsUrl += '&art=3';
+    }
+    detailsUrl += `&rd=${round}`;
+
+    console.log(`Scraping details: ${detailsUrl}`);
+
+    try {
+        const response = await fetch(detailsUrl);
+        const html = await response.text();
+
+        // Split by starting tag of main rows to handle nested tables
+        const parts = html.split('<tr class="');
+        const rows = parts.map(p => '<tr class="' + p);
+
+        const boards = [];
+        let capturing = false;
+
+        for (const row of rows) {
+            const cleanRow = clean(row);
+            const normRow = cleanRow.toLowerCase();
+            const normHome = homeTeam.toLowerCase();
+            const normAway = awayTeam.toLowerCase();
+
+            // Detect Match Header
+            if (!capturing) {
+                // Check if row contains both team names.
+                // We use a relatively strict check but allow for some noise.
+                if (normRow.includes(normHome) && normRow.includes(normAway)) {
+                    capturing = true;
+                    continue;
+                }
+            } else {
+                // If capturing, check if we hit next match header
+                if (row.includes('<th ') || row.includes('class="CRg1b"')) {
+                    // This likely means a new match header or table header
+                    break;
+                }
+
+                // Parse Board Row
+                if (row.match(/class="CRg[12]"/)) {
+                    const cells = row.split('</td>');
+                    // Structure based on observation:
+                    // Cell 0: Board (e.g. "3.1")
+                    // Cell 2: White Name
+                    // Cell 3: White Elo
+                    // Cell 6: Black Name
+                    // Cell 7: Black Elo
+                    // Cell 8: Result (e.g. "1 - 0")
+
+                    if (cells.length > 8) {
+                        const board = clean(cells[0]);
+                        const white = clean(cells[2]);
+                        const whiteElo = clean(cells[3]);
+                        const black = clean(cells[6]);
+                        const blackElo = clean(cells[7]);
+                        const result = clean(cells[8]);
+
+                        boards.push({ board, white, whiteElo, black, blackElo, result });
+                    } else {
+                        // Fallback if structure is different (sometimes Elo is missing?)
+                        // Just capture the raw cleaned text
+                        boards.push({ raw: cleanRow });
+                    }
+                }
+            }
+        }
+        return boards;
+    } catch (e) {
+        console.error('Error scraping details:', e.message);
+        return [];
+    }
+}
+
 // Helper to scrape team schedule (art=23)
 // Helper to scrape all matches from competition (art=2)
 async function scrapeCompetitionMatches(compUrl) {
@@ -37,6 +132,8 @@ async function scrapeCompetitionMatches(compUrl) {
         matchesUrl += '&art=2';
     }
 
+
+
     try {
         console.log(`Scraping pairings: ${matchesUrl}`);
         const response = await fetch(matchesUrl);
@@ -44,28 +141,8 @@ async function scrapeCompetitionMatches(compUrl) {
         const rows = html.split('</tr>');
         const allMatches = [];
 
-        // We need to track current round/date from headers if possible.
-        // In art=2, Round info is often in a header line "1. Runde am DD.MM.YYYY"
-        // But headers might be split.
-        // Simple approach: Look for "x. Runde" or "Round x"
-
         let currentRound = null;
         let currentDate = null;
-
-        const clean = (s) => {
-            if (!s) return '';
-            // Replace tags with space to prevent merging text (e.g. "Name</td><td>Score")
-            let txt = s.replace(/<[^>]*>/g, ' ').trim();
-            txt = txt.replace(/&nbsp;/g, ' ')
-                .replace(/&amp;/g, '&')
-                .replace(/&lt;/g, '<')
-                .replace(/&gt;/g, '>')
-                .replace(/&quot;/g, '"')
-                .replace(/&frac12;/g, '½')
-                .replace(/&#(\d+);/g, (match, dec) => String.fromCharCode(dec));
-            // Collapse multiple spaces
-            return txt.replace(/\s+/g, ' ').trim();
-        };
 
         for (const row of rows) {
             // Check for Round header (often separate row or in h4)
@@ -503,6 +580,16 @@ app.get('/api/standings', async (req, res) => {
         // Return empty if file doesn't exist
         res.json({ standings: [], lastUpdated: null });
     }
+});
+
+// Fetch detailed match results
+app.get('/api/standings/match-details', async (req, res) => {
+    const { url, round, home, away } = req.query;
+    if (!url || !round || !home || !away) {
+        return res.status(400).json({ error: 'Missing parameters' });
+    }
+    const boards = await scrapeMatchDetails(url, round, home, away);
+    res.json({ boards });
 });
 
 // Seed Function
