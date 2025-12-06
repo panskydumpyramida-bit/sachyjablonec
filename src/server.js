@@ -621,9 +621,9 @@ app.get('/api/standings/match-details', async (req, res) => {
 // Seed Function
 const seedDatabase = async () => {
     try {
-        const { PrismaClient } = await import('@prisma/client');
         const bcrypt = await import('bcrypt');
-        const prisma = new PrismaClient();
+        // Reuse global prisma instance
+
 
         // Check if admin exists to avoid re-hashing password unnecessarily (optional optimization but safe to upsert)
         // Actually, upsert is fine.
