@@ -399,24 +399,33 @@
 
         /* Mobile Responsive */
         @media (max-width: 900px) {
-            .game-viewer-container {
-                grid-template-columns: 1fr;
-                gap: 1rem;
+            .app-container {
+                height: auto;
+                min-height: 800px;
             }
 
-            .game-sidebar {
-                height: 250px;
+            .main-content {
+                flex-direction: column;
+            }
+
+            .sidebar {
+                width: 100%;
+                height: 300px;
                 order: 2;
-                /* List below board on mobile */
+                border-right: none;
+                border-top: 1px solid var(--viewer-border);
             }
 
-            .iframe-viewer {
-                height: 100%;
-                aspect-ratio: 1;
-            }
-
-            .game-display {
+            .game-viewer {
                 order: 1;
+                width: 100%;
+            }
+
+            .iframe-container {
+                width: 100%;
+                height: auto;
+                aspect-ratio: 1;
+                max-height: 60vh;
             }
         }
     </style>
