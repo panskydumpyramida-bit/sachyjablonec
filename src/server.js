@@ -28,7 +28,7 @@ const PORT = process.env.PORT || 3001;
 // Helper: Clean HTML text
 const clean = (s) => {
     if (!s) return '';
-    // Replace tags with space to prevent merging text (e.g. "Name</td><td>Score")
+    // Replace tags with space to prevent merging text
     let txt = s.replace(/<[^>]*>/g, ' ').trim();
     txt = txt.replace(/&nbsp;/g, ' ')
         .replace(/&amp;/g, '&')
@@ -39,6 +39,13 @@ const clean = (s) => {
         .replace(/&#(\d+);/g, (match, dec) => String.fromCharCode(dec));
     // Collapse multiple spaces
     return txt.replace(/\s+/g, ' ').trim();
+};
+
+const isElo = (s) => {
+    if (!s) return false;
+    // Checks if string is a number (Elo) or standard placeholders like "-" or empty
+    // But we use this to select PREFERRED column, so we want "looks like Elo"
+    return /^\d{3,4}$/.test(s) || s === '-';
 };
 
 // Helper to scrape match details (art=3)
@@ -96,14 +103,57 @@ async function scrapeMatchDetails(compUrl, round, homeTeam, awayTeam) {
                     // Cell 7: Black Elo
                     // Cell 8: Result (e.g. "1 - 0")
 
-                    if (cells.length > 8) {
+                    if (cells.length > 5) {
                         const board = clean(cells[0]);
-                        // Indices observed for art=3 & lan=5
                         const white = clean(cells[3]);
-                        const whiteElo = clean(cells[4]) || clean(cells[5]); // Try both cols for Elo
-                        const black = clean(cells[8]);
-                        const blackElo = clean(cells[9]);
-                        const result = clean(cells[10]);
+
+                        // White Elo is usually at 4 or 5. 5 seems more common for "Rtg".
+                        // Check if 4 or 5 is a number or dash.
+                        const rawElo4 = clean(cells[4]);
+                        const rawElo5 = clean(cells[5]);
+                        let whiteElo = isElo(rawElo5) ? rawElo5 : (isElo(rawElo4) ? rawElo4 : '');
+
+                        // Find Black Name (look for comma) start from 6
+                        let blackIndex = -1;
+                        let black = '';
+                        for (let i = 6; i < cells.length; i++) {
+                            const txt = clean(cells[i]);
+                            // Look for name format "Surname, Name"
+                            if (txt.includes(',') && txt.length > 3) {
+                                black = txt;
+                                blackIndex = i;
+                                break;
+                            }
+                        }
+
+                        // Fallback if no comma found (rare but possible), try fixed indices
+                        if (!black) {
+                            if (clean(cells[8]).length > 2) { black = clean(cells[8]); blackIndex = 8; }
+                            else if (clean(cells[9]).length > 2) { black = clean(cells[9]); blackIndex = 9; }
+                        }
+
+                        // Black Elo: search after black name
+                        let blackElo = '';
+                        if (blackIndex > -1) {
+                            // Try +1 or +2
+                            const after1 = clean(cells[blackIndex + 1]);
+                            const after2 = clean(cells[blackIndex + 2]);
+                            if (isElo(after2)) blackElo = after2;
+                            else if (isElo(after1)) blackElo = after1;
+                        }
+
+                        // Result: search for result pattern from end or specific indices
+                        // Regex for result: digits - digits or digit : digit
+                        let result = '';
+                        for (let i = cells.length - 1; i > 0; i--) {
+                            const txt = clean(cells[i]);
+                            if (txt.match(/^\d+[½\.]?\s*[:\-]\s*\d+[½\.]?$/)) {
+                                result = txt;
+                                break;
+                            }
+                        }
+                        // Fallback
+                        if (!result && cells.length > 10) result = clean(cells[10]);
 
                         boards.push({ board, white, whiteElo, black, blackElo, result });
                     } else {

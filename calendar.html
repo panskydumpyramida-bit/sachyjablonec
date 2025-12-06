@@ -561,7 +561,7 @@
                         const res = await fetch(`${API_URL}/standings/match-details?url=${encodeURIComponent(matchData.url)}&round=${round}&home=${encodeURIComponent(matchData.myTeam)}&away=${encodeURIComponent(matchData.opponent)}`);
                         const data = await res.json();
                         if (data.boards && data.boards.length > 0) {
-                            renderBoardsInline(data.boards, container);
+                            renderBoardsInline(data.boards, container, team1, team2);
                         } else {
                             container.innerHTML = '<p style="text-align: center; color: var(--text-muted); font-size: 0.9rem;">Podrobnosti nejsou k dispozici.</p>';
                         }
@@ -574,7 +574,7 @@
             }
         }
 
-        function renderBoardsInline(boards, container) {
+        function renderBoardsInline(boards, container, team1, team2) {
             container.innerHTML = `
                 <table class="boards-table" style="font-size: 0.85rem;">
                      <thead>
@@ -603,16 +603,39 @@
                 // Odd board = Home is White
                 const homeIsWhite = boardNum % 2 !== 0;
 
+                // Determine if Home/Away team is "My Team" (matches myTeam passed to this function, or use matchData context?)
+                // We don't have isHome flag easily here inside map loop, but we know team1 is Home in the table header context? 
+                // Ah wait, header is "Domácí" / "Hosté".
+                // "team1" argument to toggleMatchDetails is the Home team (Domácí).
+                // "team2" is Hosté.
+                // We need to know which one is Bižuterie.
+                const bizuterieName = 'Bižuterie'; // Keyword to identify. Or better, check specific known names?
+                // Actually, toggleMatchDetails receives team1, team2. 
+                // One of them is likely "TJ Bižuterie ...".
+                // Let's assume we want to highlight the team that CONTAINS "Bižuterie" (case insensitive).
+
+                const isTeam1Bizu = team1.toLowerCase().includes('bižuterie') || team1.toLowerCase().includes('bizuterie');
+                const isTeam2Bizu = team2.toLowerCase().includes('bižuterie') || team2.toLowerCase().includes('bizuterie');
+
+                // If both are Bižuterie (derby), highlight both? Or just verify logic.
+
                 const homeName = homeIsWhite ? b.white : b.black;
                 const homeElo = homeIsWhite ? b.whiteElo : b.blackElo;
+                const isHomePlayerBizu = isTeam1Bizu; // Domácí is Team 1.
+
+                // Highlighting style
+                const bizuStyle = 'font-weight: 700; color: var(--primary-color);';
+                const homeStyle = isHomePlayerBizu ? bizuStyle : '';
                 const homeIcon = homeIsWhite ? '<i class="fa-solid fa-square" style="color: #fff; text-shadow: 0 0 1px #999; margin-right: 5px;"></i>' : '<i class="fa-solid fa-square" style="color: #000; margin-right: 5px;"></i>';
 
                 const awayName = homeIsWhite ? b.black : b.white;
                 const awayElo = homeIsWhite ? b.blackElo : b.whiteElo;
+                const isAwayPlayerBizu = isTeam2Bizu; // Hosté is Team 2.
+                const awayStyle = isAwayPlayerBizu ? bizuStyle : '';
                 const awayIcon = homeIsWhite ? '<i class="fa-solid fa-square" style="color: #000; margin-right: 5px;"></i>' : '<i class="fa-solid fa-square" style="color: #fff; text-shadow: 0 0 1px #999; margin-right: 5px;"></i>';
 
                 // Result might need generic swap if it was 1-0 for white? 
-                // Usually result is "1 - 0" (White - Black) or "1:0".
+                // Format usually "1 - 0" (White - Black) or "1:0".
                 // If Home is Black and result is "1 - 0", then Away won.
                 // But we display result in the middle. "1 - 0" usually implicitly means White - Black.
                 // If we change columns to Home vs Away, "1 - 0" might be confusing if Home (Black) lost.
@@ -622,12 +645,12 @@
 
                 return `
                             <tr>
-                                <td style="padding: 0.5rem;">${b.board || '-'}</td>
-                                <td style="padding: 0.5rem;">${homeIcon} ${homeName || '-'}</td>
-                                <td style="padding: 0.5rem;">${homeElo || ''}</td>
+                                <td style="padding: 0.5rem; color: var(--text-muted);">${b.board || '-'}</td>
+                                <td style="padding: 0.5rem; ${homeStyle}">${homeIcon} ${homeName || '-'}</td>
+                                <td style="padding: 0.5rem; font-size: 0.8em; color: var(--text-muted);">${homeElo && homeElo !== '-' ? homeElo : ''}</td>
                                 <td style="padding: 0.5rem; font-weight: bold; color: var(--text-color);">${b.result || '-'}</td>
-                                <td style="padding: 0.5rem;">${awayIcon} ${awayName || '-'}</td>
-                                <td style="padding: 0.5rem;">${awayElo || ''}</td>
+                                <td style="padding: 0.5rem; ${awayStyle}">${awayIcon} ${awayName || '-'}</td>
+                                <td style="padding: 0.5rem; font-size: 0.8em; color: var(--text-muted);">${awayElo && awayElo !== '-' ? awayElo : ''}</td>
                             </tr>
                         `;
             }).join('')}
