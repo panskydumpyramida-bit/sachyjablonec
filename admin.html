@@ -1280,34 +1280,76 @@
         }
 
         function insertHighlight(type) {
+            const editor = document.getElementById('articleContent');
             const selection = window.getSelection();
-            if (!selection.rangeCount) return;
+
+            if (!selection.rangeCount) {
+                console.log('No selection range');
+                return;
+            }
 
             const range = selection.getRangeAt(0);
-            const parent = selection.anchorNode.parentElement;
             const className = type === 'name' ? 'highlight-name' : 'highlight-score';
 
-            // Check if already highlighted
-            if (parent.classList.contains(className)) {
-                // Unwrap
-                const text = document.createTextNode(parent.textContent);
-                parent.parentNode.replaceChild(text, parent);
-            } else if (parent.classList.contains('highlight-name') || parent.classList.contains('highlight-score')) {
-                // Change type (e.g. from name to score)
-                parent.className = className;
-            } else {
-                // Wrap
-                if (!selection.isCollapsed) {
-                    const span = document.createElement('span');
-                    span.className = className;
-                    try {
-                        range.surroundContents(span);
-                    } catch (e) {
-                        alert('Nelze zvýraznit přes více bloků. Vyberte pouze text uvnitř odstavce.');
-                    }
-                }
+            // Check if selection is within the editor
+            if (!editor.contains(range.commonAncestorContainer)) {
+                console.log('Selection not in editor');
+                // If no selection in editor, insert placeholder at end
+                editor.focus();
+                const placeholder = type === 'name' ? '[Jméno]' : '[Skóre]';
+                const span = document.createElement('span');
+                span.className = className;
+                span.textContent = placeholder;
+                editor.appendChild(span);
+                editor.appendChild(document.createTextNode(' '));
+                updatePreview();
+                return;
             }
-            document.getElementById('articleContent').focus();
+
+            // Check if already inside a highlight span
+            let parentSpan = range.commonAncestorContainer;
+            while (parentSpan && parentSpan !== editor) {
+                if (parentSpan.nodeType === 1 && (parentSpan.classList.contains('highlight-name') || parentSpan.classList.contains('highlight-score'))) {
+                    // Toggle off or change type
+                    if (parentSpan.classList.contains(className)) {
+                        // Unwrap
+                        const text = document.createTextNode(parentSpan.textContent);
+                        parentSpan.parentNode.replaceChild(text, parentSpan);
+                    } else {
+                        // Change type
+                        parentSpan.className = className;
+                    }
+                    updatePreview();
+                    checkToolbarState();
+                    return;
+                }
+                parentSpan = parentSpan.parentNode;
+            }
+
+            // Wrap selected text
+            if (!selection.isCollapsed) {
+                const span = document.createElement('span');
+                span.className = className;
+                try {
+                    const contents = range.extractContents();
+                    span.appendChild(contents);
+                    range.insertNode(span);
+                    // Clear selection
+                    selection.removeAllRanges();
+                } catch (e) {
+                    console.error('Wrap error:', e);
+                    alert('Nelze zvýraznit přes více bloků. Vyberte pouze text uvnitř odstavce.');
+                }
+            } else {
+                // No text selected - insert placeholder
+                const placeholder = type === 'name' ? '[Jméno]' : '[Skóre]';
+                const span = document.createElement('span');
+                span.className = className;
+                span.textContent = placeholder;
+                range.insertNode(span);
+            }
+
+            editor.focus();
             updatePreview();
             checkToolbarState();
         }
