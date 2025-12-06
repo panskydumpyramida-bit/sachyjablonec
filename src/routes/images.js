@@ -28,12 +28,25 @@ const upload = multer({
     }
 });
 
-// Upload image
-router.post('/upload', authMiddleware, upload.single('image'), async (req, res) => {
+// Upload image - with multer error handling
+router.post('/upload', authMiddleware, (req, res, next) => {
+    upload.single('image')(req, res, (err) => {
+        if (err) {
+            console.error('Multer error:', err);
+            if (err.code === 'LIMIT_FILE_SIZE') {
+                return res.status(400).json({ error: 'Soubor je příliš velký (max 5MB)' });
+            }
+            return res.status(400).json({ error: err.message || 'Chyba při nahrávání souboru' });
+        }
+        next();
+    });
+}, async (req, res) => {
     try {
         if (!req.file) {
-            return res.status(400).json({ error: 'No file uploaded' });
+            return res.status(400).json({ error: 'Nebyl nahrán žádný soubor' });
         }
+
+        console.log('Processing upload:', req.file.originalname, req.file.size, 'bytes');
 
         const filename = `${Date.now()}-${Math.round(Math.random() * 1E9)}.webp`;
         const filepath = path.join(__dirname, '../../uploads', filename);
@@ -48,6 +61,7 @@ router.post('/upload', authMiddleware, upload.single('image'), async (req, res) 
             .toFile(filepath);
 
         const url = `/uploads/${filename}`;
+        console.log('Image saved to:', filepath, 'URL:', url);
 
         // Save to database
         const image = await prisma.image.create({
@@ -61,8 +75,8 @@ router.post('/upload', authMiddleware, upload.single('image'), async (req, res) 
 
         res.status(201).json(image);
     } catch (error) {
-        console.error('Upload error:', error);
-        res.status(500).json({ error: 'Failed to upload image' });
+        console.error('Upload processing error:', error);
+        res.status(500).json({ error: 'Chyba při zpracování obrázku: ' + error.message });
     }
 });
 
