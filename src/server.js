@@ -98,11 +98,12 @@ async function scrapeMatchDetails(compUrl, round, homeTeam, awayTeam) {
 
                     if (cells.length > 8) {
                         const board = clean(cells[0]);
-                        const white = clean(cells[2]);
-                        const whiteElo = clean(cells[3]);
-                        const black = clean(cells[6]);
-                        const blackElo = clean(cells[7]);
-                        const result = clean(cells[8]);
+                        // Indices observed for art=3 & lan=5
+                        const white = clean(cells[3]);
+                        const whiteElo = clean(cells[4]) || clean(cells[5]); // Try both cols for Elo
+                        const black = clean(cells[8]);
+                        const blackElo = clean(cells[9]);
+                        const result = clean(cells[10]);
 
                         boards.push({ board, white, whiteElo, black, blackElo, result });
                     } else {
