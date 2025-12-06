@@ -3,6 +3,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import fs from 'fs';
 
 // Import routes
 import authRoutes from './routes/auth.js';
@@ -18,6 +19,7 @@ dotenv.config();
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+const DATA_DIR = path.join(__dirname, '../data');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -168,9 +170,57 @@ app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 const allowedHtmlFiles = [
     'index.html', 'about.html', 'teams.html', 'club-tournaments.html',
     'youth.html', 'gallery.html', 'admin.html', 'article.html',
-    'members.html', 'calendar.html'
+    'members.html', 'calendar.html', 'blicak.html'
 ];
 
+// --- Blicak Registration Endpoints ---
+const REGISTRATIONS_FILE = path.join(DATA_DIR, 'registrations.json');
+
+// Ensure registrations file exists
+if (!fs.existsSync(REGISTRATIONS_FILE)) {
+    fs.writeFileSync(REGISTRATIONS_FILE, JSON.stringify([], null, 2));
+}
+
+app.get('/api/registration/blicak', async (req, res) => {
+    try {
+        const data = await fs.promises.readFile(REGISTRATIONS_FILE, 'utf8');
+        res.json(JSON.parse(data));
+    } catch (error) {
+        console.error('Error reading registrations:', error);
+        res.status(500).json({ error: 'Failed to read registrations' });
+    }
+});
+
+app.post('/api/registration/blicak', async (req, res) => {
+    try {
+        const { name, elo, age } = req.body;
+
+        if (!name) {
+            return res.status(400).json({ error: 'Name is required' });
+        }
+
+        const data = await fs.promises.readFile(REGISTRATIONS_FILE, 'utf8');
+        const registrations = JSON.parse(data);
+
+        const newRegistration = {
+            id: Date.now().toString(),
+            name,
+            elo: elo || '-',
+            age: age || '-',
+            registeredAt: new Date().toISOString()
+        };
+
+        registrations.push(newRegistration);
+        await fs.promises.writeFile(REGISTRATIONS_FILE, JSON.stringify(registrations, null, 2));
+
+        res.json({ success: true, registration: newRegistration });
+    } catch (error) {
+        console.error('Error saving registration:', error);
+        res.status(500).json({ error: 'Failed to save registration' });
+    }
+});
+
+app.use(express.static(path.join(__dirname, '../'))); // Serve static files from root loops back to * logic safely
 // Middleware to serve static files from root safely
 app.use((req, res, next) => {
     // skip api routes

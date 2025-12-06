@@ -560,6 +560,7 @@
                     <a href="index.html" class="logo"><i class="fa-solid fa-chess-knight"></i> TJ Bižuterie - Admin</a>
                     <ul class="nav-links">
                         <li><a href="index.html" target="_blank">Web</a></li>
+                        <li><a href="blicak.html" target="_blank">Blesk</a></li>
                         <li><a href="#" onclick="logout()" style="color: #fca5a5;">Odhlásit</a></li>
                     </ul>
                 </nav>
@@ -586,6 +587,8 @@
                 <div class="nav-tab" id="messagesTab" onclick="switchTab('messages')"><i
                         class="fa-solid fa-comments"></i>
                     Vzkazovník</div>
+                <div class="nav-tab" id="blicakTab" onclick="switchTab('blicak')"><i class="fa-solid fa-bolt"></i>
+                    Vánoční blesk</div>
             </div>
 
             <div id="alertContainer"></div>
@@ -884,7 +887,6 @@
                 </div>
             </div>
 
-            <!-- Messages View -->
             <div id="messagesView" class="hidden">
                 <h2><i class="fa-solid fa-comments"></i> Správa vzkazovníku</h2>
                 <p style="color: var(--text-muted); margin-bottom: 1.5rem;">Zde můžete mazat nevhodné příspěvky ze
@@ -903,6 +905,30 @@
                 <div id="noMessagesInfo"
                     style="text-align: center; padding: 2rem; color: var(--text-muted); display: none;">
                     Žádné vzkazy k zobrazení.
+                </div>
+            </div>
+
+            <!-- Blicak Registrations View -->
+            <div id="blicakView" class="hidden">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                    <h2 style="margin: 0;"><i class="fa-solid fa-bolt"></i> Registrace - Vánoční blesk</h2>
+                    <button class="btn-primary" onclick="loadBlicakRegistrations()"><i class="fa-solid fa-sync"></i>
+                        Obnovit</button>
+                </div>
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Jméno</th>
+                            <th>ELO</th>
+                            <th>Rok narození</th>
+                            <th>Datum registrace</th>
+                        </tr>
+                    </thead>
+                    <tbody id="blicakTableBody"></tbody>
+                </table>
+                <div id="noBlicakInfo"
+                    style="text-align: center; padding: 2rem; color: var(--text-muted); display: none;">
+                    Žádné registrace.
                 </div>
             </div>
         </div>
@@ -999,6 +1025,7 @@
             document.getElementById('usersView').classList.add('hidden');
             document.getElementById('membersView').classList.add('hidden');
             document.getElementById('messagesView').classList.add('hidden');
+            document.getElementById('blicakView').classList.add('hidden');
 
             const view = document.getElementById(tab + 'View');
             if (view) view.classList.remove('hidden');
@@ -1008,6 +1035,7 @@
             if (tab === 'editor') resetEditor();
             if (tab === 'members') loadMembers();
             if (tab === 'messages') loadAdminMessages();
+            if (tab === 'blicak') loadBlicakRegistrations();
         }
 
         // Dashboard
@@ -1035,6 +1063,33 @@
             try {
                 await fetch(`${API_URL}/news/${id}/publish`, { method: 'PATCH', headers: { 'Authorization': `Bearer ${authToken}` } });
                 loadDashboard();
+            } catch (e) { console.error(e); }
+        }
+
+        async function loadBlicakRegistrations() {
+            try {
+                const res = await fetch(`${API_URL}/registration/blicak`, { headers: { 'Authorization': `Bearer ${authToken}` } });
+                if (res.ok) {
+                    const regs = await res.json();
+                    const tbody = document.getElementById('blicakTableBody');
+                    const info = document.getElementById('noBlicakInfo');
+
+                    if (regs.length === 0) {
+                        tbody.innerHTML = '';
+                        info.style.display = 'block';
+                        return;
+                    }
+
+                    info.style.display = 'none';
+                    tbody.innerHTML = regs.map(reg => `
+                        <tr>
+                            <td>${reg.name}</td>
+                            <td>${reg.elo || '-'}</td>
+                            <td>${reg.birthYear || '-'}</td>
+                            <td>${new Date(reg.timestamp).toLocaleString('cs-CZ')}</td>
+                        </tr>
+                    `).join('');
+                }
             } catch (e) { console.error(e); }
         }
 

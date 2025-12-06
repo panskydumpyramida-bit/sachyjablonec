@@ -437,6 +437,69 @@ footer {
     .menu-toggle {
         display: block;
     }
+
+    /* Mobile Menu - Always Expanded */
+    /* Ensure dropdowns take full width in the column layout */
+    .nav-links.active .dropdown {
+        display: block;
+        width: 100%;
+        margin-bottom: 0.5rem;
+    }
+
+    .nav-links.active .dropdown>a {
+        font-weight: 700;
+        color: var(--primary-color);
+        margin-bottom: 0.25rem;
+        display: block;
+    }
+
+    /* Force the menu to be visible when parent nav is active */
+    .nav-links.active .dropdown-menu {
+        display: block !important;
+        position: static !important;
+        opacity: 1 !important;
+        visibility: visible !important;
+        transform: none !important;
+        box-shadow: none;
+        border: none;
+        background-color: rgba(255, 255, 255, 0.03);
+        width: 100%;
+        padding: 0.5rem 0;
+        min-width: unset;
+        border-radius: 4px;
+        margin-top: 0;
+    }
+
+    /* Additional specificity to override any other rules */
+    @media (max-width: 768px) {
+        .dropdown-menu {
+            display: block !important;
+            /* Fallback */
+        }
+    }
+
+    .dropdown-menu li {
+        text-align: center;
+        width: 100%;
+    }
+
+    .dropdown-menu a {
+        padding: 0.6rem 0;
+        font-size: 0.95rem;
+        color: var(--text-muted);
+        display: block;
+        width: 100%;
+    }
+
+    .dropdown-menu a:hover {
+        background-color: rgba(255, 255, 255, 0.05);
+        color: var(--text-color);
+    }
+
+    /* Hide the arrow since it's always expanded */
+    .dropdown .fa-caret-down {
+        display: none;
+    }
 }
 
 .hidden {
