@@ -2061,6 +2061,26 @@
 
         function insertIntroBlock() {
             const content = document.getElementById('articleContent');
+            const selection = window.getSelection();
+
+            // Check if already inside a puzzle-section - if so, escape from it
+            if (selection.rangeCount > 0) {
+                let node = selection.getRangeAt(0).commonAncestorContainer;
+                while (node && node !== content) {
+                    if (node.nodeType === 1 && node.classList?.contains('puzzle-section')) {
+                        // Already inside - move cursor after the block
+                        const newRange = document.createRange();
+                        newRange.setStartAfter(node);
+                        newRange.collapse(true);
+                        selection.removeAllRanges();
+                        selection.addRange(newRange);
+                        content.focus();
+                        return;
+                    }
+                    node = node.parentNode;
+                }
+            }
+
             const introHtml = `<div class="puzzle-section">
     <p style="font-size: 1.1rem; margin-bottom: 1rem;">
         🧩 <strong>Pozice z partie...</strong><br>
