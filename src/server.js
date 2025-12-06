@@ -884,45 +884,46 @@ app.use((err, req, res, next) => {
 // Seed Competitions Function
 const seedCompetitions = async () => {
     try {
-        const count = await prisma.competition.count();
-        if (count === 0) {
-            console.log('Seeding competitions...');
-            const initialCompetitions = [
-                {
-                    id: "3255",
-                    name: "1. liga mládeže A",
-                    type: "chess-results",
-                    url: "https://s3.chess-results.com/tnr1243811.aspx?lan=5&art=46&SNode=S0",
-                    category: "youth"
-                },
-                {
-                    id: "3363",
-                    name: "Krajský přebor st. žáků",
-                    type: "chess-results",
-                    url: "https://s1.chess-results.com/tnr1310849.aspx?lan=5&art=46&SNode=S0",
-                    category: "youth"
-                },
-                {
-                    id: "ks-vychod",
-                    name: "Krajská soutěž východ",
-                    type: "chess-results",
-                    url: "https://s2.chess-results.com/tnr1278502.aspx?lan=5&art=46&SNode=S0",
-                    category: "teams"
-                },
-                {
-                    id: "kp-liberec",
-                    name: "Krajský přebor",
-                    type: "chess-results",
-                    url: "https://chess-results.com/tnr1276470.aspx?lan=5&art=46",
-                    category: "teams"
-                }
-            ];
-
-            for (const comp of initialCompetitions) {
-                await prisma.competition.create({ data: comp });
+        console.log('Seeding/Updating competitions...');
+        const initialCompetitions = [
+            {
+                id: "3255",
+                name: "1. liga mládeže A",
+                type: "chess-results",
+                url: "https://s3.chess-results.com/tnr1243811.aspx?lan=5&art=46&SNode=S0",
+                category: "youth"
+            },
+            {
+                id: "3363",
+                name: "Krajský přebor st. žáků",
+                type: "chess-results",
+                url: "https://s1.chess-results.com/tnr1310849.aspx?lan=5&art=46&SNode=S0",
+                category: "youth"
+            },
+            {
+                id: "ks-vychod",
+                name: "Krajská soutěž východ",
+                type: "chess-results",
+                url: "https://s2.chess-results.com/tnr1278502.aspx?lan=5&art=46&SNode=S0",
+                category: "teams"
+            },
+            {
+                id: "kp-liberec",
+                name: "Krajský přebor",
+                type: "chess-results",
+                url: "https://chess-results.com/tnr1276470.aspx?lan=5&art=46",
+                category: "teams"
             }
-            console.log('Competitions seeded.');
+        ];
+
+        for (const comp of initialCompetitions) {
+            await prisma.competition.upsert({
+                where: { id: comp.id },
+                update: {}, // Don't overwrite if exists (preserves custom URL changes)
+                create: comp
+            });
         }
+        console.log('Competitions seeded/verified.');
     } catch (e) {
         console.error('Error seeding competitions:', e);
     }
