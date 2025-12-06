@@ -476,8 +476,14 @@
                 const t2Style = (team2 === match.myTeam) ? highlightStyle : '';
 
                 const hasResult = match.result && match.result !== '-' && match.result !== '' && match.result.includes(':');
+
+                // Escape quotes for onclick handler
+                const safeTeam1 = team1.replace(/"/g, '&quot;');
+                const safeTeam2 = team2.replace(/"/g, '&quot;');
+                const safeComp = match.competition.replace(/"/g, '&quot;');
+
                 const resultHtml = hasResult
-                    ? `<span class="match-result clickable" onclick="toggleMatchDetails('${match.competition}', '${match.round}', '${team1}', '${team2}', this)" 
+                    ? `<span class="match-result clickable" onclick="toggleMatchDetails('${safeComp}', '${match.round}', '${safeTeam1}', '${safeTeam2}', this)" 
                            style="cursor: pointer; text-decoration: underline; text-decoration-style: dotted; text-underline-offset: 4px;" 
                            title="Zobrazit detailní výsledky">${match.result}</span>`
                     : (match.result && match.result !== '-' ? `<span class="match-result">${match.result}</span>` : '');
@@ -516,11 +522,18 @@
 
         // Inline Toggle Function
         async function toggleMatchDetails(competition, round, team1, team2, element) {
-            // Construct ID same as above
+            // Reconstruct ID (need to replicate logic exactly or pass ID)
+            // Note: team1 passed here might have &quot;, but the ID generation used raw string.
+            // Actually, onclick passes string literals. If I escaped them in HTML, they come back as normal strings to JS function?
+            // Yes. <div onclick="alert('&quot;')"> alerts ".
+            // So team1 here is the raw string with quotes.
             const detailsId = `details-${competition.replace(/\s+/g, '-')}-${round}-${team1.replace(/\s+/g, '-')}`.replace(/[^a-zA-Z0-9-]/g, '');
             const container = document.getElementById(detailsId);
 
-            if (!container) return;
+            if (!container) {
+                console.error('Container not found:', detailsId);
+                return;
+            }
 
             // Toggle visibility
             const isHidden = container.style.display === 'none';
@@ -567,24 +580,57 @@
                      <thead>
                         <tr>
                             <th style="padding: 0.5rem;">Šach.</th>
-                            <th style="padding: 0.5rem;">Bílý</th>
+                            <th style="padding: 0.5rem;">Domácí</th>
                             <th style="padding: 0.5rem;">ELO</th>
                             <th style="padding: 0.5rem;">Výs.</th>
-                            <th style="padding: 0.5rem;">Černý</th>
+                            <th style="padding: 0.5rem;">Hosté</th>
                             <th style="padding: 0.5rem;">ELO</th>
                         </tr>
                     </thead>
                     <tbody>
-                        ${boards.map(b => `
+                        ${boards.map(b => {
+                // Parse board number to determine color
+                // Format usually "1", "2" or "1.1", "1.2"
+                let boardNum = 1;
+                const parts = (b.board || '').split('.');
+                if (parts.length > 1) {
+                    boardNum = parseInt(parts[1]);
+                } else {
+                    boardNum = parseInt(b.board);
+                }
+                if (isNaN(boardNum)) boardNum = 1;
+
+                // Odd board = Home is White
+                const homeIsWhite = boardNum % 2 !== 0;
+
+                const homeName = homeIsWhite ? b.white : b.black;
+                const homeElo = homeIsWhite ? b.whiteElo : b.blackElo;
+                const homeIcon = homeIsWhite ? '<i class="fa-solid fa-square" style="color: #fff; text-shadow: 0 0 1px #999; margin-right: 5px;"></i>' : '<i class="fa-solid fa-square" style="color: #000; margin-right: 5px;"></i>';
+
+                const awayName = homeIsWhite ? b.black : b.white;
+                const awayElo = homeIsWhite ? b.blackElo : b.whiteElo;
+                const awayIcon = homeIsWhite ? '<i class="fa-solid fa-square" style="color: #000; margin-right: 5px;"></i>' : '<i class="fa-solid fa-square" style="color: #fff; text-shadow: 0 0 1px #999; margin-right: 5px;"></i>';
+
+                // Result might need generic swap if it was 1-0 for white? 
+                // Usually result is "1 - 0" (White - Black) or "1:0".
+                // If Home is Black and result is "1 - 0", then Away won.
+                // But we display result in the middle. "1 - 0" usually implicitly means White - Black.
+                // If we change columns to Home vs Away, "1 - 0" might be confusing if Home (Black) lost.
+                // Ideally we show score from "Home perspective" or keep standard result and users know 1-0 is first player?
+                // Standard chess score "1-0" ALWAYS means White won.
+                // So we should just display it. The columns are just for player names.
+
+                return `
                             <tr>
                                 <td style="padding: 0.5rem;">${b.board || '-'}</td>
-                                <td style="padding: 0.5rem;">${b.white || '-'}</td>
-                                <td style="padding: 0.5rem;">${b.whiteElo || ''}</td>
+                                <td style="padding: 0.5rem;">${homeIcon} ${homeName || '-'}</td>
+                                <td style="padding: 0.5rem;">${homeElo || ''}</td>
                                 <td style="padding: 0.5rem; font-weight: bold; color: var(--text-color);">${b.result || '-'}</td>
-                                <td style="padding: 0.5rem;">${b.black || '-'}</td>
-                                <td style="padding: 0.5rem;">${b.blackElo || ''}</td>
+                                <td style="padding: 0.5rem;">${awayIcon} ${awayName || '-'}</td>
+                                <td style="padding: 0.5rem;">${awayElo || ''}</td>
                             </tr>
-                        `).join('')}
+                        `;
+            }).join('')}
                     </tbody>
                 </table>
             `;
