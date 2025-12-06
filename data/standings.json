@@ -45,77 +45,77 @@
               "round": "1",
               "date": "2025/10/04",
               "opponent": "Desko Liberec",
-              "result": "3 : 3",
+              "result": "3 : 3 ",
               "isHome": false
             },
             {
               "round": "2",
               "date": "2025/10/04",
               "opponent": "ŠK Teplice",
-              "result": "5 : 1",
+              "result": "5 : 1 ",
               "isHome": true
             },
             {
               "round": "3",
               "date": "2025/10/05",
               "opponent": "ŠK Slavoj Litoměřice",
-              "result": "4 : 2",
+              "result": "4 : 2 ",
               "isHome": false
             },
             {
               "round": "4",
               "date": "2025/10/05",
               "opponent": "TJ Kobylisy",
-              "result": "5½ : ½",
+              "result": "5½ : ½ ",
               "isHome": false
             },
             {
               "round": "5",
               "date": "2025/12/06",
               "opponent": "ŠK ZIKUDA Turnov",
-              "result": " : ",
+              "result": " :  ",
               "isHome": true
             },
             {
               "round": "6",
               "date": "2025/12/06",
               "opponent": "ŠK Česká Lípa",
-              "result": " : ",
+              "result": " :  ",
               "isHome": false
             },
             {
               "round": "7",
               "date": "2026/01/24",
               "opponent": "VHS PROJEKT Kralupy",
-              "result": " : ",
+              "result": " :  ",
               "isHome": true
             },
             {
               "round": "8",
               "date": "2026/01/24",
               "opponent": "ŠK JOLY Lysá n.L. B",
-              "result": " : ",
+              "result": " :  ",
               "isHome": false
             },
             {
               "round": "9",
               "date": "2026/04/25",
               "opponent": "TJ Bohemians Praha B",
-              "result": " : ",
+              "result": " :  ",
               "isHome": true
             },
             {
               "round": "10",
               "date": "2026/04/25",
               "opponent": "ŠK Lípa",
-              "result": " : ",
+              "result": " :  ",
               "isHome": false
             },
             {
               "round": "11",
               "date": "2026/04/26",
               "opponent": "ŠŠPM Lipky HK",
-              "result": " : ",
+              "result": " :  ",
               "isHome": true
             }
           ]
@@ -156,15 +156,211 @@
           "url": null
         }
       ],
-      "updatedAt": "2025-12-05T23:38:52.309Z"
+      "updatedAt": "2025-12-06T18:51:36.230Z"
     },
     {
       "competitionId": "3363",
       "name": "Krajský přebor st. žáků",
-      "chessczUrl": "https://www.chess.cz/soutez/3363/",
+      "url": "https://s1.chess-results.com/tnr1310849.aspx?lan=5&art=0&SNode=S0",
       "category": "youth",
-      "error": "fetch failed",
-      "standings": []
+      "standings": [
+        {
+          "rank": 1,
+          "team": "TJ Desko Liberec C Žirafy",
+          "points": 13,
+          "isBizuterie": false,
+          "url": null
+        },
+        {
+          "rank": 2,
+          "team": "TJ Bižuterie Jablonec n.N. JR1",
+          "points": 12,
+          "isBizuterie": true,
+          "url": null,
+          "schedule": [
+            {
+              "round": "1",
+              "date": "06.12.2025",
+              "opponent": "TJ Desko Liberec C Žirafy",
+              "result": "3 : 1",
+              "isHome": false
+            },
+            {
+              "round": "2",
+              "date": "06.12.2025",
+              "opponent": "TJ Desko Liberec G Psi",
+              "result": "4 : 0",
+              "isHome": true
+            },
+            {
+              "round": "3",
+              "date": "06.12.2025",
+              "opponent": "ŠK ZIKUDA Turnov G Petrova banda",
+              "result": "0 : 4",
+              "isHome": false
+            },
+            {
+              "round": "4",
+              "date": "06.12.2025",
+              "opponent": "TJ Desko Liberec F Lišky",
+              "result": "3 : 1",
+              "isHome": true
+            }
+          ]
+        },
+        {
+          "rank": 3,
+          "team": "ŠK ZIKUDA Turnov F Zdislava",
+          "points": 9,
+          "isBizuterie": false,
+          "url": null
+        },
+        {
+          "rank": 4,
+          "team": "TJ Desko Liberec F Lišky",
+          "points": 9,
+          "isBizuterie": false,
+          "url": null
+        },
+        {
+          "rank": 5,
+          "team": "ŠK ZIKUDA Turnov D",
+          "points": 8,
+          "isBizuterie": false,
+          "url": null
+        },
+        {
+          "rank": 6,
+          "team": "TJ Bižuterie Jablonec n.N. L",
+          "points": 8,
+          "isBizuterie": true,
+          "url": null,
+          "schedule": [
+            {
+              "round": "1",
+              "date": "06.12.2025",
+              "opponent": "TJ Bižuterie Jablonec n.N. JR2",
+              "result": "2 : 2",
+              "isHome": true
+            },
+            {
+              "round": "2",
+              "date": "06.12.2025",
+              "opponent": "TJ Desko Liberec D Medvědi",
+              "result": "1 : 3",
+              "isHome": false
+            },
+            {
+              "round": "3",
+              "date": "06.12.2025",
+              "opponent": "ŠK ZIKUDA Turnov F Zdislava",
+              "result": "3 : 1",
+              "isHome": true
+            },
+            {
+              "round": "4",
+              "date": "06.12.2025",
+              "opponent": "ŠK ZIKUDA Turnov D",
+              "result": "2 : 2",
+              "isHome": false
+            }
+          ]
+        },
+        {
+          "rank": 8,
+          "team": "ŠK ZIKUDA Turnov G Petrova banda",
+          "points": 7,
+          "isBizuterie": false,
+          "url": null
+        },
+        {
+          "rank": 9,
+          "team": "Jizerský drak",
+          "points": 7,
+          "isBizuterie": false,
+          "url": null
+        },
+        {
+          "rank": 10,
+          "team": "TJ Desko Liberec D Medvědi",
+          "points": 6,
+          "isBizuterie": false,
+          "url": null
+        },
+        {
+          "rank": 11,
+          "team": "TJ Desko Liberec E Koaly",
+          "points": 6,
+          "isBizuterie": false,
+          "url": null
+        },
+        {
+          "rank": 12,
+          "team": "TJ Bižuterie Jablonec n.N. JR2",
+          "points": 5,
+          "isBizuterie": true,
+          "url": null,
+          "schedule": [
+            {
+              "round": "1",
+              "date": "06.12.2025",
+              "opponent": "TJ Bižuterie Jablonec n.N. L",
+              "result": "2 : 2",
+              "isHome": false
+            },
+            {
+              "round": "2",
+              "date": "06.12.2025",
+              "opponent": "Jizerský drak",
+              "result": "4 : 0",
+              "isHome": true
+            },
+            {
+              "round": "3",
+              "date": "06.12.2025",
+              "opponent": "ŠK ZIKUDA Turnov E Skála",
+              "result": "2 : 2",
+              "isHome": false
+            },
+            {
+              "round": "4",
+              "date": "06.12.2025",
+              "opponent": "ŠK ZIKUDA Turnov G Petrova banda",
+              "result": "1 : 3",
+              "isHome": true
+            },
+            {
+              "round": "5",
+              "date": "06.12.2025",
+              "opponent": "TJ Desko Liberec F Lišky",
+              "result": "3 : 1",
+              "isHome": false
+            }
+          ]
+        },
+        {
+          "rank": 13,
+          "team": "TJ Desko Liberec H Papoušci",
+          "points": 3,
+          "isBizuterie": false,
+          "url": null
+        },
+        {
+          "rank": 14,
+          "team": "TJ Desko Liberec I Zebry",
+          "points": 3,
+          "isBizuterie": false,
+          "url": null
+        },
+        {
+          "rank": 15,
+          "team": "TJ Desko Liberec G Psi",
+          "points": 3,
+          "isBizuterie": false,
+          "url": null
+        }
+      ],
+      "updatedAt": "2025-12-06T18:51:36.508Z"
     },
     {
       "competitionId": "ks-vychod",
@@ -197,49 +393,49 @@
               "round": "1",
               "date": "2025/11/02",
               "opponent": "TJ Bižuterie Jablonec n.Nisou \"D\"",
-              "result": "3½ : 1½",
+              "result": "3½ : 1½ ",
               "isHome": true
             },
             {
               "round": "2",
               "date": "2025/11/16",
               "opponent": "ŠK ZIKUDA Turnov \"F\"",
-              "result": "3 : 2",
+              "result": "3 : 2 ",
               "isHome": false
             },
             {
               "round": "3",
               "date": "2025/11/30",
               "opponent": "TJ Desko Liberec \"C\"",
-              "result": "2½ : 2½",
+              "result": "2½ : 2½ ",
               "isHome": true
             },
             {
               "round": "4",
               "date": "2025/12/14",
               "opponent": "TJ Jiskra Tanvald \"B\"",
-              "result": " : ",
+              "result": " :  ",
               "isHome": false
             },
             {
               "round": "5",
               "date": "2026/01/11",
               "opponent": "ŠK Slavia Liberec \"B\"",
-              "result": " : ",
+              "result": " :  ",
               "isHome": true
             },
             {
               "round": "6",
               "date": "2026/01/25",
               "opponent": "TJ Spartak Rokytnice n.Jizerou",
-              "result": " : ",
+              "result": " :  ",
               "isHome": false
             },
             {
               "round": "7",
               "date": "2026/02/08",
               "opponent": "volno",
-              "result": " : ",
+              "result": " :  ",
               "isHome": true
             }
           ]
@@ -262,49 +458,49 @@
               "round": "1",
               "date": "2025/11/02",
               "opponent": "TJ Bižuterie Jablonec n.Nisou \"C\"",
-              "result": "3½ : 1½",
+              "result": "3½ : 1½ ",
               "isHome": false
             },
             {
               "round": "2",
               "date": "2025/11/16",
               "opponent": "volno",
-              "result": " : ",
+              "result": " :  ",
               "isHome": true
             },
             {
               "round": "3",
               "date": "2025/11/30",
               "opponent": "ŠK ZIKUDA Turnov \"F\"",
-              "result": "2 : 3",
+              "result": "2 : 3 ",
               "isHome": true
             },
             {
               "round": "4",
               "date": "2025/12/14",
               "opponent": "TJ Desko Liberec \"C\"",
-              "result": " : ",
+              "result": " :  ",
               "isHome": false
             },
             {
               "round": "5",
               "date": "2026/01/11",
               "opponent": "TJ Jiskra Tanvald \"B\"",
-              "result": " : ",
+              "result": " :  ",
               "isHome": true
             },
             {
               "round": "6",
               "date": "2026/01/25",
               "opponent": "ŠK Slavia Liberec \"B\"",
-              "result": " : ",
+              "result": " :  ",
               "isHome": false
             },
             {
               "round": "7",
               "date": "2026/02/08",
               "opponent": "TJ Spartak Rokytnice n.Jizerou",
-              "result": " : ",
+              "result": " :  ",
               "isHome": true
             }
           ]
@@ -317,7 +513,7 @@
           "url": null
         }
       ],
-      "updatedAt": "2025-12-05T23:39:02.802Z"
+      "updatedAt": "2025-12-06T18:51:36.720Z"
     },
     {
       "competitionId": "kp-liberec",
@@ -343,63 +539,63 @@
               "round": "1",
               "date": "2025/11/09",
               "opponent": "TJ Bižuterie Jablonec n.N. \"B\"",
-              "result": "6½ : 1½",
+              "result": "6½ : 1½ ",
               "isHome": true
             },
             {
               "round": "2",
               "date": "2025/11/23",
               "opponent": "TJ Jiskra Tanvald",
-              "result": "4 : 4",
+              "result": "4 : 4 ",
               "isHome": true
             },
             {
               "round": "3",
               "date": "2025/12/07",
               "opponent": "ŠK Zikuda Turnov \"E\"",
-              "result": " : ",
+              "result": " :  ",
               "isHome": false
             },
             {
               "round": "4",
               "date": "2026/01/18",
               "opponent": "ŠK Frýdlant",
-              "result": " : ",
+              "result": " :  ",
               "isHome": true
             },
             {
               "round": "5",
               "date": "2026/02/01",
               "opponent": "1.Novoborský ŠK \"B\"",
-              "result": " : ",
+              "result": " :  ",
               "isHome": false
             },
             {
               "round": "6",
               "date": "2026/02/15",
               "opponent": "ŠK Česká Lípa \"B\"",
-              "result": " : ",
+              "result": " :  ",
               "isHome": true
             },
             {
               "round": "7",
               "date": "2026/03/01",
               "opponent": "Desko Liberec \"B\"",
-              "result": " : ",
+              "result": " :  ",
               "isHome": false
             },
             {
               "round": "8",
               "date": "2026/03/22",
               "opponent": "ŠK Slavia Liberec",
-              "result": " : ",
+              "result": " :  ",
               "isHome": true
             },
             {
               "round": "9",
               "date": "2026/04/12",
               "opponent": "TJ Lokomotiva Liberec",
-              "result": " : ",
+              "result": " :  ",
               "isHome": false
             }
           ]
@@ -450,63 +646,63 @@
               "round": "1",
               "date": "2025/11/09",
               "opponent": "TJ Bižuterie Jablonec n.N. \"A\"",
-              "result": "6½ : 1½",
+              "result": "6½ : 1½ ",
               "isHome": false
             },
             {
               "round": "2",
               "date": "2025/11/23",
               "opponent": "ŠK Česká Lípa \"B\"",
-              "result": "3 : 5",
+              "result": "3 : 5 ",
               "isHome": true
             },
             {
               "round": "3",
               "date": "2025/12/07",
               "opponent": "TJ Jiskra Tanvald",
-              "result": " : ",
+              "result": " :  ",
               "isHome": false
             },
             {
               "round": "4",
               "date": "2026/01/18",
               "opponent": "Desko Liberec \"B\"",
-              "result": " : ",
+              "result": " :  ",
               "isHome": true
             },
             {
               "round": "5",
               "date": "2026/02/01",
               "opponent": "ŠK Zikuda Turnov \"E\"",
-              "result": " : ",
+              "result": " :  ",
               "isHome": false
             },
             {
               "round": "6",
               "date": "2026/02/15",
               "opponent": "ŠK Slavia Liberec",
-              "result": " : ",
+              "result": " :  ",
               "isHome": true
             },
             {
               "round": "7",
               "date": "2026/03/01",
               "opponent": "ŠK Frýdlant",
-              "result": " : ",
+              "result": " :  ",
               "isHome": false
             },
             {
               "round": "8",
               "date": "2026/03/22",
               "opponent": "TJ Lokomotiva Liberec",
-              "result": " : ",
+              "result": " :  ",
               "isHome": true
             },
             {
               "round": "9",
               "date": "2026/04/12",
               "opponent": "1.Novoborský ŠK \"B\"",
-              "result": " : ",
+              "result": " :  ",
               "isHome": false
             }
           ]
@@ -519,8 +715,8 @@
           "url": null
         }
       ],
-      "updatedAt": "2025-12-05T23:39:02.995Z"
+      "updatedAt": "2025-12-06T18:51:36.890Z"
     }
   ],
-  "lastUpdated": "2025-12-05T23:39:02.995Z"
+  "lastUpdated": "2025-12-06T18:51:36.890Z"
 }

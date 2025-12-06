@@ -147,10 +147,122 @@ async function scrapeMatchDetails(compUrl, round, homeTeam, awayTeam) {
 // Match: TJ Bižuterie Jablonec (Home) vs ŠK Teplice (Away) - Round 2
 // Result: 5 : 1
 // Debugging Adult League KP Liberec (tnr1276470)
-const url = 'https://chess-results.com/tnr1276470.aspx?lan=5&art=3&rd=1';
-const myTeam = 'TJ Bižuterie Jablonec n.N. "A"';
-const opponent = 'TJ Bižuterie Jablonec n.N. "B"';
+// Full Flow Test
+const STANDINGS_URL = 'https://s2.chess-results.com/tnr1278502.aspx?lan=5&art=46&SNode=S0';
+const MY_TEAM_NAME = 'TJ Bižuterie Jablonec';
+const ROUND = 1;
+const HOME_TEAM = 'Desko Liberec'; // Short in this case
+const AWAY_TEAM = 'TJ Bižuterie Jablonec n.N. A'; // Long version that likely causes failure
 
-scrapeMatchDetails(url, '1', myTeam, opponent).then(boards => {
-    console.log('Result:', JSON.stringify(boards, null, 2));
-});
+async function testFullFlow() {
+    console.log('Fetching standings from:', STANDINGS_URL);
+    const response = await fetch(STANDINGS_URL, {
+        headers: {
+            'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+        }
+    });
+    const html = await response.text();
+    console.log('HTML length:', html.length);
+    console.log('Contains "Bižuterie"?', html.toLowerCase().includes('bižuterie'));
+    const rows = html.split('</tr>');
+
+    // Helper to decode entities for matching
+    const decode = (str) => str.replace(/&#(\d+);/g, (m, d) => String.fromCharCode(d));
+
+    // Fuzzy name matcher: Remove common suffixes/prefixes that vary
+    const simplify = (name) => {
+        return name.toLowerCase()
+            .replace(/n\.n\./g, '')
+            .replace(/["']/g, '')
+            .replace(/\s+/g, ' ')
+            .trim();
+    };
+
+    let teamUrl = null;
+
+    // Use Long Names to simulate issue
+    const searchHome = simplify(HOME_TEAM);
+    const searchAway = simplify(AWAY_TEAM);
+
+    console.log(`Searching for teams simplified: '${searchHome}' and '${searchAway}'`);
+
+    for (const row of rows) {
+        // ... (find url logic - simplified for this test)
+        if (decode(row).toLowerCase().includes('bižuterie')) {
+            if (!teamUrl) { // Only grab first for now
+                const urlMatch = row.match(/href="([^"]+)"/);
+                if (urlMatch) {
+                    teamUrl = urlMatch[1].replace(/&amp;/g, '&');
+                    if (!teamUrl.startsWith('http')) {
+                        const origin = new URL(STANDINGS_URL).origin;
+                        teamUrl = teamUrl.startsWith('/') ? origin + teamUrl : origin + '/' + teamUrl;
+                    }
+                    console.log('Extracted Team URL:', teamUrl);
+
+                    // Simulate server.js transformation
+                    let detailsUrl = teamUrl;
+                    if (detailsUrl.includes('art=')) {
+                        detailsUrl = detailsUrl.replace(/art=\d+/, 'art=3');
+                    } else {
+                        detailsUrl += '&art=3';
+                    }
+                    detailsUrl += `&rd=${ROUND}`;
+
+                    console.log('Transformed Details URL:', detailsUrl);
+
+                    // Use this URL for fetch
+                    teamUrl = detailsUrl;
+                }
+            }
+        }
+    }
+
+    if (teamUrl) {
+        console.log('Fetching Schedule from:', teamUrl);
+        // teamUrl is art=20 usually
+        const scheduleRes = await fetch(teamUrl, { headers: { 'User-Agent': 'Mozilla/5.0' } });
+        const scheduleHtml = await scheduleRes.text();
+        // Parse schedule for Round 1
+        // Usually row: 1 | ... | Opponent | Result
+        const sRows = scheduleHtml.split('</tr>');
+        let opponent = '';
+
+        for (const sRow of sRows) {
+            const txt = clean(sRow);
+            // Look for Round 1
+            // Format: 1 ... Name ...
+            // Assume column with link is opponent?
+            if (txt.match(/^1\s+/)) {
+                // Opponent is usually in a link that is NOT my team
+                // Find all links
+                const links = sRow.match(/<a[^>]+>([^<]+)<\/a>/g);
+                if (links) {
+                    for (const l of links) {
+                        const name = clean(l);
+                        if (!name.toLowerCase().includes('bižuterie')) {
+                            opponent = name;
+                            break;
+                        }
+                    }
+                }
+            }
+            if (opponent) break;
+        }
+
+        if (opponent) {
+            console.log(`Found Opponent for Round ${ROUND}: ${opponent}`);
+            // NOW test details
+            console.log('Testing scrapeMatchDetails with this URL...');
+            const boards = await scrapeMatchDetails(teamUrl, ROUND, MY_TEAM_NAME, opponent);
+            console.log('Result:', JSON.stringify(boards, null, 2));
+        } else {
+            console.log('Could not find opponent for Round 1 in schedule.');
+            console.log('Schedule HTML sample:', scheduleHtml.substring(0, 1000));
+        }
+
+    } else {
+        console.error('Could not find team URL in standings.');
+    }
+}
+
+testFullFlow();
