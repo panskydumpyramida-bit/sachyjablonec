@@ -25,6 +25,16 @@ const DATA_DIR = path.join(__dirname, '../data');
 const app = express();
 const PORT = process.env.PORT || 3001;
 
+// Redirect non-www to www (production only)
+app.use((req, res, next) => {
+    const host = req.headers.host;
+    // Only redirect in production and if host is non-www
+    if (host && host === 'sachyjablonec.cz') {
+        return res.redirect(301, `https://www.sachyjablonec.cz${req.url}`);
+    }
+    next();
+});
+
 // Helper: Clean HTML text
 const clean = (s) => {
     if (!s) return '';
