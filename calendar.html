@@ -347,6 +347,7 @@
                                             date: dateObj,
                                             originalDate: match.date,
                                             competition: compName,
+                                            category: comp.category || 'teams', // 'youth' or 'teams'
                                             myTeam: teamName,
                                             opponent: match.opponent,
                                             result: match.result,
@@ -579,15 +580,20 @@
                 // Inline Details Container ID
                 const detailsId = `details-${match.competition.replace(/\s+/g, '-')}-${match.round}-${team1.replace(/\s+/g, '-')}`.replace(/[^a-zA-Z0-9-]/g, '');
 
+                // Youth vs Adult styling
+                const isYouth = match.category === 'youth';
+                const categoryIcon = isYouth ? '<i class="fa-solid fa-child" style="margin-right: 0.3rem; color: #4ade80;"></i>' : '';
+                const categoryBorder = isYouth ? 'border-left-color: #4ade80;' : '';
+
                 html += `
-                    <div class="match-card ${isPast ? 'past-match' : ''}" style="${isPast ? 'border-left: 2px solid var(--text-muted);' : ''}">
+                    <div class="match-card ${isPast ? 'past-match' : ''}" style="${isPast ? 'border-left: 2px solid var(--text-muted);' : ''} ${!isPast && isYouth ? 'border-left: 2px solid #4ade80;' : ''}">
                         <div class="match-header" style="display: flex; gap: 1rem; width: 100%;">
                             <div class="match-date">
                                 <div class="match-day">${day}.</div>
                                 <div class="match-month">${dayName}</div>
                             </div>
                             <div class="match-details">
-                                <div class="match-competition">${match.competition} • ${match.round}. kolo</div>
+                                <div class="match-competition">${categoryIcon}${match.competition} • ${match.round}. kolo</div>
                                 <div class="match-teams">
                                     <span style="${t1Style}">${team1}</span> - <span style="${t2Style}">${team2}</span>
                                     ${resultHtml}
