@@ -242,9 +242,13 @@
                             style="position: absolute; right: 1rem; top: 50%; transform: translateY(-50%); color: var(--text-muted); pointer-events: none;"></i>
                     </div>
                 </div>
-                <div>
-                    <button id="togglePastBtn" class="btn-secondary" onclick="togglePastMatches()">
-                        <i class="fa-solid fa-history"></i> Zobrazit uplynulé
+                <div style="display: flex; gap: 0.5rem; align-items: center;">
+                    <select id="monthJump" onchange="jumpToMonth(this.value)"
+                        style="padding: 0.75rem 1rem; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: var(--border-radius); color: var(--text-color); font-size: 0.9rem; cursor: pointer;">
+                        <option value="">Přeskočit na měsíc...</option>
+                    </select>
+                    <button id="togglePastBtn" class="btn-secondary active" onclick="togglePastMatches()">
+                        <i class="fa-solid fa-eye-slash"></i> Skrýt uplynulé
                     </button>
                 </div>
             </div>
@@ -271,7 +275,7 @@
     <script src="js/main.js"></script>
     <script>
         let allMatchesData = [];
-        let showingPast = false;
+        let showingPast = true; // Show past matches by default
 
         document.addEventListener('DOMContentLoaded', loadCalendar);
 
@@ -323,16 +327,16 @@
                                     if (dateObj && !isNaN(dateObj.getTime())) {
                                         // Derby deduplication: if opponent also contains bižuterie, 
                                         // create a unique key based on sorted team names to avoid duplicates
-                                        const isBizuDerby = match.opponent && 
-                                            (match.opponent.toLowerCase().includes('bižuterie') || 
-                                             match.opponent.toLowerCase().includes('bizuterie'));
-                                        
+                                        const isBizuDerby = match.opponent &&
+                                            (match.opponent.toLowerCase().includes('bižuterie') ||
+                                                match.opponent.toLowerCase().includes('bizuterie'));
+
                                         let matchKey = `${compName}-${match.round}-${dateStr}`;
                                         if (isBizuDerby) {
                                             // Sort team names alphabetically to create consistent key
                                             const sortedTeams = [teamName, match.opponent].sort().join('-');
                                             matchKey = `${compName}-${match.round}-${sortedTeams}`;
-                                            
+
                                             if (seenMatches.has(matchKey)) {
                                                 return; // Skip duplicate derby match
                                             }
@@ -466,6 +470,36 @@
             }
 
             container.innerHTML = html;
+
+            // Populate month jump dropdown
+            populateMonthJump();
+        }
+
+        function populateMonthJump() {
+            const monthJump = document.getElementById('monthJump');
+            const monthDivs = document.querySelectorAll('.calendar-month[id]');
+
+            // Reset options
+            monthJump.innerHTML = '<option value="">Přeskočit na měsíc...</option>';
+
+            monthDivs.forEach(div => {
+                const monthId = div.id.replace('month-', '');
+                const monthTitle = div.querySelector('.month-title')?.textContent?.trim() || monthId;
+                // Clean up the title (remove icon text)
+                const cleanTitle = monthTitle.replace(/^\s*\S+\s*/, '').trim();
+                const option = document.createElement('option');
+                option.value = div.id;
+                option.textContent = cleanTitle;
+                monthJump.appendChild(option);
+            });
+        }
+
+        function jumpToMonth(monthId) {
+            if (!monthId) return;
+            const element = document.getElementById(monthId);
+            if (element) {
+                element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
         }
 
         function generateMatchesHtml(matches, today) {
@@ -478,26 +512,39 @@
 
                 if (monthName !== currentMonth) {
                     if (currentMonth !== '') html += '</div>'; // Close previous month div
+                    const monthId = monthName.replace(/\s+/g, '-');
                     html += `
-                        <div class="calendar-month">
-                            <h2 class="month-title"><i class="fa-regular fa-calendar"></i> ${capitalMonth}</h2>
+                        <div class="calendar-month" id="month-${monthId}">
+                            <h2 class="month-title">
+                                <i class="fa-regular fa-calendar"></i> ${capitalMonth}
+                            </h2>
                     `;
                     currentMonth = monthName;
                 }
 
                 const isPast = match.date < today;
-                const isToday = match.date.getTime() === today.getTime();
+                const isToday = match.date.toDateString() === today.toDateString();
+
+                // Check if match has a valid result (not empty, not just time, not dash)
+                const matchHasResult = match.result &&
+                    match.result !== '-' &&
+                    match.result.trim() !== '' &&
+                    match.result.trim() !== ':' &&
+                    /[\d½]/.test(match.result);
 
                 let statusClass = 'status-upcoming';
                 let statusText = 'Nadcházející';
 
-                if (isPast) {
+                // If match has result, it's finished - regardless of date
+                if (matchHasResult) {
                     statusClass = 'status-finished';
                     statusText = 'Odehráno';
-                }
-                if (isToday) {
+                } else if (isToday) {
                     statusClass = 'status-today';
                     statusText = 'Dnes';
+                } else if (isPast) {
+                    statusClass = 'status-finished';
+                    statusText = 'Odehráno';
                 }
 
                 // Format day
@@ -592,12 +639,12 @@
                     const lb = b.toLowerCase().trim();
                     return la === lb || la.includes(lb) || lb.includes(la);
                 };
-                
+
                 const matchData = allMatchesData.find(m =>
                     m.competition === competition &&
                     m.round === round &&
-                    ((fuzzyMatch(m.myTeam, team1) && fuzzyMatch(m.opponent, team2)) || 
-                     (fuzzyMatch(m.myTeam, team2) && fuzzyMatch(m.opponent, team1)))
+                    ((fuzzyMatch(m.myTeam, team1) && fuzzyMatch(m.opponent, team2)) ||
+                        (fuzzyMatch(m.myTeam, team2) && fuzzyMatch(m.opponent, team1)))
                 );
 
                 if (matchData && matchData.url) {
