@@ -23,3 +23,7 @@ prisma/migrations/
 
 # Uploads (will use cloud storage in production)
 uploads/
+
+# Data (Config files that should be editable in admin)
+data/competitions.json
+data/registrations.json
