@@ -563,7 +563,10 @@
             if (newIndex < 0) newIndex = 0;
             if (newIndex >= monthDivs.length) newIndex = monthDivs.length - 1;
 
-            monthDivs[newIndex].scrollIntoView({ behavior: 'smooth', block: 'start' });
+            // Scroll with offset for fixed header (100px offset)
+            const target = monthDivs[newIndex];
+            const targetPosition = target.getBoundingClientRect().top + window.pageYOffset - 100;
+            window.scrollTo({ top: targetPosition, behavior: 'smooth' });
         }
 
         function renderCalendar() {
