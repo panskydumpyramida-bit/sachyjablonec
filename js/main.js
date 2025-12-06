@@ -74,4 +74,30 @@ document.addEventListener('DOMContentLoaded', () => {
         };
         document.body.appendChild(adminBtn);
     }
+
+    // Minimal Cookie Consent
+    const checkCookieConsent = () => {
+        if (!localStorage.getItem('cookieConsent')) {
+            const banner = document.createElement('div');
+            banner.id = 'cookie-banner';
+            banner.innerHTML = `
+                <p>Používáme cookies pro zlepšení funkčnosti webu. Procházením stránky s tím souhlasíte.</p>
+                <button id="accept-cookies">Rozumím</button>
+            `;
+            document.body.appendChild(banner);
+
+            // Force reflow
+            banner.offsetHeight;
+            banner.classList.add('visible');
+
+            document.getElementById('accept-cookies').addEventListener('click', () => {
+                localStorage.setItem('cookieConsent', 'true');
+                banner.classList.remove('visible');
+                setTimeout(() => banner.remove(), 500);
+            });
+        }
+    };
+
+    // Small delay to not annoy user immediately
+    setTimeout(checkCookieConsent, 1000);
 });
