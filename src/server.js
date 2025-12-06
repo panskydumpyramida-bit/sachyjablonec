@@ -93,6 +93,8 @@ async function scrapeMatchDetails(compUrl, round, homeTeam, awayTeam) {
             return str.toLowerCase()
                 .replace(/n\.n\./g, '')
                 .replace(/["']/g, '')
+                // Strip common team suffixes like A, B, JR1, JR2 etc.
+                .replace(/\s+(jr\d*|[a-d]|"\w+")$/i, '')
                 .replace(/\s+/g, ' ')
                 .trim();
         };
@@ -187,12 +189,23 @@ async function scrapeMatchDetails(compUrl, round, homeTeam, awayTeam) {
                         let result = '';
                         for (let i = cells.length - 1; i > 0; i--) {
                             const txt = clean(cells[i]);
-                            if (txt.match(/^\d+[½\.]?\s*[:\-]\s*\d+[½\.]?$/)) {
+                            // Match results like "1 - 0", "½ - ½", "0.5 - 0.5", "1:0"
+                            if (txt.match(/^[\d½]+[.,]?[\d½]?\s*[:\-]\s*[\d½]+[.,]?[\d½]?$/)) {
                                 result = txt;
                                 break;
                             }
+                            // Also check for standalone ½ which indicates a draw result
+                            if (txt === '½' || txt === '0.5' || txt === '0,5') {
+                                // Look for paired ½ in adjacent cells to form "½ - ½"
+                                const prevTxt = i > 1 ? clean(cells[i - 1]) : '';
+                                if (prevTxt === '½' || prevTxt === '0.5' || prevTxt === '0,5') {
+                                    result = '½ - ½';
+                                    break;
+                                }
+                            }
                         }
-                        if (!result && cells.length > 10) result = clean(cells[10]);
+                        // If no result found but there are enough cells, last resort
+                        if (!result && cells.length > 10) result = clean(cells[10]) || '-';
 
                         boards.push({ board, homePlayer, homeElo, guestPlayer, guestElo, result });
                     } else {
