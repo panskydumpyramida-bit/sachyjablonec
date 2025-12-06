@@ -57,7 +57,12 @@ const fetchWithHeaders = (url) => fetch(url, {
 
 // Helper to scrape match details (art=3)
 async function scrapeMatchDetails(compUrl, round, homeTeam, awayTeam) {
-    let detailsUrl = compUrl;
+    // Construct clean URL for pairings (all matches in round)
+    // Remove 'snr' (team filter) and 'SNode' to ensure we get general pairings table
+    let detailsUrl = compUrl
+        .replace(/&snr=\d+/, '')
+        .replace(/&SNode=[^&]+/, '');
+
     if (detailsUrl.includes('art=')) {
         detailsUrl = detailsUrl.replace(/art=\d+/, 'art=3');
     } else {
