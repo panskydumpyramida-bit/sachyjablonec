@@ -83,18 +83,40 @@ async function scrapeMatchDetails(compUrl, round, homeTeam, awayTeam) {
         const boards = [];
         let capturing = false;
 
+        // Helper for fuzzy matching
+        const simplify = (str) => {
+            return str.toLowerCase()
+                .replace(/n\.n\./g, '')
+                .replace(/["']/g, '')
+                .replace(/\s+/g, ' ')
+                .trim();
+        };
+
+        const isMatch = (team, rowText) => {
+            const simpleTeam = simplify(team);
+            const rowLower = rowText.toLowerCase();
+
+            // 1. Direct weak match
+            if (rowLower.includes(simpleTeam)) return true;
+
+            // 2. Keyword match (if > 60% of keywords match)
+            const words = simpleTeam.split(' ').filter(w => w.length > 2);
+            const matches = words.filter(w => rowLower.includes(w));
+            return matches.length >= (words.length * 0.6);
+        };
+
+        const SimpleHome = simplify(homeTeam);
+        const SimpleAway = simplify(awayTeam);
+
         for (const row of rows) {
             const cleanRow = clean(row);
-            const normRow = cleanRow.toLowerCase();
-            const normHome = homeTeam.toLowerCase();
-            const normAway = awayTeam.toLowerCase();
 
             // Detect Match Header
             if (!capturing) {
-                // Check if row contains both team names.
-                // We use a relatively strict check but allow for some noise.
-                if (normRow.includes(normHome) && normRow.includes(normAway)) {
+                // Check if row contains both team names using fuzzy logic
+                if (isMatch(homeTeam, cleanRow) && isMatch(awayTeam, cleanRow)) {
                     capturing = true;
+                    // console.log(`Match found in row: ${cleanRow}`);
                     continue;
                 }
             } else {
