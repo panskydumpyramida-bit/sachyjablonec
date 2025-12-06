@@ -605,6 +605,7 @@
                                 mládeže</h3>
                             <p style="margin: 0; color: var(--text-muted); font-size: 0.9rem;">Aktualizovat výsledky
                                 soutěží (Chess-results, Chess.cz)</p>
+                            <div id="competitionsList" style="margin-top: 1rem;"></div>
                         </div>
                         <button class="btn-secondary" onclick="updateStandings()" id="updateStandingsBtn">
                             <i class="fa-solid fa-sync"></i> Aktualizovat tabulky
@@ -1042,6 +1043,7 @@
 
         // Dashboard
         async function loadDashboard() {
+            loadCompetitions();
             try {
                 const res = await fetch(`${API_URL}/news`, { headers: { 'Authorization': `Bearer ${authToken}` } });
                 const news = await res.json();
@@ -2045,6 +2047,58 @@
 
             btn.disabled = false;
             btn.innerHTML = '<i class="fa-solid fa-sync"></i> Aktualizovat tabulky';
+        }
+
+
+        // Load competition sources
+        async function loadCompetitions() {
+            try {
+                const res = await fetch(`${API_URL}/competitions`);
+                const competitions = await res.json();
+                const container = document.getElementById('competitionsList');
+
+                container.innerHTML = competitions.map(c => `
+            <div style="background: rgba(255, 255, 255, 0.05); padding: 0.75rem; border-radius: 6px; margin-bottom: 0.5rem; display: flex; align-items: center; justify-content: space-between; gap: 1rem;">
+                <div style="flex: 1; overflow: hidden;">
+                    <strong style="display: block; font-size: 0.9rem; color: var(--primary-color);">${c.name}</strong>
+                    <div style="font-size: 0.8rem; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${c.url}">
+                        ${c.url}
+                    </div>
+                </div>
+                <button class="btn-secondary btn-small" onclick="changeSourceUrl('${c.id}', '${escapeHtml(c.url)}')" title="Změnit zdroj">
+                    <i class="fa-solid fa-pen"></i> Změnit
+                </button>
+            </div>
+        `).join('');
+            } catch (e) {
+                console.error('Error loading competitions:', e);
+            }
+        }
+
+        async function changeSourceUrl(id, currentUrl) {
+            const newUrl = prompt('Zadejte nové URL pro zdroj dat:', currentUrl);
+            if (newUrl && newUrl !== currentUrl) {
+                try {
+                    const res = await fetch(`${API_URL}/competitions/${id}/url`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${authToken}`
+                        },
+                        body: JSON.stringify({ url: newUrl })
+                    });
+
+                    if (res.ok) {
+                        showAlert('Zdroj aktualizován', 'success');
+                        loadCompetitions();
+                    } else {
+                        showAlert('Chyba při aktualizaci', 'error');
+                    }
+                } catch (e) {
+                    console.error(e);
+                    showAlert('Chyba spojení', 'error');
+                }
+            }
         }
 
 
