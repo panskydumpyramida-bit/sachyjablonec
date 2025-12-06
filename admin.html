@@ -211,6 +211,22 @@
             font-weight: 700;
         }
 
+        .wysiwyg-content a {
+            color: #60a5fa;
+            text-decoration: underline;
+            text-underline-offset: 2px;
+            cursor: pointer;
+        }
+
+        .wysiwyg-content a::after {
+            content: ' 🔗';
+            font-size: 0.7em;
+        }
+
+        .wysiwyg-content a:hover {
+            color: #93c5fd;
+        }
+
         .preview-card {
             margin-bottom: 1.5rem;
         }
