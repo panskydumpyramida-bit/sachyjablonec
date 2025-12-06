@@ -527,6 +527,7 @@
 
         function navigateMonth(direction) {
             const monthJump = document.getElementById('monthJump');
+            if (!monthJump) return; // Element removed, use scrollMonthNav instead
             const options = [...monthJump.options].filter(o => o.value);
             if (options.length === 0) return;
 
@@ -614,6 +615,7 @@
 
         function populateMonthJump() {
             const monthJump = document.getElementById('monthJump');
+            if (!monthJump) return; // Element removed, skip
             const monthDivs = document.querySelectorAll('.calendar-month[id]');
 
             // Reset options
