@@ -1673,17 +1673,17 @@
                 span.innerHTML = '\u200B' + placeholder; // ZWS + placeholder
                 range.insertNode(span);
 
-                // Add multiple spaces AFTER the span for better mobile touch target
-                const spaceNode = document.createTextNode('\u00A0\u00A0\u00A0'); // 3 non-breaking spaces
+                // Add a regular space AFTER the span (outside of it)
+                const spaceNode = document.createTextNode('\u00A0'); // Non-breaking space
                 if (span.nextSibling) {
                     span.parentNode.insertBefore(spaceNode, span.nextSibling);
                 } else {
                     span.parentNode.appendChild(spaceNode);
                 }
 
-                // Position cursor at the END of the space node (after all spaces)
+                // Position cursor at the END of the space node (after the space character)
                 const newRange = document.createRange();
-                newRange.setStart(spaceNode, 3); // Position 3 = after all 3 spaces
+                newRange.setStart(spaceNode, 1); // Position 1 = after the space character
                 newRange.collapse(true);
                 selection.removeAllRanges();
                 selection.addRange(newRange);
