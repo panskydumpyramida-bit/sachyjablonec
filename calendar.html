@@ -339,13 +339,32 @@
                     }
                 });
 
-                // Populate filter
-                [...competitionNames].sort().forEach(name => {
-                    const option = document.createElement('option');
-                    option.value = name;
-                    option.textContent = name;
-                    filterSelect.appendChild(option);
-                });
+                // Populate filter based on available competitions from API
+                try {
+                    const compsRes = await fetch(`${API_URL}/competitions`);
+                    const compsList = await compsRes.json();
+
+                    compsList.forEach(comp => {
+                        // Avoid duplicates if scraped data has different name format
+                        if (![...filterSelect.options].some(o => o.value === comp.name)) {
+                            const option = document.createElement('option');
+                            option.value = comp.name;
+                            option.textContent = comp.name;
+                            filterSelect.appendChild(option);
+                        }
+                    });
+                } catch (e) {
+                    console.warn('Failed to fetch competition list for filter:', e);
+                    // Fallback to scraped names
+                    [...competitionNames].sort().forEach(name => {
+                        if (![...filterSelect.options].some(o => o.value === name)) {
+                            const option = document.createElement('option');
+                            option.value = name;
+                            option.textContent = name;
+                            filterSelect.appendChild(option);
+                        }
+                    });
+                }
 
                 filterSelect.addEventListener('change', () => renderCalendar());
 
