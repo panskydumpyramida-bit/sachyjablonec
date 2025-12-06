@@ -65,7 +65,7 @@ async function loadNews(options = {}) {
         // Render based on display mode
         if (displayMode === 'cards') {
             container.innerHTML = news.map(item => `
-                <article class="card">
+                <article class="card" onclick="window.location.href='${getArticleUrl(item)}'" style="cursor: pointer;">
                     <div class="card-image">
                         <img src="${item.thumbnailUrl || 'images/chess_placeholder.png'}" 
                              alt="${escapeHtml(item.title)}"
@@ -76,7 +76,7 @@ async function loadNews(options = {}) {
                         <span class="card-date">${formatDate(item.publishedDate)}</span>
                         <h3 class="card-title">${escapeHtml(item.title)}</h3>
                         <p class="card-excerpt">${item.excerpt}</p>
-                        <a href="${getArticleUrl(item)}" class="read-more">
+                        <a href="${getArticleUrl(item)}" class="read-more" onclick="event.stopPropagation()">
                             Číst více <i class="fa-solid fa-arrow-right"></i>
                         </a>
                     </div>
