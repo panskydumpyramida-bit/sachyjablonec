@@ -147,10 +147,13 @@
 
         @media (max-width: 600px) {
             .match-card {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 0.5rem;
-                padding: 1rem;
+                padding: 0.75rem;
+            }
+
+            /* The actual flex container is match-header, not match-card */
+            .match-header {
+                flex-direction: column !important;
+                gap: 0.5rem !important;
             }
 
             .match-date {
@@ -158,28 +161,33 @@
                 border-bottom: 1px solid rgba(255, 255, 255, 0.1);
                 padding-right: 0;
                 padding-bottom: 0.5rem;
-                width: 100%;
+                width: auto;
                 text-align: left;
-                display: flex;
+                display: inline-flex;
                 align-items: baseline;
                 gap: 0.35rem;
                 flex: none;
             }
 
             .match-day {
-                font-size: 1rem;
+                font-size: 0.9rem;
             }
 
             .match-month {
-                font-size: 0.75rem;
+                font-size: 0.7rem;
+            }
+
+            .match-details {
+                width: 100%;
             }
 
             .match-teams {
-                font-size: 1rem;
+                font-size: 0.95rem;
+                word-break: break-word;
             }
 
             .match-competition {
-                font-size: 0.75rem;
+                font-size: 0.7rem;
             }
 
             .match-actions {
@@ -193,7 +201,7 @@
             }
 
             .month-header h2 {
-                font-size: 1.2rem !important;
+                font-size: 1.1rem !important;
             }
         }
 
