@@ -1299,6 +1299,20 @@
                 galleryJson: JSON.stringify(galleryImages)
             };
 
+            // Validate required fields
+            if (!data.title) {
+                showAlert('Vyplňte nadpis', 'error');
+                return;
+            }
+            if (!data.publishedDate) {
+                showAlert('Vyplňte datum publikace', 'error');
+                return;
+            }
+            if (!data.excerpt) {
+                showAlert('Vyplňte krátký popis', 'error');
+                return;
+            }
+
             try {
                 const res = await fetch(url, {
                     method,
@@ -1310,9 +1324,30 @@
                     showAlert('Uloženo!', 'success');
                     switchTab('dashboard');
                 } else {
-                    showAlert('Chyba při ukládání', 'error');
+                    // Try to get error details from response
+                    let errorMsg = 'Chyba při ukládání';
+                    try {
+                        const errorData = await res.json();
+                        if (errorData.error) {
+                            errorMsg = `Chyba: ${errorData.error}`;
+                        } else if (errorData.message) {
+                            errorMsg = `Chyba: ${errorData.message}`;
+                        }
+                    } catch (parseErr) {
+                        const errorText = await res.text();
+                        if (errorText) {
+                            errorMsg = `Chyba ${res.status}: ${errorText.substring(0, 100)}`;
+                        } else {
+                            errorMsg = `Chyba ${res.status}: ${res.statusText}`;
+                        }
+                    }
+                    console.error('Save error:', errorMsg);
+                    showAlert(errorMsg, 'error');
                 }
-            } catch (e) { showAlert('Chyba spojení', 'error'); }
+            } catch (e) {
+                console.error('Connection error:', e);
+                showAlert('Chyba spojení: ' + e.message, 'error');
+            }
         }
 
         async function deleteNews(id) {
