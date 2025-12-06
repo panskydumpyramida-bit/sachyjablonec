@@ -226,6 +226,77 @@ async function scrapeMatchDetails(compUrl, round, homeTeam, awayTeam) {
 // Helper to scrape team schedule (art=23)
 // Helper to scrape all matches from competition (art=2)
 async function scrapeCompetitionMatches(compUrl) {
+    // Detect if this is an art=0 competition (lacks art=46)
+    const isArt0Competition = compUrl.includes('art=0');
+
+    if (isArt0Competition) {
+        // For art=0 competitions, iterate through rounds using art=3&rd=X
+        console.log('Art=0 competition detected, iterating through rounds...');
+        const allMatches = [];
+        const maxRounds = 20; // Safety limit
+
+        for (let rd = 1; rd <= maxRounds; rd++) {
+            // Build URL for this specific round
+            let roundUrl = compUrl.replace(/art=\d+/, 'art=3');
+            if (roundUrl.includes('rd=')) {
+                roundUrl = roundUrl.replace(/rd=\d+/, `rd=${rd}`);
+            } else {
+                roundUrl += `&rd=${rd}`;
+            }
+
+            try {
+                const response = await fetchWithHeaders(roundUrl);
+                const html = await response.text();
+
+                // Check if this round exists (look for CRg rows)
+                if (!html.includes('class="CRg1"') && !html.includes('class="CRg2"')) {
+                    console.log(`No data for round ${rd}, stopping iteration`);
+                    break;
+                }
+
+                // Extract date from page if available
+                let roundDate = null;
+                const dateMatch = html.match(/(\d{1,2}\.\d{1,2}\.\d{4}|\d{4}\/\d{1,2}\/\d{1,2})/);
+                if (dateMatch) roundDate = dateMatch[1];
+
+                // Parse match headers (team vs team rows)
+                // Format: "ach. X [Team1] Rtg - X [Team2] Rtg [score : score]"
+                const rows = html.split('</tr>');
+                for (const row of rows) {
+                    const rowText = row.replace(/<[^>]*>/g, ' ')
+                        .replace(/&nbsp;/g, ' ')
+                        .replace(/&amp;/g, '&')
+                        .replace(/&#(\d+);/g, (m, d) => String.fromCharCode(d))
+                        .replace(/\s+/g, ' ')
+                        .trim();
+
+                    // Look for match header: "ach. X [Team] Rtg - X [Team] Rtg [score]"
+                    // Pattern: "ach. [num] [HomeTeam] Rtg - [num] [AwayTeam] Rtg [score : score]"
+                    const matchPattern = /ach\.\s*\d+\s+(.+?)\s+Rtg\s*-\s*\d+\s+(.+?)\s+Rtg\s*(\d+[½]?\s*:\s*\d+[½]?)/i;
+                    const teamsMatch = rowText.match(matchPattern);
+
+                    if (teamsMatch) {
+                        allMatches.push({
+                            round: String(rd),
+                            date: roundDate || 'TBD',
+                            home: teamsMatch[1].trim(),
+                            away: teamsMatch[2].trim(),
+                            result: teamsMatch[3] ? teamsMatch[3].trim() : '-'
+                        });
+                    }
+                }
+
+                console.log(`Round ${rd}: found ${allMatches.filter(m => m.round === String(rd)).length} matches`);
+            } catch (e) {
+                console.log(`Error fetching round ${rd}: ${e.message}`);
+                break;
+            }
+        }
+
+        return allMatches;
+    }
+
+    // Standard art=2 logic for competitions with art=46
     // Convert url to art=2 (Pairings of all rounds)
     // If url has art=..., replace it. Otherwise append.
     // compUrl usually: ...art=46...
