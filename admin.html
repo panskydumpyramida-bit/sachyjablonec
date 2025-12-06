@@ -708,22 +708,23 @@
 
                             <div class="form-group" id="gamesInputPanel">
                                 <div
-                                    style="background: rgba(255, 255, 255, 0.05); padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
-                                    <h4 style="margin-top: 0; color: var(--primary-color);">Přidat partii</h4>
-                                    <div
-                                        style="display: grid; grid-template-columns: 1fr 100px; gap: 0.5rem; margin-bottom: 0.5rem;">
-                                        <input type="text" id="gameTitle"
-                                            placeholder="Kdo s kým (např. Duda - Vltavský)">
-                                        <input type="text" id="gameId" placeholder="Chess.com ID">
-                                    </div>
-                                    <div style="display: flex; align-items: center; justify-content: space-between;">
+                                    style="background: rgba(255, 255, 255, 0.05); padding: 0.75rem; border-radius: 8px; margin-bottom: 1rem;">
+                                    <h4
+                                        style="margin-top: 0; margin-bottom: 0.5rem; color: var(--primary-color); font-size: 0.85rem;">
+                                        Přidat partii</h4>
+                                    <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
+                                        <input type="text" id="gameTitle" placeholder="Kdo s kým"
+                                            style="flex: 1; min-width: 120px; max-width: 180px; font-size: 0.8rem; padding: 0.4rem;">
+                                        <input type="text" id="gameId" placeholder="Chess.com ID"
+                                            style="width: 120px; font-size: 0.8rem; padding: 0.4rem;">
                                         <label
-                                            style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                                            style="display: flex; align-items: center; gap: 0.3rem; cursor: pointer; font-size: 0.75rem; white-space: nowrap;">
                                             <input type="checkbox" id="gameCommented" style="width: auto; margin: 0;">
-                                            Komentovaná
+                                            Koment.
                                         </label>
-                                        <button type="button" class="btn-primary btn-small" onclick="addGame()">
-                                            <i class="fa-solid fa-plus"></i> Přidat partii
+                                        <button type="button" class="btn-primary btn-small" onclick="addGame()"
+                                            style="padding: 0.4rem 0.6rem; font-size: 0.75rem; white-space: nowrap;">
+                                            <i class="fa-solid fa-plus"></i> Přidat
                                         </button>
                                     </div>
                                 </div>
@@ -2249,14 +2250,31 @@
                 const formData = new FormData();
                 formData.append('image', file);
                 try {
-                    const res = await fetch(`${API_URL}/images/upload`, { method: 'POST', headers: { 'Authorization': `Bearer ${authToken}` }, body: formData });
+                    const res = await fetch(`${API_URL}/images/upload`, {
+                        method: 'POST',
+                        headers: { 'Authorization': `Bearer ${authToken}` },
+                        body: formData
+                    });
                     if (res.ok) {
                         const data = await res.json();
-                        galleryImages.push(`http://localhost:3001${data.url}`);
+                        // Use dynamic origin URL
+                        const baseUrl = window.location.origin;
+                        const imageUrl = data.url.startsWith('http') ? data.url : `${baseUrl}${data.url}`;
+                        galleryImages.push(imageUrl);
+                        console.log('Gallery image added:', imageUrl);
                         renderGallery();
+                    } else {
+                        const err = await res.text();
+                        console.error('Gallery upload failed:', err);
+                        alert('Nahrávání do galerie selhalo: ' + err);
                     }
-                } catch (e) { console.error(e); }
+                } catch (e) {
+                    console.error('Gallery upload error:', e);
+                    alert('Chyba při nahrávání: ' + e.message);
+                }
             }
+            // Clear input so same file can be uploaded again
+            event.target.value = '';
         }
 
         function removeGalleryImage(index) { galleryImages.splice(index, 1); renderGallery(); }
