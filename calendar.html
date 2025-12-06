@@ -294,8 +294,14 @@
 
             try {
                 // Fetch standings data which contains schedules
-                const response = await fetch(`${API_URL}/standings`);
-                if (!response.ok) throw new Error('Failed to fetch data');
+                const timeout = new Promise((_, reject) =>
+                    setTimeout(() => reject(new Error('Timeout po 10s')), 10000)
+                );
+
+                const fetchPromise = fetch(`${API_URL}/standings`);
+                const response = await Promise.race([fetchPromise, timeout]);
+
+                if (!response.ok) throw new Error(`HTTP Error: ${response.status} ${response.statusText}`);
 
                 const data = await response.json();
                 const competitions = data.standings || [];
@@ -364,6 +370,11 @@
                 console.error('Error loading calendar:', err);
                 container.style.display = 'none';
                 errorDiv.style.display = 'block';
+                // Show debug info
+                const debugInfo = document.createElement('div');
+                debugInfo.style.cssText = 'margin-top: 1rem; font-size: 0.8rem; color: var(--text-muted); font-family: monospace; word-break: break-all;';
+                debugInfo.innerHTML = `API: ${API_URL}/standings<br>Error: ${err.message}`;
+                errorDiv.appendChild(debugInfo);
             }
         }
 
