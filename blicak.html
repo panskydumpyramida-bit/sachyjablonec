@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="cs">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vánoční turnaj v bleskovém šachu - TJ Bižuterie Jablonec</title>
+    <meta name="description"
+        content="Vánoční turnaj v bleskovém šachu. Memoriál Čestmíra Drobníka. 18. 12. 2025. Přijďte si zahrát!">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@400;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        /* Specific Styles for Form */
+        .registration-form {
+            background-color: var(--card-bg);
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            max-width: 600px;
+            margin: 2rem auto;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: var(--text-color);
+            font-weight: 500;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 0.8rem;
+            border-radius: 6px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            background-color: rgba(0, 0, 0, 0.2);
+            color: var(--text-color);
+            transition: all 0.3s ease;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 2px rgba(212, 175, 55, 0.2);
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 1rem;
+            background-color: var(--primary-color);
+            color: #1a1a1a;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(212, 175, 55, 0.3);
+        }
+
+        .proposition-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin: 2rem 0;
+        }
+
+        .prop-card {
+            background-color: rgba(255, 255, 255, 0.03);
+            padding: 1.5rem;
+            border-radius: 8px;
+            border-left: 3px solid var(--primary-color);
+        }
+
+        .prop-card h3 {
+            color: var(--primary-color);
+            margin-bottom: 0.5rem;
+            font-size: 1.1rem;
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <div class="container">
+            <nav>
+                <a href="index.html" class="logo">
+                    <i class="fa-solid fa-chess-knight"></i>
+                    TJ Bižuterie Jablonec
+                </a>
+                <div class="menu-toggle">
+                    <i class="fa-solid fa-bars"></i>
+                </div>
+                <ul class="nav-links">
+                    <li><a href="index.html">Domů</a></li>
+                    <li><a href="about.html">O nás</a></li>
+                    <li><a href="calendar.html">Kalendář</a></li>
+                    <!-- New Item -->
+                    <li><a href="blicak.html" class="active">Vánoční Blesk</a></li>
+
+                    <li class="dropdown">
+                        <a href="#">Soutěže <i class="fa-solid fa-caret-down"></i></a>
+                        <ul class="dropdown-menu">
+                            <li><a href="teams.html">Soutěže družstev</a></li>
+                            <li><a href="club-tournaments.html">Oddílový přebor</a></li>
+                        </ul>
+                    </li>
+                    <li><a href="youth.html">Mládež</a></li>
+                    <li><a href="members.html">Členové</a></li>
+                    <li><a href="gallery.html">Galerie</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        <section class="hero small-hero">
+            <div class="container hero-content">
+                <h1>VÁNOČNÍ TURNAJ v bleskovém šachu</h1>
+                <p>Memoriál Čestmíra Drobníka - 19. ročník</p>
+            </div>
+        </section>
+
+        <section class="container" style="padding-top: 3rem;">
+
+            <div style="text-align: center; margin-bottom: 3rem;">
+                <h2 class="section-title">Propozice turnaje</h2>
+                <div style="font-size: 1.2rem; color: var(--primary-color); font-weight: bold; margin-bottom: 1rem;">
+                    18. 12. 2025 od 17:30
+                </div>
+                <p>Městská hala, Jablonec nad Nisou – zasedací místnost</p>
+            </div>
+
+            <div class="proposition-details">
+                <div class="prop-card">
+                    <h3><i class="fa-solid fa-stopwatch"></i> Tempo a Systém</h3>
+                    <p>2×5 minut za použití šachových hodin.</p>
+                    <p>10 kol švýcarským systémem (nebo 9 kol při účasti < 22 hráčů).</p>
+                </div>
+
+                <div class="prop-card">
+                    <h3><i class="fa-solid fa-money-bill-wave"></i> Vklad a Ceny</h3>
+                    <p>Vklad: 50 Kč (mládež a důchodci 20 Kč).</p>
+                    <p>Ceny pro min. 7 hráčů. </p>
+                    <p>1. místo: 200 Kč | 2. místo: 100 Kč | 3. místo: 50 Kč</p>
+                </div>
+
+                <div class="prop-card">
+                    <h3><i class="fa-solid fa-list-check"></i> Kritéria pořadí</h3>
+                    <p>Počet bodů, Buchholz, vzájemná partie, rozhodnutí pořadatele, los.</p>
+                </div>
+
+                <div class="prop-card">
+                    <h3><i class="fa-solid fa-info-circle"></i> Přihlášky</h3>
+                    <p>Online formulářem níže.</p>
+                    <p>E-mail: <a href="mailto:info@sachyjablonec.cz"
+                            style="color: var(--primary-color);">info@sachyjablonec.cz</a></p>
+                    <p>Telefon: 731 183 859</p>
+                    <p>Na místě do 17:15 (kapacita 32 hráčů).</p>
+                </div>
+            </div>
+
+            <div class="registration-form" id="regFormContainer">
+                <h2 style="text-align: center; margin-bottom: 1.5rem;">Online Přihláška</h2>
+                <form id="blicakForm">
+                    <div class="form-group">
+                        <label for="name">Jméno a Příjmení *</label>
+                        <input type="text" id="name" name="name" required placeholder="Jan Novák">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="elo">ELO (pokud máte)</label>
+                        <input type="number" id="elo" name="elo" placeholder="např. 1500">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="age">Věk (pro kategorie mládeže/seniorů)</label>
+                        <input type="number" id="age" name="age" placeholder="např. 15">
+                    </div>
+
+                    <button type="submit" class="submit-btn" id="submitBtn">Odeslat přihlášku</button>
+                    <p id="formMessage" style="margin-top: 1rem; text-align: center; display: none;"></p>
+                </form>
+            </div>
+
+            <div style="text-align: center; margin-top: 3rem; margin-bottom: 3rem;">
+                <h3>Těšíme se na Vaši účast!</h3>
+                <p style="font-size: 1.5rem; font-weight: bold; color: var(--text-color);">ŠACHU ZDAR!</p>
+            </div>
+
+        </section>
+    </main>
+
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3>TJ Bižuterie Jablonec</h3>
+                    <p>Šachový oddíl s dlouholetou tradicí v Jablonci nad Nisou.</p>
+                </div>
+                <div class="footer-section">
+                    <h3>Rychlé odkazy</h3>
+                    <ul class="footer-links">
+                        <li><a href="index.html">Domů</a></li>
+                        <li><a href="calendar.html">Kalendář</a></li>
+                        <li><a href="blicak.html">Vánoční Blesk</a></li>
+                        <li><a href="teams.html">Soutěže družstev</a></li>
+                        <li><a href="club-tournaments.html">Oddílový přebor</a></li>
+                        <li><a href="youth.html">Mládež</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h3>Kontakt</h3>
+                    <ul class="footer-links">
+                        <li><a href="mailto:info@sachyjablonec.cz">info@sachyjablonec.cz</a></li>
+                        <li><a href="https://www.facebook.com/profile.php?id=61570518746221"
+                                target="_blank">Facebook</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="copyright">
+                &copy; 2025 Šachový oddíl TJ Bižuterie Jablonec nad Nisou. Všechna práva vyhrazena.
+            </div>
+        </div>
+    </footer>
+
+    <script src="js/config.js"></script>
+    <script src="js/main.js"></script>
+    <script>
+        document.getElementById('blicakForm').addEventListener('submit', async function (e) {
+            e.preventDefault();
+            const btn = document.getElementById('submitBtn');
+            const msg = document.getElementById('formMessage');
+
+            btn.disabled = true;
+            btn.textContent = 'Odesílám...';
+
+            const formData = {
+                name: document.getElementById('name').value,
+                elo: document.getElementById('elo').value,
+                age: document.getElementById('age').value
+            };
+
+            try {
+                const response = await fetch(`${API_URL}/registration/blicak`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(formData)
+                });
+
+                if (response.ok) {
+                    msg.style.display = 'block';
+                    msg.style.color = '#4ade80'; // green
+                    msg.textContent = 'Přihláška byla úspěšně odeslána. Děkujeme!';
+                    this.reset();
+                    document.getElementById('regFormContainer').innerHTML = `
+                        <div style="text-align:center; padding: 2rem;">
+                            <i class="fa-solid fa-check-circle" style="font-size: 3rem; color: #4ade80; margin-bottom: 1rem;"></i>
+                            <h3>Přihlášeno!</h3>
+                            <p>Těšíme se na vás na turnaji.</p>
+                        </div>
+                    `;
+                } else {
+                    throw new Error('Chyba při odesílání');
+                }
+            } catch (error) {
+                console.error(error);
+                msg.style.display = 'block';
+                msg.style.color = '#ef4444'; // red
+                msg.textContent = 'Něco se pokazilo. Zkuste to prosím později nebo napište email.';
+                btn.disabled = false;
+                btn.textContent = 'Odeslat přihlášku';
+            }
+        });
+    </script>
+</body>
+
+</html>
