@@ -215,19 +215,7 @@
 </head>
 
 <body>
-    <!-- Match Details Modal -->
-    <div id="matchDetailsModal" class="details-modal">
-        <div class="details-content">
-            <span class="details-close" onclick="closeMatchDetails()">&times;</span>
-            <h3 id="modalTitle" style="color: var(--primary-color); margin-bottom: 0.5rem;">Detaily zápasu</h3>
-            <p id="modalSubtitle" style="color: var(--text-muted); margin-bottom: 1.5rem; font-size: 0.9rem;"></p>
-            <div id="modalBody">
-                <div style="text-align: center; padding: 2rem;">
-                    <i class="fa-solid fa-spinner fa-spin fa-2x" style="color: var(--primary-color);"></i>
-                </div>
-            </div>
-        </div>
-    </div>
+
     <header id="global-header"></header>
 
     <main>
@@ -487,29 +475,36 @@
                 const t1Style = (team1 === match.myTeam) ? highlightStyle : '';
                 const t2Style = (team2 === match.myTeam) ? highlightStyle : '';
 
-                // Result Clickable if valid result
-                const hasResult = match.result && match.result !== '-' && match.result !== '';
+                const hasResult = match.result && match.result !== '-' && match.result !== '' && match.result.includes(':');
                 const resultHtml = hasResult
-                    ? `<span class="match-result clickable" onclick="openMatchDetails('${match.competition}', '${match.round}', '${team1}', '${team2}', '${match.result}')" 
+                    ? `<span class="match-result clickable" onclick="toggleMatchDetails('${match.competition}', '${match.round}', '${team1}', '${team2}', this)" 
                            style="cursor: pointer; text-decoration: underline; text-decoration-style: dotted; text-underline-offset: 4px;" 
                            title="Zobrazit detailní výsledky">${match.result}</span>`
                     : (match.result && match.result !== '-' ? `<span class="match-result">${match.result}</span>` : '');
 
+                // Inline Details Container ID
+                const detailsId = `details-${match.competition.replace(/\s+/g, '-')}-${match.round}-${team1.replace(/\s+/g, '-')}`.replace(/[^a-zA-Z0-9-]/g, '');
+
                 html += `
                     <div class="match-card ${isPast ? 'past-match' : ''}" style="${isPast ? 'border-left: 2px solid var(--text-muted);' : ''}">
-                        <div class="match-date">
-                            <div class="match-day">${day}.</div>
-                            <div class="match-month">${dayName}</div>
-                        </div>
-                        <div class="match-details">
-                            <div class="match-competition">${match.competition} • ${match.round}. kolo</div>
-                            <div class="match-teams">
-                                <span style="${t1Style}">${team1}</span> - <span style="${t2Style}">${team2}</span>
-                                ${resultHtml}
+                        <div class="match-header" style="display: flex; gap: 1rem; width: 100%;">
+                            <div class="match-date">
+                                <div class="match-day">${day}.</div>
+                                <div class="match-month">${dayName}</div>
+                            </div>
+                            <div class="match-details">
+                                <div class="match-competition">${match.competition} • ${match.round}. kolo</div>
+                                <div class="match-teams">
+                                    <span style="${t1Style}">${team1}</span> - <span style="${t2Style}">${team2}</span>
+                                    ${resultHtml}
+                                </div>
+                            </div>
+                            <div class="match-actions">
+                                <span class="status-badge ${statusClass}">${statusText}</span>
                             </div>
                         </div>
-                        <div class="match-actions">
-                            <span class="status-badge ${statusClass}">${statusText}</span>
+                        <div id="${detailsId}" class="inline-details" style="display: none; width: 100%; border-top: 1px solid rgba(255,255,255,0.05); margin-top: 1rem; padding-top: 1rem;">
+                            <!-- Details Content -->
                         </div>
                     </div>
                 `;
@@ -519,97 +514,80 @@
             return html;
         }
 
-        // Modal Functions
-        function openMatchDetails(competition, round, team1, team2, result) {
-            const modal = document.getElementById('matchDetailsModal');
-            const title = document.getElementById('modalTitle');
-            const subtitle = document.getElementById('modalSubtitle');
-            const body = document.getElementById('modalBody');
+        // Inline Toggle Function
+        async function toggleMatchDetails(competition, round, team1, team2, element) {
+            // Construct ID same as above
+            const detailsId = `details-${competition.replace(/\s+/g, '-')}-${round}-${team1.replace(/\s+/g, '-')}`.replace(/[^a-zA-Z0-9-]/g, '');
+            const container = document.getElementById(detailsId);
 
-            title.textContent = `${team1} - ${team2} `;
-            subtitle.textContent = `${competition}, ${round}.kolo • Výsledek: ${result} `;
-            modal.classList.add('active');
+            if (!container) return;
 
-            // Show loader
-            body.innerHTML = `
-                    < div style = "text-align: center; padding: 2rem;" >
-                    <i class="fa-solid fa-spinner fa-spin fa-2x" style="color: var(--primary-color);"></i>
-                    <p style="margin-top: 1rem;">Načítám výsledky šachovnic...</p>
-                </div >
-                    `;
+            // Toggle visibility
+            const isHidden = container.style.display === 'none';
+            container.style.display = isHidden ? 'block' : 'none';
 
-            // Find competition URL to fetch details
-            // We need to look up the competition URL from the loaded data
-            // Since we don't have it direct here, we might need to store it in allMatchesData
-            const matchData = allMatchesData.find(m =>
-                m.competition === competition &&
-                m.round === round &&
-                ((m.myTeam === team1 && m.opponent === team2) || (m.myTeam === team2 && m.opponent === team1))
-            );
+            if (!isHidden) return; // Hiding, done.
 
-            if (matchData && matchData.url) {
-                fetchDetails(matchData.url, round, team1, team2);
-            } else {
-                body.innerHTML = '<p style="text-align: center; color: #fca5a5;">Chybí URL soutěže, nelze načíst detaily.</p>';
-            }
-        }
+            // If empty, fetch data
+            if (container.innerHTML.trim() === '' || container.innerHTML.includes('<!-- Details Content -->')) {
+                container.innerHTML = `
+                    <div style="text-align: center; padding: 1rem;">
+                        <i class="fa-solid fa-spinner fa-spin" style="color: var(--primary-color);"></i> Načítám...
+                    </div>
+                `;
 
-        async function fetchDetails(url, round, home, away) {
-            try {
-                const res = await fetch(`${API_URL} /standings/match - details ? url = ${encodeURIComponent(url)}& round=${round}& home=${encodeURIComponent(home)}& away=${encodeURIComponent(away)} `);
-                const data = await res.json();
+                // Find data
+                const matchData = allMatchesData.find(m =>
+                    m.competition === competition &&
+                    m.round === round &&
+                    ((m.myTeam === team1 && m.opponent === team2) || (m.myTeam === team2 && m.opponent === team1))
+                );
 
-                if (data.boards && data.boards.length > 0) {
-                    renderBoards(data.boards);
+                if (matchData && matchData.url) {
+                    try {
+                        const res = await fetch(`${API_URL}/standings/match-details?url=${encodeURIComponent(matchData.url)}&round=${round}&home=${encodeURIComponent(matchData.myTeam)}&away=${encodeURIComponent(matchData.opponent)}`);
+                        const data = await res.json();
+                        if (data.boards && data.boards.length > 0) {
+                            renderBoardsInline(data.boards, container);
+                        } else {
+                            container.innerHTML = '<p style="text-align: center; color: var(--text-muted); font-size: 0.9rem;">Podrobnosti nejsou k dispozici.</p>';
+                        }
+                    } catch (e) {
+                        container.innerHTML = '<p style="text-align: center; color: #fca5a5; font-size: 0.9rem;">Chyba načítání.</p>';
+                    }
                 } else {
-                    document.getElementById('modalBody').innerHTML = '<p style="text-align: center; color: var(--text-muted);">Podrobné výsledky nejsou k dispozici.</p>';
+                    container.innerHTML = '<p style="text-align: center; color: var(--text-muted); font-size: 0.9rem;">Chybí odkaz na soutěž.</p>';
                 }
-            } catch (err) {
-                console.error(err);
-                document.getElementById('modalBody').innerHTML = '<p style="text-align: center; color: #fca5a5;">Chyba při načítání detailů.</p>';
             }
         }
 
-        function renderBoards(boards) {
-            const html = `
-                    < table class="boards-table" >
-                    <thead>
+        function renderBoardsInline(boards, container) {
+            container.innerHTML = `
+                <table class="boards-table" style="font-size: 0.85rem;">
+                     <thead>
                         <tr>
-                            <th>Šach.</th>
-                            <th>Bílý</th>
-                            <th>ELO</th>
-                            <th>Výs.</th>
-                            <th>Černý</th>
-                            <th>ELO</th>
+                            <th style="padding: 0.5rem;">Šach.</th>
+                            <th style="padding: 0.5rem;">Bílý</th>
+                            <th style="padding: 0.5rem;">ELO</th>
+                            <th style="padding: 0.5rem;">Výs.</th>
+                            <th style="padding: 0.5rem;">Černý</th>
+                            <th style="padding: 0.5rem;">ELO</th>
                         </tr>
                     </thead>
                     <tbody>
                         ${boards.map(b => `
                             <tr>
-                                <td>${b.board || '-'}</td>
-                                <td>${b.white || '-'}</td>
-                                <td>${b.whiteElo || ''}</td>
-                                <td style="font-weight: bold; color: var(--text-color);">${b.result || '-'}</td>
-                                <td>${b.black || '-'}</td>
-                                <td>${b.blackElo || ''}</td>
+                                <td style="padding: 0.5rem;">${b.board || '-'}</td>
+                                <td style="padding: 0.5rem;">${b.white || '-'}</td>
+                                <td style="padding: 0.5rem;">${b.whiteElo || ''}</td>
+                                <td style="padding: 0.5rem; font-weight: bold; color: var(--text-color);">${b.result || '-'}</td>
+                                <td style="padding: 0.5rem;">${b.black || '-'}</td>
+                                <td style="padding: 0.5rem;">${b.blackElo || ''}</td>
                             </tr>
                         `).join('')}
                     </tbody>
-                </table >
+                </table>
             `;
-            document.getElementById('modalBody').innerHTML = html;
-        }
-
-        function closeMatchDetails() {
-            document.getElementById('matchDetailsModal').classList.remove('active');
-        }
-
-        // Close on outside click
-        window.onclick = function (event) {
-            const modal = document.getElementById('matchDetailsModal');
-            if (event.target == modal) {
-                closeMatchDetails();
-            }
         }
 
     </script>
