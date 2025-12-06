@@ -970,7 +970,9 @@ const seedCompetitions = async () => {
         for (const comp of initialCompetitions) {
             await prisma.competition.upsert({
                 where: { id: comp.id },
-                update: {}, // Don't overwrite if exists (preserves custom URL changes)
+                update: {
+                    url: comp.url // Always update URL to ensure correct format
+                },
                 create: comp
             });
         }
