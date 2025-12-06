@@ -193,30 +193,40 @@ app.get('/api/registration/blicak', async (req, res) => {
 
 app.post('/api/registration/blicak', async (req, res) => {
     try {
-        const { name, elo, age } = req.body;
+        const { name, club, lok, year } = req.body;
 
-        if (!name) {
-            return res.status(400).json({ error: 'Name is required' });
+        if (!name || !year) {
+            return res.status(400).json({ error: 'Name and year are required' });
         }
 
-        const data = await fs.promises.readFile(REGISTRATIONS_FILE, 'utf8');
-        const registrations = JSON.parse(data);
+        const fs = await import('fs/promises');
+        const dataPath = path.join(DATA_DIR, 'registrations.json');
 
-        const newRegistration = {
+        let registrations = [];
+        try {
+            const data = await fs.readFile(dataPath, 'utf8');
+            registrations = JSON.parse(data);
+        } catch (e) {
+            // File might not exist yet
+        }
+
+        const newReg = {
             id: Date.now().toString(),
             name,
-            elo: elo || '-',
-            age: age || '-',
-            registeredAt: new Date().toISOString()
+            club: club || '',
+            lok: lok || '',
+            year,
+            createdAt: new Date().toISOString()
         };
 
-        registrations.push(newRegistration);
-        await fs.promises.writeFile(REGISTRATIONS_FILE, JSON.stringify(registrations, null, 2));
+        registrations.push(newReg);
 
-        res.json({ success: true, registration: newRegistration });
-    } catch (error) {
-        console.error('Error saving registration:', error);
-        res.status(500).json({ error: 'Failed to save registration' });
+        await fs.writeFile(dataPath, JSON.stringify(registrations, null, 2));
+
+        res.json({ success: true, registration: newReg });
+    } catch (err) {
+        console.error('Registration error:', err);
+        res.status(500).json({ error: 'Failed to process registration' });
     }
 });
 
