@@ -1,9 +1,9 @@
-import express from 'express';
-import cors from 'cors';
-import dotenv from 'dotenv';
-import path from 'path';
-import { fileURLToPath } from 'url';
-import fs from 'fs';
+```javascript
+const express = require('express');
+const cors = require('cors');
+const dotenv = require('dotenv');
+const path = require('path');
+const fs = require('fs').promises; // Changed to fs.promises
 
 // Import routes
 import authRoutes from './routes/auth.js';
@@ -48,9 +48,9 @@ async function scrapeMatchDetails(compUrl, round, homeTeam, awayTeam) {
     } else {
         detailsUrl += '&art=3';
     }
-    detailsUrl += `&rd=${round}`;
+    detailsUrl += `& rd=${ round } `;
 
-    console.log(`Scraping details: ${detailsUrl}`);
+    console.log(`Scraping details: ${ detailsUrl } `);
 
     try {
         const response = await fetch(detailsUrl);
@@ -135,7 +135,7 @@ async function scrapeCompetitionMatches(compUrl) {
 
 
     try {
-        console.log(`Scraping pairings: ${matchesUrl}`);
+        console.log(`Scraping pairings: ${ matchesUrl } `);
         const response = await fetch(matchesUrl);
         const html = await response.text();
         const rows = html.split('</tr>');
@@ -196,7 +196,7 @@ async function scrapeCompetitionMatches(compUrl) {
                         // If both resemble scores (digits or ½) or are empty/dash
                         // Note: sometimes "-" is used for not played
                         if ((r1.match(/[\d½]/) && r2.match(/[\d½]/)) || (r1 === '½' || r2 === '½')) {
-                            resultMatch = [`${r1} : ${r2}`, r1, r2];
+                            resultMatch = [`${ r1 } : ${ r2 } `, r1, r2];
                         } else if (r1 === '' && r2 === '') {
                             // Maybe empty cells means not played?
                         }
@@ -213,7 +213,7 @@ async function scrapeCompetitionMatches(compUrl) {
                                 date: currentDate,
                                 home: homeTeam,
                                 away: awayTeam,
-                                result: resultMatch ? `${resultMatch[1]} : ${resultMatch[2]}` : '-'
+                                result: resultMatch ? `${ resultMatch[1] } : ${ resultMatch[2] } ` : '-'
                             });
                         }
                     }
@@ -247,7 +247,7 @@ app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 // Serve specific static directories
 // Serve specific static directories
 ['css', 'js', 'images', 'data', 'components'].forEach(dir => {
-    app.use(`/${dir}`, express.static(path.join(__dirname, `../${dir}`)));
+    app.use(`/ ${ dir } `, express.static(path.join(__dirname, `../ ${ dir } `)));
 });
 
 // Serve HTML files from root
@@ -326,7 +326,7 @@ app.use((req, res, next) => {
     // check if it's an allowed html file
     const filename = reqPath.split('/').pop();
     if (allowedHtmlFiles.includes(filename) && reqPath.split('/').length === 2) {
-        return res.sendFile(path.join(__dirname, `../${filename}`));
+        return res.sendFile(path.join(__dirname, `../ ${ filename } `));
     }
 
     next();
@@ -453,75 +453,75 @@ app.post('/api/standings/update', async (req, res) => {
                 } else {
                     // chess.cz logic (unchanged)
                     const response = await fetch(`https://www.chess.cz/soutez/${comp.id}/`);
-                    const html = await response.text();
-                    const lines = html.split('\n');
-                    for (const line of lines) {
-                        if (line.includes('druzstvo') && line.includes('<tr>')) {
-                            const rankMatch = line.match(/<tr>\s*<td>(\d+)<\/td>/);
-                            const teamMatch = line.match(/<a[^>]*druzstvo[^>]*>([^<]+)<\/a>/);
-                            const pointsMatch = line.match(/<b>(\d+)<\/b>/);
+const html = await response.text();
+const lines = html.split('\n');
+for (const line of lines) {
+    if (line.includes('druzstvo') && line.includes('<tr>')) {
+        const rankMatch = line.match(/<tr>\s*<td>(\d+)<\/td>/);
+        const teamMatch = line.match(/<a[^>]*druzstvo[^>]*>([^<]+)<\/a>/);
+        const pointsMatch = line.match(/<b>(\d+)<\/b>/);
 
-                            if (rankMatch && teamMatch && standings.length < 12) {
-                                const rank = parseInt(rankMatch[1]);
-                                const teamName = teamMatch[1].trim();
-                                const points = pointsMatch ? parseInt(pointsMatch[1]) : null;
+        if (rankMatch && teamMatch && standings.length < 12) {
+            const rank = parseInt(rankMatch[1]);
+            const teamName = teamMatch[1].trim();
+            const points = pointsMatch ? parseInt(pointsMatch[1]) : null;
 
-                                standings.push({
-                                    rank,
-                                    team: teamName,
-                                    points,
-                                    isBizuterie: teamName.toLowerCase().includes('bižuterie')
-                                });
-                            }
-                        }
-                    }
+            standings.push({
+                rank,
+                team: teamName,
+                points,
+                isBizuterie: teamName.toLowerCase().includes('bižuterie')
+            });
+        }
+    }
+}
                 }
 
-                // Sort by rank
-                standings.sort((a, b) => a.rank - b.rank);
+// Sort by rank
+standings.sort((a, b) => a.rank - b.rank);
 
-                results.push({
-                    competitionId: comp.id,
-                    name: comp.name,
-                    url: comp.url || comp.chessczUrl,
-                    category: comp.category || 'youth',
-                    standings: standings,
-                    updatedAt: new Date().toISOString()
-                });
+results.push({
+    competitionId: comp.id,
+    name: comp.name,
+    url: comp.url || comp.chessczUrl,
+    category: comp.category || 'youth',
+    standings: standings,
+    updatedAt: new Date().toISOString()
+});
             } catch (err) {
-                console.error(`Error fetching ${comp.name}:`, err.message);
-                results.push({
-                    competitionId: comp.id,
-                    name: comp.name,
-                    chessczUrl: comp.chessczUrl,
-                    category: comp.category,
-                    error: err.message,
-                    standings: []
-                });
-            }
+    console.error(`Error fetching ${comp.name}:`, err.message);
+    results.push({
+        competitionId: comp.id,
+        name: comp.name,
+        chessczUrl: comp.chessczUrl,
+        category: comp.category,
+        error: err.message,
+        standings: []
+    });
+}
         }
 
-        // Save to JSON file
-        const standingsData = {
-            standings: results,
-            lastUpdated: new Date().toISOString()
-        };
+// Save to JSON file
+const standingsData = {
+    standings: results,
+    lastUpdated: new Date().toISOString()
+};
 
-        const dataPath = path.join(__dirname, '../data');
-        try {
-            await fs.mkdir(dataPath, { recursive: true });
-        } catch (e) { }
+const dataPath = path.join(__dirname, '../data');
+try {
+    await fs.mkdir(dataPath, { recursive: true });
+} catch (e) { }
 
-        await fs.writeFile(
-            path.join(dataPath, 'standings.json'),
-            JSON.stringify(standingsData, null, 2)
-        );
+await fs.writeFile(
+    path.join(dataPath, 'standings.json'),
+    JSON.stringify(standingsData, null, 2)
+);
 
-        res.json({ success: true, ...standingsData });
+res.json({ success: true, ...standingsData });
     } catch (error) {
-        console.error('Standings update error:', error);
-        res.status(500).json({ success: false, error: error.message });
-    }
+    console.error('Standings update error:', error);
+    res.status(500).json({ success: false, error: error.message });
+}
 });
 
 // Get competition sources
@@ -572,12 +572,12 @@ app.put('/api/competitions/:id/url', async (req, res) => {
 // Get cached standings from file
 app.get('/api/standings', async (req, res) => {
     try {
-        const fs = await import('fs/promises');
         const dataPath = path.join(__dirname, '../data/standings.json');
         const data = await fs.readFile(dataPath, 'utf-8');
         res.json(JSON.parse(data));
     } catch (err) {
         // Return empty if file doesn't exist
+        console.error('Error reading standings:', err);
         res.json({ standings: [], lastUpdated: null });
     }
 });
