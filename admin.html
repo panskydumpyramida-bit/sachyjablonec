@@ -695,27 +695,41 @@
                                         class="fa-solid fa-plus"></i> Přidat</button>
                             </div>
 
-                            <!-- Team Checkboxes -->
-                            <div class="team-checkbox-list" id="teamCheckboxes"></div>
-                            <div class="add-team-input">
-                                <input type="text" id="newTeamName" placeholder="Název nového týmu (např. C tým)">
-                                <button type="button" class="btn-secondary btn-small" onclick="addTeam()"><i
-                                        class="fa-solid fa-plus"></i></button>
-                            </div>
-
-                            <div id="gamesInputPanel" class="hidden" style="margin-top: 1rem;">
+                            <div class="form-group" id="gamesInputPanel">
                                 <div
-                                    style="display: grid; grid-template-columns: 2fr 1fr auto auto; gap: 0.5rem; align-items: center;">
-                                    <input type="text" id="gameTitle" placeholder="Název (např. 1. Novák - Svoboda)">
-                                    <input type="text" id="gameId" placeholder="Chess.com ID">
-                                    <label
-                                        style="display: flex; align-items: center; gap: 0.25rem; font-size: 0.85rem; color: var(--text-muted); cursor: pointer;">
-                                        <input type="checkbox" id="gameCommented" style="width: auto;"> 💬
-                                    </label>
-                                    <button type="button" class="btn-primary btn-small"
-                                        onclick="addGame()">Přidat</button>
+                                    style="background: rgba(255, 255, 255, 0.05); padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
+                                    <h4 style="margin-top: 0; color: var(--primary-color);">Přidat partii</h4>
+                                    <div
+                                        style="display: grid; grid-template-columns: 1fr 100px; gap: 0.5rem; margin-bottom: 0.5rem;">
+                                        <input type="text" id="gameTitle"
+                                            placeholder="Kdo s kým (např. Duda - Vltavský)">
+                                        <input type="text" id="gameId" placeholder="Chess.com ID">
+                                    </div>
+                                    <div style="display: flex; align-items: center; justify-content: space-between;">
+                                        <label
+                                            style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                                            <input type="checkbox" id="gameCommented" style="width: auto; margin: 0;">
+                                            Komentovaná
+                                        </label>
+                                        <button type="button" class="btn-primary btn-small" onclick="addGame()">
+                                            <i class="fa-solid fa-plus"></i> Přidat partii
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div
+                                    style="background: rgba(255, 255, 255, 0.05); padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
+                                    <h4 style="margin-top: 0; color: var(--primary-color);">Přidat nadpis (oddělovač)
+                                    </h4>
+                                    <div style="display: flex; gap: 0.5rem;">
+                                        <input type="text" id="headerTitle" placeholder="Např. A tým, B tým...">
+                                        <button type="button" class="btn-secondary btn-small" onclick="addHeader()">
+                                            <i class="fa-solid fa-heading"></i> Přidat
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
+
                             <div id="gamesList" style="margin-top: 1rem;"></div>
                         </div>
 
@@ -1003,7 +1017,6 @@
         let uploadedImageData = null;
         let games = [];
         let teams = ['A tým', 'B tým']; // Default teams
-        let selectedTeams = ['A tým', 'B tým'];
         let galleryImages = [];
 
         // Init
@@ -1161,9 +1174,12 @@
 
                 // Load games from database
                 if (item.gamesJson) {
-                    games = JSON.parse(item.gamesJson);
-                } else {
-                    games = [];
+                    try {
+                        games = JSON.parse(item.gamesJson);
+                        // Backwards compatibility: if simple list of games without type check, assume they are games
+                        // If we see 'team' prop and no headers, we might want to respect it? 
+                        // Actually, let's just render what we have. If users save, it will be new format.
+                    } catch (e) { console.error(e); }
                 }
 
                 // Load teams from database
@@ -1615,47 +1631,7 @@
             });
         });
 
-        // Team Checkboxes
-        function renderTeamCheckboxes() {
-            document.getElementById('teamCheckboxes').innerHTML = teams.map((team, i) => `
-                <label class="team-checkbox ${selectedTeams.includes(team) ? 'checked' : ''}">
-                    <input type="checkbox" ${selectedTeams.includes(team) ? 'checked' : ''} onchange="toggleTeam('${team}', this.checked)">
-                    ${team}
-                    <button type="button" onclick="removeTeam(${i}); event.stopPropagation();" style="margin-left: 0.5rem; background: none; border: none; color: #fca5a5; cursor: pointer; padding: 0;">×</button>
-                </label>
-            `).join('');
-        }
-
-        function toggleTeam(team, checked) {
-            if (checked) {
-                if (!selectedTeams.includes(team)) selectedTeams.push(team);
-            } else {
-                selectedTeams = selectedTeams.filter(t => t !== team);
-            }
-            renderTeamCheckboxes();
-        }
-
-        function addTeam() {
-            const name = document.getElementById('newTeamName').value.trim();
-            if (name && !teams.includes(name)) {
-                teams.push(name);
-                selectedTeams.push(name);
-                document.getElementById('newTeamName').value = '';
-                renderTeamCheckboxes();
-            }
-        }
-
-        function removeTeam(index) {
-            const team = teams[index];
-            teams.splice(index, 1);
-            selectedTeams = selectedTeams.filter(t => t !== team);
-            // Also remove games for this team
-            games = games.filter(g => g.team !== team);
-            renderTeamCheckboxes();
-            renderGames();
-        }
-
-        // Games
+        // Games Management
         function toggleGamesInput() {
             document.getElementById('gamesInputPanel').classList.toggle('hidden');
         }
@@ -1666,16 +1642,11 @@
             const commented = document.getElementById('gameCommented').checked;
 
             if (!title || !gameId) return;
-            if (selectedTeams.length === 0) {
-                showAlert('Vyberte alespoň jeden tým', 'error');
-                return;
-            }
 
-            // Add game to first selected team
             games.push({
+                type: 'game',
                 title,
                 gameId,
-                team: selectedTeams[0],
                 commented,
                 src: `https://www.chess.com/emboard?id=${gameId}`
             });
@@ -1686,66 +1657,81 @@
             document.getElementById('gameCommented').checked = false;
         }
 
-        function removeGame(index) {
-            games.splice(index, 1);
+        function addHeader() {
+            const title = document.getElementById('headerTitle').value.trim();
+            if (!title) return;
+
+            games.push({
+                type: 'header',
+                title
+            });
+
             renderGames();
+            document.getElementById('headerTitle').value = '';
         }
 
-        function changeGameTeam(index, newTeam) {
-            games[index].team = newTeam;
+        function removeGame(index) {
+            games.splice(index, 1);
             renderGames();
         }
 
         function renderGames() {
             const container = document.getElementById('gamesList');
             if (games.length === 0) {
-                container.innerHTML = '<p style="color: var(--text-muted); font-size: 0.85rem;">Žádné partie</p>';
+                container.innerHTML = '<p style="color: var(--text-muted); font-size: 0.85rem;">Žádné položky</p>';
                 return;
             }
 
-            // Group games by team while keeping original indices
-            const grouped = {};
-            selectedTeams.forEach(t => grouped[t] = []);
-            games.forEach((g, i) => {
-                if (grouped[g.team]) grouped[g.team].push({ ...g, index: i });
-            });
-
-            container.innerHTML = selectedTeams.map(team => {
-                if (grouped[team].length === 0) return '';
-                return `
-                    <div class="team-games-section" data-team="${team}" style="margin-bottom: 1rem;">
-                        <div style="font-size: 0.85rem; color: var(--primary-color); margin-bottom: 0.5rem; font-weight: 600;">${team}</div>
-                        <div class="games-list-draggable" data-team="${team}">
-                            ${grouped[team].map(g => `
-                                <div class="game-item" draggable="true" data-index="${g.index}" data-team="${g.team}">
+            container.innerHTML = `
+                <div class="games-list-draggable">
+                    ${games.map((item, index) => {
+                if (item.type === 'header' || item.isHeader) { // Support both new and potential legacy flags
+                    return `
+                                <div class="game-item header-item" draggable="true" data-index="${index}" style="background: rgba(212, 175, 55, 0.1); border-left: 3px solid var(--primary-color);">
                                     <span class="drag-handle"><i class="fa-solid fa-grip-vertical"></i></span>
-                                    <div class="game-inputs">
-                                        <input type="text" class="game-title-input" value="${escapeHtml(g.title)}" 
-                                               onchange="updateGameTitle(${g.index}, this.value)" placeholder="Název partie">
-                                        <input type="text" class="game-id-input" value="${g.gameId}" 
-                                               onchange="updateGameId(${g.index}, this.value)" placeholder="ID">
+                                    <div style="flex: 1; display: flex; align-items: center; gap: 0.5rem;">
+                                        <i class="fa-solid fa-heading" style="color: var(--primary-color);"></i>
+                                        <input type="text" class="game-title-input" value="${escapeHtml(item.title)}" 
+                                               onchange="updateGameTitle(${index}, this.value)" style="font-weight: bold;">
                                     </div>
                                     <div class="game-actions">
-                                        <label style="display: flex; align-items: center; cursor: pointer;" title="Komentovaná">
-                                            <input type="checkbox" ${g.commented ? 'checked' : ''} 
-                                                   onchange="toggleGameCommented(${g.index}, this.checked)" 
-                                                   style="width: auto; margin: 0;">
-            ${selectedTeams.map(t => `<option value="${t}" ${t === g.team ? 'selected' : ''}>${t}</option>`).join('')}
-                                        </select>
-                                        <button class="action-btn btn-delete" onclick="removeGame(${g.index})">
+                                        <button class="action-btn btn-delete" onclick="removeGame(${index})">
                                             <i class="fa-solid fa-times"></i>
                                         </button>
                                     </div>
                                 </div>
-                            `).join('')}
-                        </div>
-                    </div>
-                `;
-            }).join('');
+                            `;
+                } else {
+                    // Regular Game
+                    // Handle legacy 'team' property if present by ignoring it visually but keeping data if needed?
+                    // Actually user wants to effectively flatten it.
+                    return `
+                                <div class="game-item" draggable="true" data-index="${index}">
+                                    <span class="drag-handle"><i class="fa-solid fa-grip-vertical"></i></span>
+                                    <div class="game-inputs">
+                                        <input type="text" class="game-title-input" value="${escapeHtml(item.title)}" 
+                                               onchange="updateGameTitle(${index}, this.value)" placeholder="Název partie">
+                                        <input type="text" class="game-id-input" value="${item.gameId || ''}" 
+                                               onchange="updateGameId(${index}, this.value)" placeholder="ID">
+                                    </div>
+                                    <div class="game-actions">
+                                        <label style="display: flex; align-items: center; cursor: pointer;" title="Komentovaná">
+                                            <input type="checkbox" ${item.commented ? 'checked' : ''} 
+                                                   onchange="toggleGameCommented(${index}, this.checked)" 
+                                                   style="width: auto; margin: 0;">
+                                            <i class="fa-regular fa-comment-dots"></i>
+                                        </label>
+                                        <button class="action-btn btn-delete" onclick="removeGame(${index})">
+                                            <i class="fa-solid fa-times"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            `;
+                }
+            }).join('')}
+                </div>
+            `;
 
-
-
-            // Initialize drag and drop
             initDragAndDrop();
         }
 
