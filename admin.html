@@ -1356,6 +1356,48 @@
 
         function insertLink() { const url = prompt('Zadejte URL:'); if (url) document.execCommand('createLink', false, url); }
 
+        function insertCollapsibleBlock() {
+            const id = 'collapse_' + Date.now();
+            const iconId = 'icon_' + Date.now();
+
+            // Note: Wrapper is contenteditable=false to allow onclick events to fire
+            // Children are contenteditable=true to allow editing text
+            const html = `
+                <div class="collapsible-wrapper" contenteditable="false" style="user-select: none;">
+                    <div class="collapsible-header" onclick="toggleSection('${id}', '${iconId}')" style="cursor: pointer;">
+                        <h3 contenteditable="true" style="cursor: text; user-select: text;">Nadpis sekce</h3>
+                        <i id="${iconId}" class="fa-solid fa-chevron-down"></i>
+                    </div>
+                    <div id="${id}" class="collapsible-content hidden" contenteditable="true" style="cursor: text; user-select: text;">
+                        <p>Zde napište obsah...</p>
+                    </div>
+                </div>
+                <p><br></p>
+            `;
+
+            document.execCommand('insertHTML', false, html);
+        }
+
+        // Preview toggle logic (matches article.html)
+        window.toggleSection = function (id, iconId) {
+            const content = document.getElementById(id);
+            const icon = document.getElementById(iconId);
+
+            if (content.classList.contains('hidden')) {
+                content.classList.remove('hidden');
+                if (icon) {
+                    icon.classList.remove('fa-chevron-down');
+                    icon.classList.add('fa-chevron-up');
+                }
+            } else {
+                content.classList.add('hidden');
+                if (icon) {
+                    icon.classList.remove('fa-chevron-up');
+                    icon.classList.add('fa-chevron-down');
+                }
+            }
+        }
+
         function insertIntroBlock() {
             const content = document.getElementById('articleContent');
             const introHtml = `<div class="puzzle-section">
@@ -1672,11 +1714,7 @@
                                             <input type="checkbox" ${g.commented ? 'checked' : ''} 
                                                    onchange="toggleGameCommented(${g.index}, this.checked)" 
                                                    style="width: auto; margin: 0;">
-                                            <span style="margin-left: 0.25rem; font-size: 0.8rem;">💬</span>
-                                        </label>
-                                        <select onchange="changeGameTeam(${g.index}, this.value)" 
-                                                style="padding: 0.2rem; font-size: 0.8rem; background: transparent; border: 1px solid var(--editor-border); color: var(--text-color); border-radius: 3px;">
-                                            ${selectedTeams.map(t => `<option value="${t}" ${t === g.team ? 'selected' : ''}>${t}</option>`).join('')}
+            ${selectedTeams.map(t => `<option value="${t}" ${t === g.team ? 'selected' : ''}>${t}</option>`).join('')}
                                         </select>
                                         <button class="action-btn btn-delete" onclick="removeGame(${g.index})">
                                             <i class="fa-solid fa-times"></i>
@@ -1688,6 +1726,8 @@
                     </div>
                 `;
             }).join('');
+
+
 
             // Initialize drag and drop
             initDragAndDrop();
