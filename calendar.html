@@ -156,17 +156,35 @@
                 gap: 0.5rem !important;
             }
 
+            /* First row: date + status badge */
+            .match-date-row {
+                display: flex !important;
+                width: 100%;
+                justify-content: space-between;
+                align-items: center;
+                border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+                padding-bottom: 0.5rem;
+            }
+
             .match-date {
                 border-right: none;
-                border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+                border-bottom: none;
                 padding-right: 0;
-                padding-bottom: 0.5rem;
+                padding-bottom: 0;
                 width: auto;
                 text-align: left;
                 display: inline-flex;
                 align-items: baseline;
                 gap: 0.35rem;
                 flex: none;
+            }
+
+            .match-status-mobile {
+                display: flex !important;
+            }
+
+            .match-status-desktop {
+                display: none !important;
             }
 
             .match-day {
@@ -749,9 +767,14 @@
                 html += `
                     <div class="match-card ${isPast ? 'past-match' : ''}" style="${isPast ? 'border-left: 2px solid var(--text-muted);' : ''} ${!isPast && isYouth ? 'border-left: 2px solid #4ade80;' : ''}">
                         <div class="match-header" style="display: flex; gap: 1rem; width: 100%;">
-                            <div class="match-date">
-                                <div class="match-day">${day}.</div>
-                                <div class="match-month">${dayName}</div>
+                            <div class="match-date-row" style="display: contents;">
+                                <div class="match-date">
+                                    <div class="match-day">${day}.</div>
+                                    <div class="match-month">${dayName}</div>
+                                </div>
+                                <div class="match-status-mobile" style="display: none; margin-left: auto;">
+                                    <span class="status-badge ${statusClass}">${statusText}</span>
+                                </div>
                             </div>
                             <div class="match-details">
                                 <div class="match-competition">${categoryIcon}${match.competition} • ${match.round}. kolo</div>
@@ -760,7 +783,7 @@
                                     ${resultHtml}
                                 </div>
                             </div>
-                            <div class="match-actions">
+                            <div class="match-actions match-status-desktop">
                                 <span class="status-badge ${statusClass}">${statusText}</span>
                             </div>
                         </div>
