@@ -1487,6 +1487,11 @@
         // Add event listeners for toolbar state
         document.addEventListener('DOMContentLoaded', () => {
             const content = document.getElementById('articleContent');
+            if (!content) {
+                console.warn('articleContent not found on DOMContentLoaded');
+                return;
+            }
+
             content.addEventListener('mouseup', checkToolbarState);
             content.addEventListener('keyup', checkToolbarState);
             content.addEventListener('click', checkToolbarState);
@@ -1496,16 +1501,23 @@
             const autoSave = () => {
                 clearTimeout(saveTimeout);
                 saveTimeout = setTimeout(() => {
+                    const titleEl = document.getElementById('newsTitle');
+                    const contentEl = document.getElementById('articleContent');
+                    const excerptEl = document.getElementById('newsExcerpt');
+                    const editIdEl = document.getElementById('editNewsId');
+
                     const draft = {
-                        title: document.getElementById('newsTitle')?.value || '',
-                        content: document.getElementById('articleContent')?.innerHTML || '',
-                        excerpt: document.getElementById('newsExcerpt')?.value || '',
-                        editId: document.getElementById('editNewsId')?.value || '',
+                        title: titleEl?.value || '',
+                        content: contentEl?.innerHTML || '',
+                        excerpt: excerptEl?.value || '',
+                        editId: editIdEl?.value || '',
                         savedAt: new Date().toISOString()
                     };
-                    if (draft.title || draft.content) {
+
+                    // Only save if there's actual content
+                    if (draft.title || (draft.content && draft.content !== '<br>' && draft.content.trim() !== '')) {
                         localStorage.setItem('newsDraft', JSON.stringify(draft));
-                        console.log('Draft auto-saved');
+                        console.log('📝 Draft auto-saved at', new Date().toLocaleTimeString());
                     }
                 }, 2000); // Save 2s after last change
             };
@@ -1514,30 +1526,39 @@
             document.getElementById('newsTitle')?.addEventListener('input', autoSave);
             document.getElementById('newsExcerpt')?.addEventListener('input', autoSave);
 
-            // Restore draft on load
-            const savedDraft = localStorage.getItem('newsDraft');
-            if (savedDraft) {
-                try {
-                    const draft = JSON.parse(savedDraft);
-                    const savedTime = new Date(draft.savedAt).toLocaleString('cs-CZ');
-                    if ((draft.title || draft.content) && !draft.editId) {
-                        if (confirm(`Máte rozepsanou novinku z ${savedTime}. Chcete ji obnovit?`)) {
-                            document.getElementById('newsTitle').value = draft.title || '';
-                            document.getElementById('articleContent').innerHTML = draft.content || '';
-                            document.getElementById('newsExcerpt').value = draft.excerpt || '';
-                            updatePreview();
-                        } else {
-                            localStorage.removeItem('newsDraft');
+            // Restore draft - delay to ensure page is fully loaded
+            setTimeout(() => {
+                const savedDraft = localStorage.getItem('newsDraft');
+                if (savedDraft) {
+                    try {
+                        const draft = JSON.parse(savedDraft);
+                        const savedTime = new Date(draft.savedAt).toLocaleString('cs-CZ');
+                        console.log('📋 Found draft from', savedTime);
+
+                        // Only restore new articles (not edits)
+                        if ((draft.title || (draft.content && draft.content !== '<br>')) && !draft.editId) {
+                            if (confirm(`Máte rozepsanou novinku z ${savedTime}. Chcete ji obnovit?`)) {
+                                document.getElementById('newsTitle').value = draft.title || '';
+                                document.getElementById('articleContent').innerHTML = draft.content || '';
+                                document.getElementById('newsExcerpt').value = draft.excerpt || '';
+                                updatePreview();
+                                console.log('✅ Draft restored');
+                            } else {
+                                localStorage.removeItem('newsDraft');
+                                console.log('🗑️ Draft discarded');
+                            }
                         }
+                    } catch (e) {
+                        console.error('Draft restore error:', e);
                     }
-                } catch (e) { console.error('Draft restore error:', e); }
-            }
+                }
+            }, 500);
 
             // Warn before leaving with unsaved changes
             window.addEventListener('beforeunload', (e) => {
                 const title = document.getElementById('newsTitle')?.value;
                 const content = document.getElementById('articleContent')?.innerHTML;
-                if (title || (content && content !== '<br>' && content !== '')) {
+                if (title || (content && content !== '<br>' && content.trim() !== '')) {
                     e.preventDefault();
                     e.returnValue = '';
                 }
