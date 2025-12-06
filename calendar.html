@@ -325,22 +325,25 @@
                         <div
                             style="display: flex; background: rgba(0,0,0,0.3); border-radius: 50px; padding: 2px; gap: 2px;">
                             <button id="catAll" onclick="filterByCategory('all')" class="cat-pill active"
-                                style="padding: 0.35rem 0.7rem; border-radius: 50px; border: none; background: var(--primary-color); color: #000; font-weight: 600; font-size: 0.7rem; cursor: pointer;">
+                                style="padding: 0.35rem 0.6rem; border-radius: 50px; border: none; background: var(--primary-color); color: #000; font-weight: 600; font-size: 0.65rem; cursor: pointer;">
                                 Vše
                             </button>
                             <button id="catTeams" onclick="filterByCategory('teams')" class="cat-pill"
-                                style="padding: 0.35rem 0.6rem; border-radius: 50px; border: none; background: transparent; color: var(--text-muted); font-weight: 500; font-size: 0.7rem; cursor: pointer;">
-                                <i class="fa-solid fa-chess-knight" style="color: #FFD700;"></i>
+                                style="padding: 0.35rem 0.6rem; border-radius: 50px; border: none; background: transparent; color: var(--text-muted); font-weight: 500; font-size: 0.65rem; cursor: pointer;">
+                                <i class="fa-solid fa-chess-knight"
+                                    style="color: #FFD700; margin-right: 0.2rem;"></i>Dospělí
                             </button>
                             <button id="catYouth" onclick="filterByCategory('youth')" class="cat-pill"
-                                style="padding: 0.35rem 0.6rem; border-radius: 50px; border: none; background: transparent; color: var(--text-muted); font-weight: 500; font-size: 0.7rem; cursor: pointer;">
-                                <i class="fa-solid fa-child" style="color: #4ade80;"></i>
+                                style="padding: 0.35rem 0.6rem; border-radius: 50px; border: none; background: transparent; color: var(--text-muted); font-weight: 500; font-size: 0.65rem; cursor: pointer;">
+                                <i class="fa-solid fa-child" style="color: #4ade80; margin-right: 0.2rem;"></i>Mládež
                             </button>
                         </div>
 
-                        <!-- Past Matches Toggle (compact) -->
+                        <!-- Past Matches Toggle -->
                         <label
-                            style="display: flex; align-items: center; gap: 0.35rem; cursor: pointer; user-select: none;">
+                            style="display: flex; align-items: center; gap: 0.3rem; cursor: pointer; user-select: none;"
+                            title="Zobrazit/skrýt odehrané zápasy">
+                            <span style="color: var(--text-muted); font-size: 0.65rem;">Historie</span>
                             <div style="position: relative; width: 36px; height: 20px;">
                                 <input type="checkbox" id="togglePastSwitch" onchange="togglePastMatches()" checked
                                     style="opacity: 0; width: 100%; height: 100%; position: absolute; cursor: pointer; z-index: 2;">
@@ -352,7 +355,7 @@
                                 </div>
                             </div>
                             <i id="toggleIcon" class="fa-solid fa-eye"
-                                style="color: var(--primary-color); font-size: 0.75rem;"></i>
+                                style="color: var(--primary-color); font-size: 0.7rem;"></i>
                         </label>
                     </div>
                 </div>
