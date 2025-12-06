@@ -104,46 +104,44 @@ async function scrapeMatchDetails(compUrl, round, homeTeam, awayTeam) {
                     // Cell 8: Result (e.g. "1 - 0")
 
                     if (cells.length > 5) {
-                        const board = clean(cells[0]);
-                        const white = clean(cells[3]);
+                        // White/Black variable names were misleading. 
+                        // Col 3 is Home Team Player. Col (Find Comma) is Guest Team Player.
+                        const homePlayer = clean(cells[3]);
 
-                        // White Elo is usually at 4 or 5. 5 seems more common for "Rtg".
-                        // Check if 4 or 5 is a number or dash.
+                        // Home Elo
                         const rawElo4 = clean(cells[4]);
                         const rawElo5 = clean(cells[5]);
-                        let whiteElo = isElo(rawElo5) ? rawElo5 : (isElo(rawElo4) ? rawElo4 : '');
+                        let homeElo = isElo(rawElo5) ? rawElo5 : (isElo(rawElo4) ? rawElo4 : '');
 
-                        // Find Black Name (look for comma) start from 6
-                        let blackIndex = -1;
-                        let black = '';
+                        // Find Guest Player (look for comma) start from 6
+                        let guestIndex = -1;
+                        let guestPlayer = '';
                         for (let i = 6; i < cells.length; i++) {
                             const txt = clean(cells[i]);
                             // Look for name format "Surname, Name"
                             if (txt.includes(',') && txt.length > 3) {
-                                black = txt;
-                                blackIndex = i;
+                                guestPlayer = txt;
+                                guestIndex = i;
                                 break;
                             }
                         }
 
-                        // Fallback if no comma found (rare but possible), try fixed indices
-                        if (!black) {
-                            if (clean(cells[8]).length > 2) { black = clean(cells[8]); blackIndex = 8; }
-                            else if (clean(cells[9]).length > 2) { black = clean(cells[9]); blackIndex = 9; }
+                        // Fallback
+                        if (!guestPlayer) {
+                            if (clean(cells[8]).length > 2) { guestPlayer = clean(cells[8]); guestIndex = 8; }
+                            else if (clean(cells[9]).length > 2) { guestPlayer = clean(cells[9]); guestIndex = 9; }
                         }
 
-                        // Black Elo: search after black name
-                        let blackElo = '';
-                        if (blackIndex > -1) {
-                            // Try +1 or +2
-                            const after1 = clean(cells[blackIndex + 1]);
-                            const after2 = clean(cells[blackIndex + 2]);
-                            if (isElo(after2)) blackElo = after2;
-                            else if (isElo(after1)) blackElo = after1;
+                        // Guest Elo
+                        let guestElo = '';
+                        if (guestIndex > -1) {
+                            const after1 = clean(cells[guestIndex + 1]);
+                            const after2 = clean(cells[guestIndex + 2]);
+                            if (isElo(after2)) guestElo = after2;
+                            else if (isElo(after1)) guestElo = after1;
                         }
 
-                        // Result: search for result pattern from end or specific indices
-                        // Regex for result: digits - digits or digit : digit
+                        // Result
                         let result = '';
                         for (let i = cells.length - 1; i > 0; i--) {
                             const txt = clean(cells[i]);
@@ -152,10 +150,9 @@ async function scrapeMatchDetails(compUrl, round, homeTeam, awayTeam) {
                                 break;
                             }
                         }
-                        // Fallback
                         if (!result && cells.length > 10) result = clean(cells[10]);
 
-                        boards.push({ board, white, whiteElo, black, blackElo, result });
+                        boards.push({ board, homePlayer, homeElo, guestPlayer, guestElo, result });
                     } else {
                         // Fallback if structure is different (sometimes Elo is missing?)
                         // Just capture the raw cleaned text

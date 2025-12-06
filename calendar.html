@@ -646,11 +646,11 @@
                 return `
                             <tr>
                                 <td style="padding: 0.5rem; color: var(--text-muted);">${b.board || '-'}</td>
-                                <td style="padding: 0.5rem; ${homeStyle}">${homeIcon} ${homeName || '-'}</td>
-                                <td style="padding: 0.5rem; font-size: 0.8em; color: var(--text-muted);">${homeElo && homeElo !== '-' ? homeElo : ''}</td>
+                                <td style="padding: 0.5rem; ${homeStyle}">${homeIcon} ${b.homePlayer || '-'}</td>
+                                <td style="padding: 0.5rem; font-size: 0.8em; color: var(--text-muted);">${b.homeElo && b.homeElo !== '-' ? b.homeElo : ''}</td>
                                 <td style="padding: 0.5rem; font-weight: bold; color: var(--text-color);">${b.result || '-'}</td>
-                                <td style="padding: 0.5rem; ${awayStyle}">${awayIcon} ${awayName || '-'}</td>
-                                <td style="padding: 0.5rem; font-size: 0.8em; color: var(--text-muted);">${awayElo && awayElo !== '-' ? awayElo : ''}</td>
+                                <td style="padding: 0.5rem; ${awayStyle}">${awayIcon} ${b.guestPlayer || '-'}</td>
+                                <td style="padding: 0.5rem; font-size: 0.8em; color: var(--text-muted);">${b.guestElo && b.guestElo !== '-' ? b.guestElo : ''}</td>
                             </tr>
                         `;
             }).join('')}
