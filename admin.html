@@ -1327,6 +1327,7 @@
             }
 
             // Wrap selected text
+            let insertedSpan = null;
             if (!selection.isCollapsed) {
                 const span = document.createElement('span');
                 span.className = className;
@@ -1334,6 +1335,7 @@
                     const contents = range.extractContents();
                     span.appendChild(contents);
                     range.insertNode(span);
+                    insertedSpan = span;
                     // Clear selection
                     selection.removeAllRanges();
                 } catch (e) {
@@ -1347,6 +1349,20 @@
                 span.className = className;
                 span.textContent = placeholder;
                 range.insertNode(span);
+                insertedSpan = span;
+            }
+
+            // Move cursor AFTER the span so next typing is normal
+            if (insertedSpan) {
+                // Insert a space after the span and position cursor there
+                const space = document.createTextNode(' ');
+                insertedSpan.parentNode.insertBefore(space, insertedSpan.nextSibling);
+
+                const newRange = document.createRange();
+                newRange.setStartAfter(space);
+                newRange.collapse(true);
+                selection.removeAllRanges();
+                selection.addRange(newRange);
             }
 
             editor.focus();
