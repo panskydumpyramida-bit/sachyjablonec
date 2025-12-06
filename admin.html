@@ -828,7 +828,8 @@
                         <!-- WYSIWYG Editor -->
                         <div class="form-group">
                             <label>Obsah článku *</label>
-                            <div class="wysiwyg-toolbar">
+                            <div class="wysiwyg-toolbar" style="flex-wrap: wrap;">
+                                <!-- Row 1: Formatting -->
                                 <button type="button" id="btnBold" onclick="formatText('bold')"
                                     title="Tučně (Ctrl+B)"><i class="fa-solid fa-bold"></i></button>
                                 <button type="button" id="btnItalic" onclick="formatText('italic')"
@@ -836,7 +837,7 @@
                                 <button type="button" id="btnUnderline" onclick="formatText('underline')"
                                     title="Podtržení (Ctrl+U)"><i class="fa-solid fa-underline"></i></button>
                                 <div class="divider"></div>
-                                <!-- Heading buttons with labels -->
+                                <!-- Heading buttons -->
                                 <div
                                     style="display: flex; gap: 2px; background: rgba(255,255,255,0.05); border-radius: 4px; padding: 2px;">
                                     <button type="button" id="headingP" onclick="applyHeading('p')"
@@ -850,17 +851,19 @@
                                         style="padding: 0.25rem 0.5rem; font-size: 0.7rem; font-weight: 500; border-radius: 3px; min-width: 28px;">H3</button>
                                 </div>
                                 <div class="divider"></div>
-                                <button type="button" id="btnHighlightName" onmousedown="event.preventDefault()"
-                                    onclick="insertHighlight('name')" title="Zvýraznit jméno" style="color: #60a5fa;"><i
-                                        class="fa-solid fa-user"></i>
-                                    Jméno</button>
-                                <button type="button" id="btnHighlightScore" onmousedown="event.preventDefault()"
-                                    onclick="insertHighlight('score')" title="Zvýraznit skóre"
-                                    style="color: #4ade80;"><i class="fa-solid fa-trophy"></i>
-                                    Skóre</button>
-                                <div class="divider"></div>
                                 <button type="button" onclick="insertLink()" title="Odkaz"><i
                                         class="fa-solid fa-link"></i></button>
+                                <button type="button" onclick="toggleSource()" title="HTML" id="btnSource"><i
+                                        class="fa-solid fa-code"></i></button>
+
+                                <!-- Row 2: Highlights and blocks (will wrap on smaller screens) -->
+                                <div class="divider" style="height: 0; width: 100%; margin: 0.25rem 0;"></div>
+                                <button type="button" id="btnHighlightName" onmousedown="event.preventDefault()"
+                                    onclick="insertHighlight('name')" title="Zvýraznit jméno" style="color: #60a5fa;"><i
+                                        class="fa-solid fa-user"></i> Jméno</button>
+                                <button type="button" id="btnHighlightScore" onmousedown="event.preventDefault()"
+                                    onclick="insertHighlight('score')" title="Zvýraznit skóre"
+                                    style="color: #4ade80;"><i class="fa-solid fa-trophy"></i> Skóre</button>
                                 <div class="divider"></div>
                                 <button type="button" onclick="insertIntroBlock()" title="Puzzle blok"
                                     style="color: #fbbf24;"><i class="fa-solid fa-lightbulb"></i></button>
@@ -868,9 +871,6 @@
                                         class="fa-solid fa-image"></i></button>
                                 <button type="button" onclick="insertCollapsibleBlock()" title="Rozbalovací sekce"
                                     style="color: #8b5cf6;"><i class="fa-solid fa-layer-group"></i></button>
-                                <div class="divider"></div>
-                                <button type="button" onclick="toggleSource()" title="HTML" id="btnSource"><i
-                                        class="fa-solid fa-code"></i></button>
                             </div>
                             <div class="wysiwyg-content" id="articleContent" contenteditable="true"
                                 oninput="updatePreview()"></div>
