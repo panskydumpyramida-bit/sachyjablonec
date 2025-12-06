@@ -586,11 +586,18 @@
                     </div>
                 `;
 
-                // Find data
+                // Find data - use fuzzy matching for team names
+                const fuzzyMatch = (a, b) => {
+                    const la = a.toLowerCase().trim();
+                    const lb = b.toLowerCase().trim();
+                    return la === lb || la.includes(lb) || lb.includes(la);
+                };
+                
                 const matchData = allMatchesData.find(m =>
                     m.competition === competition &&
                     m.round === round &&
-                    ((m.myTeam === team1 && m.opponent === team2) || (m.myTeam === team2 && m.opponent === team1))
+                    ((fuzzyMatch(m.myTeam, team1) && fuzzyMatch(m.opponent, team2)) || 
+                     (fuzzyMatch(m.myTeam, team2) && fuzzyMatch(m.opponent, team1)))
                 );
 
                 if (matchData && matchData.url) {
