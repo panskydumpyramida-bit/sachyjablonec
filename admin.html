@@ -18,8 +18,11 @@
 
         .admin-container {
             max-width: 1800px;
+            width: 100%;
+            box-sizing: border-box;
             margin: 100px auto 2rem;
             padding: 0 2rem;
+            overflow-x: hidden;
         }
 
         .login-container {
@@ -647,10 +650,17 @@
                 padding: 0.6rem 1rem;
             }
 
+            .data-table {
+                display: block;
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+
             .data-table th,
             .data-table td {
                 padding: 0.5rem;
                 font-size: 0.75rem;
+                white-space: nowrap;
             }
 
             .wysiwyg-toolbar {
@@ -705,6 +715,10 @@
 
             .editor-sidebar {
                 padding: 0.75rem;
+            }
+
+            .status-text {
+                display: none;
             }
         }
     </style>
@@ -822,6 +836,20 @@
                                 <button type="button" id="btnUnderline" onclick="formatText('underline')"
                                     title="Podtržení (Ctrl+U)"><i class="fa-solid fa-underline"></i></button>
                                 <div class="divider"></div>
+                                <!-- Heading buttons with labels -->
+                                <div
+                                    style="display: flex; gap: 2px; background: rgba(255,255,255,0.05); border-radius: 4px; padding: 2px;">
+                                    <button type="button" id="headingP" onclick="applyHeading('p')"
+                                        title="Normální text"
+                                        style="padding: 0.25rem 0.5rem; font-size: 0.7rem; font-weight: 600; border-radius: 3px; min-width: 28px;">P</button>
+                                    <button type="button" id="headingH1" onclick="applyHeading('h1')" title="Nadpis 1"
+                                        style="padding: 0.25rem 0.5rem; font-size: 0.7rem; font-weight: 700; border-radius: 3px; min-width: 28px;">H1</button>
+                                    <button type="button" id="headingH2" onclick="applyHeading('h2')" title="Nadpis 2"
+                                        style="padding: 0.25rem 0.5rem; font-size: 0.7rem; font-weight: 600; border-radius: 3px; min-width: 28px;">H2</button>
+                                    <button type="button" id="headingH3" onclick="applyHeading('h3')" title="Nadpis 3"
+                                        style="padding: 0.25rem 0.5rem; font-size: 0.7rem; font-weight: 500; border-radius: 3px; min-width: 28px;">H3</button>
+                                </div>
+                                <div class="divider"></div>
                                 <button type="button" id="btnHighlightName" onmousedown="event.preventDefault()"
                                     onclick="insertHighlight('name')" title="Zvýraznit jméno" style="color: #60a5fa;"><i
                                         class="fa-solid fa-user"></i>
@@ -831,13 +859,6 @@
                                     style="color: #4ade80;"><i class="fa-solid fa-trophy"></i>
                                     Skóre</button>
                                 <div class="divider"></div>
-                                <select id="headingSelect" onchange="applyHeading(this.value)" title="Formát"
-                                    style="background: var(--surface-color); color: var(--text-main); border: 1px solid rgba(255,255,255,0.2); border-radius: 4px; padding: 0.2rem; font-size: 0.75rem; width: 55px;">
-                                    <option value="p">P</option>
-                                    <option value="h1">H1</option>
-                                    <option value="h2">H2</option>
-                                    <option value="h3">H3</option>
-                                </select>
                                 <button type="button" onclick="insertLink()" title="Odkaz"><i
                                         class="fa-solid fa-link"></i></button>
                                 <div class="divider"></div>
@@ -1315,7 +1336,7 @@
                         <td>${item.title}</td>
                         <td>${item.category}</td>
                         <td><span class="highlight-name" style="font-size: 0.85rem;">${item.author?.username || '-'}</span></td>
-                        <td><span class="status-badge ${item.isPublished ? 'status-published' : 'status-draft'}">${item.isPublished ? 'Publikováno' : 'Koncept'}</span></td>
+                        <td><span class="status-badge ${item.isPublished ? 'status-published' : 'status-draft'}">${item.isPublished ? '✓' : '○'}<span class="status-text">${item.isPublished ? ' Pub' : ' Konc'}</span></span></td>
                         <td>
                             <button class="action-btn btn-edit" onclick="editNews(${item.id})"><i class="fa-solid fa-pen"></i></button>
                             <button class="action-btn btn-publish" onclick="togglePublish(${item.id})" title="${item.isPublished ? 'Skrýt' : 'Publikovat'}"><i class="fa-solid fa-${item.isPublished ? 'eye-slash' : 'eye'}"></i></button>
@@ -1790,13 +1811,14 @@
         function applyHeading(tag) {
             const editor = document.getElementById('articleContent');
             const selection = window.getSelection();
-            const select = document.getElementById('headingSelect');
+
+            // Update button states
+            updateHeadingButtons(tag);
 
             if (!selection.rangeCount || selection.isCollapsed) {
                 // No selection - use default behavior
                 document.execCommand('formatBlock', false, tag);
                 editor.focus();
-                select.value = 'p'; // Reset dropdown
                 checkToolbarState();
                 return;
             }
@@ -1805,7 +1827,6 @@
 
             // Check if selection is within editor
             if (!editor.contains(range.commonAncestorContainer)) {
-                select.value = 'p';
                 return;
             }
 
@@ -1822,10 +1843,24 @@
                 document.execCommand('formatBlock', false, tag);
             }
 
-            select.value = 'p'; // Reset dropdown
             editor.focus();
             updatePreview();
             checkToolbarState();
+        }
+
+        function updateHeadingButtons(active) {
+            ['P', 'H1', 'H2', 'H3'].forEach(tag => {
+                const btn = document.getElementById('heading' + tag);
+                if (btn) {
+                    if (tag.toLowerCase() === active.toLowerCase()) {
+                        btn.style.background = 'var(--primary-color)';
+                        btn.style.color = '#000';
+                    } else {
+                        btn.style.background = 'transparent';
+                        btn.style.color = 'var(--text-muted)';
+                    }
+                }
+            });
         }
 
         function insertList(type) {
