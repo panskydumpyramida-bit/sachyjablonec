@@ -148,11 +148,86 @@
                 width: 100%;
             }
         }
+
+        /* Match Details Modal */
+        .details-modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.8);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+            backdrop-filter: blur(5px);
+        }
+
+        .details-modal.active {
+            display: flex;
+        }
+
+        .details-content {
+            background: var(--surface-color);
+            border: 1px solid var(--primary-color);
+            border-radius: var(--border-radius);
+            padding: 2rem;
+            width: 90%;
+            max-width: 600px;
+            max-height: 85vh;
+            overflow-y: auto;
+            position: relative;
+            box-shadow: 0 0 50px rgba(212, 175, 55, 0.1);
+        }
+
+        .details-close {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            color: var(--text-muted);
+            cursor: pointer;
+            font-size: 1.5rem;
+            transition: color 0.3s;
+        }
+
+        .details-close:hover {
+            color: var(--primary-color);
+        }
+
+        .boards-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+            font-size: 0.9rem;
+        }
+
+        .boards-table th {
+            text-align: left;
+            padding: 0.75rem;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+            color: var(--primary-color);
+        }
+
+        .boards-table td {
+            padding: 0.75rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
     </style>
     <link rel="icon" type="image/png" href="images/favicon.png">
 </head>
 
 <body>
+    <!-- Match Details Modal -->
+    <div id="matchDetailsModal" class="details-modal">
+        <div class="details-content">
+            <span class="details-close" onclick="closeMatchDetails()">&times;</span>
+            <h3 id="modalTitle" style="color: var(--primary-color); margin-bottom: 0.5rem;">Detaily zápasu</h3>
+            <p id="modalSubtitle" style="color: var(--text-muted); margin-bottom: 1.5rem; font-size: 0.9rem;"></p>
+            <div id="modalBody">
+                <div style="text-align: center; padding: 2rem;">
+                    <i class="fa-solid fa-spinner fa-spin fa-2x" style="color: var(--primary-color);"></i>
+                </div>
+            </div>
+        </div>
+    </div>
     <header id="global-header"></header>
 
     <main>
@@ -259,7 +334,8 @@
                                             opponent: match.opponent,
                                             result: match.result,
                                             round: match.round,
-                                            isHome: match.isHome
+                                            isHome: match.isHome,
+                                            url: comp.chessczUrl || comp.url // Store URL for details fetching
                                         });
                                         competitionNames.add(compName);
                                     }
@@ -400,6 +476,14 @@
                 const t1Style = (team1 === match.myTeam) ? highlightStyle : '';
                 const t2Style = (team2 === match.myTeam) ? highlightStyle : '';
 
+                // Result Clickable if valid result
+                const hasResult = match.result && match.result !== '-' && match.result !== '';
+                const resultHtml = hasResult
+                    ? `<span class="match-result clickable" onclick="openMatchDetails('${match.competition}', '${match.round}', '${team1}', '${team2}', '${match.result}')" 
+                           style="cursor: pointer; text-decoration: underline; text-decoration-style: dotted; text-underline-offset: 4px;" 
+                           title="Zobrazit detailní výsledky">${match.result}</span>`
+                    : (match.result && match.result !== '-' ? `<span class="match-result">${match.result}</span>` : '');
+
                 html += `
                     <div class="match-card ${isPast ? 'past-match' : ''}" style="${isPast ? 'border-left: 2px solid var(--text-muted);' : ''}">
                         <div class="match-date">
@@ -410,7 +494,7 @@
                             <div class="match-competition">${match.competition} • ${match.round}. kolo</div>
                             <div class="match-teams">
                                 <span style="${t1Style}">${team1}</span> - <span style="${t2Style}">${team2}</span>
-                                ${match.result && match.result !== '-' ? `<span class="match-result">${match.result}</span>` : ''}
+                                ${resultHtml}
                             </div>
                         </div>
                         <div class="match-actions">
@@ -422,6 +506,102 @@
 
             if (matches.length > 0) html += '</div>'; // Close last month div
             return html;
+        }
+
+        // Modal Functions
+        function openMatchDetails(competition, round, team1, team2, result) {
+            const modal = document.getElementById('matchDetailsModal');
+            const title = document.getElementById('modalTitle');
+            const subtitle = document.getElementById('modalSubtitle');
+            const body = document.getElementById('modalBody');
+
+            title.textContent = `${team1} - ${team2} `;
+            subtitle.textContent = `${competition}, ${round}.kolo • Výsledek: ${result} `;
+            modal.classList.add('active');
+
+            // Show loader
+            body.innerHTML = `
+                    < div style = "text-align: center; padding: 2rem;" >
+                    <i class="fa-solid fa-spinner fa-spin fa-2x" style="color: var(--primary-color);"></i>
+                    <p style="margin-top: 1rem;">Načítám výsledky šachovnic...</p>
+                </div >
+                    `;
+
+            // Find competition URL to fetch details
+            // We need to look up the competition URL from the loaded data
+            // Since we don't have it direct here, we might need to store it in allMatchesData
+            const matchData = allMatchesData.find(m =>
+                m.competition === competition &&
+                m.round === round &&
+                ((m.myTeam === team1 && m.opponent === team2) || (m.myTeam === team2 && m.opponent === team1))
+            );
+
+            if (matchData && matchData.url) {
+                fetchDetails(matchData.url, round, team1, team2);
+            } else {
+                body.innerHTML = '<p style="text-align: center; color: #fca5a5;">Chybí URL soutěže, nelze načíst detaily.</p>';
+            }
+        }
+
+        async function fetchDetails(url, round, home, away) {
+            try {
+                const res = await fetch(`${API_URL} /standings/match - details ? url = ${encodeURIComponent(url)}& round=${round}& home=${encodeURIComponent(home)}& away=${encodeURIComponent(away)} `);
+                const data = await res.json();
+
+                if (data.boards && data.boards.length > 0) {
+                    renderBoards(data.boards);
+                } else {
+                    document.getElementById('modalBody').innerHTML = '<p style="text-align: center; color: var(--text-muted);">Podrobné výsledky nejsou k dispozici.</p>';
+                }
+            } catch (err) {
+                console.error(err);
+                document.getElementById('modalBody').innerHTML = '<p style="text-align: center; color: #fca5a5;">Chyba při načítání detailů.</p>';
+            }
+        }
+
+        function renderBoards(boards) {
+            const html = `
+                    < table class="boards-table" >
+                    <thead>
+                        <tr>
+                            <th>Šach.</th>
+                            <th>Bílý</th>
+                            <th>ELO</th>
+                            <th>Výs.</th>
+                            <th>Černý</th>
+                            <th>ELO</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${boards.map(b => `
+                            <tr>
+                                <td>${b.board || '-'}</td>
+                                <td>${b.white || '-'}</td>
+                                <td>${b.whiteElo || ''}</td>
+                                <td style="font-weight: bold; color: var(--text-color);">${b.result || '-'}</td>
+                                <td>${b.black || '-'}</td>
+                                <td>${b.blackElo || ''}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table >
+            `;
+            document.getElementById('modalBody').innerHTML = html;
+        }
+
+        function closeMatchDetails() {
+            document.getElementById('matchDetailsModal').classList.remove('active');
+        }
+
+        // Close on outside click
+        window.onclick = function (event) {
+            const modal = document.getElementById('matchDetailsModal');
+            if (event.target == modal) {
+                closeMatchDetails();
+            }
+        }
+        if (matches.length > 0) html += '</div>'; // Close last month div
+        return html;
         }
     </script>
 </body>
