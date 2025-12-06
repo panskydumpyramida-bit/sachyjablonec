@@ -1796,6 +1796,7 @@
                                 document.getElementById('articleContent').innerHTML = draft.content || '';
                                 document.getElementById('newsExcerpt').value = draft.excerpt || '';
                                 updatePreview();
+                                switchTab('editor'); // Switch to editor tab
                                 console.log('✅ Draft restored');
                             } else {
                                 localStorage.removeItem('newsDraft');
