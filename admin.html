@@ -780,75 +780,114 @@
 
                     <!-- Sidebar (30%) -->
                     <div class="editor-sidebar">
-                        <div class="preview-card">
-                            <div class="preview-title">Náhled karty</div>
-                            <div class="news-preview">
-                                <div class="preview-image" id="previewImage"><i class="fa-solid fa-image"
-                                        style="font-size: 2rem; color: var(--text-muted);"></i></div>
-                                <div class="card-content" style="padding: 1rem;">
-                                    <span class="card-category" id="previewCategory">Kategorie</span>
-                                    <span class="card-date" id="previewDate">Datum</span>
-                                    <h3 class="card-title" id="previewTitle" style="font-size: 1rem; margin: 0.5rem 0;">
-                                        Nadpis</h3>
-                                    <p class="card-excerpt" id="previewExcerpt"
-                                        style="font-size: 0.85rem; color: var(--text-muted);">Krátký popis...</p>
-                                </div>
+                        <!-- SECTION 1: Publikace -->
+                        <div
+                            style="margin-bottom: 1.5rem; padding-bottom: 1rem; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                            <div
+                                style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1rem; color: var(--primary-color);">
+                                <i class="fa-solid fa-paper-plane"></i>
+                                <span style="font-weight: 600;">Publikace</span>
                             </div>
+
+                            <div class="form-group" style="margin-bottom: 0.75rem;">
+                                <label style="font-size: 0.8rem;">Kategorie</label>
+                                <select id="newsCategory" onchange="updatePreview()" style="font-size: 0.85rem;">
+                                    <option value="Soutěže družstev">Soutěže družstev</option>
+                                    <option value="Oddílový přebor">Oddílový přebor</option>
+                                    <option value="Mládež">Mládež</option>
+                                    <option value="O nás">O nás</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group" style="margin-bottom: 0.75rem;">
+                                <label style="font-size: 0.8rem;">Datum</label>
+                                <input type="date" id="newsDate" oninput="updatePreview()" style="font-size: 0.85rem;">
+                            </div>
+
+                            <div class="form-group" style="margin-bottom: 0.75rem;">
+                                <label style="font-size: 0.8rem;">Krátký popis</label>
+                                <textarea id="newsExcerpt" rows="2" placeholder="Zobrazí se na kartě..."
+                                    oninput="updatePreview()" style="font-size: 0.85rem;"></textarea>
+                            </div>
+
+                            <label
+                                style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; font-size: 0.85rem;">
+                                <input type="checkbox" id="publishCheck" style="width: auto;">
+                                <span>Publikovat ihned</span>
+                            </label>
                         </div>
 
-                        <div class="preview-card" style="margin-top: 1rem;">
-                            <div class="preview-title"
-                                style="display: flex; justify-content: space-between; align-items: center;">
-                                <span>Náhled článku</span>
-                                <button type="button" class="btn-secondary btn-small" onclick="toggleFullPreview()"><i
-                                        class="fa-solid fa-expand"></i></button>
+                        <!-- SECTION 2: Obrázek -->
+                        <div
+                            style="margin-bottom: 1.5rem; padding-bottom: 1rem; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                            <div
+                                style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1rem; color: #f472b6;">
+                                <i class="fa-solid fa-image"></i>
+                                <span style="font-weight: 600;">Náhledový obrázek</span>
                             </div>
-                            <div id="articlePreview"
-                                style="padding: 1rem; max-height: 400px; overflow-y: auto; background: var(--card-bg); border-radius: var(--border-radius);">
-                                <p style="color: var(--text-muted); text-align: center;">Začněte psát obsah...</p>
-                            </div>
-                        </div>
 
-                        <div class="form-group">
-                            <label>Náhledový obrázek *</label>
                             <div class="image-upload" id="uploadArea"
-                                onclick="document.getElementById('imageInput').click()">
-                                <div id="uploadPlaceholder"><i class="fa-solid fa-cloud-upload-alt"
-                                        style="font-size: 1.5rem; color: var(--primary-color);"></i>
-                                    <p style="margin: 0.5rem 0 0 0; font-size: 0.9rem;">Klikněte pro nahrání</p>
+                                onclick="document.getElementById('imageInput').click()"
+                                style="height: 80px; margin-bottom: 0.5rem;">
+                                <div id="uploadPlaceholder">
+                                    <i class="fa-solid fa-cloud-upload-alt"
+                                        style="font-size: 1.2rem; color: var(--primary-color);"></i>
+                                    <p style="margin: 0.3rem 0 0 0; font-size: 0.75rem;">Klikněte pro nahrání</p>
                                 </div>
                                 <img id="uploadedImage" class="uploaded-thumb" style="display: none;">
                             </div>
                             <input type="file" id="imageInput" accept="image/*" style="display: none;"
                                 onchange="handleImageUpload(event)">
-                            <input type="text" id="imageUrl" placeholder="nebo URL obrázku"
-                                style="margin-top: 0.5rem; font-size: 0.85rem;" oninput="handleImageUrl()">
+                            <input type="text" id="imageUrl" placeholder="nebo URL obrázku" style="font-size: 0.8rem;"
+                                oninput="handleImageUrl()">
                         </div>
 
-                        <div class="form-group">
-                            <label>Kategorie *</label>
-                            <select id="newsCategory" onchange="updatePreview()">
-                                <option value="Soutěže družstev">Soutěže družstev</option>
-                                <option value="Oddílový přebor">Oddílový přebor</option>
-                                <option value="Mládež">Mládež</option>
-                                <option value="O nás">O nás</option>
-                            </select>
-                        </div>
+                        <!-- SECTION 3: Náhledy -->
+                        <div>
+                            <div
+                                style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1rem; color: #60a5fa;">
+                                <i class="fa-solid fa-eye"></i>
+                                <span style="font-weight: 600;">Náhledy</span>
+                            </div>
 
-                        <div class="form-group">
-                            <label>Datum publikace *</label>
-                            <input type="date" id="newsDate" oninput="updatePreview()">
-                        </div>
+                            <!-- Card preview -->
+                            <div class="preview-card" style="margin-bottom: 0.75rem;">
+                                <div class="preview-title" style="font-size: 0.75rem; padding: 0.5rem;">Karta</div>
+                                <div class="news-preview"
+                                    style="transform: scale(0.85); transform-origin: top left; margin-bottom: -10%;">
+                                    <div class="preview-image" id="previewImage" style="height: 80px;">
+                                        <i class="fa-solid fa-image"
+                                            style="font-size: 1.5rem; color: var(--text-muted);"></i>
+                                    </div>
+                                    <div class="card-content" style="padding: 0.75rem;">
+                                        <span class="card-category" id="previewCategory"
+                                            style="font-size: 0.6rem;">Kategorie</span>
+                                        <span class="card-date" id="previewDate"
+                                            style="font-size: 0.55rem;">Datum</span>
+                                        <h3 class="card-title" id="previewTitle"
+                                            style="font-size: 0.8rem; margin: 0.3rem 0;">Nadpis</h3>
+                                        <p class="card-excerpt" id="previewExcerpt"
+                                            style="font-size: 0.7rem; color: var(--text-muted);">Popis...</p>
+                                    </div>
+                                </div>
+                            </div>
 
-                        <div class="form-group">
-                            <label>Krátký popis *</label>
-                            <textarea id="newsExcerpt" rows="3" placeholder="Zobrazí se na kartě novinky..."
-                                oninput="updatePreview()"></textarea>
-                        </div>
-
-                        <div class="form-group">
-                            <label><input type="checkbox" id="publishCheck" style="width: auto; margin-right: 0.5rem;">
-                                Publikovat ihned</label>
+                            <!-- Article preview -->
+                            <div class="preview-card">
+                                <div class="preview-title"
+                                    style="display: flex; justify-content: space-between; align-items: center; font-size: 0.75rem; padding: 0.5rem;">
+                                    <span>Článek</span>
+                                    <button type="button" class="btn-secondary btn-small" onclick="toggleFullPreview()"
+                                        style="padding: 0.2rem 0.4rem; font-size: 0.7rem;">
+                                        <i class="fa-solid fa-expand"></i>
+                                    </button>
+                                </div>
+                                <div id="articlePreview"
+                                    style="padding: 0.75rem; max-height: 200px; overflow-y: auto; background: var(--card-bg); border-radius: var(--border-radius); font-size: 0.85rem;">
+                                    <p style="color: var(--text-muted); text-align: center; font-size: 0.8rem;">Začněte
+                                        psát...</p>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
