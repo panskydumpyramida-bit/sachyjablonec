@@ -657,11 +657,6 @@
                                     style="color: #4ade80;"><i class="fa-solid fa-trophy"></i>
                                     Skóre</button>
                                 <div class="divider"></div>
-                                <button type="button" onclick="insertList('ul')" title="Odrážkový seznam"><i
-                                        class="fa-solid fa-list-ul"></i></button>
-                                <button type="button" onclick="insertList('ol')" title="Číslovaný seznam"><i
-                                        class="fa-solid fa-list-ol"></i></button>
-                                <div class="divider"></div>
                                 <select id="headingSelect" onchange="applyHeading(this.value)" title="Formát"
                                     style="background: var(--surface-color); color: var(--text-main); border: 1px solid rgba(255,255,255,0.2); border-radius: 4px; padding: 0.2rem; font-size: 0.75rem; width: 55px;">
                                     <option value="p">P</option>
@@ -1442,8 +1437,43 @@
         });
 
         function applyHeading(tag) {
-            document.execCommand('formatBlock', false, tag);
-            document.getElementById('articleContent').focus();
+            const editor = document.getElementById('articleContent');
+            const selection = window.getSelection();
+            const select = document.getElementById('headingSelect');
+
+            if (!selection.rangeCount || selection.isCollapsed) {
+                // No selection - use default behavior
+                document.execCommand('formatBlock', false, tag);
+                editor.focus();
+                select.value = 'p'; // Reset dropdown
+                checkToolbarState();
+                return;
+            }
+
+            const range = selection.getRangeAt(0);
+
+            // Check if selection is within editor
+            if (!editor.contains(range.commonAncestorContainer)) {
+                select.value = 'p';
+                return;
+            }
+
+            // Wrap selected text in the heading tag
+            const element = document.createElement(tag);
+            try {
+                const contents = range.extractContents();
+                element.appendChild(contents);
+                range.insertNode(element);
+                selection.removeAllRanges();
+            } catch (e) {
+                console.error('Heading error:', e);
+                // Fallback to default behavior
+                document.execCommand('formatBlock', false, tag);
+            }
+
+            select.value = 'p'; // Reset dropdown
+            editor.focus();
+            updatePreview();
             checkToolbarState();
         }
 
