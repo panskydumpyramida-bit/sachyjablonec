@@ -493,7 +493,15 @@ app.post('/api/standings/update', async (req, res) => {
                                 const points = parseFloat(pointsStr);
 
                                 if (!isNaN(rank) && teamStr) {
-                                    const isBizuterie = teamStr.toLowerCase().includes('bižuterie');
+                                    // Enhanced check for Bižuterie teams (handles various name formats)
+                                    const lowerName = teamStr.toLowerCase();
+                                    const isBizuterie = lowerName.includes('bižuterie') ||
+                                        lowerName.includes('bizuterie') ||
+                                        // Youth teams may have different naming: check for Jablonec variants
+                                        (lowerName.includes('jablonec') &&
+                                            (lowerName.includes('tj') || lowerName.includes('šk') ||
+                                                lowerName.includes('sk') || lowerName.includes('ddm')));
+
 
                                     standings.push({
                                         rank,

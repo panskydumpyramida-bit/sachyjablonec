@@ -297,6 +297,7 @@
                 // Extract all matches
                 allMatchesData = [];
                 const competitionNames = new Set();
+                const seenMatches = new Set(); // For derby deduplication
 
                 competitions.forEach(comp => {
                     const compName = comp.name;
@@ -320,6 +321,24 @@
                                     }
 
                                     if (dateObj && !isNaN(dateObj.getTime())) {
+                                        // Derby deduplication: if opponent also contains bižuterie, 
+                                        // create a unique key based on sorted team names to avoid duplicates
+                                        const isBizuDerby = match.opponent && 
+                                            (match.opponent.toLowerCase().includes('bižuterie') || 
+                                             match.opponent.toLowerCase().includes('bizuterie'));
+                                        
+                                        let matchKey = `${compName}-${match.round}-${dateStr}`;
+                                        if (isBizuDerby) {
+                                            // Sort team names alphabetically to create consistent key
+                                            const sortedTeams = [teamName, match.opponent].sort().join('-');
+                                            matchKey = `${compName}-${match.round}-${sortedTeams}`;
+                                            
+                                            if (seenMatches.has(matchKey)) {
+                                                return; // Skip duplicate derby match
+                                            }
+                                            seenMatches.add(matchKey);
+                                        }
+
                                         allMatchesData.push({
                                             date: dateObj,
                                             originalDate: match.date,
