@@ -484,9 +484,8 @@
 
             monthDivs.forEach(div => {
                 const monthId = div.id.replace('month-', '');
-                const monthTitle = div.querySelector('.month-title')?.textContent?.trim() || monthId;
-                // Clean up the title (remove icon text)
-                const cleanTitle = monthTitle.replace(/^\s*\S+\s*/, '').trim();
+                // monthId format is like "prosinec-2025" - convert back to readable format
+                const cleanTitle = monthId.replace(/-/g, ' ').replace(/^(\w)/, c => c.toUpperCase());
                 const option = document.createElement('option');
                 option.value = div.id;
                 option.textContent = cleanTitle;
