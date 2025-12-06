@@ -652,31 +652,35 @@
             }
 
             list.innerHTML = '';
+            let currentLegacyTeam = null;
 
             games.forEach((game, index) => {
-                // Team Headers Logic
-                const prevGame = index > 0 ? games[index - 1] : null;
+                // Logic to render headers
+                // 1. Explicit Headers (New system)
+                if (game.type === 'header' || game.isHeader) {
+                    const header = document.createElement('div');
+                    header.className = 'team-header';
+                    header.textContent = game.title;
+                    header.style.cssText = 'padding: 0.5rem 0.75rem; font-weight: 700; color: var(--primary-color); background: rgba(255, 255, 255, 0.05); border-left: 2px solid var(--primary-color); margin: 0.5rem 0 0.25rem 0; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.05em;';
+                    list.appendChild(header);
+                    return; // It's just a visual separator, not a playable game
+                }
 
-                // Show header if it's the first item OR if team changed
-                if (index === 0 || (prevGame && prevGame.team !== game.team)) {
-                    // Check if team is defined?
-                    if (game.team) {
-                        const header = document.createElement('div');
-                        header.className = 'team-header';
-                        header.textContent = game.team;
-                        list.appendChild(header);
-                    } else if (index === 0) {
-                        // Fallback only for first item if no team property
-                        const header = document.createElement('div');
-                        header.className = 'team-header';
-                        header.textContent = "Partie";
-                        list.appendChild(header);
-                    }
+                // 2. Legacy Grouping (Old system)
+                // If game has a 'team' property and it's different from the last one we saw
+                if (game.team && game.team !== currentLegacyTeam) {
+                    const header = document.createElement('div');
+                    header.className = 'team-header';
+                    header.textContent = game.team;
+                    header.style.cssText = 'padding: 0.5rem 0.75rem; font-weight: 700; color: var(--primary-color); background: rgba(255, 255, 255, 0.05); border-left: 2px solid var(--primary-color); margin: 0.5rem 0 0.25rem 0; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.05em;';
+                    list.appendChild(header);
+                    currentLegacyTeam = game.team;
                 }
 
                 const item = document.createElement('div');
                 item.className = 'game-item';
                 item.textContent = game.title;
+                item.dataset.index = index; // Store index for mapping
 
                 if (game.commented) {
                     item.innerHTML += '&nbsp;💬';
@@ -695,8 +699,9 @@
 
         function loadGame(index) {
             if (index < 0 || index >= gamesData.length) return;
-            currentGameIndex = index;
             const game = gamesData[index];
+            if (game.type === 'header' || game.isHeader) return; // Cannot load a header
+            currentGameIndex = index;
 
             document.getElementById('current-game-title').textContent = game.title;
 
@@ -722,8 +727,9 @@
 
             // Re-query strictly game items
             const gameItems = document.querySelectorAll('.game-item');
-            gameItems.forEach((item, idx) => {
-                if (idx === index) {
+            gameItems.forEach((item) => {
+                // Check if this DOM item corresponds to the current game index
+                if (parseInt(item.dataset.index) === index) {
                     item.classList.add('active');
                     item.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
                 } else {
