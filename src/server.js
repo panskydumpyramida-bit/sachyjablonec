@@ -162,7 +162,8 @@ app.use(express.urlencoded({ extended: true }));
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
 // Serve specific static directories
-['css', 'js', 'images', 'data'].forEach(dir => {
+// Serve specific static directories
+['css', 'js', 'images', 'data', 'components'].forEach(dir => {
     app.use(`/${dir}`, express.static(path.join(__dirname, `../${dir}`)));
 });
 
