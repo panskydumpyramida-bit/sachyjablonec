@@ -127,7 +127,7 @@
 
     <main>
         <section class="hero small-hero">
-            <div class="container hero-content">
+            <div class="container hero-content" style="text-align: center; justify-content: center;">
                 <h1>VÁNOČNÍ TURNAJ v bleskovém šachu</h1>
                 <p>Memoriál Čestmíra Drobníka - 19. ročník</p>
             </div>
@@ -181,13 +181,22 @@
                     </div>
 
                     <div class="form-group">
-                        <label for="elo">ELO (pokud máte)</label>
-                        <input type="number" id="elo" name="elo" placeholder="např. 1500">
+                        <label for="club">Oddíl (nepovinné)</label>
+                        <input type="text" id="club" name="club" placeholder="např. TJ Bižuterie Jablonec">
                     </div>
 
                     <div class="form-group">
-                        <label for="age">Věk (pro kategorie mládeže/seniorů)</label>
-                        <input type="number" id="age" name="age" placeholder="např. 15">
+                        <label for="lok">Číslo LOK (registrace ŠSČR)</label>
+                        <input type="number" id="lok" name="lok" placeholder="např. 12345">
+                        <small style="color: var(--text-muted); display: block; margin-top: 0.25rem;">Naleznete na <a
+                                href="https://www.chess.cz/hraci-vyhledavani/" target="_blank"
+                                style="color: var(--primary-color);">chess.cz</a></small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="year">Ročník narození *</label>
+                        <input type="number" id="year" name="year" required placeholder="např. 2010" min="1900"
+                            max="2025">
                     </div>
 
                     <button type="submit" class="submit-btn" id="submitBtn">Odeslat přihlášku</button>
@@ -249,8 +258,9 @@
 
             const formData = {
                 name: document.getElementById('name').value,
-                elo: document.getElementById('elo').value,
-                age: document.getElementById('age').value
+                club: document.getElementById('club').value,
+                lok: document.getElementById('lok').value,
+                year: document.getElementById('year').value
             };
 
             try {

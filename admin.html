@@ -906,9 +906,10 @@
                     <thead>
                         <tr>
                             <th>Jméno</th>
-                            <th>ELO</th>
-                            <th>Rok narození</th>
-                            <th>Datum registrace</th>
+                            <th>Oddíl</th>
+                            <th>LOK</th>
+                            <th>Ročník</th>
+                            <th>Čas registrace</th>
                         </tr>
                     </thead>
                     <tbody id="blicakTableBody"></tbody>
@@ -1090,13 +1091,14 @@
 
                     info.style.display = 'none';
                     tbody.innerHTML = regs.map(reg => `
-                        <tr>
-                            <td>${reg.name}</td>
-                            <td>${reg.elo || '-'}</td>
-                            <td>${reg.birthYear || '-'}</td>
-                            <td>${new Date(reg.timestamp).toLocaleString('cs-CZ')}</td>
-                        </tr>
-                    `).join('');
+                <tr>
+                    <td><strong>${escapeHtml(reg.name)}</strong></td>
+                    <td>${escapeHtml(reg.club || '-')}</td>
+                    <td>${escapeHtml(reg.lok || '-')}</td>
+                    <td>${escapeHtml(reg.year)}</td>
+                    <td>${new Date(reg.createdAt).toLocaleString('cs-CZ')}</td>
+                </tr>
+            `).join('');
                 }
             } catch (e) { console.error(e); }
         }
@@ -2204,11 +2206,11 @@
             const tbody = document.getElementById('membersTableBody');
             tbody.innerHTML = allMembers.map(m => `
                 <tr>
-                    <td>${m.lastName} ${m.firstName}</td>
-                    <td>${m.elo || '-'}</td>
-                    <td>${m.title || '-'}</td>
-                    <td>${m.birthYear || '-'}</td>
-                    <td>${m.role || '-'}</td>
+                    <td><strong>${escapeHtml(m.firstName)} ${escapeHtml(m.lastName)}</strong></td>
+                    <td>${escapeHtml(m.elo || '-')}</td>
+                    <td>${escapeHtml(m.title || '-')}</td>
+                    <td>${escapeHtml(m.birthYear || '-')}</td>
+                    <td>${escapeHtml(m.role || '-')}</td>
                     <td>
                         <button class="action-btn btn-edit" onclick="editMember(${m.id})"><i class="fa-solid fa-edit"></i></button>
                         <button class="action-btn btn-delete" onclick="deleteMember(${m.id})"><i class="fa-solid fa-trash"></i></button>
