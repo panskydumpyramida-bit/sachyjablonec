@@ -1182,16 +1182,6 @@
                     } catch (e) { console.error(e); }
                 }
 
-                // Load teams from database
-                if (item.teamsJson) {
-                    const teamsData = JSON.parse(item.teamsJson);
-                    teams = teamsData.all || ['A tým', 'B tým'];
-                    selectedTeams = teamsData.selected || teams;
-                } else {
-                    teams = ['A tým', 'B tým'];
-                    selectedTeams = ['A tým', 'B tým'];
-                }
-
                 // Load gallery from database
                 if (item.galleryJson) {
                     galleryImages = JSON.parse(item.galleryJson);
@@ -1199,12 +1189,15 @@
                     galleryImages = [];
                 }
 
-
-                renderTeamCheckboxes();
                 renderGames();
                 renderGallery();
                 updatePreview();
-            } catch (e) { console.error(e); }
+            } catch (e) {
+                console.error(e);
+                // Fallback rendering in case of partial failure
+                renderGames();
+                renderGallery();
+            }
         }
 
         async function saveNews() {
@@ -1221,7 +1214,7 @@
                 thumbnailUrl: uploadedImageData,
                 isPublished: document.getElementById('publishCheck').checked,
                 gamesJson: JSON.stringify(games),
-                teamsJson: JSON.stringify({ all: teams, selected: selectedTeams }),
+                // teamsJson: null, // Legacy field, no longer used
                 galleryJson: JSON.stringify(galleryImages)
             };
 
