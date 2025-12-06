@@ -48,6 +48,13 @@ const isElo = (s) => {
     return /^\d{3,4}$/.test(s) || s === '-';
 };
 
+// Helper to fetch with headers
+const fetchWithHeaders = (url) => fetch(url, {
+    headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+    }
+});
+
 // Helper to scrape match details (art=3)
 async function scrapeMatchDetails(compUrl, round, homeTeam, awayTeam) {
     let detailsUrl = compUrl;
@@ -56,13 +63,18 @@ async function scrapeMatchDetails(compUrl, round, homeTeam, awayTeam) {
     } else {
         detailsUrl += '&art=3';
     }
-    detailsUrl += `& rd=${round} `;
+    detailsUrl += `&rd=${round}`;
 
-    console.log(`Scraping details: ${detailsUrl} `);
+    console.log(`Scraping details: ${detailsUrl} for ${homeTeam} vs ${awayTeam}`);
 
     try {
-        const response = await fetch(detailsUrl);
+        const response = await fetchWithHeaders(detailsUrl);
         const html = await response.text();
+
+        // Check if blocked or empty
+        if (html.length < 500) {
+            console.error('Warning: Scraped HTML is very short, might be blocked.');
+        }
 
         // Split by starting tag of main rows to handle nested tables
         const parts = html.split('<tr class="');
