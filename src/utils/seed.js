@@ -22,6 +22,33 @@ async function main() {
 
     console.log('✅ Admin user created (Role: superadmin):', admin.username);
 
+    // Create other admins
+    const commonPasswordHash = await bcrypt.hash('sachy2025', 10);
+
+    const filip = await prisma.user.upsert({
+        where: { username: 'filip' },
+        update: {},
+        create: {
+            username: 'filip',
+            email: 'filip@sachyjablonec.cz',
+            passwordHash: commonPasswordHash,
+            role: 'admin'
+        }
+    });
+    console.log('✅ Admin user created:', filip.username);
+
+    const lukas = await prisma.user.upsert({
+        where: { username: 'lukas' },
+        update: {},
+        create: {
+            username: 'lukas',
+            email: 'lukas@sachyjablonec.cz',
+            passwordHash: commonPasswordHash,
+            role: 'admin'
+        }
+    });
+    console.log('✅ Admin user created:', lukas.username);
+
     // Games for 1. kolo - Derby Bižuterie (8 games, 1 team)
     const games1kolo = [
         { title: "1. Duda - Vacek", gameId: "14096201", team: "A tým", src: "https://www.chess.com/emboard?id=14096201" },
