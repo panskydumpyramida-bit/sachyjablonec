@@ -603,8 +603,8 @@
                         <div>
                             <h3 style="margin: 0 0 0.5rem 0; color: #3b82f6;"><i class="fa-solid fa-table"></i> Tabulky
                                 mládeže</h3>
-                            <p style="margin: 0; color: var(--text-muted); font-size: 0.9rem;">Aktualizovat výsledky ze
-                                chess.cz</p>
+                            <p style="margin: 0; color: var(--text-muted); font-size: 0.9rem;">Aktualizovat výsledky
+                                soutěží (Chess-results, Chess.cz)</p>
                         </div>
                         <button class="btn-secondary" onclick="updateStandings()" id="updateStandingsBtn">
                             <i class="fa-solid fa-sync"></i> Aktualizovat tabulky
@@ -1977,7 +1977,7 @@
             btn.disabled = true;
             btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Načítám...';
             resultDiv.style.display = 'block';
-            resultDiv.innerHTML = '<p style="color: var(--text-muted);">Stahují se data z chess.cz...</p>';
+            resultDiv.innerHTML = '<p style="color: var(--text-muted);">Stahují se data ze soutěží...</p>';
 
             try {
                 const res = await fetch(`${API_URL}/standings/update`, {

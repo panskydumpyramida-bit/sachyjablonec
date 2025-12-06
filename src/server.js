@@ -269,7 +269,8 @@ app.post('/api/standings/update', async (req, res) => {
             {
                 id: '3363',
                 name: 'Krajský přebor st. žáků',
-                chessczUrl: 'https://www.chess.cz/soutez/3363/',
+                type: 'chess-results',
+                url: 'https://s1.chess-results.com/tnr1310849.aspx?lan=5&art=46&SNode=S0',
                 category: 'youth'
             },
             // New Chess-Results competition
