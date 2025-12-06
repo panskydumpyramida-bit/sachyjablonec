@@ -721,6 +721,10 @@
             .status-text {
                 display: none;
             }
+
+            .hide-mobile {
+                display: none !important;
+            }
         }
     </style>
 </head>
@@ -798,13 +802,13 @@
                     <button class="btn-primary" onclick="switchTab('editor')"><i class="fa-solid fa-plus"></i> Nová
                         novinka</button>
                 </div>
-                <table class="data-table">
+                <table class="data-table" id="newsTable">
                     <thead>
                         <tr>
                             <th>Datum</th>
                             <th>Název</th>
-                            <th>Kategorie</th>
-                            <th>Autor</th>
+                            <th class="hide-mobile">Kategorie</th>
+                            <th class="hide-mobile">Autor</th>
                             <th>Stav</th>
                             <th>Akce</th>
                         </tr>
@@ -1345,8 +1349,8 @@
                     <tr>
                         <td>${new Date(item.publishedDate).toLocaleDateString('cs-CZ')}</td>
                         <td>${item.title}</td>
-                        <td>${item.category}</td>
-                        <td><span class="highlight-name" style="font-size: 0.85rem;">${item.author?.username || '-'}</span></td>
+                        <td class="hide-mobile">${item.category}</td>
+                        <td class="hide-mobile"><span class="highlight-name" style="font-size: 0.85rem;">${item.author?.username || '-'}</span></td>
                         <td><span class="status-badge ${item.isPublished ? 'status-published' : 'status-draft'}">${item.isPublished ? '✓' : '○'}<span class="status-text">${item.isPublished ? ' Pub' : ' Konc'}</span></span></td>
                         <td>
                             <button class="action-btn btn-edit" onclick="editNews(${item.id})"><i class="fa-solid fa-pen"></i></button>
