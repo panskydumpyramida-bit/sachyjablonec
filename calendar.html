@@ -373,7 +373,9 @@
                         if (![...filterSelect.options].some(o => o.value === comp.name)) {
                             const option = document.createElement('option');
                             option.value = comp.name;
-                            option.textContent = comp.name;
+                            // Add child icon for youth categories
+                            const prefix = comp.category === 'youth' ? '👶 ' : '';
+                            option.textContent = prefix + comp.name;
                             filterSelect.appendChild(option);
                         }
                     });
