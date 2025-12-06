@@ -76,4 +76,16 @@ function initMobileMenu() {
 document.addEventListener('DOMContentLoaded', () => {
     loadComponent('global-header', 'header.html');
     loadComponent('global-footer', 'footer.html');
+
+    // Google Analytics
+    const gaId = 'G-GMHL4VL852';
+    const script = document.createElement('script');
+    script.async = true;
+    script.src = `https://www.googletagmanager.com/gtag/js?id=${gaId}`;
+    document.head.appendChild(script);
+
+    window.dataLayer = window.dataLayer || [];
+    function gtag() { dataLayer.push(arguments); }
+    gtag('js', new Date());
+    gtag('config', gaId);
 });
