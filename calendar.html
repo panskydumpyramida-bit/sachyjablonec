@@ -769,7 +769,7 @@
                 const categoryBorder = isYouth ? 'border-left-color: #4ade80;' : '';
 
                 html += `
-                    <div class="match-card ${isPast ? 'past-match' : ''}" style="${isPast ? 'border-left: 2px solid var(--text-muted);' : ''} ${!isPast && isYouth ? 'border-left: 2px solid #4ade80;' : ''}">
+                    <div class="match-card ${isPast ? 'past-match' : ''}" style="border-left: 2px solid ${isYouth ? '#4ade80' : (isPast ? 'var(--text-muted)' : 'var(--primary-color)')};">
                         <div class="match-header" style="display: flex; gap: 1rem; width: 100%;">
                             <div class="match-date-row" style="display: contents;">
                                 <div class="match-date">
