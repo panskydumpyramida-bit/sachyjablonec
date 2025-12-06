@@ -1912,19 +1912,18 @@
 
             // Create modal
             const modal = document.createElement('div');
-            modal.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.7);display:flex;align-items:center;justify-content:center;z-index:9999;';
+            modal.id = 'linkModal';
             modal.innerHTML = `
-                <div style="background:var(--surface-color);border-radius:12px;padding:1.5rem;max-width:400px;width:90%;border:1px solid rgba(255,255,255,0.1);">
-                    <h3 style="margin-bottom:1rem;color:var(--text-main);">Vložit odkaz</h3>
+                <div class="modal-overlay" onclick="document.getElementById('linkModal').remove()"></div>
+                <div class="modal-content" style="max-width: 400px;">
+                    <h3 style="margin-bottom:1rem;">Vložit odkaz</h3>
                     <div style="margin-bottom:1rem;">
                         <label style="display:block;margin-bottom:0.3rem;color:var(--text-muted);font-size:0.85rem;">URL *</label>
-                        <input type="url" id="linkUrl" placeholder="https://..." 
-                            style="width:100%;padding:0.5rem;border-radius:6px;border:1px solid rgba(255,255,255,0.2);background:var(--bg-color);color:var(--text-main);box-sizing:border-box;">
+                        <input type="url" id="linkUrl" placeholder="https://..." style="width:100%;box-sizing:border-box;">
                     </div>
                     <div style="margin-bottom:1rem;">
                         <label style="display:block;margin-bottom:0.3rem;color:var(--text-muted);font-size:0.85rem;">Text odkazu</label>
-                        <input type="text" id="linkText" value="${selectedText}" placeholder="Zobrazovaný text" 
-                            style="width:100%;padding:0.5rem;border-radius:6px;border:1px solid rgba(255,255,255,0.2);background:var(--bg-color);color:var(--text-main);box-sizing:border-box;">
+                        <input type="text" id="linkText" value="${selectedText}" placeholder="Zobrazovaný text" style="width:100%;box-sizing:border-box;">
                     </div>
                     <div style="margin-bottom:1rem;">
                         <label style="display:flex;align-items:center;gap:0.5rem;cursor:pointer;color:var(--text-muted);font-size:0.85rem;">
@@ -1933,8 +1932,8 @@
                         </label>
                     </div>
                     <div style="display:flex;gap:0.5rem;justify-content:flex-end;">
-                        <button id="linkCancel" style="padding:0.5rem 1rem;border-radius:6px;border:1px solid rgba(255,255,255,0.2);background:transparent;color:var(--text-muted);cursor:pointer;">Zrušit</button>
-                        <button id="linkInsert" style="padding:0.5rem 1rem;border-radius:6px;border:none;background:var(--primary-color);color:#000;font-weight:600;cursor:pointer;">Vložit</button>
+                        <button id="linkCancel" class="btn-secondary">Zrušit</button>
+                        <button id="linkInsert" class="btn-primary">Vložit</button>
                     </div>
                 </div>
             `;
