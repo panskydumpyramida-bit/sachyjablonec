@@ -648,11 +648,13 @@
                                 <button type="button" id="btnUnderline" onclick="formatText('underline')"
                                     title="Podtržení (Ctrl+U)"><i class="fa-solid fa-underline"></i></button>
                                 <div class="divider"></div>
-                                <button type="button" id="btnHighlightName" onclick="insertHighlight('name')"
-                                    title="Zvýraznit jméno" style="color: #60a5fa;"><i class="fa-solid fa-user"></i>
+                                <button type="button" id="btnHighlightName" onmousedown="event.preventDefault()"
+                                    onclick="insertHighlight('name')" title="Zvýraznit jméno" style="color: #60a5fa;"><i
+                                        class="fa-solid fa-user"></i>
                                     Jméno</button>
-                                <button type="button" id="btnHighlightScore" onclick="insertHighlight('score')"
-                                    title="Zvýraznit skóre" style="color: #4ade80;"><i class="fa-solid fa-trophy"></i>
+                                <button type="button" id="btnHighlightScore" onmousedown="event.preventDefault()"
+                                    onclick="insertHighlight('score')" title="Zvýraznit skóre"
+                                    style="color: #4ade80;"><i class="fa-solid fa-trophy"></i>
                                     Skóre</button>
                                 <div class="divider"></div>
                                 <button type="button" onclick="insertList('ul')" title="Odrážkový seznam"><i
