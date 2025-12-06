@@ -1344,15 +1344,18 @@
                 }
             } else {
                 // No text selected - insert placeholder
+                // Use zero-width space (​) at start to keep span alive after deleting visible text
                 const placeholder = type === 'name' ? '[Jméno]' : '[Skóre]';
                 const span = document.createElement('span');
                 span.className = className;
-                span.textContent = placeholder;
+                span.innerHTML = '\u200B' + placeholder; // ZWS + placeholder
                 range.insertNode(span);
 
-                // Select the placeholder text so user can type to replace it
+                // Select only the visible placeholder text (not the ZWS)
                 const selectRange = document.createRange();
-                selectRange.selectNodeContents(span);
+                const textNode = span.firstChild;
+                selectRange.setStart(textNode, 1); // Start after ZWS
+                selectRange.setEnd(textNode, textNode.length);
                 selection.removeAllRanges();
                 selection.addRange(selectRange);
 
