@@ -189,6 +189,27 @@
                 Přehled všech plánovaných utkání a turnajů našich družstev v aktuální sezóně.
             </p>
 
+            <!-- Filters -->
+            <div class="calendar-filters"
+                style="margin-bottom: 2rem; display: flex; flex-wrap: wrap; gap: 1rem; align-items: center; justify-content: space-between; background: var(--surface-color); padding: 1rem; border-radius: var(--border-radius); border: 1px solid rgba(255, 255, 255, 0.05);">
+                <div style="flex: 1; min-width: 200px;">
+                    <label for="competitionFilter"
+                        style="display: block; margin-bottom: 0.5rem; color: var(--text-muted); font-size: 0.9rem;">Filtrovat
+                        soutěž:</label>
+                    <select id="competitionFilter"
+                        style="width: 100%; padding: 0.75rem; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 6px; color: var(--text-color); font-family: inherit;">
+                        <option value="all">Všechny soutěže</option>
+                    </select>
+                </div>
+                <div>
+                    <label style="display: block; margin-bottom: 0.5rem; visibility: hidden;">Akce</label>
+                    <button id="togglePastBtn" class="btn-secondary" onclick="togglePastMatches()"
+                        style="white-space: nowrap;">
+                        <i class="fa-solid fa-history"></i> Zobrazit uplynulé
+                    </button>
+                </div>
+            </div>
+
             <div id="calendar-container">
                 <div style="text-align: center; padding: 3rem;">
                     <i class="fa-solid fa-spinner fa-spin fa-2x" style="color: var(--primary-color);"></i>
@@ -239,11 +260,15 @@
     <script src="js/config.js"></script>
     <script src="js/main.js"></script>
     <script>
+        let allMatchesData = [];
+        let showingPast = false;
+
         document.addEventListener('DOMContentLoaded', loadCalendar);
 
         async function loadCalendar() {
             const container = document.getElementById('calendar-container');
             const errorDiv = document.getElementById('calendar-error');
+            const filterSelect = document.getElementById('competitionFilter');
 
             try {
                 // Fetch standings data which contains schedules
@@ -253,9 +278,10 @@
                 const data = await response.json();
                 const competitions = data.standings || [];
 
-                let allMatches = [];
-
                 // Extract all matches
+                allMatchesData = [];
+                const competitionNames = new Set();
+
                 competitions.forEach(comp => {
                     const compName = comp.name;
                     if (comp.standings && Array.isArray(comp.standings)) {
@@ -264,7 +290,6 @@
                                 const teamName = teamData.team;
                                 teamData.schedule.forEach(match => {
                                     // Parse date
-                                    // match.date format usually "YYYY/MM/DD" or "DD.MM.YYYY"
                                     let dateObj = null;
                                     let dateStr = match.date.replace(/\s/g, ''); // remove spaces
 
@@ -279,7 +304,7 @@
                                     }
 
                                     if (dateObj && !isNaN(dateObj.getTime())) {
-                                        allMatches.push({
+                                        allMatchesData.push({
                                             date: dateObj,
                                             originalDate: match.date,
                                             competition: compName,
@@ -289,6 +314,7 @@
                                             round: match.round,
                                             isHome: match.isHome
                                         });
+                                        competitionNames.add(compName);
                                     }
                                 });
                             }
@@ -296,98 +322,159 @@
                     }
                 });
 
-                // Sort by date
-                allMatches.sort((a, b) => a.date - b.date);
-
-                // Group by Month (keep existing logic...)
-
-                if (allMatches.length === 0) {
-                    container.innerHTML = `
-                        <div style="text-align: center; padding: 2rem; color: var(--text-muted);">
-                            V kalendáři nejsou žádné naplánované zápasy.<br>
-                            <small>(Pokud zde nic nevidíte, zkuste aktualizovat data v administraci)</small>
-                        </div>
-                    `;
-                    return;
-                }
-
-                let html = '';
-                let currentMonth = '';
-                const today = new Date();
-                today.setHours(0, 0, 0, 0);
-
-                allMatches.forEach(match => {
-                    const monthName = match.date.toLocaleString('cs-CZ', { month: 'long', year: 'numeric' });
-                    const capitalMonth = monthName.charAt(0).toUpperCase() + monthName.slice(1);
-
-                    if (monthName !== currentMonth) {
-                        if (currentMonth !== '') html += '</div>'; // Close previous month div
-                        html += `
-                            <div class="calendar-month">
-                                <h2 class="month-title"><i class="fa-regular fa-calendar"></i> ${capitalMonth}</h2>
-                        `;
-                        currentMonth = monthName;
-                    }
-
-                    const isPast = match.date < today;
-                    const isToday = match.date.getTime() === today.getTime();
-
-                    let statusClass = 'status-upcoming';
-                    let statusText = 'Nadcházející';
-
-                    if (isPast) {
-                        statusClass = 'status-finished';
-                        statusText = 'Odehráno';
-                    }
-                    if (isToday) {
-                        statusClass = 'status-today';
-                        statusText = 'Dnes';
-                    }
-
-                    // Format day
-                    const day = match.date.getDate();
-                    const dayName = match.date.toLocaleString('cs-CZ', { weekday: 'short' });
-
-                    // Determine display order based on Home/Away
-                    let team1 = match.isHome !== false ? match.myTeam : match.opponent;
-                    let team2 = match.isHome !== false ? match.opponent : match.myTeam;
-
-                    // Highlight my team
-                    const highlightStyle = 'color: var(--primary-color); font-weight: 700;';
-                    const t1Style = (team1 === match.myTeam) ? highlightStyle : '';
-                    const t2Style = (team2 === match.myTeam) ? highlightStyle : '';
-
-                    html += `
-                        <div class="match-card ${isPast ? 'past-match' : ''}" style="${isPast ? 'opacity: 0.7;' : ''}">
-                            <div class="match-date">
-                                <div class="match-day">${day}.</div>
-                                <div class="match-month">${dayName}</div>
-                            </div>
-                            <div class="match-details">
-                                <div class="match-competition">${match.competition} • ${match.round}. kolo</div>
-                                <div class="match-teams">
-                                    <span style="${t1Style}">${team1}</span> - <span style="${t2Style}">${team2}</span>
-                                    ${match.result && match.result !== '-' ? `<span class="match-result">${match.result}</span>` : ''}
-                                </div>
-                            </div>
-                            <div class="match-actions">
-                                <span class="status-badge ${statusClass}">${statusText}</span>
-                            </div>
-                        </div>
-                    `;
+                // Populate filter
+                [...competitionNames].sort().forEach(name => {
+                    const option = document.createElement('option');
+                    option.value = name;
+                    option.textContent = name;
+                    filterSelect.appendChild(option);
                 });
 
-                html += '</div>'; // Close last month
-                container.innerHTML = html;
+                filterSelect.addEventListener('change', () => renderCalendar());
 
-                // Optionally scroll to first upcoming match
-                // window.scrollTo(...) 
+                // Sort all matches by date
+                allMatchesData.sort((a, b) => a.date - b.date);
+
+                renderCalendar();
 
             } catch (err) {
                 console.error('Error loading calendar:', err);
                 container.style.display = 'none';
                 errorDiv.style.display = 'block';
             }
+        }
+
+        function togglePastMatches() {
+            showingPast = !showingPast;
+            const btn = document.getElementById('togglePastBtn');
+            if (showingPast) {
+                btn.innerHTML = '<i class="fa-solid fa-eye-slash"></i> Skrýt uplynulé';
+                btn.style.background = 'rgba(255,255,255,0.15)';
+            } else {
+                btn.innerHTML = '<i class="fa-solid fa-history"></i> Zobrazit uplynulé';
+                btn.style.background = '';
+            }
+            renderCalendar();
+        }
+
+        function renderCalendar() {
+            const container = document.getElementById('calendar-container');
+            const filterValue = document.getElementById('competitionFilter').value;
+
+            // Filter by competition
+            let filteredMatches = allMatchesData;
+            if (filterValue !== 'all') {
+                filteredMatches = allMatchesData.filter(m => m.competition === filterValue);
+            }
+
+            if (filteredMatches.length === 0) {
+                container.innerHTML = `
+                    <div style="text-align: center; padding: 2rem; color: var(--text-muted);">
+                        Žádné zápasy neodpovídají výběru.
+                    </div>
+                `;
+                return;
+            }
+
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+
+            // Split into past and upcoming/today
+            const pastMatches = filteredMatches.filter(m => m.date < today);
+            const upcomingMatches = filteredMatches.filter(m => m.date >= today);
+
+            let html = '';
+
+            // Render Past Matches (if toggled)
+            if (showingPast && pastMatches.length > 0) {
+                html += '<div class="past-matches-container" style="opacity: 0.7; margin-bottom: 2rem; border-bottom: 2px dashed rgba(255,255,255,0.1); padding-bottom: 1rem;">';
+                html += '<h3 style="color: var(--text-muted); font-size: 1.1rem; margin-bottom: 1rem;">Uplynulé zápasy</h3>';
+                html += generateMatchesHtml(pastMatches, today);
+                html += '</div>';
+            }
+
+            // Render Upcoming Matches
+            if (upcomingMatches.length > 0) {
+                html += generateMatchesHtml(upcomingMatches, today);
+            } else if (!showingPast) {
+                html += `
+                    <div style="text-align: center; padding: 2rem; color: var(--text-muted);">
+                        Žádné nadcházející zápasy. <br>
+                        <button onclick="togglePastMatches()" class="btn-link" style="margin-top:0.5rem;">Zobrazit historii</button>
+                    </div>
+                `;
+            }
+
+            container.innerHTML = html;
+        }
+
+        function generateMatchesHtml(matches, today) {
+            let html = '';
+            let currentMonth = '';
+
+            matches.forEach(match => {
+                const monthName = match.date.toLocaleString('cs-CZ', { month: 'long', year: 'numeric' });
+                const capitalMonth = monthName.charAt(0).toUpperCase() + monthName.slice(1);
+
+                if (monthName !== currentMonth) {
+                    if (currentMonth !== '') html += '</div>'; // Close previous month div
+                    html += `
+                        <div class="calendar-month">
+                            <h2 class="month-title"><i class="fa-regular fa-calendar"></i> ${capitalMonth}</h2>
+                    `;
+                    currentMonth = monthName;
+                }
+
+                const isPast = match.date < today;
+                const isToday = match.date.getTime() === today.getTime();
+
+                let statusClass = 'status-upcoming';
+                let statusText = 'Nadcházející';
+
+                if (isPast) {
+                    statusClass = 'status-finished';
+                    statusText = 'Odehráno';
+                }
+                if (isToday) {
+                    statusClass = 'status-today';
+                    statusText = 'Dnes';
+                }
+
+                // Format day
+                const day = match.date.getDate();
+                const dayName = match.date.toLocaleString('cs-CZ', { weekday: 'short' });
+
+                // Determine display order based on Home/Away
+                let team1 = match.isHome !== false ? match.myTeam : match.opponent;
+                let team2 = match.isHome !== false ? match.opponent : match.myTeam;
+
+                // Highlight my team
+                const highlightStyle = 'color: var(--primary-color); font-weight: 700;';
+                const t1Style = (team1 === match.myTeam) ? highlightStyle : '';
+                const t2Style = (team2 === match.myTeam) ? highlightStyle : '';
+
+                html += `
+                    <div class="match-card ${isPast ? 'past-match' : ''}" style="${isPast ? 'border-left: 2px solid var(--text-muted);' : ''}">
+                        <div class="match-date">
+                            <div class="match-day">${day}.</div>
+                            <div class="match-month">${dayName}</div>
+                        </div>
+                        <div class="match-details">
+                            <div class="match-competition">${match.competition} • ${match.round}. kolo</div>
+                            <div class="match-teams">
+                                <span style="${t1Style}">${team1}</span> - <span style="${t2Style}">${team2}</span>
+                                ${match.result && match.result !== '-' ? `<span class="match-result">${match.result}</span>` : ''}
+                            </div>
+                        </div>
+                        <div class="match-actions">
+                            <span class="status-badge ${statusClass}">${statusText}</span>
+                        </div>
+                    </div>
+                `;
+            });
+
+            if (matches.length > 0) html += '</div>'; // Close last month div
+            return html;
         }
     </script>
 </body>
