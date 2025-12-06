@@ -826,18 +826,46 @@
 
                             <div class="image-upload" id="uploadArea"
                                 onclick="document.getElementById('imageInput').click()"
-                                style="height: 80px; margin-bottom: 0.5rem;">
+                                style="height: 120px; margin-bottom: 0.5rem; position: relative;">
                                 <div id="uploadPlaceholder">
                                     <i class="fa-solid fa-cloud-upload-alt"
                                         style="font-size: 1.2rem; color: var(--primary-color);"></i>
                                     <p style="margin: 0.3rem 0 0 0; font-size: 0.75rem;">Klikněte pro nahrání</p>
                                 </div>
                                 <img id="uploadedImage" class="uploaded-thumb" style="display: none;">
+                                <button type="button" id="removeImageBtn"
+                                    onclick="event.stopPropagation(); removeImage();"
+                                    style="display: none; position: absolute; top: 5px; right: 5px; background: rgba(0,0,0,0.7); border: none; color: #f87171; padding: 0.3rem 0.5rem; border-radius: 4px; cursor: pointer; font-size: 0.7rem;">
+                                    <i class="fa-solid fa-times"></i>
+                                </button>
                             </div>
                             <input type="file" id="imageInput" accept="image/*" style="display: none;"
                                 onchange="handleImageUpload(event)">
-                            <input type="text" id="imageUrl" placeholder="nebo URL obrázku" style="font-size: 0.8rem;"
-                                oninput="handleImageUrl()">
+
+                            <div id="imageUrlWrapper">
+                                <input type="text" id="imageUrl" placeholder="nebo URL obrázku"
+                                    style="font-size: 0.8rem;" oninput="handleImageUrl()">
+                            </div>
+
+                            <!-- Crop position selector -->
+                            <div id="cropPositionWrapper" style="display: none; margin-top: 0.5rem;">
+                                <label
+                                    style="font-size: 0.7rem; color: var(--text-muted); display: block; margin-bottom: 0.3rem;">Pozice
+                                    ořezu v kartě:</label>
+                                <div style="display: flex; gap: 0.25rem;">
+                                    <button type="button" onclick="setCropPosition('top')" class="crop-btn" id="cropTop"
+                                        style="flex: 1; padding: 0.3rem; font-size: 0.65rem; border-radius: 4px; border: 1px solid rgba(255,255,255,0.2); background: transparent; color: var(--text-muted); cursor: pointer;">↑
+                                        Horní</button>
+                                    <button type="button" onclick="setCropPosition('center')" class="crop-btn active"
+                                        id="cropCenter"
+                                        style="flex: 1; padding: 0.3rem; font-size: 0.65rem; border-radius: 4px; border: 1px solid var(--primary-color); background: rgba(255,215,0,0.1); color: var(--primary-color); cursor: pointer;">⬤
+                                        Střed</button>
+                                    <button type="button" onclick="setCropPosition('bottom')" class="crop-btn"
+                                        id="cropBottom"
+                                        style="flex: 1; padding: 0.3rem; font-size: 0.65rem; border-radius: 4px; border: 1px solid rgba(255,255,255,0.2); background: transparent; color: var(--text-muted); cursor: pointer;">↓
+                                        Spodní</button>
+                                </div>
+                            </div>
                         </div>
 
                         <!-- SECTION 3: Náhledy -->
@@ -2473,8 +2501,74 @@
             }
         }
 
-        function handleImageUrl() { const url = document.getElementById('imageUrl').value; if (url) { uploadedImageData = url; displayImage(url); } }
-        function displayImage(src) { document.getElementById('uploadArea').classList.add('has-image'); document.getElementById('uploadPlaceholder').style.display = 'none'; const img = document.getElementById('uploadedImage'); img.src = src; img.style.display = 'block'; document.getElementById('previewImage').innerHTML = `<img src="${src}">`; }
+        function handleImageUrl() {
+            const url = document.getElementById('imageUrl').value;
+            if (url) {
+                uploadedImageData = url;
+                displayImage(url);
+            }
+        }
+
+        let imageCropPosition = 'center';
+
+        function displayImage(src) {
+            document.getElementById('uploadArea').classList.add('has-image');
+            document.getElementById('uploadPlaceholder').style.display = 'none';
+            document.getElementById('imageUrlWrapper').style.display = 'none';
+            document.getElementById('removeImageBtn').style.display = 'block';
+            document.getElementById('cropPositionWrapper').style.display = 'block';
+
+            const img = document.getElementById('uploadedImage');
+            img.src = src;
+            img.style.display = 'block';
+            img.style.objectPosition = imageCropPosition;
+
+            // Update preview with crop position
+            const previewImg = document.getElementById('previewImage');
+            previewImg.innerHTML = `<img src="${src}" style="object-position: ${imageCropPosition};">`;
+        }
+
+        function removeImage() {
+            uploadedImageData = null;
+            document.getElementById('uploadArea').classList.remove('has-image');
+            document.getElementById('uploadPlaceholder').style.display = 'block';
+            document.getElementById('uploadedImage').style.display = 'none';
+            document.getElementById('uploadedImage').src = '';
+            document.getElementById('imageUrlWrapper').style.display = 'block';
+            document.getElementById('imageUrl').value = '';
+            document.getElementById('removeImageBtn').style.display = 'none';
+            document.getElementById('cropPositionWrapper').style.display = 'none';
+            document.getElementById('previewImage').innerHTML = '<i class="fa-solid fa-image" style="font-size: 1.5rem; color: var(--text-muted);"></i>';
+            document.getElementById('imageInput').value = '';
+        }
+
+        function setCropPosition(position) {
+            imageCropPosition = position;
+
+            // Update button styles
+            ['Top', 'Center', 'Bottom'].forEach(pos => {
+                const btn = document.getElementById('crop' + pos);
+                if (pos.toLowerCase() === position) {
+                    btn.style.border = '1px solid var(--primary-color)';
+                    btn.style.background = 'rgba(255,215,0,0.1)';
+                    btn.style.color = 'var(--primary-color)';
+                } else {
+                    btn.style.border = '1px solid rgba(255,255,255,0.2)';
+                    btn.style.background = 'transparent';
+                    btn.style.color = 'var(--text-muted)';
+                }
+            });
+
+            // Update uploaded image preview
+            const img = document.getElementById('uploadedImage');
+            img.style.objectPosition = position;
+
+            // Update card preview
+            const previewImg = document.getElementById('previewImage');
+            if (uploadedImageData) {
+                previewImg.innerHTML = `<img src="${uploadedImageData}" style="object-position: ${position};">`;
+            }
+        }
         function updatePreview() {
             document.getElementById('previewTitle').textContent = document.getElementById('newsTitle').value || 'Nadpis';
             document.getElementById('previewCategory').textContent = document.getElementById('newsCategory').value;
