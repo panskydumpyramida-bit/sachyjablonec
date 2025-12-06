@@ -549,3 +549,67 @@ footer {
 .hidden {
     display: none !important;
 }
+
+/* Minimal Cookie Bar */
+#cookie-banner {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background: rgba(26, 26, 26, 0.95);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(212, 175, 55, 0.2);
+    padding: 1rem;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+    z-index: 10000;
+    max-width: 400px;
+    transform: translateY(100px);
+    opacity: 0;
+    transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+#cookie-banner.visible {
+    transform: translateY(0);
+    opacity: 1;
+}
+
+#cookie-banner p {
+    font-size: 0.85rem;
+    margin: 0;
+    color: var(--text-color);
+    line-height: 1.4;
+}
+
+#cookie-banner button {
+    background: transparent;
+    border: 1px solid var(--primary-color);
+    color: var(--primary-color);
+    padding: 0.4rem 1rem;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    font-weight: 600;
+    white-space: nowrap;
+    transition: all 0.2s;
+}
+
+#cookie-banner button:hover {
+    background: var(--primary-color);
+    color: var(--secondary-color);
+}
+
+@media (max-width: 480px) {
+    #cookie-banner {
+        left: 20px;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+
+    #cookie-banner button {
+        align-self: flex-end;
+    }
+}
