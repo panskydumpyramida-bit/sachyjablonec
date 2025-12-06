@@ -475,7 +475,11 @@
                 const t1Style = (team1 === match.myTeam) ? highlightStyle : '';
                 const t2Style = (team2 === match.myTeam) ? highlightStyle : '';
 
-                const hasResult = match.result && match.result !== '-' && match.result !== '' && match.result.includes(':');
+                const hasResult = match.result &&
+                    match.result !== '-' &&
+                    match.result !== '' &&
+                    /[\d½]/.test(match.result) && // Must contain digits or ½
+                    !/^\d{2}:\d{2}$/.test(match.result); // Must NOT be just time (HH:MM)
 
                 // Escape quotes for onclick handler
                 const safeTeam1 = team1.replace(/"/g, '&quot;');
@@ -522,11 +526,6 @@
 
         // Inline Toggle Function
         async function toggleMatchDetails(competition, round, team1, team2, element) {
-            // Reconstruct ID (need to replicate logic exactly or pass ID)
-            // Note: team1 passed here might have &quot;, but the ID generation used raw string.
-            // Actually, onclick passes string literals. If I escaped them in HTML, they come back as normal strings to JS function?
-            // Yes. <div onclick="alert('&quot;')"> alerts ".
-            // So team1 here is the raw string with quotes.
             const detailsId = `details-${competition.replace(/\s+/g, '-')}-${round}-${team1.replace(/\s+/g, '-')}`.replace(/[^a-zA-Z0-9-]/g, '');
             const container = document.getElementById(detailsId);
 
@@ -559,13 +558,18 @@
                 if (matchData && matchData.url) {
                     try {
                         const res = await fetch(`${API_URL}/standings/match-details?url=${encodeURIComponent(matchData.url)}&round=${round}&home=${encodeURIComponent(matchData.myTeam)}&away=${encodeURIComponent(matchData.opponent)}`);
+                        if (!res.ok) throw new Error('Network response was not ok');
                         const data = await res.json();
+
+                        console.log('Boards data:', data); // Debug log
+
                         if (data.boards && data.boards.length > 0) {
                             renderBoardsInline(data.boards, container, team1, team2);
                         } else {
                             container.innerHTML = '<p style="text-align: center; color: var(--text-muted); font-size: 0.9rem;">Podrobnosti nejsou k dispozici.</p>';
                         }
                     } catch (e) {
+                        console.error('Fetch error:', e);
                         container.innerHTML = '<p style="text-align: center; color: #fca5a5; font-size: 0.9rem;">Chyba načítání.</p>';
                     }
                 } else {
