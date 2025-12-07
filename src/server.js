@@ -745,14 +745,15 @@ async function updateStandings(competitions = null) {
 }
 
 // Standings scraper - fetches latest standings from chess.cz and saves to file
-try {
-    const results = await updateStandings();
-    // Return formatted data as frontend expects
-    res.json({ success: true, standings: results, lastUpdated: new Date().toISOString() });
-} catch (error) {
-    console.error('Standings update error:', error);
-    res.status(500).json({ success: false, error: error.message });
-}
+app.post('/api/standings/update', authMiddleware, async (req, res) => {
+    try {
+        const results = await updateStandings();
+        // Return formatted data as frontend expects
+        res.json({ success: true, standings: results, lastUpdated: new Date().toISOString() });
+    } catch (error) {
+        console.error('Standings update error:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
 });
 
 // Get competition sources
