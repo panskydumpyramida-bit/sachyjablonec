@@ -1346,6 +1346,7 @@
             document.getElementById(tab + 'View').classList.remove('hidden');
 
             if (tab === 'dashboard') loadDashboard();
+            if (tab === 'editor') resetEditor();
             if (tab === 'members') loadMembers();
             if (tab === 'users') loadUsers();
             if (tab === 'messages') loadAdminMessages();
@@ -1417,7 +1418,12 @@
             document.getElementById('newsTitle').value = '';
             document.getElementById('articleContent').innerHTML = '';
             document.getElementById('newsExcerpt').value = '';
-            document.getElementById('newsDate').valueAsDate = new Date();
+
+            // Set date to today (local time)
+            const today = new Date();
+            const localIso = new Date(today.getTime() - (today.getTimezoneOffset() * 60000)).toISOString().split('T')[0];
+            document.getElementById('newsDate').value = localIso;
+
             document.getElementById('publishCheck').checked = false;
             document.getElementById('imageUrl').value = '';
 
@@ -2713,7 +2719,7 @@
             try {
                 const res = await fetch(`${API_URL}/competitions`);
                 let competitions = await res.json();
-                
+
                 // Sort by ID to keep stable order when toggling active status
                 competitions.sort((a, b) => a.id.localeCompare(b.id));
 
