@@ -107,7 +107,7 @@
                         <div
                             style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem;">
                             <!-- A Team -->
-                            <div>
+                            <div id="team-kp-A">
                                 <h3 style="color: var(--primary-color);">A Tým</h3>
                                 <p style="margin-bottom: 0.5rem; color: var(--text-muted);">Sezóna 2025/2026</p>
                                 <div id="lastMatch-kp-A" class="last-match-badge"
@@ -126,7 +126,7 @@
                             </div>
 
                             <!-- B Team -->
-                            <div>
+                            <div id="team-kp-B">
                                 <h3 style="color: var(--primary-color);">B Tým</h3>
                                 <p style="margin-bottom: 0.5rem; color: var(--text-muted);">Sezóna 2025/2026</p>
                                 <div id="lastMatch-kp-B" class="last-match-badge"
@@ -183,7 +183,7 @@
                         <div
                             style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem;">
                             <!-- C Team -->
-                            <div>
+                            <div id="team-ks-C">
                                 <h3 style="color: var(--primary-color);">C Tým</h3>
                                 <p style="margin-bottom: 0.5rem; color: var(--text-muted);">Sezóna 2025/2026</p>
                                 <div id="lastMatch-ks-C" class="last-match-badge"
@@ -199,15 +199,10 @@
                                         style="font-size: 0.7em; transition: transform 0.2s;"></i>
                                 </button>
                                 <div id="roster-ks-C" style="display: none; margin-bottom: 1rem;"></div>
-
-                                <div>
-                                    <a href="https://www.chess.cz/soutez/3105/" target="_blank" class="read-more">Více
-                                        na chess.cz <i class="fa-solid fa-external-link-alt"></i></a>
-                                </div>
                             </div>
 
                             <!-- D Team -->
-                            <div>
+                            <div id="team-ks-D">
                                 <h3 style="color: var(--primary-color);">D Tým</h3>
                                 <p style="margin-bottom: 0.5rem; color: var(--text-muted);">Sezóna 2025/2026</p>
                                 <div id="lastMatch-ks-D" class="last-match-badge"
@@ -223,11 +218,6 @@
                                         style="font-size: 0.7em; transition: transform 0.2s;"></i>
                                 </button>
                                 <div id="roster-ks-D" style="display: none; margin-bottom: 1rem;"></div>
-
-                                <div>
-                                    <a href="https://www.chess.cz/soutez/3105/" target="_blank" class="read-more">Více
-                                        na chess.cz <i class="fa-solid fa-external-link-alt"></i></a>
-                                </div>
                             </div>
                         </div>
 
@@ -441,6 +431,23 @@
             }
         }
 
+        // Navigate to team card and expand roster
+        function navigateToTeam(anchorId, rosterId, rosterUrl, rosterSnr) {
+            const anchor = document.getElementById(anchorId);
+            if (anchor) {
+                // Scroll to anchor with offset
+                anchor.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+                // Expand roster after scroll
+                setTimeout(() => {
+                    const roster = document.getElementById(rosterId);
+                    if (roster && roster.style.display === 'none') {
+                        toggleRoster(rosterId, rosterUrl, rosterSnr);
+                    }
+                }, 500);
+            }
+        }
+
         // Toggle team roster display
         async function toggleRoster(containerId, url, snr) {
             const container = document.getElementById(containerId);
@@ -599,10 +606,30 @@
                     // W/D/L display
                     const wdl = (s.wins !== undefined) ? `<span style="color:#4ade80">${s.wins}</span>/<span style="color:#fbbf24">${s.draws || 0}</span>/<span style="color:#f87171">${s.losses || 0}</span>` : '-';
 
+                    // Determine team anchor and roster ID for Bižuterie teams
+                    let teamClickHandler = '';
+                    if (isBizuterie) {
+                        // Map team name to anchor ID and roster ID
+                        const teamLower = s.team.toLowerCase();
+                        let anchorId = '', rosterId = '', rosterUrl = '', rosterSnr = '';
+                        if (teamLower.includes('"a"') || /\\ba\\b/.test(teamLower) || teamLower.endsWith(' a')) {
+                            anchorId = 'team-kp-A'; rosterId = 'roster-kp-A'; rosterUrl = 'https://chess-results.com/tnr1276470.aspx?lan=5'; rosterSnr = '1';
+                        } else if (teamLower.includes('"b"') || /\\bb\\b/.test(teamLower) || teamLower.endsWith(' b')) {
+                            anchorId = 'team-kp-B'; rosterId = 'roster-kp-B'; rosterUrl = 'https://chess-results.com/tnr1276470.aspx?lan=5'; rosterSnr = '10';
+                        } else if (teamLower.includes('"c"') || /\\bc\\b/.test(teamLower) || teamLower.endsWith(' c')) {
+                            anchorId = 'team-ks-C'; rosterId = 'roster-ks-C'; rosterUrl = 'https://chess-results.com/tnr1278502.aspx?lan=5'; rosterSnr = '4';
+                        } else if (teamLower.includes('"d"') || /\\bd\\b/.test(teamLower) || teamLower.endsWith(' d')) {
+                            anchorId = 'team-ks-D'; rosterId = 'roster-ks-D'; rosterUrl = 'https://chess-results.com/tnr1278502.aspx?lan=5'; rosterSnr = '5';
+                        }
+                        if (anchorId) {
+                            teamClickHandler = `onclick="navigateToTeam('${anchorId}', '${rosterId}', '${rosterUrl}', ${rosterSnr})" style="cursor: pointer; text-decoration: underline; text-decoration-style: dotted;"`;
+                        }
+                    }
+
                     html += `
                         <tr style="${rowStyle} transition: background 0.2s;" onmouseover="this.style.background='rgba(212,175,55,0.1)'" onmouseout="this.style.background='${isBizuterie ? 'linear-gradient(90deg, rgba(212,175,55,0.15) 0%, ' + bgColor + ' 100%)' : bgColor}'">
                             <td style="padding: 0.35rem 0.2rem; text-align: center;">${positionBadge}</td>
-                            <td style="padding: 0.35rem 0.2rem; ${teamStyle} font-size: 0.78rem;">${s.team}</td>
+                            <td style="padding: 0.35rem 0.2rem; ${teamStyle} font-size: 0.78rem;" ${teamClickHandler}>${s.team}</td>
                             <td style="padding: 0.35rem 0.5rem; text-align: center; font-family: monospace; font-size: 0.72rem; white-space: nowrap;">${wdl}</td>
                             <td style="padding: 0.35rem 0.5rem; text-align: right; font-weight: 700; font-family: monospace; font-size: 0.85rem;">${s.points !== null ? s.points : '-'}</td>
                         </tr>
