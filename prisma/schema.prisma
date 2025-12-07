@@ -116,5 +116,40 @@ model Competition {
   category  String
   createdAt DateTime @default(now()) @map("created_at")
   
+  standings Standing[]
+  
   @@map("competitions")
 }
+
+model Standing {
+  id            Int      @id @default(autoincrement())
+  competitionId String   @map("competition_id")
+  team          String
+  rank          Int
+  points        Float?
+  wins          Int?
+  draws         Int?
+  losses        Int?
+  games         Int?
+  score         Float?
+  scheduleJson  String?  @map("schedule_json") @db.Text
+  updatedAt     DateTime @updatedAt @map("updated_at")
+  
+  competition   Competition @relation(fields: [competitionId], references: [id], onDelete: Cascade)
+  
+  @@unique([competitionId, team])
+  @@map("standings")
+}
+
+model BlicakRegistration {
+  id        Int      @id @default(autoincrement())
+  name      String
+  club      String?
+  lok       String?
+  birthYear Int?     @map("birth_year")
+  eventDate DateTime @default(now()) @map("event_date")
+  createdAt DateTime @default(now()) @map("created_at")
+  
+  @@map("blicak_registrations")
+}
+
