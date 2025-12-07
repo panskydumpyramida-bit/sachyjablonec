@@ -273,9 +273,18 @@ async function scrapeTeamRoster(compUrl, teamSnr) {
             const nameMatch = row.match(/<a[^>]*class="CRdb"[^>]*>([^<]+)</i);
             const name = nameMatch ? clean(nameMatch[1]) : null;
 
-            // Extract ELO (CRr class)
+            // Extract ELO (first CRr class - before results)
             const eloMatch = row.match(/<td class="CRr">(\d+)/);
             const elo = eloMatch ? parseInt(eloMatch[1]) : null;
+
+            // Extract Performance (last CRr class - after results)
+            const allCrrMatches = row.match(/<td class="CRr">(\d+)/g) || [];
+            let perf = null;
+            if (allCrrMatches.length >= 2) {
+                const lastCrr = allCrrMatches[allCrrMatches.length - 1];
+                const perfMatch = lastCrr.match(/(\d+)/);
+                perf = perfMatch ? parseInt(perfMatch[1]) : null;
+            }
 
             // Count results in round columns (after FIDE ID column)
             // Results are in CRc cells and can be: 1, 0, ½, empty
@@ -283,12 +292,16 @@ async function scrapeTeamRoster(compUrl, teamSnr) {
             let points = 0;
 
             // Find all result cells (after the FIDE ID link)
+            // Note: Last 2 CRc cells are TOTALS (points sum and games played), not round results!
             const fideIndex = row.indexOf('ratings.fide.com');
             if (fideIndex > -1) {
                 const afterFide = row.substring(fideIndex);
                 const resultCells = afterFide.match(/<td class="CRc">([^<]*)/g) || [];
 
-                for (const cell of resultCells) {
+                // Exclude last 2 cells (they are totals, not round results)
+                const roundResultCells = resultCells.slice(0, -2);
+
+                for (const cell of roundResultCells) {
                     const val = cell.replace(/<td class="CRc">/, '').trim();
                     if (val === '1') { played++; points += 1; }
                     else if (val === '0') { played++; }
@@ -301,6 +314,7 @@ async function scrapeTeamRoster(compUrl, teamSnr) {
                     rank,
                     name,
                     elo: elo || null,
+                    perf: perf || null,
                     played,
                     points,
                     score: played > 0 ? `${points}/${played}` : '-'

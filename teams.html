@@ -123,12 +123,6 @@
                                         style="font-size: 0.7em; transition: transform 0.2s;"></i>
                                 </button>
                                 <div id="roster-kp-A" style="display: none; margin-bottom: 1rem;"></div>
-
-                                <div>
-                                    <a href="https://www.chess.cz/soutez/druzstvo/3344/191833/" target="_blank"
-                                        class="read-more">Více na chess.cz <i
-                                            class="fa-solid fa-external-link-alt"></i></a>
-                                </div>
                             </div>
 
                             <!-- B Team -->
@@ -140,7 +134,7 @@
 
                                 <!-- Roster toggle -->
                                 <button
-                                    onclick="toggleRoster('roster-kp-B', 'https://chess-results.com/tnr1276470.aspx?lan=5', 2)"
+                                    onclick="toggleRoster('roster-kp-B', 'https://chess-results.com/tnr1276470.aspx?lan=5', 10)"
                                     class="read-more"
                                     style="background: none; border: 1px solid rgba(255,255,255,0.2); padding: 0.4rem 0.8rem; border-radius: 6px; cursor: pointer; margin-bottom: 0.75rem; display: flex; align-items: center; gap: 0.5rem;">
                                     <i class="fa-solid fa-users"></i> Soupiska
@@ -148,12 +142,6 @@
                                         style="font-size: 0.7em; transition: transform 0.2s;"></i>
                                 </button>
                                 <div id="roster-kp-B" style="display: none; margin-bottom: 1rem;"></div>
-
-                                <div>
-                                    <a href="https://www.chess.cz/soutez/druzstvo/3344/191840/" target="_blank"
-                                        class="read-more">Více na chess.cz <i
-                                            class="fa-solid fa-external-link-alt"></i></a>
-                                </div>
                             </div>
                         </div>
 
@@ -192,9 +180,21 @@
                                 <p style="margin-bottom: 0.5rem; color: var(--text-muted);">Sezóna 2025/2026</p>
                                 <div id="lastMatch-ks-C" class="last-match-badge"
                                     style="margin-bottom: 0.75rem; font-size: 0.9rem;"></div>
-                                <div style="margin-bottom: 1rem;">
-                                    <a href="https://www.chess.cz/soutez/3105/" target="_blank" class="read-more">Detail
-                                        soutěže <i class="fa-solid fa-external-link-alt"></i></a>
+
+                                <!-- Roster toggle -->
+                                <button
+                                    onclick="toggleRoster('roster-ks-C', 'https://chess-results.com/tnr1278502.aspx?lan=5', 4)"
+                                    class="read-more"
+                                    style="background: none; border: 1px solid rgba(255,255,255,0.2); padding: 0.4rem 0.8rem; border-radius: 6px; cursor: pointer; margin-bottom: 0.75rem; display: flex; align-items: center; gap: 0.5rem;">
+                                    <i class="fa-solid fa-users"></i> Soupiska
+                                    <i class="fa-solid fa-chevron-down" id="icon-roster-ks-C"
+                                        style="font-size: 0.7em; transition: transform 0.2s;"></i>
+                                </button>
+                                <div id="roster-ks-C" style="display: none; margin-bottom: 1rem;"></div>
+
+                                <div>
+                                    <a href="https://www.chess.cz/soutez/3105/" target="_blank" class="read-more">Více
+                                        na chess.cz <i class="fa-solid fa-external-link-alt"></i></a>
                                 </div>
                             </div>
 
@@ -204,9 +204,21 @@
                                 <p style="margin-bottom: 0.5rem; color: var(--text-muted);">Sezóna 2025/2026</p>
                                 <div id="lastMatch-ks-D" class="last-match-badge"
                                     style="margin-bottom: 0.75rem; font-size: 0.9rem;"></div>
-                                <div style="margin-bottom: 1rem;">
-                                    <a href="https://www.chess.cz/soutez/3105/" target="_blank" class="read-more">Detail
-                                        soutěže <i class="fa-solid fa-external-link-alt"></i></a>
+
+                                <!-- Roster toggle -->
+                                <button
+                                    onclick="toggleRoster('roster-ks-D', 'https://chess-results.com/tnr1278502.aspx?lan=5', 5)"
+                                    class="read-more"
+                                    style="background: none; border: 1px solid rgba(255,255,255,0.2); padding: 0.4rem 0.8rem; border-radius: 6px; cursor: pointer; margin-bottom: 0.75rem; display: flex; align-items: center; gap: 0.5rem;">
+                                    <i class="fa-solid fa-users"></i> Soupiska
+                                    <i class="fa-solid fa-chevron-down" id="icon-roster-ks-D"
+                                        style="font-size: 0.7em; transition: transform 0.2s;"></i>
+                                </button>
+                                <div id="roster-ks-D" style="display: none; margin-bottom: 1rem;"></div>
+
+                                <div>
+                                    <a href="https://www.chess.cz/soutez/3105/" target="_blank" class="read-more">Více
+                                        na chess.cz <i class="fa-solid fa-external-link-alt"></i></a>
                                 </div>
                             </div>
                         </div>
@@ -445,13 +457,14 @@
 
                     if (data.players && data.players.length > 0) {
                         let html = '<table style="width: 100%; border-collapse: collapse; font-size: 0.85rem;">';
-                        html += '<thead><tr style="border-bottom: 1px solid rgba(255,255,255,0.1);"><th style="padding: 0.3rem; text-align: left;">#</th><th style="padding: 0.3rem; text-align: left;">Hráč</th><th style="padding: 0.3rem; text-align: right;">ELO</th><th style="padding: 0.3rem; text-align: right;">Body</th></tr></thead><tbody>';
+                        html += '<thead><tr style="border-bottom: 1px solid rgba(255,255,255,0.1);"><th style="padding: 0.3rem; text-align: left;">#</th><th style="padding: 0.3rem; text-align: left;">Hráč</th><th style="padding: 0.3rem; text-align: right;">ELO</th><th style="padding: 0.3rem; text-align: right;">Body</th><th style="padding: 0.3rem; text-align: right;" title="Průměr ELO soupeřů">Ø ELO</th></tr></thead><tbody>';
                         data.players.forEach(p => {
                             html += `<tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
                                 <td style="padding: 0.3rem; color: var(--text-muted);">${p.rank}</td>
                                 <td style="padding: 0.3rem;">${p.name}</td>
                                 <td style="padding: 0.3rem; text-align: right; color: var(--text-muted);">${p.elo || '-'}</td>
                                 <td style="padding: 0.3rem; text-align: right; font-weight: 600;">${p.score}</td>
+                                <td style="padding: 0.3rem; text-align: right; color: var(--primary-color);">${p.perf || '-'}</td>
                             </tr>`;
                         });
                         html += '</tbody></table>';
