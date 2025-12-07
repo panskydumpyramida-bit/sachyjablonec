@@ -427,9 +427,9 @@
                                         dateObj = new Date(dateStr);
                                     } else if (dateStr.includes('.')) {
                                         const parts = dateStr.split('.');
-                                        // Assume DD.MM.YYYY
+                                        // Assume DD.MM.YYYY - use T12:00:00 to avoid UTC timezone shift
                                         if (parts.length === 3) {
-                                            dateObj = new Date(`${parts[2]}-${parts[1]}-${parts[0]}`);
+                                            dateObj = new Date(`${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}T12:00:00`);
                                         }
                                     }
 
