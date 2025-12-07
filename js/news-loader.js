@@ -82,8 +82,8 @@ async function loadNews(options = {}) {
                     </div>
                 </article>
             `).join('');
-        } else if (displayMode === 'full') {
-            // Full content display mode - shows entire article content with thumbnail
+        } else if (displayMode === 'full' || displayMode === 'full-short') {
+            // Full content display mode - shows entire article content or excerpt with thumbnail
             container.innerHTML = news.map(item => `
                 <article class="card">
                     <div class="card-content">
@@ -100,7 +100,10 @@ async function loadNews(options = {}) {
                             ` : ''}
                         </div>
                         <div style="line-height: 1.8; color: var(--text-light);">
-                            ${item.content || `<p>${escapeHtml(item.excerpt || '')}</p>`}
+                            ${displayMode === 'full'
+                    ? (item.content || `<p>${escapeHtml(item.excerpt || '')}</p>`)
+                    : `<p>${escapeHtml(item.excerpt || '')}</p>`
+                }
                         </div>
                         <div style="margin-top: 1.5rem;">
                             <a href="${getArticleUrl(item)}" class="read-more">
