@@ -233,6 +233,88 @@ async function scrapeMatchDetails(compUrl, round, homeTeam, awayTeam) {
     }
 }
 
+// Helper to scrape team roster with individual results (art=1)
+async function scrapeTeamRoster(compUrl, teamSnr) {
+    // Build URL for team roster page
+    let rosterUrl = compUrl
+        .replace(/&snr=\d+/, '')
+        .replace(/&SNode=[^&]+/, '');
+
+    if (rosterUrl.includes('art=')) {
+        rosterUrl = rosterUrl.replace(/art=\d+/, 'art=1');
+    } else {
+        rosterUrl += '&art=1';
+    }
+    rosterUrl += `&snr=${teamSnr}`;
+
+    console.log(`Scraping roster: ${rosterUrl}`);
+
+    try {
+        const response = await fetchWithHeaders(rosterUrl);
+        const html = await response.text();
+
+        const players = [];
+
+        // Split by table rows
+        const rows = html.split('<tr');
+
+        for (const row of rows) {
+            // Look for player rows (have CRg1 or CRg2 class)
+            if (!row.match(/class="CRg[12]/)) continue;
+
+            const cells = row.split('</td>');
+            if (cells.length < 6) continue;
+
+            // Extract rank (first CRc cell)
+            const rankMatch = cells[0]?.match(/<td class="CRc">(\d+)/);
+            const rank = rankMatch ? parseInt(rankMatch[1]) : null;
+
+            // Extract name (look for CRdb link)
+            const nameMatch = row.match(/<a[^>]*class="CRdb"[^>]*>([^<]+)</i);
+            const name = nameMatch ? clean(nameMatch[1]) : null;
+
+            // Extract ELO (CRr class)
+            const eloMatch = row.match(/<td class="CRr">(\d+)/);
+            const elo = eloMatch ? parseInt(eloMatch[1]) : null;
+
+            // Count results in round columns (after FIDE ID column)
+            // Results are in CRc cells and can be: 1, 0, ½, empty
+            let played = 0;
+            let points = 0;
+
+            // Find all result cells (after the FIDE ID link)
+            const fideIndex = row.indexOf('ratings.fide.com');
+            if (fideIndex > -1) {
+                const afterFide = row.substring(fideIndex);
+                const resultCells = afterFide.match(/<td class="CRc">([^<]*)/g) || [];
+
+                for (const cell of resultCells) {
+                    const val = cell.replace(/<td class="CRc">/, '').trim();
+                    if (val === '1') { played++; points += 1; }
+                    else if (val === '0') { played++; }
+                    else if (val === '½' || val === '&frac12;') { played++; points += 0.5; }
+                }
+            }
+
+            if (name && rank) {
+                players.push({
+                    rank,
+                    name,
+                    elo: elo || null,
+                    played,
+                    points,
+                    score: played > 0 ? `${points}/${played}` : '-'
+                });
+            }
+        }
+
+        return players;
+    } catch (e) {
+        console.error('Error scraping roster:', e.message);
+        return [];
+    }
+}
+
 // Helper to scrape team schedule (art=23)
 // Helper to scrape all matches from competition (art=2)
 async function scrapeCompetitionMatches(compUrl) {
@@ -760,6 +842,21 @@ app.get('/api/standings/match-details', async (req, res) => {
     }
     const boards = await scrapeMatchDetails(url, round, home, away);
     res.json({ boards });
+});
+
+// Get team roster with individual player results
+app.get('/api/standings/team-roster', async (req, res) => {
+    const { url, snr } = req.query;
+    if (!url || !snr) {
+        return res.status(400).json({ error: 'Missing parameters: url and snr required' });
+    }
+    try {
+        const players = await scrapeTeamRoster(url, snr);
+        res.json({ players });
+    } catch (e) {
+        console.error('Roster error:', e);
+        res.status(500).json({ error: 'Failed to fetch roster' });
+    }
 });
 
 // Seed Function
