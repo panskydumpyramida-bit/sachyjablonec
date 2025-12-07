@@ -2673,11 +2673,11 @@
 
                 if (res.ok) {
                     const data = await res.json();
-                    
+
                     let html = '<div style="background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.2); padding: 1rem; border-radius: 6px; margin-bottom: 1rem;">';
                     html += '<h4 style="color: #10b981; margin: 0 0 0.5rem 0;"><i class="fa-solid fa-check-circle"></i> Aktualizace úspěšná</h4>';
                     html += '<ul style="margin: 0; padding-left: 1.5rem; color: var(--text-color);">';
-                    
+
                     if (data.standings && Array.isArray(data.standings)) {
                         data.standings.forEach(comp => {
                             const count = comp.standings ? comp.standings.length : 0;
@@ -2689,7 +2689,7 @@
                         });
                     }
                     html += '</ul></div>';
-                    
+
                     resultDiv.innerHTML = html;
                     showAlert('Tabulky aktualizovány', 'success');
                 } else {
@@ -2708,6 +2708,7 @@
 
 
         // Load competition sources
+        // Load competition sources
         async function loadCompetitions() {
             try {
                 const res = await fetch(`${API_URL}/competitions`);
@@ -2716,14 +2717,17 @@
 
                 container.innerHTML = competitions.map(c => `
             <div style="background: rgba(255, 255, 255, 0.05); padding: 0.75rem; border-radius: 6px; margin-bottom: 0.5rem; display: flex; align-items: center; justify-content: space-between; gap: 1rem;">
-                <div style="flex: 1; overflow: hidden;">
-                    <strong style="display: block; font-size: 0.9rem; color: var(--primary-color);">${c.name}</strong>
-                    <div style="font-size: 0.8rem; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${c.url}">
-                        ${c.url}
+                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                    <input type="checkbox" id="active_${c.id}" ${c.active !== false ? 'checked' : ''} onchange="toggleCompetitionActive('${c.id}', this.checked)" title="Aktivní/Neaktivní">
+                    <div style="overflow: hidden;">
+                        <strong style="display: block; font-size: 0.9rem; color: var(--primary-color); ${c.active === false ? 'opacity: 0.5;' : ''}">${c.name}</strong>
+                        <div style="font-size: 0.8rem; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 300px;" title="${c.url || 'Není nastaveno'}">
+                            ${c.url || '<span style="color: #fca5a5;">URL nenastaveno (vyžadováno pro aktivaci)</span>'}
+                        </div>
                     </div>
                 </div>
-                <button class="btn-secondary btn-small" onclick="changeSourceUrl('${c.id}', '${escapeHtml(c.url)}')" title="Změnit zdroj">
-                    <i class="fa-solid fa-pen"></i> Změnit
+                <button class="btn-secondary btn-small" onclick="changeSourceUrl('${c.id}', '${escapeHtml(c.url || '')}')" title="Změnit URL">
+                    <i class="fa-solid fa-pen"></i> URL
                 </button>
             </div>
         `).join('');
@@ -2732,9 +2736,26 @@
             }
         }
 
+        async function toggleCompetitionActive(id, active) {
+            try {
+                const res = await fetch(`${API_URL}/competitions/${id}/url`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
+                    body: JSON.stringify({ active })
+                });
+                if (res.ok) {
+                    loadCompetitions(); // Refresh UI
+                } else {
+                    alert('Chyba při změně stavu.');
+                    loadCompetitions(); // Revert UI
+                }
+            } catch (e) { console.error(e); }
+        }
+
         async function changeSourceUrl(id, currentUrl) {
             const newUrl = prompt('Zadejte nové URL pro zdroj dat:', currentUrl);
-            if (newUrl && newUrl !== currentUrl) {
+            // Allow empty string to clear it, but checking for null (cancel)
+            if (newUrl !== null && newUrl !== currentUrl) {
                 try {
                     const res = await fetch(`${API_URL}/competitions/${id}/url`, {
                         method: 'PUT',
@@ -2746,10 +2767,10 @@
                     });
 
                     if (res.ok) {
-                        showAlert('Zdroj aktualizován', 'success');
+                        showAlert('URL aktualizováno', 'success');
                         loadCompetitions();
                     } else {
-                        showAlert('Chyba při aktualizaci', 'error');
+                        showAlert('Chyba aktualizace', 'error');
                     }
                 } catch (e) {
                     console.error(e);
