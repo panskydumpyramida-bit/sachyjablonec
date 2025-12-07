@@ -456,18 +456,27 @@
                     const data = await res.json();
 
                     if (data.players && data.players.length > 0) {
-                        let html = '<table style="width: 100%; border-collapse: collapse; font-size: 0.85rem;">';
-                        html += '<thead><tr style="border-bottom: 1px solid rgba(255,255,255,0.1);"><th style="padding: 0.3rem; text-align: left;">#</th><th style="padding: 0.3rem; text-align: left;">Hráč</th><th style="padding: 0.3rem; text-align: right;">ELO</th><th style="padding: 0.3rem; text-align: right;">Body</th><th style="padding: 0.3rem; text-align: right;" title="Průměr ELO soupeřů">Ø ELO</th></tr></thead><tbody>';
-                        data.players.forEach(p => {
-                            html += `<tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
-                                <td style="padding: 0.3rem; color: var(--text-muted);">${p.rank}</td>
-                                <td style="padding: 0.3rem;">${p.name}</td>
-                                <td style="padding: 0.3rem; text-align: right; color: var(--text-muted);">${p.elo || '-'}</td>
-                                <td style="padding: 0.3rem; text-align: right; font-weight: 600;">${p.score}</td>
-                                <td style="padding: 0.3rem; text-align: right; color: var(--primary-color);">${p.perf || '-'}</td>
+                        let html = `<div style="background: linear-gradient(135deg, rgba(212,175,55,0.1) 0%, rgba(0,0,0,0.3) 100%); border-radius: 8px; overflow: hidden; border: 1px solid rgba(255,255,255,0.1);">`;
+                        html += `<table style="width: 100%; border-collapse: collapse; font-size: 0.85rem;">`;
+                        html += `<thead><tr style="background: linear-gradient(90deg, rgba(212,175,55,0.2) 0%, rgba(212,175,55,0.05) 100%);">
+                            <th style="padding: 0.6rem 0.4rem; text-align: center; font-weight: 600; color: var(--primary-color); width: 2rem;">#</th>
+                            <th style="padding: 0.6rem 0.4rem; text-align: left; font-weight: 600; color: var(--primary-color);">Hráč</th>
+                            <th style="padding: 0.6rem 0.4rem; text-align: right; font-weight: 600; color: var(--primary-color);">ELO</th>
+                            <th style="padding: 0.6rem 0.4rem; text-align: center; font-weight: 600; color: var(--primary-color);">Body</th>
+                            <th style="padding: 0.6rem 0.4rem; text-align: right; font-weight: 600; color: var(--primary-color);" title="Průměr ELO soupeřů">Ø ELO</th>
+                        </tr></thead><tbody>`;
+                        data.players.forEach((p, idx) => {
+                            const bgColor = idx % 2 === 0 ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.1)';
+                            const scoreColor = p.score !== '-' ? (parseFloat(p.score) > 0.5 * parseInt(p.score.split('/')[1] || 1) ? '#4ade80' : '#f87171') : 'var(--text-muted)';
+                            html += `<tr style="background: ${bgColor}; transition: background 0.2s;" onmouseover="this.style.background='rgba(212,175,55,0.1)'" onmouseout="this.style.background='${bgColor}'">
+                                <td style="padding: 0.5rem 0.4rem; text-align: center; color: var(--text-muted); font-size: 0.8rem;">${p.rank}</td>
+                                <td style="padding: 0.5rem 0.4rem; font-weight: 500;">${p.name}</td>
+                                <td style="padding: 0.5rem 0.4rem; text-align: right; color: var(--text-muted); font-family: monospace;">${p.elo || '-'}</td>
+                                <td style="padding: 0.5rem 0.4rem; text-align: center; font-weight: 700; color: ${scoreColor};">${p.score}</td>
+                                <td style="padding: 0.5rem 0.4rem; text-align: right; color: var(--text-muted); font-family: monospace; font-size: 0.8rem;">${p.perf || '-'}</td>
                             </tr>`;
                         });
-                        html += '</tbody></table>';
+                        html += '</tbody></table></div>';
                         container.innerHTML = html;
                     } else {
                         container.innerHTML = '<p style="color: var(--text-muted); text-align: center;">Soupiska není k dispozici.</p>';
