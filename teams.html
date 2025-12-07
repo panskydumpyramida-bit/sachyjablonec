@@ -103,12 +103,15 @@
                             style="margin-bottom: 2rem; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 1rem;">
                             Krajský přebor</h2>
 
+
                         <div
                             style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem;">
                             <!-- A Team -->
                             <div>
                                 <h3 style="color: var(--primary-color);">A Tým</h3>
                                 <p style="margin-bottom: 0.5rem; color: var(--text-muted);">Sezóna 2025/2026</p>
+                                <div id="lastMatch-kp-A" class="last-match-badge"
+                                    style="margin-bottom: 0.75rem; font-size: 0.9rem;"></div>
                                 <div style="margin-bottom: 1rem;">
                                     <a href="https://www.chess.cz/soutez/druzstvo/3344/191833/" target="_blank"
                                         class="read-more">Soupiska a výsledky hráčů <i
@@ -120,12 +123,22 @@
                             <div>
                                 <h3 style="color: var(--primary-color);">B Tým</h3>
                                 <p style="margin-bottom: 0.5rem; color: var(--text-muted);">Sezóna 2025/2026</p>
+                                <div id="lastMatch-kp-B" class="last-match-badge"
+                                    style="margin-bottom: 0.75rem; font-size: 0.9rem;"></div>
                                 <div style="margin-bottom: 1rem;">
                                     <a href="https://www.chess.cz/soutez/druzstvo/3344/191840/" target="_blank"
                                         class="read-more">Soupiska a výsledky hráčů <i
                                             class="fa-solid fa-external-link-alt"></i></a>
                                 </div>
                             </div>
+                        </div>
+
+                        <!-- Link to all matches -->
+                        <div style="margin-top: 1.5rem;">
+                            <a href="calendar.html" class="read-more"
+                                style="display: inline-flex; align-items: center; gap: 0.5rem;">
+                                <i class="fa-regular fa-calendar-days"></i> Všechny zápasy v kalendáři
+                            </a>
                         </div>
 
                         <!-- Standings Placeholder KP -->
@@ -153,6 +166,8 @@
                             <div>
                                 <h3 style="color: var(--primary-color);">C Tým</h3>
                                 <p style="margin-bottom: 0.5rem; color: var(--text-muted);">Sezóna 2025/2026</p>
+                                <div id="lastMatch-ks-C" class="last-match-badge"
+                                    style="margin-bottom: 0.75rem; font-size: 0.9rem;"></div>
                                 <div style="margin-bottom: 1rem;">
                                     <a href="https://www.chess.cz/soutez/3105/" target="_blank" class="read-more">Detail
                                         soutěže <i class="fa-solid fa-external-link-alt"></i></a>
@@ -163,6 +178,8 @@
                             <div>
                                 <h3 style="color: var(--primary-color);">D Tým</h3>
                                 <p style="margin-bottom: 0.5rem; color: var(--text-muted);">Sezóna 2025/2026</p>
+                                <div id="lastMatch-ks-D" class="last-match-badge"
+                                    style="margin-bottom: 0.75rem; font-size: 0.9rem;"></div>
                                 <div style="margin-bottom: 1rem;">
                                     <a href="https://www.chess.cz/soutez/3105/" target="_blank" class="read-more">Detail
                                         soutěže <i class="fa-solid fa-external-link-alt"></i></a>
@@ -222,7 +239,86 @@
             loadNews('Soutěže družstev', 'teamsNewsList', 'list');
             loadStandings('kp-liberec', 'standings-kp-liberec');
             loadStandings('ks-vychod', 'standings-ks-vychod');
+
+            // Load last match badges
+            loadLastMatches();
         });
+
+        async function loadLastMatches() {
+            try {
+                const res = await fetch(`${API_URL}/standings`);
+                if (!res.ok) return;
+                const data = await res.json();
+                const competitions = data.standings || data;
+
+                // Team mappings: containerId -> [competitionId, teamNamePattern]
+                const teamMappings = [
+                    { containerId: 'lastMatch-kp-A', compId: 'kp-liberec', pattern: /bižuterie.*a\b/i },
+                    { containerId: 'lastMatch-kp-B', compId: 'kp-liberec', pattern: /bižuterie.*b\b/i },
+                    { containerId: 'lastMatch-ks-C', compId: 'ks-vychod', pattern: /bižuterie.*(c\b|\"c\")/i },
+                    { containerId: 'lastMatch-ks-D', compId: 'ks-vychod', pattern: /bižuterie.*(d\b|\"d\")/i },
+                ];
+
+                for (const mapping of teamMappings) {
+                    const container = document.getElementById(mapping.containerId);
+                    if (!container) continue;
+
+                    const comp = competitions.find(c => c.competitionId === mapping.compId);
+                    if (!comp) continue;
+
+                    // Find team in standings
+                    const team = comp.standings?.find(s => mapping.pattern.test(s.team));
+                    if (!team || !team.schedule) continue;
+
+                    // Find last match with result
+                    const playedMatches = team.schedule.filter(m => m.result && m.result.trim() !== '');
+                    if (playedMatches.length === 0) {
+                        container.innerHTML = '<span style="color: var(--text-muted);"><i class="fa-regular fa-clock"></i> Žádný odehraný zápas</span>';
+                        continue;
+                    }
+
+                    const lastMatch = playedMatches[playedMatches.length - 1];
+
+                    // Parse result to determine win/loss/draw
+                    let statusIcon = '📊';
+                    let statusColor = 'var(--text-muted)';
+                    const resultParts = lastMatch.result.split(':').map(p => parseFloat(p.replace(',', '.')));
+                    if (resultParts.length === 2) {
+                        const [home, away] = resultParts;
+                        const isHome = lastMatch.isHome !== false; // Default true
+                        const ourScore = isHome ? home : away;
+                        const theirScore = isHome ? away : home;
+                        if (ourScore > theirScore) {
+                            statusIcon = '✅';
+                            statusColor = '#4ade80';
+                        } else if (ourScore < theirScore) {
+                            statusIcon = '❌';
+                            statusColor = '#f87171';
+                        } else {
+                            statusIcon = '🤝';
+                            statusColor = '#fbbf24';
+                        }
+                    }
+
+                    container.innerHTML = `
+                        <div style="padding: 0.5rem 0.75rem; background: rgba(255,255,255,0.05); border-radius: 6px; border-left: 3px solid ${statusColor};">
+                            <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
+                                <span style="color: var(--text-muted); font-size: 0.8em;">${lastMatch.round}. kolo</span>
+                                <span style="color: var(--text-muted);">•</span>
+                                <span style="color: var(--text-muted); font-size: 0.85em;">${lastMatch.date}</span>
+                            </div>
+                            <div style="margin-top: 0.25rem;">
+                                <span>${statusIcon}</span>
+                                <span style="color: ${statusColor}; font-weight: 600;">${lastMatch.result}</span>
+                                <span style="color: var(--text-light); margin-left: 0.25rem;">vs ${lastMatch.opponent}</span>
+                            </div>
+                        </div>
+                    `;
+                }
+            } catch (e) {
+                console.error('Error loading last matches:', e);
+            }
+        }
 
         async function loadStandings(competitionId, containerId) {
             const container = document.getElementById(containerId);
