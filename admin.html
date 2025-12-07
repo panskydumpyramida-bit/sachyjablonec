@@ -2712,7 +2712,11 @@
         async function loadCompetitions() {
             try {
                 const res = await fetch(`${API_URL}/competitions`);
-                const competitions = await res.json();
+                let competitions = await res.json();
+                
+                // Sort by ID to keep stable order when toggling active status
+                competitions.sort((a, b) => a.id.localeCompare(b.id));
+
                 const container = document.getElementById('competitionsList');
 
                 container.innerHTML = competitions.map(c => `
