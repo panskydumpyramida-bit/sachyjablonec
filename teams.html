@@ -112,9 +112,21 @@
                                 <p style="margin-bottom: 0.5rem; color: var(--text-muted);">Sezóna 2025/2026</p>
                                 <div id="lastMatch-kp-A" class="last-match-badge"
                                     style="margin-bottom: 0.75rem; font-size: 0.9rem;"></div>
-                                <div style="margin-bottom: 1rem;">
+
+                                <!-- Roster toggle -->
+                                <button
+                                    onclick="toggleRoster('roster-kp-A', 'https://chess-results.com/tnr1276470.aspx?lan=5', 1)"
+                                    class="read-more"
+                                    style="background: none; border: 1px solid rgba(255,255,255,0.2); padding: 0.4rem 0.8rem; border-radius: 6px; cursor: pointer; margin-bottom: 0.75rem; display: flex; align-items: center; gap: 0.5rem;">
+                                    <i class="fa-solid fa-users"></i> Soupiska
+                                    <i class="fa-solid fa-chevron-down" id="icon-roster-kp-A"
+                                        style="font-size: 0.7em; transition: transform 0.2s;"></i>
+                                </button>
+                                <div id="roster-kp-A" style="display: none; margin-bottom: 1rem;"></div>
+
+                                <div>
                                     <a href="https://www.chess.cz/soutez/druzstvo/3344/191833/" target="_blank"
-                                        class="read-more">Soupiska a výsledky hráčů <i
+                                        class="read-more">Více na chess.cz <i
                                             class="fa-solid fa-external-link-alt"></i></a>
                                 </div>
                             </div>
@@ -125,9 +137,21 @@
                                 <p style="margin-bottom: 0.5rem; color: var(--text-muted);">Sezóna 2025/2026</p>
                                 <div id="lastMatch-kp-B" class="last-match-badge"
                                     style="margin-bottom: 0.75rem; font-size: 0.9rem;"></div>
-                                <div style="margin-bottom: 1rem;">
+
+                                <!-- Roster toggle -->
+                                <button
+                                    onclick="toggleRoster('roster-kp-B', 'https://chess-results.com/tnr1276470.aspx?lan=5', 2)"
+                                    class="read-more"
+                                    style="background: none; border: 1px solid rgba(255,255,255,0.2); padding: 0.4rem 0.8rem; border-radius: 6px; cursor: pointer; margin-bottom: 0.75rem; display: flex; align-items: center; gap: 0.5rem;">
+                                    <i class="fa-solid fa-users"></i> Soupiska
+                                    <i class="fa-solid fa-chevron-down" id="icon-roster-kp-B"
+                                        style="font-size: 0.7em; transition: transform 0.2s;"></i>
+                                </button>
+                                <div id="roster-kp-B" style="display: none; margin-bottom: 1rem;"></div>
+
+                                <div>
                                     <a href="https://www.chess.cz/soutez/druzstvo/3344/191840/" target="_blank"
-                                        class="read-more">Soupiska a výsledky hráčů <i
+                                        class="read-more">Více na chess.cz <i
                                             class="fa-solid fa-external-link-alt"></i></a>
                                 </div>
                             </div>
@@ -393,6 +417,51 @@
                 } catch (e) {
                     console.error('Error loading match details:', e);
                     container.innerHTML = '<p style="color: #fca5a5; text-align: center;">Chyba načítání.</p>';
+                }
+            }
+        }
+
+        // Toggle team roster display
+        async function toggleRoster(containerId, url, snr) {
+            const container = document.getElementById(containerId);
+            const icon = document.getElementById(`icon-${containerId}`);
+            if (!container) return;
+
+            // Toggle visibility
+            const isHidden = container.style.display === 'none';
+            container.style.display = isHidden ? 'block' : 'none';
+            if (icon) icon.style.transform = isHidden ? 'rotate(180deg)' : 'rotate(0deg)';
+
+            if (!isHidden) return; // Hiding
+
+            // If empty, fetch data
+            if (container.innerHTML.trim() === '') {
+                container.innerHTML = '<div style="text-align: center; padding: 0.5rem;"><i class="fa-solid fa-spinner fa-spin"></i> Načítám soupisku...</div>';
+
+                try {
+                    const res = await fetch(`${API_URL}/standings/team-roster?url=${encodeURIComponent(url)}&snr=${snr}`);
+                    if (!res.ok) throw new Error('Fetch failed');
+                    const data = await res.json();
+
+                    if (data.players && data.players.length > 0) {
+                        let html = '<table style="width: 100%; border-collapse: collapse; font-size: 0.85rem;">';
+                        html += '<thead><tr style="border-bottom: 1px solid rgba(255,255,255,0.1);"><th style="padding: 0.3rem; text-align: left;">#</th><th style="padding: 0.3rem; text-align: left;">Hráč</th><th style="padding: 0.3rem; text-align: right;">ELO</th><th style="padding: 0.3rem; text-align: right;">Body</th></tr></thead><tbody>';
+                        data.players.forEach(p => {
+                            html += `<tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                                <td style="padding: 0.3rem; color: var(--text-muted);">${p.rank}</td>
+                                <td style="padding: 0.3rem;">${p.name}</td>
+                                <td style="padding: 0.3rem; text-align: right; color: var(--text-muted);">${p.elo || '-'}</td>
+                                <td style="padding: 0.3rem; text-align: right; font-weight: 600;">${p.score}</td>
+                            </tr>`;
+                        });
+                        html += '</tbody></table>';
+                        container.innerHTML = html;
+                    } else {
+                        container.innerHTML = '<p style="color: var(--text-muted); text-align: center;">Soupiska není k dispozici.</p>';
+                    }
+                } catch (e) {
+                    console.error('Error loading roster:', e);
+                    container.innerHTML = '<p style="color: #fca5a5; text-align: center;">Chyba načítání soupisky.</p>';
                 }
             }
         }
