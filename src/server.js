@@ -418,7 +418,7 @@ async function scrapeCompetitionMatches(compUrl) {
 
     try {
         console.log(`Scraping pairings: ${matchesUrl} `);
-        const response = await fetch(matchesUrl);
+        const response = await fetchWithHeaders(matchesUrl);
         const html = await response.text();
         const rows = html.split('</tr>');
         const allMatches = [];
@@ -633,7 +633,7 @@ app.post('/api/standings/update', async (req, res) => {
                     competitionMatches = await scrapeCompetitionMatches(comp.url);
 
                     // 2. Fetch Standings (art=46)
-                    const response = await fetch(comp.url);
+                    const response = await fetchWithHeaders(comp.url);
                     const html = await response.text();
 
                     const rows = html.split('</tr>');
@@ -1321,7 +1321,7 @@ app.listen(PORT, async () => {
 
                     if (comp.type === 'chess-results') {
                         competitionMatches = await scrapeCompetitionMatches(comp.url);
-                        const response = await fetch(comp.url);
+                        const response = await fetchWithHeaders(comp.url);
                         const html = await response.text();
                         const rows = html.split('</tr>');
 
