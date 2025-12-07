@@ -99,9 +99,16 @@
                 <!-- Krajský přebor -->
                 <div class="card" style="grid-column: 1 / -1;">
                     <div class="card-content">
-                        <h2
-                            style="margin-bottom: 2rem; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 1rem;">
-                            Krajský přebor</h2>
+                        <div
+                            style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 2rem; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 1rem;">
+                            <h2 style="margin: 0;">Krajský přebor <span
+                                    style="font-size: 0.6em; color: var(--text-muted); font-weight: 400;">Sezóna
+                                    2025/2026</span></h2>
+                            <a href="calendar.html" class="read-more"
+                                style="display: inline-flex; align-items: center; gap: 0.5rem; font-size: 0.85rem;">
+                                <i class="fa-regular fa-calendar-days"></i> Kalendář
+                            </a>
+                        </div>
 
 
                         <div
@@ -109,7 +116,6 @@
                             <!-- A Team -->
                             <div id="team-kp-A">
                                 <h3 style="color: var(--primary-color);">A Tým</h3>
-                                <p style="margin-bottom: 0.5rem; color: var(--text-muted);">Sezóna 2025/2026</p>
                                 <div id="lastMatch-kp-A" class="last-match-badge"
                                     style="margin-bottom: 0.75rem; font-size: 0.9rem;"></div>
 
@@ -128,7 +134,6 @@
                             <!-- B Team -->
                             <div id="team-kp-B">
                                 <h3 style="color: var(--primary-color);">B Tým</h3>
-                                <p style="margin-bottom: 0.5rem; color: var(--text-muted);">Sezóna 2025/2026</p>
                                 <div id="lastMatch-kp-B" class="last-match-badge"
                                     style="margin-bottom: 0.75rem; font-size: 0.9rem;"></div>
 
@@ -143,14 +148,6 @@
                                 </button>
                                 <div id="roster-kp-B" style="display: none; margin-bottom: 1rem;"></div>
                             </div>
-                        </div>
-
-                        <!-- Link to all matches -->
-                        <div style="margin-top: 1.5rem;">
-                            <a href="calendar.html" class="read-more"
-                                style="display: inline-flex; align-items: center; gap: 0.5rem;">
-                                <i class="fa-regular fa-calendar-days"></i> Všechny zápasy v kalendáři
-                            </a>
                         </div>
 
                         <!-- Standings Placeholder KP -->
@@ -176,16 +173,22 @@
                 <!-- Krajská soutěž I. - východ -->
                 <div class="card" style="grid-column: 1 / -1;">
                     <div class="card-content">
-                        <h2
-                            style="margin-bottom: 2rem; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 1rem;">
-                            Krajská soutěž I. - východ</h2>
+                        <div
+                            style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 2rem; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 1rem;">
+                            <h2 style="margin: 0;">Krajská soutěž I. - východ <span
+                                    style="font-size: 0.6em; color: var(--text-muted); font-weight: 400;">Sezóna
+                                    2025/2026</span></h2>
+                            <a href="calendar.html" class="read-more"
+                                style="display: inline-flex; align-items: center; gap: 0.5rem; font-size: 0.85rem;">
+                                <i class="fa-regular fa-calendar-days"></i> Kalendář
+                            </a>
+                        </div>
 
                         <div
                             style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem;">
                             <!-- C Team -->
                             <div id="team-ks-C">
                                 <h3 style="color: var(--primary-color);">C Tým</h3>
-                                <p style="margin-bottom: 0.5rem; color: var(--text-muted);">Sezóna 2025/2026</p>
                                 <div id="lastMatch-ks-C" class="last-match-badge"
                                     style="margin-bottom: 0.75rem; font-size: 0.9rem;"></div>
 
@@ -204,7 +207,6 @@
                             <!-- D Team -->
                             <div id="team-ks-D">
                                 <h3 style="color: var(--primary-color);">D Tým</h3>
-                                <p style="margin-bottom: 0.5rem; color: var(--text-muted);">Sezóna 2025/2026</p>
                                 <div id="lastMatch-ks-D" class="last-match-badge"
                                     style="margin-bottom: 0.75rem; font-size: 0.9rem;"></div>
 
@@ -343,23 +345,27 @@
 
                     container.innerHTML = `
                         <div onclick="toggleMatchBadgeDetails('${detailsId}', '${encodeURIComponent(matchUrl)}', '${lastMatch.round}', '${encodeURIComponent(teamName)}', '${encodeURIComponent(lastMatch.opponent)}')" 
-                             style="padding: 0.5rem 0.75rem; background: rgba(255,255,255,0.05); border-radius: 6px; border-left: 3px solid ${statusColor}; cursor: pointer; transition: background 0.2s;"
-                             onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='rgba(255,255,255,0.05)'">
-                            <div style="display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; flex-wrap: wrap;">
-                                <div>
-                                    <span style="color: var(--text-muted); font-size: 0.8em;">${lastMatch.round}. kolo</span>
-                                    <span style="color: var(--text-muted);">•</span>
-                                    <span style="color: var(--text-muted); font-size: 0.85em;">${lastMatch.date}</span>
+                             style="padding: 0.6rem 0.75rem; background: linear-gradient(135deg, rgba(${statusColor === '#4ade80' ? '74,222,128' : statusColor === '#f87171' ? '248,113,113' : '251,191,36'},0.15) 0%, rgba(0,0,0,0.3) 100%); border-radius: 8px; border-left: 4px solid ${statusColor}; cursor: pointer; transition: all 0.2s; box-shadow: 0 2px 8px rgba(0,0,0,0.2);"
+                             onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 4px 12px rgba(0,0,0,0.3)'" 
+                             onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='0 2px 8px rgba(0,0,0,0.2)'">
+                            <div style="display: flex; align-items: center; justify-content: space-between; gap: 0.5rem;">
+                                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                    <span style="font-size: 1.2em;">${statusIcon}</span>
+                                    <div>
+                                        <div style="font-weight: 600; color: ${statusColor}; font-size: 1.1em;">${lastMatch.result}</div>
+                                        <div style="color: var(--text-muted); font-size: 0.75em;">${lastMatch.round}. kolo • ${lastMatch.date}</div>
+                                    </div>
                                 </div>
-                                <i class="fa-solid fa-chevron-down" id="icon-${detailsId}" style="color: var(--text-muted); font-size: 0.7em; transition: transform 0.2s;"></i>
+                                <div style="display: flex; align-items: center; gap: 0.5rem; background: rgba(255,255,255,0.1); padding: 0.3rem 0.6rem; border-radius: 4px;">
+                                    <span style="font-size: 0.75em; color: var(--text-muted);">Detail</span>
+                                    <i class="fa-solid fa-chevron-down" id="icon-${detailsId}" style="color: var(--primary-color); font-size: 0.7em; transition: transform 0.2s;"></i>
+                                </div>
                             </div>
-                            <div style="margin-top: 0.25rem;">
-                                <span>${statusIcon}</span>
-                                <span style="color: ${statusColor}; font-weight: 600;">${lastMatch.result}</span>
-                                <span style="color: var(--text-light); margin-left: 0.25rem;">vs ${lastMatch.opponent}</span>
+                            <div style="margin-top: 0.4rem; color: var(--text-light); font-size: 0.85em;">
+                                vs <strong>${lastMatch.opponent}</strong>
                             </div>
                         </div>
-                        <div id="${detailsId}" style="display: none; margin-top: 0.5rem; padding: 0.5rem; background: rgba(0,0,0,0.2); border-radius: 6px; font-size: 0.85rem;"></div>
+                        <div id="${detailsId}" style="display: none; margin-top: 0.5rem; padding: 0.6rem; background: rgba(0,0,0,0.3); border-radius: 8px; font-size: 0.85rem; border: 1px solid rgba(255,255,255,0.1);"></div>
                     `;
                 }
             } catch (e) {
