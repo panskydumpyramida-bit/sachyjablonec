@@ -1339,6 +1339,12 @@ app.listen(PORT, async () => {
             try {
                 // We iterate over the results we just scraped
                 for (const competitionResult of results) {
+                    // Prevent deleting data if scraping failed
+                    if (competitionResult.error || !competitionResult.standings || competitionResult.standings.length === 0) {
+                        console.warn(`⚠️ Skipping DB update for ${competitionResult.name} - scraping failed or empty.`);
+                        continue;
+                    }
+
                     await prisma.$transaction(async (tx) => {
                         // Delete old standings for this competition
                         await tx.standing.deleteMany({
