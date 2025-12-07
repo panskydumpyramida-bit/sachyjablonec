@@ -83,32 +83,36 @@ async function loadNews(options = {}) {
                 </article>
             `).join('');
         } else if (displayMode === 'full' || displayMode === 'full-short') {
-            // Full content display mode - shows entire article content or excerpt with thumbnail
+            // Full content display mode - side-by-side layout
             container.innerHTML = news.map(item => `
                 <article class="card">
                     <div class="card-content">
-                        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
-                            <div style="flex: 1; min-width: 250px;">
-                                <h2 style="font-family: 'Playfair Display', serif; margin: 0 0 0.5rem 0;">${escapeHtml(item.title)}</h2>
-                                <span style="color: var(--text-muted); font-size: 0.9rem;">${formatDate(item.publishedDate)}</span>
-                            </div>
-                            ${item.thumbnailUrl ? `
-                                <img src="${item.thumbnailUrl}" 
-                                     alt="${escapeHtml(item.title)}"
-                                     style="max-width: 200px; max-height: 150px; border-radius: 8px; object-fit: cover;"
-                                     onerror="this.style.display='none'">
-                            ` : ''}
-                        </div>
-                        <div style="line-height: 1.8; color: var(--text-light);">
-                            ${displayMode === 'full'
+                        <div class="news-cols-layout">
+                            <div class="news-cols-content">
+                                <h2 style="font-family: 'Playfair Display', serif; margin: 0 0 0.5rem 0; color: var(--primary-color);">${escapeHtml(item.title)}</h2>
+                                <div style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1rem;">${formatDate(item.publishedDate)}</div>
+                                
+                                <div style="line-height: 1.6; color: var(--text-light); margin-bottom: 1.5rem;">
+                                    ${displayMode === 'full'
                     ? (item.content || `<p>${escapeHtml(item.excerpt || '')}</p>`)
                     : `<p>${escapeHtml(item.excerpt || '')}</p>`
                 }
-                        </div>
-                        <div style="margin-top: 1.5rem;">
-                            <a href="${getArticleUrl(item)}" class="read-more">
-                                Zobrazit detail <i class="fa-solid fa-arrow-right"></i>
-                            </a>
+                                </div>
+                                
+                                <div>
+                                    <a href="${getArticleUrl(item)}" class="read-more">
+                                        Zobrazit detail <i class="fa-solid fa-arrow-right"></i>
+                                    </a>
+                                </div>
+                            </div>
+                            
+                            ${item.thumbnailUrl ? `
+                                <div class="news-cols-image">
+                                    <img src="${item.thumbnailUrl}" 
+                                         alt="${escapeHtml(item.title)}"
+                                         onerror="this.style.display='none'">
+                                </div>
+                            ` : ''}
                         </div>
                     </div>
                 </article>
@@ -194,11 +198,49 @@ if (document.readyState === 'loading') {
     initNewsLoader();
 }
 
-// Add spinner animation
+// Add styles
 const style = document.createElement('style');
 style.textContent = `
     @keyframes spin {
         to { transform: rotate(360deg); }
     }
+    
+    .news-cols-layout {
+        display: flex;
+        gap: 2rem;
+        align-items: flex-start;
+    }
+    
+    .news-cols-content {
+        flex: 1;
+        min-width: 0; /* Prevents flex overflow */
+    }
+    
+    .news-cols-image {
+        flex-shrink: 0;
+        width: 280px;
+    }
+    
+    .news-cols-image img {
+        width: 100%;
+        border-radius: 8px;
+        object-fit: cover;
+        aspect-ratio: 4/3;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    }
+    
+    @media (max-width: 768px) {
+        .news-cols-layout {
+            flex-direction: column-reverse;
+        }
+        .news-cols-image {
+            width: 100%;
+            margin-bottom: 1rem;
+        }
+        .news-cols-image img {
+            max-height: 250px;
+        }
+    }
 `;
 document.head.appendChild(style);
+```
