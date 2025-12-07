@@ -547,8 +547,10 @@ const prisma = new PrismaClient();
 // Standings scraper - fetches latest standings from chess.cz and saves to file
 app.post('/api/standings/update', async (req, res) => {
     try {
-        // Load competitions from DB
-        const competitions = await prisma.competition.findMany();
+        // Load competitions from DB (only active)
+        const competitions = await prisma.competition.findMany({
+            where: { active: true }
+        });
 
         const results = [];
 
@@ -772,22 +774,25 @@ app.get('/api/competitions', async (req, res) => {
 });
 
 // Update competition URL
+// Update competition URL or Status
 app.put('/api/competitions/:id/url', async (req, res) => {
     try {
         const { id } = req.params;
-        const { url } = req.body;
+        const { url, active } = req.body;
 
-        if (!url) return res.status(400).json({ error: 'URL is required' });
+        const data = {};
+        if (url !== undefined) data.url = url;
+        if (active !== undefined) data.active = active;
 
         const updated = await prisma.competition.update({
             where: { id },
-            data: { url }
+            data
         });
 
         res.json({ success: true, competition: updated });
     } catch (err) {
-        console.error('Error updating competition URL:', err);
-        res.status(500).json({ error: 'Failed to update URL' });
+        console.error('Error updating competition:', err);
+        res.status(500).json({ error: 'Failed to update competition' });
     }
 });
 
@@ -1182,32 +1187,35 @@ const seedCompetitions = async () => {
             {
                 id: "3363",
                 name: "Krajský přebor mládeže",
-                type: "chess-cz", // No chess-results yet, only chess.cz
+                type: "chess-cz",
                 chessczUrl: "https://www.chess.cz/soutez/3363/",
-                url: "", // Will be updated when chess-results becomes available
-                category: "youth"
+                url: "",
+                category: "youth",
+                active: false // Inactive by default until URL provided
             },
             {
                 id: "ks-st-zaku",
-                name: "Krajská soutěž st. žáků",
+                name: "Krajská soutěž st. žáků", // Renamed
                 type: "chess-results",
-                // This competition doesn't have art=46, only art=0 (round standings)
                 url: "https://s1.chess-results.com/tnr1310849.aspx?lan=5&art=0&SNode=S0",
-                category: "youth"
+                category: "youth",
+                active: true
             },
             {
                 id: "ks-vychod",
                 name: "Krajská soutěž východ",
                 type: "chess-results",
                 url: "https://s2.chess-results.com/tnr1278502.aspx?lan=5&art=46&SNode=S0",
-                category: "teams"
+                category: "teams",
+                active: true
             },
             {
                 id: "kp-liberec",
                 name: "Krajský přebor",
                 type: "chess-results",
                 url: "https://chess-results.com/tnr1276470.aspx?lan=5&art=46",
-                category: "teams"
+                category: "teams",
+                active: true
             }
         ];
 
@@ -1219,9 +1227,16 @@ const seedCompetitions = async () => {
                     url: comp.url,
                     chessczUrl: comp.chessczUrl || null,
                     type: comp.type,
-                    category: comp.category
+                    category: comp.category,
+                    // Only update active if specific logic requires, or just keep DB state.
+                    // But for renaming/seeding new defaults, we might want to ensure default state.
+                    // However, we shouldn't overwrite user's manual "active" toggle on restart unless it's a structural change.
+                    // Let's only set 'active' on create, or if we want to enforce it for the new comp.
                 },
-                create: comp
+                create: {
+                    ...comp,
+                    active: comp.active !== undefined ? comp.active : true
+                }
             });
         }
         console.log('Competitions seeded/verified.');
@@ -1241,7 +1256,9 @@ app.listen(PORT, async () => {
     // Auto-refresh standings data on each deploy/restart
     console.log('🔄 Auto-refreshing standings data...');
     try {
-        const competitions = await prisma.competition.findMany();
+        const competitions = await prisma.competition.findMany({
+            where: { active: true }
+        });
         if (competitions.length > 0) {
             // Trigger the standings update logic
             const results = [];

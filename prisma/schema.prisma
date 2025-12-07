@@ -114,6 +114,8 @@ model Competition {
   type      String   @default("chess-results")
   url       String
   category  String
+  chessczUrl String?  @map("chesscz_url")
+  active    Boolean  @default(true)
   createdAt DateTime @default(now()) @map("created_at")
   
   standings Standing[]
