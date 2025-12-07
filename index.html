@@ -26,55 +26,58 @@
                 <h1>Šachový oddíl TJ Bižuterie Jablonec</h1>
                 <p>Tradice, vášeň, strategie. Vítejte na našem novém webu.</p>
 
-                <!-- Navigation Hub - Signpost Style -->
-                <div
-                    style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 1rem; margin-top: 2rem; max-width: 700px;">
+                <!-- Navigation Signpost - Stacked Arrows -->
+                <div style="display: flex; flex-direction: column; align-items: center; gap: 0.5rem; margin-top: 2rem;">
 
-                    <!-- Aktuality -->
-                    <a href="#news" style="text-decoration: none;">
-                        <div style="background: linear-gradient(135deg, rgba(212,175,55,0.2) 0%, rgba(212,175,55,0.05) 100%); border: 2px solid rgba(212,175,55,0.4); border-radius: 12px; padding: 1.25rem 1rem; text-align: center; transition: all 0.3s; cursor: pointer;"
-                            onmouseover="this.style.transform='translateY(-5px)';this.style.boxShadow='0 10px 30px rgba(212,175,55,0.3)';this.style.borderColor='rgba(212,175,55,0.8)'"
-                            onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='none';this.style.borderColor='rgba(212,175,55,0.4)'">
-                            <i class="fa-solid fa-newspaper"
-                                style="font-size: 2rem; color: var(--primary-color); margin-bottom: 0.5rem; display: block;"></i>
-                            <span
-                                style="color: white; font-weight: 600; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.5px;">Aktuality</span>
+                    <!-- Aktuality - Gold arrow pointing right -->
+                    <a href="#news" style="text-decoration: none; width: 100%; max-width: 280px;">
+                        <div style="background: linear-gradient(135deg, #d4af37 0%, #b8960c 100%); padding: 0.75rem 1.5rem; padding-right: 2rem; position: relative; clip-path: polygon(0 0, calc(100% - 20px) 0, 100% 50%, calc(100% - 20px) 100%, 0 100%); transition: all 0.3s; box-shadow: 0 3px 10px rgba(0,0,0,0.3);"
+                            onmouseover="this.style.transform='translateX(8px) scale(1.02)'"
+                            onmouseout="this.style.transform='translateX(0) scale(1)'">
+                            <div style="display: flex; align-items: center; gap: 0.75rem;">
+                                <i class="fa-solid fa-newspaper" style="font-size: 1.3rem; color: #1a1a1a;"></i>
+                                <span
+                                    style="color: #1a1a1a; font-weight: 700; font-size: 1rem; text-transform: uppercase; letter-spacing: 1px;">Aktuality</span>
+                            </div>
                         </div>
                     </a>
 
-                    <!-- Soutěže dospělých -->
-                    <a href="teams.html" style="text-decoration: none;">
-                        <div style="background: linear-gradient(135deg, rgba(74,222,128,0.15) 0%, rgba(74,222,128,0.03) 100%); border: 2px solid rgba(74,222,128,0.3); border-radius: 12px; padding: 1.25rem 1rem; text-align: center; transition: all 0.3s; cursor: pointer;"
-                            onmouseover="this.style.transform='translateY(-5px)';this.style.boxShadow='0 10px 30px rgba(74,222,128,0.3)';this.style.borderColor='rgba(74,222,128,0.8)'"
-                            onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='none';this.style.borderColor='rgba(74,222,128,0.3)'">
-                            <i class="fa-solid fa-chess-king"
-                                style="font-size: 2rem; color: #4ade80; margin-bottom: 0.5rem; display: block;"></i>
-                            <span
-                                style="color: white; font-weight: 600; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.5px;">Dospělí</span>
+                    <!-- Dospělí - Green arrow pointing left -->
+                    <a href="teams.html" style="text-decoration: none; width: 100%; max-width: 280px;">
+                        <div style="background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%); padding: 0.75rem 1.5rem; padding-left: 2rem; position: relative; clip-path: polygon(20px 0, 100% 0, 100% 100%, 20px 100%, 0 50%); transition: all 0.3s; box-shadow: 0 3px 10px rgba(0,0,0,0.3);"
+                            onmouseover="this.style.transform='translateX(-8px) scale(1.02)'"
+                            onmouseout="this.style.transform='translateX(0) scale(1)'">
+                            <div style="display: flex; align-items: center; justify-content: flex-end; gap: 0.75rem;">
+                                <span
+                                    style="color: #fff; font-weight: 700; font-size: 1rem; text-transform: uppercase; letter-spacing: 1px;">Dospělí</span>
+                                <i class="fa-solid fa-chess-king" style="font-size: 1.3rem; color: #fff;"></i>
+                            </div>
                         </div>
                     </a>
 
-                    <!-- Soutěže dětí -->
-                    <a href="youth.html" style="text-decoration: none;">
-                        <div style="background: linear-gradient(135deg, rgba(96,165,250,0.15) 0%, rgba(96,165,250,0.03) 100%); border: 2px solid rgba(96,165,250,0.3); border-radius: 12px; padding: 1.25rem 1rem; text-align: center; transition: all 0.3s; cursor: pointer;"
-                            onmouseover="this.style.transform='translateY(-5px)';this.style.boxShadow='0 10px 30px rgba(96,165,250,0.3)';this.style.borderColor='rgba(96,165,250,0.8)'"
-                            onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='none';this.style.borderColor='rgba(96,165,250,0.3)'">
-                            <i class="fa-solid fa-child"
-                                style="font-size: 2rem; color: #60a5fa; margin-bottom: 0.5rem; display: block;"></i>
-                            <span
-                                style="color: white; font-weight: 600; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.5px;">Mládež</span>
+                    <!-- Mládež - Blue arrow pointing right -->
+                    <a href="youth.html" style="text-decoration: none; width: 100%; max-width: 280px;">
+                        <div style="background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); padding: 0.75rem 1.5rem; padding-right: 2rem; position: relative; clip-path: polygon(0 0, calc(100% - 20px) 0, 100% 50%, calc(100% - 20px) 100%, 0 100%); transition: all 0.3s; box-shadow: 0 3px 10px rgba(0,0,0,0.3);"
+                            onmouseover="this.style.transform='translateX(8px) scale(1.02)'"
+                            onmouseout="this.style.transform='translateX(0) scale(1)'">
+                            <div style="display: flex; align-items: center; gap: 0.75rem;">
+                                <i class="fa-solid fa-child" style="font-size: 1.3rem; color: #fff;"></i>
+                                <span
+                                    style="color: #fff; font-weight: 700; font-size: 1rem; text-transform: uppercase; letter-spacing: 1px;">Mládež</span>
+                            </div>
                         </div>
                     </a>
 
-                    <!-- Blicák -->
-                    <a href="blicak.html" style="text-decoration: none;">
-                        <div style="background: linear-gradient(135deg, rgba(251,146,60,0.15) 0%, rgba(251,146,60,0.03) 100%); border: 2px solid rgba(251,146,60,0.3); border-radius: 12px; padding: 1.25rem 1rem; text-align: center; transition: all 0.3s; cursor: pointer;"
-                            onmouseover="this.style.transform='translateY(-5px)';this.style.boxShadow='0 10px 30px rgba(251,146,60,0.3)';this.style.borderColor='rgba(251,146,60,0.8)'"
-                            onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='none';this.style.borderColor='rgba(251,146,60,0.3)'">
-                            <i class="fa-solid fa-bolt"
-                                style="font-size: 2rem; color: #fb923c; margin-bottom: 0.5rem; display: block;"></i>
-                            <span
-                                style="color: white; font-weight: 600; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.5px;">Blicák</span>
+                    <!-- Blicák - Orange arrow pointing left -->
+                    <a href="blicak.html" style="text-decoration: none; width: 100%; max-width: 280px;">
+                        <div style="background: linear-gradient(135deg, #f97316 0%, #ea580c 100%); padding: 0.75rem 1.5rem; padding-left: 2rem; position: relative; clip-path: polygon(20px 0, 100% 0, 100% 100%, 20px 100%, 0 50%); transition: all 0.3s; box-shadow: 0 3px 10px rgba(0,0,0,0.3);"
+                            onmouseover="this.style.transform='translateX(-8px) scale(1.02)'"
+                            onmouseout="this.style.transform='translateX(0) scale(1)'">
+                            <div style="display: flex; align-items: center; justify-content: flex-end; gap: 0.75rem;">
+                                <span
+                                    style="color: #fff; font-weight: 700; font-size: 1rem; text-transform: uppercase; letter-spacing: 1px;">Blicák</span>
+                                <i class="fa-solid fa-bolt" style="font-size: 1.3rem; color: #fff;"></i>
+                            </div>
                         </div>
                     </a>
 
