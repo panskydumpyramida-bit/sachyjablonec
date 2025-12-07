@@ -739,6 +739,41 @@
                 display: none !important;
             }
         }
+
+        /* Toast Notifications */
+        #alertContainer {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+            width: auto;
+            max-width: 400px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            pointer-events: none;
+        }
+
+        #alertContainer .alert {
+            pointer-events: auto;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+            animation: slideIn 0.3s ease-out;
+            margin: 0;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
     </style>
 </head>
 
@@ -2659,7 +2694,34 @@
         });
 
         function logout() { localStorage.removeItem('authToken'); location.reload(); }
-        function showAlert(msg, type) { const div = document.createElement('div'); div.className = `alert alert-${type}`; div.textContent = msg; document.getElementById('alertContainer').appendChild(div); setTimeout(() => div.remove(), 3000); }
+        function showAlert(msg, type) {
+            const div = document.createElement('div');
+            div.className = `alert alert-${type}`;
+
+            // Add icon based on type
+            const icon = type === 'success' ? '<i class="fa-solid fa-check-circle"></i>' : '<i class="fa-solid fa-exclamation-circle"></i>';
+            div.innerHTML = `<div style="display:flex;align-items:center;gap:10px;">${icon} <span>${msg}</span></div>`;
+
+            // Add close button
+            const close = document.createElement('i');
+            close.className = 'fa-solid fa-times';
+            close.style.cssText = 'cursor:pointer; margin-left:10px; opacity:0.7;';
+            close.onclick = () => div.remove();
+            div.firstChild.appendChild(close);
+
+            document.getElementById('alertContainer').appendChild(div);
+
+            // Longer timeout for errors
+            const timeout = type === 'error' ? 6000 : 3000;
+            setTimeout(() => {
+                if (div.parentNode) {
+                    div.style.opacity = '0';
+                    div.style.transform = 'translateX(100%)';
+                    div.style.transition = 'all 0.3s';
+                    setTimeout(() => div.remove(), 300);
+                }
+            }, timeout);
+        }
 
         // Update standings from chess.cz
         async function updateStandings() {
