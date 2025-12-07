@@ -678,9 +678,18 @@ app.post('/api/standings/update', async (req, res) => {
                                 }
 
                                 teamStr = clean(teamStr);
+                                // Extract all stats from cells:
+                                // Cell 3: games, Cell 4: wins (+), Cell 5: draws (=), Cell 6: losses (-)
+                                // Cell 7: match points (PH1), Cell 8: board points/score (PH2)
+                                const games = parseInt(clean(cells[3])) || 0;
+                                const wins = parseInt(clean(cells[4])) || 0;
+                                const draws = parseInt(clean(cells[5])) || 0;
+                                const losses = parseInt(clean(cells[6])) || 0;
                                 let pointsStr = clean(cells[7]).replace(',', '.');
+                                let scoreStr = clean(cells[8]).replace(',', '.');
                                 const rank = parseInt(rankStr);
                                 const points = parseFloat(pointsStr);
+                                const score = parseFloat(scoreStr);
 
                                 if (!isNaN(rank) && teamStr) {
                                     // Enhanced check for Bižuterie teams (handles various name formats)
@@ -696,7 +705,12 @@ app.post('/api/standings/update', async (req, res) => {
                                     standings.push({
                                         rank,
                                         team: teamStr,
+                                        games,
+                                        wins,
+                                        draws,
+                                        losses,
                                         points: isNaN(points) ? 0 : points,
+                                        score: isNaN(score) ? 0 : score,
                                         isBizuterie: isBizuterie,
                                         url: teamDetailsUrl
                                     });
@@ -1194,4 +1208,97 @@ app.listen(PORT, async () => {
 
     // Attempt to seed competitions on startup
     await seedCompetitions();
+
+    // Auto-refresh standings data on each deploy/restart
+    console.log('🔄 Auto-refreshing standings data...');
+    try {
+        const competitions = await prisma.competition.findMany();
+        if (competitions.length > 0) {
+            // Trigger the standings update logic
+            const results = [];
+            for (const comp of competitions) {
+                try {
+                    let standings = [];
+                    let competitionMatches = [];
+
+                    if (comp.type === 'chess-results') {
+                        competitionMatches = await scrapeCompetitionMatches(comp.url);
+                        const response = await fetch(comp.url);
+                        const html = await response.text();
+                        const rows = html.split('</tr>');
+
+                        for (const row of rows) {
+                            if (row.includes('class="CRg1"') || row.includes('class="CRg2"')) {
+                                const cells = row.split('</td>');
+                                if (cells.length > 7) {
+                                    const cleanCell = (str) => {
+                                        let txt = str.replace(/<[^>]*>/g, '').trim();
+                                        txt = txt.replace(/&nbsp;/g, ' ')
+                                            .replace(/&amp;/g, '&')
+                                            .replace(/&#(\d+);/g, (m, d) => String.fromCharCode(d));
+                                        return txt;
+                                    };
+                                    const rank = parseInt(cleanCell(cells[0]));
+                                    const team = cleanCell(cells[2]);
+                                    const games = parseInt(cleanCell(cells[3])) || 0;
+                                    const wins = parseInt(cleanCell(cells[4])) || 0;
+                                    const draws = parseInt(cleanCell(cells[5])) || 0;
+                                    const losses = parseInt(cleanCell(cells[6])) || 0;
+                                    const points = parseFloat(cleanCell(cells[7]).replace(',', '.')) || 0;
+                                    const score = parseFloat(cleanCell(cells[8]).replace(',', '.')) || 0;
+
+                                    if (!isNaN(rank) && team) {
+                                        const lowerName = team.toLowerCase();
+                                        const isBizuterie = lowerName.includes('bižuterie') || lowerName.includes('bizuterie') ||
+                                            (lowerName.includes('jablonec') && (lowerName.includes('tj') || lowerName.includes('šk')));
+
+                                        standings.push({ rank, team, games, wins, draws, losses, points, score, isBizuterie, url: null });
+                                    }
+                                }
+                            }
+                        }
+
+                        // Assign schedules
+                        for (const t of standings) {
+                            if (t.isBizuterie) {
+                                t.schedule = competitionMatches.filter(m =>
+                                    m.home === t.team || m.away === t.team ||
+                                    m.home.includes(t.team) || m.away.includes(t.team)
+                                ).map(m => ({
+                                    round: m.round,
+                                    date: m.date || 'TBD',
+                                    opponent: m.home === t.team || m.home.includes(t.team) ? m.away : m.home,
+                                    result: m.result,
+                                    isHome: m.home === t.team || m.home.includes(t.team)
+                                }));
+                            }
+                        }
+                    }
+
+                    standings.sort((a, b) => a.rank - b.rank);
+                    results.push({
+                        competitionId: comp.id,
+                        name: comp.name,
+                        url: comp.url,
+                        category: comp.category,
+                        standings,
+                        updatedAt: new Date().toISOString()
+                    });
+                } catch (err) {
+                    console.error(`Error refreshing ${comp.name}:`, err.message);
+                }
+            }
+
+            // Save to file
+            const dataPath = path.join(__dirname, '../data');
+            await fs.mkdir(dataPath, { recursive: true }).catch(() => { });
+            await fs.writeFile(
+                path.join(dataPath, 'standings.json'),
+                JSON.stringify({ standings: results, lastUpdated: new Date().toISOString() }, null, 2)
+            );
+            console.log('✅ Standings data refreshed successfully');
+        }
+    } catch (e) {
+        console.error('⚠️ Auto-refresh failed:', e.message);
+    }
 });
