@@ -366,9 +366,9 @@
                     if (data.boards && data.boards.length > 0) {
                         let html = '<table style="width: 100%; border-collapse: collapse; font-size: 0.85rem;">';
                         html += '<thead><tr style="border-bottom: 1px solid rgba(255,255,255,0.1);"><th style="padding: 0.3rem; text-align: left; width: 1.5rem;">Š</th><th style="padding: 0.3rem; text-align: left;">Domácí</th><th style="padding: 0.3rem; text-align: center; white-space: nowrap;">Výs.</th><th style="padding: 0.3rem; text-align: right;">Hosté</th></tr></thead><tbody>';
-                        data.boards.forEach(b => {
-                            // Extract just the board number (e.g. "1" from "1.1" or "1")
-                            const boardNum = String(b.board).split('.')[0];
+                        data.boards.forEach((b, idx) => {
+                            // Use index as board number (1-based)
+                            const boardNum = idx + 1;
                             html += `<tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
                                 <td style="padding: 0.3rem; color: var(--text-muted);">${boardNum}</td>
                                 <td style="padding: 0.3rem;">${b.white || b.homePlayer || '-'}</td>
