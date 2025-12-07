@@ -2673,60 +2673,33 @@
 
                 if (res.ok) {
                     const data = await res.json();
-
-                    const youthComps = data.standings.filter(c => c.category === 'youth');
-                    const teamComps = data.standings.filter(c => c.category === 'teams');
-
-                    const renderGroup = (title, comps, color) => {
-                        if (comps.length === 0) return '';
-                        let html = `<h3 style="grid-column: 1/-1; color: ${color}; margin-top: 1rem; border-bottom: 2px solid ${color}; padding-bottom: 0.5rem;">${title}</h3>`;
-
-                        for (const comp of comps) {
-                            html += `
-                                <div style="background: var(--card-bg); padding: 1rem; border-radius: 8px;">
-                                    <h4 style="margin: 0 0 0.5rem 0; color: var(--primary-color);">${comp.name}</h4>
-                                    ${comp.error ? `<p style="color: #fca5a5;">Chyba: ${comp.error}</p>` :
-                                    comp.standings.length > 0 ? `
-                                            <table style="width: 100%; font-size: 0.85rem;">
-                                                <tr style="color: var(--text-muted);">
-                                                    <th style="text-align: left; padding: 0.25rem;">#</th>
-                                                    <th style="text-align: left; padding: 0.25rem;">Družstvo</th>
-                                                </tr>
-                                                ${comp.standings.map(s => `
-                                                    <tr style="${s.isBizuterie ? 'background: rgba(212, 175, 55, 0.2);' : ''}">
-                                                        <td style="padding: 0.25rem;">${s.rank}</td>
-                                                        <td style="padding: 0.25rem;">${s.isBizuterie ? '<strong>' + s.team + '</strong>' : s.team}</td>
-                                                    </tr>
-                                                `).join('')}
-                                            </table>
-                                        ` : '<p style="color: var(--text-muted);">Žádná data</p>'
-                                }
-                                </div>`;
-                        }
-                        return html;
-                    };
-
-                    let html = '<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1rem;">';
-
-                    html += renderGroup('Mládež', youthComps, '#4ade80'); // Green
-                    html += renderGroup('Soutěže družstev', teamComps, '#60a5fa'); // Blue
-
-                    if (youthComps.length === 0 && teamComps.length === 0 && data.standings.length > 0) {
-                        // Fallback if no categories matched (legacy)
-                        html += renderGroup('Ostatní', data.standings, '#9ca3af');
+                    
+                    let html = '<div style="background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.2); padding: 1rem; border-radius: 6px; margin-bottom: 1rem;">';
+                    html += '<h4 style="color: #10b981; margin: 0 0 0.5rem 0;"><i class="fa-solid fa-check-circle"></i> Aktualizace úspěšná</h4>';
+                    html += '<ul style="margin: 0; padding-left: 1.5rem; color: var(--text-color);">';
+                    
+                    if (data.standings && Array.isArray(data.standings)) {
+                        data.standings.forEach(comp => {
+                            const count = comp.standings ? comp.standings.length : 0;
+                            if (comp.error) {
+                                html += `<li style="color: #fca5a5;">${escapeHtml(comp.name)}: Chyba - ${escapeHtml(comp.error)}</li>`;
+                            } else {
+                                html += `<li>${escapeHtml(comp.name)}: načteno ${count} týmů</li>`;
+                            }
+                        });
                     }
-
-                    html += '</div>';
-                    html += '<p style="margin-top: 1rem; color: var(--text-muted); font-size: 0.85rem;"><i class="fa-solid fa-check" style="color: #86efac;"></i> Aktualizováno. Zkopírujte výsledky do youth.html ručně.</p>';
-
+                    html += '</ul></div>';
+                    
                     resultDiv.innerHTML = html;
-                    showAlert('Aktualizováno', 'success');
+                    showAlert('Tabulky aktualizovány', 'success');
                 } else {
-                    throw new Error('Server error');
+                    const errorData = await res.json().catch(() => ({}));
+                    throw new Error(errorData.error || 'Server error ' + res.status);
                 }
             } catch (e) {
-                resultDiv.innerHTML = '<p style="color: #fca5a5;"><i class="fa-solid fa-exclamation-triangle"></i> Nepodařilo se načíst tabulky</p>';
-                showAlert('Chyba při načítání tabulek', 'error');
+                console.error(e);
+                resultDiv.innerHTML = `<p style="color: #fca5a5;"><i class="fa-solid fa-exclamation-triangle"></i> Nepodařilo se načíst tabulky: ${e.message}</p>`;
+                showAlert('Chyba: ' + e.message, 'error');
             }
 
             btn.disabled = false;
