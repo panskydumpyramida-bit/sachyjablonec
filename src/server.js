@@ -712,37 +712,39 @@ app.post('/api/standings/update', async (req, res) => {
 
         // Save to Database (Prisma)
         try {
-            await prisma.$transaction(async (tx) => {
-                // We don't delete strictly, but update. Or for simplicity, we could delete old standings for this comp?
-                // Upserting is safer to keep history if we wanted, but here we just want "current standings".
-                // Actually, the `standings` array has the full current state.
-
-                // Optimized: Delete all standings for this competition and re-create.
-                // This ensures if a team disappears (rare), it's gone.
-                // And simple to implement.
-                for (const s of results) {
-                    await tx.standing.deleteMany({
-                        where: { competitionId: s.competitionId }
-                    });
-
-                    for (const teamStanding of s.standings) {
-                        await tx.standing.create({
-                            data: {
-                                competitionId: s.competitionId,
-                                team: teamStanding.team,
-                                rank: parseInt(teamStanding.rank) || 0,
-                                games: teamStanding.games,
-                                wins: teamStanding.wins,
-                                draws: teamStanding.draws,
-                                losses: teamStanding.losses,
-                                points: teamStanding.points,
-                                score: teamStanding.score,
-                                scheduleJson: JSON.stringify(teamStanding.schedule || [])
-                            }
+            // Save to Database (Prisma) - One transaction per competition to avoid timeouts
+            for (const s of results) {
+                try {
+                    await prisma.$transaction(async (tx) => {
+                        await tx.standing.deleteMany({
+                            where: { competitionId: s.competitionId }
                         });
-                    }
+
+                        for (const teamStanding of s.standings) {
+                            await tx.standing.create({
+                                data: {
+                                    competitionId: s.competitionId,
+                                    team: teamStanding.team,
+                                    rank: parseInt(teamStanding.rank) || 0,
+                                    games: teamStanding.games,
+                                    wins: teamStanding.wins,
+                                    draws: teamStanding.draws,
+                                    losses: teamStanding.losses,
+                                    points: teamStanding.points, // Now storing matches points (PH 1)
+                                    score: teamStanding.score,   // Now storing board points (PH 2)
+                                    scheduleJson: JSON.stringify(teamStanding.schedule || [])
+                                }
+                            });
+                        }
+                    }, {
+                        timeout: 20000 // 20s timeout per competition
+                    });
+                } catch (dbErr) {
+                    console.error(`Error saving standings for ${s.name}:`, dbErr);
+                    // Add error to result object so frontend knows
+                    s.error = `DB Save Error: ${dbErr.message}`;
                 }
-            });
+            }
         } catch (dbErr) {
             console.error('Error saving standings to DB:', dbErr);
             // Don't fail the request if DB save fails but scraping worked? 
