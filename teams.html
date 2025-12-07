@@ -369,11 +369,20 @@
                         data.boards.forEach((b, idx) => {
                             // Use index as board number (1-based)
                             const boardNum = idx + 1;
+                            // Format player name with ELO
+                            const formatPlayer = (name, elo) => {
+                                if (!name || name === '-') return '-';
+                                const eloStr = elo && elo !== '-' ? `<span style="color: var(--text-muted); font-size: 0.8em;"> (${elo})</span>` : '';
+                                return name + eloStr;
+                            };
+                            const homeName = formatPlayer(b.white || b.homePlayer, b.whiteElo || b.homeElo);
+                            const guestName = formatPlayer(b.black || b.guestPlayer, b.blackElo || b.guestElo);
+
                             html += `<tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
                                 <td style="padding: 0.3rem; color: var(--text-muted);">${boardNum}</td>
-                                <td style="padding: 0.3rem;">${b.white || b.homePlayer || '-'}</td>
+                                <td style="padding: 0.3rem;">${homeName}</td>
                                 <td style="padding: 0.3rem; text-align: center; font-weight: 600; white-space: nowrap;">${b.result || '-'}</td>
-                                <td style="padding: 0.3rem; text-align: right;">${b.black || b.guestPlayer || '-'}</td>
+                                <td style="padding: 0.3rem; text-align: right;">${guestName}</td>
                             </tr>`;
                         });
                         html += '</tbody></table>';
