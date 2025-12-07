@@ -176,59 +176,116 @@
                 const res = await fetch(`${API_URL}/standings`);
                 const data = await res.json();
 
-                const allStandings = data.standings || data; // handle object/array
+                const allStandings = data.standings || data;
                 // Filter only Youth
                 const youthStandings = Array.isArray(allStandings) ? allStandings.filter(c => c.category === 'youth') : [];
 
                 if (youthStandings.length === 0) {
                     container.innerHTML = `
-                        <div style="grid-column: 1 / -1; text-align: center; padding: 2rem;">
-                            <i class="fa-solid fa-table" style="font-size: 2rem; color: var(--text-muted); opacity: 0.3;"></i>
-                            <p style="margin-top: 1rem; color: var(--text-muted);">Tabulky mládeže zatím nejsou k dispozici.</p>
+                        <div style="grid-column: 1 / -1; text-align: center; padding: 4rem 2rem; background: rgba(255,255,255,0.03); border-radius: 12px; border: 1px dashed rgba(255,255,255,0.1);">
+                            <div style="font-size: 4rem; color: var(--text-muted); opacity: 0.5; margin-bottom: 1rem;">
+                                <i class="fa-solid fa-ghost fa-bounce" style="--fa-animation-duration: 3s;"></i>
+                            </div>
+                            <h3 style="color: var(--text-muted); margin-bottom: 0.5rem;">Tady zatím nic není...</h3>
+                            <p style="color: var(--text-muted); font-size: 0.9rem;">Naši šotci data nenašli. Zkuste to později!</p>
                         </div>
                     `;
                     return;
                 }
 
-                container.innerHTML = youthStandings.map(comp => `
-                    <div class="card">
-                        <div class="card-content">
-                            <h3 style="color: var(--primary-color); margin-bottom: 1rem;">${comp.name}</h3>
-                            ${comp.error ? `<p style="color: var(--text-muted);">Data nejsou dostupná</p>` :
-                        comp.standings.length > 0 ? `
-                                    <table class="standings-table" style="width: 100%; border-collapse: collapse;">
-                                        <thead>
-                                            <tr style="border-bottom: 2px solid var(--primary-color);">
-                                                <th style="padding: 0.5rem; text-align: left;">#</th>
-                                                <th style="padding: 0.5rem; text-align: left;">Družstvo</th>
-                                                <th style="padding: 0.5rem; text-align: right;">Body</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody style="color: var(--text-light);">
-                                            ${comp.standings.map(s => `
-                                                <tr style="${s.isBizuterie ? 'background: rgba(212, 175, 55, 0.1);' : ''}">
-                                                    <td style="padding: 0.5rem;">${s.rank}</td>
-                                                    <td style="padding: 0.5rem;">${s.isBizuterie ? '<strong>' + s.team + '</strong>' : s.team}</td>
-                                                    <td style="padding: 0.5rem; text-align: right; font-weight: 600;">${s.points || '-'}</td>
-                                                </tr>
-                                            `).join('')}
-                                        </tbody>
-                                    </table>
-                                ` : '<p style="color: var(--text-muted);">Žádná data</p>'
+                container.innerHTML = youthStandings.map(comp => {
+                    const compName = comp.name || 'Tabulka';
+
+                    // Specific check for completely empty/failed youth competition
+                    if ((!comp.standings || comp.standings.length === 0) && comp.error) {
+                        return `
+                            <div style="background: linear-gradient(135deg, rgba(30,30,40,0.9) 0%, rgba(20,20,30,0.95) 100%); border-radius: 12px; overflow: hidden; border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 4px 20px rgba(0,0,0,0.3); grid-column: 1 / -1;">
+                                <div style="background: linear-gradient(90deg, rgba(212,175,55,0.15) 0%, rgba(212,175,55,0.05) 100%); padding: 0.75rem 1rem; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                                    <h4 style="margin: 0; color: var(--primary-color); font-size: 0.95rem; display: flex; align-items: center; gap: 0.5rem;">
+                                        <i class="fa-solid fa-trophy"></i> ${compName}
+                                    </h4>
+                                </div>
+                                <div style="text-align: center; padding: 3rem 1rem;">
+                                    <div style="font-size: 3rem; color: var(--text-muted); opacity: 0.4; margin-bottom: 1rem;">
+                                        <i class="fa-solid fa-spider"></i>
+                                    </div>
+                                    <h3 style="color: var(--text-light); font-size: 1.1rem; margin-bottom: 0.5rem;">Tady je zatím pavučina</h3>
+                                    <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1rem;">Žádná data nebyla nalezena. Tabulka ještě neexistuje nebo spí.</p>
+                                    ${data.lastUpdated ? `<div style="font-size: 0.75rem; color: var(--text-muted); border-top: 1px solid rgba(255,255,255,0.05); padding-top: 0.5rem; display: inline-block;">Poslední pokus o budíček: ${new Date(data.lastUpdated).toLocaleDateString('cs-CZ')}</div>` : ''}
+                                </div>
+                            </div>
+                        `;
                     }
-                            ${comp.url || comp.chessczUrl ? `
-                                <a href="${comp.url || comp.chessczUrl}" target="_blank" class="read-more" style="margin-top: 1rem; display: inline-block;">
-                                    Kompletní výsledky <i class="fa-solid fa-external-link-alt"></i>
+
+                    // ... (rest of rendering similar to teams.html)
+                    // Building standard table
+                    let html = `
+                        <div style="background: linear-gradient(135deg, rgba(30,30,40,0.9) 0%, rgba(20,20,30,0.95) 100%); border-radius: 12px; overflow: hidden; border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 4px 20px rgba(0,0,0,0.3);">
+                            <div style="background: linear-gradient(90deg, rgba(212,175,55,0.15) 0%, rgba(212,175,55,0.05) 100%); padding: 0.75rem 1rem; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                                <h4 style="margin: 0; color: var(--primary-color); font-size: 0.95rem; display: flex; align-items: center; gap: 0.5rem;">
+                                    <i class="fa-solid fa-trophy"></i> ${compName}
+                                </h4>
+                            </div>
+                            <div style="overflow-x: auto; -webkit-overflow-scrolling: touch;">
+                            <table style="width: 100%; border-collapse: collapse; font-size: 0.8rem;">
+                                <thead>
+                                    <tr style="background: rgba(0,0,0,0.3);">
+                                        <th style="text-align: center; padding: 0.4rem 0.25rem; color: var(--text-muted); font-weight: 600; font-size: 0.65rem; text-transform: uppercase; white-space: nowrap;">#</th>
+                                        <th style="text-align: left; padding: 0.4rem 0.25rem; color: var(--text-muted); font-weight: 600; font-size: 0.65rem; text-transform: uppercase;">Družstvo</th>
+                                        <th style="text-align: center; padding: 0.4rem 0.5rem; color: var(--text-muted); font-weight: 600; font-size: 0.65rem; text-transform: uppercase; white-space: nowrap;" title="Výhry-Remízy-Prohry">V/R/P</th>
+                                        <th style="text-align: right; padding: 0.4rem 0.5rem; color: var(--text-muted); font-weight: 600; font-size: 0.65rem; text-transform: uppercase; white-space: nowrap;" title="Zápasové body">Body</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                    `;
+
+                    if (comp.standings && comp.standings.length > 0) {
+                        comp.standings.forEach((s, idx) => {
+                            const isBizuterie = s.isBizuterie || s.team.toLowerCase().includes('bižuterie') || s.team.toLowerCase().includes('jablonec');
+                            const bgColor = idx % 2 === 0 ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.15)';
+
+                            let positionBadge = '';
+                            if (s.rank === 1) positionBadge = '<span style="display: inline-flex; align-items: center; justify-content: center; width: 1.1rem; height: 1.1rem; background: linear-gradient(135deg, #ffd700, #b8860b); border-radius: 50%; font-size: 0.55rem; font-weight: 700; color: #000;">1</span>';
+                            else if (s.rank === 2) positionBadge = '<span style="display: inline-flex; align-items: center; justify-content: center; width: 1.1rem; height: 1.1rem; background: linear-gradient(135deg, #c0c0c0, #808080); border-radius: 50%; font-size: 0.55rem; font-weight: 700; color: #000;">2</span>';
+                            else if (s.rank === 3) positionBadge = '<span style="display: inline-flex; align-items: center; justify-content: center; width: 1.1rem; height: 1.1rem; background: linear-gradient(135deg, #cd7f32, #8b4513); border-radius: 50%; font-size: 0.55rem; font-weight: 700; color: #fff;">3</span>';
+                            else positionBadge = `<span style="color: var(--text-muted); font-size: 0.7rem;">${s.rank}</span>`;
+
+                            const rowStyle = isBizuterie
+                                ? `background: linear-gradient(90deg, rgba(212,175,55,0.15) 0%, ${bgColor} 100%); border-left: 3px solid var(--primary-color);`
+                                : `background: ${bgColor};`;
+                            const teamStyle = isBizuterie ? 'font-weight: 600; color: var(--primary-color);' : '';
+                            const wdl = (s.wins !== undefined) ? `<span style="color:#4ade80">${s.wins}</span>/<span style="color:#fbbf24">${s.draws || 0}</span>/<span style="color:#f87171">${s.losses || 0}</span>` : '-';
+
+                            html += `
+                                <tr style="${rowStyle} transition: background 0.2s;" onmouseover="this.style.background='rgba(212,175,55,0.1)'" onmouseout="this.style.background='${isBizuterie ? 'linear-gradient(90deg, rgba(212,175,55,0.15) 0%, ' + bgColor + ' 100%)' : bgColor}'">
+                                    <td style="padding: 0.35rem 0.2rem; text-align: center;">${positionBadge}</td>
+                                    <td style="padding: 0.35rem 0.2rem; ${teamStyle} font-size: 0.78rem;">${s.team}</td>
+                                    <td style="padding: 0.35rem 0.5rem; text-align: center; font-family: monospace; font-size: 0.72rem; white-space: nowrap;">${wdl}</td>
+                                    <td style="padding: 0.35rem 0.5rem; text-align: right; font-weight: 700; font-family: monospace; font-size: 0.85rem;">${s.points !== null ? s.points : '-'}</td>
+                                </tr>
+                            `;
+                        });
+                    }
+
+                    const sourceName = (comp.url && comp.url.includes('chess-results')) ? 'Chess-Results.com' : 'ŠSČR';
+                    const sourceUrl = comp.url || comp.chessczUrl || '#';
+
+                    html += `
+                                </tbody>
+                            </table>
+                            </div>
+                            <div style="padding: 0.75rem 1rem; background: rgba(0,0,0,0.2); border-top: 1px solid rgba(255,255,255,0.05); display: flex; justify-content: space-between; align-items: center;">
+                                <div style="font-size: 0.7rem; color: var(--text-muted);">
+                                    ${data.lastUpdated ? `Aktualizováno: ${new Date(data.lastUpdated).toLocaleDateString('cs-CZ')}` : ''}
+                                </div>
+                                <a href="${sourceUrl}" target="_blank" style="color: var(--text-muted); text-decoration: none; font-size: 0.75rem; display: flex; align-items: center; gap: 0.3rem; transition: color 0.2s;" onmouseover="this.style.color='var(--primary-color)'" onmouseout="this.style.color='var(--text-muted)'">
+                                    <i class="fa-solid fa-external-link-alt"></i> ${sourceName}
                                 </a>
-                            ` : ''}
-                            ${data.lastUpdated ? `
-                                <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.5rem;">
-                                    Aktualizováno: ${new Date(data.lastUpdated).toLocaleDateString('cs-CZ')}
-                                </p>
-                            ` : ''}
+                            </div>
                         </div>
-                    </div>
-                `).join('');
+                    `;
+                    return html;
+                }).join('');
 
             } catch (err) {
                 console.error('Error loading standings:', err);
