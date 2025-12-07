@@ -8,6 +8,7 @@ import { existsSync, writeFileSync } from 'fs'; // Import sync methods separatel
 
 // Import routes
 import authRoutes from './routes/auth.js';
+import { authMiddleware } from './middleware/auth.js';
 import newsRoutes from './routes/news.js';
 import reportsRoutes from './routes/reports.js';
 import imagesRoutes from './routes/images.js';
@@ -1148,7 +1149,66 @@ const seedDatabase = async () => {
     }
 };
 
-// Seed endpoint - run once to populate database
+// --- Backup Endpoint ---
+app.get('/api/admin/backup', authMiddleware, async (req, res) => {
+    try {
+        console.log('Starting database backup...');
+
+        // Fetch all data from important tables
+        const [
+            users,
+            news,
+            matchReports,
+            games,
+            images,
+            members,
+            competitions,
+            standings,
+            blicakRegistrations
+        ] = await Promise.all([
+            prisma.user.findMany(),
+            prisma.news.findMany(),
+            prisma.matchReport.findMany(),
+            prisma.game.findMany(),
+            prisma.image.findMany(),
+            prisma.member.findMany(),
+            prisma.competition.findMany(),
+            prisma.standing.findMany(),
+            prisma.blicakRegistration.findMany()
+        ]);
+
+        const backupData = {
+            metadata: {
+                timestamp: new Date().toISOString(),
+                version: '1.0'
+            },
+            data: {
+                users,
+                news,
+                matchReports,
+                games,
+                images,
+                members,
+                competitions,
+                standings,
+                blicakRegistrations
+            }
+        };
+
+        const fileName = `backup_${new Date().toISOString().replace(/[:.]/g, '-')}.json`;
+
+        res.setHeader('Content-Type', 'application/json');
+        res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
+        res.json(backupData);
+
+        console.log('Backup generated successfully');
+    } catch (error) {
+        console.error('Backup failed:', error);
+        res.status(500).json({ error: 'Backup generation failed' });
+    }
+});
+
+// Seed Endpoint (Protected)un once to populate database
 app.post('/api/seed', async (req, res) => {
     const result = await seedDatabase();
     if (result.error) {
