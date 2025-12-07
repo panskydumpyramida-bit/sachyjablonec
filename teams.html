@@ -270,8 +270,9 @@
                     const team = comp.standings?.find(s => mapping.pattern.test(s.team));
                     if (!team || !team.schedule) continue;
 
-                    // Find last match with result
-                    const playedMatches = team.schedule.filter(m => m.result && m.result.trim() !== '');
+                    // Find last match with actual result (has digits, not just ' :  ' placeholder)
+                    const hasActualResult = (r) => r && /\d/.test(r);
+                    const playedMatches = team.schedule.filter(m => hasActualResult(m.result));
                     if (playedMatches.length === 0) {
                         container.innerHTML = '<span style="color: var(--text-muted);"><i class="fa-regular fa-clock"></i> Žádný odehraný zápas</span>';
                         continue;
