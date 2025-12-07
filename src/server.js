@@ -545,221 +545,214 @@ const { PrismaClient } = await import('@prisma/client');
 const prisma = new PrismaClient();
 
 // Standings scraper - fetches latest standings from chess.cz and saves to file
-app.post('/api/standings/update', async (req, res) => {
-    try {
-        // Load competitions from DB (only active)
-        const competitions = await prisma.competition.findMany({
+async function updateStandings(competitions = null) {
+    if (!competitions) {
+        competitions = await prisma.competition.findMany({
             where: { active: true }
         });
+    }
 
-        const results = [];
+    const results = [];
 
-        for (const comp of competitions) {
-            try {
-                let standings = [];
-                let competitionMatches = []; // Store full schedule for this competition
+    for (const comp of competitions) {
+        try {
+            console.log(`Processing ${comp.name}...`);
+            let standings = [];
+            let competitionMatches = []; // Store full schedule
 
-                if (comp.type === 'chess-results') {
-                    // 1. Fetch Schedule first (art=2)
-                    competitionMatches = await scrapeCompetitionMatches(comp.url);
+            if (comp.type === 'chess-results') {
+                // 1. Fetch Schedule first (art=2)
+                competitionMatches = await scrapeCompetitionMatches(comp.url);
 
-                    // 2. Fetch Standings (art=46)
-                    const response = await fetchWithHeaders(comp.url);
-                    const html = await response.text();
+                // 2. Fetch Standings (art=46)
+                const response = await fetchWithHeaders(comp.url);
+                const html = await response.text();
 
-                    const rows = html.split('</tr>');
+                const rows = html.split('</tr>');
 
-                    for (const row of rows) {
-                        if (row.includes('class="CRg1"') || row.includes('class="CRg2"')) {
-                            const cells = row.split('</td>');
+                for (const row of rows) {
+                    if (row.includes('class="CRg1"') || row.includes('class="CRg2"')) {
+                        const cells = row.split('</td>');
 
-                            if (cells.length > 7) {
-                                const clean = (str) => {
-                                    let txt = str.replace(/<[^>]*>/g, '').trim();
-                                    txt = txt.replace(/&nbsp;/g, ' ')
-                                        .replace(/&amp;/g, '&')
-                                        .replace(/&lt;/g, '<')
-                                        .replace(/&gt;/g, '>')
-                                        .replace(/&quot;/g, '"')
-                                        .replace(/&#(\d+);/g, (match, dec) => String.fromCharCode(dec));
-                                    return txt;
-                                };
+                        if (cells.length > 7) {
+                            const clean = (str) => {
+                                let txt = str.replace(/<[^>]*>/g, '').trim();
+                                txt = txt.replace(/&nbsp;/g, ' ')
+                                    .replace(/&amp;/g, '&')
+                                    .replace(/&lt;/g, '<')
+                                    .replace(/&gt;/g, '>')
+                                    .replace(/&quot;/g, '"')
+                                    .replace(/&#(\d+);/g, (match, dec) => String.fromCharCode(dec));
+                                return txt;
+                            };
 
-                                let rankStr = clean(cells[0]);
-                                let teamStr = clean(cells[2]);
-                                const urlMatch = teamStr.match(/href="([^"]+)"/);
-                                let teamDetailsUrl = urlMatch ? urlMatch[1] : null;
-                                if (teamDetailsUrl && !teamDetailsUrl.startsWith('http')) {
-                                    const origin = new URL(comp.url).origin;
-                                    teamDetailsUrl = teamDetailsUrl.startsWith('/') ? origin + teamDetailsUrl : origin + '/' + teamDetailsUrl;
-                                }
-
-                                teamStr = clean(teamStr);
-                                // Extract all stats from cells:
-                                // Cell 3: games, Cell 4: wins (+), Cell 5: draws (=), Cell 6: losses (-)
-                                // Cell 7: match points (PH1), Cell 8: board points/score (PH2)
-                                const games = parseInt(clean(cells[3])) || 0;
-                                const wins = parseInt(clean(cells[4])) || 0;
-                                const draws = parseInt(clean(cells[5])) || 0;
-                                const losses = parseInt(clean(cells[6])) || 0;
-                                let pointsStr = clean(cells[7]).replace(',', '.');
-                                let scoreStr = clean(cells[8]).replace(',', '.');
-                                const rank = parseInt(rankStr);
-                                const points = parseFloat(pointsStr);
-                                const score = parseFloat(scoreStr);
-
-                                if (!isNaN(rank) && teamStr) {
-                                    // Enhanced check for Bižuterie teams (handles various name formats)
-                                    const lowerName = teamStr.toLowerCase();
-                                    const isBizuterie = lowerName.includes('bižuterie') ||
-                                        lowerName.includes('bizuterie') ||
-                                        // Youth teams may have different naming: check for Jablonec variants
-                                        (lowerName.includes('jablonec') &&
-                                            (lowerName.includes('tj') || lowerName.includes('šk') ||
-                                                lowerName.includes('sk') || lowerName.includes('ddm')));
-
-
-                                    standings.push({
-                                        rank,
-                                        team: teamStr,
-                                        games,
-                                        wins,
-                                        draws,
-                                        losses,
-                                        points: isNaN(points) ? 0 : points,
-                                        score: isNaN(score) ? 0 : score,
-                                        isBizuterie: isBizuterie,
-                                        url: teamDetailsUrl
-                                    });
-                                }
+                            let rankStr = clean(cells[0]);
+                            let teamStr = clean(cells[2]);
+                            const urlMatch = teamStr.match(/href="([^"]+)"/);
+                            let teamDetailsUrl = urlMatch ? urlMatch[1] : null;
+                            if (teamDetailsUrl && !teamDetailsUrl.startsWith('http')) {
+                                const origin = new URL(comp.url).origin;
+                                teamDetailsUrl = teamDetailsUrl.startsWith('/') ? origin + teamDetailsUrl : origin + '/' + teamDetailsUrl;
                             }
-                        }
-                    }
 
-                    // 3. Assign schedule from competitionMatches
-                    for (const team of standings) {
-                        if (team.isBizuterie) {
-                            // Filter matches where this team is Home or Away
-                            // Match names might differ slightly (e.g. "TJ Bižuterie..." vs "Bižuterie...")
-                            // We use lenient check or exact check if possible.
-                            // In art=2, names are usually redundant with art=46 names.
+                            teamStr = clean(teamStr);
+                            const games = parseInt(clean(cells[3])) || 0;
+                            const wins = parseInt(clean(cells[4])) || 0;
+                            const draws = parseInt(clean(cells[5])) || 0;
+                            const losses = parseInt(clean(cells[6])) || 0;
+                            // Fix comma/dot decimal
+                            let pointsStr = clean(cells[7]).replace(',', '.');
+                            let scoreStr = clean(cells[8]).replace(',', '.');
+                            const rank = parseInt(rankStr);
+                            const points = parseFloat(pointsStr);
+                            const score = parseFloat(scoreStr);
 
-                            team.schedule = competitionMatches.filter(m =>
-                                m.home === team.team || m.away === team.team ||
-                                m.home.includes(team.team) || m.away.includes(team.team) // Lenient check if exact fails
-                            ).map(m => {
-                                const isHome = m.home === team.team || m.home.includes(team.team);
-                                // Normalize date format if needed
-                                return {
-                                    round: m.round,
-                                    date: m.date || 'TBD',
-                                    opponent: isHome ? m.away : m.home,
-                                    result: m.result,
-                                    isHome: isHome // New field for UI
-                                };
-                            });
-                        }
-                    }
-
-                } else {
-                    // chess.cz logic (unchanged)
-                    const response = await fetch(`https://www.chess.cz/soutez/${comp.id}/`);
-                    const html = await response.text();
-                    const lines = html.split('\n');
-                    for (const line of lines) {
-                        if (line.includes('druzstvo') && line.includes('<tr>')) {
-                            const rankMatch = line.match(/<tr>\s*<td>(\d+)<\/td>/);
-                            const teamMatch = line.match(/<a[^>]*druzstvo[^>]*>([^<]+)<\/a>/);
-                            const pointsMatch = line.match(/<b>(\d+)<\/b>/);
-
-                            if (rankMatch && teamMatch && standings.length < 12) {
-                                const rank = parseInt(rankMatch[1]);
-                                const teamName = teamMatch[1].trim();
-                                const points = pointsMatch ? parseInt(pointsMatch[1]) : null;
+                            if (!isNaN(rank) && teamStr) {
+                                const lowerName = teamStr.toLowerCase();
+                                const isBizuterie = lowerName.includes('bižuterie') ||
+                                    lowerName.includes('bizuterie') ||
+                                    (lowerName.includes('jablonec') &&
+                                        (lowerName.includes('tj') || lowerName.includes('šk') ||
+                                            lowerName.includes('sk') || lowerName.includes('ddm')));
 
                                 standings.push({
                                     rank,
-                                    team: teamName,
-                                    points,
-                                    isBizuterie: teamName.toLowerCase().includes('bižuterie')
+                                    team: teamStr,
+                                    games,
+                                    wins,
+                                    draws,
+                                    losses,
+                                    points: isNaN(points) ? 0 : points,
+                                    score: isNaN(score) ? 0 : score,
+                                    isBizuterie: isBizuterie,
+                                    url: teamDetailsUrl
                                 });
                             }
                         }
                     }
                 }
 
-                // Sort by rank
-                standings.sort((a, b) => a.rank - b.rank);
-
-                results.push({
-                    competitionId: comp.id,
-                    name: comp.name,
-                    url: comp.url || comp.chessczUrl,
-                    category: comp.category || 'youth',
-                    standings: standings,
-                    updatedAt: new Date().toISOString()
-                });
-            } catch (err) {
-                console.error(`Error fetching ${comp.name}:`, err.message);
-                results.push({
-                    competitionId: comp.id,
-                    name: comp.name,
-                    chessczUrl: comp.chessczUrl,
-                    category: comp.category,
-                    error: err.message,
-                    standings: []
-                });
-            }
-        }
-
-        // Save to Database (Prisma)
-        try {
-            // Save to Database (Prisma) - One transaction per competition to avoid timeouts
-            for (const s of results) {
-                try {
-                    await prisma.$transaction(async (tx) => {
-                        await tx.standing.deleteMany({
-                            where: { competitionId: s.competitionId }
+                // 3. Assign schedule
+                for (const team of standings) {
+                    if (team.isBizuterie) {
+                        team.schedule = competitionMatches.filter(m =>
+                            m.home === team.team || m.away === team.team ||
+                            m.home.includes(team.team) || m.away.includes(team.team)
+                        ).map(m => {
+                            const isHome = m.home === team.team || m.home.includes(team.team);
+                            return {
+                                round: m.round,
+                                date: m.date || 'TBD',
+                                opponent: isHome ? m.away : m.home,
+                                result: m.result,
+                                isHome: isHome
+                            };
                         });
+                    }
+                }
 
-                        for (const teamStanding of s.standings) {
-                            await tx.standing.create({
-                                data: {
-                                    competitionId: s.competitionId,
-                                    team: teamStanding.team,
-                                    rank: parseInt(teamStanding.rank) || 0,
-                                    games: teamStanding.games,
-                                    wins: teamStanding.wins,
-                                    draws: teamStanding.draws,
-                                    losses: teamStanding.losses,
-                                    points: teamStanding.points, // Now storing matches points (PH 1)
-                                    score: teamStanding.score,   // Now storing board points (PH 2)
-                                    scheduleJson: JSON.stringify(teamStanding.schedule || [])
-                                }
+            } else {
+                // chess.cz logic
+                const response = await fetch(`https://www.chess.cz/soutez/${comp.id}/`);
+                const html = await response.text();
+                const lines = html.split('\n');
+                for (const line of lines) {
+                    if (line.includes('druzstvo') && line.includes('<tr>')) {
+                        const rankMatch = line.match(/<tr>\s*<td>(\d+)<\/td>/);
+                        const teamMatch = line.match(/<a[^>]*druzstvo[^>]*>([^<]+)<\/a>/);
+                        const pointsMatch = line.match(/<b>(\d+)<\/b>/);
+
+                        if (rankMatch && teamMatch && standings.length < 12) {
+                            const rank = parseInt(rankMatch[1]);
+                            const teamName = teamMatch[1].trim();
+                            const points = pointsMatch ? parseInt(pointsMatch[1]) : null;
+
+                            standings.push({
+                                rank,
+                                team: teamName,
+                                points,
+                                isBizuterie: teamName.toLowerCase().includes('bižuterie')
                             });
                         }
-                    }, {
-                        timeout: 20000 // 20s timeout per competition
-                    });
-                } catch (dbErr) {
-                    console.error(`Error saving standings for ${s.name}:`, dbErr);
-                    // Add error to result object so frontend knows
-                    s.error = `DB Save Error: ${dbErr.message}`;
+                    }
                 }
             }
-        } catch (dbErr) {
-            console.error('Error saving standings to DB:', dbErr);
-            // Don't fail the request if DB save fails but scraping worked? 
-            // Better to fail so admin knows.
-            throw dbErr;
+
+            // Sort by rank
+            standings.sort((a, b) => a.rank - b.rank);
+
+            results.push({
+                competitionId: comp.id,
+                name: comp.name,
+                url: comp.url || comp.chessczUrl,
+                category: comp.category || 'youth',
+                standings: standings,
+                updatedAt: new Date().toISOString()
+            });
+
+        } catch (err) {
+            console.error(`Error fetching ${comp.name}:`, err.message);
+            results.push({
+                competitionId: comp.id,
+                name: comp.name,
+                error: err.message,
+                standings: []
+            });
+        }
+    }
+
+    // Save results to DB
+    for (const competitionResult of results) {
+        // Critical Fix: Prevent deletion if scrape failed
+        if (competitionResult.error || !competitionResult.standings || competitionResult.standings.length === 0) {
+            console.warn(`⚠️ Skipping DB update for ${competitionResult.name} - scraping failed or empty.`);
+            continue;
         }
 
-        // Return formatted data as frontend expects
-        res.json({ success: true, standings: results, lastUpdated: new Date().toISOString() });
-    } catch (error) {
-        console.error('Standings update error:', error);
-        res.status(500).json({ success: false, error: error.message });
+        try {
+            await prisma.$transaction(async (tx) => {
+                await tx.standing.deleteMany({
+                    where: { competitionId: competitionResult.competitionId }
+                });
+
+                for (const s of competitionResult.standings) {
+                    await tx.standing.create({
+                        data: {
+                            competitionId: competitionResult.competitionId,
+                            team: s.team,
+                            rank: parseInt(s.rank) || 0,
+                            games: s.games,
+                            wins: s.wins,
+                            draws: s.draws,
+                            losses: s.losses,
+                            points: s.points,
+                            score: s.score,
+                            scheduleJson: JSON.stringify(s.schedule || [])
+                        }
+                    });
+                }
+            }, {
+                timeout: 20000 // Extended timeout
+            });
+            console.log(`✅ Standings data saved for ${competitionResult.name}`);
+        } catch (dbErr) {
+            console.error(`Error saving standings for ${competitionResult.name}:`, dbErr);
+            competitionResult.error = `DB Save Error: ${dbErr.message}`;
+        }
     }
+
+    return results;
+}
+
+// Standings scraper - fetches latest standings from chess.cz and saves to file
+try {
+    const results = await updateStandings();
+    // Return formatted data as frontend expects
+    res.json({ success: true, standings: results, lastUpdated: new Date().toISOString() });
+} catch (error) {
+    console.error('Standings update error:', error);
+    res.status(500).json({ success: false, error: error.message });
+}
 });
 
 // Get competition sources
@@ -1256,127 +1249,9 @@ app.listen(PORT, async () => {
     // Auto-refresh standings data on each deploy/restart
     console.log('🔄 Auto-refreshing standings data...');
     try {
-        const competitions = await prisma.competition.findMany({
-            where: { active: true }
-        });
-        if (competitions.length > 0) {
-            // Trigger the standings update logic
-            const results = [];
-            for (const comp of competitions) {
-                try {
-                    let standings = [];
-                    let competitionMatches = [];
-
-                    if (comp.type === 'chess-results') {
-                        competitionMatches = await scrapeCompetitionMatches(comp.url);
-                        const response = await fetchWithHeaders(comp.url);
-                        const html = await response.text();
-                        const rows = html.split('</tr>');
-
-                        for (const row of rows) {
-                            if (row.includes('class="CRg1"') || row.includes('class="CRg2"')) {
-                                const cells = row.split('</td>');
-                                if (cells.length > 7) {
-                                    const cleanCell = (str) => {
-                                        let txt = str.replace(/<[^>]*>/g, '').trim();
-                                        txt = txt.replace(/&nbsp;/g, ' ')
-                                            .replace(/&amp;/g, '&')
-                                            .replace(/&#(\d+);/g, (m, d) => String.fromCharCode(d));
-                                        return txt;
-                                    };
-                                    const rank = parseInt(cleanCell(cells[0]));
-                                    const team = cleanCell(cells[2]);
-                                    const games = parseInt(cleanCell(cells[3])) || 0;
-                                    const wins = parseInt(cleanCell(cells[4])) || 0;
-                                    const draws = parseInt(cleanCell(cells[5])) || 0;
-                                    const losses = parseInt(cleanCell(cells[6])) || 0;
-                                    const points = parseFloat(cleanCell(cells[7]).replace(',', '.')) || 0;
-                                    const score = parseFloat(cleanCell(cells[8]).replace(',', '.')) || 0;
-
-                                    if (!isNaN(rank) && team) {
-                                        const lowerName = team.toLowerCase();
-                                        const isBizuterie = lowerName.includes('bižuterie') || lowerName.includes('bizuterie') ||
-                                            (lowerName.includes('jablonec') && (lowerName.includes('tj') || lowerName.includes('šk')));
-
-                                        standings.push({ rank, team, games, wins, draws, losses, points, score, isBizuterie, url: null });
-                                    }
-                                }
-                            }
-                        }
-
-                        // Assign schedules
-                        for (const t of standings) {
-                            if (t.isBizuterie) {
-                                t.schedule = competitionMatches.filter(m =>
-                                    m.home === t.team || m.away === t.team ||
-                                    m.home.includes(t.team) || m.away.includes(t.team)
-                                ).map(m => ({
-                                    round: m.round,
-                                    date: m.date || 'TBD',
-                                    opponent: m.home === t.team || m.home.includes(t.team) ? m.away : m.home,
-                                    result: m.result,
-                                    isHome: m.home === t.team || m.home.includes(t.team)
-                                }));
-                            }
-                        }
-                    }
-
-                    standings.sort((a, b) => a.rank - b.rank);
-                    results.push({
-                        competitionId: comp.id,
-                        name: comp.name,
-                        url: comp.url,
-                        category: comp.category,
-                        standings,
-                        updatedAt: new Date().toISOString()
-                    });
-                } catch (err) {
-                    console.error(`Error refreshing ${comp.name}:`, err.message);
-                }
-            }
-
-            // Save results to Database (Prisma)
-            try {
-                // We iterate over the results we just scraped
-                for (const competitionResult of results) {
-                    // Prevent deleting data if scraping failed
-                    if (competitionResult.error || !competitionResult.standings || competitionResult.standings.length === 0) {
-                        console.warn(`⚠️ Skipping DB update for ${competitionResult.name} - scraping failed or empty.`);
-                        continue;
-                    }
-
-                    await prisma.$transaction(async (tx) => {
-                        // Delete old standings for this competition
-                        await tx.standing.deleteMany({
-                            where: { competitionId: competitionResult.competitionId }
-                        });
-
-                        // Insert new standings
-                        for (const s of competitionResult.standings) {
-                            await tx.standing.create({
-                                data: {
-                                    competitionId: competitionResult.competitionId,
-                                    team: s.team,
-                                    rank: parseInt(s.rank) || 0,
-                                    games: s.games,
-                                    wins: s.wins,
-                                    draws: s.draws,
-                                    losses: s.losses,
-                                    points: s.points,
-                                    score: s.score,
-                                    scheduleJson: JSON.stringify(s.schedule || [])
-                                }
-                            });
-                        }
-                    });
-                    console.log(`✅ Standings data saved for ${competitionResult.name}`);
-                }
-                console.log('✅ All standings data refresh complete (DB)');
-            } catch (dbErr) {
-                console.error('Error saving standings to DB:', dbErr);
-            }
-        }
-    } catch (e) {
-        console.error('⚠️ Auto-refresh failed:', e.message);
+        await updateStandings();
+        console.log('✅ Standings data initialization complete');
+    } catch (error) {
+        console.error('Startup standings update failed:', error.message);
     }
 });
