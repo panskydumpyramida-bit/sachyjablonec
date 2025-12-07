@@ -539,17 +539,14 @@ const allowedHtmlFiles = [
 ];
 
 // --- Blicak Registration Endpoints ---
-const REGISTRATIONS_FILE = path.join(DATA_DIR, 'registrations.json');
-
-// Ensure registrations file exists
-if (!existsSync(REGISTRATIONS_FILE)) {
-    writeFileSync(REGISTRATIONS_FILE, JSON.stringify([], null, 2));
-}
+// --- Blicak Registration Endpoints ---
 
 app.get('/api/registration/blicak', async (req, res) => {
     try {
-        const data = await fs.readFile(REGISTRATIONS_FILE, 'utf8');
-        res.json(JSON.parse(data));
+        const registrations = await prisma.blicakRegistration.findMany({
+            orderBy: { createdAt: 'desc' }
+        });
+        res.json(registrations);
     } catch (error) {
         console.error('Error reading registrations:', error);
         res.status(500).json({ error: 'Failed to read registrations' });
@@ -564,29 +561,17 @@ app.post('/api/registration/blicak', async (req, res) => {
             return res.status(400).json({ error: 'Name and year are required' });
         }
 
-        const dataPath = path.join(DATA_DIR, 'registrations.json');
+        const newReg = await prisma.blicakRegistration.create({
+            data: {
+                name,
+                club: club || '',
+                lok: lok ? String(lok) : '',
+                birthYear: parseInt(year),
+                eventDate: new Date() // Sets to current time, effectively registering for "now"
+            }
+        });
 
-        let registrations = [];
-        try {
-            const data = await fs.readFile(dataPath, 'utf8');
-            registrations = JSON.parse(data);
-        } catch (e) {
-            // File might not exist yet
-        }
-
-        const newReg = {
-            id: Date.now().toString(),
-            name,
-            club: club || '',
-            lok: lok || '',
-            year,
-            createdAt: new Date().toISOString()
-        };
-
-        registrations.push(newReg);
-
-        await fs.writeFile(dataPath, JSON.stringify(registrations, null, 2));
-
+        // Return structure matching frontend expectation if needed, or just standard success
         res.json({ success: true, registration: newReg });
     } catch (err) {
         console.error('Registration error:', err);
@@ -795,23 +780,48 @@ app.post('/api/standings/update', async (req, res) => {
             }
         }
 
-        // Save to JSON file
-        const standingsData = {
-            standings: results,
-            lastUpdated: new Date().toISOString()
-        };
-
-        const dataPath = path.join(__dirname, '../data');
+        // Save to Database (Prisma)
         try {
-            await fs.mkdir(dataPath, { recursive: true });
-        } catch (e) { }
+            await prisma.$transaction(async (tx) => {
+                // We don't delete strictly, but update. Or for simplicity, we could delete old standings for this comp?
+                // Upserting is safer to keep history if we wanted, but here we just want "current standings".
+                // Actually, the `standings` array has the full current state.
 
-        await fs.writeFile(
-            path.join(dataPath, 'standings.json'),
-            JSON.stringify(standingsData, null, 2)
-        );
+                // Optimized: Delete all standings for this competition and re-create.
+                // This ensures if a team disappears (rare), it's gone.
+                // And simple to implement.
+                for (const s of results) {
+                    await tx.standing.deleteMany({
+                        where: { competitionId: s.competitionId }
+                    });
 
-        res.json({ success: true, ...standingsData });
+                    for (const teamStanding of s.standings) {
+                        await tx.standing.create({
+                            data: {
+                                competitionId: s.competitionId,
+                                team: teamStanding.team,
+                                rank: parseInt(teamStanding.rank) || 0,
+                                games: teamStanding.games,
+                                wins: teamStanding.wins,
+                                draws: teamStanding.draws,
+                                losses: teamStanding.losses,
+                                points: teamStanding.points,
+                                score: teamStanding.score,
+                                scheduleJson: JSON.stringify(teamStanding.schedule || [])
+                            }
+                        });
+                    }
+                }
+            });
+        } catch (dbErr) {
+            console.error('Error saving standings to DB:', dbErr);
+            // Don't fail the request if DB save fails but scraping worked? 
+            // Better to fail so admin knows.
+            throw dbErr;
+        }
+
+        // Return formatted data as frontend expects
+        res.json({ success: true, standings: results, lastUpdated: new Date().toISOString() });
     } catch (error) {
         console.error('Standings update error:', error);
         res.status(500).json({ success: false, error: error.message });
@@ -849,16 +859,44 @@ app.put('/api/competitions/:id/url', async (req, res) => {
     }
 });
 
-// Get cached standings from file
+// Get cached standings from DB
 app.get('/api/standings', async (req, res) => {
     try {
-        const dataPath = path.join(__dirname, '../data/standings.json');
-        const data = await fs.readFile(dataPath, 'utf-8');
-        res.json(JSON.parse(data));
+        const competitions = await prisma.competition.findMany({
+            include: {
+                standings: true
+            }
+        });
+
+        // Transform to expected format: { standings: [ { competitionId, name, standings: [...] } ] }
+        // The frontend expects a specific structure: an array of competition objects with a `standings` array inside.
+        // Or rather, the previous JSON structure was `{ standings: [...], lastUpdated: ... }`.
+
+        const validCompetitions = competitions.map(comp => ({
+            competitionId: comp.id,
+            name: comp.name,
+            url: comp.url,
+            category: comp.category,
+            updatedAt: comp.updatedAt, // Use competition's updatedAt
+            standings: comp.standings.map(s => ({
+                rank: s.rank,
+                team: s.team,
+                games: s.games,
+                wins: s.wins,
+                draws: s.draws,
+                losses: s.losses,
+                points: s.points,
+                score: s.score,
+                schedule: JSON.parse(s.scheduleJson || '[]'),
+                isBizuterie: s.team.toLowerCase().includes('bižuterie') || s.team.toLowerCase().includes('bizuterie')
+            })).sort((a, b) => a.rank - b.rank)
+        }));
+
+        res.json({ standings: validCompetitions, lastUpdated: new Date().toISOString() });
+
     } catch (err) {
-        // Return empty if file doesn't exist
         console.error('Error reading standings:', err);
-        res.json({ standings: [], lastUpdated: null });
+        res.json({ standings: [] });
     }
 });
 
@@ -1289,14 +1327,40 @@ app.listen(PORT, async () => {
                 }
             }
 
-            // Save to file
-            const dataPath = path.join(__dirname, '../data');
-            await fs.mkdir(dataPath, { recursive: true }).catch(() => { });
-            await fs.writeFile(
-                path.join(dataPath, 'standings.json'),
-                JSON.stringify({ standings: results, lastUpdated: new Date().toISOString() }, null, 2)
-            );
-            console.log('✅ Standings data refreshed successfully');
+            // Save results to Database (Prisma)
+            try {
+                // We iterate over the results we just scraped
+                for (const competitionResult of results) {
+                    await prisma.$transaction(async (tx) => {
+                        // Delete old standings for this competition
+                        await tx.standing.deleteMany({
+                            where: { competitionId: competitionResult.competitionId }
+                        });
+
+                        // Insert new standings
+                        for (const s of competitionResult.standings) {
+                            await tx.standing.create({
+                                data: {
+                                    competitionId: competitionResult.competitionId,
+                                    team: s.team,
+                                    rank: parseInt(s.rank) || 0,
+                                    games: s.games,
+                                    wins: s.wins,
+                                    draws: s.draws,
+                                    losses: s.losses,
+                                    points: s.points,
+                                    score: s.score,
+                                    scheduleJson: JSON.stringify(s.schedule || [])
+                                }
+                            });
+                        }
+                    });
+                    console.log(`✅ Standings data saved for ${competitionResult.name}`);
+                }
+                console.log('✅ All standings data refresh complete (DB)');
+            } catch (dbErr) {
+                console.error('Error saving standings to DB:', dbErr);
+            }
         }
     } catch (e) {
         console.error('⚠️ Auto-refresh failed:', e.message);
