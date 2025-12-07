@@ -156,9 +156,17 @@
                         <!-- Standings Placeholder KP -->
                         <div id="standings-kp-liberec" style="margin-top: 2rem;"></div>
 
-                        <div style="margin-top: 2rem;">
-                            <h3 style="color: var(--text-light); margin-bottom: 1rem;">Reporty ze zápasů</h3>
-                            <div id="teamsNewsList" data-news-category="Soutěže družstev" data-news-display="list">
+                        <div
+                            style="margin-top: 2rem; background: linear-gradient(135deg, rgba(30,30,40,0.9) 0%, rgba(20,20,30,0.95) 100%); border-radius: 12px; overflow: hidden; border: 1px solid rgba(255,255,255,0.1);">
+                            <div
+                                style="background: linear-gradient(90deg, rgba(212,175,55,0.15) 0%, rgba(212,175,55,0.05) 100%); padding: 1rem; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                                <h4
+                                    style="margin: 0; color: var(--primary-color); font-size: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+                                    <i class="fa-solid fa-newspaper"></i> Reporty ze zápasů
+                                </h4>
+                            </div>
+                            <div id="teamsNewsList" data-news-category="Soutěže družstev" data-news-display="list"
+                                style="padding: 1rem;">
                             </div>
                         </div>
                     </div>
@@ -544,38 +552,53 @@
                     return;
                 }
 
-                // Render Table
+                // Render Table with improved UI
+                const compName = competition.name || 'Tabulka';
                 let html = `
-                    <div class="standings-wrapper">
-                        <table class="standings-table" style="width: 100%; border-collapse: collapse;">
+                    <div style="background: linear-gradient(135deg, rgba(30,30,40,0.9) 0%, rgba(20,20,30,0.95) 100%); border-radius: 12px; overflow: hidden; border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 4px 20px rgba(0,0,0,0.3);">
+                        <div style="background: linear-gradient(90deg, rgba(212,175,55,0.15) 0%, rgba(212,175,55,0.05) 100%); padding: 1rem; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                            <h4 style="margin: 0; color: var(--primary-color); font-size: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+                                <i class="fa-solid fa-trophy"></i> ${compName}
+                            </h4>
+                        </div>
+                        <table style="width: 100%; border-collapse: collapse;">
                             <thead>
-                                <tr style="border-bottom: 1px solid rgba(255,255,255,0.1); color: var(--text-muted);">
-                                    <th style="text-align: left; padding: 0.5rem;">Poř.</th>
-                                    <th style="text-align: left; padding: 0.5rem;">Tým</th>
-                                    <th style="text-align: right; padding: 0.5rem;">Body</th>
+                                <tr style="background: rgba(0,0,0,0.3);">
+                                    <th style="text-align: center; padding: 0.75rem 0.5rem; color: var(--text-muted); font-weight: 600; font-size: 0.75rem; text-transform: uppercase; width: 3rem;">#</th>
+                                    <th style="text-align: left; padding: 0.75rem 0.5rem; color: var(--text-muted); font-weight: 600; font-size: 0.75rem; text-transform: uppercase;">Družstvo</th>
+                                    <th style="text-align: right; padding: 0.75rem 0.5rem; color: var(--text-muted); font-weight: 600; font-size: 0.75rem; text-transform: uppercase; width: 4rem;">Body</th>
                                 </tr>
                             </thead>
                             <tbody>
                 `;
 
-                competition.standings.forEach(s => {
+                competition.standings.forEach((s, idx) => {
                     const isBizuterie = s.isBizuterie || s.team.toLowerCase().includes('bižuterie');
-                    // Style adjustments for Bižuterie
-                    const rowStyle = isBizuterie ? 'font-weight: bold; color: var(--primary-color); background: rgba(212, 175, 55, 0.1);' : '';
+                    const bgColor = idx % 2 === 0 ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.15)';
 
-                    // Schedule Button
-                    let scheduleBtn = '';
-                    if (s.schedule && s.schedule.length > 0) {
-                        const scheduleJson = encodeURIComponent(JSON.stringify(s.schedule));
-                        const teamSafe = s.team.replace(/'/g, "\\'");
-                        scheduleBtn = `<button onclick="window.openScheduleModal('${scheduleJson}', '${teamSafe}')" style="background:none; border:none; cursor:pointer; margin-left:0.5rem; color: #fff;" title="Rozpis zápasů"><i class="fa-regular fa-calendar-days"></i></button>`;
+                    // Position badge styling
+                    let positionBadge = '';
+                    if (s.rank === 1) {
+                        positionBadge = '<span style="display: inline-flex; align-items: center; justify-content: center; width: 1.5rem; height: 1.5rem; background: linear-gradient(135deg, #ffd700, #b8860b); border-radius: 50%; font-size: 0.7rem; font-weight: 700; color: #000;">1</span>';
+                    } else if (s.rank === 2) {
+                        positionBadge = '<span style="display: inline-flex; align-items: center; justify-content: center; width: 1.5rem; height: 1.5rem; background: linear-gradient(135deg, #c0c0c0, #808080); border-radius: 50%; font-size: 0.7rem; font-weight: 700; color: #000;">2</span>';
+                    } else if (s.rank === 3) {
+                        positionBadge = '<span style="display: inline-flex; align-items: center; justify-content: center; width: 1.5rem; height: 1.5rem; background: linear-gradient(135deg, #cd7f32, #8b4513); border-radius: 50%; font-size: 0.7rem; font-weight: 700; color: #fff;">3</span>';
+                    } else {
+                        positionBadge = `<span style="color: var(--text-muted); font-size: 0.85rem;">${s.rank}</span>`;
                     }
 
+                    // Bižuterie highlight
+                    const rowStyle = isBizuterie
+                        ? `background: linear-gradient(90deg, rgba(212,175,55,0.15) 0%, ${bgColor} 100%); border-left: 3px solid var(--primary-color);`
+                        : `background: ${bgColor};`;
+                    const teamStyle = isBizuterie ? 'font-weight: 600; color: var(--primary-color);' : '';
+
                     html += `
-                        <tr style="border-bottom: 1px solid rgba(255,255,255,0.05); ${rowStyle}">
-                            <td style="padding: 0.5rem;">${s.rank}.</td>
-                            <td style="padding: 0.5rem;">${s.team} ${scheduleBtn}</td>
-                            <td style="padding: 0.5rem; text-align: right;"><strong>${s.points !== null ? s.points : '-'}</strong></td>
+                        <tr style="${rowStyle} transition: background 0.2s;" onmouseover="this.style.background='rgba(212,175,55,0.1)'" onmouseout="this.style.background='${isBizuterie ? 'linear-gradient(90deg, rgba(212,175,55,0.15) 0%, ' + bgColor + ' 100%)' : bgColor}'">
+                            <td style="padding: 0.6rem 0.5rem; text-align: center;">${positionBadge}</td>
+                            <td style="padding: 0.6rem 0.5rem; ${teamStyle}">${s.team}</td>
+                            <td style="padding: 0.6rem 0.5rem; text-align: right; font-weight: 700; font-family: monospace; font-size: 1rem;">${s.points !== null ? s.points : '-'}</td>
                         </tr>
                     `;
                 });
@@ -586,8 +609,10 @@
                 html += `
                             </tbody>
                         </table>
-                        <div style="margin-top: 0.5rem; font-size: 0.8rem; text-align: right; color: var(--text-muted);">
-                            Zdroj: <a href="${sourceUrl}" target="_blank" style="color: var(--text-muted); text-decoration: underline;">${sourceName} <i class="fa-solid fa-external-link-alt"></i></a>
+                        <div style="padding: 0.75rem 1rem; background: rgba(0,0,0,0.2); border-top: 1px solid rgba(255,255,255,0.05); display: flex; justify-content: flex-end;">
+                            <a href="${sourceUrl}" target="_blank" style="color: var(--text-muted); text-decoration: none; font-size: 0.75rem; display: flex; align-items: center; gap: 0.3rem; transition: color 0.2s;" onmouseover="this.style.color='var(--primary-color)'" onmouseout="this.style.color='var(--text-muted)'">
+                                <i class="fa-solid fa-external-link-alt"></i> ${sourceName}
+                            </a>
                         </div>
                     </div>
                 `;
