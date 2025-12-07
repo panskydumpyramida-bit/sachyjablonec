@@ -26,78 +26,58 @@
                 <h1>Šachový oddíl TJ Bižuterie Jablonec</h1>
                 <p>Tradice, vášeň, strategie. Vítejte na našem novém webu.</p>
 
-                <!-- Wooden Signpost -->
-                <div style="display: flex; justify-content: center; margin-top: 2.5rem;">
-                    <div style="position: relative; display: flex; flex-direction: column; align-items: center;">
+                <!-- Chess Board 2x2 Navigation -->
+                <div
+                    style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 4px; margin-top: 2rem; max-width: 320px; background: rgba(0,0,0,0.3); padding: 4px; border-radius: 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.4);">
 
-                        <!-- Wooden Pole -->
-                        <div
-                            style="position: absolute; left: 50%; transform: translateX(-50%); width: 20px; height: 100%; background: linear-gradient(90deg, #5d4037 0%, #8d6e63 50%, #5d4037 100%); border-radius: 4px; box-shadow: 3px 0 8px rgba(0,0,0,0.4); z-index: 0;">
+                    <!-- Aktuality - Light square (top-left) -->
+                    <a href="#news" style="text-decoration: none;">
+                        <div style="background: linear-gradient(135deg, rgba(240,217,181,0.9) 0%, rgba(210,180,140,0.85) 100%); backdrop-filter: blur(4px); padding: 1.2rem 0.8rem; text-align: center; transition: all 0.3s; aspect-ratio: 1; display: flex; flex-direction: column; justify-content: center; align-items: center;"
+                            onmouseover="this.style.transform='scale(1.05)';this.style.boxShadow='0 0 20px rgba(212,175,55,0.5)'"
+                            onmouseout="this.style.transform='scale(1)';this.style.boxShadow='none'">
+                            <i class="fa-solid fa-newspaper"
+                                style="font-size: 1.8rem; color: #5d4037; margin-bottom: 0.3rem;"></i>
+                            <span
+                                style="color: #3e2723; font-weight: 700; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.5px;">Aktuality</span>
                         </div>
+                    </a>
 
-                        <!-- Signs Container -->
-                        <div style="display: flex; flex-direction: column; gap: 0.4rem; z-index: 1; padding: 0.5rem 0;">
-
-                            <!-- Aktuality - Dark wood, pointing right, tilted up -->
-                            <a href="#news" style="text-decoration: none; margin-left: 10px; transform: rotate(-2deg);">
-                                <div style="background: linear-gradient(180deg, #8B4513 0%, #654321 50%, #5D3A1A 100%); padding: 0.6rem 1.2rem; padding-right: 1.8rem; clip-path: polygon(0 0, calc(100% - 18px) 0, 100% 50%, calc(100% - 18px) 100%, 0 100%); transition: all 0.3s; box-shadow: 2px 3px 8px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.1); border-top: 2px solid #a0522d; min-width: 200px;"
-                                    onmouseover="this.style.transform='translateX(10px)';this.style.boxShadow='4px 5px 12px rgba(0,0,0,0.6)'"
-                                    onmouseout="this.style.transform='translateX(0)';this.style.boxShadow='2px 3px 8px rgba(0,0,0,0.5)'">
-                                    <div style="display: flex; align-items: center; gap: 0.6rem;">
-                                        <i class="fa-solid fa-newspaper" style="font-size: 1.1rem; color: #f5deb3;"></i>
-                                        <span
-                                            style="color: #f5deb3; font-weight: 700; font-size: 0.95rem; text-transform: uppercase; letter-spacing: 1px; text-shadow: 1px 1px 2px rgba(0,0,0,0.5);">Aktuality</span>
-                                    </div>
-                                </div>
-                            </a>
-
-                            <!-- Dospělí - Medium wood, pointing left, tilted down -->
-                            <a href="teams.html"
-                                style="text-decoration: none; margin-right: 10px; transform: rotate(1.5deg);">
-                                <div style="background: linear-gradient(180deg, #A0522D 0%, #8B4513 50%, #704214 100%); padding: 0.6rem 1.2rem; padding-left: 1.8rem; clip-path: polygon(18px 0, 100% 0, 100% 100%, 18px 100%, 0 50%); transition: all 0.3s; box-shadow: -2px 3px 8px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.1); border-top: 2px solid #cd853f; min-width: 240px;"
-                                    onmouseover="this.style.transform='translateX(-10px)';this.style.boxShadow='4px 5px 12px rgba(0,0,0,0.6)'"
-                                    onmouseout="this.style.transform='translateX(0)';this.style.boxShadow='-2px 3px 8px rgba(0,0,0,0.5)'">
-                                    <div
-                                        style="display: flex; align-items: center; justify-content: flex-end; gap: 0.6rem;">
-                                        <span
-                                            style="color: #ffe4b5; font-weight: 700; font-size: 0.95rem; text-transform: uppercase; letter-spacing: 1px; text-shadow: 1px 1px 2px rgba(0,0,0,0.5);">Dospělí</span>
-                                        <i class="fa-solid fa-chess-king"
-                                            style="font-size: 1.1rem; color: #ffe4b5;"></i>
-                                    </div>
-                                </div>
-                            </a>
-
-                            <!-- Mládež - Light wood, pointing right, straight -->
-                            <a href="youth.html"
-                                style="text-decoration: none; margin-left: 10px; transform: rotate(-0.5deg);">
-                                <div style="background: linear-gradient(180deg, #DEB887 0%, #D2691E 50%, #A0522D 100%); padding: 0.6rem 1.2rem; padding-right: 1.8rem; clip-path: polygon(0 0, calc(100% - 18px) 0, 100% 50%, calc(100% - 18px) 100%, 0 100%); transition: all 0.3s; box-shadow: 2px 3px 8px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.2); border-top: 2px solid #f4a460; min-width: 180px;"
-                                    onmouseover="this.style.transform='translateX(10px)';this.style.boxShadow='4px 5px 12px rgba(0,0,0,0.6)'"
-                                    onmouseout="this.style.transform='translateX(0)';this.style.boxShadow='2px 3px 8px rgba(0,0,0,0.5)'">
-                                    <div style="display: flex; align-items: center; gap: 0.6rem;">
-                                        <i class="fa-solid fa-child" style="font-size: 1.1rem; color: #3a2010;"></i>
-                                        <span
-                                            style="color: #3a2010; font-weight: 700; font-size: 0.95rem; text-transform: uppercase; letter-spacing: 1px; text-shadow: 0 1px 0 rgba(255,255,255,0.3);">Mládež</span>
-                                    </div>
-                                </div>
-                            </a>
-
-                            <!-- Blicák - Reddish wood, pointing left, tilted -->
-                            <a href="blicak.html"
-                                style="text-decoration: none; margin-right: 10px; transform: rotate(2deg);">
-                                <div style="background: linear-gradient(180deg, #B8860B 0%, #8B6914 50%, #705812 100%); padding: 0.6rem 1.2rem; padding-left: 1.8rem; clip-path: polygon(18px 0, 100% 0, 100% 100%, 18px 100%, 0 50%); transition: all 0.3s; box-shadow: -2px 3px 8px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.1); border-top: 2px solid #daa520; min-width: 160px;"
-                                    onmouseover="this.style.transform='translateX(-10px)';this.style.boxShadow='-4px 5px 12px rgba(0,0,0,0.6)'"
-                                    onmouseout="this.style.transform='translateX(0)';this.style.boxShadow='-2px 3px 8px rgba(0,0,0,0.5)'">
-                                    <div
-                                        style="display: flex; align-items: center; justify-content: flex-end; gap: 0.6rem;">
-                                        <span
-                                            style="color: #fff8dc; font-weight: 700; font-size: 0.95rem; text-transform: uppercase; letter-spacing: 1px; text-shadow: 1px 1px 2px rgba(0,0,0,0.5);">Blicák</span>
-                                        <i class="fa-solid fa-bolt" style="font-size: 1.1rem; color: #fff8dc;"></i>
-                                    </div>
-                                </div>
-                            </a>
-
+                    <!-- Dospělí - Dark square (top-right) -->
+                    <a href="teams.html" style="text-decoration: none;">
+                        <div style="background: linear-gradient(135deg, rgba(101,67,33,0.95) 0%, rgba(78,52,26,0.9) 100%); backdrop-filter: blur(4px); padding: 1.2rem 0.8rem; text-align: center; transition: all 0.3s; aspect-ratio: 1; display: flex; flex-direction: column; justify-content: center; align-items: center;"
+                            onmouseover="this.style.transform='scale(1.05)';this.style.boxShadow='0 0 20px rgba(74,222,128,0.5)'"
+                            onmouseout="this.style.transform='scale(1)';this.style.boxShadow='none'">
+                            <i class="fa-solid fa-chess-king"
+                                style="font-size: 1.8rem; color: #f5deb3; margin-bottom: 0.3rem;"></i>
+                            <span
+                                style="color: #f5deb3; font-weight: 700; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.5px;">Dospělí</span>
                         </div>
-                    </div>
+                    </a>
+
+                    <!-- Mládež - Dark square (bottom-left) -->
+                    <a href="youth.html" style="text-decoration: none;">
+                        <div style="background: linear-gradient(135deg, rgba(101,67,33,0.95) 0%, rgba(78,52,26,0.9) 100%); backdrop-filter: blur(4px); padding: 1.2rem 0.8rem; text-align: center; transition: all 0.3s; aspect-ratio: 1; display: flex; flex-direction: column; justify-content: center; align-items: center;"
+                            onmouseover="this.style.transform='scale(1.05)';this.style.boxShadow='0 0 20px rgba(96,165,250,0.5)'"
+                            onmouseout="this.style.transform='scale(1)';this.style.boxShadow='none'">
+                            <i class="fa-solid fa-child"
+                                style="font-size: 1.8rem; color: #f5deb3; margin-bottom: 0.3rem;"></i>
+                            <span
+                                style="color: #f5deb3; font-weight: 700; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.5px;">Mládež</span>
+                        </div>
+                    </a>
+
+                    <!-- Blicák - Light square (bottom-right) -->
+                    <a href="blicak.html" style="text-decoration: none;">
+                        <div style="background: linear-gradient(135deg, rgba(240,217,181,0.9) 0%, rgba(210,180,140,0.85) 100%); backdrop-filter: blur(4px); padding: 1.2rem 0.8rem; text-align: center; transition: all 0.3s; aspect-ratio: 1; display: flex; flex-direction: column; justify-content: center; align-items: center;"
+                            onmouseover="this.style.transform='scale(1.05)';this.style.boxShadow='0 0 20px rgba(251,146,60,0.5)'"
+                            onmouseout="this.style.transform='scale(1)';this.style.boxShadow='none'">
+                            <i class="fa-solid fa-bolt"
+                                style="font-size: 1.8rem; color: #5d4037; margin-bottom: 0.3rem;"></i>
+                            <span
+                                style="color: #3e2723; font-weight: 700; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.5px;">Blicák</span>
+                        </div>
+                    </a>
+
                 </div>
             </div>
         </section>
