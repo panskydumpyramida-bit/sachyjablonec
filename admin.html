@@ -1463,6 +1463,33 @@
                 verifyToken();
                 checkMaintenance();
             } else showLogin();
+
+            // Editor Enter Key Handler - Clean formatting on new line
+            const editor = document.getElementById('articleContent');
+            if (editor) {
+                editor.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter') {
+                        // Wait for the new line to be created
+                        setTimeout(() => {
+                            const sel = window.getSelection();
+                            if (!sel.rangeCount) return;
+
+                            let node = sel.anchorNode;
+                            if (node.nodeType === 3) node = node.parentNode;
+
+                            // If the new line carried over the highlight class, strip it
+                            if (node.classList && (node.classList.contains('highlight-name') || node.classList.contains('highlight-score'))) {
+                                node.className = ''; // Remove highlight class
+                                // Clean up ZWS if it was copied
+                                if (node.innerHTML && node.innerHTML.includes('\u200B')) {
+                                    node.innerHTML = node.innerHTML.replace(/\u200B/g, '');
+                                }
+                                checkToolbarState(); // Update UI
+                            }
+                        }, 0);
+                    }
+                });
+            }
         });
 
         async function checkMaintenance() {
