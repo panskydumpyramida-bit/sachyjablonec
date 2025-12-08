@@ -825,7 +825,8 @@
             <div class="admin-nav">
                 <div class="nav-tab active" onclick="switchTab('dashboard')"><i class="fa-solid fa-list"></i> Přehled
                 </div>
-                <div class="nav-tab" onclick="switchTab('editor')"><i class="fa-solid fa-plus"></i> Nová novinka</div>
+                <div class="nav-tab" onclick="resetEditor(); switchTab('editor');"><i class="fa-solid fa-plus"></i> Nová
+                    novinka</div>
                 <div class="nav-tab" onclick="switchTab('members')" style="display: none;"><i
                         class="fa-solid fa-address-book"></i> Členové
                 </div>
@@ -847,7 +848,8 @@
             <div id="dashboardView">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
                     <h2 style="margin: 0;">Seznam novinek</h2>
-                    <button class="btn-primary" onclick="switchTab('editor')"><i class="fa-solid fa-plus"></i> Nová
+                    <button class="btn-primary" onclick="resetEditor(); switchTab('editor')"><i
+                            class="fa-solid fa-plus"></i> Nová
                         novinka</button>
                 </div>
                 <table class="data-table" id="newsTable">
@@ -1381,7 +1383,6 @@
             document.getElementById(tab + 'View').classList.remove('hidden');
 
             if (tab === 'dashboard') loadDashboard();
-            if (tab === 'editor') resetEditor();
             if (tab === 'members') loadMembers();
             if (tab === 'users') loadUsers();
             if (tab === 'messages') loadAdminMessages();
@@ -1486,7 +1487,9 @@
                 const res = await fetch(`${API_URL}/news/${id}`);
                 const item = await res.json();
 
+                resetEditor(); // Clear previous state
                 switchTab('editor');
+
                 document.getElementById('editorTitle').textContent = 'Upravit novinku';
                 document.getElementById('editNewsId').value = item.id;
                 document.getElementById('newsTitle').value = item.title;
