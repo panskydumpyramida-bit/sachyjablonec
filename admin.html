@@ -1866,11 +1866,12 @@
                         span.appendChild(contents);
                         range.insertNode(span);
 
-                        // Clean selection
+                        // FIX: Place cursor at the end of the new span so user sees it and button lights up
+                        const newRange = document.createRange();
+                        newRange.selectNodeContents(span);
+                        newRange.collapse(false); // End of span
                         selection.removeAllRanges();
-
-                        // Optional: place cursor at end of span? No, keep selection cleared or wrapped? 
-                        // Usually we just wrap and leave it.
+                        selection.addRange(newRange);
                     } catch (e) {
                         console.error(e);
                     }
