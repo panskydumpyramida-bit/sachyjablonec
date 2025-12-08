@@ -35,14 +35,16 @@
         }
 
         .admin-header {
-            background: linear-gradient(135deg, var(--primary-color), #b8941f);
+            background: linear-gradient(135deg, #1f2937, #111827);
             padding: 1.5rem 2rem;
             border-radius: var(--border-radius);
             margin-bottom: 2rem;
-            color: var(--secondary-color);
+            color: var(--primary-color);
             display: flex;
             justify-content: space-between;
             align-items: center;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-left: 4px solid var(--primary-color);
         }
 
         .data-table {
@@ -870,8 +872,8 @@
         <div class="admin-container">
             <div class="admin-header">
                 <div>
-                    <h1 style="margin: 0; font-size: 1.75rem;"><i class="fa-solid fa-cogs"></i> Správa webu</h1>
-                    <p style="margin: 0.25rem 0 0 0; font-size: 0.9rem; color: rgba(255, 255, 255, 0.9); visibility: visible !important;"
+                    <h1><i class="fa-solid fa-cogs"></i> Správa webu</h1>
+                    <p style="margin: 0.25rem 0 0 0; font-size: 0.9rem; opacity: 0.8; visibility: visible !important;"
                         id="userInfo"></p>
                 </div>
             </div>
