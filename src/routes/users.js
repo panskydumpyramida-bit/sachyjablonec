@@ -1,5 +1,5 @@
 import express from 'express';
-import { getAllUsers, createUser, deleteUser } from '../controllers/userController.js';
+import { getAllUsers, createUser, deleteUser, updateUser } from '../controllers/userController.js';
 import { authMiddleware } from '../middleware/auth.js';
 import { requireRole } from '../middleware/role.js';
 
@@ -11,6 +11,7 @@ router.use(requireRole('superadmin'));
 
 router.get('/', getAllUsers);
 router.post('/', createUser);
+router.put('/:id', updateUser);
 router.delete('/:id', deleteUser);
 
 export default router;
