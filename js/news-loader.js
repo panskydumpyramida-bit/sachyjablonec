@@ -67,9 +67,19 @@ async function loadNews(options = {}) {
             container.innerHTML = news.map(item => `
                 <article class="card" onclick="window.location.href='${getArticleUrl(item)}'" style="cursor: pointer;">
                     <div class="card-image">
-                        <img src="${item.thumbnailUrl || 'images/chess_placeholder.png'}" 
-                             alt="${escapeHtml(item.title)}"
-                             onerror="this.src='images/chess_placeholder.png'">
+                        ${(() => {
+                    let thumb = item.thumbnailUrl || 'images/chess_placeholder.png';
+                    let crop = 'center';
+                    if (thumb.includes('#crop=')) {
+                        const parts = thumb.split('#crop=');
+                        thumb = parts[0];
+                        crop = parts[1]; // e.g. "25%" or "50%"
+                    }
+                    return `<img src="${thumb}" 
+                                     alt="${escapeHtml(item.title)}"
+                                     style="object-position: center ${crop};"
+                                     onerror="this.src='images/chess_placeholder.png'">`;
+                })()}
                     </div>
                     <div class="card-content">
                         <span class="card-category">${escapeHtml(item.category)}</span>
@@ -106,13 +116,22 @@ async function loadNews(options = {}) {
                                 </div>
                             </div>
                             
-                            ${item.thumbnailUrl ? `
+                            ${item.thumbnailUrl ? (() => {
+                    let thumb = item.thumbnailUrl;
+                    let crop = 'center';
+                    if (thumb.includes('#crop=')) {
+                        const parts = thumb.split('#crop=');
+                        thumb = parts[0];
+                        crop = parts[1];
+                    }
+                    return `
                                 <div class="news-cols-image">
-                                    <img src="${item.thumbnailUrl}" 
+                                    <img src="${thumb}" 
                                          alt="${escapeHtml(item.title)}"
+                                         style="object-position: center ${crop};"
                                          onerror="this.style.display='none'">
-                                </div>
-                            ` : ''}
+                                </div>`;
+                })() : ''}
                         </div>
                     </div>
                 </article>
