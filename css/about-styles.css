@@ -1,0 +1,52 @@
+/* About Page Specifics */
+.about-layout {
+    gap: 4rem;
+}
+
+@media (max-width: 768px) {
+    .about-layout {
+        grid-template-columns: 1fr;
+        /* Stack on mobile */
+        gap: 3rem;
+        /* Increased gap for breathing room */
+        text-align: center;
+    }
+
+    .map-card {
+        text-align: left;
+        /* Keep map details left aligned or center? Center is probably better for consistency */
+        text-align: center;
+    }
+}
+
+.map-card {
+    background: linear-gradient(145deg, var(--surface-color), #252525);
+    border: 1px solid rgba(212, 175, 55, 0.1);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.map-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 12px 40px rgba(212, 175, 55, 0.15);
+    border-color: rgba(212, 175, 55, 0.3);
+}
+
+.map-btn {
+    width: 100%;
+    text-align: center;
+    background: transparent;
+    border: 1px solid var(--primary-color);
+    color: var(--primary-color);
+    margin-top: 1.5rem;
+    padding: 1rem;
+    transition: all 0.3s;
+}
+
+.map-btn:hover {
+    background: var(--primary-color);
+    color: var(--secondary-color);
+    transform: none;
+    /* Reset distinct hover from generic btn */
+    box-shadow: 0 0 15px rgba(212, 175, 55, 0.4);
+}
