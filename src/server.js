@@ -36,6 +36,36 @@ app.use((req, res, next) => {
     next();
 });
 
+// Health Check (for Railway zero-downtime)
+app.get('/health', (req, res) => {
+    res.status(200).send('OK');
+});
+
+// Maintenance Mode Middleware
+app.use((req, res, next) => {
+    if (process.env.MAINTENANCE_MODE === 'true') {
+        // Allow health check even in maintenance
+        if (req.path === '/health') return next();
+
+        // Allow admin/login related API calls if needed? 
+        // For now, blocking everything except static assets if crucial? 
+        // Actually simplest is: if API -> JSON error. If page -> HTML page.
+
+        // Skip for static assets (css, js, images) to ensure maintenance page looks good
+        if (req.path.match(/\.(css|js|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot)$/)) {
+            return next();
+        }
+
+        if (req.path.startsWith('/api')) {
+            return res.status(503).json({ error: 'System is under maintenance. Please try again later.' });
+        }
+
+        // Serve maintenance page for all other routes
+        return res.status(503).sendFile(path.join(__dirname, '../public/maintenance.html'));
+    }
+    next();
+});
+
 // Helper: Clean HTML text
 const clean = (s) => {
     if (!s) return '';
