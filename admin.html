@@ -825,7 +825,7 @@
             <div class="admin-nav">
                 <div class="nav-tab active" onclick="switchTab('dashboard')"><i class="fa-solid fa-list"></i> Přehled
                 </div>
-                <div class="nav-tab" onclick="resetEditor(); switchTab('editor');"><i class="fa-solid fa-plus"></i> Nová
+                <div class="nav-tab" onclick="switchTab('editor'); resetEditor();"><i class="fa-solid fa-plus"></i> Nová
                     novinka</div>
                 <div class="nav-tab" onclick="switchTab('members')" style="display: none;"><i
                         class="fa-solid fa-address-book"></i> Členové
@@ -848,7 +848,7 @@
             <div id="dashboardView">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
                     <h2 style="margin: 0;">Seznam novinek</h2>
-                    <button class="btn-primary" onclick="resetEditor(); switchTab('editor')"><i
+                    <button class="btn-primary" onclick="switchTab('editor'); resetEditor();"><i
                             class="fa-solid fa-plus"></i> Nová
                         novinka</button>
                 </div>
@@ -1473,7 +1473,7 @@
             document.getElementById('uploadPlaceholder').style.display = 'block';
             document.getElementById('uploadedImage').style.display = 'none';
 
-            renderTeamCheckboxes();
+            // renderTeamCheckboxes(); // Removed as function is missing/legacy
             renderGames();
             document.getElementById('galleryPreview').innerHTML = '';
             updatePreview();
@@ -1487,8 +1487,8 @@
                 const res = await fetch(`${API_URL}/news/${id}`);
                 const item = await res.json();
 
-                resetEditor(); // Clear previous state
                 switchTab('editor');
+                resetEditor(); // Clear previous state
 
                 document.getElementById('editorTitle').textContent = 'Upravit novinku';
                 document.getElementById('editNewsId').value = item.id;
