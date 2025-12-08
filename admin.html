@@ -1209,73 +1209,69 @@
                             <input type="file" id="imageInput" accept="image/*" style="display: none;"
                                 onchange="handleImageUpload(event)">
 
-                            <div id="imageUrlWrapper">
+                            <div id="imageUrlWrapper" style="display: flex; gap: 0.5rem; align-items: center;">
                                 <input type="text" id="imageUrl" placeholder="nebo URL obrázku"
-                                    style="font-size: 0.8rem;" oninput="handleImageUrl()">
+                                    style="font-size: 0.8rem; flex: 1;">
+                                <button type="button" class="btn-secondary btn-small" onclick="handleImageUrl()"
+                                    style="padding: 0.4rem 0.6rem; font-size: 0.75rem;">Použít</button>
                             </div>
 
                             <!-- Crop position selector -->
-                            <div id="cropPositionWrapper" style="display: none; margin-top: 0.5rem;">
+                            <div id="cropPositionWrapper" style="display: none; margin-top: 0.8rem;">
                                 <label
-                                    style="font-size: 0.7rem; color: var(--text-muted); display: block; margin-bottom: 0.3rem;">Pozice
-                                    ořezu v kartě:</label>
-                                <div style="display: flex; gap: 0.25rem;">
-                                    <button type="button" onclick="setCropPosition('top')" class="crop-btn" id="cropTop"
-                                        style="flex: 1; padding: 0.3rem; font-size: 0.65rem; border-radius: 4px; border: 1px solid rgba(255,255,255,0.2); background: transparent; color: var(--text-muted); cursor: pointer;">↑
-                                        Horní</button>
-                                    <button type="button" onclick="setCropPosition('center')" class="crop-btn active"
-                                        id="cropCenter"
-                                        style="flex: 1; padding: 0.3rem; font-size: 0.65rem; border-radius: 4px; border: 1px solid var(--primary-color); background: rgba(255,215,0,0.1); color: var(--primary-color); cursor: pointer;">⬤
-                                        Střed</button>
-                                    <button type="button" onclick="setCropPosition('bottom')" class="crop-btn"
-                                        id="cropBottom"
-                                        style="flex: 1; padding: 0.3rem; font-size: 0.65rem; border-radius: 4px; border: 1px solid rgba(255,255,255,0.2); background: transparent; color: var(--text-muted); cursor: pointer;">↓
-                                        Spodní</button>
+                                    style="font-size: 0.75rem; color: var(--text-muted); display: flex; justify-content: space-between; margin-bottom: 0.4rem;">
+                                    <span>Pozice ořezu (výška):</span>
+                                    <span id="cropValueLabel" style="color: var(--primary-color);">50%</span>
+                                </label>
+                                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                    <span style="font-size: 0.7rem; color: var(--text-muted);">Horní</span>
+                                    <input type="range" id="cropSlider" min="0" max="100" value="50" step="1"
+                                        oninput="updateCropFromSlider(this.value)" style="flex: 1; cursor: pointer;">
+                                    <span style="font-size: 0.7rem; color: var(--text-muted);">Dolní</span>
                                 </div>
-                                <button type="button" onclick="rotateImage()"
-                                    style="width: 100%; margin-top: 0.5rem; padding: 0.3rem; background: rgba(255, 255, 255, 0.05); border: 1px solid var(--editor-border); color: var(--text-color); border-radius: 4px; cursor: pointer; font-size: 0.75rem; display: flex; align-items: center; justify-content: center; gap: 0.5rem;">
-                                    <i class="fa-solid fa-rotate-right"></i> Otočit o 90°
-                                </button>
+                            </div> <button type="button" onclick="rotateImage()"
+                                style="width: 100%; margin-top: 0.5rem; padding: 0.3rem; background: rgba(255, 255, 255, 0.05); border: 1px solid var(--editor-border); color: var(--text-color); border-radius: 4px; cursor: pointer; font-size: 0.75rem; display: flex; align-items: center; justify-content: center; gap: 0.5rem;">
+                                <i class="fa-solid fa-rotate-right"></i> Otočit o 90°
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- SECTION 3: Náhledy -->
+                    <div>
+                        <div
+                            style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1rem; color: #60a5fa;">
+                            <i class="fa-solid fa-eye"></i>
+                            <span style="font-weight: 600;">Náhledy</span>
+                        </div>
+
+                        <!-- Card preview -->
+                        <div class="preview-card" style="margin-bottom: 0.75rem;">
+                            <div class="preview-title" style="font-size: 0.75rem; padding: 0.5rem;">Karta</div>
+                            <div class="news-preview"
+                                style="transform: scale(0.85); transform-origin: top left; margin-bottom: -10%;">
+                                <div class="preview-image" id="previewImage" style="height: 80px;">
+                                    <i class="fa-solid fa-image"
+                                        style="font-size: 1.5rem; color: var(--text-muted);"></i>
+                                </div>
+                                <div class="card-content" style="padding: 0.75rem;">
+                                    <span class="card-category" id="previewCategory"
+                                        style="font-size: 0.6rem;">Kategorie</span>
+                                    <span class="card-date" id="previewDate" style="font-size: 0.55rem;">Datum</span>
+                                    <h3 class="card-title" id="previewTitle"
+                                        style="font-size: 0.8rem; margin: 0.3rem 0;">Nadpis</h3>
+                                    <p class="card-excerpt" id="previewExcerpt"
+                                        style="font-size: 0.7rem; color: var(--text-muted);">Popis...</p>
+                                </div>
                             </div>
                         </div>
 
-                        <!-- SECTION 3: Náhledy -->
-                        <div>
-                            <div
-                                style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1rem; color: #60a5fa;">
-                                <i class="fa-solid fa-eye"></i>
-                                <span style="font-weight: 600;">Náhledy</span>
-                            </div>
-
-                            <!-- Card preview -->
-                            <div class="preview-card" style="margin-bottom: 0.75rem;">
-                                <div class="preview-title" style="font-size: 0.75rem; padding: 0.5rem;">Karta</div>
-                                <div class="news-preview"
-                                    style="transform: scale(0.85); transform-origin: top left; margin-bottom: -10%;">
-                                    <div class="preview-image" id="previewImage" style="height: 80px;">
-                                        <i class="fa-solid fa-image"
-                                            style="font-size: 1.5rem; color: var(--text-muted);"></i>
-                                    </div>
-                                    <div class="card-content" style="padding: 0.75rem;">
-                                        <span class="card-category" id="previewCategory"
-                                            style="font-size: 0.6rem;">Kategorie</span>
-                                        <span class="card-date" id="previewDate"
-                                            style="font-size: 0.55rem;">Datum</span>
-                                        <h3 class="card-title" id="previewTitle"
-                                            style="font-size: 0.8rem; margin: 0.3rem 0;">Nadpis</h3>
-                                        <p class="card-excerpt" id="previewExcerpt"
-                                            style="font-size: 0.7rem; color: var(--text-muted);">Popis...</p>
-                                    </div>
-                                </div>
-                            </div>
-
-                            Začněte
-                            psát...</p>
-                        </div>
+                        Začněte
+                        psát...</p>
                     </div>
                 </div>
             </div>
         </div>
+    </div>
     </div>
 
     <!-- USERS -->
@@ -1703,9 +1699,30 @@
                 document.getElementById('publishCheck').checked = item.isPublished;
 
                 if (item.thumbnailUrl) {
-                    uploadedImageData = item.thumbnailUrl;
-                    displayImage(item.thumbnailUrl);
-                    document.getElementById('imageUrl').value = item.thumbnailUrl;
+                    // Extract crop if present
+                    let url = item.thumbnailUrl;
+                    let crop = '50%';
+                    if (url.includes('#crop=')) {
+                        const parts = url.split('#crop=');
+                        url = parts[0];
+                        crop = parts[1];
+                    }
+
+                    uploadedImageData = url;
+                    imageCropPosition = crop;
+
+                    // Set slider
+                    const numericCrop = parseInt(crop) || 50;
+                    document.getElementById('cropSlider').value = numericCrop;
+                    document.getElementById('cropValueLabel').textContent = numericCrop + '%';
+
+                    displayImage(url);
+                    document.getElementById('imageUrl').value = url;
+                } else {
+                    // Reset defaults
+                    imageCropPosition = '50%';
+                    document.getElementById('cropSlider').value = 50;
+                    document.getElementById('cropValueLabel').textContent = '50%';
                 }
 
                 // Load games from database
@@ -1747,7 +1764,8 @@
                 publishedDate: document.getElementById('newsDate').value,
                 content: document.getElementById('articleContent').innerHTML,
                 excerpt: document.getElementById('newsExcerpt').value,
-                thumbnailUrl: uploadedImageData,
+                excerpt: document.getElementById('newsExcerpt').value,
+                thumbnailUrl: uploadedImageData ? (uploadedImageData + '#crop=' + imageCropPosition) : null,
                 isPublished: document.getElementById('publishCheck').checked,
                 gamesJson: JSON.stringify(games),
                 // teamsJson: null, // Legacy field, no longer used
@@ -3190,7 +3208,21 @@
             }
         }
 
-        let imageCropPosition = 'center';
+        let imageCropPosition = '50%'; // Default center (50%)
+
+        function updateCropFromSlider(val) {
+            const pct = val + '%';
+            imageCropPosition = pct;
+            document.getElementById('cropValueLabel').textContent = pct;
+
+            // Update previews
+            const img = document.getElementById('uploadedImage');
+            if (img) img.style.objectPosition = `center ${pct}`;
+
+            const previewImg = document.getElementById('previewImage');
+            const imgTag = previewImg.querySelector('img');
+            if (imgTag) imgTag.style.objectPosition = `center ${pct}`;
+        }
 
         function displayImage(src) {
             document.getElementById('uploadArea').classList.add('has-image');
@@ -3202,20 +3234,25 @@
             const img = document.getElementById('uploadedImage');
             img.src = src;
             img.style.display = 'block';
-            img.style.objectPosition = imageCropPosition;
+            // Apply current crop
+            img.style.objectPosition = `center ${imageCropPosition}`;
 
             // Update preview with crop position
             const previewImg = document.getElementById('previewImage');
-            previewImg.innerHTML = `<img src="${src}" style="object-position: ${imageCropPosition};">`;
+            previewImg.innerHTML = `<img src="${src}" style="object-position: center ${imageCropPosition};">`;
         }
 
         function removeImage() {
             uploadedImageData = null;
+            imageCropPosition = '50%'; // Reset to default
+            document.getElementById('cropSlider').value = 50;
+            document.getElementById('cropValueLabel').textContent = '50%';
+
             document.getElementById('uploadArea').classList.remove('has-image');
             document.getElementById('uploadPlaceholder').style.display = 'block';
             document.getElementById('uploadedImage').style.display = 'none';
             document.getElementById('uploadedImage').src = '';
-            document.getElementById('imageUrlWrapper').style.display = 'block';
+            document.getElementById('imageUrlWrapper').style.display = 'flex'; // Changed from block to flex
             document.getElementById('imageUrl').value = '';
             document.getElementById('removeImageBtn').style.display = 'none';
             document.getElementById('cropPositionWrapper').style.display = 'none';
