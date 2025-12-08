@@ -197,28 +197,10 @@
 
                 // Prepare a list of cards to initialize after rendering
                 const cardsToInit = [];
-
-                // DEBUG: On-screen logging
-                const debugLog = document.createElement('div');
-                debugLog.style.background = '#000';
-                debugLog.style.color = '#0f0';
-                debugLog.style.padding = '1rem';
-                debugLog.style.marginBottom = '1rem';
-                debugLog.style.fontFamily = 'monospace';
-                debugLog.innerHTML = `<strong>DEBUG INFO:</strong><br>API_URL: ${API_URL}<br>`;
-                container.innerHTML = ''; // Clear spinner
-                container.appendChild(debugLog);
-
-                const log = (msg) => {
-                    console.log(msg);
-                    debugLog.innerHTML += `> ${msg}<br>`;
-                };
-
-                log(`Fetched data. Standings count: ${youthStandings.length}`);
+                container.innerHTML = ''; // Clear container
 
                 const htmlContent = youthStandings.map(comp => {
                     const compName = comp.name || 'Tabulka';
-                    log(`Processing: ${compName}`);
 
                     // Specific check for completely empty/failed youth competition
                     if (!comp.standings || comp.standings.length === 0) {
@@ -242,37 +224,37 @@
                         `;
                     }
 
-                    // Find our team for Match Card
-                    const ourTeam = comp.standings.find(s => /bižuterie|jablonec/i.test(s.team));
+                    // Find ALL our teams for Match Card (Array)
+                    const ourTeams = comp.standings.filter(s => /bižuterie|jablonec/i.test(s.team));
                     let matchCardHtml = '';
 
-                    if (ourTeam) {
-                        log(`Found team: ${ourTeam.team}`);
-                        if (ourTeam.schedule && ourTeam.schedule.length > 0) {
+                    if (ourTeams.length > 0) {
+                        // Filter active teams that actually have a schedule
+                        const activeTeams = ourTeams.filter(t => t.schedule && t.schedule.length > 0);
+
+                        if (activeTeams.length > 0) {
                             const cardId = `match-card-${comp.competitionId || Math.random().toString(36).substr(2, 9)}`;
+
+                            // Map to data objects
+                            const teamsData = activeTeams.map(ourTeam => ({
+                                schedule: ourTeam.schedule,
+                                teamName: ourTeam.team,
+                                teamUrl: ourTeam.url || comp.url,
+                                compName: comp.name
+                            }));
 
                             // Push to init list
                             cardsToInit.push({
                                 id: cardId,
-                                data: {
-                                    schedule: ourTeam.schedule,
-                                    teamName: ourTeam.team,
-                                    teamUrl: ourTeam.url || comp.url,
-                                    compName: comp.name
-                                }
+                                data: teamsData // Pass Array
                             });
 
                             matchCardHtml = `
                                 <div style="padding: 1rem; border-bottom: 1px solid rgba(255,255,255,0.1);">
-                                    <h5 style="margin: 0 0 0.5rem 0; color: var(--text-muted); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em;">Poslední zápas</h5>
                                     <div id="${cardId}"><i class="fa-solid fa-spinner fa-spin"></i> Načítám kartu...</div>
                                 </div>
                             `;
-                        } else {
-                            log(`No schedule for team.`);
                         }
-                    } else {
-                        log(`No team found.`);
                     }
 
                     // Building standard table
@@ -348,19 +330,16 @@
                     return html;
                 }).join('');
 
-                // Append generated HTML *after* the debug log
+                // Append generated HTML
                 const contentDiv = document.createElement('div');
                 contentDiv.innerHTML = htmlContent;
                 container.appendChild(contentDiv);
 
                 // Initialize all match cards found
-                log(`Init cards count: ${cardsToInit.length}`);
                 cardsToInit.forEach(c => {
-                    log(`Init card: ${c.id}`);
                     if (typeof window.initMatchCard === 'function') {
                         initMatchCard(c.id, c.data);
                     } else {
-                        log('ERROR: initMatchCard not found');
                         console.error('initMatchCard function not found on window!');
                     }
                 });
