@@ -279,6 +279,9 @@
             loadLastMatches();
         });
 
+        // Global state for team schedules
+        window.teamData = {};
+
         async function loadLastMatches() {
             try {
                 const res = await fetch(`${API_URL}/standings`);
@@ -307,68 +310,154 @@
 
                     // Find last match with actual result (has digits, not just ' :  ' placeholder)
                     const hasActualResult = (r) => r && /\d/.test(r);
-                    const playedMatches = team.schedule.filter(m => hasActualResult(m.result));
-                    if (playedMatches.length === 0) {
-                        container.innerHTML = '<span style="color: var(--text-muted);"><i class="fa-regular fa-clock"></i> Žádný odehraný zápas</span>';
-                        continue;
-                    }
+                    let lastPlayedIndex = -1;
 
-                    const lastMatch = playedMatches[playedMatches.length - 1];
-
-                    // Parse result to determine win/loss/draw
-                    let statusIcon = '📊';
-                    let statusColor = 'var(--text-muted)';
-                    const resultParts = lastMatch.result.split(':').map(p => parseFloat(p.replace(',', '.')));
-                    if (resultParts.length === 2) {
-                        const [home, away] = resultParts;
-                        const isHome = lastMatch.isHome !== false; // Default true
-                        const ourScore = isHome ? home : away;
-                        const theirScore = isHome ? away : home;
-                        if (ourScore > theirScore) {
-                            statusIcon = '✅';
-                            statusColor = '#4ade80';
-                        } else if (ourScore < theirScore) {
-                            statusIcon = '❌';
-                            statusColor = '#f87171';
-                        } else {
-                            statusIcon = '🤝';
-                            statusColor = '#fbbf24';
+                    // Filter or just find index? Better to keep full schedule to allow future matches.
+                    // Loop to find the last played match index
+                    for (let i = 0; i < team.schedule.length; i++) {
+                        if (hasActualResult(team.schedule[i].result)) {
+                            lastPlayedIndex = i;
                         }
                     }
 
-                    // Prepare data for click handler
-                    const matchUrl = team.url || comp.url || '';
-                    const compName = comp.competitionName || comp.competitionId;
-                    const teamName = team.team;
-                    const detailsId = `details-${mapping.containerId}`;
+                    // Default to last played, or first if none played, or 0
+                    let initialIndex = lastPlayedIndex >= 0 ? lastPlayedIndex : 0;
 
-                    container.innerHTML = `
-                        <div onclick="toggleMatchBadgeDetails('${detailsId}', '${encodeURIComponent(matchUrl)}', '${lastMatch.round}', '${encodeURIComponent(teamName)}', '${encodeURIComponent(lastMatch.opponent)}')" 
-                             style="padding: 0.6rem 0.75rem; background: linear-gradient(135deg, rgba(${statusColor === '#4ade80' ? '74,222,128' : statusColor === '#f87171' ? '248,113,113' : '251,191,36'},0.15) 0%, rgba(0,0,0,0.3) 100%); border-radius: 8px; border-left: 4px solid ${statusColor}; cursor: pointer; transition: all 0.2s; box-shadow: 0 2px 8px rgba(0,0,0,0.2);"
-                             onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 4px 12px rgba(0,0,0,0.3)'" 
-                             onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='0 2px 8px rgba(0,0,0,0.2)'">
-                            <div style="display: flex; align-items: center; justify-content: space-between; gap: 0.5rem;">
-                                <div style="display: flex; align-items: center; gap: 0.5rem;">
-                                    <span style="font-size: 1.2em;">${statusIcon}</span>
-                                    <div>
-                                        <div style="font-weight: 600; color: ${statusColor}; font-size: 1.1em;">${lastMatch.result}</div>
-                                        <div style="color: var(--text-muted); font-size: 0.75em;">${lastMatch.round}. kolo • ${lastMatch.date}</div>
-                                    </div>
-                                </div>
-                                <div style="display: flex; align-items: center; gap: 0.5rem; background: rgba(255,255,255,0.1); padding: 0.3rem 0.6rem; border-radius: 4px;">
-                                    <span style="font-size: 0.75em; color: var(--text-muted);">Detail</span>
-                                    <i class="fa-solid fa-chevron-down" id="icon-${detailsId}" style="color: var(--primary-color); font-size: 0.7em; transition: transform 0.2s;"></i>
-                                </div>
-                            </div>
-                            <div style="margin-top: 0.4rem; color: var(--text-light); font-size: 0.85em;">
-                                vs <strong>${lastMatch.opponent}</strong>
-                            </div>
-                        </div>
-                        <div id="${detailsId}" style="display: none; margin-top: 0.5rem; padding: 0.6rem; background: rgba(0,0,0,0.3); border-radius: 8px; font-size: 0.85rem; border: 1px solid rgba(255,255,255,0.1);"></div>
-                    `;
+                    // Store data globally
+                    window.teamData[mapping.containerId] = {
+                        schedule: team.schedule,
+                        currentIndex: initialIndex,
+                        teamName: team.team,
+                        teamUrl: team.url || comp.url || '',
+                        compName: comp.competitionName || comp.competitionId,
+                        mapping: mapping
+                    };
+
+                    renderMatchBadge(mapping.containerId);
                 }
             } catch (e) {
                 console.error('Error loading last matches:', e);
+            }
+        }
+
+        function renderMatchBadge(containerId) {
+            const container = document.getElementById(containerId);
+            const data = window.teamData[containerId];
+            if (!container || !data) return;
+
+            const match = data.schedule[data.currentIndex];
+            if (!match) return;
+
+            const isLast = data.currentIndex === data.schedule.length - 1;
+            const isFirst = data.currentIndex === 0;
+
+            // Analyze result
+            const hasResult = match.result && /\d/.test(match.result);
+            let statusIcon = '📅'; // Calendar for future
+            let statusColor = 'var(--text-muted)';
+            let bgColor = 'rgba(255,255,255,0.05)';
+            let borderColor = 'rgba(255,255,255,0.1)';
+
+            if (hasResult) {
+                const resultParts = match.result.split(':').map(p => parseFloat(p.replace(',', '.')));
+                if (resultParts.length === 2) {
+                    const [home, away] = resultParts;
+                    const isHome = match.isHome !== false;
+                    const ourScore = isHome ? home : away;
+                    const theirScore = isHome ? away : home;
+
+                    if (ourScore > theirScore) {
+                        statusIcon = '✅';
+                        statusColor = '#4ade80';
+                        bgColor = 'rgba(74,222,128,0.15)';
+                        borderColor = '#4ade80';
+                    } else if (ourScore < theirScore) {
+                        statusIcon = '❌';
+                        statusColor = '#f87171';
+                        bgColor = 'rgba(248,113,113,0.15)';
+                        borderColor = '#f87171';
+                    } else {
+                        statusIcon = '🤝';
+                        statusColor = '#fbbf24';
+                        bgColor = 'rgba(251,191,36,0.15)';
+                        borderColor = '#fbbf24';
+                    }
+                }
+            } else {
+                // Future match
+                borderColor = 'var(--primary-color)';
+                bgColor = 'rgba(212,175,55,0.1)';
+                statusColor = 'var(--primary-color)';
+            }
+
+            // Prepare details data
+            const detailsId = `details-${containerId}`;
+            const matchUrl = data.teamUrl;
+            // Only clickable for details IF played
+            const canShowDetails = hasResult;
+
+            container.innerHTML = `
+                <div style="display: flex; align-items: stretch; gap: 0.5rem;">
+                    <!-- Prev Button -->
+                    <button onclick="changeMatch('${containerId}', -1)" 
+                        style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; color: var(--text-muted); width: 30px; cursor: pointer; display: flex; align-items: center; justify-content: center; opacity: ${isFirst ? 0.3 : 1}; pointer-events: ${isFirst ? 'none' : 'auto'}; transition: background 0.2s;">
+                        <i class="fa-solid fa-chevron-left"></i>
+                    </button>
+
+                    <!-- Main Badge -->
+                    <div ${canShowDetails ? `onclick="toggleMatchBadgeDetails('${detailsId}', '${encodeURIComponent(matchUrl)}', '${match.round}', '${encodeURIComponent(data.teamName)}', '${encodeURIComponent(match.opponent)}', this)"` : ''} 
+                         style="flex: 1; padding: 0.6rem 0.75rem; background: linear-gradient(135deg, ${bgColor} 0%, rgba(0,0,0,0.3) 100%); border-radius: 8px; border-left: 4px solid ${borderColor}; cursor: ${canShowDetails ? 'pointer' : 'default'}; transition: all 0.2s; box-shadow: 0 2px 8px rgba(0,0,0,0.2); position: relative;"
+                         onmouseover="${canShowDetails ? 'this.style.transform=\'translateY(-2px)\';this.style.boxShadow=\'0 4px 12px rgba(0,0,0,0.3)\'' : ''}" 
+                         onmouseout="${canShowDetails ? 'this.style.transform=\'translateY(0)\';this.style.boxShadow=\'0 2px 8px rgba(0,0,0,0.2)\'' : ''}">
+                        
+                        <div style="display: flex; align-items: center; justify-content: space-between; gap: 0.5rem;">
+                            <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                <span style="font-size: 1.2em;">${statusIcon}</span>
+                                <div>
+                                    <div style="font-weight: 600; color: ${statusColor}; font-size: 1.1em;">${hasResult ? match.result : ' ? : ? '}</div>
+                                    <div style="color: var(--text-muted); font-size: 0.75em;">${match.round}. kolo • ${match.date}</div>
+                                </div>
+                            </div>
+                            
+                            ${canShowDetails ? `
+                            <div style="display: flex; align-items: center; gap: 0.5rem; background: rgba(255,255,255,0.1); padding: 0.3rem 0.6rem; border-radius: 4px;">
+                                <span style="font-size: 0.75em; color: var(--text-muted);">Detail</span>
+                                <i class="fa-solid fa-chevron-down details-icon" style="color: var(--primary-color); font-size: 0.7em; transition: transform 0.2s;"></i>
+                            </div>
+                            ` : `
+                             <div style="display: flex; align-items: center; gap: 0.5rem; padding: 0.3rem 0.6rem;">
+                                <span style="font-size: 0.75em; color: var(--text-muted);">Budoucí</span>
+                            </div>
+                            `}
+                        </div>
+                        <div style="margin-top: 0.4rem; color: var(--text-light); font-size: 0.85em;">
+                            vs <strong>${match.opponent}</strong>
+                        </div>
+                    </div>
+
+                    <!-- Next Button -->
+                    <button onclick="changeMatch('${containerId}', 1)" 
+                        style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; color: var(--text-muted); width: 30px; cursor: pointer; display: flex; align-items: center; justify-content: center; opacity: ${isLast ? 0.3 : 1}; pointer-events: ${isLast ? 'none' : 'auto'}; transition: background 0.2s;">
+                        <i class="fa-solid fa-chevron-right"></i>
+                    </button>
+                </div>
+                
+                <!-- Expanded Details Container -->
+                <div id="${detailsId}" style="display: none; margin-top: 0.5rem; padding: 0.6rem; background: rgba(0,0,0,0.3); border-radius: 8px; font-size: 0.85rem; border: 1px solid rgba(255,255,255,0.1);"></div>
+            `;
+
+            // Restore details state if it was open?
+            // For now, details close when switching matches, which is cleaner.
+        }
+
+        function changeMatch(containerId, delta) {
+            if (window.teamData && window.teamData[containerId]) {
+                const data = window.teamData[containerId];
+                const newIndex = data.currentIndex + delta;
+                if (newIndex >= 0 && newIndex < data.schedule.length) {
+                    data.currentIndex = newIndex;
+                    renderMatchBadge(containerId);
+                }
             }
         }
 
