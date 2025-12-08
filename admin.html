@@ -871,7 +871,8 @@
             <div class="admin-header">
                 <div>
                     <h1 style="margin: 0; font-size: 1.75rem;"><i class="fa-solid fa-cogs"></i> Správa webu</h1>
-                    <p style="margin: 0.25rem 0 0 0; opacity: 0.9; font-size: 0.9rem;" id="userInfo"></p>
+                    <p style="margin: 0.25rem 0 0 0; font-size: 0.9rem; color: rgba(255, 255, 255, 0.9); visibility: visible !important;"
+                        id="userInfo"></p>
                 </div>
             </div>
 
@@ -2686,9 +2687,41 @@
                 const res = await fetch(`${API_URL}/users`, { headers: { 'Authorization': `Bearer ${authToken}` } });
                 const users = await res.json();
                 document.getElementById('usersTableBody').innerHTML = users.map(u => `
-                    <tr><td>${u.username}</td><td>${u.email}</td><td>${u.role}</td><td>${u.id !== currentUser.id ? `<button class="action-btn btn-delete" onclick="deleteUser(${u.id})"><i class="fa-solid fa-trash"></i></button>` : ''}</td></tr>
+                    <tr>
+                        <td>${u.username}</td>
+                        <td>${u.email}</td>
+                        <td>
+                            <select onchange="updateUserRole(${u.id}, this.value)" style="padding: 0.25rem;">
+                                <option value="admin" ${u.role === 'admin' ? 'selected' : ''}>Admin</option>
+                                <option value="editor" ${u.role === 'editor' ? 'selected' : ''}>Editor</option>
+                                <option value="superadmin" ${u.role === 'superadmin' ? 'selected' : ''}>Superadmin</option>
+                            </select>
+                        </td>
+                        <td>
+                            ${u.id !== currentUser.id ? `<button class="action-btn btn-delete" onclick="deleteUser(${u.id})"><i class="fa-solid fa-trash"></i></button>` : ''}
+                        </td>
+                    </tr>
                 `).join('');
             } catch (e) { console.error(e); }
+        }
+
+        async function updateUserRole(id, newRole) {
+            try {
+                const res = await fetch(`${API_URL}/users/${id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
+                    body: JSON.stringify({ role: newRole })
+                });
+                if (res.ok) {
+                    showAlert(`Role změněna na ${newRole}`, 'success');
+                } else {
+                    showAlert('Chyba při změně role', 'error');
+                    loadUsers(); // Revert
+                }
+            } catch (e) {
+                console.error(e);
+                showAlert('Chyba spojení', 'error');
+            }
         }
 
         async function createUser() {
