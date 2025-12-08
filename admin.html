@@ -2334,6 +2334,11 @@
                         <div id="imgPreviewArea" style="text-align: center; margin-bottom: 1rem; min-height: 100px; border: 1px dashed rgba(255,255,255,0.2); border-radius: 8px; padding: 1rem;">
                             <p style="color: var(--text-muted);">Náhled obrázku</p>
                         </div>
+                        <div style="margin-bottom: 1rem;">
+                             <button type="button" onclick="rotateContentImage()" id="rotateContentBtn" style="width: 100%; padding: 0.4rem; background: rgba(255, 255, 255, 0.05); border: 1px solid var(--editor-border); color: var(--text-color); border-radius: 4px; cursor: pointer; font-size: 0.8rem; display: flex; align-items: center; justify-content: center; gap: 0.5rem;">
+                                <i class="fa-solid fa-rotate-right"></i> Otočit o 90°
+                            </button>
+                        </div>
                         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
                             <div>
                                 <label style="font-size: 0.85rem;">Zarovnání</label>
@@ -2474,6 +2479,33 @@
                 updatePreview();
             }
             closeImageModal();
+        }
+
+        async function rotateContentImage() {
+            const urlInput = document.getElementById('imgUrlInput');
+            const url = urlInput.value;
+            if (!url) return;
+
+            const btn = document.getElementById('rotateContentBtn');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Otáčím...';
+            btn.disabled = true;
+
+            try {
+                const newUrl = await uploadRotatedImage(url);
+                if (newUrl) {
+                    urlInput.value = newUrl;
+                    document.getElementById('imgPreviewArea').innerHTML = `<img src="${newUrl}">`;
+                    // If we are editing an existing image, update it live in preview? 
+                    // No, applyImage must be pressed to commit. But rotating basically commits a new file.
+                }
+            } catch (e) {
+                console.error('Content rotation error:', e);
+                alert('Nepodařilo se otočit obrázek: ' + e.message);
+            } finally {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }
         }
 
         // Click handler for images in editor
@@ -2741,11 +2773,35 @@
 
         function removeGalleryImage(index) { galleryImages.splice(index, 1); renderGallery(); }
 
+        async function rotateGalleryImage(index) {
+            const btn = document.getElementById(`rotateGalleryBtn_${index}`);
+            if (btn) {
+                btn.disabled = true;
+                btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
+            }
+
+            try {
+                const newUrl = await uploadRotatedImage(galleryImages[index]);
+                if (newUrl) {
+                    galleryImages[index] = newUrl;
+                    renderGallery();
+                }
+            } catch (e) {
+                console.error('Gallery rotation error:', e);
+                alert('Nepodařilo se otočit obrázek.');
+                if (btn) {
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fa-solid fa-rotate-right"></i>';
+                }
+            }
+        }
+
         function renderGallery() {
             document.getElementById('galleryPreview').innerHTML = galleryImages.length ? galleryImages.map((img, i) => `
                 <div style="position: relative;">
                     <img src="${img}" style="width: 80px; height: 80px; object-fit: cover; border-radius: 4px;">
-                    <button onclick="removeGalleryImage(${i})" style="position: absolute; top: -5px; right: -5px; background: #dc2626; border: none; color: white; width: 20px; height: 20px; border-radius: 50%; cursor: pointer; font-size: 10px;">×</button>
+                    <button onclick="removeGalleryImage(${i})" style="position: absolute; top: -5px; right: -5px; background: #dc2626; border: none; color: white; width: 20px; height: 20px; border-radius: 50%; cursor: pointer; font-size: 10px; display: flex; align-items: center; justify-content: center;">×</button>
+                    <button id="rotateGalleryBtn_${i}" onclick="rotateGalleryImage(${i})" style="position: absolute; bottom: -5px; right: -5px; background: rgba(0,0,0,0.7); border: none; color: white; width: 24px; height: 24px; border-radius: 50%; cursor: pointer; font-size: 10px; display: flex; align-items: center; justify-content: center;" title="Otočit"><i class="fa-solid fa-rotate-right"></i></button>
                 </div>
             `).join('') : '<p style="color: var(--text-muted); font-size: 0.85rem;">Žádné obrázky</p>';
         }
@@ -3114,19 +3170,12 @@
             document.getElementById('imageInput').value = '';
         }
 
-        async function rotateImage() {
-            if (!uploadedImageData) return;
-
-            const btn = document.querySelector('button[onclick="rotateImage()"]');
-            const originalText = btn.innerHTML;
-            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Otáčím...';
-            btn.disabled = true;
-
+        async function uploadRotatedImage(imageUrl) {
             try {
                 // Create image element to load current image
                 const img = new Image();
                 img.crossOrigin = "anonymous";
-                img.src = uploadedImageData;
+                img.src = imageUrl;
 
                 await new Promise((resolve, reject) => {
                     img.onload = resolve;
@@ -3162,17 +3211,33 @@
                 if (res.ok) {
                     const data = await res.json();
                     const baseUrl = window.location.origin;
-                    uploadedImageData = data.url.startsWith('http') ? data.url : `${baseUrl}${data.url}`;
-
+                    const newUrl = data.url.startsWith('http') ? data.url : `${baseUrl}${data.url}`;
                     // Force cache bust
-                    const cacheBustUrl = uploadedImageData + (uploadedImageData.includes('?') ? '&' : '?') + 't=' + new Date().getTime();
-
-                    displayImage(cacheBustUrl);
-                    console.log('Image rotated:', uploadedImageData);
+                    return newUrl + (newUrl.includes('?') ? '&' : '?') + 't=' + new Date().getTime();
                 } else {
                     throw new Error('Upload failed');
                 }
+            } catch (e) {
+                console.error('Rotation helper error:', e);
+                throw e;
+            }
+        }
 
+        async function rotateImage() {
+            if (!uploadedImageData) return;
+
+            const btn = document.querySelector('button[onclick="rotateImage()"]');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Otáčím...';
+            btn.disabled = true;
+
+            try {
+                const newUrl = await uploadRotatedImage(uploadedImageData);
+                if (newUrl) {
+                    uploadedImageData = newUrl;
+                    displayImage(newUrl);
+                    console.log('Image rotated:', newUrl);
+                }
             } catch (e) {
                 console.error('Rotation error:', e);
                 alert('Nepodařilo se otočit obrázek: ' + e.message);
