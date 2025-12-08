@@ -81,7 +81,7 @@ function renderMatchBadge(containerId) {
     // --- RENDER TEAM SWITCHER ---
     let switcherHtml = '';
     if (state.teams.length > 1) {
-        switcherHtml = `<div style="display: flex; gap: 0.5rem; margin-bottom: 0.8rem; overflow-x: auto; padding-bottom: 2px;">`;
+        switcherHtml = `<div style="display: flex; justify-content: center; gap: 0.5rem; margin-bottom: 0.8rem; overflow-x: auto; padding-bottom: 2px;">`;
         state.teams.forEach((team, idx) => {
             const isActive = idx === state.activeTeamIndex;
             const label = team.teamName.replace(/TJ Bižuterie Jablonec( n\.N\.)? /i, '').replace(/Jablonec( n\.N\.)? /i, '');
