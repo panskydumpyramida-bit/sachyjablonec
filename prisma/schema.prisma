@@ -155,3 +155,10 @@ model BlicakRegistration {
   @@map("blicak_registrations")
 }
 
+
+model SystemSetting {
+  key   String @id
+  value String
+
+  @@map("system_settings")
+}

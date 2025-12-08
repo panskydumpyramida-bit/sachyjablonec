@@ -15,6 +15,9 @@ import imagesRoutes from './routes/images.js';
 import userRoutes from './routes/users.js';
 import memberRoutes from './routes/members.js';
 import messageRoutes from './routes/messages.js';
+import { PrismaClient } from '@prisma/client';
+
+const prisma = new PrismaClient();
 
 // Load environment variables
 dotenv.config();
@@ -42,25 +45,41 @@ app.get('/health', (req, res) => {
 });
 
 // Maintenance Mode Middleware
-app.use((req, res, next) => {
-    if (process.env.MAINTENANCE_MODE === 'true') {
-        // Allow health check even in maintenance
-        if (req.path === '/health') return next();
+app.use(async (req, res, next) => {
+    // 1. Health check - always allow
+    if (req.path === '/health') return next();
 
-        // Allow admin/login related API calls if needed? 
-        // For now, blocking everything except static assets if crucial? 
-        // Actually simplest is: if API -> JSON error. If page -> HTML page.
+    // 2. Static assets - always allow
+    if (req.path.match(/\.(css|js|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot)$/)) {
+        return next();
+    }
 
-        // Skip for static assets (css, js, images) to ensure maintenance page looks good
-        if (req.path.match(/\.(css|js|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot)$/)) {
-            return next();
-        }
+    // 3. Admin login/settings needed to disable maintenance
+    // Allow login and settings endpoints so admin can turn it off!
+    if (req.path.startsWith('/api/auth') || req.path.startsWith('/api/settings')) {
+        return next();
+    }
+    // Also allow admin.html main page to load so they can access the panel
+    if (req.path === '/admin.html') return next();
 
+
+    let maintenance = process.env.MAINTENANCE_MODE === 'true';
+
+    // Check DB
+    try {
+        const setting = await prisma.systemSetting.findUnique({ where: { key: 'maintenance_mode' } });
+        if (setting && setting.value === 'true') maintenance = true;
+        if (setting && setting.value === 'false') maintenance = false; // DB overrides ENV? Or OR?
+        // Let's say DB overrides if present.
+    } catch (e) {
+        console.error('Failed to check maintenance settings:', e);
+        // Fallback to env if DB fails
+    }
+
+    if (maintenance) {
         if (req.path.startsWith('/api')) {
             return res.status(503).json({ error: 'System is under maintenance. Please try again later.' });
         }
-
-        // Serve maintenance page for all other routes
         return res.status(503).sendFile(path.join(__dirname, '../public/maintenance.html'));
     }
     next();
@@ -571,8 +590,35 @@ app.get('/api/health', (req, res) => {
     res.json({ status: 'ok', message: 'Server is running' });
 });
 
-const { PrismaClient } = await import('@prisma/client');
-const prisma = new PrismaClient();
+// --- System Settings API ---
+app.get('/api/settings', authMiddleware, async (req, res) => {
+    try {
+        const settings = await prisma.systemSetting.findMany();
+        const settingsMap = {};
+        settings.forEach(s => settingsMap[s.key] = s.value);
+        res.json(settingsMap);
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+app.post('/api/settings', authMiddleware, async (req, res) => {
+    try {
+        const { key, value } = req.body;
+        if (!key) return res.status(400).json({ error: 'Key required' });
+
+        const setting = await prisma.systemSetting.upsert({
+            where: { key },
+            update: { value: String(value) },
+            create: { key, value: String(value) }
+        });
+        res.json(setting);
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+
 
 // Standings scraper - fetches latest standings from chess.cz and saves to file
 async function updateStandings(competitions = null) {
