@@ -1179,6 +1179,11 @@
                                     <input type="checkbox" id="publishCheck" style="width: auto;">
                                     <span>Publikovat ihned</span>
                                 </label>
+
+                                <button type="button" class="btn-primary" onclick="saveNews()"
+                                    style="width: 100%; margin-top: 1rem; justify-content: center;">
+                                    <i class="fa-solid fa-save"></i> Uložit
+                                </button>
                             </div><!-- end publikaceContent -->
                         </div><!-- end publikaceSection -->
 
@@ -1248,8 +1253,9 @@
                         <div class="preview-card" style="margin-bottom: 0.75rem;">
                             <div class="preview-title" style="font-size: 0.75rem; padding: 0.5rem;">Karta</div>
                             <div class="news-preview"
-                                style="transform: scale(0.85); transform-origin: top left; margin-bottom: -10%;">
-                                <div class="preview-image" id="previewImage" style="height: 80px;">
+                                style="width: 100%; border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; overflow: hidden; background: #1a1a1a;">
+                                <div class="preview-image" id="previewImage"
+                                    style="height: 120px; text-align: center; background: #000; display: flex; align-items: center; justify-content: center; overflow: hidden;">
                                     <i class="fa-solid fa-image"
                                         style="font-size: 1.5rem; color: var(--text-muted);"></i>
                                 </div>
@@ -1265,8 +1271,6 @@
                             </div>
                         </div>
 
-                        Začněte
-                        psát...</p>
                     </div>
                 </div>
             </div>
