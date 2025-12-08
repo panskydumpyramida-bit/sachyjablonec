@@ -613,6 +613,9 @@
 
             header .nav-links {
                 gap: 1rem;
+                flex-direction: row;
+                justify-content: center;
+                flex-wrap: wrap;
             }
 
             .admin-header {
@@ -861,9 +864,9 @@
                             </label>
                             <span style="font-size: 0.8rem; margin-left: 0.5rem; color: #aaa;">Údržba</span>
                         </li>
-                        <li><a href="index.html" target="_blank">Web</a></li>
-                        <li><a href="blicak.html" target="_blank">Blesk</a></li>
-                        <li><a href="#" onclick="logout()" style="color: #fca5a5;">Odhlásit</a></li>
+                        <li><a href="index.html" target="_blank"><i class="fa-solid fa-home"></i> Web</a></li>
+                        <li><a href="#" onclick="logout()" style="color: #fca5a5;"><i
+                                    class="fa-solid fa-sign-out-alt"></i> Odhlásit</a></li>
                     </ul>
                 </nav>
             </div>
