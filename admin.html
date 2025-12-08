@@ -47,6 +47,59 @@
             border-left: 4px solid var(--primary-color);
         }
 
+        /* Explicit Header Navigation Styles */
+        #adminPanel header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: #0f172a;
+            /* Dark sleek background */
+            z-index: 10000;
+            padding: 0;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        #adminPanel nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1800px;
+            margin: 0 auto;
+            padding: 0.75rem 2rem;
+        }
+
+        #adminPanel .nav-links {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+
+        #adminPanel .logo {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        #adminPanel .nav-links a {
+            color: #e2e8f0;
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.2s;
+            font-size: 0.95rem;
+        }
+
+        #adminPanel .nav-links a:hover {
+            color: var(--primary-color);
+        }
+
         .data-table {
             width: 100%;
             border-collapse: collapse;
