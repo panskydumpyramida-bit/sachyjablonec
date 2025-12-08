@@ -9,35 +9,56 @@ window.teamData = window.teamData || {};
 /**
  * Initializes match cards for a specific container usage.
  * @param {string} containerId - DOM ID of the container
- * @param {object} teamDataObj - Data object { schedule, teamName, teamUrl, compName }
+ * @param {object|Array} inputData - Data object or Array of objects { schedule, teamName, teamUrl, compName }
  */
-window.initMatchCard = function (containerId, teamDataObj) {
+window.initMatchCard = function (containerId, inputData) {
     if (!window.teamData[containerId]) {
-        // Find last played match index
-        let lastPlayedIndex = -1;
-        const hasResult = (r) => r && /\d/.test(r);
+        // Normalize to array
+        const teams = Array.isArray(inputData) ? inputData : [inputData];
 
-        if (teamDataObj.schedule) {
-            for (let i = 0; i < teamDataObj.schedule.length; i++) {
-                if (hasResult(teamDataObj.schedule[i].result)) {
-                    lastPlayedIndex = i;
+        // Pre-process each team to find last played match
+        teams.forEach(team => {
+            let lastPlayedIndex = 0; // Default to 0 (first match) if no matches played
+            const hasResult = (r) => r && /\d/.test(r);
+
+            if (team.schedule && team.schedule.length > 0) {
+                lastPlayedIndex = 0;
+                for (let i = 0; i < team.schedule.length; i++) {
+                    if (hasResult(team.schedule[i].result)) {
+                        lastPlayedIndex = i;
+                    }
                 }
             }
-        }
 
-        teamDataObj.currentIndex = lastPlayedIndex >= 0 ? lastPlayedIndex : 0;
-        window.teamData[containerId] = teamDataObj;
+            team.currentIndex = lastPlayedIndex;
+        });
+
+        window.teamData[containerId] = {
+            teams: teams,
+            activeTeamIndex: 0
+        };
     }
 
     renderMatchBadge(containerId);
 }
 
+window.switchTeam = function (containerId, teamIndex) {
+    if (window.teamData && window.teamData[containerId]) {
+        if (teamIndex >= 0 && teamIndex < window.teamData[containerId].teams.length) {
+            window.teamData[containerId].activeTeamIndex = teamIndex;
+            renderMatchBadge(containerId);
+        }
+    }
+}
+
 window.changeMatch = function (containerId, delta) {
     if (window.teamData && window.teamData[containerId]) {
-        const data = window.teamData[containerId];
-        const newIndex = data.currentIndex + delta;
-        if (newIndex >= 0 && newIndex < data.schedule.length) {
-            data.currentIndex = newIndex;
+        const state = window.teamData[containerId];
+        const activeTeam = state.teams[state.activeTeamIndex];
+
+        const newIndex = activeTeam.currentIndex + delta;
+        if (newIndex >= 0 && newIndex < activeTeam.schedule.length) {
+            activeTeam.currentIndex = newIndex;
             renderMatchBadge(containerId);
         }
     }
@@ -45,14 +66,53 @@ window.changeMatch = function (containerId, delta) {
 
 function renderMatchBadge(containerId) {
     const container = document.getElementById(containerId);
-    const data = window.teamData[containerId];
-    if (!container || !data) return;
+    const state = window.teamData[containerId];
+    if (!container || !state) return;
 
-    const match = data.schedule[data.currentIndex];
-    if (!match) return;
+    const activeTeam = state.teams[state.activeTeamIndex];
+    if (!activeTeam) return;
 
-    const isLast = data.currentIndex === data.schedule.length - 1;
-    const isFirst = data.currentIndex === 0;
+    const match = activeTeam.schedule[activeTeam.currentIndex];
+    if (!match) {
+        container.innerHTML = '<div style="padding: 1rem; text-align: center; color: var(--text-muted);">Žádné zápasy</div>';
+        return;
+    }
+
+    // --- RENDER TEAM SWITCHER ---
+    let switcherHtml = '';
+    if (state.teams.length > 1) {
+        switcherHtml = `<div style="display: flex; gap: 0.5rem; margin-bottom: 0.8rem; overflow-x: auto; padding-bottom: 2px;">`;
+        state.teams.forEach((team, idx) => {
+            const isActive = idx === state.activeTeamIndex;
+            const label = team.teamName.replace(/TJ Bižuterie Jablonec( n\.N\.)? /i, '').replace(/Jablonec( n\.N\.)? /i, '');
+
+            switcherHtml += `
+                <button onclick="switchTeam('${containerId}', ${idx})" 
+                    style="
+                        padding: 0.25rem 0.75rem; 
+                        border-radius: 12px; 
+                        border: 1px solid ${isActive ? 'var(--primary-color)' : 'rgba(255,255,255,0.1)'}; 
+                        background: ${isActive ? 'rgba(212,175,55,0.15)' : 'rgba(0,0,0,0.2)'}; 
+                        color: ${isActive ? 'var(--primary-color)' : 'var(--text-muted)'}; 
+                        font-size: 0.75rem; 
+                        font-weight: 600; 
+                        cursor: pointer; 
+                        white-space: nowrap;
+                        transition: all 0.2s;
+                    "
+                    onmouseover="this.style.borderColor='var(--primary-color)'"
+                    onmouseout="this.style.borderColor='${isActive ? 'var(--primary-color)' : 'rgba(255,255,255,0.1)'}'"
+                >
+                    ${label}
+                </button>
+            `;
+        });
+        switcherHtml += `</div>`;
+    }
+
+    // --- RENDER MATCH CARD ---
+    const isLast = activeTeam.currentIndex === activeTeam.schedule.length - 1;
+    const isFirst = activeTeam.currentIndex === 0;
 
     // Analyze result
     const hasResult = match.result && /\d/.test(match.result);
@@ -95,7 +155,7 @@ function renderMatchBadge(containerId) {
 
     // Prepare details data
     const detailsId = `details-${containerId}`;
-    const matchUrl = data.teamUrl;
+    const matchUrl = activeTeam.teamUrl;
     // Only clickable for details IF played
     const canShowDetails = hasResult;
 
@@ -129,6 +189,7 @@ function renderMatchBadge(containerId) {
     const homeAwayBg = isHome ? 'rgba(255, 255, 255, 0.1)' : 'transparent';
 
     container.innerHTML = `
+        ${switcherHtml}
         <div style="display: flex; align-items: center; gap: 0.25rem;">
             <!-- Prev Button -->
             <button onclick="changeMatch('${containerId}', -1)"
@@ -139,7 +200,7 @@ function renderMatchBadge(containerId) {
             </button>
 
             <!-- Main Badge -->
-            <div ${canShowDetails ? `onclick="toggleMatchBadgeDetails('${detailsId}', '${encodeURIComponent(matchUrl)}', '${match.round}', '${encodeURIComponent(data.teamName)}', '${encodeURIComponent(match.opponent)}', this)"` : ''}
+            <div ${canShowDetails ? `onclick="toggleMatchBadgeDetails('${detailsId}', '${encodeURIComponent(matchUrl)}', '${match.round}', '${encodeURIComponent(activeTeam.teamName)}', '${encodeURIComponent(match.opponent)}', this)"` : ''}
                  style="flex: 1; padding: 0.6rem 0.75rem; background: linear-gradient(135deg, ${bgColor} 0%, rgba(0,0,0,0.3) 100%); border-radius: 12px; border: 1px solid ${borderColor}; cursor: ${canShowDetails ? 'pointer' : 'default'}; transition: all 0.2s; box-shadow: 0 4px 15px rgba(0,0,0,0.2); position: relative; overflow: hidden;"
                  onmouseover="${canShowDetails ? 'this.style.transform=\'translateY(-2px)\';this.style.boxShadow=\'0 8px 25px rgba(0,0,0,0.3)\'' : ''}"
                  onmouseout="${canShowDetails ? 'this.style.transform=\'translateY(0)\';this.style.boxShadow=\'0 4px 15px rgba(0,0,0,0.2)\'' : ''}">
