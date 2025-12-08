@@ -233,6 +233,12 @@
             border-color: var(--primary-color);
         }
 
+        .wysiwyg-toolbar button.active {
+            background: rgba(212, 175, 55, 0.4);
+            border-color: var(--primary-color);
+            color: var(--primary-color);
+        }
+
         .wysiwyg-toolbar .divider {
             width: 1px;
             background: var(--editor-border);
@@ -1803,116 +1809,99 @@
             const editor = document.getElementById('articleContent');
             const selection = window.getSelection();
 
-            if (!selection.rangeCount) {
-                console.log('No selection range');
-                return;
-            }
+            if (!selection.rangeCount) return;
 
             const range = selection.getRangeAt(0);
             const className = type === 'name' ? 'highlight-name' : 'highlight-score';
+            let parentSpan = null;
 
-            // Check if selection is within the editor
-            if (!editor.contains(range.commonAncestorContainer)) {
-                console.log('Selection not in editor');
-                // If no selection in editor, insert placeholder at end
-                editor.focus();
-                const placeholder = type === 'name' ? '[Jméno]' : '[Skóre]';
-                const span = document.createElement('span');
-                span.className = className;
-                span.textContent = placeholder;
-                editor.appendChild(span);
-                editor.appendChild(document.createTextNode(' '));
-                updatePreview();
-                return;
-            }
+            // 1. Check if we are inside a highlight span
+            let el = range.commonAncestorContainer;
+            if (el.nodeType === 3) el = el.parentNode;
 
-            // Check if already inside a highlight span
-            let parentSpan = range.commonAncestorContainer;
-            while (parentSpan && parentSpan !== editor) {
-                if (parentSpan.nodeType === 1 && (parentSpan.classList.contains('highlight-name') || parentSpan.classList.contains('highlight-score'))) {
-                    if (parentSpan.classList.contains(className)) {
-                        // SAME TYPE: Move cursor AFTER the span (escape from formatting)
-                        // Add space after span if not already there
-                        let spaceAfter = parentSpan.nextSibling;
-                        if (!spaceAfter || spaceAfter.nodeType !== 3) {
-                            spaceAfter = document.createTextNode('\u00A0');
-                            parentSpan.parentNode.insertBefore(spaceAfter, parentSpan.nextSibling);
-                        }
-                        // Move cursor after the space
-                        const newRange = document.createRange();
-                        newRange.setStartAfter(spaceAfter);
-                        newRange.collapse(true);
-                        selection.removeAllRanges();
-                        selection.addRange(newRange);
-                        editor.focus();
-                    } else {
-                        // DIFFERENT TYPE: Change type
-                        parentSpan.className = className;
-                    }
-                    updatePreview();
-                    checkToolbarState();
-                    return;
+            while (el && el !== editor) {
+                if (el.classList && (el.classList.contains('highlight-name') || el.classList.contains('highlight-score'))) {
+                    parentSpan = el;
+                    break;
                 }
-                parentSpan = parentSpan.parentNode;
+                el = el.parentNode;
             }
 
-            // Wrap selected text
-            let insertedSpan = null;
-            if (!selection.isCollapsed) {
-                const span = document.createElement('span');
-                span.className = className;
-                try {
-                    const contents = range.extractContents();
-                    span.appendChild(contents);
-                    range.insertNode(span);
-                    insertedSpan = span;
-                    // Clear selection
+            if (parentSpan) {
+                // We are inside a span.
+                // If it is the SAME type -> Exit (Toggle Off)
+                if (parentSpan.classList.contains(className)) {
+                    // Move cursor AFTER the span
+                    const newRange = document.createRange();
+
+                    // If we are at the end of the span, we just move out
+                    // If we are in the middle, splitting would be logic-heavy, assume user wants to 'finish' highlighting
+
+                    // Logic: Create a text node after if none exists, or just move selection
+                    if (parentSpan.nextSibling && parentSpan.nextSibling.nodeType === 3) {
+                        // There is text after, just move to start of it
+                        newRange.setStart(parentSpan.nextSibling, 0);
+                    } else {
+                        // No text after, insert a zero-width space + regular space to type into
+                        // Using ZWS to ensure cursor has a place to be, but simple space is usually enough in ContentEditable
+                        const space = document.createTextNode('\u00A0');
+                        if (parentSpan.nextSibling) {
+                            parentSpan.parentNode.insertBefore(space, parentSpan.nextSibling);
+                        } else {
+                            parentSpan.parentNode.appendChild(space);
+                        }
+                        newRange.setStart(space, 1);
+                    }
+
+                    newRange.collapse(true);
                     selection.removeAllRanges();
-                } catch (e) {
-                    console.error('Wrap error:', e);
-                    alert('Nelze zvýraznit přes více bloků. Vyberte pouze text uvnitř odstavce.');
+                    selection.addRange(newRange);
+                } else {
+                    // If DIFFERENT type -> Switch type
+                    parentSpan.className = className;
                 }
             } else {
-                // No text selected - insert placeholder
-                // Use zero-width space (​) at start to keep span alive after deleting visible text
-                const placeholder = type === 'name' ? '[Jméno]' : '[Skóre]';
-                const span = document.createElement('span');
-                span.className = className;
-                span.innerHTML = '\u200B' + placeholder; // ZWS + placeholder
-                range.insertNode(span);
+                // Not inside a span -> Create new highlight
+                if (!selection.isCollapsed) {
+                    // Text selected: wrap it
+                    const span = document.createElement('span');
+                    span.className = className;
+                    try {
+                        const contents = range.extractContents();
+                        span.appendChild(contents);
+                        range.insertNode(span);
 
-                // Add a regular space AFTER the span (outside of it)
-                const spaceNode = document.createTextNode('\u00A0'); // Non-breaking space
-                if (span.nextSibling) {
-                    span.parentNode.insertBefore(spaceNode, span.nextSibling);
+                        // Clean selection
+                        selection.removeAllRanges();
+
+                        // Optional: place cursor at end of span? No, keep selection cleared or wrapped? 
+                        // Usually we just wrap and leave it.
+                    } catch (e) {
+                        console.error(e);
+                    }
                 } else {
-                    span.parentNode.appendChild(spaceNode);
+                    // No text selected: insert placeholder
+                    const placeholder = type === 'name' ? '[Jméno]' : '[Skóre]';
+                    const span = document.createElement('span');
+                    span.className = className;
+                    span.textContent = placeholder;
+                    range.insertNode(span);
+
+                    // Add space after
+                    const space = document.createTextNode('\u00A0');
+                    if (span.nextSibling) {
+                        span.parentNode.insertBefore(space, span.nextSibling);
+                    } else {
+                        span.parentNode.appendChild(space);
+                    }
+
+                    // Move cursor to space
+                    const newRange = document.createRange();
+                    newRange.setStart(space, 1);
+                    newRange.collapse(true);
+                    selection.removeAllRanges();
+                    selection.addRange(newRange);
                 }
-
-                // Position cursor at the END of the space node (after the space character)
-                const newRange = document.createRange();
-                newRange.setStart(spaceNode, 1); // Position 1 = after the space character
-                newRange.collapse(true);
-                selection.removeAllRanges();
-                selection.addRange(newRange);
-
-                editor.focus();
-                updatePreview();
-                checkToolbarState();
-                return;
-            }
-
-            // Move cursor AFTER the span so next typing is normal (only for wrapped text)
-            if (insertedSpan) {
-                // Insert a space after the span and position cursor there
-                const space = document.createTextNode(' ');
-                insertedSpan.parentNode.insertBefore(space, insertedSpan.nextSibling);
-
-                const newRange = document.createRange();
-                newRange.setStartAfter(space);
-                newRange.collapse(true);
-                selection.removeAllRanges();
-                selection.addRange(newRange);
             }
 
             editor.focus();
@@ -1927,42 +1916,52 @@
             const anchorNode = selection.anchorNode;
             if (!anchorNode) return;
 
-            // Check B/I/U states using queryCommandState
+            // B/I/U
             const isBold = document.queryCommandState('bold');
             const isItalic = document.queryCommandState('italic');
             const isUnderline = document.queryCommandState('underline');
 
-            // Update B/I/U button styles
-            document.getElementById('btnBold').style.background = isBold ? 'rgba(255,255,255,0.2)' : 'transparent';
-            document.getElementById('btnItalic').style.background = isItalic ? 'rgba(255,255,255,0.2)' : 'transparent';
-            document.getElementById('btnUnderline').style.background = isUnderline ? 'rgba(255,255,255,0.2)' : 'transparent';
+            const btnBold = document.getElementById('btnBold');
+            const btnItalic = document.getElementById('btnItalic');
+            const btnUnderline = document.getElementById('btnUnderline');
 
-            // Reset highlight buttons
-            document.getElementById('btnHighlightName').style.background = 'transparent';
-            document.getElementById('btnHighlightScore').style.background = 'transparent';
+            if (isBold) btnBold.classList.add('active'); else btnBold.classList.remove('active');
+            if (isItalic) btnItalic.classList.add('active'); else btnItalic.classList.remove('active');
+            if (isUnderline) btnUnderline.classList.add('active'); else btnUnderline.classList.remove('active');
 
-            // Walk up DOM to find highlight span
+            // Remove manual background set in previous code
+            btnBold.style.background = '';
+            btnItalic.style.background = '';
+            btnUnderline.style.background = '';
+
+
+            // Highlight buttons
+            const btnName = document.getElementById('btnHighlightName');
+            const btnScore = document.getElementById('btnHighlightScore');
+
+            btnName.classList.remove('active');
+            btnScore.classList.remove('active');
+            btnName.style.background = ''; // clear legacy
+            btnScore.style.background = ''; // clear legacy
+
             let el = anchorNode.nodeType === 3 ? anchorNode.parentElement : anchorNode;
+            // Check current node and parents
             while (el && el.id !== 'articleContent') {
-                if (el.classList?.contains('highlight-name')) {
-                    document.getElementById('btnHighlightName').style.background = 'rgba(96, 165, 250, 0.2)';
+                if (el.classList && el.classList.contains('highlight-name')) {
+                    btnName.classList.add('active');
                     break;
-                } else if (el.classList?.contains('highlight-score')) {
-                    document.getElementById('btnHighlightScore').style.background = 'rgba(74, 222, 128, 0.2)';
+                } else if (el.classList && el.classList.contains('highlight-score')) {
+                    btnScore.classList.add('active');
                     break;
                 }
                 el = el.parentElement;
             }
 
-            // Detect heading level
+            // Heading
             const headingSelect = document.getElementById('headingSelect');
             const blockValue = document.queryCommandValue('formatBlock');
-            if (blockValue.toLowerCase() === 'h1') {
-                headingSelect.value = 'h1';
-            } else if (blockValue.toLowerCase() === 'h2') {
-                headingSelect.value = 'h2';
-            } else if (blockValue.toLowerCase() === 'h3') {
-                headingSelect.value = 'h3';
+            if (blockValue && blockValue.toLowerCase().startsWith('h')) {
+                headingSelect.value = blockValue.toLowerCase();
             } else {
                 headingSelect.value = 'p';
             }
