@@ -331,10 +331,8 @@
                     return html;
                 }).join('');
 
-                // Append generated HTML
-                const contentDiv = document.createElement('div');
-                contentDiv.innerHTML = htmlContent;
-                container.appendChild(contentDiv);
+                // Append generated HTML directly to container (to preserve Grid layout)
+                container.innerHTML = htmlContent;
 
                 // Initialize all match cards found
                 cardsToInit.forEach(c => {
