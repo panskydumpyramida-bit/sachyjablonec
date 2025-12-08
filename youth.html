@@ -225,46 +225,46 @@
                         `;
                     }
 
-                    // Find ALL our teams for Match Card (Array)
+                    // Pre-calculation for Match Card
                     const ourTeams = comp.standings.filter(s => /bižuterie|jablonec/i.test(s.team));
+                    const activeTeams = ourTeams.filter(t => t.schedule && t.schedule.length > 0);
+                    let cardId = null;
                     let matchCardHtml = '';
+                    let switcherPlaceholderHtml = '';
 
-                    if (ourTeams.length > 0) {
-                        // Filter active teams that actually have a schedule
-                        const activeTeams = ourTeams.filter(t => t.schedule && t.schedule.length > 0);
+                    if (activeTeams.length > 0) {
+                        cardId = `match-card-${comp.competitionId || Math.random().toString(36).substr(2, 9)}`;
 
-                        if (activeTeams.length > 0) {
-                            const cardId = `match-card-${comp.competitionId || Math.random().toString(36).substr(2, 9)}`;
-
-                            // Map to data objects
-                            const teamsData = activeTeams.map(ourTeam => ({
+                        // Push to init list
+                        cardsToInit.push({
+                            id: cardId,
+                            data: activeTeams.map(ourTeam => ({
                                 schedule: ourTeam.schedule,
                                 teamName: ourTeam.team,
                                 teamUrl: ourTeam.url || comp.url,
                                 compName: comp.name
-                            }));
+                            }))
+                        });
 
-                            // Push to init list
-                            cardsToInit.push({
-                                id: cardId,
-                                data: teamsData // Pass Array
-                            });
+                        // Set min-height to ensure alignment with other cards
+                        // Using 180px which covers card + padding
+                        matchCardHtml = `
+                            <div style="padding: 1rem; border-bottom: 1px solid rgba(255,255,255,0.1); min-height: 170px; display: flex; flex-direction: column; justify-content: center;">
+                                <div id="${cardId}"><i class="fa-solid fa-spinner fa-spin"></i> Načítám kartu...</div>
+                            </div>
+                        `;
 
-                            matchCardHtml = `
-                                <div style="padding: 1rem; border-bottom: 1px solid rgba(255,255,255,0.1);">
-                                    <div id="${cardId}"><i class="fa-solid fa-spinner fa-spin"></i> Načítám kartu...</div>
-                                </div>
-                            `;
-                        }
+                        switcherPlaceholderHtml = `<div id="switcher-placeholder-${cardId}" style="margin-left: auto;"></div>`;
                     }
 
                     // Building standard table
                     let html = `
                         <div style="background: linear-gradient(135deg, rgba(30,30,40,0.9) 0%, rgba(20,20,30,0.95) 100%); border-radius: 12px; overflow: hidden; border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 4px 20px rgba(0,0,0,0.3);">
-                            <div style="background: linear-gradient(90deg, rgba(212,175,55,0.15) 0%, rgba(212,175,55,0.05) 100%); padding: 0.75rem 1rem; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                            <div style="background: linear-gradient(90deg, rgba(212,175,55,0.15) 0%, rgba(212,175,55,0.05) 100%); padding: 0.75rem 1rem; border-bottom: 1px solid rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: space-between;">
                                 <h4 style="margin: 0; color: var(--primary-color); font-size: 0.95rem; display: flex; align-items: center; gap: 0.5rem;">
                                     <i class="fa-solid fa-trophy"></i> ${compName}
                                 </h4>
+                                ${switcherPlaceholderHtml}
                             </div>
                             
                             <!-- Match Card Injection -->

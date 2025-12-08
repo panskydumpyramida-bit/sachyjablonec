@@ -80,34 +80,59 @@ function renderMatchBadge(containerId) {
 
     // --- RENDER TEAM SWITCHER ---
     let switcherHtml = '';
-    if (state.teams.length > 1) {
-        switcherHtml = `<div style="display: flex; justify-content: center; gap: 0.5rem; margin-bottom: 0.8rem; overflow-x: auto; padding-bottom: 2px;">`;
-        state.teams.forEach((team, idx) => {
-            const isActive = idx === state.activeTeamIndex;
-            const label = team.teamName.replace(/TJ Bižuterie Jablonec( n\.N\.)? /i, '').replace(/Jablonec( n\.N\.)? /i, '');
+    const switcherPlaceholder = document.getElementById(`switcher-placeholder-${containerId}`);
 
-            switcherHtml += `
+    // Generate switcher buttons HTML
+    if (state.teams.length > 1) {
+        // Decide style based on location (header or body)
+        const isHeader = !!switcherPlaceholder;
+
+        const buttonsHtml = state.teams.map((team, idx) => {
+            const isActive = idx === state.activeTeamIndex;
+            // Short label for header: just A, B, JR1... if possible?
+            // "TJ Bižuterie Jablonec n.N. JR1" -> "JR1"
+            let label = team.teamName.replace(/TJ Bižuterie Jablonec( n\.N\.)? /i, '').replace(/Jablonec( n\.N\.)? /i, '');
+            if (label.trim() === '') label = team.teamName; // Fallback
+
+            // Styling
+            const baseStyle = `
+                padding: 0.2rem 0.6rem; 
+                border-radius: 12px; 
+                border: 1px solid ${isActive ? 'var(--primary-color)' : 'rgba(255,255,255,0.1)'}; 
+                background: ${isActive ? 'rgba(212,175,55,0.15)' : 'rgba(0,0,0,0.2)'}; 
+                color: ${isActive ? 'var(--primary-color)' : 'var(--text-muted)'}; 
+                font-size: 0.65rem; 
+                font-weight: 600; 
+                cursor: pointer; 
+                white-space: nowrap;
+                transition: all 0.2s;
+            `;
+
+            return `
                 <button onclick="switchTeam('${containerId}', ${idx})" 
-                    style="
-                        padding: 0.25rem 0.75rem; 
-                        border-radius: 12px; 
-                        border: 1px solid ${isActive ? 'var(--primary-color)' : 'rgba(255,255,255,0.1)'}; 
-                        background: ${isActive ? 'rgba(212,175,55,0.15)' : 'rgba(0,0,0,0.2)'}; 
-                        color: ${isActive ? 'var(--primary-color)' : 'var(--text-muted)'}; 
-                        font-size: 0.75rem; 
-                        font-weight: 600; 
-                        cursor: pointer; 
-                        white-space: nowrap;
-                        transition: all 0.2s;
-                    "
+                    style="${baseStyle}"
                     onmouseover="this.style.borderColor='var(--primary-color)'"
                     onmouseout="this.style.borderColor='${isActive ? 'var(--primary-color)' : 'rgba(255,255,255,0.1)'}'"
                 >
                     ${label}
                 </button>
             `;
-        });
-        switcherHtml += `</div>`;
+        }).join('');
+
+        const containerStyle = isHeader
+            ? `display: flex; gap: 0.4rem;`
+            : `display: flex; justify-content: center; gap: 0.5rem; margin-bottom: 0.8rem; overflow-x: auto; padding-bottom: 2px;`;
+
+        switcherHtml = `<div style="${containerStyle}">${buttonsHtml}</div>`;
+
+        // Inject into placeholder if exists
+        if (switcherPlaceholder) {
+            switcherPlaceholder.innerHTML = switcherHtml;
+            switcherHtml = ''; // Clear so it doesn't render in body
+        }
+    } else {
+        // If only one team, but placeholder exists (shouldn't happen with our logic, but safe to clear)
+        if (switcherPlaceholder) switcherPlaceholder.innerHTML = '';
     }
 
     // --- RENDER MATCH CARD ---
