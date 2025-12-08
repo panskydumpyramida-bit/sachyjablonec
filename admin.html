@@ -1831,31 +1831,41 @@
                 // We are inside a span.
                 // If it is the SAME type -> Exit (Toggle Off)
                 if (parentSpan.classList.contains(className)) {
-                    // Move cursor AFTER the span
-                    const newRange = document.createRange();
-
-                    // If we are at the end of the span, we just move out
-                    // If we are in the middle, splitting would be logic-heavy, assume user wants to 'finish' highlighting
-
-                    // Logic: Create a text node after if none exists, or just move selection
-                    if (parentSpan.nextSibling && parentSpan.nextSibling.nodeType === 3) {
-                        // There is text after, just move to start of it
-                        newRange.setStart(parentSpan.nextSibling, 0);
+                    // SAME TYPE: Move cursor OUT via a neutral buffer
+                    // Check if there is already a neutral node after
+                    let nextNode = parentSpan.nextSibling;
+                    if (nextNode && nextNode.nodeType === 1 && nextNode.tagName === 'SPAN' && !nextNode.className) {
+                        // Already have a buffer span, just move into it
+                        const newRange = document.createRange();
+                        newRange.selectNodeContents(nextNode);
+                        newRange.collapse(false); // End of span
+                        selection.removeAllRanges();
+                        selection.addRange(newRange);
+                    } else if (nextNode && nextNode.nodeType === 3) {
+                        // Text node exists, move to start of it
+                        const newRange = document.createRange();
+                        newRange.setStart(nextNode, 0);
+                        newRange.collapse(true);
+                        selection.removeAllRanges();
+                        selection.addRange(newRange);
                     } else {
-                        // No text after, insert a zero-width space + regular space to type into
-                        // Using ZWS to ensure cursor has a place to be, but simple space is usually enough in ContentEditable
-                        const space = document.createTextNode('\u00A0');
-                        if (parentSpan.nextSibling) {
-                            parentSpan.parentNode.insertBefore(space, parentSpan.nextSibling);
-                        } else {
-                            parentSpan.parentNode.appendChild(space);
-                        }
-                        newRange.setStart(space, 1);
-                    }
+                        // Create neutral span buffer
+                        const neutralSpan = document.createElement('span');
+                        neutralSpan.innerHTML = '&nbsp;'; // Visible space
 
-                    newRange.collapse(true);
-                    selection.removeAllRanges();
-                    selection.addRange(newRange);
+                        if (parentSpan.nextSibling) {
+                            parentSpan.parentNode.insertBefore(neutralSpan, parentSpan.nextSibling);
+                        } else {
+                            parentSpan.parentNode.appendChild(neutralSpan);
+                        }
+
+                        const newRange = document.createRange();
+                        newRange.setStart(neutralSpan.firstChild, 1); // After the &nbsp;
+                        newRange.collapse(true);
+                        selection.removeAllRanges();
+                        selection.addRange(newRange);
+                    }
+                    editor.focus();
                 } else {
                     // If DIFFERENT type -> Switch type
                     parentSpan.className = className;
