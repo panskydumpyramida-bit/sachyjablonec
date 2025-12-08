@@ -85,4 +85,30 @@ export const deleteUser = async (req, res) => {
         console.error('Delete user error:', error);
         res.status(500).json({ error: 'Failed to delete user' });
     }
-};
+
+    export const updateUser = async (req, res) => {
+        try {
+            const { id } = req.params;
+            const { role } = req.body;
+
+            if (!role) {
+                return res.status(400).json({ error: 'Role is required' });
+            }
+
+            const user = await prisma.user.update({
+                where: { id: parseInt(id) },
+                data: { role },
+                select: {
+                    id: true,
+                    username: true,
+                    email: true,
+                    role: true
+                }
+            });
+
+            res.json(user);
+        } catch (error) {
+            console.error('Update user error:', error);
+            res.status(500).json({ error: 'Failed to update user' });
+        }
+    };
