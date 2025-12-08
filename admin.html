@@ -774,6 +774,52 @@
                 opacity: 1;
             }
         }
+
+        /* Toggle Switch */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 40px;
+            height: 20px;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #333;
+            transition: .4s;
+            border-radius: 20px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 14px;
+            width: 14px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked+.slider {
+            background-color: var(--primary-color);
+        }
+
+        input:checked+.slider:before {
+            transform: translateX(20px);
+        }
     </style>
 </head>
 
@@ -806,6 +852,13 @@
                 <nav>
                     <a href="index.html" class="logo"><i class="fa-solid fa-chess-knight"></i> TJ Bižuterie - Admin</a>
                     <ul class="nav-links">
+                        <li style="display: flex; align-items: center; margin-right: 1rem;">
+                            <label class="switch" style="margin-bottom: 0;">
+                                <input type="checkbox" id="maintenanceToggle" onchange="toggleMaintenance()">
+                                <span class="slider round"></span>
+                            </label>
+                            <span style="font-size: 0.8rem; margin-left: 0.5rem; color: #aaa;">Údržba</span>
+                        </li>
                         <li><a href="index.html" target="_blank">Web</a></li>
                         <li><a href="blicak.html" target="_blank">Blesk</a></li>
                         <li><a href="#" onclick="logout()" style="color: #fca5a5;">Odhlásit</a></li>
@@ -1345,9 +1398,40 @@
         // Init
         window.addEventListener('DOMContentLoaded', () => {
             authToken = localStorage.getItem('authToken');
-            if (authToken) verifyToken();
-            else showLogin();
+            if (authToken) {
+                verifyToken();
+                checkMaintenance();
+            } else showLogin();
         });
+
+        async function checkMaintenance() {
+            try {
+                const res = await fetch(`${API_URL}/settings`, { headers: { 'Authorization': `Bearer ${authToken}` } });
+                const settings = await res.json();
+                document.getElementById('maintenanceToggle').checked = settings.maintenance_mode === 'true';
+            } catch (e) { console.error(e); }
+        }
+
+        async function toggleMaintenance() {
+            const toggle = document.getElementById('maintenanceToggle');
+            const value = toggle.checked;
+            try {
+                const res = await fetch(`${API_URL}/settings`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
+                    body: JSON.stringify({ key: 'maintenance_mode', value: value })
+                });
+                if (res.ok) {
+                    showAlert(value ? 'Režim údržby ZAPNUT' : 'Režim údržby VYPNUT', value ? 'success' : 'success');
+                } else {
+                    toggle.checked = !value; // Revert on error
+                    showAlert('Chyba při změně nastavení', 'error');
+                }
+            } catch (e) {
+                toggle.checked = !value;
+                showAlert('Chyba spojení', 'error');
+            }
+        }
 
         function showLogin() {
             document.getElementById('loginPage').classList.remove('hidden');
