@@ -408,6 +408,35 @@
             // Only clickable for details IF played
             const canShowDetails = hasResult;
 
+            // Format date to Czech "d. m. yyyy"
+            let formattedDate = match.date;
+            try {
+                // Determine format
+                if (match.date.includes('/')) {
+                    // Assume YYYY/MM/DD or DD/MM/YYYY? 
+                    // Based on screenshot 2025/12/07, likely YYYY/MM/DD from scraper
+                    const parts = match.date.split('/');
+                    if (parts.length === 3) {
+                        // If part[0] is year (4 digits)
+                        if (parts[0].length === 4) {
+                            const d = new Date(match.date);
+                            formattedDate = d.toLocaleDateString('cs-CZ');
+                        } else {
+                            // Already likely DD/MM/YYYY or similar, just replace / with . and space
+                            formattedDate = `${parseInt(parts[0])}. ${parseInt(parts[1])}. ${parts[2]}`;
+                        }
+                    }
+                } else if (match.date.includes('.')) {
+                    // Check if spaces are missing
+                    const parts = match.date.split('.');
+                    if (parts.length >= 3) {
+                        formattedDate = `${parseInt(parts[0])}. ${parseInt(parts[1])}. ${parts[2].trim()}`;
+                    }
+                }
+            } catch (e) {
+                console.warn('Date formatting failed', e);
+            }
+
             container.innerHTML = `
                 <div style="display: flex; align-items: center; gap: 0.25rem;">
                     <!-- Prev Button -->
@@ -432,7 +461,7 @@
                                 <span style="font-size: 1.4em; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));">${statusIcon}</span>
                                 <div>
                                     <div style="font-weight: 700; color: ${statusColor}; font-size: 1.25em; line-height: 1.2; text-shadow: 0 2px 4px rgba(0,0,0,0.5);">${hasResult ? match.result : ' ? : ? '}</div>
-                                    <div style="color: var(--text-muted); font-size: 0.75em; text-transform: uppercase; letter-spacing: 0.5px;">${match.round}. kolo • ${match.date}</div>
+                                    <div style="color: var(--text-muted); font-size: 0.75em; text-transform: uppercase; letter-spacing: 0.5px;">${match.round}. kolo • ${formattedDate}</div>
                                 </div>
                             </div>
                             
