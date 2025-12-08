@@ -43,7 +43,8 @@ app.get('/health', (req, res) => {
 
 // Maintenance Mode Middleware
 app.use((req, res, next) => {
-    if (process.env.MAINTENANCE_MODE === 'true') {
+    // FORCED MAINTENANCE FOR TESTING (Simulace údržby)
+    if (true || process.env.MAINTENANCE_MODE === 'true') {
         // Allow health check even in maintenance
         if (req.path === '/health') return next();
 
