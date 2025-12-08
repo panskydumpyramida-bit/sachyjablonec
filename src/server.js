@@ -43,8 +43,7 @@ app.get('/health', (req, res) => {
 
 // Maintenance Mode Middleware
 app.use((req, res, next) => {
-    // FORCED MAINTENANCE FOR TESTING (Simulace údržby)
-    if (true || process.env.MAINTENANCE_MODE === 'true') {
+    if (process.env.MAINTENANCE_MODE === 'true') {
         // Allow health check even in maintenance
         if (req.path === '/health') return next();
 
@@ -1275,15 +1274,17 @@ app.listen(PORT, async () => {
     console.log(`🚀 Server running on http://localhost:${PORT}`);
     console.log(`📝 Environment: ${process.env.NODE_ENV}`);
 
-    // Attempt to seed competitions on startup
-    await seedCompetitions();
+    // Attempt to seed competitions on startup (delayed to allow fast boot)
+    setTimeout(async () => {
+        try {
+            await seedCompetitions();
 
-    // Auto-refresh standings data on each deploy/restart
-    console.log('🔄 Auto-refreshing standings data...');
-    try {
-        await updateStandings();
-        console.log('✅ Standings data initialization complete');
-    } catch (error) {
-        console.error('Startup standings update failed:', error.message);
-    }
+            // Auto-refresh standings data on each deploy/restart
+            console.log('🔄 Auto-refreshing standings data...');
+            await updateStandings();
+            console.log('✅ Standings data initialization complete');
+        } catch (error) {
+            console.error('Startup initialization failed:', error.message);
+        }
+    }, 5000); // 5 second delay to ensure /health is responsive immediately
 });
