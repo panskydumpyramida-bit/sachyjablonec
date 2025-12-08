@@ -1880,7 +1880,7 @@
                     const placeholder = type === 'name' ? '[Jméno]' : '[Skóre]';
                     const span = document.createElement('span');
                     span.className = className;
-                    span.textContent = placeholder;
+                    span.innerHTML = '\u200B' + placeholder;
                     range.insertNode(span);
 
                     // Add space after
