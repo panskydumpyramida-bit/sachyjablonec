@@ -437,6 +437,15 @@
                 console.warn('Date formatting failed', e);
             }
 
+            // Determine Home/Away
+            // Note: Data structure might be inferred. If `match.isHome` exists use it.
+            // If we parsed result `home:away` and determined `ourScore`, we might know.
+            // Earlier we used: `const isHome = match.isHome !== false;`
+            const isHome = match.isHome !== false;
+            const homeAwayLabel = isHome ? 'DOMA' : 'VENKU';
+            const homeAwayColor = isHome ? 'var(--text-color)' : 'var(--text-muted)';
+            const homeAwayBg = isHome ? 'rgba(255, 255, 255, 0.1)' : 'transparent';
+
             container.innerHTML = `
                 <div style="display: flex; align-items: center; gap: 0.25rem;">
                     <!-- Prev Button -->
@@ -456,28 +465,36 @@
                         <!-- Status Strip -->
                         <div style="position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background-color: ${statusColor};"></div>
 
-                        <div style="display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; padding-left: 0.5rem;">
-                            <div style="display: flex; align-items: center; gap: 0.75rem;">
-                                <span style="font-size: 1.4em; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));">${statusIcon}</span>
-                                <div>
-                                    <div style="font-weight: 700; color: ${statusColor}; font-size: 1.25em; line-height: 1.2; text-shadow: 0 2px 4px rgba(0,0,0,0.5);">${hasResult ? match.result : ' ? : ? '}</div>
-                                    <div style="color: var(--text-muted); font-size: 0.75em; text-transform: uppercase; letter-spacing: 0.5px;">${match.round}. kolo • ${formattedDate}</div>
+                        <div style="display: flex; flex-direction: column; gap: 0.2rem; padding-left: 0.5rem;">
+                             <!-- Top Row: Round + Home/Away -->
+                             <div style="display: flex; align-items: center; justify-content: space-between; font-size: 0.75em; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted);">
+                                <span>${match.round}. KOLO • ${formattedDate}</span>
+                                <span style="font-weight: 700; color: ${homeAwayColor}; background: ${homeAwayBg}; padding: 1px 6px; border-radius: 4px; font-size: 0.9em;">${homeAwayLabel}</span>
+                             </div>
+
+                             <!-- Middle Row: Result and Status -->
+                             <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 0.2rem;">
+                                <div style="display: flex; align-items: center; gap: 0.75rem;">
+                                    <span style="font-size: 1.4em; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));">${statusIcon}</span>
+                                    <div style="font-weight: 700; color: ${statusColor}; font-size: 1.5em; line-height: 1; text-shadow: 0 2px 4px rgba(0,0,0,0.5);">${hasResult ? match.result : ' - : - '}</div>
                                 </div>
+                                
+                                ${canShowDetails ? `
+                                <div style="display: flex; align-items: center; gap: 0.5rem; background: rgba(0,0,0,0.2); padding: 0.2rem 0.6rem; border-radius: 20px; border: 1px solid rgba(255,255,255,0.05);">
+                                    <span style="font-size: 0.7em; color: var(--text-muted); font-weight: 500; text-transform: uppercase;">Detail</span>
+                                    <i class="fa-solid fa-chevron-down details-icon" style="color: var(--primary-color); font-size: 0.7em; transition: transform 0.2s;"></i>
+                                </div>
+                                ` : `
+                                 <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                    <span style="font-size: 0.75em; color: var(--text-icon); font-weight: 600; background: rgba(212,175,55,0.1); padding: 0.2em 0.5em; border-radius: 4px; color: var(--primary-color);">BUDOUCÍ</span>
+                                </div>
+                                `}
                             </div>
                             
-                            ${canShowDetails ? `
-                            <div style="display: flex; align-items: center; gap: 0.5rem; background: rgba(0,0,0,0.2); padding: 0.3rem 0.6rem; border-radius: 20px; border: 1px solid rgba(255,255,255,0.05);">
-                                <span style="font-size: 0.7em; color: var(--text-muted); font-weight: 500; text-transform: uppercase;">Detail</span>
-                                <i class="fa-solid fa-chevron-down details-icon" style="color: var(--primary-color); font-size: 0.7em; transition: transform 0.2s;"></i>
+                            <!-- Bottom Row: Opponent -->
+                            <div style="margin-top: 0.5rem; padding-top: 0.4rem; border-top: 1px solid rgba(255,255,255,0.05); color: var(--text-light); font-size: 0.9em;">
+                                <span style="color: var(--text-muted); font-size: 0.9em;">vs</span> <strong style="color: var(--text-color); font-size: 1.05em;">${match.opponent}</strong>
                             </div>
-                            ` : `
-                             <div style="display: flex; align-items: center; gap: 0.5rem; padding: 0.3rem 0.6rem;">
-                                <span style="font-size: 0.75em; color: var(--text-icon); font-weight: 600; background: rgba(212,175,55,0.1); padding: 0.2em 0.5em; border-radius: 4px; color: var(--primary-color);">BUDOUCÍ</span>
-                            </div>
-                            `}
-                        </div>
-                        <div style="margin-top: 0.5rem; padding-top: 0.5rem; border-top: 1px solid rgba(255,255,255,0.05); color: var(--text-light); font-size: 0.9em; padding-left: 0.5rem;">
-                            <span style="color: var(--text-muted); font-size: 0.9em;">vs</span> <strong style="color: var(--text-color);">${match.opponent}</strong>
                         </div>
                     </div>
 
