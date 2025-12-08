@@ -5,9 +5,9 @@ import { requireRole } from '../middleware/role.js';
 
 const router = express.Router();
 
-// All routes require authentication and superadmin role
+// All routes require authentication and admin or superadmin role
 router.use(authMiddleware);
-router.use(requireRole('superadmin'));
+router.use(requireRole(['superadmin', 'admin']));
 
 router.get('/', getAllUsers);
 router.post('/', createUser);

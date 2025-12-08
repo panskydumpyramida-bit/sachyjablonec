@@ -1442,7 +1442,7 @@
         function showAdmin() {
             document.getElementById('loginPage').classList.add('hidden');
             document.getElementById('adminPanel').classList.remove('hidden');
-            if (currentUser.role === 'superadmin') document.getElementById('usersTab').classList.remove('hidden');
+            if (['admin', 'superadmin'].includes(currentUser.role)) document.getElementById('usersTab').classList.remove('hidden');
             loadDashboard();
         }
 
