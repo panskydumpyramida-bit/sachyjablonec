@@ -184,6 +184,11 @@ export const deleteNews = async (req, res) => {
     try {
         const { id } = req.params;
 
+        // Restriction: Only admin/superadmin can delete
+        if (req.user.role !== 'admin' && req.user.role !== 'superadmin') {
+            return res.status(403).json({ error: 'Nemáte oprávnění mazat články.' });
+        }
+
         await prisma.news.delete({
             where: { id: parseInt(id) }
         });
