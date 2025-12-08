@@ -1467,26 +1467,57 @@
             // Editor Enter Key Handler - Clean formatting on new line
             const editor = document.getElementById('articleContent');
             if (editor) {
+                // Ensure paragraphs are used for new lines
+                document.execCommand('defaultParagraphSeparator', false, 'p');
+
                 editor.addEventListener('keydown', (e) => {
                     if (e.key === 'Enter') {
-                        // Wait for the new line to be created
-                        setTimeout(() => {
-                            const sel = window.getSelection();
-                            if (!sel.rangeCount) return;
+                        const sel = window.getSelection();
+                        if (!sel.rangeCount) return;
 
-                            let node = sel.anchorNode;
-                            if (node.nodeType === 3) node = node.parentNode;
+                        // Check if we are inside a highlight
+                        let node = sel.anchorNode;
+                        if (node.nodeType === 3) node = node.parentNode;
 
-                            // If the new line carried over the highlight class, strip it
-                            if (node.classList && (node.classList.contains('highlight-name') || node.classList.contains('highlight-score'))) {
-                                node.className = ''; // Remove highlight class
-                                // Clean up ZWS if it was copied
-                                if (node.innerHTML && node.innerHTML.includes('\u200B')) {
-                                    node.innerHTML = node.innerHTML.replace(/\u200B/g, '');
+                        if (node.classList && (node.classList.contains('highlight-name') || node.classList.contains('highlight-score'))) {
+                            e.preventDefault(); // Stop default browser behavior (which might be just <br> in span)
+
+                            // Force a paragraph break
+                            // This splits the block: <p><span class="h">...</span></p> <p><span class="h">...</span></p>
+                            document.execCommand('insertParagraph');
+
+                            // Now clean the style on the NEW line
+                            // The cursor should be in the new paragraph now
+
+                            // We need to wait a tick for the DOM to settle? execCommand is usually synchronous but let's be safe cleaning up
+                            // actually execCommand IS synchronous.
+
+                            const newSel = window.getSelection();
+                            let newNode = newSel.anchorNode;
+                            if (newNode.nodeType === 3) newNode = newNode.parentNode;
+
+                            // Find the highlight span in this new block and unwrap/clear it
+                            // We might be inside the span in the new paragraph
+                            if (newNode.classList && (newNode.classList.contains('highlight-name') || newNode.classList.contains('highlight-score'))) {
+                                // We are inside the span in the new line.
+                                // Remove class to make it plain text
+                                newNode.className = '';
+                                // Remove ZWS if present
+                                if (newNode.innerHTML.includes('\u200B')) {
+                                    newNode.innerHTML = newNode.innerHTML.replace(/\u200B/g, '');
                                 }
-                                checkToolbarState(); // Update UI
+                                // If the span is now empty/useless, we might want to unwrap it entirely, 
+                                // but removing class is enough to visually "reset" it.
+
+                                // However, often we want to remove the span tag nicely.
+                                // document.execCommand('removeFormat') might be cleaner?
+                                // Let's stick to removing class as it's targeted.
                             }
-                        }, 0);
+
+                            checkToolbarState();
+                        } else {
+                            // Normal Enter functionality - verify clean state on next tick if needed
+                        }
                     }
                 });
             }
