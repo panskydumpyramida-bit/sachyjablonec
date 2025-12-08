@@ -24,14 +24,14 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            height: 100vh;
+            min-height: 100vh;
             margin: 0;
             text-align: center;
         }
 
         .container {
             background: var(--surface-color);
-            padding: 2rem;
+            padding: 3rem 2rem;
             border-radius: 12px;
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
             max-width: 500px;
@@ -42,24 +42,29 @@
         h1 {
             color: var(--primary-color);
             margin-bottom: 1rem;
+            font-size: 1.8rem;
         }
 
-        i {
-            font-size: 3rem;
-            color: var(--primary-color);
-            margin-bottom: 1rem;
+        .pawn-image {
+            max-width: 200px;
+            height: auto;
+            margin-bottom: 1.5rem;
+            border-radius: 50%;
+            box-shadow: 0 0 20px rgba(212, 175, 55, 0.2);
+            border: 2px solid rgba(212, 175, 55, 0.3);
         }
 
         p {
             line-height: 1.6;
             margin-bottom: 0;
+            color: #aaa;
         }
     </style>
 </head>
 
 <body>
     <div class="container">
-        <i class="fa-solid fa-person-digging"></i>
+        <img src="/img/maintenance_pawn.png" alt="Pěšec dělník" class="pawn-image">
         <h1>Právě probíhá údržba</h1>
         <p>Omlouváme se, ale web je momentálně v údržbě. <br>Vylepšujeme pro vás služby. <br>Zkuste to prosím za chvíli.
         </p>
