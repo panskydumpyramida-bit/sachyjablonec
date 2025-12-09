@@ -10,4 +10,4 @@ routes = [
 
 # Environment variables (optional)
 [vars]
-RAILWAY_URL = "https://sachyjablonec-production.up.railway.app"
+RAILWAY_URL = "https://sachyjablonec-production-21c7.up.railway.app"

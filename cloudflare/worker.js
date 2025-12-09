@@ -7,75 +7,102 @@
  * 3. If unhealthy → serve maintenance.html
  */
 
-const RAILWAY_URL = 'https://sachyjablonec-production.up.railway.app'; // Update with your Railway URL
+const RAILWAY_URL = 'https://sachyjablonec-production-21c7.up.railway.app';
 const HEALTH_CHECK_TIMEOUT = 5000; // 5 seconds
 const HEALTH_CHECK_PATH = '/health';
 
-// Embedded maintenance HTML (fallback if fetch fails)
+// Embedded maintenance HTML (from public/maintenance.html)
 const MAINTENANCE_HTML = `<!DOCTYPE html>
 <html lang="cs">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Údržba - Šachy Jablonec</title>
+    <title>Údržba | TJ Bižuterie Jablonec</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --primary-color: #d4af37;
+            --background-color: #121212;
+            --surface-color: #1e1e1e;
+            --text-color: #e0e0e0;
+        }
+
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
-            color: #ffffff;
-            min-height: 100vh;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            font-family: 'Inter', sans-serif;
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 2rem;
-        }
-        .container {
-            max-width: 600px;
+            min-height: 100vh;
+            margin: 0;
             text-align: center;
-            background: rgba(255, 255, 255, 0.05);
-            padding: 3rem;
-            border-radius: 16px;
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(212, 175, 55, 0.2);
         }
-        .icon {
-            font-size: 4rem;
-            margin-bottom: 1.5rem;
-            animation: pulse 2s ease-in-out infinite;
+
+        .container {
+            background: var(--surface-color);
+            padding: 3rem 2rem;
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            max-width: 500px;
+            width: 90%;
+            border: 1px solid rgba(255, 255, 255, 0.05);
         }
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
-        }
+
         h1 {
-            color: #d4af37;
-            font-size: 2rem;
+            color: var(--primary-color);
             margin-bottom: 1rem;
+            font-size: 1.8rem;
         }
+
+        .pawn-svg {
+            width: 150px;
+            height: 150px;
+            margin: 0 auto 1.5rem;
+            filter: drop-shadow(0 0 20px rgba(212, 175, 55, 0.3));
+        }
+
         p {
-            color: rgba(255, 255, 255, 0.8);
             line-height: 1.6;
-            margin-bottom: 0.5rem;
-        }
-        .status {
-            margin-top: 2rem;
-            padding: 1rem;
-            background: rgba(212, 175, 55, 0.1);
-            border-radius: 8px;
-            font-size: 0.9rem;
+            margin-bottom: 0;
+            color: #aaa;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <div class="icon">♟️</div>
-        <h1>Probíhá údržba</h1>
-        <p>Momentálně provádíme aktualizaci našich systémů.</p>
-        <p>Stránky budou brzy opět dostupné.</p>
-        <div class="status">
-            <p><strong>Děkujeme za trpělivost!</strong></p>
-        </div>
+        <svg class="pawn-svg" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+            <!-- Chess Pawn -->
+            <g fill="#d4af37" stroke="#b8941f" stroke-width="2">
+                <!-- Base -->
+                <ellipse cx="100" cy="180" rx="60" ry="12"/>
+                <!-- Stem -->
+                <path d="M 70 180 L 75 140 L 85 100 L 115 100 L 125 140 L 130 180 Z"/>
+                <!-- Body -->
+                <ellipse cx="100" cy="100" rx="30" ry="35"/>
+                <!-- Neck -->
+                <rect x="90" y="65" width="20" height="15" rx="3"/>
+                <!-- Head -->
+                <circle cx="100" cy="55" r="18"/>
+                <!-- Top knob -->
+                <circle cx="100" cy="35" r="8"/>
+            </g>
+            <!-- Construction Helmet -->
+            <g fill="#ffa500" stroke="#ff8c00" stroke-width="2">
+                <!-- Helmet dome -->
+                <path d="M 75 45 Q 75 25 100 25 Q 125 25 125 45 L 120 55 L 80 55 Z"/>
+                <!-- Helmet brim -->
+                <ellipse cx="100" cy="55" rx="28" ry="6"/>
+                <!-- Helmet stripe -->
+                <rect x="85" y="38" width="30" height="4" fill="#fff" opacity="0.3"/>
+            </g>
+            <!-- Tool belt (optional detail) -->
+            <rect x="85" y="115" width="30" height="8" fill="#8b4513" stroke="#654321" stroke-width="1" rx="2"/>
+        </svg>
+        <h1>Právě probíhá údržba</h1>
+        <p>Omlouváme se, ale web je momentálně v údržbě. <br>Vylepšujeme pro vás služby. <br>Zkuste to prosím za chvíli.</p>
     </div>
 </body>
 </html>`;
@@ -122,8 +149,18 @@ async function checkHealth() {
 
         clearTimeout(timeoutId);
 
-        // Consider healthy if status is 200-299
-        return response.ok;
+        // Strict check: Must be 200 OK AND return valid JSON with status='ok'
+        if (!response.ok || response.status !== 200) {
+            return false;
+        }
+
+        // Verify JSON response
+        try {
+            const data = await response.json();
+            return data.status === 'ok';
+        } catch (e) {
+            return false;
+        }
     } catch (error) {
         console.error('Health check failed:', error.message);
         return false;
