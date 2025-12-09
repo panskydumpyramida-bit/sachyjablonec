@@ -1449,6 +1449,38 @@
             <div id="standingsResult" style="margin-top: 1rem; display: none;"></div>
         </div>
     </div>
+
+    <!-- Gallery View -->
+    <div id="galleryView" class="hidden">
+        <div class="header-actions">
+            <h2><i class="fa-regular fa-images"></i> Správa Galerie</h2>
+            <button class="primary-btn" onclick="document.getElementById('imageUploadInput').click()">
+                <i class="fa-solid fa-cloud-arrow-up"></i> Nahrát fotky
+            </button>
+            <input type="file" id="imageUploadInput" multiple accept="image/*" style="display: none;"
+                onchange="handleAdminGalleryUpload(this)">
+        </div>
+
+        <div class="card" style="padding: 0;">
+            <div style="overflow-x: auto;">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Náhled</th>
+                            <th>Název</th>
+                            <th>Datum nahrání</th>
+                            <th>Akce</th>
+                        </tr>
+                    </thead>
+                    <tbody id="galleryTableBody">
+                        <tr>
+                            <td colspan="4" style="text-align: center;">Načítám...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
     </div>
     </div>
 
