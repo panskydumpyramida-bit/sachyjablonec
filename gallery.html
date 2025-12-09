@@ -23,52 +23,13 @@
         <section class="container" style="margin-top: 80px;">
             <h1 class="section-title">Galerie</h1>
 
-            <div class="card-grid">
-                <!-- Image 1 -->
-                <div class="card">
-                    <div class="card-image" style="height: 300px;">
-                        <img src="https://i.ibb.co/wZ1wgcRT/IMG-3196.jpg" alt="Zápas B týmu">
+            <div id="galleryGrid" class="card-grid">
+                <!-- Loading State -->
+                <div style="grid-column: 1 / -1; text-align: center; padding: 4rem;">
+                    <div
+                        style="display: inline-block; width: 40px; height: 40px; border: 4px solid rgba(212, 175, 55, 0.2); border-radius: 50%; border-top-color: var(--primary-color); animation: spin 1s linear infinite;">
                     </div>
-                    <div class="card-content">
-                        <h3 class="card-title">Zápas B týmu</h3>
-                        <p class="card-excerpt">Momentka ze zápasu proti Desku Liberec.</p>
-                    </div>
-                </div>
-
-                <!-- Placeholder 1 -->
-                <div class="card">
-                    <div class="card-image" style="height: 300px;">
-                        <img src="https://images.unsplash.com/photo-1529699211952-734e80c4d42b?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
-                            alt="Šachový turnaj">
-                    </div>
-                    <div class="card-content">
-                        <h3 class="card-title">Turnaj mládeže</h3>
-                        <p class="card-excerpt">Ilustrační foto z turnaje mládeže.</p>
-                    </div>
-                </div>
-
-                <!-- Placeholder 2 -->
-                <div class="card">
-                    <div class="card-image" style="height: 300px;">
-                        <img src="https://images.unsplash.com/photo-1586165368502-1bad197a6461?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
-                            alt="Šachovnice">
-                    </div>
-                    <div class="card-content">
-                        <h3 class="card-title">Trénink</h3>
-                        <p class="card-excerpt">Pravidelné tréninky v klubovně.</p>
-                    </div>
-                </div>
-
-                <!-- Placeholder 3 -->
-                <div class="card">
-                    <div class="card-image" style="height: 300px;">
-                        <img src="https://images.unsplash.com/photo-1528819622765-d6bcf132f793?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
-                            alt="Šachové figurky">
-                    </div>
-                    <div class="card-content">
-                        <h3 class="card-title">Detail hry</h3>
-                        <p class="card-excerpt">Napětí na šachovnici.</p>
-                    </div>
+                    <p style="margin-top: 1rem; color: var(--text-muted);">Načítám galerii...</p>
                 </div>
             </div>
         </section>
@@ -79,6 +40,56 @@
     <script src="js/config.js"></script>
     <script src="js/layout-loader.js"></script>
     <script src="js/main.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            const grid = document.getElementById('galleryGrid');
+            try {
+                const res = await fetch(`${API_URL}/images/public`);
+                if (!res.ok) throw new Error('Failed to load images');
+
+                const images = await res.json();
+
+                if (images.length === 0) {
+                    grid.innerHTML = `
+                        <div style="grid-column: 1 / -1; text-align: center; padding: 4rem; background: rgba(255,255,255,0.02); border-radius: 12px; border: 1px dashed rgba(255,255,255,0.1);">
+                            <i class="fa-regular fa-images" style="font-size: 3rem; color: var(--text-muted); opacity: 0.5; margin-bottom: 1rem;"></i>
+                            <h3 style="margin-bottom: 0.5rem; color: var(--text-light);">Zatím žádné fotky</h3>
+                            <p style="color: var(--text-muted);">Galerie je momentálně prázdná.</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                grid.innerHTML = images.map(img => `
+                    <div class="card" style="animation: fadeIn 0.5s ease-out;">
+                        <div class="card-image" style="height: 300px; cursor: pointer;" onclick="window.open('${img.url}', '_blank')">
+                            <img src="${img.url}" alt="${img.altText || 'Fotografie z galerie'}" loading="lazy" style="transition: transform 0.5s ease;">
+                        </div>
+                        <div class="card-content">
+                            <h3 class="card-title">${img.altText || 'Fotografie'}</h3>
+                            <p class="card-excerpt" style="display: flex; justify-content: space-between; align-items: center;">
+                                <span style="font-size: 0.8em; opacity: 0.7;">
+                                    <i class="fa-regular fa-calendar" style="margin-right: 4px;"></i>
+                                    ${new Date(img.uploadedAt).toLocaleDateString('cs-CZ')}
+                                </span>
+                                <a href="${img.url}" target="_blank" style="color: var(--primary-color); font-size: 0.85em; text-decoration: none;">
+                                    <i class="fa-solid fa-expand"></i> Zvětšit
+                                </a>
+                            </p>
+                        </div>
+                    </div>
+                `).join('');
+
+            } catch (e) {
+                console.error('Gallery load error:', e);
+                grid.innerHTML = `
+                    <div style="grid-column: 1 / -1; text-align: center; padding: 2rem; color: #fca5a5;">
+                        <i class="fa-solid fa-triangle-exclamation"></i> Nepodařilo se načíst galerii.
+                    </div>
+                `;
+            }
+        });
+    </script>
 </body>
 
 </html>
