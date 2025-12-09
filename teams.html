@@ -299,11 +299,12 @@
                 const competitions = data.standings || data;
 
                 // Team mappings: containerId -> [competitionId, teamNamePattern]
+                // Team names are like: TJ Bižuterie Jablonec n.N. "A" and TJ Bižuterie Jablonec n.N. "B"
                 const teamMappings = [
-                    { containerId: 'lastMatch-kp-A', compId: 'kp-liberec', pattern: /bižuterie.*a\b/i },
-                    { containerId: 'lastMatch-kp-B', compId: 'kp-liberec', pattern: /bižuterie.*b\b/i },
-                    { containerId: 'lastMatch-ks-C', compId: 'ks-vychod', pattern: /bižuterie.*(c\b|\"c\")/i },
-                    { containerId: 'lastMatch-ks-D', compId: 'ks-vychod', pattern: /bižuterie.*(d\b|\"d\")/i },
+                    { containerId: 'lastMatch-kp-A', compId: 'kp-liberec', pattern: /bižuterie.*"A"/i },
+                    { containerId: 'lastMatch-kp-B', compId: 'kp-liberec', pattern: /bižuterie.*"B"/i },
+                    { containerId: 'lastMatch-ks-C', compId: 'ks-vychod', pattern: /bižuterie.*"C"/i },
+                    { containerId: 'lastMatch-ks-D', compId: 'ks-vychod', pattern: /bižuterie.*"D"/i },
                 ];
 
                 for (const mapping of teamMappings) {
@@ -454,11 +455,12 @@
                     </button>
 
                     <!-- Main Badge -->
-                    <div ${canShowDetails ? `onclick="toggleMatchBadgeDetails('${detailsId}', '${encodeURIComponent(matchUrl)}', '${match.round}', '${encodeURIComponent(data.teamName)}', '${encodeURIComponent(match.opponent)}', this)"` : ''} 
-                         style="flex: 1; padding: 0.6rem 0.75rem; background: linear-gradient(135deg, ${bgColor} 0%, rgba(0,0,0,0.3) 100%); border-radius: 12px; border: 1px solid ${borderColor}; cursor: ${canShowDetails ? 'pointer' : 'default'}; transition: all 0.2s; box-shadow: 0 4px 15px rgba(0,0,0,0.2); position: relative; overflow: hidden;"
-                         onmouseover="${canShowDetails ? 'this.style.transform=\'translateY(-2px)\';this.style.boxShadow=\'0 8px 25px rgba(0,0,0,0.3)\'' : ''}" 
-                         onmouseout="${canShowDetails ? 'this.style.transform=\'translateY(0)\';this.style.boxShadow=\'0 4px 15px rgba(0,0,0,0.2)\'' : ''}">
-                        
+                    <!-- Main Badge -->
+                    <div onclick="${canShowDetails ? `toggleMatchBadgeDetails('${detailsId}', '${encodeURIComponent(matchUrl)}', '${match.round}', '${encodeURIComponent(data.teamName)}', '${encodeURIComponent(match.opponent)}', this)` : `openScheduleModal(teamData['${containerId}'].schedule, teamData['${containerId}'].teamName)`}" 
+                         style="flex: 1; padding: 0.6rem 0.75rem; background: linear-gradient(135deg, ${bgColor} 0%, rgba(0,0,0,0.3) 100%); border-radius: 12px; border: 1px solid ${borderColor}; cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 15px rgba(0,0,0,0.2); position: relative; overflow: hidden;"
+                         onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 8px 25px rgba(0,0,0,0.3)'" 
+                         onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='0 4px 15px rgba(0,0,0,0.2)'">
+                                                
                         <!-- Status Strip -->
                         <div style="position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background-color: ${statusColor};"></div>
 
@@ -482,8 +484,9 @@
                                     <i class="fa-solid fa-chevron-down details-icon" style="color: var(--primary-color); font-size: 0.7em; transition: transform 0.2s;"></i>
                                 </div>
                                 ` : `
-                                 <div style="display: flex; align-items: center; gap: 0.5rem;">
-                                    <span style="font-size: 0.75em; color: var(--text-icon); font-weight: 600; background: rgba(212,175,55,0.1); padding: 0.2em 0.5em; border-radius: 4px; color: var(--primary-color);">BUDOUCÍ</span>
+                                 <div style="display: flex; align-items: center; gap: 0.5rem; background: rgba(212,175,55,0.1); padding: 0.2rem 0.6rem; border-radius: 20px; border: 1px solid rgba(212,175,55,0.2);">
+                                    <i class="fa-regular fa-calendar-days" style="color: var(--primary-color); font-size: 0.8em;"></i>
+                                    <span style="font-size: 0.7em; color: var(--primary-color); font-weight: 600; text-transform: uppercase;">Rozpis</span>
                                 </div>
                                 `}
                             </div>

@@ -169,16 +169,40 @@ const isMatch = (team, rowText) => {
     // 1. Direct weak match
     if (rowLower.includes(simpleTeam)) return true;
 
-    // 2. Keyword match (if > 60% of keywords match)
-    const words = simpleTeam.split(' ').filter(w => w.length > 2);
+    const words = simpleTeam.split(' ');
 
-    // Critical Fix: If a word contains a digit (e.g. JR2), it MUST be present in the row.
-    // This prevents "JR2" team matching "L" team row (where JR2 is missing but other words match).
-    const digitWord = words.find(w => /\d/.test(w));
+    // Critical Fix: Detect short identifiers (like "A", "B", "C", "D", "E") that differentiate teams
+    // Look for single letters at the end of the team name
+    const teamParts = team.replace(/["']/g, '').trim().split(/\s+/);
+    const lastPart = teamParts[teamParts.length - 1];
+
+    // If team ends with a single letter identifier (e.g. "A"), ensuring the row contains it is strict
+    // But we must be careful not to match "a" inside other words.
+    // We check if the last word is a single letter or "JR1"/"L" etc. and require it.
+    if (lastPart && (lastPart.length === 1 || lastPart.match(/^(A|B|C|D|E|F|G|L|JR\d+)$/i))) {
+        const identifier = lastPart.toLowerCase();
+        // Check if identifier exists as a minimal word in rowText (with boundaries)
+        // e.g. "a" must be " a " or at end/start. 
+        // We use regex for this identifier check
+        const idRegex = new RegExp(`(^|\\s|["'])${identifier}($|\\s|["'])`, 'i');
+        if (!idRegex.test(rowLower)) {
+            // Identifier missing in row -> mismatch
+            return false;
+        }
+    }
+
+    // 2. Keyword match (if > 60% of LONG keywords match)
+    const longWords = words.filter(w => w.length > 2);
+
+    // Also enforce digit-containing words (like JR2) if they were not caught by above logic
+    const digitWord = longWords.find(w => /\d/.test(w));
     if (digitWord && !rowLower.includes(digitWord)) return false;
 
-    const matches = words.filter(w => rowLower.includes(w));
-    return matches.length >= (words.length * 0.6);
+    // If no long words (e.g. extremly short name), fall back to strict inclusion
+    if (longWords.length === 0) return rowLower.includes(simpleTeam);
+
+    const matches = longWords.filter(w => rowLower.includes(w));
+    return matches.length >= (longWords.length * 0.6);
 };
 
 // Helper to scrape match details (art=3)

@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="cs">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Propozice - Vánoční bleskový turnaj 2025</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Inter:wght@400;500;600;700&display=swap"
+        rel="stylesheet">
+    <style>
+        @page {
+            size: A4 portrait;
+            margin: 0;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #fff;
+            color: #1a1a1a;
+            width: 210mm;
+            height: 297mm;
+            overflow: hidden;
+        }
+
+        .page {
+            width: 210mm;
+            height: 297mm;
+            padding: 10mm 15mm;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            text-align: center;
+            padding-bottom: 6mm;
+            border-bottom: 3px solid #b8860b;
+            flex-shrink: 0;
+        }
+
+        .club-name {
+            font-size: 9px;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            color: #666;
+        }
+
+        .presents {
+            font-size: 8px;
+            color: #888;
+            margin: 1mm 0 3mm;
+        }
+
+        .title {
+            font-family: 'Playfair Display', serif;
+            font-size: 28px;
+            color: #b8860b;
+            margin-bottom: 2mm;
+        }
+
+        .memorial-box {
+            display: inline-flex;
+            align-items: center;
+            gap: 4mm;
+            background: #f8f8f8;
+            padding: 3mm 5mm;
+            border-radius: 8px;
+            border: 1px solid #eee;
+            margin: 3mm 0;
+        }
+
+        .memorial-photo {
+            width: 18mm;
+            height: 18mm;
+            border-radius: 50%;
+            object-fit: cover;
+            object-position: top;
+            border: 2px solid #b8860b;
+        }
+
+        .memorial-text {
+            text-align: left;
+        }
+
+        .memorial-label {
+            font-size: 8px;
+            color: #888;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .memorial-name {
+            font-family: 'Playfair Display', serif;
+            font-size: 14px;
+            color: #333;
+        }
+
+        .memorial-edition {
+            font-size: 8px;
+            color: #888;
+            margin-top: 1mm;
+        }
+
+        .date-badge {
+            display: inline-block;
+            background: #b8860b;
+            color: #fff;
+            padding: 2mm 10mm;
+            border-radius: 20px;
+            font-weight: 700;
+            font-size: 12px;
+            margin-top: 3mm;
+        }
+
+        .content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-evenly;
+            padding: 3mm 0;
+        }
+
+        .section {}
+
+        .section-title {
+            font-size: 11px;
+            color: #b8860b;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 3mm;
+            text-align: center;
+        }
+
+        .section-title::before {
+            content: "♔ ";
+        }
+
+        .info-row {
+            display: flex;
+            gap: 3mm;
+            justify-content: center;
+        }
+
+        .info-item {
+            flex: 1;
+            max-width: 42mm;
+            background: #f5f5f5;
+            padding: 2.5mm 3mm;
+            border-radius: 2mm;
+            border-left: 3px solid #b8860b;
+        }
+
+        .info-label {
+            font-size: 7px;
+            color: #888;
+            text-transform: uppercase;
+        }
+
+        .info-value {
+            font-weight: 600;
+            font-size: 10px;
+            margin-top: 0.5mm;
+        }
+
+        .fees-row {
+            display: flex;
+            gap: 3mm;
+            justify-content: center;
+        }
+
+        .fee-card {
+            background: #f5f5f5;
+            padding: 3mm 6mm;
+            border-radius: 2mm;
+            text-align: center;
+            min-width: 45mm;
+        }
+
+        .fee-card.hl {
+            background: #fff8e7;
+            border: 2px solid #b8860b;
+        }
+
+        .fee-cat {
+            font-size: 9px;
+            color: #666;
+        }
+
+        .fee-amt {
+            font-size: 16px;
+            font-weight: 700;
+            color: #b8860b;
+            margin-top: 1mm;
+        }
+
+        .prizes-row {
+            display: flex;
+            justify-content: center;
+            gap: 4mm;
+            margin-bottom: 2mm;
+        }
+
+        .prize {
+            text-align: center;
+            padding: 3mm 6mm;
+            background: #f5f5f5;
+            border-radius: 2mm;
+            min-width: 40mm;
+        }
+
+        .prize.g {
+            border-top: 3px solid #FFD700;
+        }
+
+        .prize.s {
+            border-top: 3px solid #A0A0A0;
+        }
+
+        .prize.b {
+            border-top: 3px solid #CD7F32;
+        }
+
+        .prize-icon {
+            font-size: 16px;
+        }
+
+        .prize-amt {
+            font-weight: 700;
+            font-size: 12px;
+            margin-top: 1mm;
+        }
+
+        .extra {
+            text-align: center;
+            font-size: 10px;
+            color: #666;
+            background: #fafafa;
+            padding: 2mm 4mm;
+            border-radius: 2mm;
+        }
+
+        .schedule-row {
+            display: flex;
+            justify-content: center;
+            gap: 12mm;
+            background: #f5f5f5;
+            padding: 4mm 8mm;
+            border-radius: 2mm;
+        }
+
+        .sched-item {
+            text-align: center;
+        }
+
+        .sched-lbl {
+            font-size: 8px;
+            color: #888;
+            text-transform: uppercase;
+        }
+
+        .sched-time {
+            font-size: 16px;
+            font-weight: 700;
+            color: #b8860b;
+        }
+
+        .contact-box {
+            background: #fff8e7;
+            padding: 4mm;
+            border-radius: 2mm;
+            text-align: center;
+            border: 2px solid #b8860b;
+        }
+
+        .contact-url {
+            font-size: 12px;
+            color: #b8860b;
+            font-weight: 700;
+        }
+
+        .contact-det {
+            font-size: 10px;
+            color: #555;
+            margin-top: 1mm;
+        }
+
+        .org-row {
+            display: flex;
+            justify-content: center;
+            gap: 15mm;
+        }
+
+        .org {
+            text-align: center;
+        }
+
+        .org-role {
+            font-size: 8px;
+            color: #888;
+            text-transform: uppercase;
+        }
+
+        .org-name {
+            font-size: 11px;
+            font-weight: 600;
+            margin-top: 0.5mm;
+        }
+
+        .footer {
+            text-align: center;
+            padding-top: 4mm;
+            border-top: 2px solid #eee;
+            flex-shrink: 0;
+        }
+
+        .gdpr {
+            font-size: 7px;
+            color: #999;
+            margin-bottom: 2mm;
+            max-width: 140mm;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .closing {
+            font-family: 'Playfair Display', serif;
+            font-size: 14px;
+            color: #b8860b;
+        }
+
+        .chess {
+            font-size: 12px;
+            color: #ddd;
+            letter-spacing: 3px;
+            margin-top: 2mm;
+        }
+
+        .note {
+            font-size: 8px;
+            color: #888;
+            text-align: center;
+            margin-top: 1.5mm;
+        }
+
+        @media print {
+
+            html,
+            body {
+                width: auto;
+                height: auto;
+            }
+
+            .page {
+                padding: 8mm 12mm;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="page">
+        <header class="header">
+            <div class="club-name">Šachový oddíl TJ Bižuterie Jablonec nad Nisou</div>
+            <div class="presents">pořádá</div>
+            <h1 class="title">VÁNOČNÍ BLESKOVÝ TURNAJ</h1>
+
+            <div class="memorial-box">
+                <img src="images/cestmir_drobnik.png" alt="Čestmír Drobník" class="memorial-photo">
+                <div class="memorial-text">
+                    <div class="memorial-label">Memoriál</div>
+                    <div class="memorial-name">Čestmíra Drobníka</div>
+                    <div class="memorial-edition">1. ročník memoriálu • 19. ročník turnaje</div>
+                    <div class="date-badge">📅 Čtvrtek 18. 12. 2025</div>
+                </div>
+            </div>
+
+        </header>
+
+        <div class="content">
+            <div class="section">
+                <div class="section-title">Základní informace</div>
+                <div class="info-row">
+                    <div class="info-item">
+                        <div class="info-label">Místo konání</div>
+                        <div class="info-value">Městská hala, Jablonec n. N.</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Tempo hry</div>
+                        <div class="info-value">3 min + 2 s/tah</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Systém</div>
+                        <div class="info-value">10 kol švýcarským</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Kapacita</div>
+                        <div class="info-value">44 hráčů</div>
+                    </div>
+                </div>
+                <p class="note">Výsledky budou zaslány na zápočet LOK-Blesk</p>
+            </div>
+
+            <div class="section">
+                <div class="section-title">Startovné</div>
+                <div class="fees-row">
+                    <div class="fee-card">
+                        <div class="fee-cat">Dospělí</div>
+                        <div class="fee-amt">100 Kč</div>
+                    </div>
+                    <div class="fee-card">
+                        <div class="fee-cat">Mládež & Důchodci</div>
+                        <div class="fee-amt">50 Kč</div>
+                    </div>
+                    <div class="fee-card hl">
+                        <div class="fee-cat">Členové TJ Bižuterie</div>
+                        <div class="fee-amt">ZDARMA</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section">
+                <div class="section-title">Cenový fond</div>
+                <div class="prizes-row">
+                    <div class="prize g">
+                        <div class="prize-icon">🥇</div>
+                        <div class="prize-amt">500 Kč</div>
+                    </div>
+                    <div class="prize s">
+                        <div class="prize-icon">🥈</div>
+                        <div class="prize-amt">300 Kč</div>
+                    </div>
+                    <div class="prize b">
+                        <div class="prize-icon">🥉</div>
+                        <div class="prize-amt">200 Kč</div>
+                    </div>
+                </div>
+                <div class="extra">+ Další věcné ceny pro kategorie: Mládež (≤15 let), Senioři (60+), Hráči podle ela
+                </div>
+            </div>
+
+            <div class="section">
+                <div class="section-title">Časový rozvrh</div>
+                <div class="schedule-row">
+                    <div class="sched-item">
+                        <div class="sched-lbl">Prezence do</div>
+                        <div class="sched-time">17:15</div>
+                    </div>
+                    <div class="sched-item">
+                        <div class="sched-lbl">Zahájení</div>
+                        <div class="sched-time">17:30</div>
+                    </div>
+                    <div class="sched-item">
+                        <div class="sched-lbl">Ukončení cca</div>
+                        <div class="sched-time">20:30</div>
+                    </div>
+                </div>
+                <p class="note">Hrací materiál zajistí pořadatel</p>
+            </div>
+
+            <div class="section">
+                <div class="section-title">Přihlášky a registrace</div>
+                <div class="contact-box">
+                    <div class="contact-url">www.sachyjablonec.cz/blicak</div>
+                    <div class="contact-det">📧 info@sachyjablonec.cz | 📞 731 183 859</div>
+                </div>
+            </div>
+
+            <div class="section">
+                <div class="section-title">Organizační tým</div>
+                <div class="org-row">
+                    <div class="org">
+                        <div class="org-role">Ředitel turnaje</div>
+                        <div class="org-name">Filip Zadražil</div>
+                    </div>
+                    <div class="org">
+                        <div class="org-role">Hlavní rozhodčí</div>
+                        <div class="org-name">Lukáš Sivák</div>
+                    </div>
+                    <div class="org">
+                        <div class="org-role">Kontaktní osoba</div>
+                        <div class="org-name">Antonín Duda</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <footer class="footer">
+            <p class="gdpr">Účastí v turnaji hráč souhlasí se zpracováním osobních údajů pro zápočet LOK a prezentaci
+                výsledků, včetně pořízení fotografií.</p>
+            <div class="closing">Těšíme se na Vaši účast – ŠACHU ZDAR!</div>
+            <div class="chess">♔ ♕ ♖ ♗ ♘ ♙</div>
+        </footer>
+    </div>
+</body>
+
+</html>
