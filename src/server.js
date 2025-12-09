@@ -1278,6 +1278,24 @@ app.get('/api/admin/backup', authMiddleware, async (req, res) => {
     }
 });
 
+// Manual Migration Endpoint (Protected)
+app.post('/api/admin/migrate', authMiddleware, async (req, res) => {
+    if (req.user.role !== 'superadmin') return res.status(403).json({ error: 'Unauthorized' });
+    try {
+        const { exec } = await import('child_process');
+        exec('npx prisma db push', (error, stdout, stderr) => {
+            if (error) {
+                console.error(`Migration error: ${error.message}`);
+                return res.status(500).json({ error: error.message, details: stderr });
+            }
+            console.log(`Migration stdout: ${stdout}`);
+            res.json({ success: true, message: 'Database migration completed', output: stdout });
+        });
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
 // Seed Endpoint (Protected)un once to populate database
 app.post('/api/seed', async (req, res) => {
     const result = await seedDatabase();
