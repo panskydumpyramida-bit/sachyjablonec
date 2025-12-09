@@ -5,10 +5,10 @@ aptPkgs = ["libvips-dev"]
 DATABASE_URL = "file:/app/prisma/dev.db"
 
 [phases.build]
-cmds = ["npm ci", "npx prisma generate"]
+cmds = ["npm ci", "DATABASE_URL=file:/app/prisma/dev.db npx prisma generate"]
 
 [phases.deploy]
-cmds = ["npx prisma db push --accept-data-loss"]
+cmds = ["DATABASE_URL=file:/app/prisma/dev.db npx prisma db push --accept-data-loss"]
 
 [start]
 cmd = "npm start"
