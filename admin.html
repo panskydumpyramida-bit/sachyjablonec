@@ -3623,7 +3623,9 @@
             tbody.innerHTML = '<tr><td colspan="4" style="text-align: center;">Načítám...</td></tr>';
 
             try {
-                const res = await fetchWithAuth(`${API_URL}/images`); // Gets all images (auth required)
+                const res = await fetch(`${API_URL}/images`, {
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
                 if (!res.ok) throw new Error('Failed to load images');
 
                 const images = await res.json();
@@ -3663,8 +3665,9 @@
             if (!confirm('Opravdu chcete smazat tento obrázek? Tato akce je nevratná.')) return;
 
             try {
-                const res = await fetchWithAuth(`${API_URL}/images/${id}`, {
-                    method: 'DELETE'
+                const res = await fetch(`${API_URL}/images/${id}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${authToken}` }
                 });
 
                 if (res.ok) {
