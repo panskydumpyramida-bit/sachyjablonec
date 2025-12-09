@@ -2088,15 +2088,22 @@
                 console.log('Response status:', res.status);
 
                 if (!res.ok) {
-                    const txt = await res.text();
-                    throw new Error('Failed to load: ' + res.status);
+                    const text = await res.text();
+                    let errMsg = `Chyba ${res.status}`;
+                    try {
+                        const json = JSON.parse(text);
+                        if (json.error) errMsg += `: ${json.error}`;
+                    } catch (e) {
+                        errMsg += `: ${text.substring(0, 100)}`;
+                    }
+                    throw new Error(errMsg);
                 }
 
                 const images = await res.json();
                 console.log('Images loaded:', images.length);
 
                 if (images.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="4" style="text-align: center;">Žádné obrázky</td></tr>';
+                    tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">Žádné obrázky</td></tr>';
                     return;
                 }
 

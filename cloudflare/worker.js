@@ -58,10 +58,10 @@ const MAINTENANCE_HTML = `<!DOCTYPE html>
         }
 
         .pawn-svg {
-            width: 150px;
-            height: 150px;
+            width: 180px;
+            height: 180px;
             margin: 0 auto 1.5rem;
-            filter: drop-shadow(0 0 20px rgba(212, 175, 55, 0.3));
+            filter: drop-shadow(0 0 25px rgba(212, 175, 55, 0.4));
         }
 
         p {
@@ -73,33 +73,51 @@ const MAINTENANCE_HTML = `<!DOCTYPE html>
 </head>
 <body>
     <div class="container">
-        <svg class="pawn-svg" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
-            <!-- Chess Pawn -->
-            <g fill="#d4af37" stroke="#b8941f" stroke-width="2">
-                <!-- Base -->
-                <ellipse cx="100" cy="180" rx="60" ry="12"/>
-                <!-- Stem -->
-                <path d="M 70 180 L 75 140 L 85 100 L 115 100 L 125 140 L 130 180 Z"/>
-                <!-- Body -->
-                <ellipse cx="100" cy="100" rx="30" ry="35"/>
-                <!-- Neck -->
-                <rect x="90" y="65" width="20" height="15" rx="3"/>
-                <!-- Head -->
-                <circle cx="100" cy="55" r="18"/>
-                <!-- Top knob -->
-                <circle cx="100" cy="35" r="8"/>
+        <svg class="pawn-svg" viewBox="0 0 200 220" xmlns="http://www.w3.org/2000/svg">
+            <!-- Oval Frame -->
+            <ellipse cx="100" cy="110" rx="90" ry="100" fill="none" stroke="#d4af37" stroke-width="3" stroke-dasharray="10, 5"/>
+            <ellipse cx="100" cy="110" rx="82" ry="92" fill="#1a1a1a" stroke="#b8941f" stroke-width="1" opacity="0.5"/>
+
+            <!-- Glow behind pawn -->
+            <ellipse cx="100" cy="160" rx="50" ry="20" fill="#d4af37" opacity="0.2" filter="blur(10px)"/>
+
+            <g transform="translate(0, 10)">
+                <!-- Chess Pawn Body -->
+                <g fill="#d4af37" stroke="#b8941f" stroke-width="2">
+                    <!-- Base -->
+                    <path d="M 40 170 Q 100 190 160 170 L 160 160 Q 100 180 40 160 Z" />
+                    <rect x="45" y="150" width="110" height="15" rx="5" />
+                    
+                    <!-- Stem -->
+                    <path d="M 70 150 Q 85 100 85 80 L 115 80 Q 115 100 130 150 Z" />
+                    
+                    <!-- Collar -->
+                    <ellipse cx="100" cy="80" rx="25" ry="10" />
+                    
+                    <!-- Head base -->
+                    <circle cx="100" cy="55" r="22" />
+                </g>
+
+                <!-- Construction Helmet -->
+                <g fill="#ff9100" stroke="#cc7400" stroke-width="2">
+                    <!-- Helmet dome -->
+                    <path d="M 65 48 C 65 15 135 15 135 48" fill="#ff9100"/>
+                    <path d="M 65 48 L 135 48" stroke="none"/> <!-- fill bottom -->
+                    
+                    <!-- Helmet brim -->
+                    <path d="M 60 48 Q 100 65 140 48" fill="none" stroke="#cc7400" stroke-width="4" stroke-linecap="round"/>
+                    
+                    <!-- Reflective stripe -->
+                    <path d="M 75 35 Q 100 30 125 35" fill="none" stroke="#ffffff" stroke-width="4" opacity="0.4"/>
+                    
+                    <!-- Slight shine -->
+                    <ellipse cx="90" cy="28" rx="10" ry="5" fill="#fff" opacity="0.3" transform="rotate(-20 90 28)"/>
+                </g>
+                
+                <!-- Tool belt -->
+                <rect x="75" y="120" width="50" height="12" rx="3" fill="#8d6e63" stroke="#5d4037" stroke-width="2"/>
+                <circle cx="100" cy="126" r="3" fill="#gold"/>
             </g>
-            <!-- Construction Helmet -->
-            <g fill="#ffa500" stroke="#ff8c00" stroke-width="2">
-                <!-- Helmet dome -->
-                <path d="M 75 45 Q 75 25 100 25 Q 125 25 125 45 L 120 55 L 80 55 Z"/>
-                <!-- Helmet brim -->
-                <ellipse cx="100" cy="55" rx="28" ry="6"/>
-                <!-- Helmet stripe -->
-                <rect x="85" y="38" width="30" height="4" fill="#fff" opacity="0.3"/>
-            </g>
-            <!-- Tool belt (optional detail) -->
-            <rect x="85" y="115" width="30" height="8" fill="#8b4513" stroke="#654321" stroke-width="1" rx="2"/>
         </svg>
         <h1>Právě probíhá údržba</h1>
         <p>Omlouváme se, ale web je momentálně v údržbě. <br>Vylepšujeme pro vás služby. <br>Zkuste to prosím za chvíli.</p>
@@ -190,6 +208,7 @@ async function proxyToRailway(request) {
 
         // Add CORS headers if needed
         modifiedResponse.headers.set('Access-Control-Allow-Origin', '*');
+        modifiedResponse.headers.set('X-Proxy-By', 'Sachy-Worker-Maintenance');
 
         return modifiedResponse;
     } catch (error) {
