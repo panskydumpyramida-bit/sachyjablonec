@@ -2253,20 +2253,105 @@
         }
 
         async function loadCompetitions() {
-            const container = document.getElementById('competitionsContent');
-            if (!container) return;
             try {
-                container.innerHTML = '<div style="text-align: center; padding: 2rem; color: #fbbf24;"><i class="fa-solid fa-spinner fa-spin"></i> Načítám tabulky...</div>';
-                const res = await fetch(`${API_URL}/standings`);
+                const res = await fetch(`${API_URL}/competitions`);
+                let competitions = await res.json();
+                competitions.sort((a, b) => a.id.localeCompare(b.id));
+
+                const container = document.getElementById('competitionsList');
+                if (!container) return;
+
+                container.innerHTML = competitions.map(c => `
+                    <div style="background: rgba(255, 255, 255, 0.05); padding: 0.75rem; border-radius: 6px; margin-bottom: 0.5rem; display: flex; align-items: center; justify-content: space-between; gap: 1rem;">
+                        <div style="display: flex; align-items: center; gap: 0.5rem;">
+                            <input type="checkbox" id="active_${c.id}" ${c.active !== false ? 'checked' : ''} onchange="toggleCompetitionActive('${c.id}', this.checked)" title="Aktivní">
+                            <div style="overflow: hidden;">
+                                <strong style="display: block; font-size: 0.9rem; color: var(--primary-color); ${c.active === false ? 'opacity: 0.5;' : ''}">${escapeHtml(c.name)}</strong>
+                                <div style="font-size: 0.8rem; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 300px;" title="${c.url || 'Není nastaveno'}">
+                                    ${c.url || '<span style="color: #fca5a5;">URL nenastaveno</span>'}
+                                </div>
+                            </div>
+                        </div>
+                        <button class="btn-secondary" onclick="changeSourceUrl('${c.id}', '${escapeHtml(c.url || '')}')" style="font-size: 0.8rem; padding: 0.25rem 0.5rem;">
+                            <i class="fa-solid fa-pen"></i> URL
+                        </button>
+                    </div>
+                `).join('');
+            } catch (e) {
+                console.error('Error loading competitions:', e);
+            }
+        }
+
+        async function updateStandings() {
+            const btn = document.getElementById('updateStandingsBtn');
+            const resultDiv = document.getElementById('standingsResult');
+            if (!btn) return;
+
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Načítám...';
+            if (resultDiv) resultDiv.innerHTML = '<p style="color: var(--text-muted);">Stahují se data ze soutěží...</p>';
+
+            try {
+                const res = await fetch(`${API_URL}/standings/update`, {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+
                 if (res.ok) {
                     const data = await res.json();
-                    container.innerHTML = `<div style="padding: 1rem;"><p>Tabulky načteny. Poslední aktualizace: ${data.lastUpdated ? new Date(data.lastUpdated).toLocaleString('cs-CZ') : 'neznámá'}</p></div>`;
+                    let html = '<div style="background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.2); padding: 1rem; border-radius: 6px; margin-bottom: 1rem;">';
+                    html += '<h4 style="color: #10b981; margin: 0 0 0.5rem 0;"><i class="fa-solid fa-check-circle"></i> Aktualizace úspěšná</h4>';
+                    html += '<ul style="margin: 0; padding-left: 1.5rem;">';
+                    if (data.standings && Array.isArray(data.standings)) {
+                        data.standings.forEach(comp => {
+                            const count = comp.standings ? comp.standings.length : 0;
+                            html += comp.error
+                                ? `<li style="color: #fca5a5;">${escapeHtml(comp.name)}: Chyba - ${escapeHtml(comp.error)}</li>`
+                                : `<li>${escapeHtml(comp.name)}: načteno ${count} týmů</li>`;
+                        });
+                    }
+                    html += '</ul></div>';
+                    if (resultDiv) resultDiv.innerHTML = html;
+                    showToast('Tabulky aktualizovány');
                 } else {
-                    container.innerHTML = '<div style="text-align: center; padding: 2rem; color: red;">Nepodařilo se načíst tabulky.</div>';
+                    const errorData = await res.json().catch(() => ({}));
+                    throw new Error(errorData.error || 'Server error ' + res.status);
                 }
             } catch (e) {
-                console.error('loadCompetitions error:', e);
-                container.innerHTML = '<div style="text-align: center; padding: 2rem; color: red;">Chyba při načítání tabulek.</div>';
+                console.error(e);
+                if (resultDiv) resultDiv.innerHTML = `<p style="color: #fca5a5;"><i class="fa-solid fa-exclamation-triangle"></i> Chyba: ${e.message}</p>`;
+                showToast('Chyba: ' + e.message, 'error');
+            }
+
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fa-solid fa-sync"></i> Aktualizovat tabulky';
+        }
+
+        async function toggleCompetitionActive(id, active) {
+            try {
+                const res = await fetch(`${API_URL}/competitions/${id}/url`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
+                    body: JSON.stringify({ active })
+                });
+                if (res.ok) {
+                    loadCompetitions();
+                } else {
+                    showToast('Chyba při změně stavu', 'error');
+                    loadCompetitions();
+                }
+            } catch (e) { console.error(e); }
+        }
+
+        function changeSourceUrl(id, currentUrl) {
+            const newUrl = prompt('Nová URL pro soutěž:', currentUrl);
+            if (newUrl !== null && newUrl !== currentUrl) {
+                fetch(`${API_URL}/competitions/${id}/url`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
+                    body: JSON.stringify({ url: newUrl })
+                }).then(() => { loadCompetitions(); showToast('URL změněno'); })
+                    .catch(() => showToast('Chyba', 'error'));
             }
         }
 
