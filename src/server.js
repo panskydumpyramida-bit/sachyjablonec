@@ -44,9 +44,12 @@ app.use(cors());
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
-// Health Check (for Railway zero-downtime)
+// Health Check (for Railway zero-downtime and Cloudflare Worker)
 app.get('/health', (req, res) => {
-    res.status(200).send('OK');
+    res.status(200).json({
+        status: 'ok',
+        timestamp: new Date().toISOString()
+    });
 });
 
 // Maintenance Mode Middleware
