@@ -5,7 +5,7 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "sqlite"
   url      = env("DATABASE_URL")
 }
 
@@ -92,6 +92,7 @@ model Image {
   url          String
   altText      String?  @map("alt_text")
   uploadedAt   DateTime @default(now()) @map("uploaded_at")
+  isPublic     Boolean  @default(true) @map("is_public")
   
   @@map("images")
 }
@@ -134,7 +135,7 @@ model Standing {
   losses        Int?
   games         Int?
   score         Float?
-  scheduleJson  String?  @map("schedule_json") @db.Text
+  scheduleJson  String?  @map("schedule_json")
   updatedAt     DateTime @updatedAt @map("updated_at")
   
   competition   Competition @relation(fields: [competitionId], references: [id], onDelete: Cascade)

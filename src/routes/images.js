@@ -88,14 +88,14 @@ router.post('/upload', authMiddleware, (req, res, next) => {
     }
 });
 
-// Get public images (limited to latest 20)
+// Get public images (all visible)
 router.get('/public', async (req, res) => {
     try {
         const images = await prisma.image.findMany({
+            where: { isPublic: true },
             orderBy: {
                 uploadedAt: 'desc'
-            },
-            take: 3
+            }
         });
 
         res.json(images);
@@ -118,6 +118,24 @@ router.get('/', authMiddleware, async (req, res) => {
     } catch (error) {
         console.error('Get images error:', error);
         res.status(500).json({ error: 'Failed to get images' });
+    }
+});
+
+// Toggle image visibility
+router.put('/:id/toggle', authMiddleware, async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { isPublic } = req.body;
+
+        const image = await prisma.image.update({
+            where: { id: parseInt(id) },
+            data: { isPublic: Boolean(isPublic) }
+        });
+
+        res.json(image);
+    } catch (error) {
+        console.error('Toggle visibility error:', error);
+        res.status(500).json({ error: 'Failed to update visibility' });
     }
 });
 

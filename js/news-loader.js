@@ -1,6 +1,22 @@
 // News Loader - dynamically loads news from API
 // Uses API_URL from config.js (loaded before this script)
 
+// Helper: Check if article has games and return indicator HTML
+function getGamesIndicator(item) {
+    if (!item.gamesJson || item.gamesJson === '[]' || item.gamesJson === 'null') {
+        return '';
+    }
+    // Return a 2x2 chessboard mini-icon
+    return `<span class="games-indicator" title="Obsahuje přehrávač partií">
+        <span class="mini-board">
+            <span class="sq sq-light"></span>
+            <span class="sq sq-dark"></span>
+            <span class="sq sq-dark"></span>
+            <span class="sq sq-light"></span>
+        </span>
+    </span>`;
+}
+
 // Load and render news
 async function loadNews(options = {}) {
     const {
@@ -82,7 +98,7 @@ async function loadNews(options = {}) {
                 })()}
                     </div>
                     <div class="card-content">
-                        <span class="card-category">${escapeHtml(item.category)}</span>
+                        <span class="card-category">${escapeHtml(item.category)}${getGamesIndicator(item)}</span>
                         <span class="card-date">${formatDate(item.publishedDate)}</span>
                         <h3 class="card-title">${escapeHtml(item.title)}</h3>
                         <p class="card-excerpt">${item.excerpt}</p>
@@ -100,7 +116,7 @@ async function loadNews(options = {}) {
                         <div class="news-cols-layout">
                             <div class="news-cols-content">
                                 <h2 style="font-family: 'Playfair Display', serif; margin: 0 0 0.5rem 0; color: var(--primary-color);">${escapeHtml(item.title)}</h2>
-                                <div style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1rem;">${formatDate(item.publishedDate)}</div>
+                                <div style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1rem;">${formatDate(item.publishedDate)}${getGamesIndicator(item)}</div>
                                 
                                 <div style="line-height: 1.6; color: var(--text-light); margin-bottom: 1.5rem;">
                                     ${displayMode === 'full'
@@ -260,5 +276,25 @@ style.textContent = `
             max-height: 250px;
         }
     }
+    
+    /* Games Indicator - Mini Chessboard Icon */
+    .games-indicator {
+        display: inline-flex;
+        align-items: center;
+        margin-left: 0.5rem;
+        vertical-align: middle;
+    }
+    .mini-board {
+        display: grid;
+        grid-template-columns: repeat(2, 7px);
+        grid-template-rows: repeat(2, 7px);
+        gap: 0;
+        border-radius: 2px;
+        overflow: hidden;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.4);
+    }
+    .sq { display: block; }
+    .sq-light { background: #f0d9b5; }
+    .sq-dark { background: #b58863; }
 `;
 document.head.appendChild(style);

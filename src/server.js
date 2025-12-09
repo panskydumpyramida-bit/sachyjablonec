@@ -39,6 +39,11 @@ app.use((req, res, next) => {
     next();
 });
 
+// Basic Middleware
+app.use(cors());
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ extended: true, limit: '50mb' }));
+
 // Health Check (for Railway zero-downtime)
 app.get('/health', (req, res) => {
     res.status(200).send('OK');
@@ -84,6 +89,26 @@ app.use(async (req, res, next) => {
     }
     next();
 });
+
+// Static Files Serving
+// Explicitly serve static directories
+app.use(express.static(path.join(__dirname, '../public')));
+app.use('/js', express.static(path.join(__dirname, '../js')));
+app.use('/css', express.static(path.join(__dirname, '../css')));
+app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
+app.use('/images', express.static(path.join(__dirname, '../images')));
+
+// Serve specific HTML pages (since they are in root)
+app.get('/admin.html', (req, res) => res.sendFile(path.join(__dirname, '../admin.html')));
+app.get('/gallery.html', (req, res) => res.sendFile(path.join(__dirname, '../gallery.html')));
+app.get('/youth.html', (req, res) => res.sendFile(path.join(__dirname, '../youth.html')));
+app.get('/teams.html', (req, res) => res.sendFile(path.join(__dirname, '../teams.html')));
+app.get('/calendar.html', (req, res) => res.sendFile(path.join(__dirname, '../calendar.html')));
+app.get('/about.html', (req, res) => res.sendFile(path.join(__dirname, '../about.html')));
+app.get('/members.html', (req, res) => res.sendFile(path.join(__dirname, '../members.html')));
+app.get('/blicak.html', (req, res) => res.sendFile(path.join(__dirname, '../blicak.html')));
+// Serve index.html matches app.get('*') later, but we can serve it explicitly too
+app.get('/index.html', (req, res) => res.sendFile(path.join(__dirname, '../index.html')));
 
 // Helper: Clean HTML text
 const clean = (s) => {
