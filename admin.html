@@ -3623,7 +3623,8 @@
             const tbody = document.getElementById('galleryTableBody');
             if (!tbody) { console.error('Gallery tbody not found'); return; }
 
-            tbody.innerHTML = '<tr><td colspan="4" style="text-align: center;">Načítám... (čekám na server)</td></tr>';
+            // Unique text to verify version
+            tbody.innerHTML = '<tr><td colspan="4" style="text-align: center;">Načítám...</td></tr>';
 
             if (!authToken) {
                 console.error('No auth token available');
@@ -3632,10 +3633,16 @@
             }
 
             try {
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 8000); // 8s timeout
+
                 console.log('Fetching images from', `${API_URL}/images`);
                 const res = await fetch(`${API_URL}/images`, {
-                    headers: { 'Authorization': `Bearer ${authToken}` }
+                    headers: { 'Authorization': `Bearer ${authToken}` },
+                    signal: controller.signal
                 });
+                clearTimeout(timeoutId);
+
                 console.log('Fetch response:', res.status, res.statusText);
 
                 if (!res.ok) {

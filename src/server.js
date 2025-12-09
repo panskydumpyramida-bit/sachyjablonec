@@ -115,6 +115,35 @@ const fetchWithHeaders = (url) => fetch(url, {
     }
 });
 
+// Helper for fuzzy matching
+const simplify = (str) => {
+    return str.toLowerCase()
+        .replace(/n\.n\./g, '')
+        .replace(/["']/g, '')
+        // Removed aggressive suffix stripping to distinguish teams like JR2 vs L
+        .replace(/\s+/g, ' ')
+        .trim();
+};
+
+const isMatch = (team, rowText) => {
+    const simpleTeam = simplify(team);
+    const rowLower = rowText.toLowerCase();
+
+    // 1. Direct weak match
+    if (rowLower.includes(simpleTeam)) return true;
+
+    // 2. Keyword match (if > 60% of keywords match)
+    const words = simpleTeam.split(' ').filter(w => w.length > 2);
+
+    // Critical Fix: If a word contains a digit (e.g. JR2), it MUST be present in the row.
+    // This prevents "JR2" team matching "L" team row (where JR2 is missing but other words match).
+    const digitWord = words.find(w => /\d/.test(w));
+    if (digitWord && !rowLower.includes(digitWord)) return false;
+
+    const matches = words.filter(w => rowLower.includes(w));
+    return matches.length >= (words.length * 0.6);
+};
+
 // Helper to scrape match details (art=3)
 async function scrapeMatchDetails(compUrl, round, homeTeam, awayTeam) {
     // Construct clean URL for pairings (all matches in round)
@@ -153,8 +182,7 @@ async function scrapeMatchDetails(compUrl, round, homeTeam, awayTeam) {
             return str.toLowerCase()
                 .replace(/n\.n\./g, '')
                 .replace(/["']/g, '')
-                // Strip common team suffixes like A, B, JR1, JR2 etc.
-                .replace(/\s+(jr\d*|[a-d]|"\w+")$/i, '')
+                // Removed aggressive suffix stripping to distinguish teams like JR2 vs L
                 .replace(/\s+/g, ' ')
                 .trim();
         };
@@ -167,7 +195,14 @@ async function scrapeMatchDetails(compUrl, round, homeTeam, awayTeam) {
             if (rowLower.includes(simpleTeam)) return true;
 
             // 2. Keyword match (if > 60% of keywords match)
+            // Fix: Include words with digits (like JR2) even if short? No, JR2 is > 2.
             const words = simpleTeam.split(' ').filter(w => w.length > 2);
+
+            // Critical Fix: If a word contains a digit (e.g. JR2), it MUST be present in the row.
+            // This prevents "JR2" team matching "L" team row (where JR2 is missing but other words match).
+            const digitWord = words.find(w => /\d/.test(w));
+            if (digitWord && !rowLower.includes(digitWord)) return false;
+
             const matches = words.filter(w => rowLower.includes(w));
             return matches.length >= (words.length * 0.6);
         };
@@ -712,8 +747,7 @@ async function updateStandings(competitions = null) {
                 for (const team of standings) {
                     if (team.isBizuterie) {
                         team.schedule = competitionMatches.filter(m =>
-                            m.home === team.team || m.away === team.team ||
-                            m.home.includes(team.team) || m.away.includes(team.team)
+                            isMatch(team.team, m.home) || isMatch(team.team, m.away)
                         ).map(m => {
                             const isHome = m.home === team.team || m.home.includes(team.team);
                             return {
