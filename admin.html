@@ -1603,7 +1603,19 @@
         function showAdmin() {
             document.getElementById('loginPage').classList.add('hidden');
             document.getElementById('adminPanel').classList.remove('hidden');
-            if (['admin', 'superadmin'].includes(currentUser.role)) document.getElementById('usersTab').classList.remove('hidden');
+
+            // Show tabs based on role
+            if (['admin', 'superadmin'].includes(currentUser.role)) {
+                const galleryBtn = document.getElementById('nav-gallery');
+                if (galleryBtn) galleryBtn.style.display = 'inline-block';
+
+                const usersBtn = document.getElementById('nav-users');
+                if (usersBtn) usersBtn.style.display = 'inline-block';
+
+                const settingsBtn = document.getElementById('nav-settings');
+                if (settingsBtn) settingsBtn.style.display = 'inline-block';
+            }
+
             loadDashboard();
         }
 
