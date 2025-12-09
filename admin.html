@@ -1466,17 +1466,33 @@
 
         <script>
             async function triggerMigration() {
-                if(!confirm('Spustit aktualizaci databáze?')) return;
+                const btn = event.target.closest('button');
+                btn.disabled = true;
+                btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Pracuji...';
+
                 try {
                     const res = await fetch(`${API_URL}/admin/migrate`, {
                         method: 'POST',
                         headers: { 'Authorization': `Bearer ${authToken}` }
                     });
                     const data = await res.json();
-                    alert(JSON.stringify(data));
-                    loadAdminGallery();
-                } catch(e) {
+                    console.log('Migrace:', data);
+                    btn.innerHTML = '<i class="fa-solid fa-check"></i> Hotovo';
+                    btn.classList.remove('btn-warning');
+                    btn.classList.add('btn-success');
+
+                    // Reload gallery after 1s
+                    setTimeout(() => {
+                        loadAdminGallery();
+                        btn.disabled = false;
+                        btn.innerHTML = '<i class="fa-solid fa-wrench"></i> Opravit DB';
+                        btn.classList.remove('btn-success');
+                        btn.classList.add('btn-warning');
+                    }, 2000);
+                } catch (e) {
+                    btn.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> Chyba';
                     alert('Chyba: ' + e.message);
+                    btn.disabled = false;
                 }
             }
         </script>
@@ -1494,7 +1510,7 @@
                     </thead>
                     <tbody id="galleryTableBody">
                         <tr>
-                            <td colspan="4" style="text-align: center;">Načítám...</td>
+                            <td colspan="5" style="text-align: center;">Načítám...</td>
                         </tr>
                     </tbody>
                 </table>
@@ -2084,50 +2100,52 @@
 
         // --- Gallery Management ---
         async function loadAdminGallery() {
-            console.log('loadAdminGallery called');
             const tbody = document.getElementById('galleryTableBody');
-            if (!tbody) { console.error('Gallery tbody not found'); return; }
+            if (!tbody) return;
 
-            tbody.innerHTML = '<tr><td colspan="4" style="text-align: center;">Načítám... (pokus 2)</td></tr>';
+            // Helper to log status to UI
+            const logStatus = (msg) => {
+                tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: #fbbf24; padding: 2rem;">${msg}</td></tr>`;
+            };
+
+            logStatus('<i class="fa-solid fa-spinner fa-spin"></i> Startuji načítání...');
 
             if (!authToken) {
-                console.error('No authToken');
-                tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; color: red;">Chyba: Chybí přihlášení</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: red;">Chyba: Chybí přihlášení token</td></tr>';
                 return;
             }
 
             try {
-                const url = `${API_URL}/images`;
-                console.log('Fetching from:', url);
+                logStatus(`<i class="fa-solid fa-network-wired"></i> Volám API: ${API_URL}/images...`);
 
-                const res = await fetch(url, {
-                    headers: { 'Authorization': `Bearer ${authToken}` }
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 10000); // 10s timeout
+
+                const res = await fetch(`${API_URL}/images`, {
+                    headers: { 'Authorization': `Bearer ${authToken}` },
+                    signal: controller.signal
                 });
+                clearTimeout(timeoutId);
 
-                console.log('Response status:', res.status);
+                logStatus(`<i class="fa-solid fa-server"></i> Odpověď serveru: ${res.status}`);
 
                 if (!res.ok) {
                     const text = await res.text();
                     let errMsg = `Chyba ${res.status}`;
-                    try {
-                        const json = JSON.parse(text);
-                        if (json.error) errMsg += `: ${json.error}`;
-                    } catch (e) {
-                        errMsg += `: ${text.substring(0, 100)}`;
-                    }
+                    try { const j = JSON.parse(text); if (j.error) errMsg += `: ${j.error}`; } catch (e) { errMsg += `: ${text.substring(0, 50)}`; }
                     throw new Error(errMsg);
                 }
 
+                logStatus('<i class="fa-solid fa-code"></i> Zpracovávám data...');
                 const images = await res.json();
-                console.log('Images loaded:', images.length);
 
                 if (images.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">Žádné obrázky</td></tr>';
+                    tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 2rem;">Žádné obrázky v galerii.</td></tr>';
                     return;
                 }
 
-                const html = images.map(img => {
-                    return `
+                // Render images
+                tbody.innerHTML = images.map(img => `
                     <tr>
                         <td>
                             <img src="${img.url}" style="width: 60px; height: 40px; object-fit: cover; border-radius: 4px; cursor: pointer;" onclick="window.open('${img.url}', '_blank')">
@@ -2138,20 +2156,19 @@
                         </td>
                         <td>${new Date(img.uploadedAt).toLocaleString('cs-CZ')}</td>
                         <td>
-                            <button class="action-btn btn-danger" onclick="deleteGalleryImage(${img.id})" title="Smazat">
+                            <button class="action-btn btn-delete" onclick="deleteGalleryImage(${img.id})" title="Smazat">
                                 <i class="fa-solid fa-trash"></i>
                             </button>
                         </td>
                     </tr>
-                `;
-                }).join('');
-
-                tbody.innerHTML = html;
+                `).join('');
                 console.log('Gallery rendered');
 
             } catch (e) {
-                console.error('Full error object:', e);
-                tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; color: red;">Chyba: ${e.message}</td></tr>`;
+                console.error('Gallery Error:', e);
+                tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: red; padding: 2rem;">
+                    <i class="fa-solid fa-triangle-exclamation"></i> Chyba: ${e.name === 'AbortError' ? 'Timeout (server neodpovídá)' : e.message}
+                </td></tr>`;
             }
         }
 
