@@ -3619,16 +3619,38 @@
         }
         // --- Gallery Management ---
         async function loadAdminGallery() {
+            console.log('loadAdminGallery called');
             const tbody = document.getElementById('galleryTableBody');
-            tbody.innerHTML = '<tr><td colspan="4" style="text-align: center;">Načítám...</td></tr>';
+            if (!tbody) { console.error('Gallery tbody not found'); return; }
+
+            tbody.innerHTML = '<tr><td colspan="4" style="text-align: center;">Načítám... (čekám na server)</td></tr>';
+
+            if (!authToken) {
+                console.error('No auth token available');
+                tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; color: red;">Chyba: Chybí přihlášení</td></tr>';
+                return;
+            }
 
             try {
+                console.log('Fetching images from', `${API_URL}/images`);
                 const res = await fetch(`${API_URL}/images`, {
                     headers: { 'Authorization': `Bearer ${authToken}` }
                 });
-                if (!res.ok) throw new Error('Failed to load images');
+                console.log('Fetch response:', res.status, res.statusText);
+
+                if (!res.ok) {
+                    const txt = await res.text();
+                    console.error('Fetch failed:', txt);
+                    throw new Error(`Failed to load images: ${res.status}`);
+                }
 
                 const images = await res.json();
+                console.log('Images loaded:', images.length);
+
+                if (!Array.isArray(images)) {
+                    console.error('Response is not an array:', images);
+                    throw new Error('Invalid response format');
+                }
 
                 if (images.length === 0) {
                     tbody.innerHTML = '<tr><td colspan="4" style="text-align: center;">Žádné obrázky</td></tr>';
@@ -3657,7 +3679,7 @@
 
             } catch (e) {
                 console.error('Gallery load error:', e);
-                tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; color: #fca5a5;">Chyba načítání</td></tr>';
+                tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; color: #fca5a5;">Chyba načítání: ${e.message}</td></tr>`;
             }
         }
 
@@ -3694,11 +3716,10 @@
                 formData.append('image', file);
 
                 try {
-                    const token = localStorage.getItem('token');
                     const res = await fetch(`${API_URL}/images/upload`, {
                         method: 'POST',
                         headers: {
-                            'Authorization': `Bearer ${token}`
+                            'Authorization': `Bearer ${authToken}`
                         },
                         body: formData
                     });
