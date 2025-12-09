@@ -1641,6 +1641,7 @@
         }
 
         function showAdmin() {
+            console.log('showAdmin called');
             document.getElementById('loginPage').classList.add('hidden');
             document.getElementById('adminPanel').classList.remove('hidden');
 
@@ -1655,13 +1656,11 @@
                     usersBtn.classList.remove('hidden');
                     usersBtn.style.display = 'inline-block';
                 }
-
-                // Settings tab (if implementation exists later)
-                // const settingsBtn = document.getElementById('settingsTab');
-                // if (settingsBtn) settingsBtn.style.display = 'inline-block';
             }
 
+            console.log('showAdmin: calling loadDashboard');
             loadDashboard();
+            console.log('showAdmin: loadDashboard called');
         }
 
         async function verifyToken() {
