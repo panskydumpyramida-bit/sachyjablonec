@@ -113,6 +113,15 @@ app.get('/blicak.html', (req, res) => res.sendFile(path.join(__dirname, '../blic
 // Serve index.html matches app.get('*') later, but we can serve it explicitly too
 app.get('/index.html', (req, res) => res.sendFile(path.join(__dirname, '../index.html')));
 
+// API Routes - MUST be before static catch-all
+app.use('/api/auth', authRoutes);
+app.use('/api/news', newsRoutes);
+app.use('/api/reports', reportsRoutes);
+app.use('/api/images', imagesRoutes);
+app.use('/api/users', userRoutes);
+app.use('/api/members', memberRoutes);
+app.use('/api/messages', messageRoutes);
+
 // Helper: Clean HTML text
 const clean = (s) => {
     if (!s) return '';
@@ -570,7 +579,7 @@ app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 // Serve specific static directories
 // Serve specific static directories
 ['css', 'js', 'images', 'data', 'components'].forEach(dir => {
-    app.use(`/ ${dir} `, express.static(path.join(__dirname, `../ ${dir} `)));
+    app.use(`/${dir}`, express.static(path.join(__dirname, `../${dir}`)));
 });
 
 // Serve HTML files from root
@@ -639,14 +648,7 @@ app.use((req, res, next) => {
     next();
 });
 
-// API Routes
-app.use('/api/auth', authRoutes);
-app.use('/api/news', newsRoutes);
-app.use('/api/reports', reportsRoutes);
-app.use('/api/images', imagesRoutes);
-app.use('/api/users', userRoutes);
-app.use('/api/members', memberRoutes);
-app.use('/api/messages', messageRoutes);
+// Moved API Routes higher up
 
 // Health check
 app.get('/api/health', (req, res) => {
