@@ -631,6 +631,31 @@ app.post('/api/registration/blicak', async (req, res) => {
 });
 
 app.use(express.static(path.join(__dirname, '../'))); // Serve static files from root loops back to * logic safely
+
+// Clean URLs middleware - serve HTML files without .html extension
+// e.g. /blicak -> blicak.html, /teams -> teams.html
+app.use((req, res, next) => {
+    // skip api routes
+    if (req.path.startsWith('/api')) return next();
+
+    // Skip if path has a file extension
+    if (req.path.includes('.')) return next();
+
+    // Skip root path
+    if (req.path === '/') return next();
+
+    // Clean the path and check if corresponding .html file exists
+    const cleanPath = req.path.replace(/^\//, ''); // Remove leading slash
+    const htmlFile = `${cleanPath}.html`;
+
+    // Check if this is an allowed HTML file
+    if (allowedHtmlFiles.includes(htmlFile)) {
+        return res.sendFile(path.join(__dirname, `../${htmlFile}`));
+    }
+
+    next();
+});
+
 // Middleware to serve static files from root safely
 app.use((req, res, next) => {
     // skip api routes
@@ -642,7 +667,7 @@ app.use((req, res, next) => {
     // check if it's an allowed html file
     const filename = reqPath.split('/').pop();
     if (allowedHtmlFiles.includes(filename) && reqPath.split('/').length === 2) {
-        return res.sendFile(path.join(__dirname, `../ ${filename} `));
+        return res.sendFile(path.join(__dirname, `../${filename}`));
     }
 
     next();
