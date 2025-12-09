@@ -88,6 +88,23 @@ router.post('/upload', authMiddleware, (req, res, next) => {
     }
 });
 
+// Get public images (limited to latest 20)
+router.get('/public', async (req, res) => {
+    try {
+        const images = await prisma.image.findMany({
+            orderBy: {
+                uploadedAt: 'desc'
+            },
+            take: 20
+        });
+
+        res.json(images);
+    } catch (error) {
+        console.error('Get public images error:', error);
+        res.status(500).json({ error: 'Failed to get images' });
+    }
+});
+
 // Get all images
 router.get('/', authMiddleware, async (req, res) => {
     try {
