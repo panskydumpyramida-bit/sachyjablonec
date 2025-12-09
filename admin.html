@@ -1043,7 +1043,7 @@
                                                         <th>Akce</th>
                                                     </tr>
                                                 </thead>
-                                                <tbody id="galleryTableBody">
+                                                <tbody id="articleGalleryTableBody">
                                                     <tr>
                                                         <td colspan="4" style="text-align: center;">Načítám...</td>
                                                     </tr>
@@ -2238,6 +2238,37 @@
             }
         }
 
+        // --- Games editor functions ---
+        function renderGames() {
+            const container = document.getElementById('gamesList');
+            if (!container) return;
+            if (games.length === 0) {
+                container.innerHTML = '<p style="color: var(--text-muted); font-size: 0.85rem;">Žádné partie</p>';
+                return;
+            }
+            container.innerHTML = games.map((g, i) => `
+                <div class="game-item" style="display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem; background: rgba(255,255,255,0.05); border-radius: 4px; margin-bottom: 0.25rem;">
+                    <input type="text" value="${escapeHtml(g.title || '')}" 
+                           onchange="updateGameTitle(${i}, this.value)" 
+                           placeholder="Název partie" style="flex: 1;">
+                    <input type="text" value="${g.gameId || ''}" 
+                           onchange="updateGameId(${i}, this.value)" 
+                           placeholder="ID" style="width: 80px;">
+                    <label style="display: flex; align-items: center; gap: 0.25rem;">
+                        <input type="checkbox" ${g.commented ? 'checked' : ''} onchange="updateGameCommented(${i}, this.checked)">
+                        💬
+                    </label>
+                    <button type="button" onclick="removeGame(${i})" class="action-btn btn-delete" style="padding: 0.25rem 0.5rem;">
+                        <i class="fa-solid fa-times"></i>
+                    </button>
+                </div>
+            `).join('');
+        }
+
+        function updateGameTitle(index, value) { if (games[index]) games[index].title = value; }
+        function updateGameId(index, value) { if (games[index]) games[index].gameId = value; }
+        function updateGameCommented(index, value) { if (games[index]) games[index].commented = value; }
+        function removeGame(index) { games.splice(index, 1); renderGames(); }
 
         async function handleAdminGalleryUpload(input) {
             if (!input.files || input.files.length === 0) return;
