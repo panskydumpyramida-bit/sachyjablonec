@@ -95,7 +95,7 @@ router.get('/public', async (req, res) => {
             orderBy: {
                 uploadedAt: 'desc'
             },
-            take: 20
+            take: 3
         });
 
         res.json(images);
