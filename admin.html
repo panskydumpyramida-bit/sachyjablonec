@@ -945,7 +945,7 @@
                     <p style="margin: 0.25rem 0 0 0; font-size: 0.9rem; opacity: 0.8; visibility: visible !important;"
                         id="userInfo"></p>
                     <p style="margin: 0.1rem 0 0 0; font-size: 0.7rem; opacity: 0.5; font-family: monospace;">Build:
-                        2025-12-09 21:02 #v3</p>
+                        2025-12-09 21:11 #v4</p>
                 </div>
             </div>
 
@@ -2705,55 +2705,68 @@
                 return;
             }
 
-            container.innerHTML = `
-                <div class="games-list-draggable">
-                    ${games.map((item, index) => {
-                if (item.type === 'header' || item.isHeader) { // Support both new and potential legacy flags
-                    return `
-                                <div class="game-item header-item" draggable="true" data-index="${index}" style="background: rgba(212, 175, 55, 0.1); border-left: 3px solid var(--primary-color);">
-                                    <span class="drag-handle"><i class="fa-solid fa-grip-vertical"></i></span>
-                                    <div style="flex: 1; display: flex; align-items: center; gap: 0.5rem;">
-                                        <i class="fa-solid fa-heading" style="color: var(--primary-color);"></i>
-                                        <input type="text" class="game-title-input" value="${escapeHtml(item.title)}" 
-                                               onchange="updateGameTitle(${index}, this.value)" style="font-weight: bold;">
-                                    </div>
-                                    <div class="game-actions">
-                                        <button class="action-btn btn-delete" onclick="removeGame(${index})">
-                                            <i class="fa-solid fa-times"></i>
-                                        </button>
-                                    </div>
-                                </div>
-                            `;
-                } else {
-                    // Regular Game
-                    // Handle legacy 'team' property if present by ignoring it visually but keeping data if needed?
-                    // Actually user wants to effectively flatten it.
-                    return `
-                                <div class="game-item" draggable="true" data-index="${index}">
-                                    <span class="drag-handle"><i class="fa-solid fa-grip-vertical"></i></span>
-                                    <div class="game-inputs">
-                                        <input type="text" class="game-title-input" value="${escapeHtml(item.title)}" 
-                                               onchange="updateGameTitle(${index}, this.value)" placeholder="Název partie">
-                                        <input type="text" class="game-id-input" value="${item.gameId || ''}" 
-                                               onchange="updateGameId(${index}, this.value)" placeholder="ID">
-                                    </div>
-                                    <div class="game-actions">
-                                        <label style="display: flex; align-items: center; cursor: pointer;" title="Komentovaná">
-                                            <input type="checkbox" ${item.commented ? 'checked' : ''} 
-                                                   onchange="toggleGameCommented(${index}, this.checked)" 
-                                                   style="width: auto; margin: 0;">
-                                            <i class="fa-regular fa-comment-dots"></i>
-                                        </label>
-                                        <button class="action-btn btn-delete" onclick="removeGame(${index})">
-                                            <i class="fa-solid fa-times"></i>
-                                        </button>
-                                    </div>
-                                </div>
-                            `;
+            let currentTeam = null;
+            let html = '<div class="games-list-draggable">';
+
+            games.forEach((item, index) => {
+                // Check if this is a header item
+                if (item.type === 'header' || item.isHeader) {
+                    html += `
+                        <div class="game-item header-item" draggable="true" data-index="${index}" style="background: rgba(212, 175, 55, 0.1); border-left: 3px solid var(--primary-color);">
+                            <span class="drag-handle"><i class="fa-solid fa-grip-vertical"></i></span>
+                            <div style="flex: 1; display: flex; align-items: center; gap: 0.5rem;">
+                                <i class="fa-solid fa-heading" style="color: var(--primary-color);"></i>
+                                <input type="text" class="game-title-input" value="${escapeHtml(item.title)}" 
+                                       onchange="updateGameTitle(${index}, this.value)" style="font-weight: bold;">
+                            </div>
+                            <div class="game-actions">
+                                <button class="action-btn btn-delete" onclick="removeGame(${index})">
+                                    <i class="fa-solid fa-times"></i>
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                    return;
                 }
-            }).join('')}
-                </div>
-            `;
+
+                // Check if team changed - add visual separator (not editable, just display)
+                if (item.team && item.team !== currentTeam) {
+                    currentTeam = item.team;
+                    html += `
+                        <div class="game-item team-separator" style="background: rgba(212, 175, 55, 0.15); border-left: 3px solid var(--primary-color); padding: 0.5rem 1rem;">
+                            <i class="fa-solid fa-users" style="color: var(--primary-color); margin-right: 0.5rem;"></i>
+                            <strong style="color: var(--primary-color);">${escapeHtml(currentTeam)}</strong>
+                        </div>
+                    `;
+                }
+
+                // Regular game item
+                html += `
+                    <div class="game-item" draggable="true" data-index="${index}">
+                        <span class="drag-handle"><i class="fa-solid fa-grip-vertical"></i></span>
+                        <div class="game-inputs">
+                            <input type="text" class="game-title-input" value="${escapeHtml(item.title)}" 
+                                   onchange="updateGameTitle(${index}, this.value)" placeholder="Název partie">
+                            <input type="text" class="game-id-input" value="${item.gameId || ''}" 
+                                   onchange="updateGameId(${index}, this.value)" placeholder="ID">
+                        </div>
+                        <div class="game-actions">
+                            <label style="display: flex; align-items: center; cursor: pointer;" title="Komentovaná">
+                                <input type="checkbox" ${item.commented ? 'checked' : ''} 
+                                       onchange="toggleGameCommented(${index}, this.checked)" 
+                                       style="width: auto; margin: 0;">
+                                <i class="fa-regular fa-comment-dots"></i>
+                            </label>
+                            <button class="action-btn btn-delete" onclick="removeGame(${index})">
+                                <i class="fa-solid fa-times"></i>
+                            </button>
+                        </div>
+                    </div>
+                `;
+            });
+
+            html += '</div>';
+            container.innerHTML = html;
 
             initDragAndDrop();
         }
