@@ -144,6 +144,30 @@ router.delete('/:id', authMiddleware, async (req, res) => {
     try {
         const { id } = req.params;
 
+        // First get the image to find the filename
+        const image = await prisma.image.findUnique({
+            where: { id: parseInt(id) }
+        });
+
+        if (!image) {
+            return res.status(404).json({ error: 'Image not found' });
+        }
+
+        // Delete the physical file from disk
+        if (image.filename) {
+            const filepath = path.join(__dirname, '../../uploads', image.filename);
+            try {
+                if (fs.existsSync(filepath)) {
+                    fs.unlinkSync(filepath);
+                    console.log('Deleted file:', filepath);
+                }
+            } catch (fileErr) {
+                console.error('Error deleting file (continuing anyway):', fileErr);
+                // Continue even if file deletion fails - the DB record should still be removed
+            }
+        }
+
+        // Delete from database
         await prisma.image.delete({
             where: { id: parseInt(id) }
         });
