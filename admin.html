@@ -965,6 +965,9 @@
                 <div class="nav-tab" id="competitionsTab" onclick="switchTab('competitions')"><i
                         class="fa-solid fa-table"></i>
                     Tabulky družstva</div>
+                <div class="nav-tab" id="galleryTab" onclick="switchTab('gallery')" style="display: none;"><i
+                        class="fa-regular fa-images"></i>
+                    Galerie</div>
             </div>
 
             <div id="alertContainer"></div>
@@ -1606,14 +1609,19 @@
 
             // Show tabs based on role
             if (['admin', 'superadmin'].includes(currentUser.role)) {
-                const galleryBtn = document.getElementById('nav-gallery');
+                const galleryBtn = document.getElementById('galleryTab');
                 if (galleryBtn) galleryBtn.style.display = 'inline-block';
 
-                const usersBtn = document.getElementById('nav-users');
-                if (usersBtn) usersBtn.style.display = 'inline-block';
+                // Users tab
+                const usersBtn = document.getElementById('usersTab');
+                if (usersBtn) {
+                    usersBtn.classList.remove('hidden');
+                    usersBtn.style.display = 'inline-block';
+                }
 
-                const settingsBtn = document.getElementById('nav-settings');
-                if (settingsBtn) settingsBtn.style.display = 'inline-block';
+                // Settings tab (if implementation exists later)
+                // const settingsBtn = document.getElementById('settingsTab');
+                // if (settingsBtn) settingsBtn.style.display = 'inline-block';
             }
 
             loadDashboard();
