@@ -1464,38 +1464,7 @@
                 onchange="handleAdminGalleryUpload(this)">
         </div>
 
-        <script>
-            async function triggerMigration() {
-                const btn = event.target.closest('button');
-                btn.disabled = true;
-                btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Pracuji...';
 
-                try {
-                    const res = await fetch(`${API_URL}/admin/migrate`, {
-                        method: 'POST',
-                        headers: { 'Authorization': `Bearer ${authToken}` }
-                    });
-                    const data = await res.json();
-                    console.log('Migrace:', data);
-                    btn.innerHTML = '<i class="fa-solid fa-check"></i> Hotovo';
-                    btn.classList.remove('btn-warning');
-                    btn.classList.add('btn-success');
-
-                    // Reload gallery after 1s
-                    setTimeout(() => {
-                        loadAdminGallery();
-                        btn.disabled = false;
-                        btn.innerHTML = '<i class="fa-solid fa-wrench"></i> Opravit DB';
-                        btn.classList.remove('btn-success');
-                        btn.classList.add('btn-warning');
-                    }, 2000);
-                } catch (e) {
-                    btn.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> Chyba';
-                    alert('Chyba: ' + e.message);
-                    btn.disabled = false;
-                }
-            }
-        </script>
         <div class="card" style="padding: 0;">
             <div style="overflow-x: auto;">
                 <table class="data-table">
@@ -2254,6 +2223,49 @@
             input.value = ''; // Reset input
         }
 
+
+        async function triggerMigration() {
+            const btn = event.target.closest('button');
+            if (btn) {
+                btn.disabled = true;
+                btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Pracuji...';
+            }
+
+            try {
+                const res = await fetch(`${API_URL}/admin/migrate`, {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+
+                let data = {};
+                try { data = await res.json(); } catch (e) { }
+
+                console.log('Migrace:', data);
+
+                if (btn) {
+                    btn.innerHTML = '<i class="fa-solid fa-check"></i> Hotovo';
+                    btn.classList.remove('btn-warning');
+                    btn.classList.add('btn-success');
+                }
+
+                // Reload gallery after 2s
+                setTimeout(() => {
+                    loadAdminGallery();
+                    if (btn) {
+                        btn.disabled = false;
+                        btn.innerHTML = '<i class="fa-solid fa-wrench"></i> Opravit DB';
+                        btn.classList.remove('btn-success');
+                        btn.classList.add('btn-warning');
+                    }
+                }, 2000);
+            } catch (e) {
+                if (btn) {
+                    btn.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> Chyba';
+                    btn.disabled = false;
+                }
+                alert('Chyba: ' + e.message);
+            }
+        }
     </script>
 </body>
 
