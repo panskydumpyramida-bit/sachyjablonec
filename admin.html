@@ -1699,10 +1699,29 @@
 
         // Dashboard
         async function loadDashboard() {
+            const tbody = document.getElementById('newsTableBody');
+            if (!tbody) { console.error('newsTableBody not found'); return; }
+
+            tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: #fbbf24;">Načítám novinky...</td></tr>';
+
             try {
+                console.log('loadDashboard: fetching from', `${API_URL}/news`);
                 const res = await fetch(`${API_URL}/news`, { headers: { 'Authorization': `Bearer ${authToken}` } });
+                console.log('loadDashboard: response status', res.status);
+
+                if (!res.ok) {
+                    throw new Error(`HTTP ${res.status}`);
+                }
+
                 const news = await res.json();
-                document.getElementById('newsTableBody').innerHTML = news.map(item => `
+                console.log('loadDashboard: got', news.length, 'items');
+
+                if (news.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="6" style="text-align: center;">Žádné novinky.</td></tr>';
+                    return;
+                }
+
+                tbody.innerHTML = news.map(item => `
                     <tr>
                         <td>${new Date(item.publishedDate).toLocaleDateString('cs-CZ')}</td>
                         <td>${item.title}</td>
@@ -1716,7 +1735,10 @@
                         </td>
                     </tr>
                 `).join('');
-            } catch (e) { console.error(e); }
+            } catch (e) {
+                console.error('loadDashboard error:', e);
+                tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: red;">Chyba: ${e.message}</td></tr>`;
+            }
         }
 
         async function togglePublish(id) {
