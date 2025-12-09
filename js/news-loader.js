@@ -160,7 +160,7 @@ async function loadNews(options = {}) {
                         <li>
                             <a href="${getArticleUrl(item)}" class="news-link">
                                 <span class="news-date">${formatDate(item.publishedDate)}</span>
-                                <span class="news-title">${escapeHtml(item.title)}</span>
+                                <span class="news-title">${escapeHtml(item.title)}${getGamesIndicator(item)}</span>
                             </a>
                         </li>
                     `).join('')}
