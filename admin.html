@@ -2045,27 +2045,6 @@
             if (typeof checkToolbarState === 'function') checkToolbarState();
         }
 
-        function switchTab(tab) {
-            document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
-            const activeTab = document.querySelector(`.nav-tab[onclick="switchTab('${tab}')"]`);
-            if (activeTab) activeTab.classList.add('active');
-
-            ['dashboard', 'editor', 'members', 'users', 'messages', 'blicak', 'competitions', 'gallery'].forEach(v => {
-                const el = document.getElementById(v + 'View');
-                if (el) el.classList.add('hidden');
-            });
-
-            const view = document.getElementById(tab + 'View');
-            if (view) view.classList.remove('hidden');
-
-            if (tab === 'dashboard' && typeof loadDashboard === 'function') loadDashboard();
-            else if (tab === 'members' && typeof loadMembers === 'function') loadMembers();
-            else if (tab === 'users' && typeof loadUsers === 'function') loadUsers();
-            else if (tab === 'messages' && typeof loadAdminMessages === 'function') loadAdminMessages();
-            else if (tab === 'blicak' && typeof loadBlicakRegistrations === 'function') loadBlicakRegistrations();
-            else if (tab === 'competitions' && typeof loadCompetitions === 'function') loadCompetitions();
-            else if (tab === 'gallery') loadAdminGallery();
-        }
 
         // --- Gallery Management ---
         async function loadAdminGallery() {
