@@ -2176,6 +2176,15 @@
             }
         }
 
+        // --- Toast notification ---
+        function showToast(message, type = 'success') {
+            const toast = document.createElement('div');
+            toast.style.cssText = `position: fixed; bottom: 20px; right: 20px; padding: 1rem 1.5rem; border-radius: 8px; color: white; font-weight: 500; z-index: 10000; animation: slideIn 0.3s ease; background: ${type === 'error' ? '#ef4444' : '#22c55e'};`;
+            toast.textContent = message;
+            document.body.appendChild(toast);
+            setTimeout(() => { toast.style.opacity = '0'; setTimeout(() => toast.remove(), 300); }, 3000);
+        }
+
         // --- Missing function implementations ---
         function escapeHtml(text) {
             const div = document.createElement('div');
@@ -2209,15 +2218,38 @@
                     const messages = await res.json();
                     tbody.innerHTML = messages.map(m => `
                         <tr>
-                            <td>${escapeHtml(m.name)}</td>
-                            <td>${escapeHtml(m.email)}</td>
-                            <td>${escapeHtml(m.message.substring(0, 50))}...</td>
+                            <td>${escapeHtml(m.author || '')}</td>
+                            <td>${escapeHtml((m.content || '').substring(0, 80))}${m.content && m.content.length > 80 ? '...' : ''}</td>
                             <td>${new Date(m.createdAt).toLocaleString('cs-CZ')}</td>
                             <td><button class="action-btn btn-delete" onclick="deleteMessage(${m.id})"><i class="fa-solid fa-trash"></i></button></td>
                         </tr>
                     `).join('');
                 }
             } catch (e) { console.error('loadAdminMessages error:', e); }
+        }
+
+        async function deleteMessage(id) {
+            if (!confirm('Smazat zprávu?')) return;
+            try {
+                await fetch(`${API_URL}/messages/${id}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+                loadAdminMessages();
+                showToast('Zpráva smazána');
+            } catch (e) { showToast('Chyba', 'error'); }
+        }
+
+        async function deleteUser(id) {
+            if (!confirm('Smazat uživatele?')) return;
+            try {
+                await fetch(`${API_URL}/users/${id}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+                loadUsers();
+                showToast('Uživatel smazán');
+            } catch (e) { showToast('Chyba', 'error'); }
         }
 
         async function loadCompetitions() {
@@ -2269,6 +2301,51 @@
         function updateGameId(index, value) { if (games[index]) games[index].gameId = value; }
         function updateGameCommented(index, value) { if (games[index]) games[index].commented = value; }
         function removeGame(index) { games.splice(index, 1); renderGames(); }
+
+        // --- Editor preview and toolbar functions ---
+        function checkToolbarState() {
+            const selection = window.getSelection();
+            if (!selection || !selection.rangeCount) return;
+            const isBold = document.queryCommandState('bold');
+            const isItalic = document.queryCommandState('italic');
+            const isUnderline = document.queryCommandState('underline');
+            const btnBold = document.getElementById('btnBold');
+            const btnItalic = document.getElementById('btnItalic');
+            const btnUnderline = document.getElementById('btnUnderline');
+            if (btnBold) btnBold.classList.toggle('active', isBold);
+            if (btnItalic) btnItalic.classList.toggle('active', isItalic);
+            if (btnUnderline) btnUnderline.classList.toggle('active', isUnderline);
+        }
+
+        function removeGalleryImage(index) {
+            galleryImages.splice(index, 1);
+            renderGallery();
+        }
+
+        function renderGallery() {
+            const container = document.getElementById('galleryPreview');
+            if (!container) return;
+            container.innerHTML = galleryImages.length ? galleryImages.map((img, i) => `
+                <div style="position: relative; display: inline-block;">
+                    <img src="${img}" style="width: 80px; height: 80px; object-fit: cover; border-radius: 4px;">
+                    <button onclick="removeGalleryImage(${i})" style="position: absolute; top: -5px; right: -5px; background: #dc2626; border: none; color: white; width: 20px; height: 20px; border-radius: 50%; cursor: pointer; font-size: 10px;">×</button>
+                </div>
+            `).join('') : '<p style="color: var(--text-muted); font-size: 0.85rem;">Žádné obrázky</p>';
+        }
+
+        function updatePreview() {
+            const titleEl = document.getElementById('previewTitle');
+            const categoryEl = document.getElementById('previewCategory');
+            const excerptEl = document.getElementById('previewExcerpt');
+            const dateEl = document.getElementById('previewDate');
+
+            if (titleEl) titleEl.textContent = document.getElementById('newsTitle')?.value || 'Nadpis';
+            if (categoryEl) categoryEl.textContent = document.getElementById('newsCategory')?.value || '';
+            if (excerptEl) excerptEl.textContent = document.getElementById('newsExcerpt')?.value || 'Krátký popis...';
+
+            const date = document.getElementById('newsDate')?.value;
+            if (dateEl) dateEl.textContent = date ? new Date(date).toLocaleDateString('cs-CZ') : 'Datum';
+        }
 
         async function handleAdminGalleryUpload(input) {
             if (!input.files || input.files.length === 0) return;
