@@ -1,0 +1,13 @@
+name = "sachyjablonec-proxy"
+main = "worker.js"
+compatibility_date = "2024-12-09"
+
+# Routes - update with your actual domain
+routes = [
+  { pattern = "sachyjablonec.cz/*", zone_name = "sachyjablonec.cz" },
+  { pattern = "www.sachyjablonec.cz/*", zone_name = "sachyjablonec.cz" }
+]
+
+# Environment variables (optional)
+[vars]
+RAILWAY_URL = "https://sachyjablonec-production.up.railway.app"
