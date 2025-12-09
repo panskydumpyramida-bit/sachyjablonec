@@ -41,15 +41,18 @@
     <script src="js/layout-loader.js"></script>
     <script src="js/main.js"></script>
     <script>
+        let galleryImages = [];
+        let currentIndex = 0;
+
         document.addEventListener('DOMContentLoaded', async () => {
             const grid = document.getElementById('galleryGrid');
             try {
                 const res = await fetch(`${API_URL}/images/public`);
                 if (!res.ok) throw new Error('Failed to load images');
 
-                const images = await res.json();
+                galleryImages = await res.json();
 
-                if (images.length === 0) {
+                if (galleryImages.length === 0) {
                     grid.innerHTML = `
                         <div style="grid-column: 1 / -1; text-align: center; padding: 4rem; background: rgba(255,255,255,0.02); border-radius: 12px; border: 1px dashed rgba(255,255,255,0.1);">
                             <i class="fa-regular fa-images" style="font-size: 3rem; color: var(--text-muted); opacity: 0.5; margin-bottom: 1rem;"></i>
@@ -60,10 +63,13 @@
                     return;
                 }
 
-                grid.innerHTML = images.map(img => `
+                grid.innerHTML = galleryImages.map((img, index) => `
                     <div class="card" style="animation: fadeIn 0.5s ease-out;">
-                        <div class="card-image" style="height: 300px; cursor: pointer;" onclick="window.open('${img.url}', '_blank')">
+                        <div class="card-image" style="height: 300px; cursor: pointer;" onclick="openLightbox(${index})">
                             <img src="${img.url}" alt="${img.altText || 'Fotografie z galerie'}" loading="lazy" style="transition: transform 0.5s ease;">
+                            <div style="position: absolute; inset: 0; background: rgba(0,0,0,0.2); opacity: 0; transition: opacity 0.3s; display: flex; align-items: center; justify-content: center;" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0">
+                                <i class="fa-solid fa-expand" style="font-size: 2rem; color: white;"></i>
+                            </div>
                         </div>
                         <div class="card-content">
                             <h3 class="card-title">${img.altText || 'Fotografie'}</h3>
@@ -72,9 +78,6 @@
                                     <i class="fa-regular fa-calendar" style="margin-right: 4px;"></i>
                                     ${new Date(img.uploadedAt).toLocaleDateString('cs-CZ')}
                                 </span>
-                                <a href="${img.url}" target="_blank" style="color: var(--primary-color); font-size: 0.85em; text-decoration: none;">
-                                    <i class="fa-solid fa-expand"></i> Zvětšit
-                                </a>
                             </p>
                         </div>
                     </div>
@@ -88,6 +91,51 @@
                     </div>
                 `;
             }
+        });
+
+        // Lightbox Functions
+        function openLightbox(index) {
+            if (index < 0 || index >= galleryImages.length) return;
+            currentIndex = index;
+            updateLightbox();
+            const lightbox = document.getElementById('lightbox');
+            lightbox.classList.add('active');
+            document.body.style.overflow = 'hidden'; // Prevent scrolling
+        }
+
+        function closeLightbox() {
+            const lightbox = document.getElementById('lightbox');
+            lightbox.classList.remove('active');
+            document.body.style.overflow = ''; // Restore scrolling
+        }
+
+        function changeImage(step) {
+            let newIndex = currentIndex + step;
+            // Loop around
+            if (newIndex < 0) newIndex = galleryImages.length - 1;
+            if (newIndex >= galleryImages.length) newIndex = 0;
+
+            currentIndex = newIndex;
+            updateLightbox();
+        }
+
+        function updateLightbox() {
+            const img = galleryImages[currentIndex];
+            const imgEl = document.getElementById('lightboxImage');
+            const capEl = document.getElementById('lightboxCaption');
+
+            imgEl.src = img.url;
+            imgEl.alt = img.altText || 'Galerie';
+            capEl.textContent = `${img.altText || ''} (${currentIndex + 1} / ${galleryImages.length})`;
+        }
+
+        // Keyboard navigation
+        document.addEventListener('keydown', (e) => {
+            if (!document.getElementById('lightbox').classList.contains('active')) return;
+
+            if (e.key === 'Escape') closeLightbox();
+            if (e.key === 'ArrowLeft') changeImage(-1);
+            if (e.key === 'ArrowRight') changeImage(1);
         });
     </script>
 </body>
