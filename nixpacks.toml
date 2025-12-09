@@ -1,6 +1,9 @@
 [phases.setup]
 aptPkgs = ["libvips-dev"]
 
+[variables]
+DATABASE_URL = "file:/app/prisma/dev.db"
+
 [phases.build]
 cmds = ["npm ci", "npx prisma generate"]
 
