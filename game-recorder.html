@@ -47,7 +47,8 @@
 
         #board {
             width: 100%;
-            max-width: 650px;
+            max-width: 550px;
+            /* Reduced from 650px to fit better */
             margin: 0 auto;
             box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
             border-radius: 4px;
@@ -458,7 +459,8 @@
             position: 'start',
             onDragStart: onDragStart,
             onDrop: onDrop,
-            onSnapEnd: onSnapEnd
+            onSnapEnd: onSnapEnd,
+            pieceTheme: 'https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/img/chesspieces/wikipedia/{piece}.png'
         };
         board = Chessboard('board', config);
 
