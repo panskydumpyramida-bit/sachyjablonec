@@ -30,8 +30,29 @@ async function loadNews(options = {}) {
 
     if (!container) return;
 
-    // Show loading state
-    container.innerHTML = '<div class="loading-spinner"><i class="fa-solid fa-chess-knight fa-spin" style="font-size: 2rem; color: var(--primary-color);"></i></div>';
+    // Show loading state only if we are probably doing a fresh load (limit is not 0)
+    // If limit is 0, it means we are expanding "Show More", so we might want to keep content
+    // But currently loadNews fetches everything again.
+    // To prevent layout shift (footer jump), let's keep the old content and append spinner, 
+    // OR just set min-height.
+    // Simplest fix for jump: Don't clear innerHTML immediately if container has content.
+    const isExpanding = limit === 0 && container.children.length > 0;
+
+    if (!isExpanding) {
+        container.innerHTML = '<div class="loading-spinner"><i class="fa-solid fa-chess-knight fa-spin" style="font-size: 2rem; color: var(--primary-color);"></i></div>';
+    } else {
+        // Appending spinner to end
+        const spinner = document.createElement('div');
+        spinner.className = 'loading-spinner-append';
+        spinner.innerHTML = '<i class="fa-solid fa-chess-knight fa-spin" style="font-size: 2rem; color: var(--primary-color);"></i>';
+        spinner.style.cssText = 'text-align: center; padding: 2rem; width: 100%; grid-column: 1 / -1;';
+
+        // Remove old "Show More" button if it exists to avoid confusion
+        const oldBtn = container.querySelector('button.read-more');
+        if (oldBtn) oldBtn.closest('div').remove();
+
+        container.appendChild(spinner);
+    }
 
     try {
         let url = `${API_URL}/news?published=true`;
