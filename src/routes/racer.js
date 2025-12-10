@@ -26,11 +26,12 @@ async function fetchLichessPuzzles() {
     const allPuzzles = [];
 
     // Fetch different difficulty levels - NO AUTH TOKEN!
-    const difficulties = ['easiest', 'easier', 'normal'];
+    // 5 categories × 15 puzzles = 75 puzzles total
+    const difficulties = ['easiest', 'easier', 'normal', 'harder', 'hardest'];
 
     for (const diff of difficulties) {
         try {
-            const res = await fetch(`https://lichess.org/api/puzzle/batch/mix?nb=20&difficulty=${diff}`, {
+            const res = await fetch(`https://lichess.org/api/puzzle/batch/mix?nb=15&difficulty=${diff}`, {
                 headers: { 'Accept': 'application/json' }
                 // NO Authorization header! This gives us correct difficulty ranges
             });
@@ -72,12 +73,20 @@ router.get('/puzzles', async (req, res) => {
 
         // Return cached puzzles if still valid
         if (puzzleCache.puzzles.length >= 30 && (now - puzzleCache.lastFetch) < puzzleCache.ttl) {
-            // Shuffle for variety but keep sorted by rating groups
-            const easy = puzzleCache.puzzles.filter(p => p.puzzle.rating < 1100);
-            const medium = puzzleCache.puzzles.filter(p => p.puzzle.rating >= 1100 && p.puzzle.rating < 1400);
-            const hard = puzzleCache.puzzles.filter(p => p.puzzle.rating >= 1400);
+            // Shuffle for variety but keep sorted by rating groups (5 groups)
+            const easiest = puzzleCache.puzzles.filter(p => p.puzzle.rating < 1000);
+            const easier = puzzleCache.puzzles.filter(p => p.puzzle.rating >= 1000 && p.puzzle.rating < 1300);
+            const normal = puzzleCache.puzzles.filter(p => p.puzzle.rating >= 1300 && p.puzzle.rating < 1600);
+            const harder = puzzleCache.puzzles.filter(p => p.puzzle.rating >= 1600 && p.puzzle.rating < 1900);
+            const hardest = puzzleCache.puzzles.filter(p => p.puzzle.rating >= 1900);
 
-            const shuffled = [...shuffleArray(easy), ...shuffleArray(medium), ...shuffleArray(hard)];
+            const shuffled = [
+                ...shuffleArray(easiest),
+                ...shuffleArray(easier),
+                ...shuffleArray(normal),
+                ...shuffleArray(harder),
+                ...shuffleArray(hardest)
+            ];
 
             console.log(`Returning ${shuffled.length} cached puzzles (shuffled)`);
             return res.json({ puzzles: shuffled, cached: true, count: shuffled.length });
