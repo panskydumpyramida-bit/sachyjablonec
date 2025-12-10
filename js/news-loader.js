@@ -59,9 +59,11 @@ async function loadNews(options = {}) {
 
         let news = await response.json();
 
-        // Apply limit if specified
-        if (limit && news.length > limit) {
+        // Apply limit logic
+        let hasMore = false;
+        if (limit && limit > 0 && news.length > limit) {
             news = news.slice(0, limit);
+            hasMore = true;
         }
 
         if (news.length === 0) {
@@ -78,9 +80,11 @@ async function loadNews(options = {}) {
             return;
         }
 
+        let htmlContent = '';
+
         // Render based on display mode
         if (displayMode === 'cards') {
-            container.innerHTML = news.map(item => `
+            htmlContent = news.map(item => `
                 <article class="card" onclick="window.location.href='${getArticleUrl(item)}'" style="cursor: pointer;">
                     <div class="card-image">
                         ${(() => {
@@ -110,7 +114,7 @@ async function loadNews(options = {}) {
             `).join('');
         } else if (displayMode === 'full' || displayMode === 'full-short') {
             // Full content display mode - side-by-side layout
-            container.innerHTML = news.map(item => `
+            htmlContent = news.map(item => `
                 <article class="card" onclick="window.location.href='${getArticleUrl(item)}'" style="cursor: pointer;">
                     <div class="card-content">
                         <div class="news-cols-layout">
@@ -154,7 +158,7 @@ async function loadNews(options = {}) {
             `).join('');
         } else {
             // List display mode
-            container.innerHTML = `
+            htmlContent = `
                 <ul class="news-list">
                     ${news.map(item => `
                         <li>
@@ -167,6 +171,25 @@ async function loadNews(options = {}) {
                 </ul>
             `;
         }
+
+        // Add Show More button if there are more items
+        if (hasMore) {
+            const catArg = category ? `'${category}'` : 'null';
+            htmlContent += `
+                <div style="grid-column: 1 / -1; text-align: center; margin-top: 2rem; width: 100%;">
+                    <button onclick="loadNews({ containerId: '${containerId}', category: ${catArg}, displayMode: '${displayMode}', limit: 0 })"
+                        class="read-more"
+                        style="background: transparent; border: 1px solid var(--primary-color); cursor: pointer; padding: 0.8rem 2rem; border-radius: 50px; font-weight: 600; display: inline-flex; align-items: center; gap: 0.5rem; transition: all 0.3s;"
+                        onmouseover="this.style.background='rgba(212,175,55,0.1)'"
+                        onmouseout="this.style.background='transparent'">
+                        <i class="fa-solid fa-clock-rotate-left"></i> Zobrazit starší novinky
+                    </button>
+                </div>
+            `;
+        }
+
+        container.innerHTML = htmlContent;
+
     } catch (error) {
         console.error('Error loading news:', error);
         if (displayMode === 'cards') {
