@@ -494,9 +494,9 @@ function handleWrongMove() {
         return;
     }
 
-    // Also deduct time as before
-    timeLeft = Math.max(0, timeLeft - 5);
-    updateTimer();
+    // Time penalty disabled in this mode (kept for future modes)
+    // timeLeft = Math.max(0, timeLeft - 5);
+    // updateTimer();
 }
 
 // Update lives display (X marks)
