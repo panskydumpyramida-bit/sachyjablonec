@@ -466,15 +466,15 @@
                             const year = parseInt(reg.birthYear);
                             // Rok 2025: 15 let = 2010, 60 let = 1965
                             if (year >= 2010) {
-                                ageIcons += '<span title="Mládež (≤15 let)" style="margin-left:0.5rem; font-size:0.9em;">🧒</span>';
+                                ageIcons += '<span title="Mládež (≤15 let)" style="margin-right:0.3rem; font-size:0.9em;">🧒</span>';
                             } else if (year <= 1965) {
-                                ageIcons += '<span title="Senior (60+)" style="margin-left:0.5rem; font-size:0.9em;">👴</span>';
+                                ageIcons += '<span title="Senior (60+)" style="margin-right:0.3rem; font-size:0.9em;">👴</span>';
                             }
 
                             return `
                                 <div class="participant-item ${highlightClass}">
                                     <span>${nameIcons}${reg.name}</span>
-                                    <span class="p-year">${reg.birthYear}${ageIcons}</span>
+                                    <span class="p-year">${ageIcons}${reg.birthYear}</span>
                                 </div>
                             `;
                         }).join('');
