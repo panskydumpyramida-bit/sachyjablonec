@@ -111,7 +111,7 @@ async function loadNews(options = {}) {
         } else if (displayMode === 'full' || displayMode === 'full-short') {
             // Full content display mode - side-by-side layout
             container.innerHTML = news.map(item => `
-                <article class="card">
+                <article class="card" onclick="window.location.href='${getArticleUrl(item)}'" style="cursor: pointer;">
                     <div class="card-content">
                         <div class="news-cols-layout">
                             <div class="news-cols-content">
@@ -126,7 +126,7 @@ async function loadNews(options = {}) {
                                 </div>
                                 
                                 <div>
-                                    <a href="${getArticleUrl(item)}" class="read-more">
+                                    <a href="${getArticleUrl(item)}" class="read-more" onclick="event.stopPropagation()">
                                         Zobrazit detail <i class="fa-solid fa-arrow-right"></i>
                                     </a>
                                 </div>
