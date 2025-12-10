@@ -69,26 +69,12 @@
             }
         }
 
-        /* Lock scroll on mobile during gameplay - hide everything except game */
+        /* Global game-active styles - prevent scroll */
         body.game-active {
             overflow: hidden;
-            position: fixed;
-            width: 100%;
-            height: 100%;
-            touch-action: none;
         }
 
-        body.game-active main {
-            padding-top: 10px !important;
-            height: 100vh;
-            overflow: hidden;
-        }
-
-        /* Hide header, footer, and leaderboard during gameplay */
-        body.game-active #global-header,
-        body.game-active header,
-        body.game-active footer,
-        body.game-active #global-footer,
+        /* Hide leaderboard during active gameplay (all screens) */
         body.game-active #leaderboardSection {
             display: none !important;
         }
@@ -98,18 +84,61 @@
             display: none !important;
         }
 
-        body.game-active .game-container {
-            margin: 0 !important;
-            padding: 0.5rem !important;
-            border-radius: 0 !important;
-            height: 100vh;
-            display: flex;
-            flex-direction: column;
-            justify-content: flex-start;
+        /* MOBILE ONLY - fullscreen game mode */
+        @media (max-width: 768px) {
+            body.game-active {
+                position: fixed;
+                width: 100%;
+                height: 100%;
+                top: 0;
+                left: 0;
+            }
+
+            body.game-active main {
+                padding-top: 5px !important;
+                height: 100vh;
+                overflow: hidden;
+            }
+
+            /* Hide header and footer only on mobile */
+            body.game-active #global-header,
+            body.game-active header,
+            body.game-active footer,
+            body.game-active #global-footer {
+                display: none !important;
+            }
+
+            body.game-active .game-container {
+                margin: 0 !important;
+                padding: 0.5rem !important;
+                border-radius: 0 !important;
+                height: 100vh;
+                display: flex;
+                flex-direction: column;
+            }
+
+            body.game-active .game-header {
+                margin-bottom: 0.5rem;
+                padding-bottom: 0.5rem;
+            }
+
+            body.game-active #board {
+                max-width: min(100vw - 1rem, calc(100vh - 150px)) !important;
+                margin: 0 auto;
+            }
+
+            body.game-active .controls {
+                margin-top: 0.5rem;
+            }
         }
 
-        body.game-active #board {
-            max-width: min(100vw, 85vh) !important;
+        /* Ensure board is touchable */
+        #board {
+            touch-action: manipulation;
+        }
+
+        #board * {
+            touch-action: manipulation;
         }
 
         .game-header {
