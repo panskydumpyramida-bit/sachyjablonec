@@ -9,6 +9,14 @@ let timeLeft = 180; // 3 minutes
 let timerInterval = null;
 let isGameActive = false;
 
+// Progressive difficulty loading
+const DIFFICULTIES = ['easiest', 'easier', 'normal', 'harder', 'hardest'];
+let currentDifficultyIndex = 0;
+let totalPuzzlesSolved = 0;
+let puzzlesBeforeNextBatch = 3; // Load more after solving 3
+let puzzlesPerDifficultyLevel = 6; // Increase difficulty after 6 solved
+let isFetchingPuzzles = false;
+
 // Actually, let's just use ONE solid simple puzzle for fallback to minimize error risk
 // Mat v 1. tahu.
 const FALLBACK_PUZZLES = [
@@ -139,6 +147,29 @@ function escapeHtml(text) {
     return div.innerHTML;
 }
 
+// Fetch more puzzles from server at current difficulty
+async function fetchMorePuzzles() {
+    if (isFetchingPuzzles) return;
+    isFetchingPuzzles = true;
+
+    const difficulty = DIFFICULTIES[currentDifficultyIndex] || 'hardest';
+    console.log(`Fetching 3 ${difficulty} puzzles...`);
+
+    try {
+        const res = await fetch(`${API_URL}/racer/puzzles?difficulty=${difficulty}&count=3`);
+        if (res.ok) {
+            const data = await res.json();
+            const newPuzzles = data.puzzles || [];
+            puzzles = puzzles.concat(newPuzzles);
+            console.log(`Added ${newPuzzles.length} ${difficulty} puzzles. Total: ${puzzles.length}`);
+        }
+    } catch (e) {
+        console.error('Failed to fetch puzzles:', e);
+    }
+
+    isFetchingPuzzles = false;
+}
+
 async function startRace() {
     const startBtn = document.querySelector('#startScreen button');
     const loading = document.getElementById('loadingIndicator');
@@ -146,22 +177,18 @@ async function startRace() {
     startBtn.style.display = 'none';
     loading.classList.remove('hidden');
 
+    // Reset progressive loading state
+    puzzles = [];
+    currentPuzzleIndex = 0;
+    currentDifficultyIndex = 0;
+    totalPuzzlesSolved = 0;
+
     try {
-        // Fetch puzzles from our server-side proxy (caches to avoid Lichess rate limits)
-        try {
-            const res = await fetch(`${API_URL}/racer/puzzles`);
-            if (res.ok) {
-                const data = await res.json();
-                puzzles = data.puzzles || [];
-                console.log(`Loaded ${puzzles.length} puzzles (cached: ${data.cached})`);
-            }
-        } catch (e) {
-            console.warn('Failed to fetch from proxy:', e);
-        }
+        // Fetch initial batch of easiest puzzles
+        await fetchMorePuzzles();
 
         if (puzzles.length === 0) {
             console.warn('No puzzles from server, using fallback.');
-            // Duplicate fallback puzzles to ensure enough content for 3 minutes
             for (let i = 0; i < 10; i++) {
                 puzzles = puzzles.concat(FALLBACK_PUZZLES_FINAL);
             }
@@ -411,17 +438,39 @@ function onSnapEnd() {
 
 function handleCorrectPuzzle() {
     score++;
+    totalPuzzlesSolved++;
     updateScore();
     showFeedback('correct');
+
+    // Check if we need to increase difficulty (every 6 puzzles)
+    if (totalPuzzlesSolved > 0 && totalPuzzlesSolved % puzzlesPerDifficultyLevel === 0) {
+        if (currentDifficultyIndex < DIFFICULTIES.length - 1) {
+            currentDifficultyIndex++;
+            console.log(`Difficulty increased to: ${DIFFICULTIES[currentDifficultyIndex]}`);
+        }
+    }
+
+    // Check if we need to fetch more puzzles (every 3 puzzles)
+    const puzzlesRemaining = puzzles.length - currentPuzzleIndex - 1;
+    if (puzzlesRemaining <= 2 && !isFetchingPuzzles) {
+        fetchMorePuzzles(); // Fetch in background
+    }
 
     // Next puzzle
     currentPuzzleIndex++;
     setTimeout(() => {
         if (currentPuzzleIndex < puzzles.length) {
             loadPuzzle(puzzles[currentPuzzleIndex]);
+        } else if (isFetchingPuzzles) {
+            // Wait for more puzzles to load
+            setTimeout(() => {
+                if (currentPuzzleIndex < puzzles.length) {
+                    loadPuzzle(puzzles[currentPuzzleIndex]);
+                } else {
+                    endGame();
+                }
+            }, 1000);
         } else {
-            // Completed all loaded puzzles?
-            // Bonus for finishing? 
             endGame();
         }
     }, 500);
