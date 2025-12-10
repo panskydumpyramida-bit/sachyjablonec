@@ -1,99 +1,68 @@
 import express from 'express';
 import { PrismaClient } from '@prisma/client';
+import { readFileSync } from 'fs';
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
 
 const router = express.Router();
 const prisma = new PrismaClient();
 
-// Fallback puzzles in case API fails
-const FALLBACK_PUZZLES = [
-    { game: { pgn: "e4 e5 Bc4 Nc6 Qh5 Nf6" }, puzzle: { id: "fb001", rating: 600, solution: ["h5f7"], themes: ["mateIn1"], initialPly: 6 } },
-    { game: { pgn: "f3 e5 g4" }, puzzle: { id: "fb002", rating: 600, solution: ["d8h4"], themes: ["mateIn1"], initialPly: 3 } },
-];
+// Get directory path for ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
-// Puzzle cache
-let puzzleCache = {
-    puzzles: [],
-    lastFetch: 0,
-    ttl: 5 * 60 * 1000 // 5 minutes cache
-};
+// Load static puzzles from JSON file (100 puzzles, pre-sorted by rating)
+let STATIC_PUZZLES = [];
+try {
+    const puzzlePath = join(__dirname, '../../data/puzzles.json');
+    STATIC_PUZZLES = JSON.parse(readFileSync(puzzlePath, 'utf-8'));
+    console.log(`Loaded ${STATIC_PUZZLES.length} puzzles from static database`);
+} catch (e) {
+    console.error('Failed to load puzzles.json:', e.message);
+}
 
-// GET /api/racer/puzzles - Fetch from Lichess API with caching
+// Fisher-Yates shuffle
+function shuffleArray(array) {
+    const shuffled = [...array];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+    return shuffled;
+}
+
+// GET /api/racer/puzzles - Return shuffled puzzles from static database
 router.get('/puzzles', async (req, res) => {
     try {
-        const now = Date.now();
-
-        // Return cached puzzles if still valid and have enough
-        if (puzzleCache.puzzles.length >= 20 && (now - puzzleCache.lastFetch) < puzzleCache.ttl) {
-            console.log(`Returning ${puzzleCache.puzzles.length} cached puzzles`);
-            return res.json({ puzzles: puzzleCache.puzzles, cached: true, count: puzzleCache.puzzles.length });
+        if (STATIC_PUZZLES.length === 0) {
+            return res.status(500).json({ error: 'No puzzles available', puzzles: [] });
         }
 
-        console.log('Fetching fresh puzzles from Lichess API...');
+        // Shuffle puzzles for variety, but keep roughly sorted by rating
+        // Split into difficulty groups and shuffle within each group
+        const easy = STATIC_PUZZLES.filter(p => p.puzzle.rating < 1900);
+        const medium = STATIC_PUZZLES.filter(p => p.puzzle.rating >= 1900 && p.puzzle.rating < 2100);
+        const hard = STATIC_PUZZLES.filter(p => p.puzzle.rating >= 2100);
 
-        const LICHESS_TOKEN = process.env.LICHESS_API_TOKEN;
-        const headers = LICHESS_TOKEN ? {
-            'Authorization': `Bearer ${LICHESS_TOKEN}`,
-            'Accept': 'application/json'
-        } : { 'Accept': 'application/json' };
+        // Shuffle within each group and recombine
+        const shuffledPuzzles = [
+            ...shuffleArray(easy),
+            ...shuffleArray(medium),
+            ...shuffleArray(hard)
+        ];
 
-        let allPuzzles = [];
-
-        // Fetch easy puzzles
-        try {
-            const easyRes = await fetch('https://lichess.org/api/puzzle/batch/mix?nb=15&difficulty=easiest', { headers });
-            if (easyRes.ok) {
-                const data = await easyRes.json();
-                allPuzzles = allPuzzles.concat(data.puzzles || []);
-                console.log(`Fetched ${data.puzzles?.length || 0} easy puzzles`);
-            } else {
-                console.warn(`Easy puzzles API returned ${easyRes.status}`);
-            }
-        } catch (e) {
-            console.error('Failed to fetch easy puzzles:', e.message);
-        }
-
-        // Small delay to be nice to API
-        await new Promise(r => setTimeout(r, 500));
-
-        // Fetch normal puzzles
-        try {
-            const normalRes = await fetch('https://lichess.org/api/puzzle/batch/mix?nb=15&difficulty=normal', { headers });
-            if (normalRes.ok) {
-                const data = await normalRes.json();
-                allPuzzles = allPuzzles.concat(data.puzzles || []);
-                console.log(`Fetched ${data.puzzles?.length || 0} normal puzzles`);
-            } else {
-                console.warn(`Normal puzzles API returned ${normalRes.status}`);
-            }
-        } catch (e) {
-            console.error('Failed to fetch normal puzzles:', e.message);
-        }
-
-        // Sort by rating (easiest first)
-        allPuzzles.sort((a, b) => (a.puzzle?.rating || 1000) - (b.puzzle?.rating || 1000));
-
-        if (allPuzzles.length > 0) {
-            puzzleCache.puzzles = allPuzzles;
-            puzzleCache.lastFetch = now;
-            console.log(`Cached ${allPuzzles.length} puzzles (ratings: ${allPuzzles[0]?.puzzle?.rating} to ${allPuzzles[allPuzzles.length - 1]?.puzzle?.rating})`);
-        } else {
-            console.warn('API failed, using fallback puzzles');
-            // Duplicate fallback puzzles if API fails
-            for (let i = 0; i < 15; i++) {
-                allPuzzles = allPuzzles.concat(FALLBACK_PUZZLES);
-            }
-        }
+        console.log(`Returning ${shuffledPuzzles.length} puzzles (shuffled within difficulty groups)`);
 
         res.json({
-            puzzles: allPuzzles.length > 0 ? allPuzzles : puzzleCache.puzzles,
+            puzzles: shuffledPuzzles,
             cached: false,
-            count: allPuzzles.length,
-            source: allPuzzles.length > 0 ? 'lichess' : 'fallback'
+            count: shuffledPuzzles.length,
+            source: 'static'
         });
 
     } catch (error) {
-        console.error('Error in puzzle proxy:', error);
-        res.status(500).json({ error: 'Failed to fetch puzzles', puzzles: FALLBACK_PUZZLES });
+        console.error('Error in puzzle endpoint:', error);
+        res.status(500).json({ error: 'Failed to get puzzles', puzzles: [] });
     }
 });
 
