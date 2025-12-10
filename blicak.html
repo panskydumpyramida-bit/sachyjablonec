@@ -456,7 +456,7 @@
                         registrations.sort((a, b) => a.name.localeCompare(b.name, 'cs'));
 
                         listEl.innerHTML = registrations.map(reg => {
-                            const isVip = reg.name.includes('Antonín Duda') || reg.name.includes('Tonda Duda') || reg.name.includes('Duda Antonín');
+                            const isVip = reg.name.includes('Antonín Duda') || reg.name.includes('Tonda Duda') || reg.name.includes('Duda Antonín') || reg.name.includes('Předseda Tonda');
                             const highlightClass = isVip ? 'gold-highlight' : '';
                             const icon = isVip ? '<i class="fa-solid fa-crown" style="margin-right:0.3rem; font-size:0.8em;"></i>' : '';
 
