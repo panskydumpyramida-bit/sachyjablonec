@@ -18,6 +18,7 @@ model User {
   createdAt    DateTime @default(now()) @map("created_at")
   
   news         News[]
+  puzzleResults PuzzleRaceResult[]
   
   @@map("users")
 }
@@ -162,4 +163,16 @@ model SystemSetting {
   value String
 
   @@map("system_settings")
+}
+
+model PuzzleRaceResult {
+  id        Int      @id @default(autoincrement())
+  score     Int
+  playerName String   @map("player_name")
+  userId    Int?     @map("user_id")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user      User?    @relation(fields: [userId], references: [id])
+
+  @@map("puzzle_race_results")
 }
