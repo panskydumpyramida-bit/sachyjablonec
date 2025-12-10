@@ -69,26 +69,47 @@
             }
         }
 
-        /* Lock scroll on mobile during gameplay */
+        /* Lock scroll on mobile during gameplay - hide everything except game */
         body.game-active {
             overflow: hidden;
             position: fixed;
             width: 100%;
             height: 100%;
+            touch-action: none;
         }
 
         body.game-active main {
-            padding-top: 60px;
+            padding-top: 10px !important;
+            height: 100vh;
+            overflow: hidden;
         }
 
-        /* Hide leaderboard during active gameplay */
+        /* Hide header, footer, and leaderboard during gameplay */
+        body.game-active #global-header,
+        body.game-active header,
+        body.game-active footer,
+        body.game-active #global-footer,
         body.game-active #leaderboardSection {
-            display: none;
+            display: none !important;
         }
 
         body.game-active .start-screen,
         body.game-active .game-over-screen {
             display: none !important;
+        }
+
+        body.game-active .game-container {
+            margin: 0 !important;
+            padding: 0.5rem !important;
+            border-radius: 0 !important;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+        }
+
+        body.game-active #board {
+            max-width: min(100vw, 85vh) !important;
         }
 
         .game-header {

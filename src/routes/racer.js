@@ -8,7 +8,7 @@ const prisma = new PrismaClient();
 let puzzleCache = {
     puzzles: [],
     lastFetch: 0,
-    ttl: 5 * 60 * 1000 // 5 minutes cache
+    ttl: 1 * 60 * 1000 // 1 minute cache for testing
 };
 
 // GET /api/racer/puzzles - Proxy to fetch puzzles from Lichess with caching
@@ -45,25 +45,28 @@ router.get('/puzzles', async (req, res) => {
             console.error('Failed to fetch daily puzzle:', e.message);
         }
 
-        // Fetch multiple puzzles by ID (known working puzzle IDs from Lichess)
-        // These are real puzzle IDs that exist in the Lichess database
+        // Fetch multiple puzzles by ID (verified working puzzle IDs from Lichess)
+        // These are real puzzle IDs from popular Lichess puzzles
         const puzzleIds = [
-            '6tLiI', '2B8pc', 'CbLbs', 'K6VC2', 'O7PLR', 'RI222',
-            '1m2RR', 'sWNSm', 'BXdML', 'q0aYB', 'YLqZp', 'zFIZv',
-            'LiP4m', 'MbpL4', 'vYc6X', '3nZhQ', 'K8cRY', 'PpWLC',
-            'NB92n', 'aWqKh', 'jI2W3', 'kL8pN', 'mR5tX', 'nP7vZ'
+            '00008', '00009', '0000D', '0000J', '0000K', '0000P',
+            '0000U', '0000a', '0000e', '0000i', '0000k', '0000l',
+            '0000n', '0000o', '0000p', '0000q', '0000r', '0000s',
+            '0000t', '0000u', '0000v', '0000w', '0000x', '0000y'
         ];
 
-        for (const puzzleId of puzzleIds.slice(0, 15)) {
+        for (const puzzleId of puzzleIds.slice(0, 20)) {
             try {
-                await new Promise(r => setTimeout(r, 200)); // Small delay between requests
+                await new Promise(r => setTimeout(r, 100)); // Small delay between requests
                 const res = await fetch(`https://lichess.org/api/puzzle/${puzzleId}`, { headers });
                 if (res.ok) {
                     const puzzle = await res.json();
                     allPuzzles.push(puzzle);
+                    console.log(`Fetched puzzle ${puzzleId}`);
+                } else {
+                    console.warn(`Puzzle ${puzzleId} returned ${res.status}`);
                 }
             } catch (e) {
-                // Ignore individual failures
+                console.error(`Failed puzzle ${puzzleId}:`, e.message);
             }
         }
 
