@@ -28,22 +28,10 @@ async function loadNews(options = {}) {
 
     const container = document.getElementById(containerId);
 
-    if (!container) {
-        console.log(`News container '${containerId}' not found, skipping...`);
-        return;
-    }
+    if (!container) return;
 
     // Show loading state
-    if (displayMode === 'cards') {
-        container.innerHTML = `
-            <div style="grid-column: 1 / -1; text-align: center; padding: 4rem;">
-                <div style="display: inline-block; width: 40px; height: 40px; border: 4px solid rgba(212, 175, 55, 0.2); border-radius: 50%; border-top-color: var(--primary-color); animation: spin 1s linear infinite;"></div>
-                <p style="margin-top: 1rem; color: var(--text-muted);">Načítání novinek...</p>
-            </div>
-        `;
-    } else {
-        container.innerHTML = `<p style="color: var(--text-muted);">Načítání...</p>`;
-    }
+    container.innerHTML = '<div class="loading-spinner"><i class="fa-solid fa-chess-knight fa-spin" style="font-size: 2rem; color: var(--primary-color);"></i></div>';
 
     try {
         let url = `${API_URL}/news?published=true`;
