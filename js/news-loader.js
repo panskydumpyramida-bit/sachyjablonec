@@ -179,7 +179,7 @@ async function loadNews(options = {}) {
                 <div style="grid-column: 1 / -1; text-align: center; margin-top: 2rem; width: 100%;">
                     <button onclick="loadNews({ containerId: '${containerId}', category: ${catArg}, displayMode: '${displayMode}', limit: 0 })"
                         class="read-more"
-                        style="background: transparent; border: 1px solid var(--primary-color); cursor: pointer; padding: 0.8rem 2rem; border-radius: 50px; font-weight: 600; display: inline-flex; align-items: center; gap: 0.5rem; transition: all 0.3s;"
+                        style="background: transparent; border: 1px solid var(--primary-color); color: var(--primary-color); cursor: pointer; padding: 0.8rem 2rem; border-radius: 50px; font-weight: 600; display: inline-flex; align-items: center; gap: 0.5rem; transition: all 0.3s;"
                         onmouseover="this.style.background='rgba(212,175,55,0.1)'"
                         onmouseout="this.style.background='transparent'">
                         <i class="fa-solid fa-clock-rotate-left"></i> Zobrazit starší novinky
@@ -237,7 +237,9 @@ function escapeHtml(text) {
 function initNewsLoader() {
     // Load main news grid (homepage)
     if (document.getElementById('newsGrid')) {
-        loadNews({ containerId: 'newsGrid', displayMode: 'cards' });
+        const el = document.getElementById('newsGrid');
+        const limit = el.dataset.newsLimit ? parseInt(el.dataset.newsLimit) : null;
+        loadNews({ containerId: 'newsGrid', displayMode: 'cards', limit });
     }
 
     // Load section-specific news
