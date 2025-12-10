@@ -355,6 +355,12 @@ function onDrop(source, target) {
     const uciMove = move.from + move.to + (move.promotion ? move.promotion : '');
     const expectedMove = game.currentSolution[game.solutionIndex];
 
+    // DEBUG: Log what we're comparing
+    console.log('DEBUG: Your move UCI:', uciMove);
+    console.log('DEBUG: Expected move:', expectedMove);
+    console.log('DEBUG: Solution array:', game.currentSolution);
+    console.log('DEBUG: Solution index:', game.solutionIndex);
+
     // Lichess UCI doesn't strictly have promotion unless it's a promotion move.
     // Our 'uciMove' might look like 'a7a8q'. Expected 'a7a8q'.
     // Or 'e2e4'.
@@ -363,6 +369,7 @@ function onDrop(source, target) {
     // Simple check:
     if (uciMove !== expectedMove) {
         // Wrong move!
+        console.log('DEBUG: WRONG! uciMove=' + uciMove + ' expectedMove=' + expectedMove);
         game.undo(); // undo the move on board logic
         handleWrongMove();
         return 'snapback';
