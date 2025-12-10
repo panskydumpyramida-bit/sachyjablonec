@@ -35,14 +35,60 @@
 
         @media (max-width: 768px) {
             main {
-                padding-top: 80px;
+                padding-top: 70px;
             }
 
             .game-container {
-                margin: 0.5rem;
-                padding: 1rem;
-                border-radius: 0.5rem;
+                margin: 0;
+                padding: 0.75rem;
+                border-radius: 0;
+                box-shadow: none;
+                border: none;
             }
+
+            .game-header {
+                margin-bottom: 0.75rem;
+                padding-bottom: 0.5rem;
+            }
+
+            .stat-box {
+                padding: 0.5rem 1rem;
+                min-width: 80px;
+            }
+
+            .stat-value {
+                font-size: 1.2rem;
+            }
+
+            #board {
+                max-width: 100%;
+            }
+
+            .controls {
+                margin-top: 1rem;
+            }
+        }
+
+        /* Lock scroll on mobile during gameplay */
+        body.game-active {
+            overflow: hidden;
+            position: fixed;
+            width: 100%;
+            height: 100%;
+        }
+
+        body.game-active main {
+            padding-top: 60px;
+        }
+
+        /* Hide leaderboard during active gameplay */
+        body.game-active #leaderboardSection {
+            display: none;
+        }
+
+        body.game-active .start-screen,
+        body.game-active .game-over-screen {
+            display: none !important;
         }
 
         .game-header {
