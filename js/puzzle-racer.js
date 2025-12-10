@@ -110,16 +110,22 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
-async function loadLeaderboard() {
+// Current leaderboard period
+let currentLeaderboardPeriod = 'all';
+
+async function loadLeaderboard(period = 'all') {
     try {
-        const res = await fetch(`${API_URL}/racer/leaderboard`);
+        const res = await fetch(`${API_URL}/racer/leaderboard?period=${period}`);
         if (!res.ok) throw new Error('Failed to fetch leaderboard');
 
         const data = await res.json();
         const tbody = document.getElementById('leaderboardBody');
 
         if (data.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; padding: 2rem;">Zatím žádné výsledky. Buďte první!</td></tr>';
+            const emptyMsg = period === 'week'
+                ? 'Tento týden zatím žádné výsledky. Buďte první!'
+                : 'Zatím žádné výsledky. Buďte první!';
+            tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; padding: 2rem;">${emptyMsg}</td></tr>`;
             return;
         }
 
@@ -143,6 +149,24 @@ async function loadLeaderboard() {
         document.getElementById('leaderboardBody').innerHTML = '<tr><td colspan="4" style="text-align: center; padding: 2rem; color: #fca5a5;">Chyba při načítání žebříčku.</td></tr>';
     }
 }
+
+// Switch between all time and weekly leaderboard
+function switchLeaderboard(period) {
+    currentLeaderboardPeriod = period;
+
+    // Update tab styles
+    document.getElementById('tabAllTime').classList.toggle('active', period === 'all');
+    document.getElementById('tabWeekly').classList.toggle('active', period === 'week');
+
+    // Show loading
+    document.getElementById('leaderboardBody').innerHTML = '<tr><td colspan="4" style="text-align: center; padding: 2rem;"><i class="fa-solid fa-spinner fa-spin"></i> Načítám...</td></tr>';
+
+    // Load leaderboard with new period
+    loadLeaderboard(period);
+}
+
+// Make switchLeaderboard available globally
+window.switchLeaderboard = switchLeaderboard;
 
 function escapeHtml(text) {
     if (!text) return '';

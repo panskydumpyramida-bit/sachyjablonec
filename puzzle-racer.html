@@ -190,6 +190,21 @@
             transform: scale(1.2);
         }
 
+        /* Leaderboard tab styles */
+        .leaderboard-tab {
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--text-muted);
+        }
+
+        .leaderboard-tab:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .leaderboard-tab.active {
+            background: var(--primary-color);
+            color: white;
+        }
+
         #board {
             width: 100%;
             max-width: 500px;
@@ -354,8 +369,21 @@
                 <!-- LEADERBOARD SECTION -->
                 <div id="leaderboardSection"
                     style="margin-top: 3rem; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 2rem;">
-                    <h3 style="text-align: center; color: var(--primary-color); margin-bottom: 1.5rem;"><i
+                    <h3 style="text-align: center; color: var(--primary-color); margin-bottom: 1rem;"><i
                             class="fa-solid fa-trophy"></i> Nejlepší výsledky</h3>
+
+                    <!-- Leaderboard Tabs -->
+                    <div style="display: flex; justify-content: center; gap: 0.5rem; margin-bottom: 1.5rem;">
+                        <button id="tabAllTime" onclick="switchLeaderboard('all')" class="leaderboard-tab active"
+                            style="padding: 0.6rem 1.2rem; border: none; border-radius: 20px; cursor: pointer; font-weight: 600; transition: all 0.3s;">
+                            <i class="fa-solid fa-infinity"></i> Celkově
+                        </button>
+                        <button id="tabWeekly" onclick="switchLeaderboard('week')" class="leaderboard-tab"
+                            style="padding: 0.6rem 1.2rem; border: none; border-radius: 20px; cursor: pointer; font-weight: 600; transition: all 0.3s;">
+                            <i class="fa-solid fa-calendar-week"></i> Tento týden
+                        </button>
+                    </div>
+
                     <div style="overflow-x: auto;">
                         <table style="width: 100%; border-collapse: collapse; color: var(--text-main);">
                             <thead>

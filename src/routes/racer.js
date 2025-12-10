@@ -83,10 +83,23 @@ router.post('/save', async (req, res) => {
     }
 });
 
-// GET /api/racer/leaderboard
+// GET /api/racer/leaderboard?period=week|all
 router.get('/leaderboard', async (req, res) => {
     try {
+        const period = req.query.period || 'all';
+
+        // Build where clause for time filter
+        let whereClause = {};
+        if (period === 'week') {
+            const oneWeekAgo = new Date();
+            oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+            whereClause = {
+                createdAt: { gte: oneWeekAgo }
+            };
+        }
+
         const leaderboard = await prisma.puzzleRaceResult.findMany({
+            where: whereClause,
             take: 10,
             orderBy: {
                 score: 'desc'
