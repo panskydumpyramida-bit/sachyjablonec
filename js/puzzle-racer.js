@@ -241,10 +241,17 @@ function startGameLoop() {
 
 function loadPuzzle(puzzleData) {
     if (!puzzleData) {
-        // Ran out of puzzles? Win/End?
-        // Maybe fetch more in background? For now just end.
-        endGame();
+        // No puzzle data - wait for fetch (don't end game!)
+        console.log('No puzzle data, waiting...');
+        setTimeout(loadNextPuzzleOrWait, 300);
         return;
+    }
+
+    // Prefetch more puzzles when we're getting low (when loading puzzle and only 2-3 left)
+    const puzzlesRemaining = puzzles.length - currentPuzzleIndex;
+    if (puzzlesRemaining <= 3 && !isFetchingPuzzles) {
+        console.log(`Only ${puzzlesRemaining} puzzles remaining, prefetching more...`);
+        fetchMorePuzzles();
     }
 
     const gamePgn = puzzleData.game.pgn;
@@ -455,7 +462,7 @@ function handleCorrectPuzzle() {
         }
     }
 
-    // Check if we need to fetch more puzzles (every 3 puzzles)
+    // Check if we need to fetch more puzzles (fetch early when only 1-2 remaining)
     const puzzlesRemaining = puzzles.length - currentPuzzleIndex - 1;
     if (puzzlesRemaining <= 2 && !isFetchingPuzzles) {
         fetchMorePuzzles(); // Fetch in background
@@ -463,22 +470,26 @@ function handleCorrectPuzzle() {
 
     // Next puzzle
     currentPuzzleIndex++;
-    setTimeout(() => {
-        if (currentPuzzleIndex < puzzles.length) {
-            loadPuzzle(puzzles[currentPuzzleIndex]);
-        } else if (isFetchingPuzzles) {
-            // Wait for more puzzles to load
-            setTimeout(() => {
-                if (currentPuzzleIndex < puzzles.length) {
-                    loadPuzzle(puzzles[currentPuzzleIndex]);
-                } else {
-                    endGame();
-                }
-            }, 1000);
-        } else {
-            endGame();
-        }
-    }, 500);
+
+    // Load next puzzle or wait for more to load (NEVER end game due to lack of puzzles)
+    loadNextPuzzleOrWait();
+}
+
+// Helper to load next puzzle or wait for fetch to complete
+function loadNextPuzzleOrWait() {
+    if (currentPuzzleIndex < puzzles.length) {
+        // Have more puzzles ready
+        loadPuzzle(puzzles[currentPuzzleIndex]);
+    } else if (isFetchingPuzzles) {
+        // Waiting for puzzles to load - show loading indicator
+        console.log('Waiting for more puzzles...');
+        setTimeout(loadNextPuzzleOrWait, 300);
+    } else {
+        // No puzzles and not fetching - fetch more and wait
+        console.log('Out of puzzles, fetching more...');
+        fetchMorePuzzles();
+        setTimeout(loadNextPuzzleOrWait, 500);
+    }
 }
 
 function handleWrongMove() {
