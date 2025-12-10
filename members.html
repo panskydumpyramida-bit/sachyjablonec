@@ -225,7 +225,7 @@
     <header id="global-header"></header>
 
     <main>
-        <section class="hero-small" style="text-align: center; padding: 2rem 0;">
+        <section class="hero-small" style="text-align: center; padding: 2rem 0; margin-top: 100px;">
             <div class="container">
                 <h1 style="font-size: 2rem; margin: 0;"><i class="fa-solid fa-users"></i> Členská sekce</h1>
             </div>
@@ -253,8 +253,7 @@
 
                 <!-- Messages View -->
                 <div id="messagesView" class="messages-container hidden">
-                    <div class="messages-header">
-                        <h2><i class="fa-solid fa-comments"></i> Vzkazovník</h2>
+                    <div class="messages-header" style="justify-content: flex-end;">
                         <button onclick="logout()" class="logout-btn">
                             <i class="fa-solid fa-sign-out-alt"></i> Odhlásit
                         </button>
@@ -275,6 +274,38 @@
                             onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='0 4px 15px rgba(74, 222, 128, 0.3)'">
                             <i class="fa-solid fa-play"></i> Hrát nyní
                         </a>
+                    </div>
+
+                    <!-- Game Editor Promo -->
+                    <div
+                        style="background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(30, 58, 138, 0.3)); padding: 1.5rem; border-radius: 1rem; border: 1px solid rgba(59, 130, 246, 0.3); margin-bottom: 2rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+                        <div>
+                            <h3 style="color: #60a5fa; margin-bottom: 0.5rem;"><i class="fa-solid fa-chess-board"></i>
+                                Editor Partií</h3>
+                            <p style="color: var(--text-muted); font-size: 0.95rem;">Zaznamenejte sehranou partii do
+                                databáze.</p>
+                        </div>
+                        <a href="game-recorder.html"
+                            style="background: linear-gradient(135deg, #3b82f6, #2563eb); color: white; font-weight: 700; padding: 0.8rem 1.5rem; border-radius: 50px; text-decoration: none; display: inline-flex; align-items: center; gap: 0.5rem; transition: all 0.3s; box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);"
+                            onmouseover="this.style.transform='scale(1.05)'; this.style.boxShadow='0 6px 20px rgba(59, 130, 246, 0.4)'"
+                            onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='0 4px 15px rgba(59, 130, 246, 0.3)'">
+                            <i class="fa-solid fa-plus"></i> Nahrát partii
+                        </a>
+                    </div>
+
+                    <!-- Games List Section -->
+                    <h3 style="margin-bottom: 1.5rem; color: var(--text-muted);">
+                        <i class="fa-solid fa-list"></i> Poslední nahrané partie
+                    </h3>
+                    <div id="gamesList" class="message-list" style="margin-bottom: 2rem;">
+                        <div class="empty-state">
+                            <i class="fa-solid fa-spinner fa-spin"></i>
+                            <p>Načítám partie...</p>
+                        </div>
+                    </div>
+
+                    <div style="margin-top: 3rem;">
+                        <h2 style="margin-bottom: 1.5rem;"><i class="fa-solid fa-comments"></i> Vzkazovník</h2>
                     </div>
 
                     <div class="message-form">
@@ -341,7 +372,9 @@
                     localStorage.setItem(PASSWORD_KEY, password);
                     document.getElementById('loginView').classList.add('hidden');
                     document.getElementById('messagesView').classList.remove('hidden');
+                    document.getElementById('messagesView').classList.remove('hidden');
                     loadMessages(await res.json());
+                    loadGames(); // Fetch games
                 } else {
                     document.getElementById('loginError').style.display = 'block';
                     localStorage.removeItem(PASSWORD_KEY);
@@ -411,6 +444,53 @@
             } catch (e) {
                 console.error(e);
                 alert('Chyba spojení.');
+            }
+        }
+
+        async function loadGames() {
+            const password = localStorage.getItem(PASSWORD_KEY);
+            const container = document.getElementById('gamesList');
+
+            try {
+                const res = await fetch(`${API_URL}/games`, {
+                    headers: { 'X-Club-Password': password }
+                });
+
+                if (!res.ok) throw new Error('Failed to fetch games');
+
+                const games = await res.json();
+
+                if (games.length === 0) {
+                    container.innerHTML = `
+                        <div class="empty-state">
+                            <i class="fa-solid fa-chess-pawn"></i>
+                            <p>Zatím žádné nahrané partie.</p>
+                        </div>`;
+                    return;
+                }
+
+                container.innerHTML = games.map(game => `
+                    <div class="message-card" style="display:flex; justify-content:space-between; align-items:center;">
+                        <div>
+                            <div class="message-header" style="margin-bottom:0.2rem;">
+                                <span class="message-author" style="color:var(--text-main); font-size:1.1rem;">
+                                    <i class="fa-solid fa-chess"></i> <strong>${escapeHtml(game.white)}</strong> vs <strong>${escapeHtml(game.black)}</strong>
+                                </span>
+                            </div>
+                            <div style="font-size:0.9rem; color: #4ade80; font-weight:bold;">${game.result}</div>
+                            <div class="message-time" style="font-size:0.8rem;">${new Date(game.date).toLocaleDateString('cs-CZ')} • ${escapeHtml(game.event || 'Casual')}</div>
+                        </div>
+                        <div>
+                             <a href="${API_URL}/games/${game.id}/pgn" target="_blank" class="btn-primary" style="padding:0.5rem 1rem; font-size:0.8rem; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2);">
+                                <i class="fa-solid fa-download"></i> PGN
+                            </a>
+                        </div>
+                    </div>
+                `).join('');
+
+            } catch (e) {
+                console.error(e);
+                container.innerHTML = '<p style="color:#fca5a5; text-align:center;">Nepodařilo se načíst partie.</p>';
             }
         }
 

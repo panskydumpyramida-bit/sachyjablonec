@@ -19,6 +19,7 @@ model User {
   
   news         News[]
   puzzleResults PuzzleRaceResult[]
+  recordedGames GameRecorded[]
   
   @@map("users")
 }
@@ -175,4 +176,20 @@ model PuzzleRaceResult {
   user      User?    @relation(fields: [userId], references: [id])
 
   @@map("puzzle_race_results")
+}
+
+model GameRecorded {
+  id          Int      @id @default(autoincrement())
+  white       String
+  black       String
+  result      String   // "1-0", "0-1", "1/2-1/2", "*"
+  date        DateTime @default(now())
+  event       String?
+  pgn         String   @map("pgn_text")
+  uploadedBy  Int?     @map("uploaded_by")
+  createdAt   DateTime @default(now()) @map("created_at")
+  
+  user        User?    @relation(fields: [uploadedBy], references: [id])
+
+  @@map("games_recorded")
 }
