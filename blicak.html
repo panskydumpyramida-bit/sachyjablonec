@@ -458,11 +458,21 @@
                         listEl.innerHTML = registrations.map(reg => {
                             const isVip = reg.name.includes('Antonín Duda') || reg.name.includes('Tonda Duda') || reg.name.includes('Duda Antonín') || reg.name.includes('Předseda Tonda');
                             const highlightClass = isVip ? 'gold-highlight' : '';
-                            const icon = isVip ? '<i class="fa-solid fa-crown" style="margin-right:0.3rem; font-size:0.8em;"></i>' : '';
+
+                            let icons = '';
+                            if (isVip) icons += '<i class="fa-solid fa-crown" style="margin-right:0.3rem; font-size:0.8em;"></i>';
+
+                            const year = parseInt(reg.birthYear);
+                            // Rok 2025: 15 let = 2010, 60 let = 1965
+                            if (year >= 2010) {
+                                icons += '<span title="Mládež (≤15 let)" style="margin-right:0.3rem; font-size:0.9em;">🧒</span>';
+                            } else if (year <= 1965) {
+                                icons += '<span title="Senior (60+)" style="margin-right:0.3rem; font-size:0.9em;">👴</span>';
+                            }
 
                             return `
                                 <div class="participant-item ${highlightClass}">
-                                    <span>${icon}${reg.name}</span>
+                                    <span>${icons}${reg.name}</span>
                                     <span class="p-year">${reg.birthYear}</span>
                                 </div>
                             `;
