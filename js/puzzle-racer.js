@@ -17,6 +17,10 @@ let puzzlesBeforeNextBatch = 3; // Load more after solving 3
 let puzzlesPerDifficultyLevel = 6; // Increase difficulty after 6 solved
 let isFetchingPuzzles = false;
 
+// Lives system - 3 mistakes = game over
+let mistakeCount = 0;
+const MAX_MISTAKES = 3;
+
 // Actually, let's just use ONE solid simple puzzle for fallback to minimize error risk
 // Mat v 1. tahu.
 const FALLBACK_PUZZLES = [
@@ -219,6 +223,7 @@ function startGameLoop() {
 
     updateScore();
     updateTimer();
+    resetLives(); // Reset lives display
 
     // Initialize first puzzle
     loadPuzzle(puzzles[currentPuzzleIndex]);
@@ -477,12 +482,41 @@ function handleCorrectPuzzle() {
 }
 
 function handleWrongMove() {
-    // Penalty time? Or just failure feedback?
-    // Racer usually penalizes time or score.
-    // Let's deduct 5 seconds.
+    mistakeCount++;
+    updateLivesDisplay();
+    showFeedback('wrong');
+
+    // 3 mistakes = game over
+    if (mistakeCount >= MAX_MISTAKES) {
+        setTimeout(() => {
+            endGame();
+        }, 500);
+        return;
+    }
+
+    // Also deduct time as before
     timeLeft = Math.max(0, timeLeft - 5);
     updateTimer();
-    showFeedback('wrong');
+}
+
+// Update lives display (X marks)
+function updateLivesDisplay() {
+    for (let i = 1; i <= MAX_MISTAKES; i++) {
+        const lifeIcon = document.getElementById(`life${i}`);
+        if (lifeIcon) {
+            if (i <= mistakeCount) {
+                lifeIcon.classList.add('lost');
+            } else {
+                lifeIcon.classList.remove('lost');
+            }
+        }
+    }
+}
+
+// Reset lives at game start
+function resetLives() {
+    mistakeCount = 0;
+    updateLivesDisplay();
 }
 
 function showFeedback(type) {

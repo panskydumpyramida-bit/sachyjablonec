@@ -171,6 +171,25 @@
             color: var(--primary-color);
         }
 
+        /* Lives display */
+        .lives-display {
+            display: flex;
+            gap: 0.3rem;
+            justify-content: center;
+            margin-top: 0.3rem;
+        }
+
+        .life-icon {
+            font-size: 1.2rem;
+            color: #374151;
+            transition: color 0.3s, transform 0.3s;
+        }
+
+        .life-icon.lost {
+            color: #ef4444;
+            transform: scale(1.2);
+        }
+
         #board {
             width: 100%;
             max-width: 500px;
@@ -277,6 +296,14 @@
                         <div class="stat-box">
                             <span class="stat-label">Čas</span>
                             <span class="stat-value" id="timer">3:00</span>
+                        </div>
+                        <div class="stat-box">
+                            <span class="stat-label">Životy</span>
+                            <div class="lives-display">
+                                <i class="fa-solid fa-xmark life-icon" id="life1"></i>
+                                <i class="fa-solid fa-xmark life-icon" id="life2"></i>
+                                <i class="fa-solid fa-xmark life-icon" id="life3"></i>
+                            </div>
                         </div>
                         <div class="stat-box">
                             <span class="stat-label">Skóre</span>
