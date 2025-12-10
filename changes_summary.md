@@ -20,3 +20,26 @@ Vytvořeny 4 grafické verze propozic pro tisk do PDF:
     - Upraven `teams.html` pro přesné rozlišení týmů "A" a "B" (dříve se překrývaly).
     - Opravena scraping logika na serveru (`server.js`), aby správně přiřazovala zápasy týmům s jednopísmenným označením (A, B, C...).
 - **Výsledek**: Karty pro A tým a B tým nyní zobrazují správné a odlišné údaje o zápasech.
+
+---
+
+# Budoucí vývoj (Roadmap)
+
+## Puzzle Racer - Admin nastavení
+- [ ] Databázový model pro nastavení hry (`PuzzleRacerSettings`)
+- [ ] Admin UI pro superadmina:
+  - Počet puzzlů na úroveň (teď: 6)
+  - Počet puzzlů na fetch (teď: 3)
+  - Zapnutí/vypnutí životů
+  - Penalizace za špatný tah (sekund)
+  - Časový limit hry (teď: 3 min)
+- [ ] API endpoint pro čtení/zápis nastavení
+- [ ] Frontend: načítat nastavení z API místo hardcoded hodnot
+
+## Přehrávač partií - Vylepšení
+- [ ] Responzivní design pro mobily
+- [ ] Klávesové zkratky pro navigaci (šipky)
+- [ ] Zobrazení hodnocení motorů (evaluace)
+- [ ] Export do PGN
+- [ ] Komentáře k tahům
+- [ ] Varianty (odbočky)
