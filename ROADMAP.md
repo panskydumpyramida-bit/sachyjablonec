@@ -4,22 +4,96 @@ Plán budoucího vývoje webu sachyjablonec.cz.
 
 ---
 
+## 🚨 KRITICKÉ: Bezpečnostní opravy
+
+**Tyto problémy by měly být vyřešeny co nejdříve.**
+
+### Nalezené problémy
+
+1. **`/api/auth/fix-admins` - Exposed bez autentizace**
+   - Endpoint obsahuje hardcoded hesla (`sachy2025`)
+   - Kdokoliv může vytvořit admin účty
+   - **Řešení:** Odstranit nebo chránit auth middleware
+
+2. **Registrace vytváří adminy automaticky**
+   - `role: 'admin'` je default při registraci
+   - **Řešení:** Změnit default na `'user'`, admin práva pouze přes superadmina
+
+3. **Chybí role superadmin**
+   - Všichni admini mají stejná práva
+   - **Řešení:** Přidat hierarchii: `user` → `admin` → `superadmin`
+
+4. **Rate limiting**
+   - Žádná ochrana proti brute-force útokům na login
+   - **Řešení:** Přidat `express-rate-limit` na auth endpointy
+
+### Plánované změny
+- [ ] Odstranit nebo zabezpečit `/fix-admins` endpoint
+- [ ] Změnit default role na `'user'`
+- [ ] Přidat role `superadmin` do DB schématu
+- [ ] Implementovat role-based access control (RBAC)
+- [ ] Přidat rate limiting na `/api/auth/*`
+- [ ] Přidat rate limiting na Lichess API proxy
+
+---
+
+## 🧹 Priorita 0: Čištění kódu
+
+**Aktuální technický dluh, který zpomaluje další vývoj.**
+
+### Nalezené problémy
+
+1. **`server.js` má 1470 řádků**
+   - Obsahuje scraping logiku, API routes, helpers
+   - Obtížná údržba a testování
+
+2. **Debug/test soubory v produkci**
+   - `debug-scraper.js`, `debug-scraping.js`, `test-*.js`
+   - `debug_*.html`, `dump_html.js`
+   - Potenciální bezpečnostní riziko
+
+3. **Duplicitní helper funkce**
+   - `clean()`, `simplify()`, `isMatch()` definovány vícekrát
+
+### Plánované změny
+- [ ] Rozdělit `server.js` do modulů:
+  - `src/services/scrapingService.js`
+  - `src/services/standingsService.js`
+  - `src/utils/helpers.js`
+- [ ] Přesunout debug/test soubory do `/scripts` nebo odstranit
+- [ ] Přidat `.gitignore` pravidla pro debug soubory
+- [ ] Centralizovat helper funkce
+
+---
+
 ## 🎯 Priorita 1: Refaktoring ukládání partií
 
 **Cíl:** Změnit způsob ukládání šachových partií tak, aby je bylo možné používat napříč všemi sekcemi webu.
 
 ### Současný stav
-- Partie jsou vázány na konkrétní reporty/články
-- Nelze je sdílet mezi sekcemi (mládež, družstva, novinky)
+- Model `Game` je vázaný na `MatchReport` (přes `reportId`)
+- Partie nelze sdílet mezi sekcemi (mládež, družstva, novinky)
 - Duplicita při zobrazení stejné partie na více místech
 
 ### Plánované změny
-- [ ] Nový databázový model `Game` oddělený od článků
-- [ ] Vazební tabulky pro přiřazení partií k různým entitám
-- [ ] API endpoint pro CRUD operace s partiemi
-- [ ] Univerzální přehrávač partií použitelný v libovolné sekci
+- [ ] Nový nezávislý model `Game`:
+  ```prisma
+  model Game {
+    id          Int      @id
+    pgn         String   // PGN zápis
+    whitePlayer String
+    blackPlayer String
+    result      String   // "1-0", "0-1", "1/2-1/2"
+    event       String?  // Turnaj/soutěž
+    date        DateTime?
+    tags        String[] // Pro filtrování
+  }
+  ```
+- [ ] Vazební tabulky pro přiřazení partií k entitám
+- [ ] API endpoint `/api/games` pro CRUD operace
+- [ ] Univerzální přehrávač partií
 - [ ] Import PGN souborů do centrální databáze
-- [ ] Tagování partií (hráč, turnaj, datum, výsledek)
+- [ ] Tagování a vyhledávání partií
 
 ---
 
@@ -51,6 +125,51 @@ Plán budoucího vývoje webu sachyjablonec.cz.
 - [ ] Export partie do PGN formátu
 - [ ] Podpora komentářů k tahům
 - [ ] Podpora variant (odbočky v analýze)
+
+---
+
+## 📱 Priorita 4: Mobilní optimalizace
+
+### Nalezené problémy
+- Některé stránky nejsou plně responzivní
+- Admin panel není použitelný na mobilu
+- Kalkulačka/tabulky se špatně renderují na malých obrazovkách
+
+### Plánované změny
+- [ ] Audit všech stránek na mobilu (< 768px)
+- [ ] Oprava kritických UI problémů
+- [ ] Mobilní verze admin panelu (nebo alespoň čtení)
+- [ ] Touch-friendly ovládací prvky
+
+---
+
+## 🔄 Priorita 5: Automatizace a CI/CD
+
+### Plánované změny
+- [ ] Automatické testy (Jest/Vitest)
+- [ ] GitHub Actions pro CI/CD
+- [ ] Automatické aktualizace standings (cron job)
+- [ ] Monitorování chyb (Sentry nebo podobné)
+- [ ] Automatické zálohování databáze
+
+---
+
+## 📊 Další návrhy
+
+### Admin panel
+- [ ] Dashboard s metrikami (návštěvnost, aktivita)
+- [ ] Log změn (audit trail)
+- [ ] Bulk operace (mazání, publikování)
+
+### Uživatelská zkušenost
+- [ ] Dark/Light mode přepínač
+- [ ] Notifikace o nových článcích
+- [ ] RSS feed pro novinky
+
+### Výkon
+- [ ] Lazy loading obrázků
+- [ ] Caching API odpovědí
+- [ ] CDN pro statické soubory
 
 ---
 
