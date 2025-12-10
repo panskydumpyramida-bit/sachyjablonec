@@ -245,13 +245,15 @@ function loadPuzzle(puzzleData) {
     const history = game.history({ verbose: true });
     game.reset();
 
-    // Replay moves up to initialPly - 1 to set up the "before last move" state
-    // This allows us to ANIMATE the last move so the user sees what happened
-    const movesToReplay = puzzleData.puzzle.initialPly - 1;
+    // Replay moves up to initialPly to set up the position where the puzzle starts
+    // initialPly = number of half-moves already played
+    // The NEXT move (history[initialPly]) is the "opponent's last move" to animate
+    // After that animation, the player solves the puzzle
+    const movesToReplay = puzzleData.puzzle.initialPly;
 
     for (let i = 0; i < movesToReplay; i++) {
         const move = history[i];
-        game.move(move);
+        if (move) game.move(move);
     }
 
     // Determine orientation based on who will be to move AFTER the last move
