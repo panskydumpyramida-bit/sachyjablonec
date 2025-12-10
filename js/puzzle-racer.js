@@ -134,7 +134,7 @@ async function loadLeaderboard() {
                     <td style="padding: 1rem; color: var(--text-muted);">#${index + 1}</td>
                     <td style="padding: 1rem; font-weight: 600;">${medal}${escapeHtml(entry.playerName)}</td>
                     <td style="padding: 1rem; color: #4ade80; font-weight: 700; font-size: 1.1rem;">${entry.score}</td>
-                    <td style="padding: 1rem; color: var(--text-muted); font-size: 0.9rem;">${new Date(entry.createdAt).toLocaleDateString('cs-CZ')}</td>
+                    <td style="padding: 1rem; color: var(--text-muted); font-size: 0.85rem;">${new Date(entry.createdAt).toLocaleString('cs-CZ', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}</td>
                 </tr>
             `;
         }).join('');
