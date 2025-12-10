@@ -1,25 +1,15 @@
 import express from 'express';
 import { PrismaClient } from '@prisma/client';
-import { readFileSync } from 'fs';
-import { fileURLToPath } from 'url';
-import { dirname, join } from 'path';
 
 const router = express.Router();
 const prisma = new PrismaClient();
 
-// Get directory path for ES modules
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
-
-// Load static puzzles from JSON file (100 puzzles, pre-sorted by rating)
-let STATIC_PUZZLES = [];
-try {
-    const puzzlePath = join(__dirname, '../../data/puzzles.json');
-    STATIC_PUZZLES = JSON.parse(readFileSync(puzzlePath, 'utf-8'));
-    console.log(`Loaded ${STATIC_PUZZLES.length} puzzles from static database`);
-} catch (e) {
-    console.error('Failed to load puzzles.json:', e.message);
-}
+// Puzzle cache - refresh every 10 minutes
+let puzzleCache = {
+    puzzles: [],
+    lastFetch: 0,
+    ttl: 10 * 60 * 1000 // 10 minutes
+};
 
 // Fisher-Yates shuffle
 function shuffleArray(array) {
@@ -31,38 +21,87 @@ function shuffleArray(array) {
     return shuffled;
 }
 
-// GET /api/racer/puzzles - Return shuffled puzzles from static database
+// Fetch puzzles from Lichess API (NO AUTH TOKEN = correct difficulties!)
+async function fetchLichessPuzzles() {
+    const allPuzzles = [];
+
+    // Fetch different difficulty levels - NO AUTH TOKEN!
+    const difficulties = ['easiest', 'easier', 'normal'];
+
+    for (const diff of difficulties) {
+        try {
+            const res = await fetch(`https://lichess.org/api/puzzle/batch/mix?nb=20&difficulty=${diff}`, {
+                headers: { 'Accept': 'application/json' }
+                // NO Authorization header! This gives us correct difficulty ranges
+            });
+
+            if (res.ok) {
+                const data = await res.json();
+                const puzzles = data.puzzles || [];
+                console.log(`Fetched ${puzzles.length} ${diff} puzzles (rating ${puzzles[0]?.puzzle?.rating}-${puzzles[puzzles.length - 1]?.puzzle?.rating})`);
+                allPuzzles.push(...puzzles);
+            } else {
+                console.warn(`Lichess ${diff} returned ${res.status}`);
+            }
+
+            // Small delay between requests
+            await new Promise(r => setTimeout(r, 500));
+        } catch (e) {
+            console.error(`Failed to fetch ${diff}:`, e.message);
+        }
+    }
+
+    // Remove duplicates by puzzle ID
+    const seen = new Set();
+    const unique = allPuzzles.filter(p => {
+        if (seen.has(p.puzzle.id)) return false;
+        seen.add(p.puzzle.id);
+        return true;
+    });
+
+    // Sort by rating
+    unique.sort((a, b) => a.puzzle.rating - b.puzzle.rating);
+
+    return unique;
+}
+
+// GET /api/racer/puzzles - Fetch from Lichess with caching
 router.get('/puzzles', async (req, res) => {
     try {
-        if (STATIC_PUZZLES.length === 0) {
-            return res.status(500).json({ error: 'No puzzles available', puzzles: [] });
+        const now = Date.now();
+
+        // Return cached puzzles if still valid
+        if (puzzleCache.puzzles.length >= 30 && (now - puzzleCache.lastFetch) < puzzleCache.ttl) {
+            // Shuffle for variety but keep sorted by rating groups
+            const easy = puzzleCache.puzzles.filter(p => p.puzzle.rating < 1100);
+            const medium = puzzleCache.puzzles.filter(p => p.puzzle.rating >= 1100 && p.puzzle.rating < 1400);
+            const hard = puzzleCache.puzzles.filter(p => p.puzzle.rating >= 1400);
+
+            const shuffled = [...shuffleArray(easy), ...shuffleArray(medium), ...shuffleArray(hard)];
+
+            console.log(`Returning ${shuffled.length} cached puzzles (shuffled)`);
+            return res.json({ puzzles: shuffled, cached: true, count: shuffled.length });
         }
 
-        // Shuffle puzzles for variety, but keep roughly sorted by rating
-        // Split into difficulty groups and shuffle within each group
-        const easy = STATIC_PUZZLES.filter(p => p.puzzle.rating < 1900);
-        const medium = STATIC_PUZZLES.filter(p => p.puzzle.rating >= 1900 && p.puzzle.rating < 2100);
-        const hard = STATIC_PUZZLES.filter(p => p.puzzle.rating >= 2100);
+        // Fetch fresh puzzles
+        console.log('Fetching fresh puzzles from Lichess...');
+        const puzzles = await fetchLichessPuzzles();
 
-        // Shuffle within each group and recombine
-        const shuffledPuzzles = [
-            ...shuffleArray(easy),
-            ...shuffleArray(medium),
-            ...shuffleArray(hard)
-        ];
-
-        console.log(`Returning ${shuffledPuzzles.length} puzzles (shuffled within difficulty groups)`);
+        if (puzzles.length > 0) {
+            puzzleCache.puzzles = puzzles;
+            puzzleCache.lastFetch = now;
+            console.log(`Cached ${puzzles.length} puzzles`);
+        }
 
         res.json({
-            puzzles: shuffledPuzzles,
+            puzzles: puzzles.length > 0 ? puzzles : puzzleCache.puzzles,
             cached: false,
-            count: shuffledPuzzles.length,
-            source: 'static'
+            count: puzzles.length
         });
 
     } catch (error) {
-        console.error('Error in puzzle endpoint:', error);
-        res.status(500).json({ error: 'Failed to get puzzles', puzzles: [] });
+        console.error('Error fetching puzzles:', error);
+        res.status(500).json({ error: 'Failed to fetch puzzles', puzzles: puzzleCache.puzzles || [] });
     }
 });
 
