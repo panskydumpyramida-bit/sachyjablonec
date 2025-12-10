@@ -28,11 +28,11 @@ Plán budoucího vývoje webu sachyjablonec.cz.
    - **Řešení:** Přidat `express-rate-limit` na auth endpointy
 
 ### Plánované změny
-- [ ] Odstranit nebo zabezpečit `/fix-admins` endpoint
-- [ ] Změnit default role na `'user'`
+- [x] Odstranit nebo zabezpečit `/fix-admins` endpoint
+- [x] Změnit default role na `'user'`
 - [ ] Přidat role `superadmin` do DB schématu
 - [ ] Implementovat role-based access control (RBAC)
-- [ ] Přidat rate limiting na `/api/auth/*`
+- [x] Přidat rate limiting na `/api/auth/*`
 - [ ] Přidat rate limiting na Lichess API proxy
 
 ---
