@@ -28,7 +28,7 @@ export const register = async (req, res) => {
                 username,
                 email,
                 passwordHash,
-                role: 'admin'
+                role: 'user' // SECURITY FIX: Default to 'user', not 'admin'
             }
         });
 
