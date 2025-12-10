@@ -303,6 +303,57 @@
                 </form>
             </div>
 
+            <!-- List of Participants -->
+            <div style="max-width: 600px; margin: 2rem auto;">
+                <details id="participantsDetails"
+                    style="background: rgba(255, 255, 255, 0.03); border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.1); overflow: hidden;">
+                    <summary
+                        style="padding: 1rem; cursor: pointer; font-weight: 600; list-style: none; display: flex; align-items: center; justify-content: space-between; user-select: none;">
+                        <span><i class="fa-solid fa-users"
+                                style="color: var(--primary-color); margin-right: 0.5rem;"></i>
+                            Seznam přihlášených <span id="countBadge"
+                                style="font-size: 0.8em; background: rgba(255,255,255,0.1); padding: 2px 8px; border-radius: 12px; margin-left: 0.5rem;">0</span></span>
+                        <i class="fa-solid fa-chevron-down" style="font-size: 0.8em; transition: transform 0.3s;"></i>
+                    </summary>
+                    <div id="participantsList" style="padding: 0 1rem 1rem 1rem; max-height: 400px; overflow-y: auto;">
+                        <p style="text-align: center; color: var(--text-muted); padding: 1rem;">Načítám seznam...</p>
+                    </div>
+                </details>
+            </div>
+
+            <style>
+                details[open] summary i.fa-chevron-down {
+                    transform: rotate(180deg);
+                }
+
+                .participant-item {
+                    display: flex;
+                    justify-content: space-between;
+                    padding: 0.5rem 0;
+                    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+                    font-size: 0.95rem;
+                }
+
+                .participant-item:last-child {
+                    border-bottom: none;
+                }
+
+                .participant-item.gold-highlight {
+                    color: #d4af37;
+                    font-weight: bold;
+                    background: linear-gradient(90deg, transparent, rgba(212, 175, 55, 0.1), transparent);
+                }
+
+                .p-year {
+                    color: var(--text-muted);
+                    font-size: 0.85em;
+                }
+
+                .gold-highlight .p-year {
+                    color: rgba(212, 175, 55, 0.7);
+                }
+            </style>
+
             <div style="text-align: center; margin-top: 2rem;">
                 <p style="color: var(--text-muted); font-style: italic; margin-bottom: 0.5rem;">
                     <i class="fa-solid fa-file-lines"></i> Startovní listina z Chess-Results bude přidána brzy.
@@ -391,6 +442,33 @@
 
                 const capacity = 44;
                 const count = registrations.length;
+
+                // Update Participants List
+                const listEl = document.getElementById('participantsList');
+                const badgeEl = document.getElementById('countBadge');
+                if (listEl && badgeEl) {
+                    badgeEl.textContent = count;
+
+                    if (count === 0) {
+                        listEl.innerHTML = '<p style="text-align: center; color: var(--text-muted); padding: 0.5rem;">Zatím nikdo, buď první!</p>';
+                    } else {
+                        // Sort alphabetically by name
+                        registrations.sort((a, b) => a.name.localeCompare(b.name, 'cs'));
+
+                        listEl.innerHTML = registrations.map(reg => {
+                            const isVip = reg.name.includes('Antonín Duda') || reg.name.includes('Tonda Duda') || reg.name.includes('Duda Antonín');
+                            const highlightClass = isVip ? 'gold-highlight' : '';
+                            const icon = isVip ? '<i class="fa-solid fa-crown" style="margin-right:0.3rem; font-size:0.8em;"></i>' : '';
+
+                            return `
+                                <div class="participant-item ${highlightClass}">
+                                    <span>${icon}${reg.name}</span>
+                                    <span class="p-year">${reg.birthYear}</span>
+                                </div>
+                            `;
+                        }).join('');
+                    }
+                }
                 const remaining = Math.max(0, capacity - count);
 
                 // Color coding
