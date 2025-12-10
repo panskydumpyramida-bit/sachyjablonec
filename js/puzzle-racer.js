@@ -171,6 +171,9 @@ async function startRace() {
         document.getElementById('startScreen').classList.add('hidden');
         document.getElementById('gameInterface').classList.remove('hidden');
 
+        // Lock scroll on mobile
+        document.body.classList.add('game-active');
+
         startGameLoop();
 
     } catch (e) {
@@ -452,6 +455,9 @@ function updateTimer() {
 function endGame() {
     isGameActive = false;
     clearInterval(timerInterval);
+
+    // Unlock scroll
+    document.body.classList.remove('game-active');
 
     document.getElementById('gameInterface').classList.add('hidden');
     document.getElementById('gameOverScreen').classList.remove('hidden');
