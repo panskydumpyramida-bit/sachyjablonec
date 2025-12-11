@@ -480,10 +480,10 @@
                             <div style="font-size:0.9rem; color: #4ade80; font-weight:bold;">${game.result}</div>
                             <div class="message-time" style="font-size:0.8rem;">${new Date(game.date).toLocaleDateString('cs-CZ')} • ${escapeHtml(game.event || 'Casual')}</div>
                         </div>
-                        <div>
-                             <a href="${API_URL}/games/${game.id}/pgn" target="_blank" class="btn-primary" style="padding:0.5rem 1rem; font-size:0.8rem; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); margin-right: 0.5rem;">
+                         <div>
+                             <button onclick="downloadGamePgn(${game.id})" class="btn-primary" style="padding:0.5rem 1rem; font-size:0.8rem; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); margin-right: 0.5rem; cursor: pointer;">
                                 <i class="fa-solid fa-download"></i> PGN
-                            </a>
+                            </button>
                             <a href="game-recorder.html?id=${game.id}" class="btn-primary" style="padding:0.5rem 1rem; font-size:0.8rem;">
                                 <i class="fa-solid fa-chess-board"></i> Editor
                             </a>
@@ -494,6 +494,38 @@
             } catch (e) {
                 console.error(e);
                 container.innerHTML = '<p style="color:#fca5a5; text-align:center;">Nepodařilo se načíst partie.</p>';
+            }
+        }
+
+        async function downloadGamePgn(id) {
+            try {
+                const password = localStorage.getItem(PASSWORD_KEY);
+                const res = await fetch(`${API_URL}/games/${id}/pgn`, {
+                    headers: { 'X-Club-Password': password }
+                });
+
+                if (!res.ok) throw new Error('Download failed');
+
+                const blob = await res.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.style.display = 'none';
+                a.href = url;
+                // Try to get filename from header or default
+                const contentDist = res.headers.get('Content-Disposition');
+                let filename = `game_${id}.pgn`;
+                if (contentDist && contentDist.includes('filename=')) {
+                    filename = contentDist.split('filename=')[1].replace(/"/g, '');
+                }
+
+                a.download = filename;
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                document.body.removeChild(a);
+            } catch (e) {
+                console.error(e);
+                alert('Stahování selhalo (neautorizováno?).');
             }
         }
 
