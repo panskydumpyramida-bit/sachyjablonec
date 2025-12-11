@@ -481,8 +481,11 @@
                             <div class="message-time" style="font-size:0.8rem;">${new Date(game.date).toLocaleDateString('cs-CZ')} • ${escapeHtml(game.event || 'Casual')}</div>
                         </div>
                         <div>
-                             <a href="${API_URL}/games/${game.id}/pgn" target="_blank" class="btn-primary" style="padding:0.5rem 1rem; font-size:0.8rem; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2);">
+                             <a href="${API_URL}/games/${game.id}/pgn" target="_blank" class="btn-primary" style="padding:0.5rem 1rem; font-size:0.8rem; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); margin-right: 0.5rem;">
                                 <i class="fa-solid fa-download"></i> PGN
+                            </a>
+                            <a href="game-recorder.html?id=${game.id}" class="btn-primary" style="padding:0.5rem 1rem; font-size:0.8rem;">
+                                <i class="fa-solid fa-chess-board"></i> Editor
                             </a>
                         </div>
                     </div>
