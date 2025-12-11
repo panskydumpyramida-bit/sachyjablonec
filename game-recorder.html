@@ -298,8 +298,22 @@
                             </div>
                         </div>
 
-                        <!-- PGN Output (Hidden) -->
-                        <textarea id="pgnOutput" readonly style="display: none;"></textarea>
+                        <!-- PGN Output & Actions -->
+                        <div style="margin: 1rem 0;">
+                            <label
+                                style="color:var(--text-muted); display:block; margin-bottom:0.5rem; font-size: 0.8rem;">PGN
+                                Zápis</label>
+                            <textarea id="pgnOutput" readonly
+                                style="width:100%; height:80px; background:rgba(0,0,0,0.3); color:var(--text-muted); border:1px solid rgba(255,255,255,0.1); padding:0.5rem; border-radius:4px; font-family:monospace; font-size:0.8rem; resize:none;"></textarea>
+                            <div style="display:flex; gap:0.5rem; margin-top:0.5rem;">
+                                <button class="btn-control" onclick="copyPgn()"
+                                    style="font-size:0.8rem; padding:0.4rem 0.8rem;"><i class="fa-solid fa-copy"></i>
+                                    Kopírovat</button>
+                                <button class="btn-control" onclick="downloadPgn()"
+                                    style="font-size:0.8rem; padding:0.4rem 0.8rem;"><i
+                                        class="fa-solid fa-download"></i> Stáhnout</button>
+                            </div>
+                        </div>
 
                         <button class="main-btn" onclick="saveGame()" style="margin-top: 0; padding: 0.8rem;">
                             <i class="fa-solid fa-save"></i> Uložit Partii
@@ -477,6 +491,71 @@
 
         // Resize handle
         window.addEventListener('resize', board.resize);
+
+        // Load game if ID present in URL
+        document.addEventListener('DOMContentLoaded', () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const gameId = urlParams.get('id');
+            if (gameId) {
+                loadGameById(gameId);
+            }
+        });
+
+        async function loadGameById(id) {
+            try {
+                // Determine API URL (using window.API_URL from config.js if available, else relative)
+                const apiUrl = window.API_URL || '/api';
+                const res = await fetch(`${apiUrl}/games/${id}`);
+                if (!res.ok) throw new Error('Game not found');
+
+                const gameData = await res.json();
+
+                // Load metadata
+                document.getElementById('whitePlayer').value = gameData.white;
+                document.getElementById('blackPlayer').value = gameData.black;
+                document.getElementById('result').value = gameData.result;
+
+                // Load PGN
+                if (gameData.pgn) {
+                    game.load_pgn(gameData.pgn);
+                    board.position(game.fen());
+                    updateStatus();
+                }
+            } catch (e) {
+                console.error(e);
+                alert('Nepodařilo se načíst partii.');
+            }
+        }
+
+        function copyPgn() {
+            const pgnText = document.getElementById('pgnOutput');
+            pgnText.select();
+            document.execCommand('copy'); // Fallback
+            // Modern API
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(pgnText.value).then(() => {
+                    const btn = event.target.closest('button');
+                    const originalhtml = btn.innerHTML;
+                    btn.innerHTML = '<i class="fa-solid fa-check"></i> Zkopírováno';
+                    setTimeout(() => btn.innerHTML = originalhtml, 2000);
+                });
+            }
+        }
+
+        function downloadPgn() {
+            const pgn = game.pgn();
+            const white = document.getElementById('whitePlayer').value || 'White';
+            const black = document.getElementById('blackPlayer').value || 'Black';
+            const filename = `${white}_vs_${black}.pgn`.replace(/[^a-z0-9]/gi, '_');
+
+            const element = document.createElement('a');
+            element.setAttribute('href', 'data:application/x-chess-pgn;charset=utf-8,' + encodeURIComponent(pgn));
+            element.setAttribute('download', filename);
+            element.style.display = 'none';
+            document.body.appendChild(element);
+            element.click();
+            document.body.removeChild(element);
+        }
     </script>
 </body>
 
