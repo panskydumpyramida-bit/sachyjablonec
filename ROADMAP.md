@@ -166,6 +166,8 @@ Plán budoucího vývoje webu sachyjablonec.cz.
 - [x] Export partie do PGN (tlačítka pro stažení/kopírování)
 - [x] Načítání partie přes URL ID (`?id=123`)
 - [x] Zabezpečené stahování (auth fallback)
+- [x] **Click-to-Move** ovládání a nápověda tahů (tečky)
+- [x] Vizuální zvýraznění a sjednocení UI s Puzzle Racer
 
 ### Systém
 - [x] Oprava `ReferenceError` v `server.js` (racer routes)
