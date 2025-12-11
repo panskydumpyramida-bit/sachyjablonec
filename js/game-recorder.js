@@ -3,6 +3,14 @@ let board = null;
 let game = new Chess();
 let selectedSquare = null;
 
+// Playback state
+let moveHistory = [];       // Full move history for navigation
+let currentMoveIndex = -1;  // -1 = start position, 0 = after first move, etc.
+let autoplayInterval = null;
+
+// Track current game ID for updates (null = new game)
+let currentGameId = null;
+
 // --- Click-to-Move & Highlight Logic ---
 
 function removeHighlights() {
@@ -158,6 +166,130 @@ function undoMove() {
     updateStatus();
     removeHighlights();
     selectedSquare = null;
+    // Update move history tracking
+    moveHistory = game.history({ verbose: true });
+    currentMoveIndex = moveHistory.length - 1;
+}
+
+// --- Playback Navigation ---
+
+function updateMoveHistory() {
+    moveHistory = game.history({ verbose: true });
+    currentMoveIndex = moveHistory.length - 1;
+}
+
+function goToPosition(index) {
+    // Rebuild position from start
+    game.reset();
+    for (let i = 0; i <= index && i < moveHistory.length; i++) {
+        game.move(moveHistory[i]);
+    }
+    currentMoveIndex = index;
+    board.position(game.fen());
+    removeHighlights();
+
+    // Highlight the last move if any
+    if (index >= 0 && moveHistory[index]) {
+        highlightMove(moveHistory[index].from, moveHistory[index].to);
+    }
+
+    updatePgnDisplay();
+    highlightActiveMove();
+}
+
+function goToStart() {
+    stopAutoplay();
+    if (moveHistory.length === 0) {
+        moveHistory = game.history({ verbose: true });
+    }
+    goToPosition(-1);
+    game.reset();
+    board.position('start');
+    removeHighlights();
+    updatePgnDisplay();
+    highlightActiveMove();
+}
+
+function goBack() {
+    stopAutoplay();
+    if (moveHistory.length === 0) {
+        moveHistory = game.history({ verbose: true });
+        currentMoveIndex = moveHistory.length - 1;
+    }
+    if (currentMoveIndex >= 0) {
+        goToPosition(currentMoveIndex - 1);
+    }
+}
+
+function goForward() {
+    if (moveHistory.length === 0) {
+        moveHistory = game.history({ verbose: true });
+        currentMoveIndex = -1;
+    }
+    if (currentMoveIndex < moveHistory.length - 1) {
+        goToPosition(currentMoveIndex + 1);
+    } else {
+        stopAutoplay();
+    }
+}
+
+function goToEnd() {
+    stopAutoplay();
+    if (moveHistory.length === 0) {
+        moveHistory = game.history({ verbose: true });
+    }
+    goToPosition(moveHistory.length - 1);
+}
+
+function toggleAutoplay() {
+    if (autoplayInterval) {
+        stopAutoplay();
+    } else {
+        startAutoplay();
+    }
+}
+
+function startAutoplay() {
+    const btn = document.getElementById('autoplayBtn');
+    if (btn) btn.innerHTML = '<i class="fa-solid fa-pause"></i>';
+
+    // Initialize if needed
+    if (moveHistory.length === 0) {
+        moveHistory = game.history({ verbose: true });
+        currentMoveIndex = -1;
+        goToPosition(-1);
+    }
+
+    autoplayInterval = setInterval(() => {
+        if (currentMoveIndex < moveHistory.length - 1) {
+            goForward();
+        } else {
+            stopAutoplay();
+        }
+    }, 1000); // 1 second per move
+}
+
+function stopAutoplay() {
+    if (autoplayInterval) {
+        clearInterval(autoplayInterval);
+        autoplayInterval = null;
+    }
+    const btn = document.getElementById('autoplayBtn');
+    if (btn) btn.innerHTML = '<i class="fa-solid fa-play"></i>';
+}
+
+function highlightActiveMove() {
+    // Remove active class from all moves
+    document.querySelectorAll('.move').forEach(el => el.classList.remove('active'));
+
+    // Add active class to current move
+    if (currentMoveIndex >= 0) {
+        const moves = document.querySelectorAll('.move');
+        if (moves[currentMoveIndex]) {
+            moves[currentMoveIndex].classList.add('active');
+            moves[currentMoveIndex].scrollIntoView({ block: 'nearest' });
+        }
+    }
 }
 
 // --- IO Logic ---
@@ -191,8 +323,13 @@ async function saveGame() {
     status.innerText = '';
 
     try {
-        const res = await fetch(`${API_URL}/games`, {
-            method: 'POST',
+        // Use PUT for update if we have a game ID, POST for new game
+        const isUpdate = currentGameId !== null;
+        const url = isUpdate ? `${API_URL}/games/${currentGameId}` : `${API_URL}/games`;
+        const method = isUpdate ? 'PUT' : 'POST';
+
+        const res = await fetch(url, {
+            method: method,
             headers: {
                 'Content-Type': 'application/json',
                 'X-Club-Password': token
@@ -208,7 +345,7 @@ async function saveGame() {
 
         if (res.ok) {
             status.style.color = '#4ade80';
-            status.innerText = 'Partie úspěšně uložena!';
+            status.innerText = isUpdate ? 'Partie úspěšně aktualizována!' : 'Partie úspěšně uložena!';
             setTimeout(() => {
                 window.location.href = 'members.html';
             }, 1500);
@@ -246,6 +383,10 @@ async function loadGameById(id) {
         if (!res.ok) throw new Error('Game not found');
 
         const gameData = await res.json();
+
+        // Store game ID for updates
+        currentGameId = parseInt(id);
+
         document.getElementById('whitePlayer').value = gameData.white;
         document.getElementById('blackPlayer').value = gameData.black;
         document.getElementById('result').value = gameData.result;
@@ -254,6 +395,16 @@ async function loadGameById(id) {
             game.load_pgn(gameData.pgn);
             board.position(game.fen());
             updateStatus();
+
+            // Initialize playback history
+            moveHistory = game.history({ verbose: true });
+            currentMoveIndex = moveHistory.length - 1;
+        }
+
+        // Update save button text to indicate update mode
+        const saveBtn = document.querySelector('.main-btn');
+        if (saveBtn) {
+            saveBtn.innerHTML = '<i class="fa-solid fa-save"></i> Aktualizovat Partii';
         }
     } catch (e) {
         console.error(e);
@@ -336,6 +487,13 @@ document.addEventListener('DOMContentLoaded', () => {
     window.downloadPgn = downloadPgn;
     window.openGameInfo = openGameInfo;
     window.closeGameInfo = closeGameInfo;
+
+    // Playback controls
+    window.goToStart = goToStart;
+    window.goBack = goBack;
+    window.goForward = goForward;
+    window.goToEnd = goToEnd;
+    window.toggleAutoplay = toggleAutoplay;
 
     // Initialize Chessboard
     var config = {
