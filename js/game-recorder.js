@@ -293,6 +293,17 @@ function downloadPgn() {
     document.body.removeChild(element);
 }
 
+// Mobile Modal Logic
+function openGameInfo() {
+    document.getElementById('gameSidebar').classList.add('active');
+    document.body.classList.add('modal-open');
+}
+
+function closeGameInfo() {
+    document.getElementById('gameSidebar').classList.remove('active');
+    document.body.classList.remove('modal-open');
+}
+
 // --- Initialization ---
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -302,6 +313,8 @@ document.addEventListener('DOMContentLoaded', () => {
     window.saveGame = saveGame;
     window.copyPgn = copyPgn;
     window.downloadPgn = downloadPgn;
+    window.openGameInfo = openGameInfo;
+    window.closeGameInfo = closeGameInfo;
 
     var config = {
         draggable: true,
