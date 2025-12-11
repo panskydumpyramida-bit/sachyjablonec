@@ -1,0 +1,235 @@
+/**
+ * Admin Core Module
+ * Contains: Auth, Navigation, Toast, Utilities
+ */
+
+// Global State
+let authToken = localStorage.getItem('admin_token');
+let currentUser = null;
+
+// API URL from config
+const API_URL = window.API_URL || '/api';
+
+// ================================
+// UTILITIES
+// ================================
+
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+function showToast(message, type = 'success') {
+    const toast = document.createElement('div');
+    toast.className = `toast toast-${type}`;
+    toast.innerHTML = `
+        <i class="fa-solid fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'}"></i>
+        ${message}
+    `;
+    toast.style.cssText = `
+        position: fixed;
+        bottom: 2rem;
+        right: 2rem;
+        background: ${type === 'success' ? '#22c55e' : '#ef4444'};
+        color: white;
+        padding: 1rem 1.5rem;
+        border-radius: 0.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        z-index: 10000;
+        animation: slideIn 0.3s ease;
+    `;
+    document.body.appendChild(toast);
+    setTimeout(() => toast.remove(), 3000);
+}
+
+// ================================
+// AUTHENTICATION
+// ================================
+
+async function login() {
+    const username = document.getElementById('username').value;
+    const password = document.getElementById('password').value;
+
+    try {
+        const res = await fetch(`${API_URL}/auth/login`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username, password })
+        });
+
+        if (res.ok) {
+            const data = await res.json();
+            authToken = data.token;
+            localStorage.setItem('admin_token', data.token);
+            currentUser = data.user;
+            showAdmin();
+        } else {
+            document.getElementById('loginError').style.display = 'block';
+        }
+    } catch (e) {
+        console.error('Login error:', e);
+        alert('Chyba při přihlašování');
+    }
+}
+
+function logout() {
+    localStorage.removeItem('admin_token');
+    authToken = null;
+    currentUser = null;
+    showLogin();
+}
+
+function showLogin() {
+    document.getElementById('loginPage').classList.remove('hidden');
+    document.getElementById('adminPanel').classList.add('hidden');
+}
+
+function showAdmin() {
+    document.getElementById('loginPage').classList.add('hidden');
+    document.getElementById('adminPanel').classList.remove('hidden');
+
+    // Show tabs based on role
+    if (['admin', 'superadmin'].includes(currentUser.role)) {
+        const galleryBtn = document.getElementById('galleryTab');
+        if (galleryBtn) galleryBtn.style.display = 'inline-block';
+
+        const usersBtn = document.getElementById('usersTab');
+        if (usersBtn) {
+            usersBtn.classList.remove('hidden');
+            usersBtn.style.display = 'inline-block';
+        }
+    }
+
+    loadDashboard();
+}
+
+async function verifyToken() {
+    try {
+        const res = await fetch(`${API_URL}/auth/me`, {
+            headers: { 'Authorization': `Bearer ${authToken}` }
+        });
+        if (res.ok) {
+            currentUser = await res.json();
+            document.getElementById('userInfo').textContent = `${currentUser.username} (${currentUser.role})`;
+            showAdmin();
+        } else {
+            logout();
+        }
+    } catch (e) {
+        logout();
+    }
+}
+
+// ================================
+// NAVIGATION
+// ================================
+
+function switchTab(tab) {
+    document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+    const activeTab = document.querySelector(`.nav-tab[onclick="switchTab('${tab}')"]`);
+    if (activeTab) activeTab.classList.add('active');
+
+    // Hide all views
+    ['dashboard', 'editor', 'members', 'users', 'messages', 'blicak', 'competitions', 'gallery'].forEach(v => {
+        const el = document.getElementById(v + 'View');
+        if (el) el.classList.add('hidden');
+    });
+
+    // Show selected view
+    const view = document.getElementById(tab + 'View');
+    if (view) view.classList.remove('hidden');
+
+    // Load data for view
+    if (tab === 'dashboard') loadDashboard();
+    else if (tab === 'members') loadMembers();
+    else if (tab === 'users') loadUsers();
+    else if (tab === 'messages') loadAdminMessages();
+    else if (tab === 'blicak') loadBlicakRegistrations();
+    else if (tab === 'competitions') loadCompetitions();
+    else if (tab === 'gallery') loadAdminGallery();
+}
+
+// ================================
+// DASHBOARD
+// ================================
+
+async function loadDashboard() {
+    try {
+        const res = await fetch(`${API_URL}/news`, {
+            headers: { 'Authorization': `Bearer ${authToken}` }
+        });
+        const news = await res.json();
+        document.getElementById('newsTableBody').innerHTML = news.map(item => `
+            <tr>
+                <td>${new Date(item.publishedDate).toLocaleDateString('cs-CZ')}</td>
+                <td>${item.title}</td>
+                <td class="hide-mobile">${item.category}</td>
+                <td class="hide-mobile"><span class="highlight-name" style="font-size: 0.85rem;">${item.author?.username || '-'}</span></td>
+                <td class="hide-mobile"><span class="status-badge ${item.isPublished ? 'status-published' : 'status-draft'}">${item.isPublished ? '✓' : '○'}<span class="status-text">${item.isPublished ? ' Pub' : ' Konc'}</span></span></td>
+                <td>
+                    <button class="action-btn btn-edit" onclick="editNews(${item.id})"><i class="fa-solid fa-pen"></i></button>
+                    <button class="action-btn btn-publish" onclick="togglePublish(${item.id})" title="${item.isPublished ? 'Skrýt' : 'Publikovat'}"><i class="fa-solid fa-${item.isPublished ? 'eye-slash' : 'eye'}"></i></button>
+                    ${['admin', 'superadmin'].includes(currentUser.role) ? `<button class="action-btn btn-delete" onclick="deleteNews(${item.id})"><i class="fa-solid fa-trash"></i></button>` : ''}
+                </td>
+            </tr>
+        `).join('');
+    } catch (e) {
+        console.error('Dashboard load error:', e);
+    }
+}
+
+async function togglePublish(id) {
+    try {
+        await fetch(`${API_URL}/news/${id}/publish`, {
+            method: 'PATCH',
+            headers: { 'Authorization': `Bearer ${authToken}` }
+        });
+        loadDashboard();
+    } catch (e) {
+        console.error(e);
+    }
+}
+
+async function deleteNews(id) {
+    if (!confirm('Opravdu smazat tuto novinku?')) return;
+    try {
+        await fetch(`${API_URL}/news/${id}`, {
+            method: 'DELETE',
+            headers: { 'Authorization': `Bearer ${authToken}` }
+        });
+        showToast('Novinka smazána');
+        loadDashboard();
+    } catch (e) {
+        console.error(e);
+        showToast('Nepodařilo se smazat', 'error');
+    }
+}
+
+// ================================
+// INIT
+// ================================
+
+document.addEventListener('DOMContentLoaded', () => {
+    if (authToken) {
+        verifyToken();
+    }
+
+    // Enter key for login
+    document.getElementById('password')?.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') login();
+    });
+});
+
+// Export for global access
+window.login = login;
+window.logout = logout;
+window.switchTab = switchTab;
+window.editNews = editNews;
+window.togglePublish = togglePublish;
+window.deleteNews = deleteNews;
+window.showToast = showToast;
+window.escapeHtml = escapeHtml;
