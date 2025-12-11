@@ -46,6 +46,8 @@ function showToast(message, type = 'success') {
     setTimeout(() => toast.remove(), 3000);
 }
 
+const showAlert = showToast; // Alias for backward compatibility
+
 // ================================
 // AUTHENTICATION
 // ================================
@@ -232,4 +234,5 @@ window.editNews = editNews;
 window.togglePublish = togglePublish;
 window.deleteNews = deleteNews;
 window.showToast = showToast;
+window.showAlert = showAlert;
 window.escapeHtml = escapeHtml;
