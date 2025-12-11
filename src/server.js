@@ -1451,8 +1451,8 @@ const seedCompetitions = async () => {
 };
 
 // Start server
-app.listen(PORT, async () => {
-    console.log(`🚀 Server running on http://localhost:${PORT}`);
+app.listen(PORT, '0.0.0.0', async () => {
+    console.log(`🚀 Server running on http://0.0.0.0:${PORT}`);
     console.log(`📝 Environment: ${process.env.NODE_ENV}`);
 
     // Attempt to seed competitions on startup (delayed to allow fast boot)
