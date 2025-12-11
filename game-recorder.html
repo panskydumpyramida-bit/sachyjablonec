@@ -253,10 +253,48 @@
             pointer-events: none;
         }
 
-        /* Mobile Modal Styles */
+        /* Mobile Modal Styles & Layout Fixes */
         @media (max-width: 900px) {
+
+            /* Hide global navigation elements to prevent scrolling and save space */
+            #global-header,
+            #global-footer,
+            .hero-small {
+                display: none !important;
+            }
+
+            /* Reset main layout for full screen */
+            body,
+            html {
+                height: 100%;
+                overflow: hidden;
+                /* Disable scroll on body */
+            }
+
+            main {
+                height: 100%;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                padding: 0 !important;
+            }
+
+            section {
+                padding: 1rem 0 !important;
+            }
+
+            /* Adjust controls for mobile */
+            .controls {
+                margin-top: 1rem;
+                gap: 0.5rem;
+                padding-bottom: 2rem;
+                /* Safety padding for bottom touches */
+            }
+
             .mobile-only-btn {
                 display: flex !important;
+                background: rgba(255, 255, 255, 0.15) !important;
+                border: 1px solid rgba(255, 255, 255, 0.3) !important;
             }
 
             .sidebar {
@@ -267,28 +305,32 @@
                 top: 0;
                 left: 0;
                 width: 100%;
-                height: 100vh;
-                z-index: 1000;
+                height: 100%;
+                z-index: 9999;
+                /* Very high z-index */
                 border-radius: 0;
                 margin: 0;
-                background: rgba(20, 20, 25, 0.98);
-                /* Less transp for readability */
+                background: #1a1a1e;
+                /* Solid background */
                 overflow-y: auto;
                 padding-top: 4rem;
                 /* Space for close button */
+                -webkit-overflow-scrolling: touch;
             }
 
             .sidebar.active {
                 display: flex;
+                /* Override display: none */
                 flex-direction: column;
             }
 
             .btn-close-modal {
                 display: block !important;
                 position: absolute;
-                top: 1rem;
-                right: 1rem;
-                background: transparent;
+                top: 1.5rem;
+                right: 1.5rem;
+                z-index: 10000;
+                background: rgba(255, 0, 0, 0.2);
                 border: 1px solid rgba(255, 255, 255, 0.2);
                 color: white;
                 padding: 0.5rem 1rem;
@@ -297,9 +339,12 @@
                 cursor: pointer;
             }
 
-            body.modal-open {
-                overflow: hidden;
-                /* Prevent body scroll when modal open */
+            /* Ensure board fits */
+            #board {
+                max-height: 70vh;
+                /* Leave space for controls */
+                width: 95vw !important;
+                margin: 0 auto;
             }
         }
     </style>
