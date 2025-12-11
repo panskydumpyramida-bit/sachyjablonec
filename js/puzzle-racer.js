@@ -302,7 +302,7 @@ function loadPuzzle(puzzleData) {
             onDragStart: onDragStart,
             onDrop: onDrop,
             onSnapEnd: onSnapEnd,
-            moveSpeed: 200  // 200ms animation - fast but smooth
+            moveSpeed: 300  // 300ms animation
         };
         board = Chessboard('board', config);
     }
@@ -316,7 +316,7 @@ function loadPuzzle(puzzleData) {
 
             // Highlight the opponent's move (which is the start of the puzzle)
             highlightMove(lastMove.from, lastMove.to);
-        }, 250);
+        }, 350);
     } else {
         // Should not happen for valid puzzles, but graceful fallback
         // If initialPly is 0? Puzzle starts from start position? Unlikely.
@@ -508,7 +508,7 @@ function handleMove(source, target, isDrop) {
         // Opponent's turn - wait for player's animation to complete (250ms)
         setTimeout(() => {
             makeOpponentMove();
-        }, 250);
+        }, 350);
     }
 
     return true;
@@ -539,7 +539,7 @@ function makeOpponentMove() {
             handleCorrectPuzzle();
         }
         // If more player moves needed, player can now move (no action needed here)
-    }, 250);
+    }, 350);
 }
 
 function handleCorrectPuzzle() {
@@ -570,7 +570,7 @@ function handleCorrectPuzzle() {
     setTimeout(() => {
         // Load next puzzle or wait for more to load (NEVER end game due to lack of puzzles)
         loadNextPuzzleOrWait();
-    }, 250);
+    }, 350);
 }
 
 // Helper to load next puzzle or wait for fetch to complete
