@@ -524,7 +524,7 @@ function makeOpponentMove() {
     const promotion = opponentMoveUci.length > 4 ? opponentMoveUci.substring(4, 5) : undefined;
 
     game.move({ from, to, promotion });
-    board.position(game.fen());
+    board.position(game.fen(), true); // true = animate the move
 
     // Highlight opponent move
     // removeHighlights();
