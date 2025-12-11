@@ -307,8 +307,8 @@ function loadPuzzle(puzzleData) {
         board = Chessboard('board', config);
     }
 
-    // Animate the last move (Opponent's move) after a short delay
-    // OPTIMIZED: Reduced from 500ms to 250ms for snappier feel
+    // Animate the last move (Opponent's move) after a delay
+    // 500ms gives time for board setup before animation starts
     if (lastMove) {
         setTimeout(() => {
             game.move(lastMove);
@@ -316,7 +316,7 @@ function loadPuzzle(puzzleData) {
 
             // Highlight the opponent's move (which is the start of the puzzle)
             highlightMove(lastMove.from, lastMove.to);
-        }, 250);
+        }, 500);
     } else {
         // Should not happen for valid puzzles, but graceful fallback
         // If initialPly is 0? Puzzle starts from start position? Unlikely.
@@ -505,10 +505,10 @@ function handleMove(source, target, isDrop) {
     if (game.solutionIndex >= game.currentSolution.length) {
         handleCorrectPuzzle();
     } else {
-        // Opponent's turn - wait for player's animation to complete first (400ms for 'slow' moveSpeed)
+        // Opponent's turn - wait for player's animation to complete (500ms for 'slow' moveSpeed)
         setTimeout(() => {
             makeOpponentMove();
-        }, 400);
+        }, 500);
     }
 
     return true;
@@ -533,13 +533,13 @@ function makeOpponentMove() {
 
     game.solutionIndex++;
 
-    // Wait for opponent's animation to complete before next action
+    // Wait for opponent's animation to complete before next action (500ms)
     setTimeout(() => {
         if (game.solutionIndex >= game.currentSolution.length) {
             handleCorrectPuzzle();
         }
         // If more player moves needed, player can now move (no action needed here)
-    }, 400);
+    }, 500);
 }
 
 function handleCorrectPuzzle() {
@@ -566,12 +566,11 @@ function handleCorrectPuzzle() {
     // Next puzzle
     currentPuzzleIndex++;
 
-    // ANIMATION FIX: Wait for last move animation to complete before loading next puzzle
-    // chessboard.js 'slow' moveSpeed is approximately 400ms
+    // Wait for last move animation to complete before loading next puzzle (500ms)
     setTimeout(() => {
         // Load next puzzle or wait for more to load (NEVER end game due to lack of puzzles)
         loadNextPuzzleOrWait();
-    }, 400);
+    }, 500);
 }
 
 // Helper to load next puzzle or wait for fetch to complete
