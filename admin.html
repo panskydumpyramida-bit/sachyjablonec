@@ -1425,8 +1425,7 @@
         <div class="header-actions">
             <h2><i class="fa-regular fa-images"></i> Správa Galerie</h2>
             <div style="display: flex; gap: 1rem;">
-                <button id="batchDeleteBtn" class="action-btn btn-danger" style="display: none;"
-                    onclick="deleteSelectedImages()">
+                <button id="batchDeleteBtn" class="action-btn btn-danger" disabled onclick="deleteSelectedImages()">
                     <i class="fa-solid fa-trash"></i> Smazat vybrané (<span id="selectedCount">0</span>)
                 </button>
                 <button class="primary-btn" onclick="document.getElementById('imageUploadInput').click()">
