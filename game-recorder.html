@@ -29,7 +29,7 @@
             display: grid;
             grid-template-columns: 1fr 280px;
             gap: 2rem;
-            margin-top: 2rem;
+            margin-top: 0.5rem;
             align-items: start;
         }
 
@@ -59,12 +59,16 @@
         .sidebar {
             background: var(--surface-color);
             border: 1px solid rgba(255, 255, 255, 0.05);
-            padding: 1.5rem;
+            padding: 1.2rem;
             border-radius: 12px;
             display: flex;
             flex-direction: column;
-            gap: 1.5rem;
+            gap: 1rem;
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+            /* Fixed height to match board (approx 550px for board + 50px controls approx) */
+            height: 550px;
+            max-height: 550px;
+            overflow: hidden;
         }
 
         .move-list {
@@ -94,6 +98,11 @@
             width: auto;
             min-width: 90px;
             padding: 0.2rem 0.5rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.02);
+        }
+
+        .move-pair:nth-child(even) {
+            background: rgba(255, 255, 255, 0.03);
         }
 
         .move-number {
@@ -108,7 +117,8 @@
             padding: 2px 6px;
             border-radius: 4px;
             color: var(--text-color);
-            transition: background 0.2s;
+            transition: background 0.2s, color 0.2s;
+            margin-right: 2px;
         }
 
         .move:hover {
@@ -228,13 +238,14 @@
     <header id="global-header"></header>
 
     <main>
-        <section class="hero-small" style="text-align: center; padding: 2rem 0; margin-top: 100px;">
+        <!-- Reduced top margin and padding to fit board on screen -->
+        <section class="hero-small" style="text-align: center; padding: 0.5rem 0; margin-top: 85px;">
             <div class="container">
-                <h1 style="font-size: 2rem; margin: 0;"><i class="fa-solid fa-chess-board"></i> Editor Partií</h1>
+                <h1 style="font-size: 1.8rem; margin: 0;"><i class="fa-solid fa-chess-board"></i> Editor Partií</h1>
             </div>
         </section>
 
-        <section style="padding: 2rem 0;">
+        <section style="padding: 0.5rem 0;">
             <div class="container">
                 <div class="editor-container">
 
@@ -255,47 +266,47 @@
                     <!-- Right: Info & Moves -->
                     <div class="sidebar">
 
-                        <!-- Metadata Form -->
-                        <div>
-                            <div class="form-group">
-                                <label>Bílý</label>
-                                <input type="text" id="whitePlayer" placeholder="Jméno hráče">
+                        <!-- Metadata Form: Compact Grid -->
+                        <div style="display: grid; grid-template-columns: 1fr 1fr 80px; gap: 0.5rem; align-items: end;">
+                            <div class="form-group" style="margin-bottom: 0;">
+                                <label style="font-size: 0.8rem; margin-bottom: 0.2rem;">Bílý</label>
+                                <input type="text" id="whitePlayer" placeholder="Jméno" style="padding: 0.5rem;">
                             </div>
-                            <div class="form-group">
-                                <label>Černý</label>
-                                <input type="text" id="blackPlayer" placeholder="Jméno hráče">
+                            <div class="form-group" style="margin-bottom: 0;">
+                                <label style="font-size: 0.8rem; margin-bottom: 0.2rem;">Černý</label>
+                                <input type="text" id="blackPlayer" placeholder="Jméno" style="padding: 0.5rem;">
                             </div>
-                            <div class="form-group">
-                                <label>Výsledek</label>
-                                <select id="result">
+                            <div class="form-group" style="margin-bottom: 0;">
+                                <label style="font-size: 0.8rem; margin-bottom: 0.2rem;">Výsledek</label>
+                                <select id="result" style="padding: 0.5rem;">
                                     <option value="*">*</option>
-                                    <option value="1-0">1-0 (Bílý vyhrál)</option>
-                                    <option value="0-1">0-1 (Černý vyhrál)</option>
-                                    <option value="1/2-1/2">1/2-1/2 (Remíza)</option>
+                                    <option value="1-0">1-0</option>
+                                    <option value="0-1">0-1</option>
+                                    <option value="1/2-1/2">½-½</option>
                                 </select>
                             </div>
                         </div>
 
-                        <!-- Move List -->
-                        <div>
-                            <label style="color:var(--text-muted); display:block; margin-bottom:0.5rem;">Průběh
+                        <!-- Move List: Flex Grow to fill space -->
+                        <div style="flex: 1; display: flex; flex-direction: column; min-height: 0;">
+                            <label
+                                style="color:var(--text-muted); display:block; margin-bottom:0.5rem; font-size: 0.9rem;">Průběh
                                 partie</label>
-                            <div id="moveList" class="move-list">
+                            <div id="moveList" class="move-list"
+                                style="height: auto; flex: 1; border: 1px solid rgba(255,255,255,0.05);">
                                 <!-- Moves will go here -->
                             </div>
                         </div>
 
-                        <!-- PGN Output (Hidden logic mostly) -->
-                        <div class="form-group">
-                            <label>PGN (Read-only)</label>
-                            <textarea id="pgnOutput" readonly
-                                style="width:100%; height:100px; background:rgba(0,0,0,0.3); color:#aaa; border:1px solid rgba(255,255,255,0.1);"></textarea>
-                        </div>
+                        <!-- PGN Output (Hidden) -->
+                        <textarea id="pgnOutput" readonly style="display: none;"></textarea>
 
-                        <button class="main-btn" onclick="saveGame()">
+                        <button class="main-btn" onclick="saveGame()" style="margin-top: 0; padding: 0.8rem;">
                             <i class="fa-solid fa-save"></i> Uložit Partii
                         </button>
-                        <p id="saveStatus" style="text-align: center; margin-top: 0.5rem; min-height: 1.5rem;"></p>
+                        <p id="saveStatus"
+                            style="text-align: center; margin-top: 0.2rem; min-height: 1.2rem; font-size: 0.9rem; margin-bottom: 0;">
+                        </p>
 
                     </div>
                 </div>
