@@ -2,7 +2,7 @@
 aptPkgs = ["libvips-dev"]
 
 [phases.build]
-cmds = ["npm ci", "npx prisma generate"]
+cmds = ["npm install", "npx prisma generate"]
 
 [phases.deploy]
 cmds = ["npx prisma db push --accept-data-loss"]
