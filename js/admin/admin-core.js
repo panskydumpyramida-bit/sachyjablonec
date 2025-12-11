@@ -4,7 +4,7 @@
  */
 
 // Global State
-let authToken = localStorage.getItem('admin_token');
+let authToken = localStorage.getItem('authToken');
 let currentUser = null;
 
 // API URL from config
@@ -64,7 +64,7 @@ async function login() {
         if (res.ok) {
             const data = await res.json();
             authToken = data.token;
-            localStorage.setItem('admin_token', data.token);
+            localStorage.setItem('authToken', data.token);
             currentUser = data.user;
             showAdmin();
         } else {
@@ -77,7 +77,7 @@ async function login() {
 }
 
 function logout() {
-    localStorage.removeItem('admin_token');
+    localStorage.removeItem('authToken');
     authToken = null;
     currentUser = null;
     showLogin();
