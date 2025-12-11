@@ -154,6 +154,26 @@ Plán budoucího vývoje webu sachyjablonec.cz.
 
 ---
 
+## ✅ Dokončeno (11. 12. 2025)
+
+### Puzzle Racer
+- [x] Oprava logiky (načítání bufferu, čekací stavy)
+- [x] Indikátor obtížnosti v UI
+- [x] Oprava načítání žebříčku
+
+### Editor Partií
+- [x] Responzivní design pro mobily (výška sidebaru)
+- [x] Export partie do PGN (tlačítka pro stažení/kopírování)
+- [x] Načítání partie přes URL ID (`?id=123`)
+- [x] Zabezpečené stahování (auth fallback)
+
+### Systém
+- [x] Oprava `ReferenceError` v `server.js` (racer routes)
+- [x] CORS povolení pro `X-Club-Password`
+- [x] Docker build optimalizace (`.dockerignore`)
+
+---
+
 ## 📊 Další návrhy
 
 ### Admin panel

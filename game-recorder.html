@@ -231,6 +231,27 @@
             background: rgba(255, 255, 255, 0.1);
             border-radius: 3px;
         }
+
+        /* Chess Board Highlights & Hints */
+        .highlight-selected {
+            box-shadow: inset 0 0 3px 3px yellow;
+        }
+
+        .highlight-move {
+            box-shadow: inset 0 0 3px 3px rgba(255, 255, 0, 0.8) !important;
+        }
+
+        .hint-dot {
+            width: 25%;
+            height: 25%;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 50%;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+        }
     </style>
 </head>
 
@@ -333,257 +354,7 @@
     <script src="js/config.js"></script>
     <script src="js/layout-loader.js"></script>
     <script src="js/main.js"></script>
-
-    <script>
-        let board = null;
-        let game = new Chess();
-
-        function onDragStart(source, piece, position, orientation) {
-            if (game.game_over()) return false;
-            // only pick up pieces for the side to move
-            if ((game.turn() === 'w' && piece.search(/^b/) !== -1) ||
-                (game.turn() === 'b' && piece.search(/^w/) !== -1)) {
-                return false;
-            }
-        }
-
-        function onDrop(source, target) {
-            // see if the move is legal
-            var move = game.move({
-                from: source,
-                to: target,
-                promotion: 'q' // NOTE: always promote to a queen for example simplicity
-            });
-
-            // illegal move
-            if (move === null) return 'snapback';
-
-            updateStatus();
-        }
-
-        // update the board position after the piece snap
-        // for castling, en passant, pawn promotion
-        function onSnapEnd() {
-            board.position(game.fen());
-        }
-
-        function updateStatus() {
-            let status = '';
-            let moveColor = 'White';
-            if (game.turn() === 'b') {
-                moveColor = 'Black';
-            }
-
-            // Update PGN
-            updatePgnDisplay();
-
-            // Update Board
-            // board is auto updated by onSnapEnd
-        }
-
-        function updatePgnDisplay() {
-            const pgn = game.pgn();
-            document.getElementById('pgnOutput').value = pgn;
-
-            // Render nice move list
-            const history = game.history();
-            const listEl = document.getElementById('moveList');
-            listEl.innerHTML = '';
-
-            for (let i = 0; i < history.length; i += 2) {
-                const moveNum = Math.floor(i / 2) + 1;
-                const whiteMove = history[i];
-                const blackMove = history[i + 1] || '';
-
-                const div = document.createElement('div');
-                div.className = 'move-pair';
-                div.innerHTML = `
-                    <span class="move-number">${moveNum}.</span>
-                    <span class="move">${whiteMove}</span>
-                    ${blackMove ? `<span class="move">${blackMove}</span>` : ''}
-                `;
-                listEl.appendChild(div);
-            }
-
-            // Auto scroll to bottom
-            listEl.scrollTop = listEl.scrollHeight;
-        }
-
-        function undoMove() {
-            game.undo();
-            board.position(game.fen());
-            updateStatus();
-        }
-
-        async function saveGame() {
-            const white = document.getElementById('whitePlayer').value;
-            const black = document.getElementById('blackPlayer').value;
-            const result = document.getElementById('result').value;
-
-            // Check auth token (club password)
-            const token = localStorage.getItem('club_auth_token');
-            if (!token) {
-                const status = document.getElementById('saveStatus');
-                status.style.color = 'red';
-                status.innerText = 'Pro uložení se musíte přihlásit v členské sekci!';
-                return;
-            }
-
-            if (!white || !black) {
-                alert('Vyplňte jména hráčů!');
-                return;
-            }
-
-            const pgnHeader = `[White "${white}"]\n[Black "${black}"]\n[Result "${result}"]\n[Date "${new Date().toISOString().split('T')[0]}"]\n\n`;
-            const fullPgn = pgnHeader + game.pgn();
-
-            const btn = document.querySelector('.main-btn');
-            const status = document.getElementById('saveStatus');
-
-            btn.disabled = true;
-            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Ukládám...';
-            status.innerText = '';
-
-            try {
-                const res = await fetch(`${API_URL}/games`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-Club-Password': token
-                    },
-                    body: JSON.stringify({
-                        white,
-                        black,
-                        result,
-                        pgn: fullPgn,
-                        event: 'Web Editor Game'
-                    })
-                });
-
-                if (res.ok) {
-                    status.style.color = '#4ade80';
-                    status.innerText = 'Partie úspěšně uložena!';
-                    setTimeout(() => {
-                        window.location.href = 'members.html';
-                    }, 1500);
-                } else {
-                    throw new Error('Save failed');
-                }
-            } catch (e) {
-                console.error(e);
-                status.style.color = 'red';
-                status.innerText = 'Chyba při ukládání.';
-                btn.disabled = false;
-                btn.innerHTML = '<i class="fa-solid fa-save"></i> Uložit Partii';
-            }
-        }
-
-        // Init board
-        var config = {
-            draggable: true,
-            position: 'start',
-            onDragStart: onDragStart,
-            onDrop: onDrop,
-            onSnapEnd: onSnapEnd,
-            pieceTheme: 'https://chessboardjs.com/img/chesspieces/wikipedia/{piece}.png'
-        };
-        board = Chessboard('board', config);
-
-        // Resize handle
-        window.addEventListener('resize', board.resize);
-
-        // Load game if ID present in URL
-        document.addEventListener('DOMContentLoaded', () => {
-            const urlParams = new URLSearchParams(window.location.search);
-            const gameId = urlParams.get('id');
-            if (gameId) {
-                loadGameById(gameId);
-            }
-        });
-
-        async function loadGameById(id) {
-            try {
-                // Determine API URL
-                const apiUrl = window.API_URL || '/api';
-                let token = localStorage.getItem('club_auth_token');
-
-                let res = await fetch(`${apiUrl}/games/${id}`, {
-                    headers: {
-                        'X-Club-Password': token || ''
-                    }
-                });
-
-                // If unauthorized, prompt for password
-                if (res.status === 401 || res.status === 403) {
-                    const password = prompt('Pro zobrazení partie zadejte heslo oddílu:');
-                    if (password) {
-                        res = await fetch(`${apiUrl}/games/${id}`, {
-                            headers: {
-                                'X-Club-Password': password
-                            }
-                        });
-
-                        // If success, save token
-                        if (res.ok) {
-                            localStorage.setItem('club_auth_token', password);
-                        }
-                    }
-                }
-
-                if (!res.ok) {
-                    if (res.status === 401 || res.status === 403) throw new Error('Nesprávné heslo.');
-                    throw new Error('Game not found');
-                }
-
-                const gameData = await res.json();
-
-                // Load metadata
-                document.getElementById('whitePlayer').value = gameData.white;
-                document.getElementById('blackPlayer').value = gameData.black;
-                document.getElementById('result').value = gameData.result;
-
-                // Load PGN
-                if (gameData.pgn) {
-                    game.load_pgn(gameData.pgn);
-                    board.position(game.fen());
-                    updateStatus();
-                }
-            } catch (e) {
-                console.error(e);
-                alert(`Nepodařilo se načíst partii: ${e.message}`);
-            }
-        }
-
-        function copyPgn() {
-            const pgnText = document.getElementById('pgnOutput');
-            pgnText.select();
-            document.execCommand('copy'); // Fallback
-            // Modern API
-            if (navigator.clipboard) {
-                navigator.clipboard.writeText(pgnText.value).then(() => {
-                    const btn = event.target.closest('button');
-                    const originalhtml = btn.innerHTML;
-                    btn.innerHTML = '<i class="fa-solid fa-check"></i> Zkopírováno';
-                    setTimeout(() => btn.innerHTML = originalhtml, 2000);
-                });
-            }
-        }
-
-        function downloadPgn() {
-            const pgn = game.pgn();
-            const white = document.getElementById('whitePlayer').value || 'White';
-            const black = document.getElementById('blackPlayer').value || 'Black';
-            const filename = `${white}_vs_${black}.pgn`.replace(/[^a-z0-9]/gi, '_');
-
-            const element = document.createElement('a');
-            element.setAttribute('href', 'data:application/x-chess-pgn;charset=utf-8,' + encodeURIComponent(pgn));
-            element.setAttribute('download', filename);
-            element.style.display = 'none';
-            document.body.appendChild(element);
-            element.click();
-            document.body.removeChild(element);
-        }
-    </script>
+    <script src="js/game-recorder.js"></script>
 </body>
 
 </html>
