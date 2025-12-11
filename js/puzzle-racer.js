@@ -491,7 +491,7 @@ function handleMove(source, target, isDrop) {
     }
 
     // 3. Correct move!
-    // If click-move, we must update board visually
+    // If click-move, update board visually WITH animation
     if (!isDrop) {
         board.move(`${source}-${target}`);
     }
@@ -562,8 +562,12 @@ function handleCorrectPuzzle() {
     // Next puzzle
     currentPuzzleIndex++;
 
-    // Load next puzzle or wait for more to load (NEVER end game due to lack of puzzles)
-    loadNextPuzzleOrWait();
+    // ANIMATION FIX: Wait for last move animation to complete before loading next puzzle
+    // chessboard.js 'slow' moveSpeed is approximately 400ms
+    setTimeout(() => {
+        // Load next puzzle or wait for more to load (NEVER end game due to lack of puzzles)
+        loadNextPuzzleOrWait();
+    }, 400);
 }
 
 // Helper to load next puzzle or wait for fetch to complete
