@@ -483,11 +483,11 @@ function handleMove(source, target, isDrop) {
         // Wrong move!
         game.undo(); // undo the move on board logic
 
-        // (For click, we haven't moved piece on board yet so we good)
-        // (For drag, we return false so snapback happens)
+        // BUGFIX: Force board to sync with game state (ensures snapback works)
+        board.position(game.fen(), false);
 
         handleWrongMove();
-        return 'snapback';
+        return false; // BUGFIX: Return false, not 'snapback' - onDrop checks for falsy value
     }
 
     // 3. Correct move!
