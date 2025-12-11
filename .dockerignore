@@ -1,0 +1,6 @@
+node_modules
+.git
+.DS_Store
+uploads
+resume_sachy.sh
+.env
