@@ -302,13 +302,13 @@ function loadPuzzle(puzzleData) {
             onDragStart: onDragStart,
             onDrop: onDrop,
             onSnapEnd: onSnapEnd,
-            moveSpeed: 'slow'
+            moveSpeed: 200  // 200ms animation - fast but smooth
         };
         board = Chessboard('board', config);
     }
 
-    // Animate the last move (Opponent's move) after a delay
-    // 500ms gives time for board setup before animation starts
+    // Animate the last move (Opponent's move) after board is ready
+    // 250ms delay before animation starts
     if (lastMove) {
         setTimeout(() => {
             game.move(lastMove);
@@ -316,7 +316,7 @@ function loadPuzzle(puzzleData) {
 
             // Highlight the opponent's move (which is the start of the puzzle)
             highlightMove(lastMove.from, lastMove.to);
-        }, 500);
+        }, 250);
     } else {
         // Should not happen for valid puzzles, but graceful fallback
         // If initialPly is 0? Puzzle starts from start position? Unlikely.
@@ -505,10 +505,10 @@ function handleMove(source, target, isDrop) {
     if (game.solutionIndex >= game.currentSolution.length) {
         handleCorrectPuzzle();
     } else {
-        // Opponent's turn - wait for player's animation to complete (500ms for 'slow' moveSpeed)
+        // Opponent's turn - wait for player's animation to complete (250ms)
         setTimeout(() => {
             makeOpponentMove();
-        }, 500);
+        }, 250);
     }
 
     return true;
@@ -533,13 +533,13 @@ function makeOpponentMove() {
 
     game.solutionIndex++;
 
-    // Wait for opponent's animation to complete before next action (500ms)
+    // Wait for opponent's animation to complete before next action (250ms)
     setTimeout(() => {
         if (game.solutionIndex >= game.currentSolution.length) {
             handleCorrectPuzzle();
         }
         // If more player moves needed, player can now move (no action needed here)
-    }, 500);
+    }, 250);
 }
 
 function handleCorrectPuzzle() {
@@ -566,11 +566,11 @@ function handleCorrectPuzzle() {
     // Next puzzle
     currentPuzzleIndex++;
 
-    // Wait for last move animation to complete before loading next puzzle (500ms)
+    // Wait for last move animation to complete before loading next puzzle (250ms)
     setTimeout(() => {
         // Load next puzzle or wait for more to load (NEVER end game due to lack of puzzles)
         loadNextPuzzleOrWait();
-    }, 500);
+    }, 250);
 }
 
 // Helper to load next puzzle or wait for fetch to complete
