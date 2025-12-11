@@ -8,6 +8,7 @@ let score = 0;
 let timeLeft = 180; // 3 minutes
 let timerInterval = null;
 let isGameActive = false;
+let selectedSquare = null; // Click-to-move state
 
 // Progressive difficulty loading
 const DIFFICULTIES = ['easiest', 'easier', 'normal', 'harder', 'hardest'];
@@ -298,6 +299,10 @@ function loadPuzzle(puzzleData) {
     if (board) {
         board.destroy();
     }
+
+    // Explicitly remove all move highlights from the DOM to prevent persistence
+    removeMoveHighlights();
+
     board = Chessboard('board', config);
 
     // Animate the last move (Opponent's move) after a short delay
@@ -306,7 +311,11 @@ function loadPuzzle(puzzleData) {
             game.move(lastMove);
             board.position(game.fen(), true); // animate
 
-            // Highlight the last move? (Optional refinement)
+            // Highlight the opponent's move (which is the start of the puzzle)
+            // Parsing UCI latMove for highlighting: 
+            // lastMove is object { color: 'b', from: 'e2', to: 'e4', ... }
+            // We can access properties directly.
+            highlightMove(lastMove.from, lastMove.to);
         }, 500);
     } else {
         // Should not happen for valid puzzles, but graceful fallback
@@ -343,74 +352,190 @@ function onDragStart(source, piece, position, orientation) {
         (game.turn() === 'b' && piece.search(/^w/) !== -1)) {
         return false;
     }
+
+    // Highlight source on drag
+    removeHighlights();
+    highlightSquare(source);
+    selectedSquare = source; // consistent state
 }
 
 function onDrop(source, target) {
     if (!isGameActive) return 'snapback';
+    if (source === target) return;
 
-    // Verify if this move is legal in chess terms first
-    const move = game.move({
-        from: source,
-        to: target,
-        promotion: 'q' // NOTE: always promote to a queen for simplicity
-    });
+    // Handle move (passed isDrop=true)
+    const success = handleMove(source, target, true);
 
-    if (move === null) return 'snapback'; // illegal move
+    // Keep move highlights if success? 
+    // handleMove already calls highlightMove if success.
 
-    // Check if it matches the solution
-    const uciMove = move.from + move.to + (move.promotion ? move.promotion : '');
-    const expectedMove = game.currentSolution[game.solutionIndex];
+    // Always clear SELECTION highlights after drop attempt
+    removeHighlights();
+    selectedSquare = null;
 
-    // DEBUG: Log what we're comparing
-    console.log('DEBUG: Your move UCI:', uciMove);
-    console.log('DEBUG: Expected move:', expectedMove);
-    console.log('DEBUG: Solution array:', game.currentSolution);
-    console.log('DEBUG: Solution index:', game.solutionIndex);
-
-    // Lichess UCI doesn't strictly have promotion unless it's a promotion move.
-    // Our 'uciMove' might look like 'a7a8q'. Expected 'a7a8q'.
-    // Or 'e2e4'.
-
-    // Comparison needs care strictly for promotion.
-    // Simple check:
-    if (uciMove !== expectedMove) {
-        // Wrong move!
-        console.log('DEBUG: WRONG! uciMove=' + uciMove + ' expectedMove=' + expectedMove);
-        game.undo(); // undo the move on board logic
-        handleWrongMove();
-        return 'snapback';
-    }
-
-    // Correct move!
-    game.solutionIndex++;
-
-    // Check if puzzle is solved
-    if (game.solutionIndex >= game.currentSolution.length) {
-        // Puzzle Completed!
-        handleCorrectPuzzle();
-    } else {
-        // Opponent's turn (next move in solution)
-        setTimeout(() => {
-            const opponentMoveUci = game.currentSolution[game.solutionIndex];
-            const from = opponentMoveUci.substring(0, 2);
-            const to = opponentMoveUci.substring(2, 4);
-            const promotion = opponentMoveUci.length > 4 ? opponentMoveUci.substring(4, 5) : undefined;
-
-            game.move({ from, to, promotion });
-            board.position(game.fen());
-
-            game.solutionIndex++;
-
-            // Check if THIS was the last move (unlikely in puzzle, usually ends on player move)
-            if (game.solutionIndex >= game.currentSolution.length) {
-                handleCorrectPuzzle();
-            }
-        }, 300);
-    }
+    return success ? undefined : 'snapback';
 }
 
 function onSnapEnd() {
     // board.position(game.fen()); // Just to sync visuals if any weirdness
+}
+
+// --- CLICK TO MOVE LOGIC ---
+
+function handleSquareClick(square) {
+    if (!isGameActive) return;
+
+    // Cases:
+    // 1. No selection -> select if own piece
+    // 2. Selection active:
+    //    a. Clicked same square -> deselect
+    //    b. Clicked other own piece -> change selection
+    //    c. Clicked target -> attempt move
+
+    const pieceOnSquare = game.get(square);
+    const isOwnPiece = pieceOnSquare && pieceOnSquare.color === game.turn();
+
+    if (!selectedSquare) {
+        if (isOwnPiece) {
+            selectSquare(square);
+        }
+        return;
+    }
+
+    // We have a selection
+    if (square === selectedSquare) {
+        deselectSquare();
+        return;
+    }
+
+    if (isOwnPiece) {
+        // Change selection
+        selectSquare(square);
+        return;
+    }
+
+    // Attempt move selectedSquare -> square
+    const success = handleMove(selectedSquare, square, false);
+    if (success) {
+        deselectSquare();
+    } else {
+        // Invalid move or wrong solution
+        // Optional: flash red or just deselect? 
+        // Lichess keeps selection if invalid move (e.g. impossible move), 
+        // but if it's a "wrong solution" move (legal but bad), we penalized.
+        // If it was just an illegal move (knight jump weirdly), handleMove returns false early.
+        // We should probably just deselect to be clean.
+        deselectSquare();
+    }
+}
+
+function selectSquare(square) {
+    selectedSquare = square;
+    removeHighlights();
+    highlightSquare(square);
+}
+
+function deselectSquare() {
+    selectedSquare = null;
+    removeHighlights();
+}
+
+function highlightSquare(square) {
+    const $square = $('#board .square-' + square);
+    $square.addClass('highlight-selected');
+}
+
+function removeHighlights() {
+    $('#board .square-55d63').removeClass('highlight-selected');
+}
+
+function highlightMove(source, target) {
+    // Remove old move highlights
+    $('#board .square-55d63').removeClass('highlight-move');
+    // Add new
+    $('#board .square-' + source).addClass('highlight-move');
+    $('#board .square-' + target).addClass('highlight-move');
+}
+
+function removeMoveHighlights() {
+    $('#board .square-55d63').removeClass('highlight-move');
+}
+
+// Core move logic shared by Drag and Click
+function handleMove(source, target, isDrop) {
+    // 1. Verify legality in Chess.js
+    const move = game.move({
+        from: source,
+        to: target,
+        promotion: 'q'
+    });
+
+    if (move === null) return false; // Illegal move
+
+    // 2. Check against solution
+    const uciMove = move.from + move.to + (move.promotion ? move.promotion : '');
+    const expectedMove = game.currentSolution[game.solutionIndex];
+
+    // Debug logs removed for production
+    // console.log(`Move attempt: ${uciMove} vs expected ${expectedMove}`);
+
+    if (uciMove !== expectedMove) {
+        // Wrong move!
+        game.undo(); // undo the move on board logic
+
+        // (For click, we haven't moved piece on board yet so we good)
+        // (For drag, we return false so snapback happens)
+
+        handleWrongMove();
+        return 'snapback';
+    }
+
+    // 3. Correct move!
+    // If click-move, we must update board visually
+    if (!isDrop) {
+        board.move(`${source}-${target}`);
+    }
+
+    // Highlight the move (persistent until next move/puzzle)
+    highlightMove(source, target);
+
+    game.solutionIndex++;
+
+    // Check if puzzle solved by this move
+    if (game.solutionIndex >= game.currentSolution.length) {
+        handleCorrectPuzzle();
+    } else {
+        // Opponent's turn
+        setTimeout(() => {
+            makeOpponentMove();
+        }, 300);
+    }
+
+    return true;
+}
+
+function makeOpponentMove() {
+    // Safety check
+    if (game.solutionIndex >= game.currentSolution.length) return;
+
+    const opponentMoveUci = game.currentSolution[game.solutionIndex];
+    const from = opponentMoveUci.substring(0, 2);
+    const to = opponentMoveUci.substring(2, 4);
+    const promotion = opponentMoveUci.length > 4 ? opponentMoveUci.substring(4, 5) : undefined;
+
+    game.move({ from, to, promotion });
+    board.position(game.fen());
+
+    // Highlight opponent move
+    // removeHighlights();
+    // highlightSquare(from);
+    // highlightSquare(to);
+
+    game.solutionIndex++;
+
+    if (game.solutionIndex >= game.currentSolution.length) {
+        handleCorrectPuzzle();
+    }
 }
 
 function handleCorrectPuzzle() {
@@ -526,17 +651,20 @@ function updateDifficultyDisplay() {
     if (diffEl) {
         // Translate difficulty to Czech or just show meaningful text
         const map = {
-            'easiest': 'Začátečník',
-            'easier': 'Lehká',
-            'normal': 'Střední',
-            'harder': 'Těžká',
-            'hardest': 'Expert'
+            'easiest': { text: 'Začátečník', icon: 'fa-chess-pawn' },
+            'easier': { text: 'Lehká', icon: 'fa-chess-knight' },
+            'normal': { text: 'Střední', icon: 'fa-chess-bishop' },
+            'harder': { text: 'Těžká', icon: 'fa-chess-rook' },
+            'hardest': { text: 'Expert', icon: 'fa-chess-queen' }
         };
         const currentDiff = DIFFICULTIES[currentDifficultyIndex] || 'easiest';
-        diffEl.innerText = `Obtížnost: ${map[currentDiff] || currentDiff}`;
+        const info = map[currentDiff] || map['easiest'];
+
+        // USER REQUEST: Icon only (removed info.text)
+        diffEl.innerHTML = `<i class="fa-solid ${info.icon}" title="${info.text}"></i>`;
 
         // Add visual flair based on level
-        diffEl.className = 'difficulty-badge level-' + currentDiff;
+        diffEl.className = 'stat-value difficulty-badge level-' + currentDiff;
     }
 }
 
@@ -672,4 +800,31 @@ document.addEventListener('DOMContentLoaded', () => {
         const nameInput = document.getElementById('playerName');
         if (nameInput) nameInput.value = savedName;
     }
+
+    // ROBUST CLICK HANDLING (Capture Phase)
+    // We bind to the DOCUMENT to ensure it survives board re-creation.
+    const handleInput = (e) => {
+        // Ensure we are clicking inside the board
+        const boardContainer = document.getElementById('board');
+        if (!boardContainer || !boardContainer.contains(e.target)) return;
+
+        // Find closest square element
+        const squareEl = e.target.closest('.square-55d63');
+        if (!squareEl) return;
+
+        // Get square ID
+        const squareId = squareEl.getAttribute('data-square');
+        if (squareId) {
+            if (e.type === 'touchstart') {
+                // optional preventDefault if needed
+            }
+
+            handleSquareClick(squareId);
+        }
+    };
+
+    // Use capture to see events before chessboard.js
+    // Using body is enough and safer than specific element if element is replaced
+    document.body.addEventListener('mousedown', handleInput, true);
+    document.body.addEventListener('click', handleInput, true);
 });
