@@ -169,6 +169,7 @@ async function startRace() {
         // Lock scroll on mobile
         document.body.classList.add('game-active');
 
+        updateDifficultyDisplay(); // Init difficulty text
         startGameLoop();
 
     } catch (e) {
@@ -423,6 +424,7 @@ function handleCorrectPuzzle() {
         if (currentDifficultyIndex < DIFFICULTIES.length - 1) {
             currentDifficultyIndex++;
             console.log(`Difficulty increased to: ${DIFFICULTIES[currentDifficultyIndex]}`);
+            updateDifficultyDisplay();
         }
     }
 
@@ -517,6 +519,27 @@ function updateScore() {
     document.getElementById('score').innerText = score;
 }
 
+
+
+function updateDifficultyDisplay() {
+    const diffEl = document.getElementById('difficultyDisplay');
+    if (diffEl) {
+        // Translate difficulty to Czech or just show meaningful text
+        const map = {
+            'easiest': 'Začátečník',
+            'easier': 'Lehká',
+            'normal': 'Střední',
+            'harder': 'Těžká',
+            'hardest': 'Expert'
+        };
+        const currentDiff = DIFFICULTIES[currentDifficultyIndex] || 'easiest';
+        diffEl.innerText = `Obtížnost: ${map[currentDiff] || currentDiff}`;
+
+        // Add visual flair based on level
+        diffEl.className = 'difficulty-badge level-' + currentDiff;
+    }
+}
+
 function updateTimer() {
     const min = Math.floor(timeLeft / 60);
     const sec = timeLeft % 60;
@@ -568,3 +591,85 @@ async function saveScore() {
         alert('Chyba připojení.');
     }
 }
+
+// --- RESTORED LEADERBOARD LOGIC ---
+
+// Current leaderboard period
+let currentLeaderboardPeriod = 'all';
+
+async function loadLeaderboard(period = 'all') {
+    try {
+        const res = await fetch(`${API_URL}/racer/leaderboard?period=${period}`);
+        if (!res.ok) throw new Error('Failed to fetch leaderboard');
+
+        const data = await res.json();
+        const tbody = document.getElementById('leaderboardBody');
+
+        if (data.length === 0) {
+            const emptyMsg = period === 'week'
+                ? 'Tento týden zatím žádné výsledky. Buďte první!'
+                : 'Zatím žádné výsledky. Buďte první!';
+            tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; padding: 2rem;">${emptyMsg}</td></tr>`;
+            return;
+        }
+
+        tbody.innerHTML = data.map((entry, index) => {
+            let medal = '';
+            if (index === 0) medal = '🥇 ';
+            if (index === 1) medal = '🥈 ';
+            if (index === 2) medal = '🥉 ';
+
+            return `
+                <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                    <td style="padding: 1rem; color: var(--text-muted);">#${index + 1}</td>
+                    <td style="padding: 1rem; font-weight: 600;">${medal}${escapeHtml(entry.playerName)}</td>
+                    <td style="padding: 1rem; color: #4ade80; font-weight: 700; font-size: 1.1rem;">${entry.score}</td>
+                    <td style="padding: 1rem; color: var(--text-muted); font-size: 0.85rem;">${new Date(entry.createdAt).toLocaleString('cs-CZ', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}</td>
+                </tr>
+            `;
+        }).join('');
+    } catch (e) {
+        console.error(e);
+        const errMsg = e.message || 'Chyba serveru';
+        const tbody = document.getElementById('leaderboardBody');
+        if (tbody) tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; padding: 2rem; color: #fca5a5;">Chyba při načítání: ${errMsg}</td></tr>`;
+    }
+}
+
+function switchLeaderboard(period) {
+    currentLeaderboardPeriod = period;
+
+    // Update tab styles
+    document.getElementById('tabAllTime').classList.toggle('active', period === 'all');
+    document.getElementById('tabWeekly').classList.toggle('active', period === 'week');
+
+    // Show loading
+    document.getElementById('leaderboardBody').innerHTML = '<tr><td colspan="4" style="text-align: center; padding: 2rem;"><i class="fa-solid fa-spinner fa-spin"></i> Načítám...</td></tr>';
+
+    // Load leaderboard with new period
+    loadLeaderboard(period);
+}
+
+function escapeHtml(text) {
+    if (!text) return '';
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+// Initialize on load
+document.addEventListener('DOMContentLoaded', () => {
+    // expose functions to window
+    window.startRace = startRace;
+    window.saveScore = saveScore;
+    window.skipPuzzle = skipPuzzle;
+    window.switchLeaderboard = switchLeaderboard;
+
+    // Load leaderboard and player name on init
+    loadLeaderboard();
+    const savedName = localStorage.getItem('puzzle_racer_name');
+    if (savedName) {
+        const nameInput = document.getElementById('playerName');
+        if (nameInput) nameInput.value = savedName;
+    }
+});
