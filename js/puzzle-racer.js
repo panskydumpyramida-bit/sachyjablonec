@@ -476,10 +476,16 @@ function handleMove(source, target, isDrop) {
     const uciMove = move.from + move.to + (move.promotion ? move.promotion : '');
     const expectedMove = game.currentSolution[game.solutionIndex];
 
-    // Debug logs removed for production
-    // console.log(`Move attempt: ${uciMove} vs expected ${expectedMove}`);
+    // Check if this is the last move in solution (potential checkmate)
+    const isLastSolutionMove = game.solutionIndex === game.currentSolution.length - 1;
+    const isCheckmate = game.in_checkmate();
 
-    if (uciMove !== expectedMove) {
+    // Accept move if:
+    // 1. It matches the expected solution, OR
+    // 2. It's the last move AND it results in checkmate (alternative mate)
+    const isCorrect = (uciMove === expectedMove) || (isLastSolutionMove && isCheckmate);
+
+    if (!isCorrect) {
         // Wrong move!
         game.undo(); // undo the move on board logic
 
@@ -548,6 +554,13 @@ function handleCorrectPuzzle() {
     updateScore();
     showFeedback('correct');
 
+    // Easter egg: Completed all difficulty levels! (5 × 6 = 30 puzzles)
+    const totalPuzzlesForAllLevels = DIFFICULTIES.length * puzzlesPerDifficultyLevel;
+    if (totalPuzzlesSolved >= totalPuzzlesForAllLevels) {
+        showEasterEgg();
+        return; // Don't load more puzzles
+    }
+
     // Check if we need to increase difficulty (every 6 puzzles)
     if (totalPuzzlesSolved > 0 && totalPuzzlesSolved % puzzlesPerDifficultyLevel === 0) {
         if (currentDifficultyIndex < DIFFICULTIES.length - 1) {
@@ -571,6 +584,29 @@ function handleCorrectPuzzle() {
         // Load next puzzle or wait for more to load (NEVER end game due to lack of puzzles)
         loadNextPuzzleOrWait();
     }, 350);
+}
+
+// Easter egg for completing all puzzles!
+function showEasterEgg() {
+    isGameActive = false;
+    clearInterval(timerInterval);
+    document.body.classList.remove('game-active');
+
+    document.getElementById('gameInterface').classList.add('hidden');
+    document.getElementById('gameOverScreen').classList.remove('hidden');
+
+    // Special easter egg message
+    const finalScoreEl = document.getElementById('finalScore');
+    finalScoreEl.innerHTML = `
+        <div style="font-size: 3rem;">🏆 ${score} 🏆</div>
+        <div style="font-size: 1.2rem; color: var(--primary-color); margin-top: 1rem;">
+            <i class="fa-solid fa-star"></i> LEGENDA! <i class="fa-solid fa-star"></i>
+        </div>
+        <div style="font-size: 0.9rem; color: var(--text-muted); margin-top: 0.5rem; max-width: 300px; margin-left: auto; margin-right: auto;">
+            Vyřešil jsi všech ${DIFFICULTIES.length * puzzlesPerDifficultyLevel} puzzlů!<br>
+            Řeknu Tondovi ať to udělá těžší... 😄
+        </div>
+    `;
 }
 
 // Helper to load next puzzle or wait for fetch to complete
