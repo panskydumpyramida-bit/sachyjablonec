@@ -2,6 +2,7 @@
 let board = null;
 let game = new Chess();
 let selectedSquare = null;
+let pendingPromotion = null; // Stores {source, target} during promotion check
 
 // Playback state
 let moveHistory = [];       // Full move history for navigation
@@ -43,10 +44,30 @@ function handleSquareClick(square) {
     // If we have a selected square
     if (selectedSquare) {
         // 1. Try to move to the clicked square
+        // Check for promotion
+        // Check for promotion
+        const sourcePiece = game.get(selectedSquare);
+        const targetRank = square.charAt(1);
+        const isPromotion = sourcePiece.type === 'p' &&
+            ((sourcePiece.color === 'w' && targetRank === '8') || (sourcePiece.color === 'b' && targetRank === '1'));
+
+        if (isPromotion) {
+            // Check if move is legal (ignoring promotion field for now to validation)
+            // Actually game.move needs promotion for validation of pawns to last rank
+            // So we try strict check
+            const tempMove = game.move({ from: selectedSquare, to: square, promotion: 'q' });
+            if (tempMove) {
+                game.undo(); // Revert test move
+                pendingPromotion = { source: selectedSquare, target: square };
+                showPromotionModal(game.turn());
+                return;
+            }
+        }
+
         const move = game.move({
             from: selectedSquare,
             to: square,
-            promotion: 'q' // Simplification for click-to-move
+            promotion: 'q' // Fallback/Default if not caught above (should not happen if logic matches)
         });
 
         if (move) {
@@ -103,6 +124,18 @@ function onDragStart(source, piece, position, orientation) {
 
 function onDrop(source, target) {
     // see if the move is legal
+    // Check for promotion
+    const piece = game.get(source);
+    const targetRank = target.charAt(1);
+    const isPromotion = piece.type === 'p' &&
+        ((piece.color === 'w' && targetRank === '8') || (piece.color === 'b' && targetRank === '1'));
+
+    if (isPromotion) {
+        pendingPromotion = { source: source, target: target };
+        showPromotionModal(game.turn());
+        return 'snapback'; // Don't move on board yet
+    }
+
     var move = game.move({
         from: source,
         to: target,
@@ -291,6 +324,44 @@ function highlightActiveMove() {
         }
     }
 }
+
+// --- Promotion Logic ---
+
+function showPromotionModal(color) {
+    const modal = document.getElementById('promotionModal');
+    if (modal) {
+        modal.classList.add('active');
+        // Update piece images based on color
+        const prefix = color === 'w' ? 'w' : 'b';
+        document.querySelectorAll('.promotion-piece img').forEach(img => {
+            const pieceType = img.getAttribute('data-piece').toUpperCase();
+            img.src = `https://chessboardjs.com/img/chesspieces/wikipedia/${prefix}${pieceType}.png`;
+        });
+    }
+}
+
+function completePromotion(pieceType) {
+    const modal = document.getElementById('promotionModal');
+    if (modal) modal.classList.remove('active');
+
+    if (pendingPromotion) {
+        const move = game.move({
+            from: pendingPromotion.source,
+            to: pendingPromotion.target,
+            promotion: pieceType
+        });
+
+        if (move) {
+            board.position(game.fen());
+            updateStatus();
+            removeHighlights();
+            highlightMove(pendingPromotion.source, pendingPromotion.target);
+        }
+        pendingPromotion = null;
+        selectedSquare = null;
+    }
+}
+window.completePromotion = completePromotion; // Export for HTML onclick
 
 // --- IO Logic ---
 
