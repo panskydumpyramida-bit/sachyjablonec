@@ -1,3 +1,6 @@
+[variables]
+NPM_CONFIG_PRODUCTION = 'false'
+
 [phases.setup]
 aptPkgs = ["libvips-dev"]
 
