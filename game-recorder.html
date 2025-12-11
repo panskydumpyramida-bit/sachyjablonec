@@ -505,7 +505,19 @@
             try {
                 // Determine API URL (using window.API_URL from config.js if available, else relative)
                 const apiUrl = window.API_URL || '/api';
-                const res = await fetch(`${apiUrl}/games/${id}`);
+                const token = localStorage.getItem('club_auth_token');
+
+                const res = await fetch(`${apiUrl}/games/${id}`, {
+                    headers: {
+                        'X-Club-Password': token || ''
+                    }
+                });
+
+                if (res.status === 401 || res.status === 403) {
+                    alert('Pro zobrazení této partie musíte být přihlášeni (heslo oddílu).');
+                    return;
+                }
+
                 if (!res.ok) throw new Error('Game not found');
 
                 const gameData = await res.json();
