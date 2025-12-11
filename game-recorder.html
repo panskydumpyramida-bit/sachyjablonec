@@ -249,95 +249,98 @@
             position: absolute;
             top: 50%;
             left: 50%;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+        }
 
-            /* Mobile Modal Styles & Layout Fixes */
-            @media (max-width: 900px) {
+        /* Mobile Modal Styles & Layout Fixes */
+        @media (max-width: 900px) {
 
-                /* Hide global navigation elements to prevent scrolling and save space */
-                /* Keep header/footer visible as requested */
+            /* Hide global navigation elements to prevent scrolling and save space */
+            /* Keep header/footer visible as requested */
 
-                /* Reset main layout for full screen */
-                body,
-                html {
-                    height: 100%;
-                    /* allow scroll again since header is back? 
+            /* Reset main layout for full screen */
+            body,
+            html {
+                height: 100%;
+                /* allow scroll again since header is back? 
                    Actually UI is better fixed, but we need header space */
-                    overflow: auto;
-                }
-
-                main {
-                    /* Remove fixed height constraint to allow normal flow */
-                    min-height: calc(100vh - 140px);
-                    /* rough header+footer height */
-                    height: auto;
-                    display: block;
-                    padding: 1rem 0 !important;
-                }
-
-                section {
-                    padding: 1rem 0 !important;
-                }
-
-                /* Adjust controls for mobile */
-                .controls {
-                    margin-top: 1rem;
-                    gap: 0.5rem;
-                    padding-bottom: 2rem;
-                    /* Safety padding for bottom touches */
-                }
-
-                .mobile-only-btn {
-                    display: flex !important;
-                    background: rgba(255, 255, 255, 0.15) !important;
-                    border: 1px solid rgba(255, 255, 255, 0.3) !important;
-                }
-
-                /* Use ID for higher specificity to override desktop styles */
-                #gameSidebar {
-                    display: none !important;
-                    /* Hidden by default - CRITICAL */
-                    position: fixed;
-                    top: 0;
-                    left: 0;
-                    width: 100%;
-                    height: 100%;
-                    z-index: 9999;
-                    border: none;
-                    margin: 0;
-                    background: #1a1a1e;
-                    overflow-y: auto;
-                    padding-top: 4rem;
-                    -webkit-overflow-scrolling: touch;
-                }
-
-                #gameSidebar.active {
-                    display: flex !important;
-                    /* Force display when active */
-                    flex-direction: column;
-                }
-
-                .btn-close-modal {
-                    display: block !important;
-                    position: absolute;
-                    top: 1.5rem;
-                    right: 1.5rem;
-                    z-index: 10000;
-                    background: rgba(255, 0, 0, 0.2);
-                    border: 1px solid rgba(255, 255, 255, 0.2);
-                    color: white;
-                    padding: 0.5rem 1rem;
-                    border-radius: 50px;
-                    font-size: 1rem;
-                    cursor: pointer;
-                }
-
-                /* Ensure board fits but isn't too wide */
-                #board {
-                    max-width: 88vw !important;
-                    /* Reduced from 95vw */
-                    margin: 0 auto;
-                }
+                overflow: auto;
             }
+
+            main {
+                /* Remove fixed height constraint to allow normal flow */
+                min-height: calc(100vh - 140px);
+                /* rough header+footer height */
+                height: auto;
+                display: block;
+                padding: 1rem 0 !important;
+            }
+
+            section {
+                padding: 1rem 0 !important;
+            }
+
+            /* Adjust controls for mobile */
+            .controls {
+                margin-top: 1rem;
+                gap: 0.5rem;
+                padding-bottom: 2rem;
+                /* Safety padding for bottom touches */
+            }
+
+            .mobile-only-btn {
+                display: flex !important;
+                background: rgba(255, 255, 255, 0.15) !important;
+                border: 1px solid rgba(255, 255, 255, 0.3) !important;
+            }
+
+            /* Use ID for higher specificity to override desktop styles */
+            #gameSidebar {
+                display: none !important;
+                /* Hidden by default - CRITICAL */
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                z-index: 9999;
+                border: none;
+                margin: 0;
+                background: #1a1a1e;
+                overflow-y: auto;
+                padding-top: 4rem;
+                -webkit-overflow-scrolling: touch;
+            }
+
+            #gameSidebar.active {
+                display: flex !important;
+                /* Force display when active */
+                flex-direction: column;
+            }
+
+            .btn-close-modal {
+                display: block !important;
+                position: absolute;
+                top: 1.5rem;
+                right: 1.5rem;
+                z-index: 10000;
+                background: rgba(255, 0, 0, 0.2);
+                border: 1px solid rgba(255, 255, 255, 0.2);
+                color: white;
+                padding: 0.5rem 1rem;
+                border-radius: 50px;
+                font-size: 1rem;
+                cursor: pointer;
+            }
+
+            /* Ensure board fits but isn't too wide */
+            #board {
+                max-width: 88vw !important;
+                /* Reduced from 95vw */
+                margin: 0 auto;
+            }
+        }
         }
     </style>
 </head>
