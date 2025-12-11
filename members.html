@@ -293,6 +293,36 @@
                         </a>
                     </div>
 
+                    <!-- Gallery Upload Section -->
+                    <div
+                        style="background: linear-gradient(135deg, rgba(168, 85, 247, 0.1), rgba(88, 28, 135, 0.3)); padding: 1.5rem; border-radius: 1rem; border: 1px solid rgba(168, 85, 247, 0.3); margin-bottom: 2rem;">
+                        <div
+                            style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 1rem;">
+                            <div>
+                                <h3 style="color: #a855f7; margin-bottom: 0.5rem;">
+                                    <i class="fa-solid fa-images"></i> Galerie
+                                </h3>
+                                <p style="color: var(--text-muted); font-size: 0.95rem;">
+                                    Nahrajte fotky z akcí a turnajů
+                                </p>
+                            </div>
+                            <button onclick="document.getElementById('memberGalleryInput').click()"
+                                style="background: linear-gradient(135deg, #a855f7, #7c3aed); color: white; font-weight: 700; padding: 0.8rem 1.5rem; border-radius: 50px; border: none; cursor: pointer; display: inline-flex; align-items: center; gap: 0.5rem; box-shadow: 0 4px 15px rgba(168, 85, 247, 0.3); transition: all 0.3s;"
+                                onmouseover="this.style.transform='scale(1.05)'"
+                                onmouseout="this.style.transform='scale(1)'">
+                                <i class="fa-solid fa-cloud-upload-alt"></i> Nahrát fotky
+                            </button>
+                            <input type="file" id="memberGalleryInput" multiple accept="image/*" style="display: none;"
+                                onchange="handleMemberGalleryUpload(this)">
+                        </div>
+                        <div id="memberGalleryGrid"
+                            style="display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 0.75rem; min-height: 50px;">
+                            <p id="galleryLoadingText"
+                                style="color: var(--text-muted); font-size: 0.9rem; grid-column: 1 / -1;"><i
+                                    class="fa-solid fa-spinner fa-spin"></i> Načítám galerii...</p>
+                        </div>
+                    </div>
+
                     <!-- Games List Section -->
                     <h3 style="margin-bottom: 1.5rem; color: var(--text-muted);">
                         <i class="fa-solid fa-list"></i> Poslední nahrané partie
@@ -375,6 +405,7 @@
                     document.getElementById('messagesView').classList.remove('hidden');
                     loadMessages(await res.json());
                     loadGames(); // Fetch games
+                    loadMemberGallery(); // Fetch gallery
                 } else {
                     document.getElementById('loginError').style.display = 'block';
                     localStorage.removeItem(PASSWORD_KEY);
@@ -533,6 +564,83 @@
             const div = document.createElement('div');
             div.textContent = text;
             return div.innerHTML;
+        }
+
+        // --- Gallery Functions ---
+        async function loadMemberGallery() {
+            const password = localStorage.getItem(PASSWORD_KEY);
+            const grid = document.getElementById('memberGalleryGrid');
+
+            try {
+                const res = await fetch(`${API_URL}/images`, {
+                    headers: { 'X-Club-Password': password }
+                });
+
+                if (!res.ok) throw new Error('Failed to fetch gallery');
+
+                const images = await res.json();
+
+                if (images.length === 0) {
+                    grid.innerHTML = '<p style="color: var(--text-muted); font-size: 0.9rem; grid-column: 1 / -1;">Zatím žádné fotky v galerii.</p>';
+                    return;
+                }
+
+                renderMemberGallery(images);
+            } catch (e) {
+                console.error('Gallery load error:', e);
+                grid.innerHTML = '<p style="color: #fca5a5; font-size: 0.9rem; grid-column: 1 / -1;">Nepodařilo se načíst galerii.</p>';
+            }
+        }
+
+        function renderMemberGallery(images) {
+            const grid = document.getElementById('memberGalleryGrid');
+            const latestImages = images.slice(0, 20); // Show last 20 images
+
+            grid.innerHTML = latestImages.map(img => `
+                <a href="${img.url}" target="_blank" style="display: block; aspect-ratio: 1; overflow: hidden; border-radius: 8px; border: 1px solid rgba(168, 85, 247, 0.3);">
+                    <img src="${img.url}" alt="Gallery image" style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s;" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'">
+                </a>
+            `).join('');
+        }
+
+        async function handleMemberGalleryUpload(input) {
+            if (!input.files || input.files.length === 0) return;
+
+            const password = localStorage.getItem(PASSWORD_KEY);
+            const files = Array.from(input.files);
+            let successCount = 0;
+
+            // Show uploading state
+            const grid = document.getElementById('memberGalleryGrid');
+            const originalContent = grid.innerHTML;
+            grid.innerHTML = `<p style="color: #a855f7; font-size: 0.9rem; grid-column: 1 / -1;"><i class="fa-solid fa-spinner fa-spin"></i> Nahrávám ${files.length} fotk${files.length === 1 ? 'u' : files.length < 5 ? 'y' : 'ek'}...</p>`;
+
+            for (const file of files) {
+                const formData = new FormData();
+                formData.append('image', file);
+
+                try {
+                    const res = await fetch(`${API_URL}/images/upload`, {
+                        method: 'POST',
+                        headers: { 'X-Club-Password': password },
+                        body: formData
+                    });
+
+                    if (res.ok) successCount++;
+                } catch (e) {
+                    console.error('Upload failed for file:', file.name, e);
+                }
+            }
+
+            if (successCount > 0) {
+                // Reload gallery to show new images
+                loadMemberGallery();
+            } else {
+                grid.innerHTML = originalContent;
+                alert('Nahrávání selhalo. Zkuste to prosím znovu.');
+            }
+
+            input.value = ''; // Reset input
         }
     </script>
 </body>
