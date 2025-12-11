@@ -54,6 +54,13 @@
             border-radius: 4px;
             overflow: hidden;
             /* For board rounded corners */
+            touch-action: none;
+            /* Prevent scroll during drag on mobile */
+        }
+
+        /* Make sure all board elements also prevent touch scroll */
+        #board * {
+            touch-action: none;
         }
 
         .sidebar {
@@ -469,7 +476,7 @@
     <script src="js/config.js"></script>
     <script src="js/layout-loader.js"></script>
     <script src="js/main.js"></script>
-    <script src="js/game-recorder.js?v=3.0"></script>
+    <script src="js/game-recorder.js?v=4.0"></script>
 </body>
 
 </html>

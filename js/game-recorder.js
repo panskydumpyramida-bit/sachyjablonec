@@ -373,5 +373,5 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     document.body.addEventListener('mousedown', handleInput, true);
-    // Touch support optional/handled by mouse emulation or add touchstart if needed
+    document.body.addEventListener('touchstart', handleInput, true); // Mobile touch support
 });
