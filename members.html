@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Členové (Vzkazovník) - Šachový oddíl TJ Bižuterie Jablonec</title>
+    <title>Členská sekce - Šachový oddíl TJ Bižuterie Jablonec</title>
     <link
         href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Open+Sans:wght@400;600&display=swap"
         rel="stylesheet">
@@ -69,29 +69,132 @@
             box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.2);
         }
 
-        .auth-container input::placeholder {
-            color: var(--text-muted);
+        /* Member Hub Grid */
+        .member-hub {
+            max-width: 600px;
+            margin: 0 auto;
         }
 
-        .messages-container {
-            max-width: 800px;
-            margin: 1rem auto;
-        }
-
-        .messages-header {
+        .hub-header {
             display: flex;
-            justify-content: space-between;
+            justify-content: flex-end;
+            margin-bottom: 2rem;
+        }
+
+        .hub-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+        }
+
+        .hub-tile {
+            aspect-ratio: 1;
+            border-radius: 1rem;
+            display: flex;
+            flex-direction: column;
             align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: none;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hub-tile::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: inherit;
+            opacity: 0.9;
+            transition: opacity 0.3s;
+        }
+
+        .hub-tile:hover::before {
+            opacity: 1;
+        }
+
+        .hub-tile:hover {
+            transform: scale(1.02);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
+        }
+
+        .hub-tile i {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        .hub-tile span {
+            font-size: 1.1rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Tile colors */
+        .tile-puzzle {
+            background: linear-gradient(145deg, #166534, #15803d);
+            color: #4ade80;
+        }
+
+        .tile-games {
+            background: linear-gradient(145deg, #1e3a8a, #2563eb);
+            color: #60a5fa;
+        }
+
+        .tile-messages {
+            background: linear-gradient(145deg, #78350f, #b45309);
+            color: #fcd34d;
+        }
+
+        .tile-gallery {
+            background: linear-gradient(145deg, #581c87, #7c3aed);
+            color: #c4b5fd;
+        }
+
+        /* Section Views */
+        .section-view {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
             margin-bottom: 2rem;
             padding-bottom: 1rem;
             border-bottom: 1px solid rgba(255, 255, 255, 0.1);
         }
 
-        .messages-header h2 {
-            color: var(--primary-color);
+        .back-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            color: var(--text-muted);
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
             display: flex;
             align-items: center;
-            gap: 0.75rem;
+            justify-content: center;
+            transition: all 0.3s;
+        }
+
+        .back-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+        }
+
+        .section-title {
+            flex: 1;
+            margin: 0;
+            font-size: 1.5rem;
         }
 
         .logout-btn {
@@ -112,21 +215,13 @@
             color: var(--text-main);
         }
 
+        /* Messages styles */
         .message-form {
             background: linear-gradient(145deg, rgba(30, 30, 30, 0.8), rgba(20, 20, 20, 0.9));
             padding: 2rem;
             border-radius: 1rem;
-            margin-bottom: 2.5rem;
+            margin-bottom: 2rem;
             border: 1px solid rgba(212, 175, 55, 0.2);
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-        }
-
-        .message-form h3 {
-            color: var(--primary-color);
-            margin-bottom: 1.5rem;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
         }
 
         .form-grid {
@@ -144,19 +239,6 @@
             color: var(--text-main);
             font-family: inherit;
             font-size: 1rem;
-            transition: all 0.3s;
-        }
-
-        .form-grid input:focus,
-        .form-grid textarea:focus {
-            outline: none;
-            border-color: var(--primary-color);
-            box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.1);
-        }
-
-        .form-grid textarea {
-            resize: vertical;
-            min-height: 100px;
         }
 
         .message-list {
@@ -166,56 +248,76 @@
         }
 
         .message-card {
-            background: linear-gradient(145deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.01));
+            background: rgba(255, 255, 255, 0.03);
             padding: 1.25rem 1.5rem;
             border-radius: 0.75rem;
             border-left: 4px solid var(--primary-color);
+        }
+
+        /* Gallery grid */
+        .gallery-upload-area {
+            background: linear-gradient(145deg, rgba(88, 28, 135, 0.2), rgba(88, 28, 135, 0.1));
+            border: 2px dashed rgba(168, 85, 247, 0.4);
+            border-radius: 1rem;
+            padding: 2rem;
+            text-align: center;
+            margin-bottom: 2rem;
+            cursor: pointer;
             transition: all 0.3s;
         }
 
-        .message-card:hover {
-            background: rgba(255, 255, 255, 0.05);
-            transform: translateX(4px);
+        .gallery-upload-area:hover {
+            border-color: #a855f7;
+            background: rgba(88, 28, 135, 0.3);
         }
 
-        .message-header {
+        .gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            gap: 1rem;
+        }
+
+        .gallery-item {
+            aspect-ratio: 1;
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .gallery-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.3s;
+        }
+
+        .gallery-item:hover img {
+            transform: scale(1.1);
+        }
+
+        /* Games list */
+        .game-card {
+            background: rgba(255, 255, 255, 0.03);
+            padding: 1rem 1.5rem;
+            border-radius: 0.75rem;
+            border-left: 4px solid #3b82f6;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 0.75rem;
-        }
-
-        .message-author {
-            font-weight: 700;
-            color: var(--primary-color);
-            font-size: 1rem;
-        }
-
-        .message-time {
-            color: var(--text-muted);
-            font-size: 0.85rem;
-        }
-
-        .message-content {
-            font-size: 1rem;
-            line-height: 1.7;
-            color: var(--text-main);
-        }
-
-        .empty-state {
-            text-align: center;
-            padding: 4rem 2rem;
-            color: var(--text-muted);
-        }
-
-        .empty-state i {
-            font-size: 3rem;
             margin-bottom: 1rem;
-            opacity: 0.5;
         }
 
         .hidden {
             display: none !important;
+        }
+
+        @media (max-width: 480px) {
+            .hub-tile i {
+                font-size: 2.5rem;
+            }
+
+            .hub-tile span {
+                font-size: 0.9rem;
+            }
         }
     </style>
     <link rel="icon" type="image/png" href="images/favicon.png">
@@ -239,7 +341,7 @@
                         <i class="fa-solid fa-lock"></i>
                     </div>
                     <h2>Vstup pro členy</h2>
-                    <p class="subtitle">Zadejte heslo oddílu pro přístup ke vzkazovníku</p>
+                    <p class="subtitle">Zadejte heslo oddílu</p>
                     <div style="margin-bottom: 1.5rem;">
                         <input type="password" id="clubPassword" placeholder="••••••••">
                     </div>
@@ -251,113 +353,106 @@
                     </p>
                 </div>
 
-                <!-- Messages View -->
-                <div id="messagesView" class="messages-container hidden">
-                    <div class="messages-header" style="justify-content: flex-end;">
+                <!-- Hub View (Main Menu) -->
+                <div id="hubView" class="member-hub hidden">
+                    <div class="hub-header">
                         <button onclick="logout()" class="logout-btn">
                             <i class="fa-solid fa-sign-out-alt"></i> Odhlásit
                         </button>
                     </div>
-
-                    <!-- Puzzle Racer Promo -->
-                    <div
-                        style="background: linear-gradient(135deg, rgba(74, 222, 128, 0.1), rgba(6, 78, 59, 0.3)); padding: 1.5rem; border-radius: 1rem; border: 1px solid rgba(74, 222, 128, 0.3); margin-bottom: 2rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
-                        <div>
-                            <h3 style="color: #4ade80; margin-bottom: 0.5rem;"><i class="fa-solid fa-chess-clock"></i>
-                                Puzzle Racer</h3>
-                            <p style="color: var(--text-muted); font-size: 0.95rem;">Potrénujte postřeh v naší nové hře!
-                                3 minuty, stovky diagramů.</p>
-                        </div>
-                        <a href="puzzle-racer.html"
-                            style="background: linear-gradient(135deg, #4ade80, #22c55e); color: #064e3b; font-weight: 700; padding: 0.8rem 1.5rem; border-radius: 50px; text-decoration: none; display: inline-flex; align-items: center; gap: 0.5rem; transition: all 0.3s; box-shadow: 0 4px 15px rgba(74, 222, 128, 0.3);"
-                            onmouseover="this.style.transform='scale(1.05)'; this.style.boxShadow='0 6px 20px rgba(74, 222, 128, 0.4)'"
-                            onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='0 4px 15px rgba(74, 222, 128, 0.3)'">
-                            <i class="fa-solid fa-play"></i> Hrát nyní
+                    <div class="hub-grid">
+                        <a href="puzzle-racer.html" class="hub-tile tile-puzzle">
+                            <i class="fa-solid fa-chess-clock"></i>
+                            <span>Puzzle Racer</span>
                         </a>
-                    </div>
-
-                    <!-- Game Editor Promo -->
-                    <div
-                        style="background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(30, 58, 138, 0.3)); padding: 1.5rem; border-radius: 1rem; border: 1px solid rgba(59, 130, 246, 0.3); margin-bottom: 2rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
-                        <div>
-                            <h3 style="color: #60a5fa; margin-bottom: 0.5rem;"><i class="fa-solid fa-chess-board"></i>
-                                Editor Partií</h3>
-                            <p style="color: var(--text-muted); font-size: 0.95rem;">Zaznamenejte sehranou partii do
-                                databáze.</p>
+                        <div class="hub-tile tile-games" onclick="showSection('games')">
+                            <i class="fa-solid fa-chess-board"></i>
+                            <span>Editor Partií</span>
                         </div>
-                        <a href="game-recorder.html"
-                            style="background: linear-gradient(135deg, #3b82f6, #2563eb); color: white; font-weight: 700; padding: 0.8rem 1.5rem; border-radius: 50px; text-decoration: none; display: inline-flex; align-items: center; gap: 0.5rem; transition: all 0.3s; box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);"
-                            onmouseover="this.style.transform='scale(1.05)'; this.style.boxShadow='0 6px 20px rgba(59, 130, 246, 0.4)'"
-                            onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='0 4px 15px rgba(59, 130, 246, 0.3)'">
-                            <i class="fa-solid fa-plus"></i> Nahrát partii
-                        </a>
-                    </div>
-
-                    <!-- Gallery Upload Section -->
-                    <div
-                        style="background: linear-gradient(135deg, rgba(168, 85, 247, 0.1), rgba(88, 28, 135, 0.3)); padding: 1.5rem; border-radius: 1rem; border: 1px solid rgba(168, 85, 247, 0.3); margin-bottom: 2rem;">
-                        <div
-                            style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 1rem;">
-                            <div>
-                                <h3 style="color: #a855f7; margin-bottom: 0.5rem;">
-                                    <i class="fa-solid fa-images"></i> Galerie
-                                </h3>
-                                <p style="color: var(--text-muted); font-size: 0.95rem;">
-                                    Nahrajte fotky z akcí a turnajů
-                                </p>
-                            </div>
-                            <button onclick="document.getElementById('memberGalleryInput').click()"
-                                style="background: linear-gradient(135deg, #a855f7, #7c3aed); color: white; font-weight: 700; padding: 0.8rem 1.5rem; border-radius: 50px; border: none; cursor: pointer; display: inline-flex; align-items: center; gap: 0.5rem; box-shadow: 0 4px 15px rgba(168, 85, 247, 0.3); transition: all 0.3s;"
-                                onmouseover="this.style.transform='scale(1.05)'"
-                                onmouseout="this.style.transform='scale(1)'">
-                                <i class="fa-solid fa-cloud-upload-alt"></i> Nahrát fotky
-                            </button>
-                            <input type="file" id="memberGalleryInput" multiple accept="image/*" style="display: none;"
-                                onchange="handleMemberGalleryUpload(this)">
+                        <div class="hub-tile tile-messages" onclick="showSection('messages')">
+                            <i class="fa-solid fa-comments"></i>
+                            <span>Vzkazovník</span>
                         </div>
-                        <div id="memberGalleryGrid"
-                            style="display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 0.75rem; min-height: 50px;">
-                            <p id="galleryLoadingText"
-                                style="color: var(--text-muted); font-size: 0.9rem; grid-column: 1 / -1;"><i
-                                    class="fa-solid fa-spinner fa-spin"></i> Načítám galerii...</p>
+                        <div class="hub-tile tile-gallery" onclick="showSection('gallery')">
+                            <i class="fa-solid fa-images"></i>
+                            <span>Galerie</span>
                         </div>
                     </div>
+                </div>
 
-                    <!-- Games List Section -->
-                    <h3 style="margin-bottom: 1.5rem; color: var(--text-muted);">
+                <!-- Games Section -->
+                <div id="gamesSection" class="section-view hidden">
+                    <div class="section-header">
+                        <button class="back-btn" onclick="showHub()">
+                            <i class="fa-solid fa-arrow-left"></i>
+                        </button>
+                        <h2 class="section-title" style="color: #60a5fa;">
+                            <i class="fa-solid fa-chess-board"></i> Editor Partií
+                        </h2>
+                    </div>
+                    <a href="game-recorder.html" class="btn-primary"
+                        style="display: inline-flex; align-items: center; gap: 0.5rem; margin-bottom: 2rem;">
+                        <i class="fa-solid fa-plus"></i> Nahrát novou partii
+                    </a>
+                    <h3 style="color: var(--text-muted); margin-bottom: 1rem;">
                         <i class="fa-solid fa-list"></i> Poslední nahrané partie
                     </h3>
-                    <div id="gamesList" class="message-list" style="margin-bottom: 2rem;">
-                        <div class="empty-state">
-                            <i class="fa-solid fa-spinner fa-spin"></i>
-                            <p>Načítám partie...</p>
-                        </div>
+                    <div id="gamesList">
+                        <p style="color: var(--text-muted);"><i class="fa-solid fa-spinner fa-spin"></i> Načítám...</p>
                     </div>
+                </div>
 
-                    <div style="margin-top: 3rem;">
-                        <h2 style="margin-bottom: 1.5rem;"><i class="fa-solid fa-comments"></i> Vzkazovník</h2>
+                <!-- Messages Section -->
+                <div id="messagesSection" class="section-view hidden">
+                    <div class="section-header">
+                        <button class="back-btn" onclick="showHub()">
+                            <i class="fa-solid fa-arrow-left"></i>
+                        </button>
+                        <h2 class="section-title" style="color: #fcd34d;">
+                            <i class="fa-solid fa-comments"></i> Vzkazovník
+                        </h2>
                     </div>
-
                     <div class="message-form">
-                        <h3><i class="fa-solid fa-pen"></i> Napsat vzkaz</h3>
+                        <h3 style="color: var(--primary-color); margin-bottom: 1rem;">
+                            <i class="fa-solid fa-pen"></i> Napsat vzkaz
+                        </h3>
                         <div class="form-grid">
                             <input type="text" id="msgAuthor" placeholder="Vaše jméno">
                             <textarea id="msgContent" rows="4"
                                 placeholder="Napište vzkaz ostatním členům..."></textarea>
                             <button class="btn-primary" onclick="postMessage()" style="justify-self: start;">
-                                <i class="fa-solid fa-paper-plane"></i> Odeslat vzkaz
+                                <i class="fa-solid fa-paper-plane"></i> Odeslat
                             </button>
                         </div>
                     </div>
-
-                    <h3 style="margin-bottom: 1.5rem; color: var(--text-muted);">
+                    <h3 style="color: var(--text-muted); margin-bottom: 1rem;">
                         <i class="fa-solid fa-clock-rotate-left"></i> Poslední vzkazy
                     </h3>
                     <div id="messageList" class="message-list">
-                        <div class="empty-state">
-                            <i class="fa-solid fa-spinner fa-spin"></i>
-                            <p>Načítám vzkazy...</p>
-                        </div>
+                        <p style="color: var(--text-muted);"><i class="fa-solid fa-spinner fa-spin"></i> Načítám...</p>
+                    </div>
+                </div>
+
+                <!-- Gallery Section -->
+                <div id="gallerySection" class="section-view hidden">
+                    <div class="section-header">
+                        <button class="back-btn" onclick="showHub()">
+                            <i class="fa-solid fa-arrow-left"></i>
+                        </button>
+                        <h2 class="section-title" style="color: #c4b5fd;">
+                            <i class="fa-solid fa-images"></i> Galerie
+                        </h2>
+                    </div>
+                    <div class="gallery-upload-area" onclick="document.getElementById('galleryInput').click()">
+                        <i class="fa-solid fa-cloud-upload-alt"
+                            style="font-size: 2.5rem; color: #a855f7; margin-bottom: 0.5rem;"></i>
+                        <p style="color: var(--text-muted); margin: 0;">Klikněte pro nahrání fotek</p>
+                        <input type="file" id="galleryInput" multiple accept="image/*" style="display: none;"
+                            onchange="handleMemberGalleryUpload(this)">
+                    </div>
+                    <div id="galleryGrid" class="gallery-grid">
+                        <p style="color: var(--text-muted); grid-column: 1 / -1;"><i
+                                class="fa-solid fa-spinner fa-spin"></i> Načítám...</p>
                     </div>
                 </div>
             </div>
@@ -370,7 +465,6 @@
     <script src="js/layout-loader.js"></script>
     <script src="js/main.js"></script>
     <script>
-        // Simple Auth Logic
         const PASSWORD_KEY = 'club_auth_token';
 
         document.addEventListener('DOMContentLoaded', () => {
@@ -380,9 +474,7 @@
             }
 
             document.getElementById('clubPassword').addEventListener('keypress', function (e) {
-                if (e.key === 'Enter') {
-                    login();
-                }
+                if (e.key === 'Enter') login();
             });
         });
 
@@ -401,11 +493,7 @@
                 if (res.ok) {
                     localStorage.setItem(PASSWORD_KEY, password);
                     document.getElementById('loginView').classList.add('hidden');
-                    document.getElementById('messagesView').classList.remove('hidden');
-                    document.getElementById('messagesView').classList.remove('hidden');
-                    loadMessages(await res.json());
-                    loadGames(); // Fetch games
-                    loadMemberGallery(); // Fetch gallery
+                    document.getElementById('hubView').classList.remove('hidden');
                 } else {
                     document.getElementById('loginError').style.display = 'block';
                     localStorage.removeItem(PASSWORD_KEY);
@@ -421,26 +509,61 @@
             location.reload();
         }
 
-        function loadMessages(messages) {
-            const container = document.getElementById('messageList');
-            if (messages.length === 0) {
-                container.innerHTML = `
-                    <div class="empty-state">
-                        <i class="fa-solid fa-comment-slash"></i>
-                        <p>Zatím žádné vzkazy. Buďte první!</p>
-                    </div>`;
-                return;
-            }
+        // Section Navigation
+        function showSection(section) {
+            document.getElementById('hubView').classList.add('hidden');
+            document.getElementById('gamesSection').classList.add('hidden');
+            document.getElementById('messagesSection').classList.add('hidden');
+            document.getElementById('gallerySection').classList.add('hidden');
 
-            container.innerHTML = messages.map(msg => `
-                <div class="message-card">
-                    <div class="message-header">
-                        <span class="message-author"><i class="fa-solid fa-user"></i> ${escapeHtml(msg.author)}</span>
-                        <span class="message-time">${new Date(msg.createdAt).toLocaleString('cs-CZ')}</span>
+            if (section === 'games') {
+                document.getElementById('gamesSection').classList.remove('hidden');
+                loadGames();
+            } else if (section === 'messages') {
+                document.getElementById('messagesSection').classList.remove('hidden');
+                loadMessages();
+            } else if (section === 'gallery') {
+                document.getElementById('gallerySection').classList.remove('hidden');
+                loadGallery();
+            }
+        }
+
+        function showHub() {
+            document.getElementById('gamesSection').classList.add('hidden');
+            document.getElementById('messagesSection').classList.add('hidden');
+            document.getElementById('gallerySection').classList.add('hidden');
+            document.getElementById('hubView').classList.remove('hidden');
+        }
+
+        // Messages
+        async function loadMessages() {
+            const password = localStorage.getItem(PASSWORD_KEY);
+            const container = document.getElementById('messageList');
+
+            try {
+                const res = await fetch(`${API_URL}/messages`, {
+                    headers: { 'X-Club-Password': password }
+                });
+                const messages = await res.json();
+
+                if (messages.length === 0) {
+                    container.innerHTML = '<p style="color: var(--text-muted); text-align: center;">Zatím žádné vzkazy.</p>';
+                    return;
+                }
+
+                container.innerHTML = messages.map(msg => `
+                    <div class="message-card">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                            <span style="color: var(--primary-color); font-weight: 700;"><i class="fa-solid fa-user"></i> ${escapeHtml(msg.author)}</span>
+                            <span style="color: var(--text-muted); font-size: 0.85rem;">${new Date(msg.createdAt).toLocaleString('cs-CZ')}</span>
+                        </div>
+                        <div style="color: var(--text-main);">${escapeHtml(msg.content)}</div>
                     </div>
-                    <div class="message-content">${escapeHtml(msg.content)}</div>
-                </div>
-            `).join('');
+                `).join('');
+            } catch (e) {
+                console.error(e);
+                container.innerHTML = '<p style="color: #fca5a5;">Chyba načítání.</p>';
+            }
         }
 
         async function postMessage() {
@@ -454,7 +577,7 @@
             }
 
             try {
-                const res = await fetch(`${API_URL}/messages`, {
+                await fetch(`${API_URL}/messages`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -462,22 +585,15 @@
                     },
                     body: JSON.stringify({ author, content })
                 });
-
-                if (res.ok) {
-                    document.getElementById('msgContent').value = '';
-                    const listRes = await fetch(`${API_URL}/messages`, {
-                        headers: { 'X-Club-Password': password }
-                    });
-                    loadMessages(await listRes.json());
-                } else {
-                    alert('Chyba při odesílání vzkazu.');
-                }
+                document.getElementById('msgContent').value = '';
+                loadMessages();
             } catch (e) {
                 console.error(e);
-                alert('Chyba spojení.');
+                alert('Chyba při odesílání.');
             }
         }
 
+        // Games
         async function loadGames() {
             const password = localStorage.getItem(PASSWORD_KEY);
             const container = document.getElementById('gamesList');
@@ -486,45 +602,33 @@
                 const res = await fetch(`${API_URL}/games`, {
                     headers: { 'X-Club-Password': password }
                 });
-
-                if (!res.ok) throw new Error('Failed to fetch games');
-
                 const games = await res.json();
 
                 if (games.length === 0) {
-                    container.innerHTML = `
-                        <div class="empty-state">
-                            <i class="fa-solid fa-chess-pawn"></i>
-                            <p>Zatím žádné nahrané partie.</p>
-                        </div>`;
+                    container.innerHTML = '<p style="color: var(--text-muted); text-align: center;">Zatím žádné nahrané partie.</p>';
                     return;
                 }
 
                 container.innerHTML = games.map(game => `
-                    <div class="message-card" style="display:flex; justify-content:space-between; align-items:center;">
+                    <div class="game-card">
                         <div>
-                            <div class="message-header" style="margin-bottom:0.2rem;">
-                                <span class="message-author" style="color:var(--text-main); font-size:1.1rem;">
-                                    <i class="fa-solid fa-chess"></i> <strong>${escapeHtml(game.white)}</strong> vs <strong>${escapeHtml(game.black)}</strong>
-                                </span>
-                            </div>
-                            <div style="font-size:0.9rem; color: #4ade80; font-weight:bold;">${game.result}</div>
-                            <div class="message-time" style="font-size:0.8rem;">${new Date(game.date).toLocaleDateString('cs-CZ')} • ${escapeHtml(game.event || 'Casual')}</div>
+                            <div style="font-weight: 700; color: var(--text-main);"><i class="fa-solid fa-chess"></i> ${escapeHtml(game.white)} vs ${escapeHtml(game.black)}</div>
+                            <div style="color: #4ade80; font-weight: 700;">${game.result}</div>
+                            <div style="color: var(--text-muted); font-size: 0.85rem;">${new Date(game.date).toLocaleDateString('cs-CZ')}</div>
                         </div>
-                         <div>
-                             <button onclick="downloadGamePgn(${game.id})" class="btn-primary" style="padding:0.5rem 1rem; font-size:0.8rem; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); margin-right: 0.5rem; cursor: pointer;">
+                        <div style="display: flex; gap: 0.5rem;">
+                            <button onclick="downloadGamePgn(${game.id})" class="btn-secondary" style="padding: 0.5rem 0.75rem; font-size: 0.8rem;">
                                 <i class="fa-solid fa-download"></i> PGN
                             </button>
-                            <a href="game-recorder.html?id=${game.id}" class="btn-primary" style="padding:0.5rem 1rem; font-size:0.8rem;">
-                                <i class="fa-solid fa-chess-board"></i> Editor
+                            <a href="game-recorder.html?id=${game.id}" class="btn-primary" style="padding: 0.5rem 0.75rem; font-size: 0.8rem;">
+                                <i class="fa-solid fa-edit"></i> Upravit
                             </a>
                         </div>
                     </div>
                 `).join('');
-
             } catch (e) {
                 console.error(e);
-                container.innerHTML = '<p style="color:#fca5a5; text-align:center;">Nepodařilo se načíst partie.</p>';
+                container.innerHTML = '<p style="color: #fca5a5;">Chyba načítání.</p>';
             }
         }
 
@@ -534,73 +638,45 @@
                 const res = await fetch(`${API_URL}/games/${id}/pgn`, {
                     headers: { 'X-Club-Password': password }
                 });
-
-                if (!res.ok) throw new Error('Download failed');
-
                 const blob = await res.blob();
                 const url = window.URL.createObjectURL(blob);
                 const a = document.createElement('a');
-                a.style.display = 'none';
                 a.href = url;
-                // Try to get filename from header or default
-                const contentDist = res.headers.get('Content-Disposition');
-                let filename = `game_${id}.pgn`;
-                if (contentDist && contentDist.includes('filename=')) {
-                    filename = contentDist.split('filename=')[1].replace(/"/g, '');
-                }
-
-                a.download = filename;
+                a.download = `game_${id}.pgn`;
                 document.body.appendChild(a);
                 a.click();
-                window.URL.revokeObjectURL(url);
                 document.body.removeChild(a);
             } catch (e) {
                 console.error(e);
-                alert('Stahování selhalo (neautorizováno?).');
+                alert('Stahování selhalo.');
             }
         }
 
-        function escapeHtml(text) {
-            const div = document.createElement('div');
-            div.textContent = text;
-            return div.innerHTML;
-        }
-
-        // --- Gallery Functions ---
-        async function loadMemberGallery() {
+        // Gallery
+        async function loadGallery() {
             const password = localStorage.getItem(PASSWORD_KEY);
-            const grid = document.getElementById('memberGalleryGrid');
+            const container = document.getElementById('galleryGrid');
 
             try {
                 const res = await fetch(`${API_URL}/images`, {
                     headers: { 'X-Club-Password': password }
                 });
-
-                if (!res.ok) throw new Error('Failed to fetch gallery');
-
                 const images = await res.json();
 
                 if (images.length === 0) {
-                    grid.innerHTML = '<p style="color: var(--text-muted); font-size: 0.9rem; grid-column: 1 / -1;">Zatím žádné fotky v galerii.</p>';
+                    container.innerHTML = '<p style="color: var(--text-muted); grid-column: 1 / -1; text-align: center;">Zatím žádné fotky.</p>';
                     return;
                 }
 
-                renderMemberGallery(images);
+                container.innerHTML = images.slice(0, 30).map(img => `
+                    <a href="${img.url}" target="_blank" class="gallery-item">
+                        <img src="${img.url}" alt="Gallery image">
+                    </a>
+                `).join('');
             } catch (e) {
-                console.error('Gallery load error:', e);
-                grid.innerHTML = '<p style="color: #fca5a5; font-size: 0.9rem; grid-column: 1 / -1;">Nepodařilo se načíst galerii.</p>';
+                console.error(e);
+                container.innerHTML = '<p style="color: #fca5a5; grid-column: 1 / -1;">Chyba načítání.</p>';
             }
-        }
-
-        function renderMemberGallery(images) {
-            const grid = document.getElementById('memberGalleryGrid');
-            const latestImages = images.slice(0, 20); // Show last 20 images
-
-            grid.innerHTML = latestImages.map(img => `
-                <a href="${img.url}" target="_blank" style="display: block; aspect-ratio: 1; overflow: hidden; border-radius: 8px; border: 1px solid rgba(168, 85, 247, 0.3);">
-                    <img src="${img.url}" alt="Gallery image" style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s;" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'">
-                </a>
-            `).join('');
         }
 
         async function handleMemberGalleryUpload(input) {
@@ -610,10 +686,8 @@
             const files = Array.from(input.files);
             let successCount = 0;
 
-            // Show uploading state
-            const grid = document.getElementById('memberGalleryGrid');
-            const originalContent = grid.innerHTML;
-            grid.innerHTML = `<p style="color: #a855f7; font-size: 0.9rem; grid-column: 1 / -1;"><i class="fa-solid fa-spinner fa-spin"></i> Nahrávám ${files.length} fotk${files.length === 1 ? 'u' : files.length < 5 ? 'y' : 'ek'}...</p>`;
+            const container = document.getElementById('galleryGrid');
+            container.innerHTML = `<p style="color: #a855f7; grid-column: 1 / -1; text-align: center;"><i class="fa-solid fa-spinner fa-spin"></i> Nahrávám ${files.length} fotek...</p>`;
 
             for (const file of files) {
                 const formData = new FormData();
@@ -625,22 +699,24 @@
                         headers: { 'X-Club-Password': password },
                         body: formData
                     });
-
                     if (res.ok) successCount++;
                 } catch (e) {
-                    console.error('Upload failed for file:', file.name, e);
+                    console.error('Upload failed:', e);
                 }
             }
 
             if (successCount > 0) {
-                // Reload gallery to show new images
-                loadMemberGallery();
+                loadGallery();
             } else {
-                grid.innerHTML = originalContent;
-                alert('Nahrávání selhalo. Zkuste to prosím znovu.');
+                container.innerHTML = '<p style="color: #fca5a5; grid-column: 1 / -1;">Nahrávání selhalo.</p>';
             }
+            input.value = '';
+        }
 
-            input.value = ''; // Reset input
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
         }
     </script>
 </body>
