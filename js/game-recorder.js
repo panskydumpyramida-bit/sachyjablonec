@@ -306,50 +306,78 @@ function closeGameInfo() {
 
 // --- Initialization ---
 
-document.addEventListener('DOMContentLoaded', () => {
-    // Expose globals for HTML buttons
-    window.game = game;
-    window.undoMove = undoMove;
-    window.saveGame = saveGame;
-    window.copyPgn = copyPgn;
-    window.downloadPgn = downloadPgn;
-    window.openGameInfo = openGameInfo;
-    window.closeGameInfo = closeGameInfo;
+// Mobile Modal Logic - explicitly attached
+const infoBtn = document.querySelector('.mobile-only-btn');
+if (infoBtn) {
+    infoBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        document.getElementById('gameSidebar').classList.add('active');
+        document.body.classList.add('modal-open');
+    });
+}
 
-    var config = {
-        draggable: true,
-        position: 'start',
-        onDragStart: onDragStart,
-        onDrop: onDrop,
-        onSnapEnd: onSnapEnd,
-        pieceTheme: 'https://chessboardjs.com/img/chesspieces/wikipedia/{piece}.png'
-    };
-    board = Chessboard('board', config);
-    // Expose board
-    window.board = board;
+const closeBtn = document.querySelector('.btn-close-modal');
+if (closeBtn) {
+    closeBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        document.getElementById('gameSidebar').classList.remove('active');
+        document.body.classList.remove('modal-open');
+    });
+}
 
-    window.addEventListener('resize', board.resize);
+// Expose globals for other HTML buttons (legacy)
+window.game = game;
+window.undoMove = undoMove;
+window.saveGame = saveGame;
+window.copyPgn = copyPgn;
+window.downloadPgn = downloadPgn;
+// openGameInfo/closeGameInfo no longer needed globally if bound above, 
+// but keeping them for safety if onclick remains
+window.openGameInfo = () => {
+    document.getElementById('gameSidebar').classList.add('active');
+    document.body.classList.add('modal-open');
+};
+window.closeGameInfo = () => {
+    document.getElementById('gameSidebar').classList.remove('active');
+    document.body.classList.remove('modal-open');
+};
 
-    const urlParams = new URLSearchParams(window.location.search);
-    const gameId = urlParams.get('id');
-    if (gameId) {
-        loadGameById(gameId);
+var config = {
+    draggable: true,
+    position: 'start',
+    onDragStart: onDragStart,
+    onDrop: onDrop,
+    onSnapEnd: onSnapEnd,
+    pieceTheme: 'https://chessboardjs.com/img/chesspieces/wikipedia/{piece}.png'
+};
+board = Chessboard('board', config);
+// Expose board
+window.board = board;
+
+window.addEventListener('resize', board.resize);
+
+const urlParams = new URLSearchParams(window.location.search);
+const gameId = urlParams.get('id');
+if (gameId) {
+    loadGameById(gameId);
+}
+
+// ROBUST CLICK HANDLING (Capture Phase)
+const handleInput = (e) => {
+    const boardContainer = document.getElementById('board');
+    if (!boardContainer || !boardContainer.contains(e.target)) return;
+
+    const squareEl = e.target.closest('.square-55d63');
+    if (!squareEl) return;
+
+    const squareId = squareEl.getAttribute('data-square');
+    if (squareId) {
+        handleSquareClick(squareId);
     }
+};
 
-    // ROBUST CLICK HANDLING (Capture Phase)
-    const handleInput = (e) => {
-        const boardContainer = document.getElementById('board');
-        if (!boardContainer || !boardContainer.contains(e.target)) return;
-
-        const squareEl = e.target.closest('.square-55d63');
-        if (!squareEl) return;
-
-        const squareId = squareEl.getAttribute('data-square');
-        if (squareId) {
-            handleSquareClick(squareId);
-        }
-    };
-
-    document.body.addEventListener('mousedown', handleInput, true);
+document.body.addEventListener('mousedown', handleInput, true);
     // Touch support optional/handled by mouse emulation or add touchstart if needed
 });

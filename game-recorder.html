@@ -257,7 +257,10 @@
         @media (max-width: 900px) {
 
             /* Hide global navigation elements to prevent scrolling and save space */
-            /* Keep header/footer visible as requested */
+            /* Keep header visible, but hide footer to save vertical space */
+            #global-footer {
+                display: none !important;
+            }
 
             /* Reset main layout for full screen */
             body,
@@ -341,7 +344,6 @@
                 margin: 0 auto;
             }
         }
-        }
     </style>
 </head>
 
@@ -372,7 +374,8 @@
                             <button class="btn-control" onclick="undoMove()"><i class="fa-solid fa-arrow-left"></i>
                                 Zpět</button>
                             <!-- Mobile Info Button -->
-                            <button class="btn-control mobile-only-btn" onclick="openGameInfo()" style="display: none;">
+                            <!-- Mobile Info Button -->
+                            <button class="btn-control mobile-only-btn">
                                 <i class="fa-solid fa-info-circle"></i> Info
                             </button>
                             <!-- Exit Button -->
@@ -388,7 +391,7 @@
                     <div id="gameSidebar" class="sidebar">
 
                         <!-- Close button for mobile modal -->
-                        <button class="btn-close-modal" onclick="closeGameInfo()" style="display: none;">
+                        <button class="btn-close-modal">
                             <i class="fa-solid fa-times"></i> Zavřít
                         </button>
 
