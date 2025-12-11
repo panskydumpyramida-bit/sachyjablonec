@@ -139,7 +139,7 @@ Plán budoucího vývoje webu sachyjablonec.cz.
 - [ ] Audit všech stránek na mobilu (< 768px)
 - [ ] Oprava kritických UI problémů
 - [ ] Mobilní verze admin panelu (nebo alespoň čtení)
-- [ ] Touch-friendly ovládací prvky
+- [x] Touch-friendly ovládací prvky (Editor Partií, Puzzle Racer)
 
 ---
 
@@ -160,6 +160,7 @@ Plán budoucího vývoje webu sachyjablonec.cz.
 - [x] Oprava logiky (načítání bufferu, čekací stavy)
 - [x] Indikátor obtížnosti v UI
 - [x] Oprava načítání žebříčku
+- [x] Tlačítko "Odejít" pro návrat do menu
 
 ### Editor Partií
 - [x] Responzivní design pro mobily (výška sidebaru)
@@ -168,11 +169,16 @@ Plán budoucího vývoje webu sachyjablonec.cz.
 - [x] Zabezpečené stahování (auth fallback)
 - [x] **Click-to-Move** ovládání a nápověda tahů (tečky)
 - [x] Vizuální zvýraznění a sjednocení UI s Puzzle Racer
+- [x] **Mobilní UI**: Info panel jako modální okno (vyskakovací)
+- [x] **Touch optimalizace**: Drag & drop bez scrollování, touchstart pro click-to-move
+- [x] Tlačítko "Odejít" pro návrat do menu
+- [x] Skrytý header/footer na mobilu pro maximální prostor
 
 ### Systém
 - [x] Oprava `ReferenceError` v `server.js` (racer routes)
 - [x] CORS povolení pro `X-Club-Password`
 - [x] Docker build optimalizace (`.dockerignore`)
+- [x] Nixpacks konfigurace vyčištěna od deprecated warningů
 
 ---
 
