@@ -505,10 +505,10 @@ function handleMove(source, target, isDrop) {
     if (game.solutionIndex >= game.currentSolution.length) {
         handleCorrectPuzzle();
     } else {
-        // Opponent's turn - OPTIMIZED: Reduced from 300ms to 150ms
+        // Opponent's turn - wait for player's animation to complete first (400ms for 'slow' moveSpeed)
         setTimeout(() => {
             makeOpponentMove();
-        }, 150);
+        }, 400);
     }
 
     return true;
