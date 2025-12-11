@@ -58,7 +58,7 @@ async function loadAdminGallery() {
         if (!Array.isArray(images)) throw new Error('Invalid response format');
 
         if (images.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">Žádné obrázky</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="6" style="text-align: center;">Žádné obrázky</td></tr>';
             return;
         }
 
@@ -74,6 +74,9 @@ async function loadAdminGallery() {
                     <div style="font-weight: 500;">${img.originalName || 'Bez názvu'}</div>
                     <div style="font-size: 0.75rem; color: var(--text-muted);">${img.altText || ''}</div>
                 </td>
+                <td style="text-align: center;">
+                    <input type="checkbox" ${img.isPublic ? 'checked' : ''} onchange="toggleGalleryVisibility(${img.id}, this.checked)">
+                </td>
                 <td style="font-size: 0.85rem; color: var(--text-muted);">
                     ${new Date(img.uploadedAt).toLocaleString('cs-CZ')}
                 </td>
@@ -87,7 +90,31 @@ async function loadAdminGallery() {
 
     } catch (e) {
         console.error('Gallery load error:', e);
-        tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: #fca5a5;">Chyba načítání: ${e.message}</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: #fca5a5;">Chyba načítání: ${e.message}</td></tr>`;
+    }
+}
+
+async function toggleGalleryVisibility(id, isPublic) {
+    try {
+        const res = await fetch(`${API_URL}/images/${id}/toggle`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${authToken}`
+            },
+            body: JSON.stringify({ isPublic })
+        });
+
+        if (res.ok) {
+            showToast(isPublic ? 'Obrázek je veřejný' : 'Obrázek je skrytý');
+        } else {
+            showToast('Nepodařilo se změnit viditelnost', 'error');
+            loadAdminGallery(); // Reload to reset checkbox state
+        }
+    } catch (e) {
+        console.error(e);
+        showToast('Chyba komunikace', 'error');
+        loadAdminGallery();
     }
 }
 
@@ -337,4 +364,5 @@ window.selectGalleryForThumbnail = selectGalleryForThumbnail;
 window.selectGalleryForArticleGallery = selectGalleryForArticleGallery;
 window.updateBatchActions = updateBatchActions;
 window.toggleSelectAllGallery = toggleSelectAllGallery;
+window.toggleGalleryVisibility = toggleGalleryVisibility;
 window.deleteSelectedImages = deleteSelectedImages;
