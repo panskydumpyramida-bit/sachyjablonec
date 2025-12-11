@@ -252,6 +252,56 @@
             transform: translate(-50%, -50%);
             pointer-events: none;
         }
+
+        /* Mobile Modal Styles */
+        @media (max-width: 900px) {
+            .mobile-only-btn {
+                display: flex !important;
+            }
+
+            .sidebar {
+                /* Transform sidebar into a modal on mobile */
+                display: none;
+                /* Hidden by default */
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100vh;
+                z-index: 1000;
+                border-radius: 0;
+                margin: 0;
+                background: rgba(20, 20, 25, 0.98);
+                /* Less transp for readability */
+                overflow-y: auto;
+                padding-top: 4rem;
+                /* Space for close button */
+            }
+
+            .sidebar.active {
+                display: flex;
+                flex-direction: column;
+            }
+
+            .btn-close-modal {
+                display: block !important;
+                position: absolute;
+                top: 1rem;
+                right: 1rem;
+                background: transparent;
+                border: 1px solid rgba(255, 255, 255, 0.2);
+                color: white;
+                padding: 0.5rem 1rem;
+                border-radius: 50px;
+                font-size: 1rem;
+                cursor: pointer;
+            }
+
+            body.modal-open {
+                overflow: hidden;
+                /* Prevent body scroll when modal open */
+            }
+        }
     </style>
 </head>
 
@@ -281,11 +331,20 @@
                                 Otočit</button>
                             <button class="btn-control" onclick="undoMove()"><i class="fa-solid fa-arrow-left"></i>
                                 Zpět</button>
+                            <!-- Mobile Info Button -->
+                            <button class="btn-control mobile-only-btn" onclick="openGameInfo()" style="display: none;">
+                                <i class="fa-solid fa-info-circle"></i> Info
+                            </button>
                         </div>
                     </div>
 
-                    <!-- Right: Info & Moves -->
-                    <div class="sidebar">
+                    <!-- Right: Info & Moves (Desktop Sidebar / Mobile Modal Content) -->
+                    <div id="gameSidebar" class="sidebar">
+
+                        <!-- Close button for mobile modal -->
+                        <button class="btn-close-modal" onclick="closeGameInfo()" style="display: none;">
+                            <i class="fa-solid fa-times"></i> Zavřít
+                        </button>
 
                         <!-- Metadata Form: Compact Grid -->
                         <div style="display: grid; grid-template-columns: 1fr 1fr 80px; gap: 0.5rem; align-items: end;">
