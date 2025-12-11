@@ -1,9 +1,0 @@
-{
-    "build": {
-        "env": {
-            "NPM_CONFIG_PRODUCTION": "false"
-        }
-    },
-    "buildCommand": "npm install && npx prisma generate",
-    "startCommand": "npm start"
-}
