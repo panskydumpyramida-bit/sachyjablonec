@@ -98,21 +98,6 @@
             cursor: pointer;
             transition: all 0.3s;
             border: none;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .hub-tile::before {
-            content: '';
-            position: absolute;
-            inset: 0;
-            background: inherit;
-            opacity: 0.9;
-            transition: opacity 0.3s;
-        }
-
-        .hub-tile:hover::before {
-            opacity: 1;
         }
 
         .hub-tile:hover {
@@ -123,8 +108,6 @@
         .hub-tile i {
             font-size: 3rem;
             margin-bottom: 1rem;
-            position: relative;
-            z-index: 1;
         }
 
         .hub-tile span {
@@ -132,8 +115,6 @@
             font-weight: 700;
             text-transform: uppercase;
             letter-spacing: 0.1em;
-            position: relative;
-            z-index: 1;
         }
 
         /* Tile colors */
