@@ -37,31 +37,29 @@ Plán budoucího vývoje webu sachyjablonec.cz.
 
 ---
 
-## 🧹 Priorita 0: Čištění kódu
+## 🧹 Priorita 0: Čištění kódu a Refaktoring
 
-**Aktuální technický dluh, který zpomaluje další vývoj.**
+**Aktuální technický dluh a probíhající práce na architektuře.**
 
-### Nalezené problémy
+### Admin Panel Modularizace (Probíhá)
+Refaktoring monolitického `admin.html` (3800+ řádků) na JS moduly.
+- [x] **Fáze 1:** Extrakce, nezávislých modulů
+  - Vytvořena struktura `js/admin/`
+  - Hotové moduly: `admin-gallery.js`, `admin-members.js`, `admin-messages.js`
+  - Odstraněno ~400 řádků legacy kódu
+- [ ] **Fáze 2:** Migrace hlavních komponent
+  - [ ] News Editor (`admin-news.js`)
+  - [ ] Competitions & Standings (`admin-competitions.js`)
+- [ ] **Fáze 3:** Shared Core & Cleanup
+  - [ ] Plná migrace `admin-core.js` (auth, routing)
+  - [ ] Odstranění veškerého JS z `admin.html`
 
-1. **`server.js` má 1470 řádků**
-   - Obsahuje scraping logiku, API routes, helpers
-   - Obtížná údržba a testování
-
-2. **Debug/test soubory v produkci**
-   - `debug-scraper.js`, `debug-scraping.js`, `test-*.js`
-   - `debug_*.html`, `dump_html.js`
-   - Potenciální bezpečnostní riziko
-
-3. **Duplicitní helper funkce**
-   - `clean()`, `simplify()`, `isMatch()` definovány vícekrát
-
-### Plánované změny
-- [ ] Rozdělit `server.js` do modulů:
+### Backend Refaktoring
+- [ ] Rozdělit `server.js` (1470 řádků) do modulů:
   - `src/services/scrapingService.js`
   - `src/services/standingsService.js`
   - `src/utils/helpers.js`
 - [ ] Přesunout debug/test soubory do `/scripts` nebo odstranit
-- [ ] Přidat `.gitignore` pravidla pro debug soubory
 - [ ] Centralizovat helper funkce
 
 ---
@@ -69,11 +67,6 @@ Plán budoucího vývoje webu sachyjablonec.cz.
 ## 🎯 Priorita 1: Refaktoring ukládání partií
 
 **Cíl:** Změnit způsob ukládání šachových partií tak, aby je bylo možné používat napříč všemi sekcemi webu.
-
-### Současný stav
-- Model `Game` je vázaný na `MatchReport` (přes `reportId`)
-- Partie nelze sdílet mezi sekcemi (mládež, družstva, novinky)
-- Duplicita při zobrazení stejné partie na více místech
 
 ### Plánované změny
 - [ ] Nový nezávislý model `Game`:
@@ -93,7 +86,6 @@ Plán budoucího vývoje webu sachyjablonec.cz.
 - [ ] API endpoint `/api/games` pro CRUD operace
 - [ ] Univerzální přehrávač partií
 - [ ] Import PGN souborů do centrální databáze
-- [ ] Tagování a vyhledávání partií
 
 ---
 
@@ -106,99 +98,51 @@ Plán budoucího vývoje webu sachyjablonec.cz.
 - [ ] Admin UI formulář:
   - Počet puzzlů na úroveň obtížnosti (default: 6)
   - Počet puzzlů na fetch (default: 3)
-  - Zapnutí/vypnutí systému životů
-  - Penalizace za špatný tah (sekund)
+  - Zapnutí/vypnutí systému životů (Penalizace)
   - Časový limit hry (default: 180s)
 - [ ] API endpoint GET/PUT `/api/admin/puzzle-racer/settings`
-- [ ] Frontend: načítat nastavení z API místo hardcoded hodnot
 
 ---
 
-## 🖥️ Priorita 3: Přehrávač partií - Vylepšení
-
-**Cíl:** Modernizovat a rozšířit funkcionalitu přehrávače.
-
-### Plánované změny
-- [ ] Responzivní design pro mobily
-- [ ] Klávesové zkratky pro navigaci (← → šipky)
-- [ ] Zobrazení hodnocení motorů (engine evaluation)
-- [ ] Export partie do PGN formátu
-- [ ] Podpora komentářů k tahům
-- [ ] Podpora variant (odbočky v analýze)
-
----
-
-## 📱 Priorita 4: Mobilní optimalizace
+## 📱 Priorita 3: Mobilní optimalizace
 
 ### Nalezené problémy
 - Některé stránky nejsou plně responzivní
 - Admin panel není použitelný na mobilu
-- Kalkulačka/tabulky se špatně renderují na malých obrazovkách
 
 ### Plánované změny
 - [ ] Audit všech stránek na mobilu (< 768px)
 - [ ] Oprava kritických UI problémů
 - [ ] Mobilní verze admin panelu (nebo alespoň čtení)
-- [x] Touch-friendly ovládací prvky (Editor Partií, Puzzle Racer)
-
----
-
-## 🔄 Priorita 5: Automatizace a CI/CD
-
-### Plánované změny
-- [ ] Automatické testy (Jest/Vitest)
-- [ ] GitHub Actions pro CI/CD
-- [ ] Automatické aktualizace standings (cron job)
-- [ ] Monitorování chyb (Sentry nebo podobné)
-- [ ] Automatické zálohování databáze
 
 ---
 
 ## ✅ Dokončeno (11. 12. 2025)
 
-### Puzzle Racer
+### Členská sekce (Members Hub)
+- [x] **Nový Design:** Implementován 2x2 grid "hub" pro lepší navigaci na mobilech i desktopu.
+- [x] **Galerie:** Přidána možnost nahrávat fotky přímo z členské sekce.
+- [x] **Opravy UI:** Opravena chybějící ikona u Puzzle Racer dlaždice (`fa-puzzle-piece`).
+- [x] **Konzistence:** Sjednocen vzhled sekcí (tlačítka zpět, hlavičky).
+
+### Admin Panel & Systém
+- [x] **Modularizace:** Vytvořeny moduly `admin-gallery.js`, `admin-members.js`, `admin-messages.js`.
+- [x] **Gallery Picker:** Modální okno pro výběr obrázků z galerie (použito v Editoru i Members).
+- [x] **API Auth:** Sjednocena autentizace (`X-Club-Password` i `Bearer Token` pro API obrázků).
+- [x] **Cleanup:** Odstraněno cca 400 řádků duplicitního kódu z admin.html.
+
+### Puzzle Racer (Ranní update)
 - [x] Oprava logiky (načítání bufferu, čekací stavy)
 - [x] Indikátor obtížnosti v UI
 - [x] Oprava načítání žebříčku
-- [x] Tlačítko "Odejít" pro návrat do menu
 
-### Editor Partií
-- [x] Responzivní design pro mobily (výška sidebaru)
-- [x] Export partie do PGN (tlačítka pro stažení/kopírování)
-- [x] Načítání partie přes URL ID (`?id=123`)
-- [x] Zabezpečené stahování (auth fallback)
-- [x] **Click-to-Move** ovládání a nápověda tahů (tečky)
-- [x] Vizuální zvýraznění a sjednocení UI s Puzzle Racer
-- [x] **Mobilní UI**: Info panel jako modální okno (vyskakovací)
-- [x] **Touch optimalizace**: Drag & drop bez scrollování, touchstart pro click-to-move
-- [x] Tlačítko "Odejít" pro návrat do menu
-- [x] Skrytý header/footer na mobilu pro maximální prostor
-
-### Systém
-- [x] Oprava `ReferenceError` v `server.js` (racer routes)
-- [x] CORS povolení pro `X-Club-Password`
-- [x] Docker build optimalizace (`.dockerignore`)
-- [x] Nixpacks konfigurace vyčištěna od deprecated warningů
+### Editor Partií (Ranní update)
+- [x] Responzivní design pro mobily
+- [x] Export partie do PGN
+- [x] Načítání partie přes URL ID
+- [x] **Click-to-Move** ovládání a nápověda tahů
+- [x] **Touch optimalizace**
 
 ---
 
-## 📊 Další návrhy
-
-### Admin panel
-- [ ] Dashboard s metrikami (návštěvnost, aktivita)
-- [ ] Log změn (audit trail)
-- [ ] Bulk operace (mazání, publikování)
-
-### Uživatelská zkušenost
-- [ ] Dark/Light mode přepínač
-- [ ] Notifikace o nových článcích
-- [ ] RSS feed pro novinky
-
-### Výkon
-- [ ] Lazy loading obrázků
-- [ ] Caching API odpovědí
-- [ ] CDN pro statické soubory
-
----
-
-*Poslední aktualizace: 11. 12. 2025*
+*Poslední aktualizace: 11. 12. 2025 (22:30)*
