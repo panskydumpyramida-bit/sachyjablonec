@@ -378,6 +378,26 @@
 
                     <!-- Left: Board -->
                     <div>
+                        <!-- Playback Controls Above Board -->
+                        <div class="playback-controls"
+                            style="display: flex; justify-content: center; gap: 0.5rem; margin-bottom: 0.5rem;">
+                            <button class="btn-control" onclick="goToStart()" title="Na začátek">
+                                <i class="fa-solid fa-backward-fast"></i>
+                            </button>
+                            <button class="btn-control" onclick="goBack()" title="Předchozí tah">
+                                <i class="fa-solid fa-backward-step"></i>
+                            </button>
+                            <button class="btn-control" id="autoplayBtn" onclick="toggleAutoplay()"
+                                title="Přehrát partii">
+                                <i class="fa-solid fa-play"></i>
+                            </button>
+                            <button class="btn-control" onclick="goForward()" title="Další tah">
+                                <i class="fa-solid fa-forward-step"></i>
+                            </button>
+                            <button class="btn-control" onclick="goToEnd()" title="Na konec">
+                                <i class="fa-solid fa-forward-fast"></i>
+                            </button>
+                        </div>
                         <div id="board"></div>
                         <div class="controls" style="margin-top: 1rem;">
                             <button class="btn-control"
@@ -476,7 +496,7 @@
     <script src="js/config.js"></script>
     <script src="js/layout-loader.js"></script>
     <script src="js/main.js"></script>
-    <script src="js/game-recorder.js?v=4.0"></script>
+    <script src="js/game-recorder.js?v=5.0"></script>
 </body>
 
 </html>
