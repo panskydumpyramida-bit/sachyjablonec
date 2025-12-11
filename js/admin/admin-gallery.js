@@ -12,11 +12,25 @@ async function loadAdminGallery() {
     const tbody = document.getElementById('galleryTableBody');
     if (!tbody) { console.error('Gallery tbody not found'); return; }
 
-    tbody.innerHTML = '<tr><td colspan="4" style="text-align: center;">Načítám...</td></tr>';
+    // Reset batch actions state
+    const selectAll = document.getElementById('selectAllGallery');
+    if (selectAll) {
+        selectAll.checked = false;
+        selectAll.indeterminate = false;
+    }
+    const batchBtn = document.getElementById('batchDeleteBtn');
+    if (batchBtn) {
+        batchBtn.style.display = 'none';
+        // Reset button content if it was stuck in loading state
+        batchBtn.innerHTML = '<i class="fa-solid fa-trash"></i> Smazat vybrané (<span id="selectedCount">0</span>)';
+        batchBtn.disabled = false;
+    }
+
+    tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">Načítám...</td></tr>';
 
     if (!authToken) {
         console.error('No auth token available');
-        tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; color: red;">Chyba: Chybí přihlášení</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: red;">Chyba: Chybí přihlášení</td></tr>';
         return;
     }
 
@@ -31,8 +45,6 @@ async function loadAdminGallery() {
         });
         clearTimeout(timeoutId);
 
-        console.log('Fetch response:', res.status, res.statusText);
-
         if (!res.ok) {
             const txt = await res.text();
             console.error('Fetch failed:', txt);
@@ -40,20 +52,19 @@ async function loadAdminGallery() {
         }
 
         const images = await res.json();
-        console.log('Images loaded:', images.length);
 
-        if (!Array.isArray(images)) {
-            console.error('Response is not an array:', images);
-            throw new Error('Invalid response format');
-        }
+        if (!Array.isArray(images)) throw new Error('Invalid response format');
 
         if (images.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="4" style="text-align: center;">Žádné obrázky</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">Žádné obrázky</td></tr>';
             return;
         }
 
         tbody.innerHTML = images.map(img => `
             <tr>
+                <td style="text-align: center; width: 40px;">
+                    <input type="checkbox" class="gallery-checkbox" value="${img.id}" onchange="updateBatchActions()">
+                </td>
                 <td style="width: 80px;">
                     <img src="${img.url}" style="width: 60px; height: 40px; object-fit: cover; border-radius: 4px; cursor: pointer;" onclick="window.open('${img.url}', '_blank')">
                 </td>
@@ -74,7 +85,7 @@ async function loadAdminGallery() {
 
     } catch (e) {
         console.error('Gallery load error:', e);
-        tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; color: #fca5a5;">Chyba načítání: ${e.message}</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: #fca5a5;">Chyba načítání: ${e.message}</td></tr>`;
     }
 }
 
@@ -96,6 +107,76 @@ async function deleteGalleryImage(id) {
     } catch (e) {
         console.error(e);
         showToast('Chyba při mazání', 'error');
+    }
+}
+
+// Batch Actions Functions
+function updateBatchActions() {
+    const checkboxes = document.querySelectorAll('.gallery-checkbox:checked');
+    const count = checkboxes.length;
+    const btn = document.getElementById('batchDeleteBtn');
+    const countSpan = document.getElementById('selectedCount');
+
+    if (btn && countSpan) {
+        if (count > 0) {
+            btn.style.display = 'block';
+            countSpan.textContent = count;
+        } else {
+            btn.style.display = 'none';
+        }
+    }
+
+    const selectAll = document.getElementById('selectAllGallery');
+    const allCheckboxes = document.querySelectorAll('.gallery-checkbox');
+    if (selectAll) {
+        selectAll.checked = allCheckboxes.length > 0 && checkboxes.length === allCheckboxes.length;
+        selectAll.indeterminate = count > 0 && count < allCheckboxes.length;
+    }
+}
+
+function toggleSelectAllGallery(source) {
+    const checkboxes = document.querySelectorAll('.gallery-checkbox');
+    checkboxes.forEach(cb => cb.checked = source.checked);
+    updateBatchActions();
+}
+
+async function deleteSelectedImages() {
+    const checkboxes = document.querySelectorAll('.gallery-checkbox:checked');
+    if (checkboxes.length === 0) return;
+
+    if (!confirm(`Opravdu smazat ${checkboxes.length} vybraných obrázků? Tato akce je nevratná.`)) return;
+
+    const btn = document.getElementById('batchDeleteBtn');
+    if (btn) {
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Mazání...';
+        btn.disabled = true;
+    }
+
+    let successCount = 0;
+    const ids = Array.from(checkboxes).map(cb => cb.value);
+
+    // Delete in parallel
+    const promises = ids.map(id =>
+        fetch(`${API_URL}/images/${id}`, {
+            method: 'DELETE',
+            headers: { 'Authorization': `Bearer ${authToken}` }
+        }).then(res => res.ok ? 1 : 0).catch(() => 0)
+    );
+
+    const results = await Promise.all(promises);
+    successCount = results.reduce((a, b) => a + b, 0);
+
+    if (btn) {
+        btn.innerHTML = `<i class="fa-solid fa-trash"></i> Smazat vybrané (<span id="selectedCount">${ids.length}</span>)`;
+        btn.disabled = false;
+    }
+
+    if (successCount > 0) {
+        showToast(`Smazáno ${successCount} obrázků`);
+        loadAdminGallery();
+    } else {
+        showToast('Chyba při mazání', 'error');
+        updateBatchActions();
     }
 }
 
@@ -247,3 +328,6 @@ window.closeGalleryPicker = closeGalleryPicker;
 window.selectGalleryForImageModal = selectGalleryForImageModal;
 window.selectGalleryForThumbnail = selectGalleryForThumbnail;
 window.selectGalleryForArticleGallery = selectGalleryForArticleGallery;
+window.updateBatchActions = updateBatchActions;
+window.toggleSelectAllGallery = toggleSelectAllGallery;
+window.deleteSelectedImages = deleteSelectedImages;
