@@ -1445,13 +1445,14 @@
                                     onclick="toggleSelectAllGallery(this)"></th>
                             <th>Náhled</th>
                             <th>Název</th>
+                            <th>Veřejné</th>
                             <th>Datum nahrání</th>
                             <th>Akce</th>
                         </tr>
                     </thead>
                     <tbody id="galleryTableBody">
                         <tr>
-                            <td colspan="5" style="text-align: center;">Načítám...</td>
+                            <td colspan="6" style="text-align: center;">Načítám...</td>
                         </tr>
                     </tbody>
                 </table>
@@ -1510,6 +1511,7 @@
         var authToken = null;
         let currentUser = null;
         let uploadedImageData = null;
+        let currentImageOriginalName = '';
         let games = [];
         let teams = ['A tým', 'B tým']; // Default teams
         let galleryImages = [];
@@ -3238,6 +3240,7 @@
         async function handleImageUpload(event) {
             const file = event.target.files[0];
             if (!file) return;
+            currentImageOriginalName = file.name;
 
             const formData = new FormData();
             formData.append('image', file);
@@ -3357,7 +3360,18 @@
 
                 // Upload
                 const formData = new FormData();
-                formData.append('image', blob, 'rotated_image.jpg');
+                let rotationName = 'rotated_image.jpg';
+                if (currentImageOriginalName) {
+                    const parts = currentImageOriginalName.split('.');
+                    if (parts.length > 1) {
+                        const ext = parts.pop();
+                        const name = parts.join('.');
+                        rotationName = `${name}_rot.${ext}`;
+                    } else {
+                        rotationName = `${currentImageOriginalName}_rot.jpg`;
+                    }
+                }
+                formData.append('image', blob, rotationName);
 
                 const res = await fetch(`${API_URL}/images/upload`, {
                     method: 'POST',
