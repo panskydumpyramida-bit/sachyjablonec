@@ -20,10 +20,12 @@ async function loadAdminGallery() {
     }
     const batchBtn = document.getElementById('batchDeleteBtn');
     if (batchBtn) {
-        batchBtn.style.display = 'none';
+        // batchBtn.style.display = 'none'; // Keep visible but disabled
+        batchBtn.disabled = true;
+        batchBtn.style.opacity = '0.5';
+        batchBtn.style.cursor = 'not-allowed';
         // Reset button content if it was stuck in loading state
         batchBtn.innerHTML = '<i class="fa-solid fa-trash"></i> Smazat vybrané (<span id="selectedCount">0</span>)';
-        batchBtn.disabled = false;
     }
 
     tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">Načítám...</td></tr>';
@@ -119,10 +121,15 @@ function updateBatchActions() {
 
     if (btn && countSpan) {
         if (count > 0) {
-            btn.style.display = 'block';
+            btn.disabled = false;
+            btn.style.opacity = '1';
+            btn.style.cursor = 'pointer';
             countSpan.textContent = count;
         } else {
-            btn.style.display = 'none';
+            btn.disabled = true;
+            btn.style.opacity = '0.5';
+            btn.style.cursor = 'not-allowed';
+            countSpan.textContent = '0';
         }
     }
 
