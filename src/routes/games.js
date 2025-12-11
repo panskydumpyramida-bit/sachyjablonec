@@ -68,12 +68,21 @@ router.get('/:id/pgn', async (req, res) => {
         console.error('Error downloading PGN:', error);
         res.status(500).send('Error downloading file');
     }
-    if (!game) return res.status(404).json({ error: 'Game not found' });
-    res.json(game);
-} catch (error) {
-    console.error('Error fetching game:', error);
-    res.status(500).json({ error: 'Failed to fetch game' });
-}
-    });
+});
+
+// Get single game details
+router.get('/:id', async (req, res) => {
+    try {
+        const game = await prisma.gameRecorded.findUnique({
+            where: { id: parseInt(req.params.id) },
+            include: { user: { select: { username: true } } }
+        });
+        if (!game) return res.status(404).json({ error: 'Game not found' });
+        res.json(game);
+    } catch (error) {
+        console.error('Error fetching game:', error);
+        res.status(500).json({ error: 'Failed to fetch game' });
+    }
+});
 
 export default router;
