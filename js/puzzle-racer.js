@@ -284,39 +284,39 @@ function loadPuzzle(puzzleData) {
     // Update UI text immediately
     document.getElementById('toMove').innerText = playerColor === 'white' ? 'Bílý na tahu' : 'Černý na tahu';
 
-    // Initialize/Update Board
-    const config = {
-        draggable: true,
-        position: game.fen(), // Position BEFORE the last move
-        orientation: playerColor,
-        pieceTheme: 'https://chessboardjs.com/img/chesspieces/wikipedia/{piece}.png',
-        onDragStart: onDragStart,
-        onDrop: onDrop,
-        onSnapEnd: onSnapEnd,
-        moveSpeed: 'slow'
-    };
-
-    if (board) {
-        board.destroy();
-    }
-
+    // Initialize/Update Board - OPTIMIZED: Reuse board instance when possible
     // Explicitly remove all move highlights from the DOM to prevent persistence
     removeMoveHighlights();
 
-    board = Chessboard('board', config);
+    if (board) {
+        // Reuse existing board - just update position and orientation (faster!)
+        board.orientation(playerColor);
+        board.position(game.fen(), false); // false = no animation for initial position
+    } else {
+        // First time - create board
+        const config = {
+            draggable: true,
+            position: game.fen(),
+            orientation: playerColor,
+            pieceTheme: 'https://chessboardjs.com/img/chesspieces/wikipedia/{piece}.png',
+            onDragStart: onDragStart,
+            onDrop: onDrop,
+            onSnapEnd: onSnapEnd,
+            moveSpeed: 'slow'
+        };
+        board = Chessboard('board', config);
+    }
 
     // Animate the last move (Opponent's move) after a short delay
+    // OPTIMIZED: Reduced from 500ms to 250ms for snappier feel
     if (lastMove) {
         setTimeout(() => {
             game.move(lastMove);
             board.position(game.fen(), true); // animate
 
             // Highlight the opponent's move (which is the start of the puzzle)
-            // Parsing UCI latMove for highlighting: 
-            // lastMove is object { color: 'b', from: 'e2', to: 'e4', ... }
-            // We can access properties directly.
             highlightMove(lastMove.from, lastMove.to);
-        }, 500);
+        }, 250);
     } else {
         // Should not happen for valid puzzles, but graceful fallback
         // If initialPly is 0? Puzzle starts from start position? Unlikely.
@@ -505,10 +505,10 @@ function handleMove(source, target, isDrop) {
     if (game.solutionIndex >= game.currentSolution.length) {
         handleCorrectPuzzle();
     } else {
-        // Opponent's turn
+        // Opponent's turn - OPTIMIZED: Reduced from 300ms to 150ms
         setTimeout(() => {
             makeOpponentMove();
-        }, 300);
+        }, 150);
     }
 
     return true;
