@@ -533,9 +533,13 @@ function makeOpponentMove() {
 
     game.solutionIndex++;
 
-    if (game.solutionIndex >= game.currentSolution.length) {
-        handleCorrectPuzzle();
-    }
+    // Wait for opponent's animation to complete before next action
+    setTimeout(() => {
+        if (game.solutionIndex >= game.currentSolution.length) {
+            handleCorrectPuzzle();
+        }
+        // If more player moves needed, player can now move (no action needed here)
+    }, 400);
 }
 
 function handleCorrectPuzzle() {
