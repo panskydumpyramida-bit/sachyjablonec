@@ -503,22 +503,37 @@
 
         async function loadGameById(id) {
             try {
-                // Determine API URL (using window.API_URL from config.js if available, else relative)
+                // Determine API URL
                 const apiUrl = window.API_URL || '/api';
-                const token = localStorage.getItem('club_auth_token');
+                let token = localStorage.getItem('club_auth_token');
 
-                const res = await fetch(`${apiUrl}/games/${id}`, {
+                let res = await fetch(`${apiUrl}/games/${id}`, {
                     headers: {
                         'X-Club-Password': token || ''
                     }
                 });
 
+                // If unauthorized, prompt for password
                 if (res.status === 401 || res.status === 403) {
-                    alert('Pro zobrazení této partie musíte být přihlášeni (heslo oddílu).');
-                    return;
+                    const password = prompt('Pro zobrazení partie zadejte heslo oddílu:');
+                    if (password) {
+                        res = await fetch(`${apiUrl}/games/${id}`, {
+                            headers: {
+                                'X-Club-Password': password
+                            }
+                        });
+
+                        // If success, save token
+                        if (res.ok) {
+                            localStorage.setItem('club_auth_token', password);
+                        }
+                    }
                 }
 
-                if (!res.ok) throw new Error('Game not found');
+                if (!res.ok) {
+                    if (res.status === 401 || res.status === 403) throw new Error('Nesprávné heslo.');
+                    throw new Error('Game not found');
+                }
 
                 const gameData = await res.json();
 
@@ -535,7 +550,7 @@
                 }
             } catch (e) {
                 console.error(e);
-                alert('Nepodařilo se načíst partii.');
+                alert(`Nepodařilo se načíst partii: ${e.message}`);
             }
         }
 
