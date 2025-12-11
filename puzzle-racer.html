@@ -144,18 +144,30 @@
         .game-header {
             display: flex;
             justify-content: space-between;
-            align-items: center;
-            margin-bottom: 2rem;
+            align-items: stretch;
+            /* Make all boxes same height */
+            gap: 0.5rem;
+            /* Add gap between boxes */
+            margin: 0 auto 2rem auto;
             padding-bottom: 1rem;
             border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            max-width: 500px;
+            width: 100%;
         }
 
         .stat-box {
             background: rgba(0, 0, 0, 0.3);
-            padding: 0.8rem 1.5rem;
+            padding: 0.8rem 0.5rem;
+            /* Reduce side padding slightly as we use flex:1 */
             border-radius: 0.5rem;
             text-align: center;
-            min-width: 120px;
+            flex: 1;
+            /* Distribute width equally */
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            min-width: 0;
+            /* Allow shrinking below content size if flex needs it */
         }
 
         .stat-label {
@@ -277,6 +289,19 @@
         .wrong-feedback {
             animation: flashRed 0.3s ease;
         }
+
+        /* Click-to-move highlighting */
+        .highlight-selected {
+            box-shadow: inset 0 0 3px 3px yellow;
+        }
+
+        .highlight-dest {
+            box-shadow: inset 0 0 3px 3px #1579db;
+        }
+
+        .highlight-move {
+            box-shadow: inset 0 0 3px 3px rgba(255, 255, 0, 0.8) !important;
+        }
     </style>
 </head>
 
@@ -325,7 +350,7 @@
                             <span class="stat-value" id="score">0</span>
                         </div>
                         <div class="stat-box">
-                            <span class="stat-label">Úroveň</span>
+                            <span class="stat-label">Obtížnost úlohy</span>
                             <span class="stat-value" id="difficultyDisplay"
                                 style="font-size: 1rem; line-height: 1.5;">Začítečník</span>
                         </div>
