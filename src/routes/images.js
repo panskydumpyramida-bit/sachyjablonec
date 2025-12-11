@@ -5,7 +5,7 @@ import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
 import { PrismaClient } from '@prisma/client';
-import { authMiddleware } from '../middleware/auth.js';
+import { checkClubPassword } from '../controllers/messageController.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -37,7 +37,7 @@ const upload = multer({
 });
 
 // Upload image - with multer error handling
-router.post('/upload', authMiddleware, (req, res, next) => {
+router.post('/upload', checkClubPassword, (req, res, next) => {
     upload.single('image')(req, res, (err) => {
         if (err) {
             console.error('Multer error:', err);
@@ -106,7 +106,7 @@ router.get('/public', async (req, res) => {
 });
 
 // Get all images
-router.get('/', authMiddleware, async (req, res) => {
+router.get('/', checkClubPassword, async (req, res) => {
     try {
         const images = await prisma.image.findMany({
             orderBy: {
@@ -122,7 +122,7 @@ router.get('/', authMiddleware, async (req, res) => {
 });
 
 // Toggle image visibility
-router.put('/:id/toggle', authMiddleware, async (req, res) => {
+router.put('/:id/toggle', checkClubPassword, async (req, res) => {
     try {
         const { id } = req.params;
         const { isPublic } = req.body;
@@ -140,7 +140,7 @@ router.put('/:id/toggle', authMiddleware, async (req, res) => {
 });
 
 // Delete image
-router.delete('/:id', authMiddleware, async (req, res) => {
+router.delete('/:id', checkClubPassword, async (req, res) => {
     try {
         const { id } = req.params;
 
