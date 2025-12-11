@@ -1424,9 +1424,15 @@
     <div id="galleryView" class="hidden">
         <div class="header-actions">
             <h2><i class="fa-regular fa-images"></i> Správa Galerie</h2>
-            <button class="primary-btn" onclick="document.getElementById('imageUploadInput').click()">
-                <i class="fa-solid fa-cloud-arrow-up"></i> Nahrát fotky
-            </button>
+            <div style="display: flex; gap: 1rem;">
+                <button id="batchDeleteBtn" class="action-btn btn-danger" style="display: none;"
+                    onclick="deleteSelectedImages()">
+                    <i class="fa-solid fa-trash"></i> Smazat vybrané (<span id="selectedCount">0</span>)
+                </button>
+                <button class="primary-btn" onclick="document.getElementById('imageUploadInput').click()">
+                    <i class="fa-solid fa-cloud-arrow-up"></i> Nahrát fotky
+                </button>
+            </div>
             <input type="file" id="imageUploadInput" multiple accept="image/*" style="display: none;"
                 onchange="handleAdminGalleryUpload(this)">
         </div>
@@ -1436,6 +1442,8 @@
                 <table class="data-table">
                     <thead>
                         <tr>
+                            <th style="width: 40px;"><input type="checkbox" id="selectAllGallery"
+                                    onclick="toggleSelectAllGallery(this)"></th>
                             <th>Náhled</th>
                             <th>Název</th>
                             <th>Datum nahrání</th>
