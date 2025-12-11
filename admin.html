@@ -1121,6 +1121,10 @@
                                     <button type="button" class="btn-secondary btn-small"
                                         onclick="toggleGalleryUrlInput()"><i class="fa-solid fa-link"></i>
                                         URL</button>
+                                    <button type="button" class="btn-secondary btn-small"
+                                        onclick="selectGalleryForArticleGallery()"
+                                        title="Vybrat z existující galerie"><i
+                                            class="fa-regular fa-images"></i></button>
                                 </div>
                                 <input type="file" id="galleryInput" accept="image/*" multiple style="display: none;"
                                     onchange="addGalleryImages(event)">
@@ -1227,6 +1231,10 @@
                                     style="font-size: 0.8rem; flex: 1;">
                                 <button type="button" class="btn-secondary btn-small" onclick="handleImageUrl()"
                                     style="padding: 0.4rem 0.6rem; font-size: 0.75rem;">Použít</button>
+                                <button type="button" class="btn-secondary btn-small"
+                                    onclick="selectGalleryForThumbnail()"
+                                    style="padding: 0.4rem 0.6rem; font-size: 0.75rem;" title="Vybrat z galerie"><i
+                                        class="fa-regular fa-images"></i></button>
                             </div>
 
                             <!-- Crop position selector -->
@@ -2464,6 +2472,9 @@
                             <input type="text" id="imgUrlInput" placeholder="URL obrázku" style="flex: 1;">
                             <button type="button" class="btn-secondary" onclick="document.getElementById('imgFileInput').click()">
                                 <i class="fa-solid fa-upload"></i> Nahrát
+                            </button>
+                            <button type="button" class="btn-secondary" onclick="selectGalleryForImageModal()">
+                                <i class="fa-regular fa-images"></i> Galerie
                             </button>
                             <input type="file" id="imgFileInput" accept="image/*" style="display: none;" onchange="handleImageFile(event)">
                         </div>
@@ -3720,6 +3731,113 @@
             }
 
             input.value = ''; // Reset input
+        }
+
+        // --- Gallery Picker Modal ---
+        let galleryPickerCallback = null;
+
+        async function showGalleryPicker(callback) {
+            galleryPickerCallback = callback;
+
+            // Create or show modal
+            let modal = document.getElementById('galleryPickerModal');
+            if (!modal) {
+                modal = document.createElement('div');
+                modal.id = 'galleryPickerModal';
+                modal.innerHTML = `
+                    <div class="modal-overlay" onclick="closeGalleryPicker()"></div>
+                    <div class="modal-content" style="max-width: 700px; max-height: 80vh;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                            <h3 style="margin: 0;"><i class="fa-regular fa-images"></i> Vybrat z galerie</h3>
+                            <button type="button" onclick="closeGalleryPicker()" style="background: none; border: none; color: var(--text-muted); font-size: 1.5rem; cursor: pointer;">&times;</button>
+                        </div>
+                        <div id="galleryPickerGrid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 1rem; max-height: 60vh; overflow-y: auto; padding: 0.5rem;">
+                            <p style="color: var(--text-muted); grid-column: 1 / -1; text-align: center;"><i class="fa-solid fa-spinner fa-spin"></i> Načítám...</p>
+                        </div>
+                    </div>
+                `;
+                modal.style.cssText = 'position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 3000; display: flex; align-items: center; justify-content: center;';
+                document.body.appendChild(modal);
+
+                // Add styles
+                if (!document.getElementById('galleryPickerStyles')) {
+                    const style = document.createElement('style');
+                    style.id = 'galleryPickerStyles';
+                    style.textContent = `
+                        #galleryPickerModal .modal-overlay { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); }
+                        #galleryPickerModal .modal-content { position: relative; background: var(--surface-color); padding: 1.5rem; border-radius: var(--border-radius); width: 90%; }
+                        #galleryPickerModal .gallery-picker-item { aspect-ratio: 1; overflow: hidden; border-radius: 8px; border: 2px solid transparent; cursor: pointer; transition: all 0.2s; }
+                        #galleryPickerModal .gallery-picker-item:hover { border-color: var(--primary-color); transform: scale(1.05); }
+                        #galleryPickerModal .gallery-picker-item img { width: 100%; height: 100%; object-fit: cover; }
+                    `;
+                    document.head.appendChild(style);
+                }
+            } else {
+                modal.style.display = 'flex';
+            }
+
+            // Load images
+            const grid = document.getElementById('galleryPickerGrid');
+            try {
+                const res = await fetch(`${API_URL}/images`, {
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+
+                if (!res.ok) throw new Error('Failed to fetch');
+
+                const images = await res.json();
+
+                if (images.length === 0) {
+                    grid.innerHTML = '<p style="color: var(--text-muted); grid-column: 1 / -1; text-align: center;">Galerie je prázdná. Nejdříve nahrajte nějaké obrázky.</p>';
+                    return;
+                }
+
+                grid.innerHTML = images.map(img => `
+                    <div class="gallery-picker-item" onclick="selectFromGallery('${img.url}')">
+                        <img src="${img.url}" alt="${img.originalName || 'Gallery image'}">
+                    </div>
+                `).join('');
+            } catch (e) {
+                console.error('Gallery picker error:', e);
+                grid.innerHTML = '<p style="color: #fca5a5; grid-column: 1 / -1; text-align: center;">Nepodařilo se načíst galerii.</p>';
+            }
+        }
+
+        function selectFromGallery(url) {
+            if (galleryPickerCallback) {
+                galleryPickerCallback(url);
+            }
+            closeGalleryPicker();
+        }
+
+        function closeGalleryPicker() {
+            const modal = document.getElementById('galleryPickerModal');
+            if (modal) modal.style.display = 'none';
+            galleryPickerCallback = null;
+        }
+
+        // Helper to add gallery selection to image modal
+        function selectGalleryForImageModal() {
+            showGalleryPicker((url) => {
+                document.getElementById('imgUrlInput').value = url;
+                document.getElementById('imgPreviewArea').innerHTML = `<img src="${url}">`;
+            });
+        }
+
+        // Helper to add gallery selection to thumbnail
+        function selectGalleryForThumbnail() {
+            showGalleryPicker((url) => {
+                uploadedImageData = url;
+                displayImage(url);
+            });
+        }
+
+        // Helper to add gallery selection to article gallery
+        function selectGalleryForArticleGallery() {
+            showGalleryPicker((url) => {
+                galleryImages.push(url);
+                renderGallery();
+            });
         }
 
     </script>
