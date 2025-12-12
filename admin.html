@@ -950,6 +950,57 @@
             width: 90% !important;
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6) !important;
         }
+
+        /* Responsive Styles */
+        @media (max-width: 1024px) {
+            .editor-layout {
+                grid-template-columns: 1fr;
+            }
+
+            .editor-sidebar {
+                order: -1;
+                /* Sidebar with actions on top */
+                margin-bottom: 2rem;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .admin-container {
+                margin-top: 80px;
+                padding: 0 1rem;
+            }
+
+            .admin-header {
+                flex-direction: column;
+                gap: 1rem;
+                align-items: flex-start;
+                padding: 1rem;
+            }
+
+            #adminPanel nav {
+                padding: 0.5rem 1rem;
+            }
+
+            #adminPanel .logo {
+                font-size: 1rem;
+            }
+
+            #adminPanel .nav-links {
+                gap: 1rem;
+            }
+
+            #adminPanel .nav-links a span {
+                display: none;
+                /* Hide text on very small screens if needed, or keep */
+            }
+
+            /* Ensure tabular data doesn't break layout */
+            .data-table {
+                display: block;
+                overflow-x: auto;
+                white-space: nowrap;
+            }
+        }
     </style>
 </head>
 
