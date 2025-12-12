@@ -39,6 +39,7 @@ router.get('/puzzles', async (req, res) => {
     try {
         const difficulty = req.query.difficulty || 'easiest';
         const count = Math.min(parseInt(req.query.count) || 3, 20); // increased max count for caching
+        const mode = req.query.mode || 'thematic'; // Default to checking settings if not specified
 
         // Validate difficulty
         if (!DIFFICULTIES.includes(difficulty)) {
@@ -47,10 +48,17 @@ router.get('/puzzles', async (req, res) => {
 
         // Get theme from settings
         const settings = await prisma.puzzleRacerSettings.findFirst();
-        const theme = settings?.puzzleTheme || 'mix';
-        const randomize = settings?.randomizePuzzles !== false; // Default true
 
-        // If randomization is OFF, try to serve from cache
+        let theme = settings?.puzzleTheme || 'mix';
+        let randomize = settings?.randomizePuzzles !== false; // Default true
+
+        // FORCE overrides for Vanilla mode
+        if (mode === 'vanilla') {
+            theme = 'mix';
+            randomize = true;
+        }
+
+        // If randomization is OFF (and not vanilla), try to serve from cache
         if (!randomize) {
             let fixedSet = settings?.fixedPuzzleSet || {};
 
@@ -94,7 +102,7 @@ router.get('/puzzles', async (req, res) => {
             }
         }
 
-        // Standard Random Mode or Fetch Fallback
+        // Standard Random Mode (or failover)
         console.log(`Fetching ${count} ${difficulty} puzzles (theme: ${theme})...`);
         const puzzles = await fetchPuzzlesByDifficulty(difficulty, count, theme);
 
