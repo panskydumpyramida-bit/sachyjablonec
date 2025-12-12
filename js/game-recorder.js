@@ -52,9 +52,7 @@ function handleSquareClick(square) {
             ((sourcePiece.color === 'w' && targetRank === '8') || (sourcePiece.color === 'b' && targetRank === '1'));
 
         if (isPromotion) {
-            // Check if move is legal (ignoring promotion field for now to validation)
-            // Actually game.move needs promotion for validation of pawns to last rank
-            // So we try strict check
+            // Validate promotion intent
             const tempMove = game.move({ from: selectedSquare, to: square, promotion: 'q' });
             if (tempMove) {
                 game.undo(); // Revert test move
@@ -67,20 +65,23 @@ function handleSquareClick(square) {
         const move = game.move({
             from: selectedSquare,
             to: square,
-            promotion: 'q' // Fallback/Default if not caught above (should not happen if logic matches)
+            promotion: 'q' // Fallback
         });
 
         if (move) {
             // Valid move!
             board.position(game.fen());
             updateStatus();
+            updateMoveHistory(); // Update history immediately
             removeHighlights();
             highlightMove(selectedSquare, square);
             selectedSquare = null;
             return;
         }
 
-        // 2. If move invalid, check if we clicked another own piece (switch selection)
+        // 2. If move invalid...
+        // ... (rest is same)
+
         // Check piece on clicked square
         const piece = game.get(square);
         if (piece && piece.color === game.turn()) {
@@ -150,6 +151,7 @@ function onDrop(source, target) {
     }
 
     updateStatus();
+    updateMoveHistory(); // Update history
     removeHighlights();
     highlightMove(source, target);
     selectedSquare = null;
@@ -159,171 +161,8 @@ function onSnapEnd() {
     board.position(game.fen());
 }
 
-// --- Game Control Logic ---
+// ... (skip unchanged) ...
 
-function updateStatus() {
-    updatePgnDisplay();
-}
-
-function updatePgnDisplay() {
-    const pgn = game.pgn();
-    const pgnEl = document.getElementById('pgnOutput');
-    if (pgnEl) pgnEl.value = pgn;
-
-    // Render nice move list
-    const history = game.history();
-    const listEl = document.getElementById('moveList');
-    if (listEl) {
-        listEl.innerHTML = '';
-        for (let i = 0; i < history.length; i += 2) {
-            const moveNum = Math.floor(i / 2) + 1;
-            const whiteMove = history[i];
-            const blackMove = history[i + 1] || '';
-
-            const div = document.createElement('div');
-            div.className = 'move-pair';
-            div.innerHTML = `
-                <span class="move-number">${moveNum}.</span>
-                <span class="move">${whiteMove}</span>
-                ${blackMove ? `<span class="move">${blackMove}</span>` : ''}
-            `;
-            listEl.appendChild(div);
-        }
-        listEl.scrollTop = listEl.scrollHeight;
-    }
-}
-
-function undoMove() {
-    game.undo();
-    board.position(game.fen());
-    updateStatus();
-    removeHighlights();
-    selectedSquare = null;
-    // Update move history tracking
-    moveHistory = game.history({ verbose: true });
-    currentMoveIndex = moveHistory.length - 1;
-}
-
-// --- Playback Navigation ---
-
-function updateMoveHistory() {
-    moveHistory = game.history({ verbose: true });
-    currentMoveIndex = moveHistory.length - 1;
-}
-
-function goToPosition(index) {
-    // Rebuild position from start
-    game.reset();
-    for (let i = 0; i <= index && i < moveHistory.length; i++) {
-        game.move(moveHistory[i]);
-    }
-    currentMoveIndex = index;
-    board.position(game.fen());
-    removeHighlights();
-
-    // Highlight the last move if any
-    if (index >= 0 && moveHistory[index]) {
-        highlightMove(moveHistory[index].from, moveHistory[index].to);
-    }
-
-    updatePgnDisplay();
-    highlightActiveMove();
-}
-
-function goToStart() {
-    stopAutoplay();
-    if (moveHistory.length === 0) {
-        moveHistory = game.history({ verbose: true });
-    }
-    goToPosition(-1);
-    game.reset();
-    board.position('start');
-    removeHighlights();
-    updatePgnDisplay();
-    highlightActiveMove();
-}
-
-function goBack() {
-    stopAutoplay();
-    if (moveHistory.length === 0) {
-        moveHistory = game.history({ verbose: true });
-        currentMoveIndex = moveHistory.length - 1;
-    }
-    if (currentMoveIndex >= 0) {
-        goToPosition(currentMoveIndex - 1);
-    }
-}
-
-function goForward() {
-    if (moveHistory.length === 0) {
-        moveHistory = game.history({ verbose: true });
-        currentMoveIndex = -1;
-    }
-    if (currentMoveIndex < moveHistory.length - 1) {
-        goToPosition(currentMoveIndex + 1);
-    } else {
-        stopAutoplay();
-    }
-}
-
-function goToEnd() {
-    stopAutoplay();
-    if (moveHistory.length === 0) {
-        moveHistory = game.history({ verbose: true });
-    }
-    goToPosition(moveHistory.length - 1);
-}
-
-function toggleAutoplay() {
-    if (autoplayInterval) {
-        stopAutoplay();
-    } else {
-        startAutoplay();
-    }
-}
-
-function startAutoplay() {
-    const btn = document.getElementById('autoplayBtn');
-    if (btn) btn.innerHTML = '<i class="fa-solid fa-pause"></i>';
-
-    // Initialize if needed
-    if (moveHistory.length === 0) {
-        moveHistory = game.history({ verbose: true });
-        currentMoveIndex = -1;
-        goToPosition(-1);
-    }
-
-    autoplayInterval = setInterval(() => {
-        if (currentMoveIndex < moveHistory.length - 1) {
-            goForward();
-        } else {
-            stopAutoplay();
-        }
-    }, 1000); // 1 second per move
-}
-
-function stopAutoplay() {
-    if (autoplayInterval) {
-        clearInterval(autoplayInterval);
-        autoplayInterval = null;
-    }
-    const btn = document.getElementById('autoplayBtn');
-    if (btn) btn.innerHTML = '<i class="fa-solid fa-play"></i>';
-}
-
-function highlightActiveMove() {
-    // Remove active class from all moves
-    document.querySelectorAll('.move').forEach(el => el.classList.remove('active'));
-
-    // Add active class to current move
-    if (currentMoveIndex >= 0) {
-        const moves = document.querySelectorAll('.move');
-        if (moves[currentMoveIndex]) {
-            moves[currentMoveIndex].classList.add('active');
-            moves[currentMoveIndex].scrollIntoView({ block: 'nearest' });
-        }
-    }
-}
 
 // --- Promotion Logic ---
 
@@ -337,10 +176,14 @@ function showPromotionModal(color) {
             const pieceType = img.getAttribute('data-piece').toUpperCase();
             img.src = `https://chessboardjs.com/img/chesspieces/wikipedia/${prefix}${pieceType}.png`;
         });
+        console.log('Promotion modal shown for:', color);
+    } else {
+        console.error('Promotion modal not found!');
     }
 }
 
 function completePromotion(pieceType) {
+    console.log('Completing promotion with:', pieceType);
     const modal = document.getElementById('promotionModal');
     if (modal) modal.classList.remove('active');
 
@@ -352,13 +195,21 @@ function completePromotion(pieceType) {
         });
 
         if (move) {
+            console.log('Promotion successful:', move);
             board.position(game.fen());
             updateStatus();
+            updateMoveHistory(); // Sync history
             removeHighlights();
             highlightMove(pendingPromotion.source, pendingPromotion.target);
+        } else {
+            console.error('Promotion move failed:', pendingPromotion);
+            alert('Neplatný tah povýšení.');
+            board.position(game.fen()); // Reset board visual
         }
         pendingPromotion = null;
         selectedSquare = null;
+    } else {
+        console.warn('No pending promotion found.');
     }
 }
 window.completePromotion = completePromotion; // Export for HTML onclick

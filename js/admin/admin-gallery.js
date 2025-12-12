@@ -330,28 +330,6 @@ function closeGalleryPicker() {
     galleryPickerCallback = null;
 }
 
-// Helpers for gallery selection in different contexts
-function selectGalleryForImageModal() {
-    showGalleryPicker((url) => {
-        document.getElementById('imgUrlInput').value = url;
-        document.getElementById('imgPreviewArea').innerHTML = `<img src="${url}">`;
-    });
-}
-
-function selectGalleryForThumbnail() {
-    showGalleryPicker((url) => {
-        uploadedImageData = url;
-        displayImage(url);
-    });
-}
-
-function selectGalleryForArticleGallery() {
-    showGalleryPicker((url) => {
-        galleryImages.push(url);
-        renderGallery();
-    });
-}
-
 // Export for global access
 window.loadAdminGallery = loadAdminGallery;
 window.deleteGalleryImage = deleteGalleryImage;
@@ -359,9 +337,6 @@ window.handleAdminGalleryUpload = handleAdminGalleryUpload;
 window.showGalleryPicker = showGalleryPicker;
 window.selectFromGallery = selectFromGallery;
 window.closeGalleryPicker = closeGalleryPicker;
-window.selectGalleryForImageModal = selectGalleryForImageModal;
-window.selectGalleryForThumbnail = selectGalleryForThumbnail;
-window.selectGalleryForArticleGallery = selectGalleryForArticleGallery;
 window.updateBatchActions = updateBatchActions;
 window.toggleSelectAllGallery = toggleSelectAllGallery;
 window.toggleGalleryVisibility = toggleGalleryVisibility;
