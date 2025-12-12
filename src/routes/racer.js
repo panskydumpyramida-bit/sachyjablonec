@@ -39,7 +39,7 @@ router.get('/puzzles', async (req, res) => {
     try {
         const difficulty = req.query.difficulty || 'easiest';
         const count = Math.min(parseInt(req.query.count) || 3, 20); // increased max count for caching
-        const mode = req.query.mode || 'thematic'; // Default to checking settings if not specified
+        const mode = req.query.mode || 'vanilla'; // Default to vanilla (safer fallback)
 
         // Validate difficulty
         if (!DIFFICULTIES.includes(difficulty)) {
