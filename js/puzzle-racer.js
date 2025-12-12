@@ -32,6 +32,30 @@ let penaltyEnabled = false;
 let penaltySeconds = 5;
 let skipOnMistake = false;
 
+// Game mode: 'vanilla' uses fixed defaults, 'thematic' uses admin settings
+let gameMode = 'vanilla';
+
+// Vanilla defaults (fixed, not affected by admin settings)
+const VANILLA_DEFAULTS = {
+    puzzleTheme: 'mix',
+    timeLimitSeconds: 180,
+    livesEnabled: true,
+    maxLives: 3,
+    puzzlesPerDifficulty: 6,
+    penaltyEnabled: false,
+    penaltySeconds: 5,
+    skipOnMistake: false
+};
+
+// Detect mode from URL parameter
+function detectGameMode() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const mode = urlParams.get('mode');
+    gameMode = mode === 'thematic' ? 'thematic' : 'vanilla';
+    console.log('Game mode:', gameMode);
+    return gameMode;
+}
+
 // Actually, let's just use ONE solid simple puzzle for fallback to minimize error risk
 // Mat v 1. tahu.
 const FALLBACK_PUZZLES = [
@@ -145,29 +169,29 @@ async function fetchMorePuzzles() {
     isFetchingPuzzles = false;
 }
 
-// Load game settings from API
+// Load game settings based on mode
 async function loadGameSettings() {
-    try {
-        const res = await fetch(`${API_URL}/racer/settings`);
-        if (res.ok) {
-            gameSettings = await res.json();
-            console.log('Loaded game settings:', gameSettings);
+    // Vanilla mode uses fixed defaults (no API call needed)
+    if (gameMode === 'vanilla') {
+        gameSettings = { ...VANILLA_DEFAULTS };
+        console.log('Using vanilla defaults:', gameSettings);
+    } else {
+        // Thematic mode fetches settings from admin panel
+        try {
+            const res = await fetch(`${API_URL}/racer/settings`);
+            if (res.ok) {
+                gameSettings = await res.json();
+                console.log('Loaded thematic settings from API:', gameSettings);
+            } else {
+                throw new Error('API returned non-ok status');
+            }
+        } catch (e) {
+            console.error('Failed to load thematic settings, using vanilla fallback:', e);
+            gameSettings = { ...VANILLA_DEFAULTS };
         }
-    } catch (e) {
-        console.error('Failed to load settings, using defaults:', e);
-        gameSettings = {
-            puzzleTheme: 'mix',
-            timeLimitSeconds: 180,
-            livesEnabled: true,
-            maxLives: 3,
-            puzzlesPerDifficulty: 6,
-            penaltyEnabled: false,
-            penaltySeconds: 5,
-            skipOnMistake: false
-        };
     }
 
-    // Apply settings
+    // Apply settings to game variables
     timeLeft = gameSettings.timeLimitSeconds || 180;
     livesEnabled = gameSettings.livesEnabled !== false;
     MAX_MISTAKES = gameSettings.maxLives || 3;
@@ -184,7 +208,10 @@ async function startRace() {
     startBtn.style.display = 'none';
     loading.classList.remove('hidden');
 
-    // Load settings first
+    // Detect mode from URL parameter
+    detectGameMode();
+
+    // Load settings based on mode
     await loadGameSettings();
 
     // Reset progressive loading state
@@ -960,4 +987,39 @@ document.addEventListener('DOMContentLoaded', () => {
     // Using body is enough and safer than specific element if element is replaced
     document.body.addEventListener('mousedown', handleInput, true);
     document.body.addEventListener('click', handleInput, true);
+
+    // Initialize mode UI on page load
+    initModeUI();
 });
+
+// Initialize mode indicator UI based on URL parameter
+function initModeUI() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const mode = urlParams.get('mode');
+    const isThematic = mode === 'thematic';
+
+    // Show correct badge
+    const vanillaBadge = document.getElementById('vanillaBadge');
+    const thematicBadge = document.getElementById('thematicBadge');
+    const switchLink = document.getElementById('switchModeLink');
+    const switchText = document.getElementById('switchModeText');
+    const modeDesc = document.getElementById('modeDescription');
+
+    if (vanillaBadge) vanillaBadge.style.display = isThematic ? 'none' : 'inline-block';
+    if (thematicBadge) thematicBadge.style.display = isThematic ? 'inline-block' : 'none';
+
+    // Update switch link
+    if (switchLink) {
+        switchLink.href = isThematic ? 'puzzle-racer.html' : '?mode=thematic';
+    }
+    if (switchText) {
+        switchText.textContent = isThematic ? 'Přepnout na klasický mód' : 'Přepnout na tématický mód';
+    }
+
+    // Update description
+    if (modeDesc) {
+        modeDesc.textContent = isThematic
+            ? 'Tématický mód s nastavením z admin panelu.'
+            : 'Vyřešte co nejvíce taktických úloh během 3 minut! Obtížnost se postupně zvyšuje.';
+    }
+}
