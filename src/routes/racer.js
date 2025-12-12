@@ -7,46 +7,37 @@ const prisma = new PrismaClient();
 // Valid difficulty levels in order
 const DIFFICULTIES = ['easiest', 'easier', 'normal', 'harder', 'hardest'];
 
-// Fetch puzzles from Lichess API - use /api/puzzle/next endpoint (no auth required)
+// Fetch puzzles from Lichess API - batch endpoint
+// Uses the token for authenticated requests
 async function fetchPuzzlesByDifficulty(difficulty, count = 3, theme = 'mix') {
-    const puzzles = [];
-
     try {
-        // Use daily puzzle endpoint first, then iterate for more
-        // The /api/puzzle/next endpoint doesn't exist without auth
-        // Use /api/puzzle/daily for daily puzzle (no auth)
-        // For random puzzles, we'll use the public training API
+        // Lichess API: /api/puzzle/batch/{angle}?nb={count}&difficulty={difficulty}
+        // angle can be 'mix' or a specific theme like 'opening', 'endgame', etc.
+        const url = `https://lichess.org/api/puzzle/batch/${theme}?nb=${count}&difficulty=${difficulty}`;
 
-        // Try the training endpoint with theme
-        const themeParam = theme !== 'mix' ? theme : '';
-        const url = themeParam
-            ? `https://lichess.org/training/${themeParam}`
-            : `https://lichess.org/training`;
+        const headers = { 'Accept': 'application/json' };
 
-        // Actually, let's use the puzzle storm api which is simpler
-        // Or use /api/puzzle/daily which is guaranteed to work
-        for (let i = 0; i < count; i++) {
-            const res = await fetch(`https://lichess.org/api/puzzle/daily`, {
-                headers: { 'Accept': 'application/json' }
-            });
-
-            if (res.ok) {
-                const data = await res.json();
-                if (data.puzzle && data.game) {
-                    puzzles.push(data);
-                }
-            }
-
-            // Small delay between requests to be nice to the API
-            if (i < count - 1) {
-                await new Promise(r => setTimeout(r, 100));
-            }
+        // Always add auth token if available (required for batch endpoint)
+        if (process.env.LICHESS_API_TOKEN) {
+            headers['Authorization'] = `Bearer ${process.env.LICHESS_API_TOKEN}`;
         }
 
-        console.log(`Fetched ${puzzles.length} puzzles (theme: ${theme}, difficulty: ${difficulty})`);
-        return puzzles;
+        console.log(`Fetching from: ${url}`);
+
+        const res = await fetch(url, { headers });
+
+        if (res.ok) {
+            const data = await res.json();
+            const puzzles = data.puzzles || [];
+            console.log(`Fetched ${puzzles.length} ${difficulty} puzzles (theme: ${theme})`);
+            return puzzles;
+        } else {
+            const errorText = await res.text();
+            console.warn(`Lichess ${difficulty}/${theme} returned ${res.status}: ${errorText}`);
+            return [];
+        }
     } catch (e) {
-        console.error(`Failed to fetch puzzles:`, e.message);
+        console.error(`Failed to fetch ${difficulty}/${theme}:`, e.message);
         return [];
     }
 }
