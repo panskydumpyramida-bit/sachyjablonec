@@ -194,6 +194,34 @@ async function editNews(id) {
 }
 
 async function saveNews() {
+    // Check for pending thumbnail rotation
+    if (pendingThumbnailBlob) {
+        const formData = new FormData();
+        const fileName = `rotated_thumb_${Date.now()}.jpg`;
+        formData.append('image', pendingThumbnailBlob, fileName);
+
+        try {
+            const res = await fetch(`${API_URL}/images/upload`, {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${authToken}` },
+                body: formData
+            });
+            if (res.ok) {
+                const data = await res.json();
+                const baseUrl = window.location.origin;
+                uploadedImageData = data.url.startsWith('http') ? data.url : `${baseUrl}${data.url}`;
+            } else {
+                showAlert('Nepodařilo se nahrát rotovaný náhled', 'error');
+                return;
+            }
+        } catch (e) {
+            console.error('Thumbnail upload error:', e);
+            showAlert('Chyba při nahrávání náhledu', 'error');
+            return;
+        }
+        pendingThumbnailBlob = null; // Clear after upload
+    }
+
     const id = document.getElementById('editNewsId').value;
     const method = id ? 'PUT' : 'POST';
     const url = id ? `${API_URL}/news/${id}` : `${API_URL}/news`;
@@ -705,6 +733,10 @@ let selectedImage = null;
 let savedRange = null;
 let pendingImageBlob = null; // Stores rotated image blob until final save
 
+// Sidebar Thumbnail State
+// uploadedImageData is defined at top of file
+let pendingThumbnailBlob = null; // Stores rotated thumbnail blob until final save
+
 function insertImage() {
     const sel = window.getSelection();
     if (sel.rangeCount > 0) {
@@ -1032,6 +1064,8 @@ async function handleImageUpload(event) {
     const file = event.target.files[0];
     if (!file) return;
 
+    pendingThumbnailBlob = null; // Reset pending rotation
+
     const formData = new FormData();
     formData.append('image', file);
 
@@ -1058,10 +1092,11 @@ async function handleImageUpload(event) {
 
 function handleImageUrl() {
     const url = document.getElementById('imageUrl').value;
-    if (url) {
-        uploadedImageData = url;
-        displayImage(url);
-    }
+    if (!url) return;
+
+    pendingThumbnailBlob = null; // Reset pending rotation
+    uploadedImageData = url;
+    displayImage(url);
 }
 
 function displayImage(src) {
@@ -1110,22 +1145,56 @@ function updateCropFromSlider(val) {
     if (imgTag) imgTag.style.objectPosition = `center ${imageCropPosition}`;
 }
 
+// Thumbnail Rotation - now works locally
 async function rotateImage() {
-    if (!uploadedImageData) return;
+    // Get source - either uploadedImageData or pending blob
+    let imageSrc = uploadedImageData;
+    if (pendingThumbnailBlob) {
+        imageSrc = URL.createObjectURL(pendingThumbnailBlob);
+    }
+
+    if (!imageSrc) return;
+
     const btn = document.querySelector('button[onclick="rotateImage()"]');
     if (btn) btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
 
     try {
-        const newUrl = await uploadRotatedImage(uploadedImageData);
-        if (newUrl) {
-            uploadedImageData = newUrl;
-            displayImage(newUrl);
-            document.getElementById('imageUrl').value = newUrl;
-        }
+        const img = new Image();
+        img.crossOrigin = "anonymous";
+        img.src = imageSrc;
+
+        await new Promise((resolve, reject) => {
+            img.onload = resolve;
+            img.onerror = reject;
+        });
+
+        // Rotate on canvas
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = img.height;
+        canvas.height = img.width;
+
+        ctx.translate(canvas.width / 2, canvas.height / 2);
+        ctx.rotate(90 * Math.PI / 180);
+        ctx.drawImage(img, -img.width / 2, -img.height / 2);
+
+        // Store as blob for later upload
+        pendingThumbnailBlob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.9));
+
+        // Show preview using data URL
+        const dataUrl = canvas.toDataURL('image/jpeg', 0.9);
+        displayImage(dataUrl); // This updates the preview
+
+        // Note: we KEEP uploadedImageData as the base, because displayImage updates the preview 
+        // but doesn't change uploadedImageData. Wait, actually displayImage MIGHT rely on 
+        // us not changing uploadedImageData to something invalid. 
+        // But for consistency until save, let's just rely on pendingThumbnailBlob.
+
     } catch (e) {
+        console.error('Thumbnail rotation error:', e);
         alert('Nepodařilo se otočit obrázek');
     } finally {
-        if (btn) btn.innerHTML = '<i class="fa-solid fa-rotate-right"></i>';
+        if (btn) btn.innerHTML = '<i class="fa-solid fa-rotate-right"></i> Otočit o 90°';
     }
 }
 
