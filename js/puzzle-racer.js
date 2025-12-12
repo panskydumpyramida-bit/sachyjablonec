@@ -155,7 +155,7 @@ async function fetchMorePuzzles() {
     }
 
     try {
-        const res = await fetch(`${API_URL}/racer/puzzles?difficulty=${difficulty}&count=${batchSize}`);
+        const res = await fetch(`${API_URL}/racer/puzzles?difficulty=${difficulty}&count=${batchSize}&mode=${gameMode}`);
         if (res.ok) {
             const data = await res.json();
             const newPuzzles = data.puzzles || [];
