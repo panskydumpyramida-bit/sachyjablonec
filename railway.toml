@@ -2,7 +2,7 @@
 buildCommand = "npm install && npx prisma generate"
 
 [deploy]
-startCommand = "npx prisma migrate deploy && npm start"
+startCommand = "./start.sh"
 healthcheckPath = "/health"
 healthcheckTimeout = 200
 restartPolicyType = "on_failure"
