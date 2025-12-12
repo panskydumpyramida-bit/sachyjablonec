@@ -1076,38 +1076,31 @@ function renderGames() {
     const items = games.map((game, index) => `
         <div class="game-item" draggable="true" data-index="${index}" data-team="${game.team || ''}">
             <div class="game-header">
-                <div>
-                    <span class="game-number">#${index + 1}</span>
-                    <i class="fa-solid fa-chess-board" style="color:var(--primary-color);margin-left:8px;"></i>
-                </div>
-                <div class="game-actions">
-                     <label title="Komentovaná partie" style="cursor:pointer; margin-right: 0.5rem; display: flex; align-items: center; gap: 0.3rem; font-size: 0.8rem; color: var(--text-muted);">
-                        <input type="checkbox" ${game.commented ? 'checked' : ''} onchange="toggleGameCommented(${index}, this.checked)">
-                        <i class="fa-regular fa-comment-dots"></i>
-                    </label>
-                    <button class="action-btn btn-delete" onclick="removeGame(${index})"><i class="fa-solid fa-times"></i></button>
-                </div>
+                <span class="game-number">#${index + 1}</span>
+                <i class="fa-solid fa-chess-board" style="color:var(--primary-color);"></i>
             </div>
             <div class="game-body">
                 <input type="text" 
                        class="game-title-input" 
                        value="${escapeHtml(game.title || '')}" 
-                       placeholder="Nadpis partie (např. Duda - Soupeř)"
+                       placeholder="Jméno partie"
                        oninput="updateGameTitle(${index}, this.value)">
-                
-                 <div style="display:flex; gap:0.5rem; margin-top:0.5rem;">
-                    <div style="flex:1;">
-                         <input type="text" 
-                           class="game-id-input" 
-                           value="${game.gameId || ''}" 
-                           placeholder="Chess.com ID (např. 123456)"
-                           onchange="updateGameId(${index}, this.value)"
-                           style="width: 100%; box-sizing: border-box; font-family: monospace;">
-                    </div>
-                    <a href="https://www.chess.com/analysis/game/live/${game.gameId}" target="_blank" class="btn-secondary" style="padding: 4px 8px;" title="Otevřít na Chess.com">
-                        <i class="fa-solid fa-external-link-alt"></i>
-                    </a>
-                </div>
+                <input type="text" 
+                       class="game-id-input" 
+                       value="${game.gameId || ''}" 
+                       placeholder="Chess.com ID"
+                       onchange="updateGameId(${index}, this.value)"
+                       style="width: 100px; font-family: monospace;">
+                <a href="https://www.chess.com/analysis/game/live/${game.gameId}" target="_blank" class="btn-secondary" style="padding: 4px 8px;" title="Chess.com">
+                    <i class="fa-solid fa-external-link-alt"></i>
+                </a>
+            </div>
+            <div class="game-actions">
+                <label title="Komentovaná" style="cursor:pointer; display: flex; align-items: center; gap: 0.25rem; font-size: 0.75rem; color: var(--text-muted);">
+                    <input type="checkbox" ${game.commented ? 'checked' : ''} onchange="toggleGameCommented(${index}, this.checked)">
+                    <i class="fa-regular fa-comment-dots"></i>
+                </label>
+                <button class="action-btn btn-delete" onclick="removeGame(${index})"><i class="fa-solid fa-times"></i></button>
             </div>
         </div>
     `).join('');
