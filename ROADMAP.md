@@ -142,4 +142,36 @@ Refaktoring monolitického `admin.html` (3800+ řádků) na JS moduly.
 
 ---
 
-*Poslední aktualizace: 11. 12. 2025 (23:55)*
+## 🚀 Railway Deployment Notes
+
+### Důležité informace o Railway + Prisma
+
+**Konfigurace:** `railway.toml`
+```toml
+[build]
+buildCommand = "npm install && npx prisma generate"
+
+[deploy]
+startCommand = "npx prisma migrate deploy && npm start"
+healthcheckPath = "/health"
+healthcheckTimeout = 200
+restartPolicyType = "on_failure"
+```
+
+### Pravidla pro Prisma migrace na Railway:
+
+1. **`prisma generate`** → v **build** fázi (OK, nepotřebuje DB)
+2. **`prisma migrate deploy`** → v **start** fázi (potřebuje DATABASE_URL, který je dostupný až za běhu!)
+3. **NIKDY** nedávat `prisma migrate deploy` do `buildCommand` - DATABASE_URL není dostupný během buildu
+4. Railway používá **Railpack** (ne nixpacks) - konfigurace přes `railway.toml`, ne `nixpacks.toml`
+
+### Jak přidat novou tabulku:
+
+1. Přidat model do `prisma/schema.prisma`
+2. Lokálně: `npx prisma migrate dev --name nazev_migrace`
+3. Commit a push: `git add -f prisma/migrations/ && git commit -m "..." && git push`
+4. Railway automaticky při startu spustí `prisma migrate deploy`
+
+---
+
+*Poslední aktualizace: 12. 12. 2025 (13:35)*
