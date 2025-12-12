@@ -18,11 +18,14 @@ async function fetchPuzzlesByDifficulty(difficulty, count = 3, theme = 'mix') {
         const headers = { 'Accept': 'application/json' };
 
         // Always add auth token if available (required for batch endpoint)
-        if (process.env.LICHESS_API_TOKEN) {
-            headers['Authorization'] = `Bearer ${process.env.LICHESS_API_TOKEN}`;
+        const token = process.env.LICHESS_API_TOKEN;
+        if (token) {
+            headers['Authorization'] = `Bearer ${token}`;
+            console.log(`Fetching from: ${url} (with token)`);
+        } else {
+            console.warn('LICHESS_API_TOKEN not found in environment! Puzzles may fail.');
+            console.log(`Fetching from: ${url} (NO token)`);
         }
-
-        console.log(`Fetching from: ${url}`);
 
         const res = await fetch(url, { headers });
 
