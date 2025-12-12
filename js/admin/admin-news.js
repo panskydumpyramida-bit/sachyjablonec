@@ -703,6 +703,7 @@ Najdete vítězný tah? ♟️
 
 let selectedImage = null;
 let savedRange = null;
+let pendingImageBlob = null; // Stores rotated image blob until final save
 
 function insertImage() {
     const sel = window.getSelection();
@@ -776,6 +777,7 @@ function showImageModal(existingImg = null) {
     const imgUrlInput = document.getElementById('imgUrlInput');
     const imgPreviewArea = document.getElementById('imgPreviewArea');
     const imgAlignInput = document.getElementById('imgAlignInput');
+    pendingImageBlob = null; // Reset any pending rotated image
 
     if (existingImg) {
         const src = existingImg.getAttribute('src');
@@ -832,9 +834,37 @@ async function handleImageFile(event) {
     }
 }
 
-function saveImageInsertion() {
-    const url = document.getElementById('imgUrlInput').value;
+async function saveImageInsertion() {
+    let url = document.getElementById('imgUrlInput').value;
     const align = document.getElementById('imgAlignInput').value;
+
+    // If we have a pending rotated image, upload it now
+    if (pendingImageBlob) {
+        const formData = new FormData();
+        const fileName = `rotated_${Date.now()}.jpg`;
+        formData.append('image', pendingImageBlob, fileName);
+
+        try {
+            const res = await fetch(`${API_URL}/images/upload`, {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${authToken}` },
+                body: formData
+            });
+            if (res.ok) {
+                const data = await res.json();
+                const baseUrl = window.location.origin;
+                url = data.url.startsWith('http') ? data.url : `${baseUrl}${data.url}`;
+            } else {
+                alert('Nepodařilo se nahrát rotovaný obrázek');
+                return;
+            }
+        } catch (e) {
+            console.error('Upload error:', e);
+            alert('Chyba při nahrávání obrázku');
+            return;
+        }
+        pendingImageBlob = null; // Clear after upload
+    }
 
     if (!url) {
         closeImageModal();
@@ -884,11 +914,17 @@ function deleteImage() {
     closeImageModal();
 }
 
-// Rotation
+// Rotation - now works locally without uploading each time
 async function rotateContentImage() {
     const urlInput = document.getElementById('imgUrlInput');
-    const url = urlInput.value;
-    if (!url) return;
+    const previewArea = document.getElementById('imgPreviewArea');
+
+    // Get source - either URL or pending blob
+    let imageSrc = urlInput.value;
+    if (pendingImageBlob) {
+        imageSrc = URL.createObjectURL(pendingImageBlob);
+    }
+    if (!imageSrc) return;
 
     const btn = document.getElementById('rotateContentBtn');
     const originalText = btn.innerHTML;
@@ -896,17 +932,38 @@ async function rotateContentImage() {
     btn.disabled = true;
 
     try {
-        const newUrl = await uploadRotatedImage(url);
-        if (newUrl) {
-            urlInput.value = newUrl;
-            document.getElementById('imgPreviewArea').innerHTML = `<img src="${newUrl}" style="max-width:100%; max-height: 300px;">`;
+        const img = new Image();
+        img.crossOrigin = "anonymous";
+        img.src = imageSrc;
 
-            // If editing existing, update it too
-            if (selectedImage) {
-                selectedImage.src = newUrl;
-            }
-        }
+        await new Promise((resolve, reject) => {
+            img.onload = resolve;
+            img.onerror = reject;
+        });
+
+        // Rotate on canvas
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = img.height;
+        canvas.height = img.width;
+
+        ctx.translate(canvas.width / 2, canvas.height / 2);
+        ctx.rotate(90 * Math.PI / 180);
+        ctx.drawImage(img, -img.width / 2, -img.height / 2);
+
+        // Store as blob for later upload
+        pendingImageBlob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.9));
+
+        // Show preview using data URL
+        const dataUrl = canvas.toDataURL('image/jpeg', 0.9);
+        previewArea.innerHTML = `<img src="${dataUrl}" style="max-width:100%; max-height: 300px;">`;
+
+        // Clear URL input since we're using pending blob now
+        urlInput.value = '';
+        urlInput.placeholder = 'Rotovaný obrázek (bude nahrán při vložení)';
+
     } catch (e) {
+        console.error('Rotation error:', e);
         alert('Nepodařilo se otočit obrázek');
     } finally {
         btn.innerHTML = originalText;
