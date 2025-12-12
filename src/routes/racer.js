@@ -7,27 +7,14 @@ const prisma = new PrismaClient();
 // Valid difficulty levels in order
 const DIFFICULTIES = ['easiest', 'easier', 'normal', 'harder', 'hardest'];
 
-// Fetch puzzles from Lichess API - batch endpoint
-// Uses the token for authenticated requests
+// Fetch puzzles from Lichess API by difficulty and theme
+// NO Authorization header required - this gives us correct difficulty ranges
 async function fetchPuzzlesByDifficulty(difficulty, count = 3, theme = 'mix') {
     try {
-        // Lichess API: /api/puzzle/batch/{angle}?nb={count}&difficulty={difficulty}
-        // angle can be 'mix' or a specific theme like 'opening', 'endgame', etc.
-        const url = `https://lichess.org/api/puzzle/batch/${theme}?nb=${count}&difficulty=${difficulty}`;
-
-        const headers = { 'Accept': 'application/json' };
-
-        // Always add auth token if available (required for batch endpoint)
-        const token = process.env.LICHESS_API_TOKEN;
-        if (token) {
-            headers['Authorization'] = `Bearer ${token}`;
-            console.log(`Fetching from: ${url} (with token)`);
-        } else {
-            console.warn('LICHESS_API_TOKEN not found in environment! Puzzles may fail.');
-            console.log(`Fetching from: ${url} (NO token)`);
-        }
-
-        const res = await fetch(url, { headers });
+        // Lichess API: /api/puzzle/batch/{theme}?nb={count}&difficulty={difficulty}
+        const res = await fetch(`https://lichess.org/api/puzzle/batch/${theme}?nb=${count}&difficulty=${difficulty}`, {
+            headers: { 'Accept': 'application/json' }
+        });
 
         if (res.ok) {
             const data = await res.json();
@@ -35,8 +22,7 @@ async function fetchPuzzlesByDifficulty(difficulty, count = 3, theme = 'mix') {
             console.log(`Fetched ${puzzles.length} ${difficulty} puzzles (theme: ${theme})`);
             return puzzles;
         } else {
-            const errorText = await res.text();
-            console.warn(`Lichess ${difficulty}/${theme} returned ${res.status}: ${errorText}`);
+            console.warn(`Lichess ${difficulty}/${theme} returned ${res.status}`);
             return [];
         }
     } catch (e) {
