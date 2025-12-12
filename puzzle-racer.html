@@ -302,6 +302,25 @@
         .highlight-move {
             box-shadow: inset 0 0 3px 3px rgba(255, 255, 0, 0.8) !important;
         }
+
+        /* Mode badges */
+        .mode-badge {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        .vanilla-mode {
+            background: linear-gradient(135deg, #60a5fa, #3b82f6);
+            color: white;
+        }
+
+        .thematic-mode {
+            background: linear-gradient(135deg, #f472b6, #ec4899);
+            color: white;
+        }
     </style>
 </head>
 
@@ -315,14 +334,36 @@
                 <!-- START SCREEN -->
                 <div id="startScreen" class="start-screen">
                     <h2><i class="fa-solid fa-flag-checkered"></i> Puzzle Racer</h2>
+
+                    <!-- Mode indicator -->
+                    <div id="modeIndicator" style="margin-bottom: 1.5rem;">
+                        <span id="vanillaBadge" class="mode-badge vanilla-mode">
+                            <i class="fa-solid fa-snowflake"></i> Klasický mód
+                        </span>
+                        <span id="thematicBadge" class="mode-badge thematic-mode" style="display: none;">
+                            <i class="fa-solid fa-palette"></i> Tématický mód
+                        </span>
+                    </div>
+
                     <p
                         style="font-size: 1.1rem; color: var(--text-muted); margin-bottom: 2rem; max-width: 500px; margin-left: auto; margin-right: auto;">
-                        Vyřešte co nejvíce taktických úloh během 3 minut! Obtížnost se postupně zvyšuje.
+                        <span id="modeDescription">Vyřešte co nejvíce taktických úloh během 3 minut! Obtížnost se
+                            postupně zvyšuje.</span>
                     </p>
                     <button class="btn-primary" onclick="window.startRace()"
                         style="font-size: 1.2rem; padding: 1rem 3rem;">
                         <i class="fa-solid fa-play"></i> Start
                     </button>
+
+                    <!-- Mode switcher -->
+                    <div style="margin-top: 1.5rem;">
+                        <a id="switchModeLink" href="?mode=thematic"
+                            style="color: var(--text-muted); font-size: 0.9rem; text-decoration: none;">
+                            <i class="fa-solid fa-arrows-rotate"></i> <span id="switchModeText">Přepnout na tématický
+                                mód</span>
+                        </a>
+                    </div>
+
                     <!-- Loading indication -->
                     <div id="loadingIndicator" class="hidden" style="margin-top: 2rem; color: var(--primary-color);">
                         <i class="fa-solid fa-spinner fa-spin fa-2x"></i>
@@ -449,7 +490,7 @@
     <script src="js/config.js"></script>
     <script src="js/layout-loader.js"></script>
     <script src="js/main.js"></script>
-    <script src="js/puzzle-racer.js?v=21"></script>
+    <script src="js/puzzle-racer.js?v=22"></script>
 </body>
 
 </html>
