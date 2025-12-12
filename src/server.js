@@ -104,16 +104,47 @@ app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 app.use('/images', express.static(path.join(__dirname, '../images')));
 
 // Serve specific HTML pages (since they are in root)
-app.get('/admin.html', (req, res) => res.sendFile(path.join(__dirname, '../admin.html')));
-app.get('/gallery.html', (req, res) => res.sendFile(path.join(__dirname, '../gallery.html')));
-app.get('/youth.html', (req, res) => res.sendFile(path.join(__dirname, '../youth.html')));
-app.get('/teams.html', (req, res) => res.sendFile(path.join(__dirname, '../teams.html')));
-app.get('/calendar.html', (req, res) => res.sendFile(path.join(__dirname, '../calendar.html')));
-app.get('/about.html', (req, res) => res.sendFile(path.join(__dirname, '../about.html')));
-app.get('/members.html', (req, res) => res.sendFile(path.join(__dirname, '../members.html')));
-app.get('/blicak.html', (req, res) => res.sendFile(path.join(__dirname, '../blicak.html')));
-// Serve index.html matches app.get('*') later, but we can serve it explicitly too
-app.get('/index.html', (req, res) => res.sendFile(path.join(__dirname, '../index.html')));
+// Serve specific HTML pages (Clean URLs support)
+const servePage = (page) => (req, res) => res.sendFile(path.join(__dirname, `../${page}`));
+
+app.get('/admin', servePage('admin.html'));
+app.get('/admin.html', servePage('admin.html'));
+
+app.get('/gallery', servePage('gallery.html'));
+app.get('/gallery.html', servePage('gallery.html'));
+
+app.get('/youth', servePage('youth.html'));
+app.get('/youth.html', servePage('youth.html'));
+
+app.get('/teams', servePage('teams.html'));
+app.get('/teams.html', servePage('teams.html'));
+
+app.get('/calendar', servePage('calendar.html'));
+app.get('/calendar.html', servePage('calendar.html'));
+
+app.get('/about', servePage('about.html'));
+app.get('/about.html', servePage('about.html'));
+
+app.get('/members', servePage('members.html'));
+app.get('/members.html', servePage('members.html'));
+
+app.get('/blicak', servePage('blicak.html'));
+app.get('/blicak.html', servePage('blicak.html'));
+
+app.get('/puzzle-racer', servePage('puzzle-racer.html'));
+app.get('/puzzle-racer.html', servePage('puzzle-racer.html'));
+
+app.get('/game-recorder', servePage('game-recorder.html'));
+app.get('/game-recorder.html', servePage('game-recorder.html'));
+
+app.get('/club-tournaments', servePage('club-tournaments.html'));
+app.get('/club-tournaments.html', servePage('club-tournaments.html'));
+
+app.get('/article', servePage('article.html')); // Dynamic article page often uses query params
+app.get('/article.html', servePage('article.html'));
+
+app.get('/index', servePage('index.html'));
+app.get('/index.html', servePage('index.html'));
 
 // API Routes - MUST be before static catch-all
 app.use('/api/auth', authRoutes);
