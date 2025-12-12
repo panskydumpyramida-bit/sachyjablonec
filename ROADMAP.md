@@ -157,7 +157,7 @@ Refaktoring monolitického `admin.html` (3800+ řádků) na JS moduly.
 buildCommand = "npm install && npx prisma generate"
 
 [deploy]
-startCommand = "npx prisma migrate deploy && npm start"
+startCommand = "./start.sh" # Custom script handling migrations
 healthcheckPath = "/health"
 healthcheckTimeout = 200
 restartPolicyType = "on_failure"
