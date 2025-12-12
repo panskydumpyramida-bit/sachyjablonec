@@ -48,7 +48,7 @@ Refaktoring monolitického `admin.html` (3800+ řádků) na JS moduly.
   - Hotové moduly: `admin-gallery.js`, `admin-members.js`, `admin-messages.js`
   - Odstraněno ~400 řádků legacy kódu
 - [ ] **Fáze 2:** Migrace hlavních komponent
-  - [ ] News Editor (`admin-news.js`)
+  - [x] News Editor (`admin-news.js`)
   - [ ] Competitions & Standings (`admin-competitions.js`)
 - [ ] **Fáze 3:** Shared Core & Cleanup
   - [ ] Plná migrace `admin-core.js` (auth, routing)
@@ -126,10 +126,12 @@ Refaktoring monolitického `admin.html` (3800+ řádků) na JS moduly.
 - [x] **Konzistence:** Sjednocen vzhled sekcí (tlačítka zpět, hlavičky).
 
 ### Admin Panel & Systém
+- [x] **News Editor Refaktoring:** Kompletní extrakce editoru novinek do modulu `js/admin/admin-news.js`.
+- [x] **Hromadné Mazání:** Implementováno hromadné mazání obrázků v galerii.
 - [x] **Modularizace:** Vytvořeny moduly `admin-gallery.js`, `admin-members.js`, `admin-messages.js`.
 - [x] **Gallery Picker:** Modální okno pro výběr obrázků z galerie (použito v Editoru i Members).
 - [x] **API Auth:** Sjednocena autentizace (`X-Club-Password` i `Bearer Token` pro API obrázků).
-- [x] **Cleanup:** Odstraněno cca 400 řádků duplicitního kódu z admin.html.
+- [x] **Cleanup:** Odstraněno cca 1000+ řádků legacy kódu z admin.html.
 
 ### Puzzle Racer (Ranní update)
 - [x] Oprava logiky (načítání bufferu, čekací stavy)
@@ -145,4 +147,4 @@ Refaktoring monolitického `admin.html` (3800+ řádků) na JS moduly.
 
 ---
 
-*Poslední aktualizace: 11. 12. 2025 (22:30)*
+*Poslední aktualizace: 11. 12. 2025 (23:55)*
