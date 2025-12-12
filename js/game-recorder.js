@@ -161,8 +161,16 @@ function onSnapEnd() {
     board.position(game.fen());
 }
 
-// ... (skip unchanged) ...
-
+// Undo last move
+function undoMove() {
+    const move = game.undo();
+    if (move) {
+        board.position(game.fen());
+        updateStatus();
+        updateMoveHistory();
+        removeHighlights();
+    }
+}
 
 // --- Promotion Logic ---
 
