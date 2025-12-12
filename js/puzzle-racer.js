@@ -27,6 +27,11 @@ let livesEnabled = true; // Will be overwritten by settings
 let gameSettings = {};
 let isFetchingPuzzles = false;
 
+// Penalty and skip settings (from API)
+let penaltyEnabled = false;
+let penaltySeconds = 5;
+let skipOnMistake = false;
+
 // Actually, let's just use ONE solid simple puzzle for fallback to minimize error risk
 // Mat v 1. tahu.
 const FALLBACK_PUZZLES = [
@@ -155,7 +160,10 @@ async function loadGameSettings() {
             timeLimitSeconds: 180,
             livesEnabled: true,
             maxLives: 3,
-            puzzlesPerDifficulty: 6
+            puzzlesPerDifficulty: 6,
+            penaltyEnabled: false,
+            penaltySeconds: 5,
+            skipOnMistake: false
         };
     }
 
@@ -164,6 +172,9 @@ async function loadGameSettings() {
     livesEnabled = gameSettings.livesEnabled !== false;
     MAX_MISTAKES = gameSettings.maxLives || 3;
     puzzlesPerDifficultyLevel = gameSettings.puzzlesPerDifficulty || 6;
+    penaltyEnabled = gameSettings.penaltyEnabled === true;
+    penaltySeconds = gameSettings.penaltySeconds || 5;
+    skipOnMistake = gameSettings.skipOnMistake === true;
 }
 
 async function startRace() {
@@ -679,9 +690,27 @@ function handleWrongMove() {
         return;
     }
 
-    // Time penalty disabled in this mode (kept for future modes)
-    // timeLeft = Math.max(0, timeLeft - 5);
-    // updateTimer();
+    // Apply time penalty if enabled
+    if (penaltyEnabled) {
+        timeLeft = Math.max(0, timeLeft - penaltySeconds);
+        updateTimer();
+
+        // Check if penalty caused time to run out
+        if (timeLeft <= 0) {
+            setTimeout(() => {
+                endGame();
+            }, 500);
+            return;
+        }
+    }
+
+    // Skip to next puzzle if enabled (without requiring user to solve current one)
+    if (skipOnMistake) {
+        setTimeout(() => {
+            currentPuzzleIndex++;
+            loadNextPuzzleOrWait();
+        }, 500);
+    }
 }
 
 // Update lives display (X marks)

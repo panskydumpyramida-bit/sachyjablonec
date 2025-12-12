@@ -201,6 +201,9 @@ model PuzzleRacerSettings {
   livesEnabled          Boolean  @default(true) @map("lives_enabled")
   maxLives              Int      @default(3) @map("max_lives")
   puzzlesPerDifficulty  Int      @default(6) @map("puzzles_per_difficulty")
+  penaltyEnabled        Boolean  @default(false) @map("penalty_enabled")
+  penaltySeconds        Int      @default(5) @map("penalty_seconds")
+  skipOnMistake         Boolean  @default(false) @map("skip_on_mistake")
   updatedAt             DateTime @updatedAt @map("updated_at")
 
   @@map("puzzle_racer_settings")
