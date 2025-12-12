@@ -861,7 +861,8 @@ async function saveScore() {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 score,
-                playerName
+                playerName,
+                mode: gameMode // Send current game mode
             })
         });
 
@@ -886,8 +887,12 @@ async function saveScore() {
 let currentLeaderboardPeriod = 'all';
 
 async function loadLeaderboard(period = 'all') {
+    // Detect mode again to be sure (since this runs on init)
+    const urlParams = new URLSearchParams(window.location.search);
+    const mode = urlParams.get('mode') === 'thematic' ? 'thematic' : 'vanilla';
+
     try {
-        const res = await fetch(`${API_URL}/racer/leaderboard?period=${period}`);
+        const res = await fetch(`${API_URL}/racer/leaderboard?period=${period}&mode=${mode}`);
         if (!res.ok) throw new Error('Failed to fetch leaderboard');
 
         const data = await res.json();

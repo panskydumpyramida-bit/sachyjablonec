@@ -172,6 +172,7 @@ model PuzzleRaceResult {
   playerName String   @map("player_name")
   userId    Int?     @map("user_id")
   createdAt DateTime @default(now()) @map("created_at")
+  mode      String   @default("vanilla") // 'vanilla', 'thematic'
 
   user      User?    @relation(fields: [userId], references: [id])
 

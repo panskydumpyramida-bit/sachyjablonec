@@ -127,7 +127,7 @@ router.put('/settings', async (req, res) => {
 // POST /api/racer/save
 router.post('/save', async (req, res) => {
     try {
-        const { score, playerName, userId } = req.body;
+        const { score, playerName, userId, mode } = req.body;
 
         if (score === undefined || score === null) {
             return res.status(400).json({ error: 'Score is required' });
@@ -138,6 +138,7 @@ router.post('/save', async (req, res) => {
                 score: parseInt(score),
                 playerName: playerName || 'Anonymous',
                 userId: userId ? parseInt(userId) : null,
+                mode: mode || 'vanilla'
             },
         });
 
@@ -148,19 +149,21 @@ router.post('/save', async (req, res) => {
     }
 });
 
-// GET /api/racer/leaderboard?period=week|all
+// GET /api/racer/leaderboard?period=week|all&mode=vanilla|thematic
 router.get('/leaderboard', async (req, res) => {
     try {
         const period = req.query.period || 'all';
+        const mode = req.query.mode || 'vanilla';
 
-        // Build where clause for time filter
-        let whereClause = {};
+        // Build where clause for time filter and mode
+        let whereClause = {
+            mode: mode
+        };
+
         if (period === 'week') {
             const oneWeekAgo = new Date();
             oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
-            whereClause = {
-                createdAt: { gte: oneWeekAgo }
-            };
+            whereClause.createdAt = { gte: oneWeekAgo };
         }
 
         const leaderboard = await prisma.puzzleRaceResult.findMany({
