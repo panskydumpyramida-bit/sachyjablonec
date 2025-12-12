@@ -1453,20 +1453,49 @@
                             <label>Časový limit (sekundy)</label>
                             <input type="number" id="prTimeLimit" min="30" max="600" value="180">
                         </div>
+
+                        <hr style="border: none; border-top: 1px solid rgba(255,255,255,0.1); margin: 1.5rem 0;">
+                        <h4 style="margin: 0 0 1rem 0; color: var(--text-muted); font-size: 0.9rem;"><i
+                                class="fa-solid fa-heart-crack"></i> Chování při chybě</h4>
+
                         <div class="form-group">
                             <label style="display: flex; align-items: center; gap: 0.5rem;">
                                 <input type="checkbox" id="prLivesEnabled" checked style="width: auto;">
-                                Systém životů (3 chyby = konec hry)
+                                Systém životů (X chyb = konec hry)
                             </label>
                         </div>
                         <div class="form-group" id="prMaxLivesGroup">
                             <label>Počet životů</label>
                             <input type="number" id="prMaxLives" min="1" max="10" value="3">
                         </div>
+
+                        <div class="form-group">
+                            <label style="display: flex; align-items: center; gap: 0.5rem;">
+                                <input type="checkbox" id="prPenaltyEnabled" style="width: auto;">
+                                Časová penalizace za chybu
+                            </label>
+                        </div>
+                        <div class="form-group" id="prPenaltySecondsGroup" style="display: none;">
+                            <label>Penalizace (sekundy)</label>
+                            <input type="number" id="prPenaltySeconds" min="1" max="60" value="5">
+                        </div>
+
+                        <div class="form-group">
+                            <label style="display: flex; align-items: center; gap: 0.5rem;">
+                                <input type="checkbox" id="prSkipOnMistake" style="width: auto;">
+                                Po chybě přeskočit na další puzzle (bez nutnosti vyřešit)
+                            </label>
+                        </div>
+
+                        <hr style="border: none; border-top: 1px solid rgba(255,255,255,0.1); margin: 1.5rem 0;">
+                        <h4 style="margin: 0 0 1rem 0; color: var(--text-muted); font-size: 0.9rem;"><i
+                                class="fa-solid fa-chart-line"></i> Progrese</h4>
+
                         <div class="form-group">
                             <label>Puzzlů na úroveň obtížnosti</label>
                             <input type="number" id="prPuzzlesPerDifficulty" min="1" max="20" value="6">
                         </div>
+
                         <div style="display: flex; justify-content: flex-end; margin-top: 1.5rem;">
                             <button class="btn-primary" onclick="savePuzzleRacerSettings()" id="savePrSettingsBtn">
                                 <i class="fa-solid fa-save"></i> Uložit nastavení
@@ -1746,10 +1775,15 @@
                 document.getElementById('prLivesEnabled').checked = settings.livesEnabled !== false;
                 document.getElementById('prMaxLives').value = settings.maxLives || 3;
                 document.getElementById('prPuzzlesPerDifficulty').value = settings.puzzlesPerDifficulty || 6;
+                document.getElementById('prPenaltyEnabled').checked = settings.penaltyEnabled === true;
+                document.getElementById('prPenaltySeconds').value = settings.penaltySeconds || 5;
+                document.getElementById('prSkipOnMistake').checked = settings.skipOnMistake === true;
 
-                // Toggle max lives visibility
+                // Toggle visibility of dependent fields
                 document.getElementById('prMaxLivesGroup').style.display =
                     document.getElementById('prLivesEnabled').checked ? 'block' : 'none';
+                document.getElementById('prPenaltySecondsGroup').style.display =
+                    document.getElementById('prPenaltyEnabled').checked ? 'block' : 'none';
             } catch (e) {
                 console.error('Failed to load puzzle racer settings:', e);
             }
@@ -1775,7 +1809,10 @@
                         timeLimitSeconds: parseInt(document.getElementById('prTimeLimit').value),
                         livesEnabled: document.getElementById('prLivesEnabled').checked,
                         maxLives: parseInt(document.getElementById('prMaxLives').value),
-                        puzzlesPerDifficulty: parseInt(document.getElementById('prPuzzlesPerDifficulty').value)
+                        puzzlesPerDifficulty: parseInt(document.getElementById('prPuzzlesPerDifficulty').value),
+                        penaltyEnabled: document.getElementById('prPenaltyEnabled').checked,
+                        penaltySeconds: parseInt(document.getElementById('prPenaltySeconds').value),
+                        skipOnMistake: document.getElementById('prSkipOnMistake').checked
                     })
                 });
 
@@ -1793,13 +1830,21 @@
             }
         }
 
-        // Toggle lives input visibility
+        // Toggle visibility of dependent settings fields
         document.addEventListener('DOMContentLoaded', () => {
             const livesCheck = document.getElementById('prLivesEnabled');
+            const penaltyCheck = document.getElementById('prPenaltyEnabled');
+
             if (livesCheck) {
                 livesCheck.addEventListener('change', () => {
                     document.getElementById('prMaxLivesGroup').style.display =
                         livesCheck.checked ? 'block' : 'none';
+                });
+            }
+            if (penaltyCheck) {
+                penaltyCheck.addEventListener('change', () => {
+                    document.getElementById('prPenaltySecondsGroup').style.display =
+                        penaltyCheck.checked ? 'block' : 'none';
                 });
             }
         });

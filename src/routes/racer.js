@@ -72,7 +72,10 @@ const DEFAULT_SETTINGS = {
     timeLimitSeconds: 180,
     livesEnabled: true,
     maxLives: 3,
-    puzzlesPerDifficulty: 6
+    puzzlesPerDifficulty: 6,
+    penaltyEnabled: false,
+    penaltySeconds: 5,
+    skipOnMistake: false
 };
 
 // GET /api/racer/settings - Public (game fetches settings before start)
@@ -95,25 +98,23 @@ router.put('/settings', async (req, res) => {
             return res.status(401).json({ error: 'Unauthorized' });
         }
 
-        const { puzzleTheme, timeLimitSeconds, livesEnabled, maxLives, puzzlesPerDifficulty } = req.body;
+        const { puzzleTheme, timeLimitSeconds, livesEnabled, maxLives, puzzlesPerDifficulty, penaltyEnabled, penaltySeconds, skipOnMistake } = req.body;
+
+        const data = {
+            puzzleTheme: puzzleTheme || 'mix',
+            timeLimitSeconds: parseInt(timeLimitSeconds) || 180,
+            livesEnabled: livesEnabled !== false,
+            maxLives: parseInt(maxLives) || 3,
+            puzzlesPerDifficulty: parseInt(puzzlesPerDifficulty) || 6,
+            penaltyEnabled: penaltyEnabled === true,
+            penaltySeconds: parseInt(penaltySeconds) || 5,
+            skipOnMistake: skipOnMistake === true
+        };
 
         const updated = await prisma.puzzleRacerSettings.upsert({
             where: { id: 1 },
-            update: {
-                puzzleTheme: puzzleTheme || 'mix',
-                timeLimitSeconds: parseInt(timeLimitSeconds) || 180,
-                livesEnabled: livesEnabled !== false,
-                maxLives: parseInt(maxLives) || 3,
-                puzzlesPerDifficulty: parseInt(puzzlesPerDifficulty) || 6
-            },
-            create: {
-                id: 1,
-                puzzleTheme: puzzleTheme || 'mix',
-                timeLimitSeconds: parseInt(timeLimitSeconds) || 180,
-                livesEnabled: livesEnabled !== false,
-                maxLives: parseInt(maxLives) || 3,
-                puzzlesPerDifficulty: parseInt(puzzlesPerDifficulty) || 6
-            }
+            update: data,
+            create: { id: 1, ...data }
         });
 
         res.json(updated);
