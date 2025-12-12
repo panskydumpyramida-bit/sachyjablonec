@@ -38,7 +38,7 @@ async function fetchPuzzlesByDifficulty(difficulty, count = 3, theme = 'mix') {
 router.get('/puzzles', async (req, res) => {
     try {
         const difficulty = req.query.difficulty || 'easiest';
-        const count = Math.min(parseInt(req.query.count) || 3, 10); // Max 10 per request
+        const count = Math.min(parseInt(req.query.count) || 3, 20); // increased max count for caching
 
         // Validate difficulty
         if (!DIFFICULTIES.includes(difficulty)) {
@@ -48,7 +48,53 @@ router.get('/puzzles', async (req, res) => {
         // Get theme from settings
         const settings = await prisma.puzzleRacerSettings.findFirst();
         const theme = settings?.puzzleTheme || 'mix';
+        const randomize = settings?.randomizePuzzles !== false; // Default true
 
+        // If randomization is OFF, try to serve from cache
+        if (!randomize) {
+            let fixedSet = settings?.fixedPuzzleSet || {};
+
+            // Check if we have puzzles for this difficulty in cache
+            if (fixedSet[difficulty] && Array.isArray(fixedSet[difficulty]) && fixedSet[difficulty].length > 0) {
+                // Return the cached puzzles (limited by count)
+                // If the game needs more, it might be an issue, but we cache e.g. 50
+                const cached = fixedSet[difficulty].slice(0, count);
+                console.log(`Serving ${cached.length} fixed puzzles for ${difficulty}`);
+                return res.json({
+                    puzzles: cached,
+                    difficulty,
+                    theme,
+                    count: cached.length,
+                    fromCache: true
+                });
+            }
+
+            // Cache MISS: Fetch fresh, save to DB, then serve
+            console.log(`Cache miss for fixed set ${difficulty}. Fetching and caching...`);
+            // Fetch A LOT to be safe for future requests (e.g. 50)
+            const countToCache = 50;
+            const newPuzzles = await fetchPuzzlesByDifficulty(difficulty, countToCache, theme);
+
+            if (newPuzzles.length > 0) {
+                // Update DB with new cache
+                fixedSet[difficulty] = newPuzzles;
+                await prisma.puzzleRacerSettings.update({
+                    where: { id: settings.id },
+                    data: { fixedPuzzleSet: fixedSet }
+                });
+
+                const cached = newPuzzles.slice(0, count);
+                return res.json({
+                    puzzles: cached,
+                    difficulty,
+                    theme,
+                    count: cached.length,
+                    fromCache: true
+                });
+            }
+        }
+
+        // Standard Random Mode or Fetch Fallback
         console.log(`Fetching ${count} ${difficulty} puzzles (theme: ${theme})...`);
         const puzzles = await fetchPuzzlesByDifficulty(difficulty, count, theme);
 
@@ -56,7 +102,8 @@ router.get('/puzzles', async (req, res) => {
             puzzles,
             difficulty,
             theme,
-            count: puzzles.length
+            count: puzzles.length,
+            fromCache: false
         });
 
     } catch (error) {
@@ -75,7 +122,8 @@ const DEFAULT_SETTINGS = {
     puzzlesPerDifficulty: 6,
     penaltyEnabled: false,
     penaltySeconds: 5,
-    skipOnMistake: false
+    skipOnMistake: false,
+    randomizePuzzles: true
 };
 
 // GET /api/racer/settings - Public (game fetches settings before start)
@@ -98,7 +146,7 @@ router.put('/settings', async (req, res) => {
             return res.status(401).json({ error: 'Unauthorized' });
         }
 
-        const { puzzleTheme, timeLimitSeconds, livesEnabled, maxLives, puzzlesPerDifficulty, penaltyEnabled, penaltySeconds, skipOnMistake } = req.body;
+        const { puzzleTheme, timeLimitSeconds, livesEnabled, maxLives, puzzlesPerDifficulty, penaltyEnabled, penaltySeconds, skipOnMistake, randomizePuzzles } = req.body;
 
         const data = {
             puzzleTheme: puzzleTheme || 'mix',
@@ -108,8 +156,17 @@ router.put('/settings', async (req, res) => {
             puzzlesPerDifficulty: parseInt(puzzlesPerDifficulty) || 6,
             penaltyEnabled: penaltyEnabled === true,
             penaltySeconds: parseInt(penaltySeconds) || 5,
-            skipOnMistake: skipOnMistake === true
+            skipOnMistake: skipOnMistake === true,
+            randomizePuzzles: randomizePuzzles !== false
         };
+
+        // If theme changes or switching TO fixed mode, we might want to clear cache?
+        // Actually, let's keep it simple: Cache is only cleared manually via refresh button or if theme changes significantly?
+        // Let's decide: if theme changes, we SHOULD clear cache to avoid mixing themes.
+        const current = await prisma.puzzleRacerSettings.findFirst();
+        if (current && current.puzzleTheme !== data.puzzleTheme) {
+            data.fixedPuzzleSet = {}; // Clear cache on theme change
+        }
 
         const updated = await prisma.puzzleRacerSettings.upsert({
             where: { id: 1 },
@@ -118,9 +175,31 @@ router.put('/settings', async (req, res) => {
         });
 
         res.json(updated);
+
     } catch (error) {
-        console.error('Error saving settings:', error);
-        res.status(500).json({ error: 'Failed to save settings' });
+        console.error('Error updating settings:', error);
+        res.status(500).json({ error: 'Failed to update settings' });
+    }
+});
+
+// POST /api/racer/settings/refresh-set - Admin only
+// Force clear the fixed cache so new puzzles are fetched next time
+router.post('/settings/refresh-set', async (req, res) => {
+    try {
+        const authHeader = req.headers.authorization;
+        if (!authHeader || !authHeader.startsWith('Bearer ')) {
+            return res.status(401).json({ error: 'Unauthorized' });
+        }
+
+        await prisma.puzzleRacerSettings.update({
+            where: { id: 1 },
+            data: { fixedPuzzleSet: {} } // Clear cache
+        });
+
+        res.json({ success: true, message: 'Cached set cleared' });
+    } catch (error) {
+        console.error('Error refreshing set:', error);
+        res.status(500).json({ error: 'Failed to refresh set' });
     }
 });
 
