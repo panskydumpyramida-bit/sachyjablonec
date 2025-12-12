@@ -205,6 +205,8 @@ model PuzzleRacerSettings {
   penaltyEnabled        Boolean  @default(false) @map("penalty_enabled")
   penaltySeconds        Int      @default(5) @map("penalty_seconds")
   skipOnMistake         Boolean  @default(false) @map("skip_on_mistake")
+  randomizePuzzles      Boolean  @default(true) @map("randomize_puzzles")
+  fixedPuzzleSet        Json?    @map("fixed_puzzle_set")
   updatedAt             DateTime @updatedAt @map("updated_at")
 
   @@map("puzzle_racer_settings")
