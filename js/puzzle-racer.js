@@ -993,7 +993,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // Initialize mode indicator UI based on URL parameter
-function initModeUI() {
+async function initModeUI() {
     const urlParams = new URLSearchParams(window.location.search);
     const mode = urlParams.get('mode');
     const isThematic = mode === 'thematic';
@@ -1016,10 +1016,50 @@ function initModeUI() {
         switchText.textContent = isThematic ? 'Přepnout na klasický mód' : 'Přepnout na tématický mód';
     }
 
-    // Update description
+    // Update description - for thematic mode, fetch and show current settings
     if (modeDesc) {
-        modeDesc.textContent = isThematic
-            ? 'Tématický mód s nastavením z admin panelu.'
-            : 'Vyřešte co nejvíce taktických úloh během 3 minut! Obtížnost se postupně zvyšuje.';
+        if (isThematic) {
+            try {
+                const res = await fetch(`${API_URL}/racer/settings`);
+                if (res.ok) {
+                    const settings = await res.json();
+                    const themeName = getThemeDisplayName(settings.puzzleTheme || 'mix');
+                    const timeMin = Math.floor((settings.timeLimitSeconds || 180) / 60);
+                    const timeSec = (settings.timeLimitSeconds || 180) % 60;
+                    const timeStr = timeSec > 0 ? `${timeMin}:${String(timeSec).padStart(2, '0')}` : `${timeMin} min`;
+
+                    let descParts = [`Téma: <strong>${themeName}</strong>`, `Čas: <strong>${timeStr}</strong>`];
+                    if (settings.livesEnabled) {
+                        descParts.push(`Životy: <strong>${settings.maxLives || 3}</strong>`);
+                    }
+                    if (settings.penaltyEnabled) {
+                        descParts.push(`Penalizace: <strong>-${settings.penaltySeconds || 5}s</strong>`);
+                    }
+                    modeDesc.innerHTML = descParts.join(' • ');
+                } else {
+                    modeDesc.textContent = 'Tématický mód s nastavením z admin panelu.';
+                }
+            } catch (e) {
+                modeDesc.textContent = 'Tématický mód s nastavením z admin panelu.';
+            }
+        } else {
+            modeDesc.textContent = 'Vyřešte co nejvíce taktických úloh během 3 minut! Obtížnost se postupně zvyšuje.';
+        }
     }
+}
+
+// Map theme codes to Czech display names
+function getThemeDisplayName(theme) {
+    const themeNames = {
+        'mix': 'Smíšené',
+        'opening': 'Zahájení',
+        'middlegame': 'Střední hra',
+        'endgame': 'Koncovka',
+        'rookEndgame': 'Věžová koncovka',
+        'bishopEndgame': 'Střelcová koncovka',
+        'pawnEndgame': 'Pěšcová koncovka',
+        'knightEndgame': 'Jezdcová koncovka',
+        'queenEndgame': 'Dámová koncovka'
+    };
+    return themeNames[theme] || theme;
 }
