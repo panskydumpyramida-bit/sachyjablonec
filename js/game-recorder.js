@@ -172,6 +172,54 @@ function undoMove() {
     }
 }
 
+// Playback controls - for reviewing recorded games
+// (Variables playbackMoves, playbackIndex, autoplayInterval are at top of file)
+
+function goToStart() {
+    // Reset to starting position
+    game.reset();
+    board.position('start');
+    playbackIndex = 0;
+    updateStatus();
+    updateMoveHistory();
+    removeHighlights();
+}
+
+function goBack() {
+    const move = game.undo();
+    if (move) {
+        board.position(game.fen());
+        playbackIndex = Math.max(0, playbackIndex - 1);
+        updateStatus();
+        updateMoveHistory();
+        removeHighlights();
+    }
+}
+
+function goForward() {
+    // This requires knowing the full move list
+    // For now, just replay from history if available
+    const history = game.history({ verbose: true });
+    // Cannot go forward past current position in recording mode
+    console.log('goForward not available in recording mode');
+}
+
+function goToEnd() {
+    // In recording mode, already at end
+    console.log('Already at end in recording mode');
+}
+
+function toggleAutoplay() {
+    if (autoplayInterval) {
+        clearInterval(autoplayInterval);
+        autoplayInterval = null;
+    } else {
+        autoplayInterval = setInterval(() => {
+            goForward();
+        }, 1000);
+    }
+}
+
 // --- Promotion Logic ---
 
 function showPromotionModal(color) {
