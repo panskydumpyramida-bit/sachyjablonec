@@ -921,6 +921,35 @@
         input:checked+.slider:before {
             transform: translateX(20px);
         }
+
+        /* Image Modal Styles */
+        #imageModal {
+            display: none;
+        }
+
+        #imageModal .modal-overlay {
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            right: 0 !important;
+            bottom: 0 !important;
+            background: rgba(0, 0, 0, 0.85) !important;
+            z-index: 9998 !important;
+        }
+
+        #imageModal .modal-content {
+            position: fixed !important;
+            top: 50% !important;
+            left: 50% !important;
+            transform: translate(-50%, -50%) !important;
+            z-index: 9999 !important;
+            background: #1a1a2e !important;
+            border-radius: 12px !important;
+            padding: 1.5rem !important;
+            max-width: 500px !important;
+            width: 90% !important;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6) !important;
+        }
     </style>
 </head>
 
