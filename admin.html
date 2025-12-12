@@ -958,8 +958,7 @@
             }
 
             .editor-sidebar {
-                order: -1;
-                /* Sidebar with actions on top */
+                /* Removing order: -1 so it flows below main content */
                 margin-bottom: 2rem;
             }
         }
@@ -999,6 +998,22 @@
                 display: block;
                 overflow-x: auto;
                 white-space: nowrap;
+            }
+
+            .admin-nav {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 0.5rem;
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+
+            .nav-tab {
+                white-space: nowrap;
+                flex: 1 1 auto;
+                /* Allow tabs to grow/shrink but respect content */
+                text-align: center;
+                min-width: fit-content;
             }
         }
     </style>
@@ -1055,7 +1070,7 @@
                     <p style="margin: 0.25rem 0 0 0; font-size: 0.9rem; opacity: 0.8; visibility: visible !important;"
                         id="userInfo"></p>
                     <p style="margin: 0.1rem 0 0 0; font-size: 0.7rem; opacity: 0.5; font-family: monospace;">Build:
-                        2025-12-12 13:54 #v7</p>
+                        2025-12-12 14:27 #v8</p>
                 </div>
             </div>
 
