@@ -725,11 +725,10 @@ function showImageModal(existingImg = null) {
         // Construction seems safer for modularity.
         modal = document.createElement('div');
         modal.id = 'imageModal';
-        modal.style.cssText = 'position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 1000; display: none; align-items: center; justify-content: center;';
         modal.innerHTML = `
-            <div class="modal-overlay" onclick="closeImageModal()" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7);"></div>
-            <div class="modal-content" style="position: relative; z-index: 1; background: var(--editor-bg, #1a1a2e); border-radius: 12px; padding: 1.5rem; max-width: 500px; width: 90%;">
-                <h3 style="margin-bottom: 1rem;">${existingImg ? 'Upravit obrázek' : 'Vložit obrázek'}</h3>
+            <div class="modal-overlay" onclick="closeImageModal()" style="position: fixed !important; top: 0 !important; left: 0 !important; right: 0 !important; bottom: 0 !important; background: rgba(0,0,0,0.8) !important; z-index: 9998 !important;"></div>
+            <div class="modal-content" style="position: fixed !important; top: 50% !important; left: 50% !important; transform: translate(-50%, -50%) !important; z-index: 9999 !important; background: #1a1a2e !important; border-radius: 12px !important; padding: 1.5rem !important; max-width: 500px !important; width: 90% !important; box-shadow: 0 20px 60px rgba(0,0,0,0.5) !important;">
+                <h3 style="margin-bottom: 1rem; color: #d4af37;">${existingImg ? 'Upravit obrázek' : 'Vložit obrázek'}</h3>
                 <div style="display: flex; gap: 0.5rem; margin-bottom: 1rem;">
                     <input type="text" id="imgUrlInput" placeholder="URL obrázku" style="flex: 1;">
                     <button type="button" class="btn-secondary" onclick="document.getElementById('imgFileInput').click()">
@@ -766,11 +765,12 @@ function showImageModal(existingImg = null) {
                 </div>
             </div>
         `;
-        document.body.appendChild(modal);
+        // Prepend to body to avoid any CSS inheritance issues
+        document.body.insertBefore(modal, document.body.firstChild);
     }
 
-    // Ensure proper overlay styles are always applied
-    modal.style.cssText = 'position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 1000; display: flex; align-items: center; justify-content: center;';
+    // Show the modal
+    modal.style.display = 'block';
 
     // Reset/fill input values
     const imgUrlInput = document.getElementById('imgUrlInput');
