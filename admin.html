@@ -245,6 +245,11 @@
             margin: 0 0.5rem;
         }
 
+        .editor-main {
+            min-width: 0;
+            /* Prevents grid blowout */
+        }
+
         .wysiwyg-content {
             min-height: 400px;
             padding: 1rem;
@@ -257,8 +262,10 @@
             overflow-y: auto;
             max-width: 100%;
             box-sizing: border-box;
-            overflow-wrap: break-word;
+            overflow-wrap: anywhere;
+            word-break: break-word;
             word-wrap: break-word;
+            /* Fallback */
         }
 
         .wysiwyg-content:focus {
@@ -1019,1164 +1026,1521 @@
                 text-align: center;
                 min-width: fit-content;
             }
+
+            /* Ensure tabular data doesn't break layout */
+            .data-table {
+                display: block;
+                overflow-x: auto;
+                white-space: nowrap;
+            }
+
+            .admin-nav {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 0.5rem;
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+
+            .nav-tab {
+                white-space: nowrap;
+                flex: 1 1 auto;
+                /* Allow tabs to grow/shrink but respect content */
+                text-align: center;
+                min-width: fit-content;
+            }
+
+            .settings-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Puzzle Racer Admin Styles */
+        .settings-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-top: 1.5rem;
+        }
+
+        .settings-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--editor-border);
+            border-radius: 8px;
+            padding: 1.5rem;
+        }
+
+        .settings-card h4 {
+            margin-top: 0;
+            margin-bottom: 1rem;
+            color: var(--primary-color);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 1rem;
+        }
+
+        .settings-card .form-group:last-child {
+            margin-bottom: 0;
+        }
+
+        .control-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .control-row label {
+            margin-bottom: 0;
         }
     </style>
 </head>
 
 <body>
-    <!-- LOGIN -->
-    <div id="loginPage" class="hidden">
-        <div class="login-container">
-            <h1 style="text-align: center; margin-bottom: 2rem;">
-                <i class="fa-solid fa-chess-knight" style="color: var(--primary-color);"></i><br>Admin Panel
-            </h1>
-            <div id="loginError"></div>
-            <form id="loginForm">
-                <div class="form-group"><label>Uživatelské jméno</label><input type="text" id="username" required></div>
-                <div class="form-group"><label>Heslo</label>
-                    <div style="position: relative;">
-                        <input type="password" id="password" required style="padding-right: 40px;">
-                        <i class="fa-solid fa-eye" id="togglePassword"
-                            style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); cursor: pointer; color: var(--text-muted);"></i>
+    < !-- LOGIN -->
+        <div id="loginPage" class="hidden">
+            <div class="login-container">
+                <h1 style="text-align: center; margin-bottom: 2rem;"><i class="fa-solid fa-chess-knight"
+                        style="color: var(--primary-color);"></i><br>Admin Panel </h1>
+                <div id="loginError"></div>
+                <form id="loginForm">
+                    <div class="form-group"><label>Uživatelské jméno</label><input type="text" id="username" required>
                     </div>
-                </div>
-                <button type="submit" class="btn-primary" style="width: 100%">Přihlásit se</button>
-            </form>
+                    <div class="form-group"><label>Heslo</label>
+                        <div style="position: relative;"><input type="password" id="password" required
+                                style="padding-right: 40px;"><i class="fa-solid fa-eye" id="togglePassword"
+                                style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); cursor: pointer; color: var(--text-muted);"></i>
+                        </div>
+                    </div><button type="submit" class="btn-primary" style="width: 100%">Přihlásit se</button>
+                </form>
+            </div>
         </div>
-    </div>
-
-    <!-- ADMIN PANEL -->
-    <div id="adminPanel" class="hidden">
-        <header>
-            <div class="container">
-                <nav>
-                    <a href="index.html" class="logo"><i class="fa-solid fa-chess-knight"></i> TJ Bižuterie - Admin</a>
-                    <ul class="nav-links">
-                        <li style="display: flex; align-items: center; margin-right: 1rem;">
-                            <label class="switch" style="margin-bottom: 0;">
-                                <input type="checkbox" id="maintenanceToggle" onchange="toggleMaintenance()">
-                                <span class="slider round"></span>
-                            </label>
-                            <span style="font-size: 0.8rem; margin-left: 0.5rem; color: #aaa;">Údržba</span>
-                        </li>
-                        <li><a href="index.html" target="_blank"><i class="fa-solid fa-home"></i> Web</a></li>
-                        <li><a href="#" onclick="logout()" style="color: #fca5a5;"><i
-                                    class="fa-solid fa-sign-out-alt"></i> Odhlásit</a></li>
-                    </ul>
-                </nav>
-            </div>
-        </header>
-
-        <div class="admin-container">
-            <div class="admin-header">
-                <div>
-                    <h1><i class="fa-solid fa-cogs"></i> Správa webu</h1>
-                    <p style="margin: 0.25rem 0 0 0; font-size: 0.9rem; opacity: 0.8; visibility: visible !important;"
-                        id="userInfo"></p>
-                    <p style="margin: 0.1rem 0 0 0; font-size: 0.7rem; opacity: 0.5; font-family: monospace;">Build:
-                        2025-12-12 14:27 #v8</p>
-                </div>
-            </div>
-
-            <div class="admin-nav">
-                <div class="nav-tab active" onclick="switchTab('dashboard')"><i class="fa-solid fa-list"></i> Přehled
-                </div>
-                <div class="nav-tab" onclick="switchTab('editor'); resetEditor();"><i class="fa-solid fa-plus"></i> Nová
-                    novinka</div>
-                <div class="nav-tab" onclick="switchTab('members')" style="display: none;"><i
-                        class="fa-solid fa-address-book"></i> Členové
-                </div>
-                <div class="nav-tab hidden" id="usersTab" onclick="switchTab('users')"><i class="fa-solid fa-users"></i>
-                    Uživatelé</div>
-                <div class="nav-tab" id="messagesTab" onclick="switchTab('messages')"><i
-                        class="fa-solid fa-comments"></i>
-                    Vzkazovník</div>
-                <div class="nav-tab" id="blicakTab" onclick="switchTab('blicak')"><i class="fa-solid fa-bolt"></i>
-                    Vánoční blesk</div>
-                <div class="nav-tab" id="competitionsTab" onclick="switchTab('competitions')"><i
-                        class="fa-solid fa-table"></i>
-                    Tabulky družstva</div>
-                <div class="nav-tab" id="galleryTab" onclick="switchTab('gallery')" style="display: none;"><i
-                        class="fa-regular fa-images"></i>
-                    Galerie</div>
-                <div class="nav-tab" id="puzzleRacerTab" onclick="switchTab('puzzleRacer')"><i
-                        class="fa-solid fa-puzzle-piece"></i>
-                    Puzzle Racer</div>
-            </div>
-
-            <div id="alertContainer"></div>
-
-            <!-- DASHBOARD -->
-            <div id="dashboardView">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-                    <h2 style="margin: 0;">Seznam novinek</h2>
-                    <button class="btn-primary" onclick="switchTab('editor'); resetEditor();"><i
-                            class="fa-solid fa-plus"></i> Nová
-                        novinka</button>
-                </div>
-                <table class="data-table" id="newsTable">
-                    <thead>
-                        <tr>
-                            <th>Datum</th>
-                            <th>Název</th>
-                            <th class="hide-mobile">Kategorie</th>
-                            <th class="hide-mobile">Autor</th>
-                            <th class="hide-mobile">Stav</th>
-                            <th>Akce</th>
-                        </tr>
-                    </thead>
-                    <tbody id="newsTableBody"></tbody>
-                </table>
-            </div>
-
-            <!-- EDITOR -->
-            <div id="editorView" class="hidden">
-                <div class="editor-layout">
-                    <!-- Main Editor (70%) -->
-                    <div class="editor-main">
-                        <h2 style="margin-top: 0;" id="editorTitle">Nová novinka</h2>
-                        <input type="hidden" id="editNewsId">
-
-                        <div class="form-group">
-                            <label>Nadpis článku *</label>
-                            <input type="text" id="newsTitle" placeholder="Zadejte nadpis..." oninput="updatePreview()">
-                        </div>
-
-                        <!-- WYSIWYG Editor -->
-                        <div class="form-group">
-                            <label>Obsah článku *</label>
-                            <div class="wysiwyg-toolbar" style="flex-wrap: wrap;">
-                                <!-- Row 1: Formatting -->
-                                <button type="button" id="btnBold" onclick="formatText('bold')"
-                                    title="Tučně (Ctrl+B)"><i class="fa-solid fa-bold"></i></button>
-                                <button type="button" id="btnItalic" onclick="formatText('italic')"
-                                    title="Kurzíva (Ctrl+I)"><i class="fa-solid fa-italic"></i></button>
-                                <button type="button" id="btnUnderline" onclick="formatText('underline')"
-                                    title="Podtržení (Ctrl+U)"><i class="fa-solid fa-underline"></i></button>
-                                <div class="divider"></div>
-                                <!-- Heading buttons -->
-                                <div
-                                    style="display: flex; gap: 2px; background: rgba(255,255,255,0.05); border-radius: 4px; padding: 2px;">
-                                    <button type="button" id="headingP" onclick="applyHeading('p')"
-                                        title="Normální text"
-                                        style="padding: 0.25rem 0.5rem; font-size: 0.7rem; font-weight: 600; border-radius: 3px; min-width: 28px;">P</button>
-                                    <button type="button" id="headingH1" onclick="applyHeading('h1')" title="Nadpis 1"
-                                        style="padding: 0.25rem 0.5rem; font-size: 0.7rem; font-weight: 700; border-radius: 3px; min-width: 28px;">H1</button>
-                                    <button type="button" id="headingH2" onclick="applyHeading('h2')" title="Nadpis 2"
-                                        style="padding: 0.25rem 0.5rem; font-size: 0.7rem; font-weight: 600; border-radius: 3px; min-width: 28px;">H2</button>
-                                    <button type="button" id="headingH3" onclick="applyHeading('h3')" title="Nadpis 3"
-                                        style="padding: 0.25rem 0.5rem; font-size: 0.7rem; font-weight: 500; border-radius: 3px; min-width: 28px;">H3</button>
-                                </div>
-                                <div class="divider"></div>
-                                <button type="button" onclick="insertLink()" title="Odkaz"><i
-                                        class="fa-solid fa-link"></i></button>
-                                <button type="button" onclick="toggleSource()" title="HTML" id="btnSource"><i
-                                        class="fa-solid fa-code"></i></button>
-
-                                <!-- Row 2: Highlights and blocks (will wrap on smaller screens) -->
-                                <div class="divider" style="height: 0; width: 100%; margin: 0.25rem 0;"></div>
-                                <button type="button" id="btnHighlightName" onmousedown="event.preventDefault()"
-                                    onclick="insertHighlight('name')" title="Zvýraznit jméno" style="color: #60a5fa;"><i
-                                        class="fa-solid fa-user"></i> Jméno</button>
-                                <button type="button" id="btnHighlightScore" onmousedown="event.preventDefault()"
-                                    onclick="insertHighlight('score')" title="Zvýraznit skóre"
-                                    style="color: #4ade80;"><i class="fa-solid fa-trophy"></i> Skóre</button>
-                                <div class="divider"></div>
-                                <button type="button" onclick="insertIntroBlock()" title="Puzzle blok"
-                                    style="color: #fbbf24;"><i class="fa-solid fa-lightbulb"></i></button>
-                                <button type="button" onclick="insertImage()" title="Obrázek" style="color: #f472b6;"><i
-                                        class="fa-solid fa-image"></i></button>
-                                <button type="button" onclick="insertCollapsibleBlock()" title="Rozbalovací sekce"
-                                    style="color: #8b5cf6;"><i class="fa-solid fa-layer-group"></i></button>
-                            </div>
-                            <div class="wysiwyg-content" id="articleContent" contenteditable="true"
-                                oninput="updatePreview()"></div>
-                            <textarea id="articleSource" class="wysiwyg-content hidden"
-                                oninput="updateContentFromSource()"></textarea>
-                        </div>
-
-                        <!-- Games Panel -->
-                        <div class="panel-section">
-                            <div class="panel-header">
-                                <label style="margin: 0;"><i class="fa-solid fa-chess-board"></i> Přehrávač
-                                    partií</label>
-                            </div>
-
-                            <div class="form-group" id="gamesInputPanel">
-                                <div
-                                    style="background: rgba(255, 255, 255, 0.05); padding: 0.75rem; border-radius: 8px; margin-bottom: 1rem;">
-                                    <h4
-                                        style="margin-top: 0; margin-bottom: 0.5rem; color: var(--primary-color); font-size: 0.85rem;">
-                                        Přidat partii</h4>
-                                    <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
-                                        <input type="text" id="gameTitle" placeholder="Kdo s kým"
-                                            style="flex: 1; min-width: 120px; max-width: 180px; font-size: 0.8rem; padding: 0.4rem;">
-                                        <input type="text" id="gameId" placeholder="Chess.com ID"
-                                            style="width: 120px; font-size: 0.8rem; padding: 0.4rem;">
-                                        <label
-                                            style="display: flex; align-items: center; gap: 0.3rem; cursor: pointer; font-size: 0.75rem; white-space: nowrap;">
-                                            <input type="checkbox" id="gameCommented" style="width: auto; margin: 0;">
-                                            Koment.
-                                        </label>
-                                        <button type="button" class="btn-primary btn-small" onclick="addGame()"
-                                            style="padding: 0.4rem 0.6rem; font-size: 0.75rem; white-space: nowrap;">
-                                            <i class="fa-solid fa-plus"></i> Přidat
-                                        </button>
-                                    </div>
-                                </div>
-
-                                <div
-                                    style="background: rgba(255, 255, 255, 0.05); padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
-                                    <h4 style="margin-top: 0; color: var(--primary-color);">Přidat nadpis
-                                        (oddělovač)
-                                    </h4>
-                                    <div style="display: flex; gap: 0.5rem;">
-                                        <input type="text" id="headerTitle" placeholder="Např. A tým, B tým...">
-                                        <button type="button" class="btn-secondary btn-small" onclick="addHeader()">
-                                            <i class="fa-solid fa-heading"></i> Přidat
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div id="gamesList" style="margin-top: 1rem;"></div>
-                        </div>
-
-                        <!-- Gallery Panel -->
-                        <div class="panel-section">
-                            <div class="panel-header">
-                                <label style="margin: 0;"><i class="fa-solid fa-images"></i> Galerie</label>
-                                <div style="display: flex; gap: 0.5rem;">
-                                    <button type="button" class="btn-secondary btn-small"
-                                        onclick="document.getElementById('galleryInput').click()"><i
-                                            class="fa-solid fa-upload"></i> Nahrát</button>
-                                    <button type="button" class="btn-secondary btn-small"
-                                        onclick="toggleGalleryUrlInput()"><i class="fa-solid fa-link"></i>
-                                        URL</button>
-                                    <button type="button" class="btn-secondary btn-small"
-                                        onclick="selectGalleryForArticleGallery()"
-                                        title="Vybrat z existující galerie"><i
-                                            class="fa-regular fa-images"></i></button>
-                                </div>
-                                <input type="file" id="galleryInput" accept="image/*" multiple style="display: none;"
-                                    onchange="addGalleryImages(event)">
-                            </div>
-                            <div id="galleryUrlInput" class="hidden" style="margin-bottom: 0.75rem;">
-                                <div style="display: flex; gap: 0.5rem;">
-                                    <input type="text" id="galleryImageUrl" placeholder="URL obrázku (https://...)"
-                                        style="flex: 1; font-size: 0.85rem;">
-                                    <button type="button" class="btn-primary btn-small"
-                                        onclick="addGalleryFromUrl()">Přidat</button>
-                                </div>
-                            </div>
-                            <div id="galleryPreview" style="display: flex; flex-wrap: wrap; gap: 0.5rem;"></div>
-                        </div>
-
-                        <div style="margin-top: 2rem; display: flex; gap: 1rem;">
-                            <button class="btn-primary" onclick="saveNews()"><i class="fa-solid fa-save"></i>
-                                Uložit</button>
-                            <button class="btn-secondary" onclick="switchTab('dashboard')">Zrušit</button>
-                        </div>
+        < !-- ADMIN PANEL -->
+            <div id="adminPanel" class="hidden">
+                <header>
+                    <div class="container">
+                        <nav><a href="index.html" class="logo"><i class="fa-solid fa-chess-knight"></i>TJ Bižuterie -
+                                Admin</a>
+                            <ul class="nav-links">
+                                <li style="display: flex; align-items: center; margin-right: 1rem;"><label
+                                        class="switch" style="margin-bottom: 0;"><input type="checkbox"
+                                            id="maintenanceToggle" onchange="toggleMaintenance()"><span
+                                            class="slider round"></span></label><span
+                                        style="font-size: 0.8rem; margin-left: 0.5rem; color: #aaa;">Údržba</span></li>
+                                <li><a href="index.html" target="_blank"><i class="fa-solid fa-home"></i>Web</a></li>
+                                <li><a href="#" onclick="logout()" style="color: #fca5a5;"><i
+                                            class="fa-solid fa-sign-out-alt"></i>Odhlásit</a></li>
+                            </ul>
+                        </nav>
                     </div>
-
-                    <!-- Sidebar (30%) -->
-                    <div class="editor-sidebar">
-                        <!-- SECTION 1: Publikace (collapsible) -->
-                        <div id="publikaceSection"
-                            style="margin-bottom: 1.5rem; padding-bottom: 1rem; border-bottom: 1px solid rgba(255,255,255,0.1);">
-                            <div onclick="toggleSidebarSection('publikace')"
-                                style="display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; margin-bottom: 0.75rem; color: var(--primary-color); cursor: pointer;">
-                                <div style="display: flex; align-items: center; gap: 0.5rem;">
-                                    <i class="fa-solid fa-paper-plane"></i>
-                                    <span style="font-weight: 600;">Publikace</span>
-                                </div>
-                                <i class="fa-solid fa-chevron-down" id="publikaceIcon"
-                                    style="font-size: 0.7rem; transition: transform 0.2s;"></i>
-                            </div>
-                            <div id="publikaceContent">
-
-                                <div class="form-group" style="margin-bottom: 0.75rem;">
-                                    <label style="font-size: 0.8rem;">Kategorie</label>
-                                    <select id="newsCategory" onchange="updatePreview()" style="font-size: 0.85rem;">
-                                        <option value="Soutěže družstev">Soutěže družstev</option>
-                                        <option value="Oddílový přebor">Oddílový přebor</option>
-                                        <option value="Mládež">Mládež</option>
-                                        <option value="O nás">O nás</option>
-                                    </select>
-                                </div>
-
-                                <div class="form-group" style="margin-bottom: 0.75rem;">
-                                    <label style="font-size: 0.8rem;">Datum</label>
-                                    <input type="date" id="newsDate" oninput="updatePreview()"
-                                        style="font-size: 0.85rem;">
-                                </div>
-
-                                <div class="form-group" style="margin-bottom: 0.75rem;">
-                                    <label style="font-size: 0.8rem;">Krátký popis</label>
-                                    <textarea id="newsExcerpt" rows="2" placeholder="Zobrazí se na kartě..."
-                                        oninput="updatePreview()" style="font-size: 0.85rem;"></textarea>
-                                </div>
-
-                                <label
-                                    style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; font-size: 0.85rem;">
-                                    <input type="checkbox" id="publishCheck" style="width: auto;">
-                                    <span>Publikovat ihned</span>
-                                </label>
-
-                                <button type="button" class="btn-primary" onclick="saveNews()"
-                                    style="width: 100%; margin-top: 1rem; justify-content: center;">
-                                    <i class="fa-solid fa-save"></i> Uložit
-                                </button>
-                            </div><!-- end publikaceContent -->
-                        </div><!-- end publikaceSection -->
-
-                        <!-- SECTION 2: Obrázek -->
-                        <div
-                            style="margin-bottom: 1.5rem; padding-bottom: 1rem; border-bottom: 1px solid rgba(255,255,255,0.1);">
-                            <div
-                                style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1rem; color: #f472b6;">
-                                <i class="fa-solid fa-image"></i>
-                                <span style="font-weight: 600;">Náhledový obrázek</span>
-                            </div>
-
-                            <div class="image-upload" id="uploadArea"
-                                onclick="document.getElementById('imageInput').click()"
-                                style="height: 120px; margin-bottom: 0.5rem; position: relative;">
-                                <div id="uploadPlaceholder">
-                                    <i class="fa-solid fa-cloud-upload-alt"
-                                        style="font-size: 1.2rem; color: var(--primary-color);"></i>
-                                    <p style="margin: 0.3rem 0 0 0; font-size: 0.75rem;">Klikněte pro nahrání
-                                    </p>
-                                </div>
-                                <img id="uploadedImage" class="uploaded-thumb" style="display: none;">
-                                <button type="button" id="removeImageBtn"
-                                    onclick="event.stopPropagation(); removeImage();"
-                                    style="display: none; position: absolute; top: 5px; right: 5px; background: rgba(0,0,0,0.7); border: none; color: #f87171; padding: 0.3rem 0.5rem; border-radius: 4px; cursor: pointer; font-size: 0.7rem;">
-                                    <i class="fa-solid fa-times"></i>
-                                </button>
-                            </div>
-                            <input type="file" id="imageInput" accept="image/*" style="display: none;"
-                                onchange="handleImageUpload(event)">
-
-                            <div id="imageUrlWrapper" style="display: flex; gap: 0.5rem; align-items: center;">
-                                <input type="text" id="imageUrl" placeholder="nebo URL obrázku"
-                                    style="font-size: 0.8rem; flex: 1;">
-                                <button type="button" class="btn-secondary btn-small" onclick="handleImageUrl()"
-                                    style="padding: 0.4rem 0.6rem; font-size: 0.75rem;">Použít</button>
-                                <button type="button" class="btn-secondary btn-small"
-                                    onclick="selectGalleryForThumbnail()"
-                                    style="padding: 0.4rem 0.6rem; font-size: 0.75rem;" title="Vybrat z galerie"><i
-                                        class="fa-regular fa-images"></i></button>
-                            </div>
-
-                            <!-- Crop position selector -->
-                            <div id="cropPositionWrapper" style="display: none; margin-top: 0.8rem;">
-                                <label
-                                    style="font-size: 0.75rem; color: var(--text-muted); display: flex; justify-content: space-between; margin-bottom: 0.4rem;">
-                                    <span>Pozice ořezu (výška):</span>
-                                    <span id="cropValueLabel" style="color: var(--primary-color);">50%</span>
-                                </label>
-                                <div style="display: flex; align-items: center; gap: 0.5rem;">
-                                    <span style="font-size: 0.7rem; color: var(--text-muted);">Horní</span>
-                                    <input type="range" id="cropSlider" min="0" max="100" value="50" step="1"
-                                        oninput="updateCropFromSlider(this.value)" style="flex: 1; cursor: pointer;">
-                                    <span style="font-size: 0.7rem; color: var(--text-muted);">Dolní</span>
-                                </div>
-                            </div> <button type="button" onclick="rotateImage()"
-                                style="width: 100%; margin-top: 0.5rem; padding: 0.3rem; background: rgba(255, 255, 255, 0.05); border: 1px solid var(--editor-border); color: var(--text-color); border-radius: 4px; cursor: pointer; font-size: 0.75rem; display: flex; align-items: center; justify-content: center; gap: 0.5rem;">
-                                <i class="fa-solid fa-rotate-right"></i> Otočit o 90°
-                            </button>
-                        </div>
-
-                        <!-- SECTION 3: Náhledy -->
+                </header>
+                <div class="admin-container">
+                    <div class="admin-header">
                         <div>
+                            <h1><i class="fa-solid fa-cogs"></i>Správa webu</h1>
+                            <p style="margin: 0.25rem 0 0 0; font-size: 0.9rem; opacity: 0.8; visibility: visible !important;"
+                                id="userInfo"></p>
+                            <p style="margin: 0.1rem 0 0 0; font-size: 0.7rem; opacity: 0.5; font-family: monospace;">
+                                Build: 2025-12-12 14:27 #v8</p>
+                        </div>
+                    </div>
+                    <div class="admin-nav">
+                        <div class="nav-tab active" onclick="switchTab('dashboard')"><i
+                                class="fa-solid fa-list"></i>Přehled </div>
+                        <div class="nav-tab" onclick="switchTab('editor'); resetEditor();"><i
+                                class="fa-solid fa-plus"></i>Nová novinka</div>
+                        <div class="nav-tab" onclick="switchTab('members')" style="display: none;"><i
+                                class="fa-solid fa-address-book"></i>Členové </div>
+                        <div class="nav-tab hidden" id="usersTab" onclick="switchTab('users')"><i
+                                class="fa-solid fa-users"></i>Uživatelé</div>
+                        <div class="nav-tab" id="messagesTab" onclick="switchTab('messages')"><i
+                                class="fa-solid fa-comments"></i>Vzkazovník</div>
+                        <div class="nav-tab" id="blicakTab" onclick="switchTab('blicak')"><i
+                                class="fa-solid fa-bolt"></i>Vánoční blesk</div>
+                        <div class="nav-tab" id="competitionsTab" onclick="switchTab('competitions')"><i
+                                class="fa-solid fa-table"></i>Tabulky družstva</div>
+                        <div class="nav-tab" id="galleryTab" onclick="switchTab('gallery')" style="display: none;"><i
+                                class="fa-regular fa-images"></i>Galerie</div>
+                        <div class="nav-tab" id="puzzleRacerTab" onclick="switchTab('puzzleRacer')"><i
+                                class="fa-solid fa-puzzle-piece"></i>Puzzle Racer</div>
+                    </div>
+                    <div id="alertContainer"></div>
+                    < !-- DASHBOARD -->
+                        <div id="dashboardView">
                             <div
-                                style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1rem; color: #60a5fa;">
-                                <i class="fa-solid fa-eye"></i>
-                                <span style="font-weight: 600;">Náhledy</span>
+                                style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                                <h2 style="margin: 0;">Seznam novinek</h2><button class="btn-primary"
+                                    onclick="switchTab('editor'); resetEditor();"><i class="fa-solid fa-plus"></i>Nová
+                                    novinka</button>
                             </div>
-
-                            <!-- Card preview -->
-                            <div class="preview-card" style="margin-bottom: 0.75rem;">
-                                <div class="preview-title" style="font-size: 0.75rem; padding: 0.5rem;">Karta</div>
-                                <div class="news-preview"
-                                    style="width: 100%; border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; overflow: hidden; background: #1a1a1a;">
-                                    <div class="preview-image" id="previewImage"
-                                        style="height: 120px; text-align: center; background: #000; display: flex; align-items: center; justify-content: center; overflow: hidden;">
-                                        <i class="fa-solid fa-image"
-                                            style="font-size: 1.5rem; color: var(--text-muted);"></i>
-                                    </div>
-                                    <div class="card-content" style="padding: 0.75rem;">
-                                        <span class="card-category" id="previewCategory"
-                                            style="font-size: 0.6rem;">Kategorie</span>
-                                        <span class="card-date" id="previewDate"
-                                            style="font-size: 0.55rem;">Datum</span>
-                                        <h3 class="card-title" id="previewTitle"
-                                            style="font-size: 0.8rem; margin: 0.3rem 0;">Nadpis</h3>
-                                        <p class="card-excerpt" id="previewExcerpt"
-                                            style="font-size: 0.7rem; color: var(--text-muted);">Popis...</p>
-                                    </div>
+                            <table class="data-table" id="newsTable">
+                                <thead>
+                                    <tr>
+                                        <th>Datum</th>
+                                        <th>Název</th>
+                                        <th class="hide-mobile">Kategorie</th>
+                                        <th class="hide-mobile">Autor</th>
+                                        <th class="hide-mobile">Stav</th>
+                                        <th>Akce</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="newsTableBody"></tbody>
+                            </table>
+                        </div>
+                        < !-- EDITOR -->
+                            <div id="editorView" class="hidden">
+                                <div class="editor-layout">
+                                    < !-- Main Editor (70%) -->
+                                        <div class="editor-main">
+                                            <h2 style="margin-top: 0;" id="editorTitle">Nová novinka</h2><input
+                                                type="hidden" id="editNewsId">
+                                            <div class="form-group"><label>Nadpis článku *</label><input type="text"
+                                                    id="newsTitle" placeholder="Zadejte nadpis..."
+                                                    oninput="updatePreview()"></div>
+                                            < !-- WYSIWYG Editor -->
+                                                <div class="form-group"><label>Obsah článku *</label>
+                                                    <div class="wysiwyg-toolbar" style="flex-wrap: wrap;">
+                                                        < !-- Row 1: Formatting --><button type="button" id="btnBold"
+                                                                onclick="formatText('bold')" title="Tučně (Ctrl+B)"><i
+                                                                    class="fa-solid fa-bold"></i></button><button
+                                                                type="button" id="btnItalic"
+                                                                onclick="formatText('italic')"
+                                                                title="Kurzíva (Ctrl+I)"><i
+                                                                    class="fa-solid fa-italic"></i></button><button
+                                                                type="button" id="btnUnderline"
+                                                                onclick="formatText('underline')"
+                                                                title="Podtržení (Ctrl+U)"><i
+                                                                    class="fa-solid fa-underline"></i></button>
+                                                            <div class="divider"></div>
+                                                            < !-- Heading buttons -->
+                                                                <div
+                                                                    style="display: flex; gap: 2px; background: rgba(255,255,255,0.05); border-radius: 4px; padding: 2px;">
+                                                                    <button type="button" id="headingP"
+                                                                        onclick="applyHeading('p')"
+                                                                        title="Normální text"
+                                                                        style="padding: 0.25rem 0.5rem; font-size: 0.7rem; font-weight: 600; border-radius: 3px; min-width: 28px;">P</button><button
+                                                                        type="button" id="headingH1"
+                                                                        onclick="applyHeading('h1')" title="Nadpis 1"
+                                                                        style="padding: 0.25rem 0.5rem; font-size: 0.7rem; font-weight: 700; border-radius: 3px; min-width: 28px;">H1</button><button
+                                                                        type="button" id="headingH2"
+                                                                        onclick="applyHeading('h2')" title="Nadpis 2"
+                                                                        style="padding: 0.25rem 0.5rem; font-size: 0.7rem; font-weight: 600; border-radius: 3px; min-width: 28px;">H2</button><button
+                                                                        type="button" id="headingH3"
+                                                                        onclick="applyHeading('h3')" title="Nadpis 3"
+                                                                        style="padding: 0.25rem 0.5rem; font-size: 0.7rem; font-weight: 500; border-radius: 3px; min-width: 28px;">H3</button>
+                                                                </div>
+                                                                <div class="divider"></div><button type="button"
+                                                                    onclick="insertLink()" title="Odkaz"><i
+                                                                        class="fa-solid fa-link"></i></button><button
+                                                                    type="button" onclick="toggleSource()" title="HTML"
+                                                                    id="btnSource"><i
+                                                                        class="fa-solid fa-code"></i></button>
+                                                                < !-- Row 2: Highlights and blocks (will wrap on smaller
+                                                                    screens) -->
+                                                                    <div class="divider"
+                                                                        style="height: 0; width: 100%; margin: 0.25rem 0;">
+                                                                    </div><button type="button" id="btnHighlightName"
+                                                                        onmousedown="event.preventDefault()"
+                                                                        onclick="insertHighlight('name')"
+                                                                        title="Zvýraznit jméno"
+                                                                        style="color: #60a5fa;"><i
+                                                                            class="fa-solid fa-user"></i>Jméno</button><button
+                                                                        type="button" id="btnHighlightScore"
+                                                                        onmousedown="event.preventDefault()"
+                                                                        onclick="insertHighlight('score')"
+                                                                        title="Zvýraznit skóre"
+                                                                        style="color: #4ade80;"><i
+                                                                            class="fa-solid fa-trophy"></i>Skóre</button>
+                                                                    <div class="divider"></div><button type="button"
+                                                                        onclick="insertIntroBlock()" title="Puzzle blok"
+                                                                        style="color: #fbbf24;"><i
+                                                                            class="fa-solid fa-lightbulb"></i></button><button
+                                                                        type="button" onclick="insertImage()"
+                                                                        title="Obrázek" style="color: #f472b6;"><i
+                                                                            class="fa-solid fa-image"></i></button><button
+                                                                        type="button" onclick="insertCollapsibleBlock()"
+                                                                        title="Rozbalovací sekce"
+                                                                        style="color: #8b5cf6;"><i
+                                                                            class="fa-solid fa-layer-group"></i></button>
+                                                    </div>
+                                                    <div class="wysiwyg-content" id="articleContent"
+                                                        contenteditable="true" oninput="updatePreview()"></div><textarea
+                                                        id="articleSource" class="wysiwyg-content hidden"
+                                                        oninput="updateContentFromSource()"></textarea>
+                                                </div>
+                                                < !-- Games Panel -->
+                                                    <div class="panel-section">
+                                                        <div class="panel-header"><label style="margin: 0;"><i
+                                                                    class="fa-solid fa-chess-board"></i>Přehrávač
+                                                                partií</label></div>
+                                                        <div class="form-group" id="gamesInputPanel">
+                                                            <div
+                                                                style="background: rgba(255, 255, 255, 0.05); padding: 0.75rem; border-radius: 8px; margin-bottom: 1rem;">
+                                                                <h4
+                                                                    style="margin-top: 0; margin-bottom: 0.5rem; color: var(--primary-color); font-size: 0.85rem;">
+                                                                    Přidat partii</h4>
+                                                                <div
+                                                                    style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
+                                                                    <input type="text" id="gameTitle"
+                                                                        placeholder="Kdo s kým"
+                                                                        style="flex: 1; min-width: 120px; max-width: 180px; font-size: 0.8rem; padding: 0.4rem;"><input
+                                                                        type="text" id="gameId"
+                                                                        placeholder="Chess.com ID"
+                                                                        style="width: 120px; font-size: 0.8rem; padding: 0.4rem;"><label
+                                                                        style="display: flex; align-items: center; gap: 0.3rem; cursor: pointer; font-size: 0.75rem; white-space: nowrap;"><input
+                                                                            type="checkbox" id="gameCommented"
+                                                                            style="width: auto; margin: 0;">Koment.
+                                                                    </label><button type="button"
+                                                                        class="btn-primary btn-small"
+                                                                        onclick="addGame()"
+                                                                        style="padding: 0.4rem 0.6rem; font-size: 0.75rem; white-space: nowrap;"><i
+                                                                            class="fa-solid fa-plus"></i>Přidat
+                                                                    </button></div>
+                                                            </div>
+                                                            <div
+                                                                style="background: rgba(255, 255, 255, 0.05); padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
+                                                                <h4 style="margin-top: 0; color: var(--primary-color);">
+                                                                    Přidat nadpis (oddělovač) </h4>
+                                                                <div style="display: flex; gap: 0.5rem;"><input
+                                                                        type="text" id="headerTitle"
+                                                                        placeholder="Např. A tým, B tým..."><button
+                                                                        type="button" class="btn-secondary btn-small"
+                                                                        onclick="addHeader()"><i
+                                                                            class="fa-solid fa-heading"></i>Přidat
+                                                                    </button></div>
+                                                            </div>
+                                                        </div>
+                                                        <div id="gamesList" style="margin-top: 1rem;"></div>
+                                                    </div>
+                                                    < !-- Gallery Panel -->
+                                                        <div class="panel-section">
+                                                            <div class="panel-header"><label style="margin: 0;"><i
+                                                                        class="fa-solid fa-images"></i>Galerie</label>
+                                                                <div style="display: flex; gap: 0.5rem;"><button
+                                                                        type="button" class="btn-secondary btn-small"
+                                                                        onclick="document.getElementById('galleryInput').click()"><i
+                                                                            class="fa-solid fa-upload"></i>Nahrát</button><button
+                                                                        type="button" class="btn-secondary btn-small"
+                                                                        onclick="toggleGalleryUrlInput()"><i
+                                                                            class="fa-solid fa-link"></i>URL</button><button
+                                                                        type="button" class="btn-secondary btn-small"
+                                                                        onclick="selectGalleryForArticleGallery()"
+                                                                        title="Vybrat z existující galerie"><i
+                                                                            class="fa-regular fa-images"></i></button>
+                                                                </div><input type="file" id="galleryInput"
+                                                                    accept="image/*" multiple style="display: none;"
+                                                                    onchange="addGalleryImages(event)">
+                                                            </div>
+                                                            <div id="galleryUrlInput" class="hidden"
+                                                                style="margin-bottom: 0.75rem;">
+                                                                <div style="display: flex; gap: 0.5rem;"><input
+                                                                        type="text" id="galleryImageUrl"
+                                                                        placeholder="URL obrázku (https://...)"
+                                                                        style="flex: 1; font-size: 0.85rem;"><button
+                                                                        type="button" class="btn-primary btn-small"
+                                                                        onclick="addGalleryFromUrl()">Přidat</button>
+                                                                </div>
+                                                            </div>
+                                                            <div id="galleryPreview"
+                                                                style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
+                                                            </div>
+                                                        </div>
+                                                        <div style="margin-top: 2rem; display: flex; gap: 1rem;"><button
+                                                                class="btn-primary" onclick="saveNews()"><i
+                                                                    class="fa-solid fa-save"></i>Uložit</button><button
+                                                                class="btn-secondary"
+                                                                onclick="switchTab('dashboard')">Zrušit</button></div>
+                                        </div>
+                                        < !-- Sidebar (30%) -->
+                                            <div class="editor-sidebar">
+                                                < !-- SECTION 1: Publikace (collapsible) -->
+                                                    <div id="publikaceSection"
+                                                        style="margin-bottom: 1.5rem; padding-bottom: 1rem; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                                                        <div onclick="toggleSidebarSection('publikace')"
+                                                            style="display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; margin-bottom: 0.75rem; color: var(--primary-color); cursor: pointer;">
+                                                            <div
+                                                                style="display: flex; align-items: center; gap: 0.5rem;">
+                                                                <i class="fa-solid fa-paper-plane"></i><span
+                                                                    style="font-weight: 600;">Publikace</span></div><i
+                                                                class="fa-solid fa-chevron-down" id="publikaceIcon"
+                                                                style="font-size: 0.7rem; transition: transform 0.2s;"></i>
+                                                        </div>
+                                                        <div id="publikaceContent">
+                                                            <div class="form-group" style="margin-bottom: 0.75rem;">
+                                                                <label
+                                                                    style="font-size: 0.8rem;">Kategorie</label><select
+                                                                    id="newsCategory" onchange="updatePreview()"
+                                                                    style="font-size: 0.85rem;">
+                                                                    <option value="Soutěže družstev">Soutěže družstev
+                                                                    </option>
+                                                                    <option value="Oddílový přebor">Oddílový přebor
+                                                                    </option>
+                                                                    <option value="Mládež">Mládež</option>
+                                                                    <option value="O nás">O nás</option>
+                                                                </select></div>
+                                                            <div class="form-group" style="margin-bottom: 0.75rem;">
+                                                                <label style="font-size: 0.8rem;">Datum</label><input
+                                                                    type="date" id="newsDate" oninput="updatePreview()"
+                                                                    style="font-size: 0.85rem;"></div>
+                                                            <div class="form-group" style="margin-bottom: 0.75rem;">
+                                                                <label style="font-size: 0.8rem;">Krátký
+                                                                    popis</label><textarea id="newsExcerpt" rows="2"
+                                                                    placeholder="Zobrazí se na kartě..."
+                                                                    oninput="updatePreview()"
+                                                                    style="font-size: 0.85rem;"></textarea></div><label
+                                                                style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; font-size: 0.85rem;"><input
+                                                                    type="checkbox" id="publishCheck"
+                                                                    style="width: auto;"><span>Publikovat
+                                                                    ihned</span></label><button type="button"
+                                                                class="btn-primary" onclick="saveNews()"
+                                                                style="width: 100%; margin-top: 1rem; justify-content: center;"><i
+                                                                    class="fa-solid fa-save"></i>Uložit </button>
+                                                        </div>
+                                                        < !-- end publikaceContent -->
+                                                    </div>
+                                                    < !-- end publikaceSection -->
+                                                        < !-- SECTION 2: Obrázek -->
+                                                            <div
+                                                                style="margin-bottom: 1.5rem; padding-bottom: 1rem; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                                                                <div
+                                                                    style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1rem; color: #f472b6;">
+                                                                    <i class="fa-solid fa-image"></i><span
+                                                                        style="font-weight: 600;">Náhledový
+                                                                        obrázek</span></div>
+                                                                <div class="image-upload" id="uploadArea"
+                                                                    onclick="document.getElementById('imageInput').click()"
+                                                                    style="height: 120px; margin-bottom: 0.5rem; position: relative;">
+                                                                    <div id="uploadPlaceholder"><i
+                                                                            class="fa-solid fa-cloud-upload-alt"
+                                                                            style="font-size: 1.2rem; color: var(--primary-color);"></i>
+                                                                        <p
+                                                                            style="margin: 0.3rem 0 0 0; font-size: 0.75rem;">
+                                                                            Klikněte pro nahrání </p>
+                                                                    </div><img id="uploadedImage" class="uploaded-thumb"
+                                                                        style="display: none;"><button type="button"
+                                                                        id="removeImageBtn"
+                                                                        onclick="event.stopPropagation(); removeImage();"
+                                                                        style="display: none; position: absolute; top: 5px; right: 5px; background: rgba(0,0,0,0.7); border: none; color: #f87171; padding: 0.3rem 0.5rem; border-radius: 4px; cursor: pointer; font-size: 0.7rem;"><i
+                                                                            class="fa-solid fa-times"></i></button>
+                                                                </div><input type="file" id="imageInput"
+                                                                    accept="image/*" style="display: none;"
+                                                                    onchange="handleImageUpload(event)">
+                                                                <div id="imageUrlWrapper"
+                                                                    style="display: flex; gap: 0.5rem; align-items: center;">
+                                                                    <input type="text" id="imageUrl"
+                                                                        placeholder="nebo URL obrázku"
+                                                                        style="font-size: 0.8rem; flex: 1;"><button
+                                                                        type="button" class="btn-secondary btn-small"
+                                                                        onclick="handleImageUrl()"
+                                                                        style="padding: 0.4rem 0.6rem; font-size: 0.75rem;">Použít</button><button
+                                                                        type="button" class="btn-secondary btn-small"
+                                                                        onclick="selectGalleryForThumbnail()"
+                                                                        style="padding: 0.4rem 0.6rem; font-size: 0.75rem;"
+                                                                        title="Vybrat z galerie"><i
+                                                                            class="fa-regular fa-images"></i></button>
+                                                                </div>
+                                                                < !-- Crop position selector -->
+                                                                    <div id="cropPositionWrapper"
+                                                                        style="display: none; margin-top: 0.8rem;">
+                                                                        <label
+                                                                            style="font-size: 0.75rem; color: var(--text-muted); display: flex; justify-content: space-between; margin-bottom: 0.4rem;"><span>Pozice
+                                                                                ořezu (výška):</span><span
+                                                                                id="cropValueLabel"
+                                                                                style="color: var(--primary-color);">50%</span></label>
+                                                                        <div
+                                                                            style="display: flex; align-items: center; gap: 0.5rem;">
+                                                                            <span
+                                                                                style="font-size: 0.7rem; color: var(--text-muted);">Horní</span><input
+                                                                                type="range" id="cropSlider" min="0"
+                                                                                max="100" value="50" step="1"
+                                                                                oninput="updateCropFromSlider(this.value)"
+                                                                                style="flex: 1; cursor: pointer;"><span
+                                                                                style="font-size: 0.7rem; color: var(--text-muted);">Dolní</span>
+                                                                        </div>
+                                                                    </div><button type="button" onclick="rotateImage()"
+                                                                        style="width: 100%; margin-top: 0.5rem; padding: 0.3rem; background: rgba(255, 255, 255, 0.05); border: 1px solid var(--editor-border); color: var(--text-color); border-radius: 4px; cursor: pointer; font-size: 0.75rem; display: flex; align-items: center; justify-content: center; gap: 0.5rem;"><i
+                                                                            class="fa-solid fa-rotate-right"></i>Otočit
+                                                                        o 90° </button>
+                                                            </div>
+                                                            < !-- SECTION 3: Náhledy -->
+                                                                <div>
+                                                                    <div
+                                                                        style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1rem; color: #60a5fa;">
+                                                                        <i class="fa-solid fa-eye"></i><span
+                                                                            style="font-weight: 600;">Náhledy</span>
+                                                                    </div>
+                                                                    < !-- Card preview -->
+                                                                        <div class="preview-card"
+                                                                            style="margin-bottom: 0.75rem;">
+                                                                            <div class="preview-title"
+                                                                                style="font-size: 0.75rem; padding: 0.5rem;">
+                                                                                Karta</div>
+                                                                            <div class="news-preview"
+                                                                                style="width: 100%; border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; overflow: hidden; background: #1a1a1a;">
+                                                                                <div class="preview-image"
+                                                                                    id="previewImage"
+                                                                                    style="height: 120px; text-align: center; background: #000; display: flex; align-items: center; justify-content: center; overflow: hidden;">
+                                                                                    <i class="fa-solid fa-image"
+                                                                                        style="font-size: 1.5rem; color: var(--text-muted);"></i>
+                                                                                </div>
+                                                                                <div class="card-content"
+                                                                                    style="padding: 0.75rem;"><span
+                                                                                        class="card-category"
+                                                                                        id="previewCategory"
+                                                                                        style="font-size: 0.6rem;">Kategorie</span><span
+                                                                                        class="card-date"
+                                                                                        id="previewDate"
+                                                                                        style="font-size: 0.55rem;">Datum</span>
+                                                                                    <h3 class="card-title"
+                                                                                        id="previewTitle"
+                                                                                        style="font-size: 0.8rem; margin: 0.3rem 0;">
+                                                                                        Nadpis</h3>
+                                                                                    <p class="card-excerpt"
+                                                                                        id="previewExcerpt"
+                                                                                        style="font-size: 0.7rem; color: var(--text-muted);">
+                                                                                        Popis...</p>
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+                                                                </div>
+                                            </div>
                                 </div>
                             </div>
-
+                </div>
+            </div>
+            < !-- USERS -->
+                < !-- MEMBERS -->
+                    <div id="membersView" class="hidden">
+                        <div
+                            style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                            <h2 style="margin: 0;">Seznam členů</h2><button class="btn-primary"
+                                onclick="openMemberModal()"><i class="fa-solid fa-user-plus"></i>Nový člen</button>
+                        </div>
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Jméno</th>
+                                    <th>ELO</th>
+                                    <th>Titul</th>
+                                    <th>Narození</th>
+                                    <th>Role</th>
+                                    <th>Akce</th>
+                                </tr>
+                            </thead>
+                            <tbody id="membersTableBody"></tbody>
+                        </table>
+                    </div>
+                    <div id="usersView" class="hidden">
+                        <div class="editor-layout">
+                            <div>
+                                <h2>Seznam uživatelů</h2>
+                                <table class="data-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Username</th>
+                                            <th>Email</th>
+                                            <th>Role</th>
+                                            <th>Akce</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="usersTableBody"></tbody>
+                                </table>
+                            </div>
+                            <div class="editor-sidebar">
+                                <h3>Přidat uživatele</h3>
+                                <div class="form-group"><label>Username</label><input type="text" id="newUsername">
+                                </div>
+                                <div class="form-group"><label>Email</label><input type="email" id="newEmail"></div>
+                                <div class="form-group"><label>Heslo</label><input type="password" id="newPassword">
+                                </div>
+                                <div class="form-group"><label>Role</label><select id="newRole">
+                                        <option value="admin">Admin</option>
+                                        <option value="superadmin">Superadmin</option>
+                                    </select></div><button class="btn-primary" onclick="createUser()">Vytvořit</button>
+                            </div>
                         </div>
                     </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- USERS -->
-    <!-- MEMBERS -->
-    <div id="membersView" class="hidden">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-            <h2 style="margin: 0;">Seznam členů</h2>
-            <button class="btn-primary" onclick="openMemberModal()"><i class="fa-solid fa-user-plus"></i>
-                Nový
-                člen</button>
-        </div>
-
-        <table class="data-table">
-            <thead>
-                <tr>
-                    <th>Jméno</th>
-                    <th>ELO</th>
-                    <th>Titul</th>
-                    <th>Narození</th>
-                    <th>Role</th>
-                    <th>Akce</th>
-                </tr>
-            </thead>
-            <tbody id="membersTableBody"></tbody>
-        </table>
-    </div>
-
-    <div id="usersView" class="hidden">
-        <div class="editor-layout">
-            <div>
-                <h2>Seznam uživatelů</h2>
-                <table class="data-table">
-                    <thead>
-                        <tr>
-                            <th>Username</th>
-                            <th>Email</th>
-                            <th>Role</th>
-                            <th>Akce</th>
-                        </tr>
-                    </thead>
-                    <tbody id="usersTableBody"></tbody>
-                </table>
-            </div>
-            <div class="editor-sidebar">
-                <h3>Přidat uživatele</h3>
-                <div class="form-group"><label>Username</label><input type="text" id="newUsername"></div>
-                <div class="form-group"><label>Email</label><input type="email" id="newEmail"></div>
-                <div class="form-group"><label>Heslo</label><input type="password" id="newPassword"></div>
-                <div class="form-group"><label>Role</label><select id="newRole">
-                        <option value="admin">Admin</option>
-                        <option value="superadmin">Superadmin</option>
-                    </select></div>
-                <button class="btn-primary" onclick="createUser()">Vytvořit</button>
-            </div>
-        </div>
-    </div>
-
-    <div id="messagesView" class="hidden">
-        <h2><i class="fa-solid fa-comments"></i> Správa vzkazovníku</h2>
-        <p style="color: var(--text-muted); margin-bottom: 1.5rem;">Zde můžete mazat nevhodné příspěvky ze
-            vzkazovníku.</p>
-        <table class="data-table">
-            <thead>
-                <tr>
-                    <th>Autor</th>
-                    <th>Obsah</th>
-                    <th>Datum</th>
-                    <th>Akce</th>
-                </tr>
-            </thead>
-            <tbody id="messagesTableBody"></tbody>
-        </table>
-        <div id="noMessagesInfo" style="text-align: center; padding: 2rem; color: var(--text-muted); display: none;">
-            Žádné vzkazy k zobrazení.
-        </div>
-    </div>
-
-    <!-- Blicak Registrations View -->
-    <div id="blicakView" class="hidden">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-            <h2 style="margin: 0;"><i class="fa-solid fa-bolt"></i> Registrace - Vánoční blesk</h2>
-            <button class="btn-primary" onclick="loadBlicakRegistrations()"><i class="fa-solid fa-sync"></i>
-                Obnovit</button>
-        </div>
-        <table class="data-table">
-            <thead>
-                <tr>
-                    <th>Jméno</th>
-                    <th>Oddíl</th>
-                    <th>LOK</th>
-                    <th>Ročník</th>
-                    <th>Čas registrace</th>
-                </tr>
-            </thead>
-            <tbody id="blicakTableBody"></tbody>
-        </table>
-        <div id="noBlicakInfo" style="text-align: center; padding: 2rem; color: var(--text-muted); display: none;">
-            Žádné registrace.
-        </div>
-    </div>
-
-    <!-- Competitions View -->
-    <div id="competitionsView" class="hidden">
-        <div class="card"
-            style="margin-bottom: 2rem; padding: 1.5rem; background: linear-gradient(135deg, var(--card-bg), rgba(59, 130, 246, 0.1)); border-left: 4px solid #3b82f6;">
-            <div
-                style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
-                <div style="width: 100%;">
-                    <h3 style="margin: 0 0 0.5rem 0; color: #3b82f6;"><i class="fa-solid fa-table"></i>
-                        Tabulky
-                        družstva</h3>
-                    <p style="margin: 0; color: var(--text-muted); font-size: 0.9rem;">Správa zdrojů dat pro
-                        soutěže. Změny se projeví po kliknutí na "Aktualizovat tabulky".</p>
-
-                    <div style="display: flex; justify-content: flex-end; margin-top: 1rem;">
-                        <button class="btn-secondary" onclick="updateStandings()" id="updateStandingsBtn">
-                            <i class="fa-solid fa-sync"></i> Aktualizovat tabulky
-                        </button>
+                    <div id="messagesView" class="hidden">
+                        <h2><i class="fa-solid fa-comments"></i>Správa vzkazovníku</h2>
+                        <p style="color: var(--text-muted); margin-bottom: 1.5rem;">Zde můžete mazat nevhodné příspěvky
+                            ze vzkazovníku.</p>
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Autor</th>
+                                    <th>Obsah</th>
+                                    <th>Datum</th>
+                                    <th>Akce</th>
+                                </tr>
+                            </thead>
+                            <tbody id="messagesTableBody"></tbody>
+                        </table>
+                        <div id="noMessagesInfo"
+                            style="text-align: center; padding: 2rem; color: var(--text-muted); display: none;">Žádné
+                            vzkazy k zobrazení. </div>
                     </div>
-
-                    <div id="competitionsList" style="margin-top: 1rem;"></div>
-                </div>
-
-            </div>
-            <div id="standingsResult" style="margin-top: 1rem; display: none;"></div>
-        </div>
-    </div>
-
-    <!-- Puzzle Racer Settings View -->
-    <div id="puzzleRacerView" class="hidden">
-        <div class="card">
-            <div
-                style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
-                <div style="width: 100%;">
-                    <h3 style="margin: 0 0 0.5rem 0; color: #3b82f6;"><i class="fa-solid fa-puzzle-piece"></i>
-                        Puzzle Racer - Nastavení</h3>
-                    <p style="margin: 0; color: var(--text-muted); font-size: 0.9rem;">Konfigurace herních parametrů.
-                        Změny se projeví při dalším spuštění hry.</p>
-
-                    <div id="puzzleRacerSettingsForm" style="margin-top: 1.5rem; max-width: 500px;">
-                        <div class="form-group">
-                            <label>Téma úloh</label>
-                            <select id="prTheme">
-                                <option value="mix">Smíšené (Doporučeno)</option>
-                                <option value="opening">Zahájení</option>
-                                <option value="middlegame">Střední hra</option>
-                                <option value="endgame">Koncovka</option>
-                                <option value="rookEndgame">Věžová koncovka</option>
-                                <option value="bishopEndgame">Střelcová koncovka</option>
-                                <option value="pawnEndgame">Pěšcová koncovka</option>
-                                <option value="knightEndgame">Jezdcová koncovka</option>
-                                <option value="queenEndgame">Dámová koncovka</option>
-                            </select>
+                    < !-- Blicak Registrations View -->
+                        <div id="blicakView" class="hidden">
+                            <div
+                                style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                                <h2 style="margin: 0;"><i class="fa-solid fa-bolt"></i>Registrace - Vánoční blesk</h2>
+                                <button class="btn-primary" onclick="loadBlicakRegistrations()"><i
+                                        class="fa-solid fa-sync"></i>Obnovit</button>
+                            </div>
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Jméno</th>
+                                        <th>Oddíl</th>
+                                        <th>LOK</th>
+                                        <th>Ročník</th>
+                                        <th>Čas registrace</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="blicakTableBody"></tbody>
+                            </table>
+                            <div id="noBlicakInfo"
+                                style="text-align: center; padding: 2rem; color: var(--text-muted); display: none;">
+                                Žádné registrace. </div>
                         </div>
-                        <div class="form-group">
-                            <label>Časový limit (sekundy)</label>
-                            <input type="number" id="prTimeLimit" min="30" max="600" value="180">
-                        </div>
+                        < !-- Competitions View -->
+                            <div id="competitionsView" class="hidden">
+                                <div class="card"
+                                    style="margin-bottom: 2rem; padding: 1.5rem; background: linear-gradient(135deg, var(--card-bg), rgba(59, 130, 246, 0.1)); border-left: 4px solid #3b82f6;">
+                                    <div
+                                        style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+                                        <div style="width: 100%;">
+                                            <h3 style="margin: 0 0 0.5rem 0; color: #3b82f6;"><i
+                                                    class="fa-solid fa-table"></i>Tabulky družstva</h3>
+                                            <p style="margin: 0; color: var(--text-muted); font-size: 0.9rem;">Správa
+                                                zdrojů dat pro soutěže. Změny se projeví po kliknutí na "Aktualizovat
+                                                tabulky" .</p>
+                                            <div style="display: flex; justify-content: flex-end; margin-top: 1rem;">
+                                                <button class="btn-secondary" onclick="updateStandings()"
+                                                    id="updateStandingsBtn"><i class="fa-solid fa-sync"></i>Aktualizovat
+                                                    tabulky </button></div>
+                                            <div id="competitionsList" style="margin-top: 1rem;"></div>
+                                        </div>
+                                    </div>
+                                    <div id="standingsResult" style="margin-top: 1rem; display: none;"></div>
+                                </div>
+                            </div>
+                            < !-- Puzzle Racer Settings View -->
+                                <div id="puzzleRacerView" class="hidden">
+                                    <div class="card">
+                                        <div
+                                            style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+                                            <div style="width: 100%;">
+                                                <h3 style="margin: 0 0 0.5rem 0; color: #3b82f6;"><i
+                                                        class="fa-solid fa-puzzle-piece"></i>Puzzle Racer - Nastavení
+                                                </h3>
+                                                <p style="margin: 0; color: var(--text-muted); font-size: 0.9rem;">
+                                                    Konfigurace herních parametrů. Změny se projeví při dalším spuštění
+                                                    hry.</p>
+                                                <div id="puzzleRacerSettingsForm">
+                                                    <div class="settings-grid">
+                                                        < !-- Helper: General Settings -->
+                                                            <div class="settings-card">
+                                                                <h4><i class="fa-solid fa-sliders"></i>Obecné nastavení
+                                                                </h4>
+                                                                <div class="form-group"><label>Téma úloh</label><select
+                                                                        id="prTheme">
+                                                                        <option value="mix">Smíšené (Doporučeno)
+                                                                        </option>
+                                                                        <option value="opening">Zahájení</option>
+                                                                        <option value="middlegame">Střední hra</option>
+                                                                        <option value="endgame">Koncovka</option>
+                                                                        <option value="rookEndgame">Věžová koncovka
+                                                                        </option>
+                                                                        <option value="bishopEndgame">Střelcová koncovka
+                                                                        </option>
+                                                                        <option value="pawnEndgame">Pěšcová koncovka
+                                                                        </option>
+                                                                        <option value="knightEndgame">Jezdcová koncovka
+                                                                        </option>
+                                                                        <option value="queenEndgame">Dámová koncovka
+                                                                        </option>
+                                                                    </select></div>
+                                                                <div class="form-group"><label>Časový limit
+                                                                        (sekundy)</label><input type="number"
+                                                                        id="prTimeLimit" min="30" max="600" value="180">
+                                                                </div>
+                                                                <div class="form-group"><label>Puzzlů na úroveň
+                                                                        obtížnosti</label><input type="number"
+                                                                        id="prPuzzlesPerDifficulty" min="1" max="20"
+                                                                        value="6"></div>
+                                                            </div>
+                                                            < !-- Helper: Difficulty & Behavior -->
+                                                                <div class="settings-card">
+                                                                    <h4><i class="fa-solid fa-heart-crack"></i>Obtížnost
+                                                                        a Chyby</h4>
+                                                                    < !-- Lives -->
+                                                                        <div class="control-row"><label>Systém
+                                                                                životů</label><label
+                                                                                class="switch"><input type="checkbox"
+                                                                                    id="prLivesEnabled" checked><span
+                                                                                    class="slider round"></span></label>
+                                                                        </div>
+                                                                        <div class="form-group" id="prMaxLivesGroup">
+                                                                            <label>Počet životů</label><input
+                                                                                type="number" id="prMaxLives" min="1"
+                                                                                <div class="divider"
+                                                                                style="margin: 1rem 0; background: rgba(255,255,255,0.1); height: 1px;">
+                                                                        </div>
+                                                                        < !-- Penalty -->
+                                                                            <div class="control-row"><label>Časová
+                                                                                    penalizace</label><label
+                                                                                    class="switch"><input
+                                                                                        type="checkbox"
+                                                                                        id="prPenaltyEnabled"><span
+                                                                                        class="slider round"></span></label>
+                                                                            </div>
+                                                                            <div class="form-group"
+                                                                                id="prPenaltySecondsGroup"
+                                                                                style="display: none;"><label>Penalizace
+                                                                                    (sekundy)</label><input
+                                                                                    type="number" id="prPenaltySeconds"
+                                                                                    min="1" max="60" value="5"></div>
+                                                                            <div class="divider"
+                                                                                style="margin: 1rem 0; background: rgba(255,255,255,0.1); height: 1px;">
+                                                                            </div>
+                                                                            < !-- Skip -->
+                                                                                <div class="control-row">
+                                                                                    <label>Přeskočit po
+                                                                                        chybě</label><label
+                                                                                        class="switch"><input
+                                                                                            type="checkbox"
+                                                                                            id="prSkipOnMistake"><span
+                                                                                            class="slider round"></span></label>
+                                                                                </div>
+                                                                </div>
+                                                    </div>
+                                                    <div
+                                                        style="display: flex; justify-content: flex-end; margin-top: 1.5rem;">
+                                                        <button class="btn-primary" onclick="savePuzzleRacerSettings()"
+                                                            id="savePrSettingsBtn"><i
+                                                                class="fa-solid fa-save"></i>Uložit nastavení </button>
+                                                    </div>
+                                                    <div id="prSettingsResult"
+                                                        style="margin-top: 1rem; text-align: center;"></div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                < !-- Gallery View -->
+                                    <div id="galleryView" class="hidden">
+                                        <div class="header-actions">
+                                            <h2><i class="fa-regular fa-images"></i>Správa Galerie</h2>
+                                            <div style="display: flex; gap: 1rem;"><button id="batchDeleteBtn"
+                                                    class="action-btn btn-danger" disabled
+                                                    onclick="deleteSelectedImages()"><i
+                                                        class="fa-solid fa-trash"></i>Smazat vybrané (<span
+                                                        id="selectedCount">0</span>) </button><button
+                                                    class="primary-btn"
+                                                    onclick="document.getElementById('imageUploadInput').click()"><i
+                                                        class="fa-solid fa-cloud-arrow-up"></i>Nahrát fotky </button>
+                                            </div><input type="file" id="imageUploadInput" multiple accept="image/*"
+                                                style="display: none;" onchange="handleAdminGalleryUpload(this)">
+                                        </div>
+                                        <div class="card" style="padding: 0;">
+                                            <div style="overflow-x: auto;">
+                                                <table class="data-table">
+                                                    <thead>
+                                                        <tr>
+                                                            <th style="width: 40px;"><input type="checkbox"
+                                                                    id="selectAllGallery"
+                                                                    onclick="toggleSelectAllGallery(this)"></th>
+                                                            <th>Náhled</th>
+                                                            <th>Název</th>
+                                                            <th>Veřejné</th>
+                                                            <th>Datum nahrání</th>
+                                                            <th>Akce</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody id="galleryTableBody">
+                                                        <tr>
+                                                            <td colspan="6" style="text-align: center;">Načítám...</td>
+                                                        </tr>
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    </div>
+                                    </div>
+                                    < !-- Member Modal -->
+                                        <div id="memberModal" class="modal-overlay" style="display: none;">
+                                            <div class="modal-content" style="width: 500px;">
+                                                <h2 id="memberModalTitle" style="margin-top: 0;">Nový člen</h2><input
+                                                    type="hidden" id="memberId">
+                                                <div class="form-group"><label>Jméno *</label><input type="text"
+                                                        id="memberFirstName" placeholder="Jan"></div>
+                                                <div class="form-group"><label>Příjmení *</label><input type="text"
+                                                        id="memberLastName" placeholder="Novák"></div>
+                                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                                                    <div class="form-group"><label>ELO</label><input type="number"
+                                                            id="memberElo"></div>
+                                                    <div class="form-group"><label>Titul</label><input type="text"
+                                                            id="memberTitle" placeholder="Např. FM"></div>
+                                                </div>
+                                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                                                    <div class="form-group"><label>Rok narození</label><input
+                                                            type="number" id="memberBirthYear"></div>
+                                                    <div class="form-group"><label>Role</label><input type="text"
+                                                            id="memberRole" placeholder="Např. Předseda"></div>
+                                                </div>
+                                                <div
+                                                    style="display: flex; gap: 1rem; justify-content: flex-end; margin-top: 1rem;">
+                                                    <button class="btn-secondary"
+                                                        onclick="closeMemberModal()">Zrušit</button><button
+                                                        class="btn-primary" onclick="saveMember()">Uložit</button></div>
+                                            </div>
+                                        </div>
+                                        <script src="js/config.js"></script>
+                                        <script src="js/admin/admin-gallery.js?v=20251211_2"></script>
+                                        <script src="js/admin/admin-news.js?v=20251211_1"></script>
+                                        <script src="js/admin/admin-members.js"></script>
+                                        <script src="js/admin/admin-messages.js"></script>
+                                        <script src="js/admin/admin-competitions.js?v=20251212_1"></script>
+                                        <script> // Admin Panel Logic - use API_URL from config.js
+                                            var authToken = null;
+                                            let currentUser = null;
+                                            // let uploadedImageData = null; // Moved to admin-news.js
+                                            // let currentImageOriginalName = ''; // Moved to admin-news.js
+                                            // let games = []; // Moved to admin-games.js
+                                            // let teams = ['A tým', 'B tým']; // Default teams // Moved to admin-games.js
+                                            // let galleryImages = []; // Moved to admin-news.js
 
-                        <hr style="border: none; border-top: 1px solid rgba(255,255,255,0.1); margin: 1.5rem 0;">
-                        <h4 style="margin: 0 0 1rem 0; color: var(--text-muted); font-size: 0.9rem;"><i
-                                class="fa-solid fa-heart-crack"></i> Chování při chybě</h4>
+                                            // Init
+                                            window.addEventListener('DOMContentLoaded', () => {
+                                                authToken = localStorage.getItem('authToken');
 
-                        <div class="form-group">
-                            <label style="display: flex; align-items: center; gap: 0.5rem;">
-                                <input type="checkbox" id="prLivesEnabled" checked style="width: auto;">
-                                Systém životů (X chyb = konec hry)
-                            </label>
-                        </div>
-                        <div class="form-group" id="prMaxLivesGroup">
-                            <label>Počet životů</label>
-                            <input type="number" id="prMaxLives" min="1" max="10" value="3">
-                        </div>
+                                                if (authToken) {
+                                                    verifyToken();
+                                                    checkMaintenance();
+                                                }
 
-                        <div class="form-group">
-                            <label style="display: flex; align-items: center; gap: 0.5rem;">
-                                <input type="checkbox" id="prPenaltyEnabled" style="width: auto;">
-                                Časová penalizace za chybu
-                            </label>
-                        </div>
-                        <div class="form-group" id="prPenaltySecondsGroup" style="display: none;">
-                            <label>Penalizace (sekundy)</label>
-                            <input type="number" id="prPenaltySeconds" min="1" max="60" value="5">
-                        </div>
+                                                else showLogin();
 
-                        <div class="form-group">
-                            <label style="display: flex; align-items: center; gap: 0.5rem;">
-                                <input type="checkbox" id="prSkipOnMistake" style="width: auto;">
-                                Po chybě přeskočit na další puzzle (bez nutnosti vyřešit)
-                            </label>
-                        </div>
+                                                // Editor Enter Key Handler - Clean formatting on new line
+                                                const editor = document.getElementById('articleContent');
 
-                        <hr style="border: none; border-top: 1px solid rgba(255,255,255,0.1); margin: 1.5rem 0;">
-                        <h4 style="margin: 0 0 1rem 0; color: var(--text-muted); font-size: 0.9rem;"><i
-                                class="fa-solid fa-chart-line"></i> Progrese</h4>
+                                                if (editor) {
+                                                    // Ensure paragraphs are used for new lines
+                                                    document.execCommand('defaultParagraphSeparator', false, 'p');
 
-                        <div class="form-group">
-                            <label>Puzzlů na úroveň obtížnosti</label>
-                            <input type="number" id="prPuzzlesPerDifficulty" min="1" max="20" value="6">
-                        </div>
+                                                    editor.addEventListener('keydown', (e) => {
+                                                        if (e.key === 'Enter') {
+                                                            const sel = window.getSelection();
+                                                            if (!sel.rangeCount) return;
 
-                        <div style="display: flex; justify-content: flex-end; margin-top: 1.5rem;">
-                            <button class="btn-primary" onclick="savePuzzleRacerSettings()" id="savePrSettingsBtn">
-                                <i class="fa-solid fa-save"></i> Uložit nastavení
-                            </button>
-                        </div>
-                        <div id="prSettingsResult" style="margin-top: 1rem; text-align: center;"></div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+                                                            // Check if we are inside a highlight
+                                                            let node = sel.anchorNode;
+                                                            if (node.nodeType === 3) node = node.parentNode;
 
-    <!-- Gallery View -->
-    <div id="galleryView" class="hidden">
-        <div class="header-actions">
-            <h2><i class="fa-regular fa-images"></i> Správa Galerie</h2>
-            <div style="display: flex; gap: 1rem;">
-                <button id="batchDeleteBtn" class="action-btn btn-danger" disabled onclick="deleteSelectedImages()">
-                    <i class="fa-solid fa-trash"></i> Smazat vybrané (<span id="selectedCount">0</span>)
-                </button>
-                <button class="primary-btn" onclick="document.getElementById('imageUploadInput').click()">
-                    <i class="fa-solid fa-cloud-arrow-up"></i> Nahrát fotky
-                </button>
-            </div>
-            <input type="file" id="imageUploadInput" multiple accept="image/*" style="display: none;"
-                onchange="handleAdminGalleryUpload(this)">
-        </div>
+                                                            if (node.classList && (node.classList.contains('highlight-name') || node.classList.contains('highlight-score'))) {
+                                                                e.preventDefault(); // Stop default browser behavior (which might be just <br> in span)
 
-        <div class="card" style="padding: 0;">
-            <div style="overflow-x: auto;">
-                <table class="data-table">
-                    <thead>
-                        <tr>
-                            <th style="width: 40px;"><input type="checkbox" id="selectAllGallery"
-                                    onclick="toggleSelectAllGallery(this)"></th>
-                            <th>Náhled</th>
-                            <th>Název</th>
-                            <th>Veřejné</th>
-                            <th>Datum nahrání</th>
-                            <th>Akce</th>
-                        </tr>
-                    </thead>
-                    <tbody id="galleryTableBody">
-                        <tr>
-                            <td colspan="6" style="text-align: center;">Načítám...</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-    </div>
-    </div>
+                                                                // Force a paragraph break
+                                                                // This splits the block: <p><span class="h">...</span></p> <p><span class="h">...</span></p>
+                                                                document.execCommand('insertParagraph');
 
-    <!-- Member Modal -->
-    <div id="memberModal" class="modal-overlay" style="display: none;">
-        <div class="modal-content" style="width: 500px;">
-            <h2 id="memberModalTitle" style="margin-top: 0;">Nový člen</h2>
-            <input type="hidden" id="memberId">
-            <div class="form-group">
-                <label>Jméno *</label>
-                <input type="text" id="memberFirstName" placeholder="Jan">
-            </div>
-            <div class="form-group">
-                <label>Příjmení *</label>
-                <input type="text" id="memberLastName" placeholder="Novák">
-            </div>
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
-                <div class="form-group">
-                    <label>ELO</label>
-                    <input type="number" id="memberElo">
-                </div>
-                <div class="form-group">
-                    <label>Titul</label>
-                    <input type="text" id="memberTitle" placeholder="Např. FM">
-                </div>
-            </div>
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
-                <div class="form-group">
-                    <label>Rok narození</label>
-                    <input type="number" id="memberBirthYear">
-                </div>
-                <div class="form-group">
-                    <label>Role</label>
-                    <input type="text" id="memberRole" placeholder="Např. Předseda">
-                </div>
-            </div>
-            <div style="display: flex; gap: 1rem; justify-content: flex-end; margin-top: 1rem;">
-                <button class="btn-secondary" onclick="closeMemberModal()">Zrušit</button>
-                <button class="btn-primary" onclick="saveMember()">Uložit</button>
-            </div>
-        </div>
-    </div>
+                                                                // Now clean the style on the NEW line
+                                                                // The cursor should be in the new paragraph now
 
-    <script src="js/config.js"></script>
-    <script src="js/admin/admin-gallery.js?v=20251211_2"></script>
-    <script src="js/admin/admin-news.js?v=20251211_1"></script>
-    <script src="js/admin/admin-members.js"></script>
-    <script src="js/admin/admin-messages.js"></script>
-    <script src="js/admin/admin-competitions.js?v=20251212_1"></script>
-    <script>
-        // Admin Panel Logic - use API_URL from config.js
-        var authToken = null;
-        let currentUser = null;
-        // let uploadedImageData = null; // Moved to admin-news.js
-        // let currentImageOriginalName = ''; // Moved to admin-news.js
-        // let games = []; // Moved to admin-games.js
-        // let teams = ['A tým', 'B tým']; // Default teams // Moved to admin-games.js
-        // let galleryImages = []; // Moved to admin-news.js
+                                                                // We need to wait a tick for the DOM to settle? execCommand is usually synchronous but let's be safe cleaning up
+                                                                // actually execCommand IS synchronous.
 
-        // Init
-        window.addEventListener('DOMContentLoaded', () => {
-            authToken = localStorage.getItem('authToken');
-            if (authToken) {
-                verifyToken();
-                checkMaintenance();
-            } else showLogin();
+                                                                const newSel = window.getSelection();
+                                                                let newNode = newSel.anchorNode;
+                                                                if (newNode.nodeType === 3) newNode = newNode.parentNode;
 
-            // Editor Enter Key Handler - Clean formatting on new line
-            const editor = document.getElementById('articleContent');
-            if (editor) {
-                // Ensure paragraphs are used for new lines
-                document.execCommand('defaultParagraphSeparator', false, 'p');
+                                                                // Find the highlight span in this new block and unwrap/clear it
+                                                                // We might be inside the span in the new paragraph
+                                                                if (newNode.classList && (newNode.classList.contains('highlight-name') || newNode.classList.contains('highlight-score'))) {
+                                                                    // We are inside the span in the new line.
+                                                                    // Remove class to make it plain text
+                                                                    newNode.className = '';
 
-                editor.addEventListener('keydown', (e) => {
-                    if (e.key === 'Enter') {
-                        const sel = window.getSelection();
-                        if (!sel.rangeCount) return;
+                                                                    // Remove ZWS if present
+                                                                    if (newNode.innerHTML.includes('\u200B')) {
+                                                                        newNode.innerHTML = newNode.innerHTML.replace(/\u200B/g, '');
+                                                                    }
 
-                        // Check if we are inside a highlight
-                        let node = sel.anchorNode;
-                        if (node.nodeType === 3) node = node.parentNode;
+                                                                    // If the span is now empty/useless, we might want to unwrap it entirely, 
+                                                                    // but removing class is enough to visually "reset" it.
 
-                        if (node.classList && (node.classList.contains('highlight-name') || node.classList.contains('highlight-score'))) {
-                            e.preventDefault(); // Stop default browser behavior (which might be just <br> in span)
+                                                                    // However, often we want to remove the span tag nicely.
+                                                                    // document.execCommand('removeFormat') might be cleaner?
+                                                                    // Let's stick to removing class as it's targeted.
+                                                                }
 
-                            // Force a paragraph break
-                            // This splits the block: <p><span class="h">...</span></p> <p><span class="h">...</span></p>
-                            document.execCommand('insertParagraph');
+                                                                checkToolbarState();
+                                                            }
 
-                            // Now clean the style on the NEW line
-                            // The cursor should be in the new paragraph now
+                                                            else {
+                                                                // Normal Enter functionality - verify clean state on next tick if needed
+                                                            }
+                                                        }
+                                                    });
+                                                }
+                                            });
 
-                            // We need to wait a tick for the DOM to settle? execCommand is usually synchronous but let's be safe cleaning up
-                            // actually execCommand IS synchronous.
+                                            async function checkMaintenance() {
+                                                try {
+                                                    const res = await fetch(`$ {
+                        API_URL
+                    }
 
-                            const newSel = window.getSelection();
-                            let newNode = newSel.anchorNode;
-                            if (newNode.nodeType === 3) newNode = newNode.parentNode;
-
-                            // Find the highlight span in this new block and unwrap/clear it
-                            // We might be inside the span in the new paragraph
-                            if (newNode.classList && (newNode.classList.contains('highlight-name') || newNode.classList.contains('highlight-score'))) {
-                                // We are inside the span in the new line.
-                                // Remove class to make it plain text
-                                newNode.className = '';
-                                // Remove ZWS if present
-                                if (newNode.innerHTML.includes('\u200B')) {
-                                    newNode.innerHTML = newNode.innerHTML.replace(/\u200B/g, '');
-                                }
-                                // If the span is now empty/useless, we might want to unwrap it entirely, 
-                                // but removing class is enough to visually "reset" it.
-
-                                // However, often we want to remove the span tag nicely.
-                                // document.execCommand('removeFormat') might be cleaner?
-                                // Let's stick to removing class as it's targeted.
-                            }
-
-                            checkToolbarState();
-                        } else {
-                            // Normal Enter functionality - verify clean state on next tick if needed
+                    /settings`, {
+                                                        headers: {
+                                                            'Authorization': `Bearer $ {
+                            authToken
                         }
-                    }
-                });
-            }
-        });
 
-        async function checkMaintenance() {
-            try {
-                const res = await fetch(`${API_URL}/settings`, { headers: { 'Authorization': `Bearer ${authToken}` } });
-                const settings = await res.json();
-                document.getElementById('maintenanceToggle').checked = settings.maintenance_mode === 'true';
-            } catch (e) { console.error(e); }
-        }
+                        `
+                                                        }
+                                                    });
+                                                    const settings = await res.json();
+                                                    document.getElementById('maintenanceToggle').checked = settings.maintenance_mode === 'true';
+                                                }
 
-        async function toggleMaintenance() {
-            const toggle = document.getElementById('maintenanceToggle');
-            const value = toggle.checked;
-            try {
-                const res = await fetch(`${API_URL}/settings`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
-                    body: JSON.stringify({ key: 'maintenance_mode', value: value })
-                });
-                if (res.ok) {
-                    showAlert(value ? 'Režim údržby ZAPNUT' : 'Režim údržby VYPNUT', value ? 'success' : 'success');
-                } else {
-                    toggle.checked = !value; // Revert on error
-                    showAlert('Chyba při změně nastavení', 'error');
-                }
-            } catch (e) {
-                toggle.checked = !value;
-                showAlert('Chyba spojení', 'error');
-            }
-        }
+                                                catch (e) {
+                                                    console.error(e);
+                                                }
+                                            }
 
-        function showLogin() {
-            document.getElementById('loginPage').classList.remove('hidden');
-            document.getElementById('adminPanel').classList.add('hidden');
-        }
+                                            async function toggleMaintenance() {
+                                                const toggle = document.getElementById('maintenanceToggle');
+                                                const value = toggle.checked;
 
-        function showAdmin() {
-            document.getElementById('loginPage').classList.add('hidden');
-            document.getElementById('adminPanel').classList.remove('hidden');
-
-            // Show tabs based on role
-            if (['admin', 'superadmin'].includes(currentUser.role)) {
-                const galleryBtn = document.getElementById('galleryTab');
-                if (galleryBtn) galleryBtn.style.display = 'inline-block';
-
-                // Users tab
-                const usersBtn = document.getElementById('usersTab');
-                if (usersBtn) {
-                    usersBtn.classList.remove('hidden');
-                    usersBtn.style.display = 'inline-block';
-                }
-
-                // Settings tab (if implementation exists later)
-                // const settingsBtn = document.getElementById('settingsTab');
-                // if (settingsBtn) settingsBtn.style.display = 'inline-block';
-            }
-
-            loadDashboard();
-        }
-
-        async function verifyToken() {
-            try {
-                const res = await fetch(`${API_URL}/auth/me`, { headers: { 'Authorization': `Bearer ${authToken}` } });
-                if (res.ok) {
-                    currentUser = await res.json();
-                    document.getElementById('userInfo').textContent = `${currentUser.username} (${currentUser.role})`;
-                    showAdmin();
-                } else { logout(); }
-            } catch (e) { logout(); }
-        }
-
-        function switchTab(tab) {
-            document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
-            const activeTab = document.querySelector(`.nav-tab[onclick="switchTab('${tab}')"]`);
-            if (activeTab) activeTab.classList.add('active');
-
-            ['dashboard', 'editor', 'members', 'users', 'messages', 'blicak', 'competitions', 'gallery', 'puzzleRacer'].forEach(v => {
-                const el = document.getElementById(v + 'View');
-                if (el) el.classList.add('hidden');
-            });
-
-            const view = document.getElementById(tab + 'View');
-            if (view) view.classList.remove('hidden');
-
-            if (tab === 'dashboard') loadDashboard();
-            else if (tab === 'members') loadMembers();
-            else if (tab === 'users') loadUsers();
-            else if (tab === 'messages') loadAdminMessages();
-            else if (tab === 'blicak') loadBlicakRegistrations();
-            else if (tab === 'competitions') loadCompetitions();
-            else if (tab === 'gallery') loadAdminGallery();
-            else if (tab === 'puzzleRacer') loadPuzzleRacerSettings();
-        }
-
-        // --- Puzzle Racer Settings ---
-        async function loadPuzzleRacerSettings() {
-            try {
-                const res = await fetch(`${API_URL}/racer/settings`);
-                const settings = await res.json();
-
-                document.getElementById('prTheme').value = settings.puzzleTheme || 'mix';
-                document.getElementById('prTimeLimit').value = settings.timeLimitSeconds || 180;
-                document.getElementById('prLivesEnabled').checked = settings.livesEnabled !== false;
-                document.getElementById('prMaxLives').value = settings.maxLives || 3;
-                document.getElementById('prPuzzlesPerDifficulty').value = settings.puzzlesPerDifficulty || 6;
-                document.getElementById('prPenaltyEnabled').checked = settings.penaltyEnabled === true;
-                document.getElementById('prPenaltySeconds').value = settings.penaltySeconds || 5;
-                document.getElementById('prSkipOnMistake').checked = settings.skipOnMistake === true;
-
-                // Toggle visibility of dependent fields
-                document.getElementById('prMaxLivesGroup').style.display =
-                    document.getElementById('prLivesEnabled').checked ? 'block' : 'none';
-                document.getElementById('prPenaltySecondsGroup').style.display =
-                    document.getElementById('prPenaltyEnabled').checked ? 'block' : 'none';
-            } catch (e) {
-                console.error('Failed to load puzzle racer settings:', e);
-            }
-        }
-
-        async function savePuzzleRacerSettings() {
-            const btn = document.getElementById('savePrSettingsBtn');
-            const result = document.getElementById('prSettingsResult');
-
-            btn.disabled = true;
-            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Ukládám...';
-            result.textContent = '';
-
-            try {
-                const res = await fetch(`${API_URL}/racer/settings`, {
-                    method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${authToken}`
-                    },
-                    body: JSON.stringify({
-                        puzzleTheme: document.getElementById('prTheme').value,
-                        timeLimitSeconds: parseInt(document.getElementById('prTimeLimit').value),
-                        livesEnabled: document.getElementById('prLivesEnabled').checked,
-                        maxLives: parseInt(document.getElementById('prMaxLives').value),
-                        puzzlesPerDifficulty: parseInt(document.getElementById('prPuzzlesPerDifficulty').value),
-                        penaltyEnabled: document.getElementById('prPenaltyEnabled').checked,
-                        penaltySeconds: parseInt(document.getElementById('prPenaltySeconds').value),
-                        skipOnMistake: document.getElementById('prSkipOnMistake').checked
-                    })
-                });
-
-                if (res.ok) {
-                    result.innerHTML = '<span style="color: #4ade80;"><i class="fa-solid fa-check"></i> Uloženo!</span>';
-                } else {
-                    result.innerHTML = '<span style="color: #fca5a5;">Chyba při ukládání</span>';
-                }
-            } catch (e) {
-                console.error(e);
-                result.innerHTML = '<span style="color: #fca5a5;">Chyba spojení</span>';
-            } finally {
-                btn.disabled = false;
-                btn.innerHTML = '<i class="fa-solid fa-save"></i> Uložit nastavení';
-            }
-        }
-
-        // Toggle visibility of dependent settings fields
-        document.addEventListener('DOMContentLoaded', () => {
-            const livesCheck = document.getElementById('prLivesEnabled');
-            const penaltyCheck = document.getElementById('prPenaltyEnabled');
-
-            if (livesCheck) {
-                livesCheck.addEventListener('change', () => {
-                    document.getElementById('prMaxLivesGroup').style.display =
-                        livesCheck.checked ? 'block' : 'none';
-                });
-            }
-            if (penaltyCheck) {
-                penaltyCheck.addEventListener('change', () => {
-                    document.getElementById('prPenaltySecondsGroup').style.display =
-                        penaltyCheck.checked ? 'block' : 'none';
-                });
-            }
-        });
-
-        // Dashboard
-        async function loadDashboard() {
-            try {
-                const res = await fetch(`${API_URL}/news`, { headers: { 'Authorization': `Bearer ${authToken}` } });
-                const news = await res.json();
-                document.getElementById('newsTableBody').innerHTML = news.map(item => `
-                    <tr>
-                        <td>${new Date(item.publishedDate).toLocaleDateString('cs-CZ')}</td>
-                        <td>${item.title}</td>
-                        <td class="hide-mobile">${item.category}</td>
-                        <td class="hide-mobile"><span class="highlight-name" style="font-size: 0.85rem;">${item.author?.username || '-'}</span></td>
-                        <td class="hide-mobile"><span class="status-badge ${item.isPublished ? 'status-published' : 'status-draft'}">${item.isPublished ? '✓' : '○'}<span class="status-text">${item.isPublished ? ' Pub' : ' Konc'}</span></span></td>
-                        <td>
-                            <button class="action-btn btn-edit" onclick="editNews(${item.id})"><i class="fa-solid fa-pen"></i></button>
-                            <button class="action-btn btn-publish" onclick="togglePublish(${item.id})" title="${item.isPublished ? 'Skrýt' : 'Publikovat'}"><i class="fa-solid fa-${item.isPublished ? 'eye-slash' : 'eye'}"></i></button>
-                            ${['admin', 'superadmin'].includes(currentUser.role) ? `<button class="action-btn btn-delete" onclick="deleteNews(${item.id})"><i class="fa-solid fa-trash"></i></button>` : ''}
-                        </td>
-                    </tr>
-                `).join('');
-            } catch (e) { console.error(e); }
-        }
-
-        async function togglePublish(id) {
-            try {
-                await fetch(`${API_URL}/news/${id}/publish`, { method: 'PATCH', headers: { 'Authorization': `Bearer ${authToken}` } });
-                loadDashboard();
-            } catch (e) { console.error(e); }
-        }
-
-        async function loadBlicakRegistrations() {
-            try {
-                const res = await fetch(`${API_URL}/registration/blicak`, { headers: { 'Authorization': `Bearer ${authToken}` } });
-                if (res.ok) {
-                    const regs = await res.json();
-                    const tbody = document.getElementById('blicakTableBody');
-                    const info = document.getElementById('noBlicakInfo');
-
-                    if (regs.length === 0) {
-                        tbody.innerHTML = '';
-                        info.style.display = 'block';
-                        return;
+                                                try {
+                                                    const res = await fetch(`$ {
+                        API_URL
                     }
 
-                    info.style.display = 'none';
-                    tbody.innerHTML = regs.map(reg => `
-                <tr>
-                    <td><strong>${escapeHtml(reg.name)}</strong></td>
-                    <td>${escapeHtml(reg.club || '-')}</td>
-                    <td>${escapeHtml(reg.lok || '-')}</td>
-                    <td>${escapeHtml(reg.birthYear)}</td>
-                    <td>${new Date(reg.createdAt).toLocaleString('cs-CZ')}</td>
-                </tr>
-            `).join('');
+                    /settings`, {
+                                                        method: 'POST',
+                                                        headers: {
+                                                            'Content-Type': 'application/json', 'Authorization': `Bearer $ {
+                            authToken
+                        }
+
+                        `
+                                                        }
+
+                                                        ,
+                                                        body: JSON.stringify({
+                                                            key: 'maintenance_mode', value: value
+                                                        })
+                                                    });
+
+                                                    if (res.ok) {
+                                                        showAlert(value ? 'Režim údržby ZAPNUT' : 'Režim údržby VYPNUT', value ? 'success' : 'success');
+                                                    }
+
+                                                    else {
+                                                        toggle.checked = !value; // Revert on error
+                                                        showAlert('Chyba při změně nastavení', 'error');
+                                                    }
+                                                }
+
+                                                catch (e) {
+                                                    toggle.checked = !value;
+                                                    showAlert('Chyba spojení', 'error');
+                                                }
+                                            }
+
+                                            function showLogin() {
+                                                document.getElementById('loginPage').classList.remove('hidden');
+                                                document.getElementById('adminPanel').classList.add('hidden');
+                                            }
+
+                                            function showAdmin() {
+                                                document.getElementById('loginPage').classList.add('hidden');
+                                                document.getElementById('adminPanel').classList.remove('hidden');
+
+                                                // Show tabs based on role
+                                                if (['admin', 'superadmin'].includes(currentUser.role)) {
+                                                    const galleryBtn = document.getElementById('galleryTab');
+                                                    if (galleryBtn) galleryBtn.style.display = 'inline-block';
+
+                                                    // Users tab
+                                                    const usersBtn = document.getElementById('usersTab');
+
+                                                    if (usersBtn) {
+                                                        usersBtn.classList.remove('hidden');
+                                                        usersBtn.style.display = 'inline-block';
+                                                    }
+
+                                                    // Settings tab (if implementation exists later)
+                                                    // const settingsBtn = document.getElementById('settingsTab');
+                                                    // if (settingsBtn) settingsBtn.style.display = 'inline-block';
+                                                }
+
+                                                loadDashboard();
+                                            }
+
+                                            async function verifyToken() {
+                                                try {
+                                                    const res = await fetch(`$ {
+                        API_URL
+                    }
+
+                    /auth/me`, {
+                                                        headers: {
+                                                            'Authorization': `Bearer $ {
+                            authToken
+                        }
+
+                        `
+                                                        }
+                                                    });
+
+                                                    if (res.ok) {
+                                                        currentUser = await res.json();
+
+                                                        document.getElementById('userInfo').textContent = `$ {
+                    currentUser.username
                 }
-            } catch (e) { console.error(e); }
-        }
 
-        // Editor
+                ($ {
+                        currentUser.role
+                    })`;
+                                                        showAdmin();
+                                                    }
 
+                                                    else {
+                                                        logout();
+                                                    }
+                                                }
 
-        // Games Management
+                                                catch (e) {
+                                                    logout();
+                                                }
+                                            }
 
+                                            function switchTab(tab) {
+                                                document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+                                                const activeTab = document.querySelector(`.nav-tab[onclick="switchTab('${tab}')"]`);
+                                                if (activeTab) activeTab.classList.add('active');
 
-        // Users
-        async function loadUsers() {
-            try {
-                const res = await fetch(`${API_URL}/users`, { headers: { 'Authorization': `Bearer ${authToken}` } });
-                const users = await res.json();
-                document.getElementById('usersTableBody').innerHTML = users.map(u => `
-                    <tr>
-                        <td>${u.username}</td>
-                        <td>${u.email}</td>
-                        <td>
-                            <select onchange="updateUserRole(${u.id}, this.value)" style="padding: 0.25rem;">
-                                <option value="admin" ${u.role === 'admin' ? 'selected' : ''}>Admin</option>
-                                <option value="editor" ${u.role === 'editor' ? 'selected' : ''}>Editor</option>
-                                <option value="superadmin" ${u.role === 'superadmin' ? 'selected' : ''}>Superadmin</option>
-                            </select>
-                        </td>
-                        <td>
-                            ${u.id !== currentUser.id ? `<button class="action-btn btn-delete" onclick="deleteUser(${u.id})"><i class="fa-solid fa-trash"></i></button>` : ''}
-                        </td>
-                    </tr>
-                `).join('');
-            } catch (e) { console.error(e); }
-        }
+                                                ['dashboard',
+                                                    'editor',
+                                                    'members',
+                                                    'users',
+                                                    'messages',
+                                                    'blicak',
+                                                    'competitions',
+                                                    'gallery',
+                                                    'puzzleRacer'].forEach(v => {
+                                                        const el = document.getElementById(v + 'View');
+                                                        if (el) el.classList.add('hidden');
+                                                    });
 
-        async function updateUserRole(id, newRole) {
-            try {
-                const res = await fetch(`${API_URL}/users/${id}`, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
-                    body: JSON.stringify({ role: newRole })
-                });
-                if (res.ok) {
-                    showAlert(`Role změněna na ${newRole}`, 'success');
-                } else {
-                    showAlert('Chyba při změně role', 'error');
-                    loadUsers(); // Revert
+                                                const view = document.getElementById(tab + 'View');
+                                                if (view) view.classList.remove('hidden');
+
+                                                if (tab === 'dashboard') loadDashboard();
+                                                else if (tab === 'members') loadMembers();
+                                                else if (tab === 'users') loadUsers();
+                                                else if (tab === 'messages') loadAdminMessages();
+                                                else if (tab === 'blicak') loadBlicakRegistrations();
+                                                else if (tab === 'competitions') loadCompetitions();
+                                                else if (tab === 'gallery') loadAdminGallery();
+                                                else if (tab === 'puzzleRacer') loadPuzzleRacerSettings();
+                                            }
+
+                                            // --- Puzzle Racer Settings ---
+                                            async function loadPuzzleRacerSettings() {
+                                                try {
+                                                    const res = await fetch(`$ {
+                        API_URL
+                    }
+
+                    /racer/settings`);
+                                                    const settings = await res.json();
+
+                                                    document.getElementById('prTheme').value = settings.puzzleTheme || 'mix';
+                                                    document.getElementById('prTimeLimit').value = settings.timeLimitSeconds || 180;
+                                                    document.getElementById('prLivesEnabled').checked = settings.livesEnabled !== false;
+                                                    document.getElementById('prMaxLives').value = settings.maxLives || 3;
+                                                    document.getElementById('prPuzzlesPerDifficulty').value = settings.puzzlesPerDifficulty || 6;
+                                                    document.getElementById('prPenaltyEnabled').checked = settings.penaltyEnabled === true;
+                                                    document.getElementById('prPenaltySeconds').value = settings.penaltySeconds || 5;
+                                                    document.getElementById('prSkipOnMistake').checked = settings.skipOnMistake === true;
+
+                                                    // Toggle visibility of dependent fields
+                                                    document.getElementById('prMaxLivesGroup').style.display = document.getElementById('prLivesEnabled').checked ? 'block' : 'none';
+                                                    document.getElementById('prPenaltySecondsGroup').style.display = document.getElementById('prPenaltyEnabled').checked ? 'block' : 'none';
+                                                }
+
+                                                catch (e) {
+                                                    console.error('Failed to load puzzle racer settings:', e);
+                                                }
+                                            }
+
+                                            async function savePuzzleRacerSettings() {
+                                                const btn = document.getElementById('savePrSettingsBtn');
+                                                const result = document.getElementById('prSettingsResult');
+
+                                                btn.disabled = true;
+                                                btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Ukládám...';
+                                                result.textContent = '';
+
+                                                try {
+                                                    const res = await fetch(`$ {
+                        API_URL
+                    }
+
+                    /racer/settings`, {
+                                                        method: 'PUT',
+                                                        headers: {
+
+                                                            'Content-Type': 'application/json',
+                                                            'Authorization': `Bearer $ {
+                            authToken
+                        }
+
+                        `
+                                                        }
+
+                                                        ,
+                                                        body: JSON.stringify({
+                                                            puzzleTheme: document.getElementById('prTheme').value,
+                                                            timeLimitSeconds: parseInt(document.getElementById('prTimeLimit').value),
+                                                            livesEnabled: document.getElementById('prLivesEnabled').checked,
+                                                            maxLives: parseInt(document.getElementById('prMaxLives').value),
+                                                            puzzlesPerDifficulty: parseInt(document.getElementById('prPuzzlesPerDifficulty').value),
+                                                            penaltyEnabled: document.getElementById('prPenaltyEnabled').checked,
+                                                            penaltySeconds: parseInt(document.getElementById('prPenaltySeconds').value),
+                                                            skipOnMistake: document.getElementById('prSkipOnMistake').checked
+                                                        })
+                                                    });
+
+                                                    if (res.ok) {
+                                                        result.innerHTML = '<span style="color: #4ade80;"><i class="fa-solid fa-check"></i> Uloženo!</span>';
+                                                    }
+
+                                                    else {
+                                                        result.innerHTML = '<span style="color: #fca5a5;">Chyba při ukládání</span>';
+                                                    }
+                                                }
+
+                                                catch (e) {
+                                                    console.error(e);
+                                                    result.innerHTML = '<span style="color: #fca5a5;">Chyba spojení</span>';
+                                                }
+
+                                                finally {
+                                                    btn.disabled = false;
+                                                    btn.innerHTML = '<i class="fa-solid fa-save"></i> Uložit nastavení';
+                                                }
+                                            }
+
+                                            // Toggle visibility of dependent settings fields
+                                            document.addEventListener('DOMContentLoaded', () => {
+                                                const livesCheck = document.getElementById('prLivesEnabled');
+                                                const penaltyCheck = document.getElementById('prPenaltyEnabled');
+
+                                                if (livesCheck) {
+                                                    livesCheck.addEventListener('change', () => {
+                                                        document.getElementById('prMaxLivesGroup').style.display = livesCheck.checked ? 'block' : 'none';
+                                                    });
+                                                }
+
+                                                if (penaltyCheck) {
+                                                    penaltyCheck.addEventListener('change', () => {
+                                                        document.getElementById('prPenaltySecondsGroup').style.display = penaltyCheck.checked ? 'block' : 'none';
+                                                    });
+                                                }
+                                            });
+
+                                            // Dashboard
+                                            async function loadDashboard() {
+                                                try {
+                                                    const res = await fetch(`$ {
+                        API_URL
+                    }
+
+                    /news`, {
+                                                        headers: {
+                                                            'Authorization': `Bearer $ {
+                            authToken
+                        }
+
+                        `
+                                                        }
+                                                    });
+                                                    const news = await res.json();
+
+                                                    document.getElementById('newsTableBody').innerHTML = news.map(item => ` <tr> <td>$ {
+                    new Date(item.publishedDate).toLocaleDateString('cs-CZ')
                 }
-            } catch (e) {
-                console.error(e);
-                showAlert('Chyba spojení', 'error');
+
+                </td> <td>$ {
+                    item.title
+                }
+
+                </td> <td class="hide-mobile" >$ {
+                    item.category
+                }
+
+                </td> <td class="hide-mobile" ><span class="highlight-name" style="font-size: 0.85rem;" >$ {
+                    item.author?.username || '-'
+                }
+
+                </span></td> <td class="hide-mobile" ><span class="status-badge ${item.isPublished ? 'status-published' : 'status-draft'}" >$ {
+                    item.isPublished ? '✓' : '○'
+                }
+
+                <span class="status-text" >$ {
+                    item.isPublished ? ' Pub' : ' Konc'
+                }
+
+                </span></span></td> <td> <button class="action-btn btn-edit" onclick="editNews(${item.id})" ><i class="fa-solid fa-pen" ></i></button> <button class="action-btn btn-publish" onclick="togglePublish(${item.id})" title="${item.isPublished ? 'Skrýt' : 'Publikovat'}" ><i class="fa-solid fa-${item.isPublished ? 'eye-slash' : 'eye'}" ></i></button> $ {
+                    ['admin', 'superadmin'].includes(currentUser.role) ? `< button class= "action-btn btn-delete" onclick = "deleteNews(${item.id})" > <i class="fa-solid fa-trash" ></i></button > ` : ''
+                }
+
+                </td> </tr> `).join('');
+                                                }
+
+                                                catch (e) {
+                                                    console.error(e);
+                                                }
+                                            }
+
+                                            async function togglePublish(id) {
+                                                try {
+                                                    await fetch(`$ {
+                        API_URL
+                    }
+
+                    /news/$ {
+                        id
+                    }
+
+                    /publish`, {
+                                                        method: 'PATCH', headers: {
+                                                            'Authorization': `Bearer $ {
+                            authToken
+                        }
+
+                        `
+                                                        }
+                                                    });
+                                                    loadDashboard();
+                                                }
+
+                                                catch (e) {
+                                                    console.error(e);
+                                                }
+                                            }
+
+                                            async function loadBlicakRegistrations() {
+                                                try {
+                                                    const res = await fetch(`$ {
+                        API_URL
+                    }
+
+                    /registration/blicak`, {
+                                                        headers: {
+                                                            'Authorization': `Bearer $ {
+                            authToken
+                        }
+
+                        `
+                                                        }
+                                                    });
+
+                                                    if (res.ok) {
+                                                        const regs = await res.json();
+                                                        const tbody = document.getElementById('blicakTableBody');
+                                                        const info = document.getElementById('noBlicakInfo');
+
+                                                        if (regs.length === 0) {
+                                                            tbody.innerHTML = '';
+                                                            info.style.display = 'block';
+                                                            return;
+                                                        }
+
+                                                        info.style.display = 'none';
+
+                                                        tbody.innerHTML = regs.map(reg => ` <tr> <td><strong>$ {
+                        escapeHtml(reg.name)
+                    }
+
+                    </strong></td> <td>$ {
+                        escapeHtml(reg.club || '-')
+                    }
+
+                    </td> <td>$ {
+                        escapeHtml(reg.lok || '-')
+                    }
+
+                    </td> <td>$ {
+                        escapeHtml(reg.birthYear)
+                    }
+
+                    </td> <td>$ {
+                        new Date(reg.createdAt).toLocaleString('cs-CZ')
+                    }
+
+                    </td> </tr> `).join('');
+                                                    }
+                                                }
+
+                                                catch (e) {
+                                                    console.error(e);
+                                                }
+                                            }
+
+                                            // Editor
+
+
+                                            // Games Management
+
+
+                                            // Users
+                                            async function loadUsers() {
+                                                try {
+                                                    const res = await fetch(`$ {
+                        API_URL
+                    }
+
+                    /users`, {
+                                                        headers: {
+                                                            'Authorization': `Bearer $ {
+                            authToken
+                        }
+
+                        `
+                                                        }
+                                                    });
+                                                    const users = await res.json();
+
+                                                    document.getElementById('usersTableBody').innerHTML = users.map(u => ` <tr> <td>$ {
+                    u.username
+                }
+
+                </td> <td>$ {
+                    u.email
+                }
+
+                </td> <td> <select onchange="updateUserRole(${u.id}, this.value)" style="padding: 0.25rem;" > <option value="admin"$ {
+                    u.role==='admin' ? 'selected' : ''
+                }
+
+                >Admin</option> <option value="editor"$ {
+                    u.role==='editor' ? 'selected' : ''
+                }
+
+                >Editor</option> <option value="superadmin"$ {
+                    u.role==='superadmin' ? 'selected' : ''
+                }
+
+                >Superadmin</option> </select> </td> <td> $ {
+                    u.id !==currentUser.id ? `< button class= "action-btn btn-delete" onclick = "deleteUser(${u.id})" > <i class="fa-solid fa-trash" ></i></button > ` : ''
+                }
+
+                </td> </tr> `).join('');
+                                                }
+
+                                                catch (e) {
+                                                    console.error(e);
+                                                }
+                                            }
+
+                                            async function updateUserRole(id, newRole) {
+                                                try {
+                                                    const res = await fetch(`$ {
+                        API_URL
+                    }
+
+                    /users/$ {
+                        id
+                    }
+
+                    `, {
+
+                                                        method: 'PUT',
+                                                        headers: {
+                                                            'Content-Type': 'application/json', 'Authorization': `Bearer $ {
+                            authToken
+                        }
+
+                        `
+                                                        }
+
+                                                        ,
+                                                        body: JSON.stringify({
+                                                            role: newRole
+                                                        })
+                                                    });
+
+                                                    if (res.ok) {
+                                                        showAlert(`Role změněna na $ {
+                    newRole
+                }
+
+                `, 'success');
+                                                    }
+
+                                                    else {
+                                                        showAlert('Chyba při změně role', 'error');
+                                                        loadUsers(); // Revert
+                                                    }
+                                                }
+
+                                                catch (e) {
+                                                    console.error(e);
+                                                    showAlert('Chyba spojení', 'error');
+                                                }
+                                            }
+
+
+
+                                            // Messages (Vzkazovník)
+                                            // Messages Logic - now loaded from js/admin/admin-messages.js
+
+                                            function escapeHtml(text) {
+                                                const div = document.createElement('div');
+                                                div.textContent = text;
+                                                return div.innerHTML;
+                                            }
+
+                                            // Delete News (for superadmin)
+
+
+                                            // Auth
+                                            document.getElementById('loginForm').addEventListener('submit', async (e) => {
+                                                e.preventDefault();
+
+                                                try {
+                                                    const res = await fetch(`$ {
+                            API_URL
+                        }
+
+                        /auth/login`, {
+                                                        method: 'POST', headers: {
+                                                            'Content-Type': 'application/json'
+                                                        }
+
+                                                        , body: JSON.stringify({
+                                                            username: document.getElementById('username').value, password: document.getElementById('password').value
+                                                        })
+                                                    });
+
+                                                    if (res.ok) {
+                                                        const data = await res.json(); authToken = data.token; currentUser = data.user; localStorage.setItem('authToken', authToken); showAdmin();
+                                                    }
+
+                                                    else {
+                                                        document.getElementById('loginError').innerHTML = '<div class="alert alert-error">Chybné údaje</div>';
+                                                    }
+                                                }
+
+                                                catch (e) {
+                                                    document.getElementById('loginError').innerHTML = '<div class="alert alert-error">Chyba spojení</div>';
+                                                }
+                                            });
+
+                                            // Password Toggle
+                                            const togglePassword = document.querySelector('#togglePassword');
+                                            const password = document.querySelector('#password');
+
+                                            togglePassword.addEventListener('click', function () {
+                                                const type = password.getAttribute('type') === 'password' ? 'text' : 'password';
+                                                password.setAttribute('type', type);
+                                                this.classList.toggle('fa-eye');
+                                                this.classList.toggle('fa-eye-slash');
+                                            });
+
+                                            function logout() {
+                                                localStorage.removeItem('authToken');
+                                                location.reload();
+                                            }
+
+                                            function showAlert(msg, type) {
+                                                const div = document.createElement('div');
+
+                                                div.className = `alert alert-$ {
+                type
             }
-        }
 
+            `;
 
+                                                // Add icon based on type
+                                                const icon = type === 'success' ? '<i class="fa-solid fa-check-circle"></i>' : '<i class="fa-solid fa-exclamation-circle"></i>';
 
-        // Messages (Vzkazovník)
-        // Messages Logic - now loaded from js/admin/admin-messages.js
-
-        function escapeHtml(text) {
-            const div = document.createElement('div');
-            div.textContent = text;
-            return div.innerHTML;
-        }
-
-        // Delete News (for superadmin)
-
-
-        // Auth
-        document.getElementById('loginForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            try {
-                const res = await fetch(`${API_URL}/auth/login`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username: document.getElementById('username').value, password: document.getElementById('password').value }) });
-                if (res.ok) { const data = await res.json(); authToken = data.token; currentUser = data.user; localStorage.setItem('authToken', authToken); showAdmin(); }
-                else { document.getElementById('loginError').innerHTML = '<div class="alert alert-error">Chybné údaje</div>'; }
-            } catch (e) { document.getElementById('loginError').innerHTML = '<div class="alert alert-error">Chyba spojení</div>'; }
-        });
-
-        // Password Toggle
-        const togglePassword = document.querySelector('#togglePassword');
-        const password = document.querySelector('#password');
-        togglePassword.addEventListener('click', function () {
-            const type = password.getAttribute('type') === 'password' ? 'text' : 'password';
-            password.setAttribute('type', type);
-            this.classList.toggle('fa-eye');
-            this.classList.toggle('fa-eye-slash');
-        });
-
-        function logout() { localStorage.removeItem('authToken'); location.reload(); }
-        function showAlert(msg, type) {
-            const div = document.createElement('div');
-            div.className = `alert alert-${type}`;
-
-            // Add icon based on type
-            const icon = type === 'success' ? '<i class="fa-solid fa-check-circle"></i>' : '<i class="fa-solid fa-exclamation-circle"></i>';
-            div.innerHTML = `<div style="display:flex;align-items:center;gap:10px;">${icon} <span>${msg}</span></div>`;
-
-            // Add close button
-            const close = document.createElement('i');
-            close.className = 'fa-solid fa-times';
-            close.style.cssText = 'cursor:pointer; margin-left:10px; opacity:0.7;';
-            close.onclick = () => div.remove();
-            div.firstChild.appendChild(close);
-
-            document.getElementById('alertContainer').appendChild(div);
-
-            // Longer timeout for errors
-            const timeout = type === 'error' ? 6000 : 3000;
-            setTimeout(() => {
-                if (div.parentNode) {
-                    div.style.opacity = '0';
-                    div.style.transform = 'translateX(100%)';
-                    div.style.transition = 'all 0.3s';
-                    setTimeout(() => div.remove(), 300);
-                }
-            }, timeout);
-        }
-        window.showToast = showAlert;
-
-        // updateStandings() moved to js/admin/admin-competitions.js
-
-
-        // loadCompetitions(), toggleCompetitionActive(), changeSourceUrl() 
-        // moved to js/admin/admin-competitions.js
-
-
-
-
-
-        // Collapsible sidebar sections
-        function toggleSidebarSection(section) {
-            const content = document.getElementById(section + 'Content');
-            const icon = document.getElementById(section + 'Icon');
-            if (content.style.display === 'none') {
-                content.style.display = 'block';
-                icon.style.transform = 'rotate(0deg)';
-            } else {
-                content.style.display = 'none';
-                icon.style.transform = 'rotate(-90deg)';
+                                                div.innerHTML = `<div style="display:flex;align-items:center;gap:10px;">$ {
+                icon
             }
-        }
 
-        // Members Management - now loaded from js/admin/admin-members.js
-        // Gallery Management - now loaded from js/admin/admin-gallery.js
+            <span>$ {
+                msg
+            }
 
-    </script>
+            </span></div>`;
+
+                                                // Add close button
+                                                const close = document.createElement('i');
+                                                close.className = 'fa-solid fa-times';
+                                                close.style.cssText = 'cursor:pointer; margin-left:10px; opacity:0.7;';
+                                                close.onclick = () => div.remove();
+                                                div.firstChild.appendChild(close);
+
+                                                document.getElementById('alertContainer').appendChild(div);
+
+                                                // Longer timeout for errors
+                                                const timeout = type === 'error' ? 6000 : 3000;
+
+                                                setTimeout(() => {
+                                                    if (div.parentNode) {
+                                                        div.style.opacity = '0';
+                                                        div.style.transform = 'translateX(100%)';
+                                                        div.style.transition = 'all 0.3s';
+                                                        setTimeout(() => div.remove(), 300);
+                                                    }
+                                                }
+
+                                                    , timeout);
+                                            }
+
+                                            window.showToast = showAlert;
+
+                                            // updateStandings() moved to js/admin/admin-competitions.js
+
+
+                                            // loadCompetitions(), toggleCompetitionActive(), changeSourceUrl() 
+                                            // moved to js/admin/admin-competitions.js
+
+
+
+
+
+                                            // Collapsible sidebar sections
+                                            function toggleSidebarSection(section) {
+                                                const content = document.getElementById(section + 'Content');
+                                                const icon = document.getElementById(section + 'Icon');
+
+                                                if (content.style.display === 'none') {
+                                                    content.style.display = 'block';
+                                                    icon.style.transform = 'rotate(0deg)';
+                                                }
+
+                                                else {
+                                                    content.style.display = 'none';
+                                                    icon.style.transform = 'rotate(-90deg)';
+                                                }
+                                            }
+
+                                            // Members Management - now loaded from js/admin/admin-members.js
+                                            // Gallery Management - now loaded from js/admin/admin-gallery.js
+
+                                        </script>
 </body>
 
 </html>
