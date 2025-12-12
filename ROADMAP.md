@@ -47,9 +47,9 @@ Refaktoring monolitického `admin.html` (3800+ řádků) na JS moduly.
   - Vytvořena struktura `js/admin/`
   - Hotové moduly: `admin-gallery.js`, `admin-members.js`, `admin-messages.js`
   - Odstraněno ~400 řádků legacy kódu
-- [ ] **Fáze 2:** Migrace hlavních komponent
+- [x] **Fáze 2:** Migrace hlavních komponent
   - [x] News Editor (`admin-news.js`)
-  - [ ] Competitions & Standings (`admin-competitions.js`)
+  - [x] Competitions & Standings (`admin-competitions.js`)
 - [ ] **Fáze 3:** Shared Core & Cleanup
   - [ ] Plná migrace `admin-core.js` (auth, routing)
   - [ ] Odstranění veškerého JS z `admin.html`
@@ -89,17 +89,13 @@ Refaktoring monolitického `admin.html` (3800+ řádků) na JS moduly.
 
 ---
 
-## 🎮 Priorita 2: Puzzle Racer - Admin nastavení
+## ✅ Priorita 2: Puzzle Racer - Admin nastavení (HOTOVO)
 
-**Cíl:** Umožnit superadminovi konfigurovat parametry hry.
-
-### Plánované změny
-- [ ] Databázový model `PuzzleRacerSettings`
-- [ ] Admin UI formulář:
-  - Počet puzzlů na úroveň obtížnosti (default: 6)
-  - Zapnutí/vypnutí systému životů (Penalizace)
-  - Časový limit hry (default: 180s)
-- [ ] API endpoint GET/PUT `/api/admin/puzzle-racer/settings`
+**Implementováno 12. 12. 2025:**
+- [x] Databázový model `PuzzleRacerSettings`
+- [x] Admin UI formulář s nastavením (téma, čas, životy, penalizace, přeskakování)
+- [x] API endpoint GET/PUT `/api/racer/settings`
+- [x] Dva herní módy: Vanilla (fixní nastavení) a Thematic (z admin panelu)
 
 ---
 
