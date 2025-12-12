@@ -131,6 +131,12 @@ async function verifyToken() {
 // ================================
 
 function switchTab(tab) {
+    // Cleanup any open modals from previous section
+    const imageModal = document.getElementById('imageModal');
+    if (imageModal) imageModal.style.display = 'none';
+    const galleryPicker = document.getElementById('galleryPickerModal');
+    if (galleryPicker) galleryPicker.style.display = 'none';
+
     document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
     const activeTab = document.querySelector(`.nav-tab[onclick="switchTab('${tab}')"]`);
     if (activeTab) activeTab.classList.add('active');
