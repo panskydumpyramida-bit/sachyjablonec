@@ -12,9 +12,10 @@ npx prisma migrate resolve --applied 20251210194447_init_postgres_with_puzzle_ra
 npx prisma migrate resolve --applied 20251212122551_add_missing_tables || echo "⚠️ Migration 2 resolution skipped (already applied?)"
 
 # 2. Deploy any NEW migrations (this should run the puzzle_modes migration)
+# 2. Deploy any NEW migrations (this should run the puzzle_modes migration)
 echo "🔄 Deploying pending migrations..."
-npx prisma migrate deploy
+npx prisma migrate deploy || { echo "❌ Migration failed, stopping startup."; exit 1; }
 
 # 3. Start the application
 echo "🟢 Starting application..."
-npm start
+exec npm start
