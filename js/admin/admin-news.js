@@ -725,9 +725,10 @@ function showImageModal(existingImg = null) {
         // Construction seems safer for modularity.
         modal = document.createElement('div');
         modal.id = 'imageModal';
+        modal.style.cssText = 'position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 1000; display: none; align-items: center; justify-content: center;';
         modal.innerHTML = `
-            <div class="modal-overlay" onclick="closeImageModal()"></div>
-            <div class="modal-content">
+            <div class="modal-overlay" onclick="closeImageModal()" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7);"></div>
+            <div class="modal-content" style="position: relative; z-index: 1; background: var(--editor-bg, #1a1a2e); border-radius: 12px; padding: 1.5rem; max-width: 500px; width: 90%;">
                 <h3 style="margin-bottom: 1rem;">${existingImg ? 'Upravit obrázek' : 'Vložit obrázek'}</h3>
                 <div style="display: flex; gap: 0.5rem; margin-bottom: 1rem;">
                     <input type="text" id="imgUrlInput" placeholder="URL obrázku" style="flex: 1;">
