@@ -412,16 +412,28 @@
 
         .game-item {
             display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 0.5rem 0.75rem;
+            flex-direction: column;
+            padding: 0.75rem;
             background: rgba(255, 255, 255, 0.03);
-            border-radius: 4px;
-            margin-bottom: 0.5rem;
+            border-radius: 6px;
+            margin-bottom: 0.75rem;
             font-size: 0.9rem;
             cursor: grab;
             transition: all 0.2s;
-            border: 1px solid transparent;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .game-item .game-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+
+        .game-item .game-body {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
         }
 
         .game-item:hover {
