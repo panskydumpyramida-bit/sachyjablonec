@@ -1627,45 +1627,69 @@
                                         životů</label><label class="switch"><input type="checkbox" id="prLivesEnabled"
                                             checked><span class="slider round"></span></label>
                                 </div>
-                                <div class="form-group" id="prMaxLivesGroup">
-                                    <label>Počet životů</label><input type="number" id="prMaxLives" min="1" max="10"
-                                        value="3">
+                                <div id="prMaxLivesGroup" class="form-group" style="margin-top: 0.5rem;"><label>Počet
+                                        životů</label><input type="number" id="prMaxLives" min="1" max="10" value="3">
                                 </div>
-                                <div class="divider"
-                                    style="margin: 1rem 0; background: rgba(255,255,255,0.1); height: 1px;">
-                                </div>
-                                <!-- Penalty -->
-                                <div class="control-row"><label>Časová
-                                        penalizace</label><label class="switch"><input type="checkbox"
-                                            id="prPenaltyEnabled"><span class="slider round"></span></label>
-                                </div>
-                                <div class="form-group" id="prPenaltySecondsGroup" style="display: none;">
-                                    <label>Penalizace
-                                        (sekundy)</label><input type="number" id="prPenaltySeconds" min="1" max="60"
-                                        value="5">
-                                </div>
-                                <div class="divider"
-                                    style="margin: 1rem 0; background: rgba(255,255,255,0.1); height: 1px;">
-                                </div>
-                                <!-- Skip -->
-                                <div class="control-row">
-                                    <label>Přeskočit po
-                                        chybě</label><label class="switch"><input type="checkbox"
-                                            id="prSkipOnMistake"><span class="slider round"></span></label>
+
+                                <div
+                                    style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid rgba(255,255,255,0.05);">
+                                    <div class="control-row">
+                                        <label>Náhodné úlohy</label>
+                                        <label class="switch">
+                                            <input type="checkbox" id="prRandomizePuzzles" checked
+                                                onchange="togglePrRandomizeUI()">
+                                            <span class="slider round"></span>
+                                        </label>
+                                    </div>
+                                    <p
+                                        style="font-size: 0.8rem; color: #888; margin-top: 0.2rem; margin-bottom: 0.5rem;">
+                                        Pokud vypnuto, všichni hráči dostanou stejnou sadu úloh.
+                                    </p>
+                                    <button id="prRefreshSetBtn" class="btn-secondary" onclick="refreshPrFixedSet()"
+                                        style="display: none; width: 100%; font-size: 0.85rem; margin-top: 0.5rem;">
+                                        <i class="fa-solid fa-rotate"></i> Vygenerovat novou sadu
+                                    </button>
                                 </div>
                             </div>
+                            <div class="form-group" id="prMaxLivesGroup">
+                                <label>Počet životů</label><input type="number" id="prMaxLives" min="1" max="10"
+                                    value="3">
+                            </div>
+                            <div class="divider"
+                                style="margin: 1rem 0; background: rgba(255,255,255,0.1); height: 1px;">
+                            </div>
+                            <!-- Penalty -->
+                            <div class="control-row"><label>Časová
+                                    penalizace</label><label class="switch"><input type="checkbox"
+                                        id="prPenaltyEnabled"><span class="slider round"></span></label>
+                            </div>
+                            <div class="form-group" id="prPenaltySecondsGroup" style="display: none;">
+                                <label>Penalizace
+                                    (sekundy)</label><input type="number" id="prPenaltySeconds" min="1" max="60"
+                                    value="5">
+                            </div>
+                            <div class="divider"
+                                style="margin: 1rem 0; background: rgba(255,255,255,0.1); height: 1px;">
+                            </div>
+                            <!-- Skip -->
+                            <div class="control-row">
+                                <label>Přeskočit po
+                                    chybě</label><label class="switch"><input type="checkbox" id="prSkipOnMistake"><span
+                                        class="slider round"></span></label>
+                            </div>
                         </div>
-                        <div style="display: flex; justify-content: flex-end; margin-top: 1.5rem;">
-                            <button class="btn-primary" onclick="savePuzzleRacerSettings()" id="savePrSettingsBtn"><i
-                                    class="fa-solid fa-save"></i>Uložit
-                                nastavení </button>
-                        </div>
-                        <div id="prSettingsResult" style="margin-top: 1rem; text-align: center;">
-                        </div>
+                    </div>
+                    <div style="display: flex; justify-content: flex-end; margin-top: 1.5rem;">
+                        <button class="btn-primary" onclick="savePuzzleRacerSettings()" id="savePrSettingsBtn"><i
+                                class="fa-solid fa-save"></i>Uložit
+                            nastavení </button>
+                    </div>
+                    <div id="prSettingsResult" style="margin-top: 1rem; text-align: center;">
                     </div>
                 </div>
             </div>
         </div>
+    </div>
     </div>
     <!-- Gallery View -->
     <div id="galleryView" class="hidden">
@@ -1967,6 +1991,10 @@
                 document.getElementById('prPenaltySeconds').value = settings.penaltySeconds || 5;
                 document.getElementById('prSkipOnMistake').checked = settings.skipOnMistake === true;
 
+                // New: Randomize
+                document.getElementById('prRandomizePuzzles').checked = settings.randomizePuzzles !== false;
+                togglePrRandomizeUI(); // visuals
+
                 // Toggle visibility of dependent fields
                 document.getElementById('prMaxLivesGroup').style.display = document.getElementById('prLivesEnabled').checked ? 'block' : 'none';
                 document.getElementById('prPenaltySecondsGroup').style.display = document.getElementById('prPenaltyEnabled').checked ? 'block' : 'none';
@@ -1974,6 +2002,36 @@
 
             catch (e) {
                 console.error('Failed to load puzzle racer settings:', e);
+            }
+        }
+
+        function togglePrRandomizeUI() {
+            const isRandom = document.getElementById('prRandomizePuzzles').checked;
+            const btn = document.getElementById('prRefreshSetBtn');
+            if (btn) btn.style.display = isRandom ? 'none' : 'block';
+        }
+
+        async function refreshPrFixedSet() {
+            if (!confirm('Opravdu chcete vygenerovat novou sadu úloh? Stará sada bude zahozena.')) return;
+
+            const btn = document.getElementById('prRefreshSetBtn');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Generuji...';
+            btn.disabled = true;
+
+            try {
+                const res = await fetch(`${API_URL}/racer/settings/refresh-set`, {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+                if (res.ok) alert('Nová sada byla vygenerována (cache smazána). Při příští hře se načtou nové úlohy.');
+                else alert('Chyba při generování.');
+            } catch (e) {
+                console.error(e);
+                alert('Chyba spojení.');
+            } finally {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
             }
         }
 
@@ -2000,7 +2058,8 @@
                         puzzlesPerDifficulty: parseInt(document.getElementById('prPuzzlesPerDifficulty').value),
                         penaltyEnabled: document.getElementById('prPenaltyEnabled').checked,
                         penaltySeconds: parseInt(document.getElementById('prPenaltySeconds').value),
-                        skipOnMistake: document.getElementById('prSkipOnMistake').checked
+                        skipOnMistake: document.getElementById('prSkipOnMistake').checked,
+                        randomizePuzzles: document.getElementById('prRandomizePuzzles').checked
                     })
                 });
 
