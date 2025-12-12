@@ -769,7 +769,10 @@ function showImageModal(existingImg = null) {
         document.body.appendChild(modal);
     }
 
-    // reset/fill logic
+    // Ensure proper overlay styles are always applied
+    modal.style.cssText = 'position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 1000; display: flex; align-items: center; justify-content: center;';
+
+    // Reset/fill input values
     const imgUrlInput = document.getElementById('imgUrlInput');
     const imgPreviewArea = document.getElementById('imgPreviewArea');
     const imgAlignInput = document.getElementById('imgAlignInput');
@@ -783,14 +786,12 @@ function showImageModal(existingImg = null) {
         else if (existingImg.style.float === 'right') imgAlignInput.value = 'right';
         else if (existingImg.style.width === '100%') imgAlignInput.value = 'full';
         else imgAlignInput.value = 'center';
-
     } else {
         imgUrlInput.value = '';
         imgPreviewArea.innerHTML = '<p style="color: var(--text-muted);">Náhled obrázku</p>';
         imgAlignInput.value = 'center';
     }
 
-    modal.style.display = 'flex';
     imgUrlInput.onchange = () => {
         if (imgUrlInput.value) imgPreviewArea.innerHTML = `<img src="${imgUrlInput.value}" style="max-width:100%; max-height: 300px;">`;
     };
