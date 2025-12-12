@@ -1620,62 +1620,69 @@
                             </div>
                             <!-- Helper: Difficulty & Behavior -->
                             <div class="settings-card">
-                                <h4><i class="fa-solid fa-heart-crack"></i>Obtížnost
-                                    a Chyby</h4>
+                                <h4><i class="fa-solid fa-heart-crack"></i>Obtížnost a Chyby</h4>
+
                                 <!-- Lives -->
-                                <div class="control-row"><label>Systém
-                                        životů</label><label class="switch"><input type="checkbox" id="prLivesEnabled"
-                                            checked><span class="slider round"></span></label>
+                                <div class="control-row">
+                                    <label>Systém životů</label>
+                                    <label class="switch">
+                                        <input type="checkbox" id="prLivesEnabled" checked>
+                                        <span class="slider round"></span>
+                                    </label>
                                 </div>
-                                <div id="prMaxLivesGroup" class="form-group" style="margin-top: 0.5rem;"><label>Počet
-                                        životů</label><input type="number" id="prMaxLives" min="1" max="10" value="3">
+                                <div id="prMaxLivesGroup" class="form-group" style="margin-top: 0.5rem;">
+                                    <label>Počet životů</label>
+                                    <input type="number" id="prMaxLives" min="1" max="10" value="3">
                                 </div>
 
-                                <div
-                                    style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid rgba(255,255,255,0.05);">
-                                    <div class="control-row">
-                                        <label>Náhodné úlohy</label>
-                                        <label class="switch">
-                                            <input type="checkbox" id="prRandomizePuzzles" checked
-                                                onchange="togglePrRandomizeUI()">
-                                            <span class="slider round"></span>
-                                        </label>
-                                    </div>
-                                    <p
-                                        style="font-size: 0.8rem; color: #888; margin-top: 0.2rem; margin-bottom: 0.5rem;">
-                                        Pokud vypnuto, všichni hráči dostanou stejnou sadu úloh.
-                                    </p>
-                                    <button id="prRefreshSetBtn" class="btn-secondary" onclick="refreshPrFixedSet()"
-                                        style="display: none; width: 100%; font-size: 0.85rem; margin-top: 0.5rem;">
-                                        <i class="fa-solid fa-rotate"></i> Vygenerovat novou sadu
-                                    </button>
+                                <div class="divider"
+                                    style="margin: 1rem 0; background: rgba(255,255,255,0.1); height: 1px;"></div>
+
+                                <!-- Randomize -->
+                                <div class="control-row">
+                                    <label>Náhodné úlohy</label>
+                                    <label class="switch">
+                                        <input type="checkbox" id="prRandomizePuzzles" checked
+                                            onchange="togglePrRandomizeUI()">
+                                        <span class="slider round"></span>
+                                    </label>
                                 </div>
-                            </div>
-                            <div class="form-group" id="prMaxLivesGroup">
-                                <label>Počet životů</label><input type="number" id="prMaxLives" min="1" max="10"
-                                    value="3">
-                            </div>
-                            <div class="divider"
-                                style="margin: 1rem 0; background: rgba(255,255,255,0.1); height: 1px;">
-                            </div>
-                            <!-- Penalty -->
-                            <div class="control-row"><label>Časová
-                                    penalizace</label><label class="switch"><input type="checkbox"
-                                        id="prPenaltyEnabled"><span class="slider round"></span></label>
-                            </div>
-                            <div class="form-group" id="prPenaltySecondsGroup" style="display: none;">
-                                <label>Penalizace
-                                    (sekundy)</label><input type="number" id="prPenaltySeconds" min="1" max="60"
-                                    value="5">
-                            </div>
-                            <div class="divider"
-                                style="margin: 1rem 0; background: rgba(255,255,255,0.1); height: 1px;">
-                            </div>
-                            <!-- Skip -->
-                            <div class="control-row">
-                                <label>Přeskočit po
-                                    chybě</label><label class="switch"><input type="checkbox" id="prSkipOnMistake"><span
-                                        class="slider round"></span></label>
+                                <p style="font-size: 0.8rem; color: #888; margin-top: 0.2rem; margin-bottom: 0.5rem;">
+                                    Pokud vypnuto, všichni hráči dostanou stejnou sadu úloh.
+                                </p>
+                                <button id="prRefreshSetBtn" class="btn-secondary" onclick="refreshPrFixedSet()"
+                                    style="display: none; width: 100%; font-size: 0.85rem; margin-top: 0.5rem;">
+                                    <i class="fa-solid fa-rotate"></i> Vygenerovat novou sadu
+                                </button>
+
+                                <div class="divider"
+                                    style="margin: 1rem 0; background: rgba(255,255,255,0.1); height: 1px;"></div>
+
+                                <!-- Penalty -->
+                                <div class="control-row">
+                                    <label>Časová penalizace</label>
+                                    <label class="switch">
+                                        <input type="checkbox" id="prPenaltyEnabled">
+                                        <span class="slider round"></span>
+                                    </label>
+                                </div>
+                                <div id="prPenaltySecondsGroup" class="form-group"
+                                    style="margin-top: 0.5rem; display: none;">
+                                    <label>Sekundy penalizace</label>
+                                    <input type="number" id="prPenaltySeconds" min="1" max="60" value="5">
+                                </div>
+
+                                <div class="divider"
+                                    style="margin: 1rem 0; background: rgba(255,255,255,0.1); height: 1px;"></div>
+
+                                <!-- Skip on Mistake -->
+                                <div class="control-row">
+                                    <label>Přeskočit po chybě</label>
+                                    <label class="switch">
+                                        <input type="checkbox" id="prSkipOnMistake">
+                                        <span class="slider round"></span>
+                                    </label>
+                                </div>
                             </div>
                         </div>
                     </div>
