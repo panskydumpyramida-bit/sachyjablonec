@@ -1624,7 +1624,8 @@
                                 <div class="form-group" id="prPenaltySecondsGroup" style="display: none;">
                                     <label>Penalizace
                                         (sekundy)</label><input type="number" id="prPenaltySeconds" min="1" max="60"
-                                        value="5"></div>
+                                        value="5">
+                                </div>
                                 <div class="divider"
                                     style="margin: 1rem 0; background: rgba(255,255,255,0.1); height: 1px;">
                                 </div>
@@ -1801,17 +1802,9 @@
 
         async function checkMaintenance() {
             try {
-                const res = await fetch(`$ {
-                        API_URL
-                    }
-
-                    /settings`, {
+                const res = await fetch(`${API_URL}/settings`, {
                     headers: {
-                        'Authorization': `Bearer $ {
-                            authToken
-                        }
-
-                        `
+                        'Authorization': `Bearer ${authToken}`
                     }
                 });
                 const settings = await res.json();
@@ -1828,21 +1821,12 @@
             const value = toggle.checked;
 
             try {
-                const res = await fetch(`$ {
-                        API_URL
-                    }
-
-                    /settings`, {
+                const res = await fetch(`${API_URL}/settings`, {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json', 'Authorization': `Bearer $ {
-                            authToken
-                        }
-
-                        `
-                    }
-
-                    ,
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
                     body: JSON.stringify({
                         key: 'maintenance_mode', value: value
                     })
@@ -1896,30 +1880,16 @@
 
         async function verifyToken() {
             try {
-                const res = await fetch(`$ {
-                        API_URL
-                    }
-
-                    /auth/me`, {
+                const res = await fetch(`${API_URL}/auth/me`, {
                     headers: {
-                        'Authorization': `Bearer $ {
-                            authToken
-                        }
-
-                        `
+                        'Authorization': `Bearer ${authToken}`
                     }
                 });
 
                 if (res.ok) {
                     currentUser = await res.json();
 
-                    document.getElementById('userInfo').textContent = `$ {
-                    currentUser.username
-                }
-
-                ($ {
-                        currentUser.role
-                    })`;
+                    document.getElementById('userInfo').textContent = `${currentUser.username} (${currentUser.role})`;
                     showAdmin();
                 }
 
@@ -1967,11 +1937,7 @@
         // --- Puzzle Racer Settings ---
         async function loadPuzzleRacerSettings() {
             try {
-                const res = await fetch(`$ {
-                        API_URL
-                    }
-
-                    /racer/settings`);
+                const res = await fetch(`${API_URL}/racer/settings`);
                 const settings = await res.json();
 
                 document.getElementById('prTheme').value = settings.puzzleTheme || 'mix';
@@ -2002,23 +1968,12 @@
             result.textContent = '';
 
             try {
-                const res = await fetch(`$ {
-                        API_URL
-                    }
-
-                    /racer/settings`, {
+                const res = await fetch(`${API_URL}/racer/settings`, {
                     method: 'PUT',
                     headers: {
-
                         'Content-Type': 'application/json',
-                        'Authorization': `Bearer $ {
-                            authToken
-                        }
-
-                        `
-                    }
-
-                    ,
+                        'Authorization': `Bearer ${authToken}`
+                    },
                     body: JSON.stringify({
                         puzzleTheme: document.getElementById('prTheme').value,
                         timeLimitSeconds: parseInt(document.getElementById('prTimeLimit').value),
@@ -2072,50 +2027,32 @@
         // Dashboard
         async function loadDashboard() {
             try {
-                const res = await fetch(`$ {
-                        API_URL
-                    }
-
-                    /news`, {
+                const res = await fetch(`${API_URL}/news`, {
                     headers: {
-                        'Authorization': `Bearer $ {
-                            authToken
-                        }
-
-                        `
+                        'Authorization': `Bearer ${authToken}`
                     }
                 });
                 const news = await res.json();
 
-                document.getElementById('newsTableBody').innerHTML = news.map(item => ` <tr> <td>$ {
-                    new Date(item.publishedDate).toLocaleDateString('cs-CZ')
-                }
-
-                </td> <td>$ {
-                    item.title
-                }
-
-                </td> <td class="hide-mobile" >$ {
-                    item.category
-                }
-
-                </td> <td class="hide-mobile" ><span class="highlight-name" style="font-size: 0.85rem;" >$ {
-                    item.author?.username || '-'
-                }
-
-                </span></td> <td class="hide-mobile" ><span class="status-badge ${item.isPublished ? 'status-published' : 'status-draft'}" >$ {
-                    item.isPublished ? '✓' : '○'
-                }
-
-                <span class="status-text" >$ {
-                    item.isPublished ? ' Pub' : ' Konc'
-                }
-
-                </span></span></td> <td> <button class="action-btn btn-edit" onclick="editNews(${item.id})" ><i class="fa-solid fa-pen" ></i></button> <button class="action-btn btn-publish" onclick="togglePublish(${item.id})" title="${item.isPublished ? 'Skrýt' : 'Publikovat'}" ><i class="fa-solid fa-${item.isPublished ? 'eye-slash' : 'eye'}" ></i></button> $ {
-                    ['admin', 'superadmin'].includes(currentUser.role) ? `< button class= "action-btn btn-delete" onclick = "deleteNews(${item.id})" > <i class="fa-solid fa-trash" ></i></button > ` : ''
-                }
-
-                </td> </tr> `).join('');
+                document.getElementById('newsTableBody').innerHTML = news.map(item => `
+                    <tr>
+                        <td>${new Date(item.publishedDate).toLocaleDateString('cs-CZ')}</td>
+                        <td>${item.title}</td>
+                        <td class="hide-mobile">${item.category}</td>
+                        <td class="hide-mobile"><span class="highlight-name" style="font-size: 0.85rem;">${item.author?.username || '-'}</span></td>
+                        <td class="hide-mobile">
+                            <span class="status-badge ${item.isPublished ? 'status-published' : 'status-draft'}">
+                                ${item.isPublished ? '✓' : '○'}
+                                <span class="status-text">${item.isPublished ? ' Pub' : ' Konc'}</span>
+                            </span>
+                        </td>
+                        <td>
+                            <button class="action-btn btn-edit" onclick="editNews(${item.id})"><i class="fa-solid fa-pen"></i></button>
+                            <button class="action-btn btn-publish" onclick="togglePublish(${item.id})" title="${item.isPublished ? 'Skrýt' : 'Publikovat'}"><i class="fa-solid fa-${item.isPublished ? 'eye-slash' : 'eye'}"></i></button>
+                            ${['admin', 'superadmin'].includes(currentUser.role) ? `<button class="action-btn btn-delete" onclick="deleteNews(${item.id})"><i class="fa-solid fa-trash"></i></button>` : ''}
+                        </td>
+                    </tr>
+                `).join('');
             }
 
             catch (e) {
@@ -2125,21 +2062,10 @@
 
         async function togglePublish(id) {
             try {
-                await fetch(`$ {
-                        API_URL
-                    }
-
-                    /news/$ {
-                        id
-                    }
-
-                    /publish`, {
-                    method: 'PATCH', headers: {
-                        'Authorization': `Bearer $ {
-                            authToken
-                        }
-
-                        `
+                await fetch(`${API_URL}/news/${id}/publish`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`
                     }
                 });
                 loadDashboard();
@@ -2152,17 +2078,9 @@
 
         async function loadBlicakRegistrations() {
             try {
-                const res = await fetch(`$ {
-                        API_URL
-                    }
-
-                    /registration/blicak`, {
+                const res = await fetch(`${API_URL}/registration/blicak`, {
                     headers: {
-                        'Authorization': `Bearer $ {
-                            authToken
-                        }
-
-                        `
+                        'Authorization': `Bearer ${authToken}`
                     }
                 });
 
@@ -2179,27 +2097,14 @@
 
                     info.style.display = 'none';
 
-                    tbody.innerHTML = regs.map(reg => ` <tr> <td><strong>$ {
-                        escapeHtml(reg.name)
-                    }
-
-                    </strong></td> <td>$ {
-                        escapeHtml(reg.club || '-')
-                    }
-
-                    </td> <td>$ {
-                        escapeHtml(reg.lok || '-')
-                    }
-
-                    </td> <td>$ {
-                        escapeHtml(reg.birthYear)
-                    }
-
-                    </td> <td>$ {
-                        new Date(reg.createdAt).toLocaleString('cs-CZ')
-                    }
-
-                    </td> </tr> `).join('');
+                    tbody.innerHTML = regs.map(reg => `
+                        <tr>
+                            <td><strong>${escapeHtml(reg.name)}</strong></td>
+                            <td>${escapeHtml(reg.club || '-')}</td>
+                            <td>${escapeHtml(reg.lok || '-')}</td>
+                            <td>${escapeHtml(reg.birthYear)}</td>
+                            <td>${new Date(reg.createdAt).toLocaleString('cs-CZ')}</td>
+                        </tr>`).join('');
                 }
             }
 
@@ -2217,46 +2122,30 @@
         // Users
         async function loadUsers() {
             try {
-                const res = await fetch(`$ {
-                        API_URL
-                    }
-
-                    /users`, {
+                const res = await fetch(`${API_URL}/users`, {
                     headers: {
-                        'Authorization': `Bearer $ {
-                            authToken
-                        }
-
-                        `
+                        'Authorization': `Bearer ${authToken}`
                     }
                 });
                 const users = await res.json();
 
-                document.getElementById('usersTableBody').innerHTML = users.map(u => ` <tr> <td>$ {
-                    u.username
-                }
-
-                </td> <td>$ {
-                    u.email
-                }
-
-                </td> <td> <select onchange="updateUserRole(${u.id}, this.value)" style="padding: 0.25rem;" > <option value="admin"$ {
-                    u.role==='admin' ? 'selected' : ''
-                }
-
-                >Admin</option> <option value="editor"$ {
-                    u.role==='editor' ? 'selected' : ''
-                }
-
-                >Editor</option> <option value="superadmin"$ {
-                    u.role==='superadmin' ? 'selected' : ''
-                }
-
-                >Superadmin</option> </select> </td> <td> $ {
-                    u.id !==currentUser.id ? `< button class= "action-btn btn-delete" onclick = "deleteUser(${u.id})" > <i class="fa-solid fa-trash" ></i></button > ` : ''
-                }
-
-                </td> </tr> `).join('');
+                document.getElementById('usersTableBody').innerHTML = users.map(u => `
+                    <tr>
+                        <td>${u.username}</td>
+                        <td>${u.email}</td>
+                        <td>
+                            <select onchange="updateUserRole(${u.id}, this.value)" style="padding: 0.25rem;">
+                                <option value="admin" ${u.role === 'admin' ? 'selected' : ''}>Admin</option>
+                                <option value="editor" ${u.role === 'editor' ? 'selected' : ''}>Editor</option>
+                                <option value="superadmin" ${u.role === 'superadmin' ? 'selected' : ''}>Superadmin</option>
+                            </select>
+                        </td>
+                        <td>${new Date(u.createdAt).toLocaleDateString('cs-CZ')}</td>
+                        <td>
+                            ${u.id !== currentUser.id ? `<button class="action-btn btn-delete" onclick="deleteUser(${u.id})"><i class="fa-solid fa-trash"></i></button>` : ''}
+                        </td>
+                    </tr>
+                `).join('');
             }
 
             catch (e) {
@@ -2266,37 +2155,17 @@
 
         async function updateUserRole(id, newRole) {
             try {
-                const res = await fetch(`$ {
-                        API_URL
-                    }
-
-                    /users/$ {
-                        id
-                    }
-
-                    `, {
-
-                    method: 'PUT',
+                const res = await fetch(`${API_URL}/users/${id}/role`, {
+                    method: 'PATCH',
                     headers: {
-                        'Content-Type': 'application/json', 'Authorization': `Bearer $ {
-                            authToken
-                        }
-
-                        `
-                    }
-
-                    ,
-                    body: JSON.stringify({
-                        role: newRole
-                    })
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify({ role: newRole })
                 });
 
                 if (res.ok) {
-                    showAlert(`Role změněna na $ {
-                    newRole
-                }
-
-                `, 'success');
+                    showAlert(`Role změněna na ${newRole}`, 'success');
                 }
 
                 else {
@@ -2330,22 +2199,23 @@
             e.preventDefault();
 
             try {
-                const res = await fetch(`$ {
-                            API_URL
-                        }
-
-                        /auth/login`, {
-                    method: 'POST', headers: {
+                const res = await fetch(`${API_URL}/auth/login`, {
+                    method: 'POST',
+                    headers: {
                         'Content-Type': 'application/json'
-                    }
-
-                    , body: JSON.stringify({
-                        username: document.getElementById('username').value, password: document.getElementById('password').value
+                    },
+                    body: JSON.stringify({
+                        username: document.getElementById('username').value,
+                        password: document.getElementById('password').value
                     })
                 });
 
                 if (res.ok) {
-                    const data = await res.json(); authToken = data.token; currentUser = data.user; localStorage.setItem('authToken', authToken); showAdmin();
+                    const data = await res.json();
+                    authToken = data.token;
+                    currentUser = data.user;
+                    localStorage.setItem('authToken', authToken);
+                    showAdmin();
                 }
 
                 else {
@@ -2377,24 +2247,15 @@
         function showAlert(msg, type) {
             const div = document.createElement('div');
 
-            div.className = `alert alert-$ {
-                type
-            }
-
-            `;
+            div.className = `alert alert-${type}`;
 
             // Add icon based on type
             const icon = type === 'success' ? '<i class="fa-solid fa-check-circle"></i>' : '<i class="fa-solid fa-exclamation-circle"></i>';
 
-            div.innerHTML = `<div style="display:flex;align-items:center;gap:10px;">$ {
-                icon
-            }
-
-            <span>$ {
-                msg
-            }
-
-            </span></div>`;
+            div.innerHTML = `<div style="display:flex;align-items:center;gap:10px;">
+                    ${icon}
+                    <span>${msg}</span>
+                </div>`;
 
             // Add close button
             const close = document.createElement('i');
