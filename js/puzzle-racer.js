@@ -1001,19 +1001,21 @@ async function initModeUI() {
     // Show correct badge
     const vanillaBadge = document.getElementById('vanillaBadge');
     const thematicBadge = document.getElementById('thematicBadge');
-    const switchLink = document.getElementById('switchModeLink');
-    const switchText = document.getElementById('switchModeText');
     const modeDesc = document.getElementById('modeDescription');
 
-    if (vanillaBadge) vanillaBadge.style.display = isThematic ? 'none' : 'inline-block';
-    if (thematicBadge) thematicBadge.style.display = isThematic ? 'inline-block' : 'none';
-
-    // Update switch link
-    if (switchLink) {
-        switchLink.href = isThematic ? 'puzzle-racer.html' : '?mode=thematic';
+    // Update Tab UI (Visual Selection)
+    if (vanillaBadge) {
+        vanillaBadge.style.opacity = isThematic ? '0.5' : '1';
+        vanillaBadge.style.boxShadow = isThematic ? 'none' : '0 0 15px rgba(59, 130, 246, 0.5)';
+        vanillaBadge.style.transform = isThematic ? 'scale(0.95)' : 'scale(1.05)';
+        vanillaBadge.style.transition = 'all 0.3s ease';
     }
-    if (switchText) {
-        switchText.textContent = isThematic ? 'Přepnout na klasický mód' : 'Přepnout na tématický mód';
+
+    if (thematicBadge) {
+        thematicBadge.style.opacity = isThematic ? '1' : '0.5';
+        thematicBadge.style.boxShadow = isThematic ? '0 0 15px rgba(236, 72, 153, 0.5)' : 'none';
+        thematicBadge.style.transform = isThematic ? 'scale(1.05)' : 'scale(0.95)';
+        thematicBadge.style.transition = 'all 0.3s ease';
     }
 
     // Update description - for thematic mode, fetch and show current settings

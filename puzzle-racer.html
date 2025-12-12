@@ -335,34 +335,27 @@
                 <div id="startScreen" class="start-screen">
                     <h2><i class="fa-solid fa-flag-checkered"></i> Puzzle Racer</h2>
 
-                    <!-- Mode indicator -->
-                    <div id="modeIndicator" style="margin-bottom: 1.5rem;">
-                        <span id="vanillaBadge" class="mode-badge vanilla-mode">
+                    <!-- Mode indicator / selection tabs -->
+                    <div id="modeIndicator"
+                        style="display: flex; gap: 1rem; justify-content: center; margin-bottom: 2rem; flex-wrap: wrap;">
+                        <div id="vanillaBadge" class="mode-badge vanilla-mode"
+                            onclick="window.location.href='puzzle-racer.html'" style="cursor: pointer; opacity: 1;">
                             <i class="fa-solid fa-snowflake"></i> Klasický mód
-                        </span>
-                        <span id="thematicBadge" class="mode-badge thematic-mode" style="display: none;">
+                        </div>
+                        <div id="thematicBadge" class="mode-badge thematic-mode"
+                            onclick="window.location.href='?mode=thematic'" style="cursor: pointer; opacity: 0.5;">
                             <i class="fa-solid fa-palette"></i> Tématický mód
-                        </span>
+                        </div>
                     </div>
 
-                    <p
+                    <p id="modeDescription"
                         style="font-size: 1.1rem; color: var(--text-muted); margin-bottom: 2rem; max-width: 500px; margin-left: auto; margin-right: auto;">
-                        <span id="modeDescription">Vyřešte co nejvíce taktických úloh během 3 minut! Obtížnost se
-                            postupně zvyšuje.</span>
+                        Vyřešte co nejvíce taktických úloh během 3 minut! Obtížnost se postupně zvyšuje.
                     </p>
                     <button class="btn-primary" onclick="window.startRace()"
                         style="font-size: 1.2rem; padding: 1rem 3rem;">
                         <i class="fa-solid fa-play"></i> Start
                     </button>
-
-                    <!-- Mode switcher -->
-                    <div style="margin-top: 1.5rem;">
-                        <a id="switchModeLink" href="?mode=thematic"
-                            style="color: var(--text-muted); font-size: 0.9rem; text-decoration: none;">
-                            <i class="fa-solid fa-arrows-rotate"></i> <span id="switchModeText">Přepnout na tématický
-                                mód</span>
-                        </a>
-                    </div>
 
                     <!-- Loading indication -->
                     <div id="loadingIndicator" class="hidden" style="margin-top: 2rem; color: var(--primary-color);">
