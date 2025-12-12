@@ -970,6 +970,9 @@
                 <div class="nav-tab" id="galleryTab" onclick="switchTab('gallery')" style="display: none;"><i
                         class="fa-regular fa-images"></i>
                     Galerie</div>
+                <div class="nav-tab" id="puzzleRacerTab" onclick="switchTab('puzzleRacer')"><i
+                        class="fa-solid fa-puzzle-piece"></i>
+                    Puzzle Racer</div>
             </div>
 
             <div id="alertContainer"></div>
@@ -1420,6 +1423,62 @@
         </div>
     </div>
 
+    <!-- Puzzle Racer Settings View -->
+    <div id="puzzleRacerView" class="hidden">
+        <div class="card">
+            <div
+                style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+                <div style="width: 100%;">
+                    <h3 style="margin: 0 0 0.5rem 0; color: #3b82f6;"><i class="fa-solid fa-puzzle-piece"></i>
+                        Puzzle Racer - Nastavení</h3>
+                    <p style="margin: 0; color: var(--text-muted); font-size: 0.9rem;">Konfigurace herních parametrů.
+                        Změny se projeví při dalším spuštění hry.</p>
+
+                    <div id="puzzleRacerSettingsForm" style="margin-top: 1.5rem; max-width: 500px;">
+                        <div class="form-group">
+                            <label>Téma úloh</label>
+                            <select id="prTheme">
+                                <option value="mix">Smíšené (Doporučeno)</option>
+                                <option value="opening">Zahájení</option>
+                                <option value="middlegame">Střední hra</option>
+                                <option value="endgame">Koncovka</option>
+                                <option value="rookEndgame">Věžová koncovka</option>
+                                <option value="bishopEndgame">Střelcová koncovka</option>
+                                <option value="pawnEndgame">Pěšcová koncovka</option>
+                                <option value="knightEndgame">Jezdcová koncovka</option>
+                                <option value="queenEndgame">Dámová koncovka</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Časový limit (sekundy)</label>
+                            <input type="number" id="prTimeLimit" min="30" max="600" value="180">
+                        </div>
+                        <div class="form-group">
+                            <label style="display: flex; align-items: center; gap: 0.5rem;">
+                                <input type="checkbox" id="prLivesEnabled" checked style="width: auto;">
+                                Systém životů (3 chyby = konec hry)
+                            </label>
+                        </div>
+                        <div class="form-group" id="prMaxLivesGroup">
+                            <label>Počet životů</label>
+                            <input type="number" id="prMaxLives" min="1" max="10" value="3">
+                        </div>
+                        <div class="form-group">
+                            <label>Puzzlů na úroveň obtížnosti</label>
+                            <input type="number" id="prPuzzlesPerDifficulty" min="1" max="20" value="6">
+                        </div>
+                        <div style="display: flex; justify-content: flex-end; margin-top: 1.5rem;">
+                            <button class="btn-primary" onclick="savePuzzleRacerSettings()" id="savePrSettingsBtn">
+                                <i class="fa-solid fa-save"></i> Uložit nastavení
+                            </button>
+                        </div>
+                        <div id="prSettingsResult" style="margin-top: 1rem; text-align: center;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Gallery View -->
     <div id="galleryView" class="hidden">
         <div class="header-actions">
@@ -1658,7 +1717,7 @@
             const activeTab = document.querySelector(`.nav-tab[onclick="switchTab('${tab}')"]`);
             if (activeTab) activeTab.classList.add('active');
 
-            ['dashboard', 'editor', 'members', 'users', 'messages', 'blicak', 'competitions', 'gallery'].forEach(v => {
+            ['dashboard', 'editor', 'members', 'users', 'messages', 'blicak', 'competitions', 'gallery', 'puzzleRacer'].forEach(v => {
                 const el = document.getElementById(v + 'View');
                 if (el) el.classList.add('hidden');
             });
@@ -1673,7 +1732,77 @@
             else if (tab === 'blicak') loadBlicakRegistrations();
             else if (tab === 'competitions') loadCompetitions();
             else if (tab === 'gallery') loadAdminGallery();
+            else if (tab === 'puzzleRacer') loadPuzzleRacerSettings();
         }
+
+        // --- Puzzle Racer Settings ---
+        async function loadPuzzleRacerSettings() {
+            try {
+                const res = await fetch(`${API_URL}/racer/settings`);
+                const settings = await res.json();
+
+                document.getElementById('prTheme').value = settings.puzzleTheme || 'mix';
+                document.getElementById('prTimeLimit').value = settings.timeLimitSeconds || 180;
+                document.getElementById('prLivesEnabled').checked = settings.livesEnabled !== false;
+                document.getElementById('prMaxLives').value = settings.maxLives || 3;
+                document.getElementById('prPuzzlesPerDifficulty').value = settings.puzzlesPerDifficulty || 6;
+
+                // Toggle max lives visibility
+                document.getElementById('prMaxLivesGroup').style.display =
+                    document.getElementById('prLivesEnabled').checked ? 'block' : 'none';
+            } catch (e) {
+                console.error('Failed to load puzzle racer settings:', e);
+            }
+        }
+
+        async function savePuzzleRacerSettings() {
+            const btn = document.getElementById('savePrSettingsBtn');
+            const result = document.getElementById('prSettingsResult');
+
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Ukládám...';
+            result.textContent = '';
+
+            try {
+                const res = await fetch(`${API_URL}/racer/settings`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify({
+                        puzzleTheme: document.getElementById('prTheme').value,
+                        timeLimitSeconds: parseInt(document.getElementById('prTimeLimit').value),
+                        livesEnabled: document.getElementById('prLivesEnabled').checked,
+                        maxLives: parseInt(document.getElementById('prMaxLives').value),
+                        puzzlesPerDifficulty: parseInt(document.getElementById('prPuzzlesPerDifficulty').value)
+                    })
+                });
+
+                if (res.ok) {
+                    result.innerHTML = '<span style="color: #4ade80;"><i class="fa-solid fa-check"></i> Uloženo!</span>';
+                } else {
+                    result.innerHTML = '<span style="color: #fca5a5;">Chyba při ukládání</span>';
+                }
+            } catch (e) {
+                console.error(e);
+                result.innerHTML = '<span style="color: #fca5a5;">Chyba spojení</span>';
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fa-solid fa-save"></i> Uložit nastavení';
+            }
+        }
+
+        // Toggle lives input visibility
+        document.addEventListener('DOMContentLoaded', () => {
+            const livesCheck = document.getElementById('prLivesEnabled');
+            if (livesCheck) {
+                livesCheck.addEventListener('change', () => {
+                    document.getElementById('prMaxLivesGroup').style.display =
+                        livesCheck.checked ? 'block' : 'none';
+                });
+            }
+        });
 
         // Dashboard
         async function loadDashboard() {

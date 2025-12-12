@@ -7,10 +7,11 @@ const prisma = new PrismaClient();
 // Valid difficulty levels in order
 const DIFFICULTIES = ['easiest', 'easier', 'normal', 'harder', 'hardest'];
 
-// Fetch puzzles from Lichess API by difficulty (NO AUTH = correct difficulties!)
-async function fetchPuzzlesByDifficulty(difficulty, count = 3) {
+// Fetch puzzles from Lichess API by difficulty and theme
+async function fetchPuzzlesByDifficulty(difficulty, count = 3, theme = 'mix') {
     try {
-        const res = await fetch(`https://lichess.org/api/puzzle/batch/mix?nb=${count}&difficulty=${difficulty}`, {
+        // Lichess API: /api/puzzle/batch/{theme}?nb={count}&difficulty={difficulty}
+        const res = await fetch(`https://lichess.org/api/puzzle/batch/${theme}?nb=${count}&difficulty=${difficulty}`, {
             headers: { 'Accept': 'application/json' }
             // NO Authorization header! This gives us correct difficulty ranges
         });
@@ -18,14 +19,14 @@ async function fetchPuzzlesByDifficulty(difficulty, count = 3) {
         if (res.ok) {
             const data = await res.json();
             const puzzles = data.puzzles || [];
-            console.log(`Fetched ${puzzles.length} ${difficulty} puzzles`);
+            console.log(`Fetched ${puzzles.length} ${difficulty} puzzles (theme: ${theme})`);
             return puzzles;
         } else {
-            console.warn(`Lichess ${difficulty} returned ${res.status}`);
+            console.warn(`Lichess ${difficulty}/${theme} returned ${res.status}`);
             return [];
         }
     } catch (e) {
-        console.error(`Failed to fetch ${difficulty}:`, e.message);
+        console.error(`Failed to fetch ${difficulty}/${theme}:`, e.message);
         return [];
     }
 }
@@ -44,18 +45,81 @@ router.get('/puzzles', async (req, res) => {
             return res.status(400).json({ error: 'Invalid difficulty', puzzles: [] });
         }
 
-        console.log(`Fetching ${count} ${difficulty} puzzles...`);
-        const puzzles = await fetchPuzzlesByDifficulty(difficulty, count);
+        // Get theme from settings
+        const settings = await prisma.puzzleRacerSettings.findFirst();
+        const theme = settings?.puzzleTheme || 'mix';
+
+        console.log(`Fetching ${count} ${difficulty} puzzles (theme: ${theme})...`);
+        const puzzles = await fetchPuzzlesByDifficulty(difficulty, count, theme);
 
         res.json({
             puzzles,
             difficulty,
+            theme,
             count: puzzles.length
         });
 
     } catch (error) {
         console.error('Error fetching puzzles:', error);
         res.status(500).json({ error: 'Failed to fetch puzzles', puzzles: [] });
+    }
+});
+
+// Default settings for when no record exists
+const DEFAULT_SETTINGS = {
+    id: 1,
+    puzzleTheme: 'mix',
+    timeLimitSeconds: 180,
+    livesEnabled: true,
+    maxLives: 3,
+    puzzlesPerDifficulty: 6
+};
+
+// GET /api/racer/settings - Public (game fetches settings before start)
+router.get('/settings', async (req, res) => {
+    try {
+        const settings = await prisma.puzzleRacerSettings.findFirst();
+        res.json(settings || DEFAULT_SETTINGS);
+    } catch (error) {
+        console.error('Error fetching settings:', error);
+        res.json(DEFAULT_SETTINGS);
+    }
+});
+
+// PUT /api/racer/settings - Admin only (requires auth token)
+router.put('/settings', async (req, res) => {
+    try {
+        // Simple auth check - reuse Bearer token pattern
+        const authHeader = req.headers.authorization;
+        if (!authHeader || !authHeader.startsWith('Bearer ')) {
+            return res.status(401).json({ error: 'Unauthorized' });
+        }
+
+        const { puzzleTheme, timeLimitSeconds, livesEnabled, maxLives, puzzlesPerDifficulty } = req.body;
+
+        const updated = await prisma.puzzleRacerSettings.upsert({
+            where: { id: 1 },
+            update: {
+                puzzleTheme: puzzleTheme || 'mix',
+                timeLimitSeconds: parseInt(timeLimitSeconds) || 180,
+                livesEnabled: livesEnabled !== false,
+                maxLives: parseInt(maxLives) || 3,
+                puzzlesPerDifficulty: parseInt(puzzlesPerDifficulty) || 6
+            },
+            create: {
+                id: 1,
+                puzzleTheme: puzzleTheme || 'mix',
+                timeLimitSeconds: parseInt(timeLimitSeconds) || 180,
+                livesEnabled: livesEnabled !== false,
+                maxLives: parseInt(maxLives) || 3,
+                puzzlesPerDifficulty: parseInt(puzzlesPerDifficulty) || 6
+            }
+        });
+
+        res.json(updated);
+    } catch (error) {
+        console.error('Error saving settings:', error);
+        res.status(500).json({ error: 'Failed to save settings' });
     }
 });
 
