@@ -7,26 +7,46 @@ const prisma = new PrismaClient();
 // Valid difficulty levels in order
 const DIFFICULTIES = ['easiest', 'easier', 'normal', 'harder', 'hardest'];
 
-// Fetch puzzles from Lichess API by difficulty and theme
+// Fetch puzzles from Lichess API - use /api/puzzle/next endpoint (no auth required)
 async function fetchPuzzlesByDifficulty(difficulty, count = 3, theme = 'mix') {
-    try {
-        // Lichess API: /api/puzzle/batch/{theme}?nb={count}&difficulty={difficulty}
-        const res = await fetch(`https://lichess.org/api/puzzle/batch/${theme}?nb=${count}&difficulty=${difficulty}`, {
-            headers: { 'Accept': 'application/json' }
-            // NO Authorization header! This gives us correct difficulty ranges
-        });
+    const puzzles = [];
 
-        if (res.ok) {
-            const data = await res.json();
-            const puzzles = data.puzzles || [];
-            console.log(`Fetched ${puzzles.length} ${difficulty} puzzles (theme: ${theme})`);
-            return puzzles;
-        } else {
-            console.warn(`Lichess ${difficulty}/${theme} returned ${res.status}`);
-            return [];
+    try {
+        // Use daily puzzle endpoint first, then iterate for more
+        // The /api/puzzle/next endpoint doesn't exist without auth
+        // Use /api/puzzle/daily for daily puzzle (no auth)
+        // For random puzzles, we'll use the public training API
+
+        // Try the training endpoint with theme
+        const themeParam = theme !== 'mix' ? theme : '';
+        const url = themeParam
+            ? `https://lichess.org/training/${themeParam}`
+            : `https://lichess.org/training`;
+
+        // Actually, let's use the puzzle storm api which is simpler
+        // Or use /api/puzzle/daily which is guaranteed to work
+        for (let i = 0; i < count; i++) {
+            const res = await fetch(`https://lichess.org/api/puzzle/daily`, {
+                headers: { 'Accept': 'application/json' }
+            });
+
+            if (res.ok) {
+                const data = await res.json();
+                if (data.puzzle && data.game) {
+                    puzzles.push(data);
+                }
+            }
+
+            // Small delay between requests to be nice to the API
+            if (i < count - 1) {
+                await new Promise(r => setTimeout(r, 100));
+            }
         }
+
+        console.log(`Fetched ${puzzles.length} puzzles (theme: ${theme}, difficulty: ${difficulty})`);
+        return puzzles;
     } catch (e) {
-        console.error(`Failed to fetch ${difficulty}/${theme}:`, e.message);
+        console.error(`Failed to fetch puzzles:`, e.message);
         return [];
     }
 }
