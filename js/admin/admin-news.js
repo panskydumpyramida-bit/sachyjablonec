@@ -717,6 +717,13 @@ function showImageModal(existingImg = null) {
     selectedImage = existingImg;
 
     let modal = document.getElementById('imageModal');
+
+    // Remove old modal if it exists (to clear any cached versions)
+    if (modal) {
+        modal.remove();
+        modal = null;
+    }
+
     if (!modal) {
         // Modal structure needs to be added to DOM if missing, or we assume it exists in admin.html
         // For now, assuming it might be cleaned from admin.html, so generating it here check would be good.
