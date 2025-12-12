@@ -97,7 +97,6 @@ Refaktoring monolitického `admin.html` (3800+ řádků) na JS moduly.
 - [ ] Databázový model `PuzzleRacerSettings`
 - [ ] Admin UI formulář:
   - Počet puzzlů na úroveň obtížnosti (default: 6)
-  - Počet puzzlů na fetch (default: 3)
   - Zapnutí/vypnutí systému životů (Penalizace)
   - Časový limit hry (default: 180s)
 - [ ] API endpoint GET/PUT `/api/admin/puzzle-racer/settings`

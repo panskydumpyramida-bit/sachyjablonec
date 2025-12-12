@@ -5,7 +5,7 @@ let board = null;
 let puzzles = [];
 let currentPuzzleIndex = 0;
 let score = 0;
-let timeLeft = 180; // 3 minutes
+let timeLeft = 180; // 3 minutes (will be overwritten by settings)
 let timerInterval = null;
 let isGameActive = false;
 let selectedSquare = null; // Click-to-move state
@@ -16,12 +16,16 @@ let currentDifficultyIndex = 0;
 let totalPuzzlesSolved = 0;
 // Prefetch trigger: fetching when fewer than 5 puzzles remain
 let puzzlesBeforeNextBatch = 5;
-let puzzlesPerDifficultyLevel = 6; // Increase difficulty after 6 solved
-let isFetchingPuzzles = false;
+let puzzlesPerDifficultyLevel = 6; // Will be overwritten by settings
 
-// Lives system - 3 mistakes = game over
+// Lives system - configurable via settings
 let mistakeCount = 0;
-const MAX_MISTAKES = 3;
+let MAX_MISTAKES = 3; // Will be overwritten by settings
+let livesEnabled = true; // Will be overwritten by settings
+
+// Game settings from API
+let gameSettings = {};
+let isFetchingPuzzles = false;
 
 // Actually, let's just use ONE solid simple puzzle for fallback to minimize error risk
 // Mat v 1. tahu.
@@ -136,12 +140,41 @@ async function fetchMorePuzzles() {
     isFetchingPuzzles = false;
 }
 
+// Load game settings from API
+async function loadGameSettings() {
+    try {
+        const res = await fetch(`${API_URL}/racer/settings`);
+        if (res.ok) {
+            gameSettings = await res.json();
+            console.log('Loaded game settings:', gameSettings);
+        }
+    } catch (e) {
+        console.error('Failed to load settings, using defaults:', e);
+        gameSettings = {
+            puzzleTheme: 'mix',
+            timeLimitSeconds: 180,
+            livesEnabled: true,
+            maxLives: 3,
+            puzzlesPerDifficulty: 6
+        };
+    }
+
+    // Apply settings
+    timeLeft = gameSettings.timeLimitSeconds || 180;
+    livesEnabled = gameSettings.livesEnabled !== false;
+    MAX_MISTAKES = gameSettings.maxLives || 3;
+    puzzlesPerDifficultyLevel = gameSettings.puzzlesPerDifficulty || 6;
+}
+
 async function startRace() {
     const startBtn = document.querySelector('#startScreen button');
     const loading = document.getElementById('loadingIndicator');
 
     startBtn.style.display = 'none';
     loading.classList.remove('hidden');
+
+    // Load settings first
+    await loadGameSettings();
 
     // Reset progressive loading state
     puzzles = [];
@@ -170,6 +203,9 @@ async function startRace() {
         // Lock scroll on mobile
         document.body.classList.add('game-active');
 
+        // Update lives UI based on settings
+        updateLivesUI();
+
         updateDifficultyDisplay(); // Init difficulty text
         startGameLoop();
 
@@ -183,7 +219,7 @@ async function startRace() {
 
 function startGameLoop() {
     score = 0;
-    timeLeft = 180;
+    // timeLeft is already set by loadGameSettings()
     currentPuzzleIndex = 0;
     isGameActive = true;
 
@@ -635,8 +671,8 @@ function handleWrongMove() {
     updateLivesDisplay();
     showFeedback('wrong');
 
-    // 3 mistakes = game over
-    if (mistakeCount >= MAX_MISTAKES) {
+    // Check if lives system is enabled and we're out of lives
+    if (livesEnabled && mistakeCount >= MAX_MISTAKES) {
         setTimeout(() => {
             endGame();
         }, 500);
@@ -658,6 +694,31 @@ function updateLivesDisplay() {
             } else {
                 lifeIcon.classList.remove('lost');
             }
+        }
+    }
+}
+
+// Update lives UI based on settings (show/hide, adjust count)
+function updateLivesUI() {
+    const livesBox = document.querySelector('.stat-box:has(.lives-display)');
+    const livesDisplay = document.querySelector('.lives-display');
+
+    if (!livesEnabled) {
+        // Hide lives box if disabled
+        if (livesBox) livesBox.style.display = 'none';
+        return;
+    }
+
+    if (livesBox) livesBox.style.display = '';
+
+    // Dynamically create life icons based on MAX_MISTAKES
+    if (livesDisplay) {
+        livesDisplay.innerHTML = '';
+        for (let i = 1; i <= MAX_MISTAKES; i++) {
+            const icon = document.createElement('i');
+            icon.className = 'fa-solid fa-xmark life-icon';
+            icon.id = `life${i}`;
+            livesDisplay.appendChild(icon);
         }
     }
 }

@@ -193,3 +193,15 @@ model GameRecorded {
 
   @@map("games_recorded")
 }
+
+model PuzzleRacerSettings {
+  id                    Int      @id @default(1)
+  puzzleTheme           String   @default("mix") @map("puzzle_theme")
+  timeLimitSeconds      Int      @default(180) @map("time_limit_seconds")
+  livesEnabled          Boolean  @default(true) @map("lives_enabled")
+  maxLives              Int      @default(3) @map("max_lives")
+  puzzlesPerDifficulty  Int      @default(6) @map("puzzles_per_difficulty")
+  updatedAt             DateTime @updatedAt @map("updated_at")
+
+  @@map("puzzle_racer_settings")
+}
