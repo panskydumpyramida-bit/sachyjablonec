@@ -110,6 +110,11 @@ Refaktoring monolitického `admin.html` (3800+ řádků) na JS moduly.
 - [ ] Oprava kritických UI problémů
 - [ ] Mobilní verze admin panelu (nebo alespoň čtení)
 
+### Budoucí funkce (Backlog)
+- [ ] **Diskuzní fórum pod články**
+  - **Fáze 1:** Anonymní příspěvky (s moderací)
+  - **Fáze 2:** Přihlášení uživatelů a pokročilá správa (vyžaduje auth systém)
+
 ---
 
 ## ✅ Dokončeno (11. 12. 2025)
