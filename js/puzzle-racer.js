@@ -537,18 +537,27 @@ function removeMoveHighlights() {
 
 // Core move logic shared by Drag and Click
 function handleMove(source, target, isDrop) {
-    // 1. Verify legality in Chess.js
+    // Get expected move to determine promotion piece (if any)
+    const expectedMove = game.currentSolution[game.solutionIndex];
+
+    // Extract promotion piece from solution (e.g. "a7a8n" -> 'n', "e7e8q" -> 'q')
+    // Lichess solution format: from(2) + to(2) + promotion(1)? = 4-5 chars
+    let promotionPiece = 'q'; // Default to queen
+    if (expectedMove && expectedMove.length === 5) {
+        promotionPiece = expectedMove.charAt(4); // n, b, r, or q
+    }
+
+    // 1. Verify legality in Chess.js with correct promotion piece
     const move = game.move({
         from: source,
         to: target,
-        promotion: 'q'
+        promotion: promotionPiece
     });
 
     if (move === null) return false; // Illegal move
 
     // 2. Check against solution
     const uciMove = move.from + move.to + (move.promotion ? move.promotion : '');
-    const expectedMove = game.currentSolution[game.solutionIndex];
 
     // Check if this is the last move in solution (potential checkmate)
     const isLastSolutionMove = game.solutionIndex === game.currentSolution.length - 1;
