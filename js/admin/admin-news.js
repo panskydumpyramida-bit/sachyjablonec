@@ -1208,7 +1208,29 @@ function renderGames() {
     const list = document.getElementById('gamesList');
     if (!list) return; // Should exist
 
-    const items = games.map((game, index) => `
+    const items = games.map((game, index) => {
+        if (game.type === 'header') {
+            return `
+            <div class="game-item game-header-item" draggable="true" data-index="${index}" style="background: rgba(212, 175, 55, 0.15); border: 1px solid var(--primary-color);">
+                <div class="game-header">
+                    <span class="game-number"><i class="fa-solid fa-heading"></i></span>
+                    <strong>Oddělovač</strong>
+                </div>
+                <div class="game-body" style="flex: 1;">
+                    <input type="text" 
+                           class="game-title-input" 
+                           value="${escapeHtml(game.title || '')}" 
+                           placeholder="Např. A tým"
+                           oninput="updateGameTitle(${index}, this.value)"
+                           style="font-weight: bold; color: var(--primary-color);">
+                </div>
+                <div class="game-actions">
+                    <button class="action-btn btn-delete" onclick="removeGame(${index})"><i class="fa-solid fa-times"></i></button>
+                </div>
+            </div>`;
+        }
+
+        return `
         <div class="game-item" draggable="true" data-index="${index}" data-team="${game.team || ''}">
             <div class="game-header">
                 <span class="game-number">#${index + 1}</span>
@@ -1238,7 +1260,7 @@ function renderGames() {
                 <button class="action-btn btn-delete" onclick="removeGame(${index})"><i class="fa-solid fa-times"></i></button>
             </div>
         </div>
-    `).join('');
+    `}).join('');
 
     list.innerHTML = items;
 
@@ -1254,6 +1276,20 @@ function addGame() {
         src: '',
         team: 'A tým' // default
     });
+    renderGames();
+}
+
+function addHeader() {
+    const title = document.getElementById('headerTitle').value.trim();
+    if (!title) {
+        alert('Zadejte text nadpisu');
+        return;
+    }
+    games.push({
+        type: 'header',
+        title: title
+    });
+    document.getElementById('headerTitle').value = '';
     renderGames();
 }
 
@@ -1460,16 +1496,16 @@ function selectGalleryForImageModal() {
 
 function selectGalleryForThumbnail() {
     if (!window.showGalleryPicker) return;
-    showGalleryPicker((url) => {
-        uploadedImageData = url;
+    showGalleryPicker((url, caption) => {
+        uploadedImageData = url; // Caption ignored for thumbnail
         displayImage(url);
     });
 }
 
 function selectGalleryForArticleGallery() {
     if (!window.showGalleryPicker) return;
-    showGalleryPicker((url) => {
-        galleryImages.push({ url, caption: '' });
+    showGalleryPicker((url, caption) => {
+        galleryImages.push({ url, caption: caption || '' });
         renderGallery();
     });
 }
@@ -1518,3 +1554,4 @@ window.selectGalleryForThumbnail = selectGalleryForThumbnail;
 window.selectGalleryForArticleGallery = selectGalleryForArticleGallery;
 window.updatePreview = updatePreview;
 window.checkDraft = checkDraft;
+window.addHeader = addHeader;
