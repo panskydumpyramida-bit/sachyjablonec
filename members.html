@@ -650,8 +650,9 @@
                 }
 
                 container.innerHTML = images.slice(0, 30).map(img => `
-                    <a href="${img.url}" target="_blank" class="gallery-item">
-                        <img src="${img.url}" alt="Gallery image">
+                    <a href="${img.url}" target="_blank" class="gallery-item" style="position: relative;">
+                        <img src="${img.url}" alt="${img.altText || 'Gallery image'}">
+                        ${img.altText ? `<div style="position: absolute; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.7); color: white; font-size: 0.7rem; padding: 0.3rem; text-align: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${escapeHtml(img.altText)}</div>` : ''}
                     </a>
                 `).join('');
             } catch (e) {
