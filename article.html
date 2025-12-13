@@ -723,17 +723,6 @@
                     return; // It's just a visual separator, not a playable game
                 }
 
-                // 2. Legacy Grouping (Old system)
-                // If game has a 'team' property and it's different from the last one we saw
-                if (game.team && game.team !== currentLegacyTeam) {
-                    const header = document.createElement('div');
-                    header.className = 'team-header';
-                    header.textContent = game.team;
-                    header.style.cssText = 'padding: 0.5rem 0.75rem; font-weight: 700; color: var(--primary-color); background: rgba(255, 255, 255, 0.05); border-left: 2px solid var(--primary-color); margin: 0.5rem 0 0.25rem 0; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.05em;';
-                    list.appendChild(header);
-                    currentLegacyTeam = game.team;
-                }
-
                 const item = document.createElement('div');
                 item.className = 'game-item';
                 item.textContent = game.title;
