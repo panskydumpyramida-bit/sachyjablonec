@@ -158,13 +158,13 @@ async function updateImageCaption(id, altText) {
         });
 
         if (res.ok) {
-            showToast('Popisek uložen');
+            showAlert('✓ Popisek uložen', 'success');
         } else {
-            showToast('Nepodařilo se uložit popisek', 'error');
+            showAlert('Nepodařilo se uložit popisek', 'error');
         }
     } catch (e) {
         console.error('Update caption error:', e);
-        showToast('Chyba při ukládání', 'error');
+        showAlert('Chyba při ukládání', 'error');
     }
 }
 
