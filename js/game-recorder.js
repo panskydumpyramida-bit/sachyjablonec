@@ -465,6 +465,79 @@ function downloadPgn() {
     document.body.removeChild(element);
 }
 
+// --- Import PGN Modal ---
+
+function showImportPgnModal() {
+    const modal = document.getElementById('importPgnModal');
+    if (modal) {
+        modal.style.display = 'flex';
+        document.getElementById('importPgnInput').value = '';
+        document.getElementById('importPgnInput').focus();
+    }
+}
+window.showImportPgnModal = showImportPgnModal;
+
+function closeImportPgnModal() {
+    const modal = document.getElementById('importPgnModal');
+    if (modal) modal.style.display = 'none';
+}
+window.closeImportPgnModal = closeImportPgnModal;
+
+function importPgn() {
+    const pgnText = document.getElementById('importPgnInput').value.trim();
+
+    if (!pgnText) {
+        alert('Vložte prosím PGN zápis.');
+        return;
+    }
+
+    // Reset game and try to load
+    game.reset();
+
+    // Try to load PGN (chess.js loads the FIRST game if multiple)
+    const success = game.load_pgn(pgnText);
+
+    if (!success) {
+        alert('Nepodařilo se načíst PGN. Zkontrolujte formát zápisu.');
+        return;
+    }
+
+    // Extract header info if present
+    const whiteMatch = pgnText.match(/\[White\s+"([^"]+)"\]/i);
+    const blackMatch = pgnText.match(/\[Black\s+"([^"]+)"\]/i);
+    const resultMatch = pgnText.match(/\[Result\s+"([^"]+)"\]/i);
+
+    if (whiteMatch) document.getElementById('whitePlayer').value = whiteMatch[1];
+    if (blackMatch) document.getElementById('blackPlayer').value = blackMatch[1];
+    if (resultMatch) {
+        const resultSelect = document.getElementById('result');
+        const resultValue = resultMatch[1];
+        // Find matching option
+        for (let opt of resultSelect.options) {
+            if (opt.value === resultValue || opt.text === resultValue) {
+                resultSelect.value = opt.value;
+                break;
+            }
+        }
+    }
+
+    // Update board and UI
+    board.position(game.fen());
+    updateStatus();
+    updateMoveHistory();
+
+    closeImportPgnModal();
+
+    // Show success message
+    const status = document.getElementById('saveStatus');
+    if (status) {
+        status.style.color = '#4ade80';
+        status.innerText = 'PGN úspěšně načteno!';
+        setTimeout(() => status.innerText = '', 3000);
+    }
+}
+window.importPgn = importPgn;
+
 // Mobile Modal Logic
 function openGameInfo() {
     document.getElementById('gameSidebar').classList.add('active');
