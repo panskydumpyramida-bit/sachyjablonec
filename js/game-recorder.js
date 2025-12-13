@@ -494,20 +494,61 @@ document.addEventListener('DOMContentLoaded', () => {
         loadGameById(gameId);
     }
 
-    // ROBUST CLICK HANDLING (Capture Phase)
-    const handleInput = (e) => {
-        const boardContainer = document.getElementById('board');
-        if (!boardContainer || !boardContainer.contains(e.target)) return;
+    // CLICK-TO-MOVE HANDLING
+    // Use mouseup instead of mousedown to avoid conflicting with drag-drop
+    let isDragging = false;
+    let dragStartPos = null;
 
-        const squareEl = e.target.closest('.square-55d63');
-        if (!squareEl) return;
+    document.body.addEventListener('mousedown', (e) => {
+        dragStartPos = { x: e.clientX, y: e.clientY };
+        isDragging = false;
+    }, true);
 
-        const squareId = squareEl.getAttribute('data-square');
-        if (squareId) {
-            handleSquareClick(squareId);
+    document.body.addEventListener('mousemove', (e) => {
+        if (dragStartPos) {
+            const dx = Math.abs(e.clientX - dragStartPos.x);
+            const dy = Math.abs(e.clientY - dragStartPos.y);
+            if (dx > 5 || dy > 5) {
+                isDragging = true;
+            }
         }
-    };
+    }, true);
 
-    document.body.addEventListener('mousedown', handleInput, true);
-    document.body.addEventListener('touchstart', handleInput, true); // Mobile touch support
+    document.body.addEventListener('mouseup', (e) => {
+        const boardContainer = document.getElementById('board');
+
+        // Only handle click if not dragging
+        if (!isDragging && boardContainer && boardContainer.contains(e.target)) {
+            const squareEl = e.target.closest('.square-55d63');
+            if (squareEl) {
+                const squareId = squareEl.getAttribute('data-square');
+                if (squareId) {
+                    handleSquareClick(squareId);
+                }
+            }
+        }
+
+        dragStartPos = null;
+        isDragging = false;
+    }, true);
+
+    // Mobile touch - touchend for click-to-move
+    document.body.addEventListener('touchend', (e) => {
+        const boardContainer = document.getElementById('board');
+        if (!boardContainer) return;
+
+        const touch = e.changedTouches[0];
+        const elementAtPoint = document.elementFromPoint(touch.clientX, touch.clientY);
+
+        if (boardContainer.contains(elementAtPoint)) {
+            const squareEl = elementAtPoint.closest('.square-55d63');
+            if (squareEl) {
+                const squareId = squareEl.getAttribute('data-square');
+                if (squareId) {
+                    // Small delay to let drag-drop resolve first
+                    setTimeout(() => handleSquareClick(squareId), 50);
+                }
+            }
+        }
+    }, true);
 });
