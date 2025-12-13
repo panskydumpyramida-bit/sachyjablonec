@@ -42,7 +42,7 @@
     <script src="js/lightbox.js"></script>
     <script src="js/main.js"></script>
     <script>
-        let galleryImages = [];
+        window.galleryImages = [];
 
         document.addEventListener('DOMContentLoaded', async () => {
             const grid = document.getElementById('galleryGrid');
@@ -50,9 +50,9 @@
                 const res = await fetch(`${API_URL}/images/public`);
                 if (!res.ok) throw new Error('Failed to load images');
 
-                galleryImages = await res.json();
+                window.galleryImages = await res.json();
 
-                if (galleryImages.length === 0) {
+                if (window.galleryImages.length === 0) {
                     grid.innerHTML = `
                         <div style="grid-column: 1 / -1; text-align: center; padding: 4rem; background: rgba(255,255,255,0.02); border-radius: 12px; border: 1px dashed rgba(255,255,255,0.1);">
                             <i class="fa-regular fa-images" style="font-size: 3rem; color: var(--text-muted); opacity: 0.5; margin-bottom: 1rem;"></i>
@@ -63,9 +63,9 @@
                     return;
                 }
 
-                grid.innerHTML = galleryImages.map((img, index) => `
+                grid.innerHTML = window.galleryImages.map((img, index) => `
                     <div class="card" style="animation: fadeIn 0.5s ease-out;">
-                        <div class="card-image" style="height: 300px; cursor: pointer;" onclick="SJLightbox.open(galleryImages, ${index})">
+                        <div class="card-image" style="height: 300px; cursor: pointer;" onclick="SJLightbox.open(window.galleryImages, ${index})">
                             <img src="${img.url}" alt="${img.altText || 'Fotografie z galerie'}" loading="lazy" style="transition: transform 0.5s ease;">
                             <div style="position: absolute; inset: 0; background: rgba(0,0,0,0.2); opacity: 0; transition: opacity 0.3s; display: flex; align-items: center; justify-content: center;" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0">
                                 <i class="fa-solid fa-expand" style="font-size: 2rem; color: white;"></i>
