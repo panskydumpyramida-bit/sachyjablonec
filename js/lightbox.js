@@ -120,10 +120,13 @@ const SJLightbox = (function () {
     }
 
     function open(imageArray, startIndex = 0) {
+        console.log('[Lightbox] open called with startIndex:', startIndex, 'array length:', imageArray?.length);
         createLightbox();
 
         images = imageArray || [];
         currentIndex = Math.max(0, Math.min(startIndex, images.length - 1));
+
+        console.log('[Lightbox] currentIndex set to:', currentIndex, 'image url:', images[currentIndex]?.url);
 
         if (images.length === 0) return;
 
