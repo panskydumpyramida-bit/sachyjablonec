@@ -71,8 +71,14 @@ async function loadAdminGallery() {
                     <img src="${img.url}" style="width: 60px; height: 40px; object-fit: cover; border-radius: 4px; cursor: pointer;" onclick="window.open('${img.url}', '_blank')">
                 </td>
                 <td>
-                    <div style="font-weight: 500;">${img.originalName || 'Bez názvu'}</div>
-                    <div style="font-size: 0.75rem; color: var(--text-muted);">${img.altText || ''}</div>
+                    <div style="font-weight: 500; font-size: 0.85rem; margin-bottom: 0.3rem;">${img.originalName || 'Bez názvu'}</div>
+                    <input type="text" 
+                           class="caption-input" 
+                           value="${img.altText || ''}" 
+                           placeholder="Přidat popisek..." 
+                           data-id="${img.id}"
+                           onblur="updateImageCaption(${img.id}, this.value)"
+                           style="width: 100%; padding: 0.3rem 0.5rem; font-size: 0.8rem; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 4px; color: var(--text-color);">
                 </td>
                 <td style="text-align: center;">
                     <input type="checkbox" ${img.isPublic ? 'checked' : ''} onchange="toggleGalleryVisibility(${img.id}, this.checked)">
@@ -136,6 +142,29 @@ async function deleteGalleryImage(id) {
     } catch (e) {
         console.error(e);
         showToast('Chyba při mazání', 'error');
+    }
+}
+
+// Update image caption (altText)
+async function updateImageCaption(id, altText) {
+    try {
+        const res = await fetch(`${API_URL}/images/${id}/caption`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${authToken}`
+            },
+            body: JSON.stringify({ altText })
+        });
+
+        if (res.ok) {
+            showToast('Popisek uložen');
+        } else {
+            showToast('Nepodařilo se uložit popisek', 'error');
+        }
+    } catch (e) {
+        console.error('Update caption error:', e);
+        showToast('Chyba při ukládání', 'error');
     }
 }
 
@@ -333,6 +362,7 @@ function closeGalleryPicker() {
 // Export for global access
 window.loadAdminGallery = loadAdminGallery;
 window.deleteGalleryImage = deleteGalleryImage;
+window.updateImageCaption = updateImageCaption;
 window.handleAdminGalleryUpload = handleAdminGalleryUpload;
 window.showGalleryPicker = showGalleryPicker;
 window.selectFromGallery = selectFromGallery;
