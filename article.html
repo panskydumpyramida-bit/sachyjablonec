@@ -453,6 +453,35 @@
                 height: 600px;
                 aspect-ratio: auto;
             }
+
+            /* Sticky controls on mobile */
+            .controls {
+                position: sticky;
+                bottom: 0;
+                z-index: 100;
+                background: var(--viewer-sidebar);
+                border-top: 1px solid var(--viewer-border);
+                border-radius: 0;
+                margin: 0 -1.5rem -1.5rem -1.5rem;
+                padding: 0.75rem 1rem;
+            }
+
+            /* Hide button text, show only icons on small screens */
+            .btn-text {
+                display: none;
+            }
+
+            .control-btn {
+                padding: 0.6rem 0.8rem;
+            }
+
+            .current-game-title {
+                font-size: 0.85rem;
+            }
+
+            .game-counter {
+                font-size: 0.7rem;
+            }
         }
     </style>
     <link rel="icon" type="image/png" href="images/favicon.png">
