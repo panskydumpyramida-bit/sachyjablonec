@@ -57,10 +57,50 @@ function updateMoveHistory() {
 
     moveListEl.innerHTML = html;
 
+    // Add click handlers for move navigation
+    moveListEl.querySelectorAll('.move').forEach(moveEl => {
+        moveEl.addEventListener('click', () => {
+            const ply = parseInt(moveEl.getAttribute('data-ply'));
+            jumpToMove(ply + 1); // ply is 0-indexed, jumpToMove expects 1-indexed
+        });
+    });
+
     // Scroll to current move
     const activeMove = moveListEl.querySelector('.move.active');
     if (activeMove) {
         activeMove.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    }
+}
+
+// Jump to specific move by ply number (1-indexed)
+function jumpToMove(targetPly) {
+    // Ensure we have saved history
+    if (savedMoves.length === 0 && game.history().length > 0) {
+        saveCurrentHistory();
+    }
+
+    if (savedMoves.length === 0) return;
+
+    // Clamp target to valid range
+    targetPly = Math.max(0, Math.min(targetPly, savedMoves.length));
+
+    // Reset and replay to target position
+    game.reset();
+    for (let i = 0; i < targetPly; i++) {
+        game.move(savedMoves[i]);
+    }
+
+    currentMoveIdx = targetPly;
+    board.position(game.fen());
+    updateStatus();
+    updateMoveHistory();
+
+    // Highlight last move
+    if (targetPly > 0) {
+        const lastMove = savedMoves[targetPly - 1];
+        highlightMove(lastMove.from, lastMove.to);
+    } else {
+        removeHighlights();
     }
 }
 
