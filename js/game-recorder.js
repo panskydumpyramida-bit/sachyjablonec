@@ -168,6 +168,8 @@ function onDrop(source, target) {
     // see if the move is legal
     // Check for promotion
     const piece = game.get(source);
+    if (!piece) return 'snapback'; // No piece at source
+
     const targetRank = target.charAt(1);
     const isPromotion = piece.type === 'p' &&
         ((piece.color === 'w' && targetRank === '8') || (piece.color === 'b' && targetRank === '1'));
