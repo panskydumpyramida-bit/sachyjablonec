@@ -139,6 +139,24 @@ router.put('/:id/toggle', checkClubPassword, async (req, res) => {
     }
 });
 
+// Update image caption (altText)
+router.put('/:id/caption', checkClubPassword, async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { altText } = req.body;
+
+        const image = await prisma.image.update({
+            where: { id: parseInt(id) },
+            data: { altText: altText || null }
+        });
+
+        res.json(image);
+    } catch (error) {
+        console.error('Update caption error:', error);
+        res.status(500).json({ error: 'Failed to update caption' });
+    }
+});
+
 // Delete image
 router.delete('/:id', checkClubPassword, async (req, res) => {
     try {
