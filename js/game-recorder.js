@@ -26,7 +26,9 @@ function updateMoveHistory() {
     const moveListEl = document.getElementById('moveList');
     if (!moveListEl) return;
 
-    const history = game.history({ verbose: true });
+    // Use savedMoves if we're in navigation mode, otherwise current game history
+    const history = savedMoves.length > 0 ? savedMoves : game.history({ verbose: true });
+    const currentPosition = savedMoves.length > 0 ? currentMoveIdx : history.length;
 
     if (history.length === 0) {
         moveListEl.innerHTML = '<span style="color: var(--text-muted); font-size: 0.9rem;">Partie začíná...</span>';
@@ -40,17 +42,26 @@ function updateMoveHistory() {
         const whiteMove = history[i]?.san || '';
         const blackMove = history[i + 1]?.san || '';
 
+        // Highlight current position
+        const whiteActive = (i + 1) === currentPosition ? 'active' : '';
+        const blackActive = (i + 2) === currentPosition ? 'active' : '';
+        const whiteFuture = (i + 1) > currentPosition ? 'future' : '';
+        const blackFuture = (i + 2) > currentPosition ? 'future' : '';
+
         html += `<div class="move-pair">
             <span class="move-number">${moveNumber}.</span>
-            <span class="move" data-ply="${i}">${whiteMove}</span>
-            ${blackMove ? `<span class="move" data-ply="${i + 1}">${blackMove}</span>` : ''}
+            <span class="move ${whiteActive} ${whiteFuture}" data-ply="${i}">${whiteMove}</span>
+            ${blackMove ? `<span class="move ${blackActive} ${blackFuture}" data-ply="${i + 1}">${blackMove}</span>` : ''}
         </div>`;
     }
 
     moveListEl.innerHTML = html;
 
-    // Scroll to bottom
-    moveListEl.scrollTop = moveListEl.scrollHeight;
+    // Scroll to current move
+    const activeMove = moveListEl.querySelector('.move.active');
+    if (activeMove) {
+        activeMove.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    }
 }
 
 // --- Click-to-Move & Highlight Logic ---
