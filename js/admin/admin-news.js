@@ -175,9 +175,11 @@ async function editNews(id) {
             } catch (e) { console.error(e); }
         }
 
-        // Load gallery from database
+        // Load gallery from database (with backward compatibility for string-only format)
         if (item.galleryJson) {
-            galleryImages = JSON.parse(item.galleryJson);
+            const parsed = JSON.parse(item.galleryJson);
+            // Convert legacy string format to object format
+            galleryImages = parsed.map(item => typeof item === 'string' ? { url: item, caption: '' } : item);
         } else {
             galleryImages = [];
         }
@@ -1360,7 +1362,7 @@ function toggleGalleryUrlInput() {
 function addGalleryFromUrl() {
     const url = document.getElementById('galleryImageUrl').value.trim();
     if (url) {
-        galleryImages.push(url);
+        galleryImages.push({ url, caption: '' });
         renderGallery();
         document.getElementById('galleryImageUrl').value = '';
     }
@@ -1380,7 +1382,7 @@ async function addGalleryImages(event) {
                 const data = await res.json();
                 const baseUrl = window.location.origin;
                 const imageUrl = data.url.startsWith('http') ? data.url : `${baseUrl}${data.url}`;
-                galleryImages.push(imageUrl);
+                galleryImages.push({ url: imageUrl, caption: '' });
                 renderGallery();
             }
         } catch (e) {
@@ -1403,9 +1405,10 @@ async function rotateGalleryImage(index) {
     }
 
     try {
-        const newUrl = await uploadRotatedImage(galleryImages[index]);
+        const imgUrl = typeof galleryImages[index] === 'string' ? galleryImages[index] : galleryImages[index].url;
+        const newUrl = await uploadRotatedImage(imgUrl);
         if (newUrl) {
-            galleryImages[index] = newUrl;
+            galleryImages[index] = { url: newUrl, caption: galleryImages[index].caption || '' };
             renderGallery();
         }
     } catch (e) {
@@ -1418,13 +1421,27 @@ async function rotateGalleryImage(index) {
 }
 
 function renderGallery() {
-    document.getElementById('galleryPreview').innerHTML = galleryImages.length ? galleryImages.map((img, i) => `
-        <div style="position: relative;">
-            <img src="${img}" style="width: 80px; height: 80px; object-fit: cover; border-radius: 4px;">
-            <button onclick="removeGalleryImage(${i})" style="position: absolute; top: -5px; right: -5px; background: #dc2626; border: none; color: white; width: 20px; height: 20px; border-radius: 50%; cursor: pointer; font-size: 10px; display: flex; align-items: center; justify-content: center;">×</button>
-            <button id="rotateGalleryBtn_${i}" onclick="rotateGalleryImage(${i})" style="position: absolute; bottom: -5px; right: -5px; background: rgba(0,0,0,0.7); border: none; color: white; width: 24px; height: 24px; border-radius: 50%; cursor: pointer; font-size: 10px; display: flex; align-items: center; justify-content: center;" title="Otočit"><i class="fa-solid fa-rotate-right"></i></button>
+    document.getElementById('galleryPreview').innerHTML = galleryImages.length ? galleryImages.map((item, i) => {
+        const url = typeof item === 'string' ? item : item.url;
+        const caption = typeof item === 'string' ? '' : (item.caption || '');
+        return `
+        <div style="display: flex; flex-direction: column; gap: 0.3rem; width: 100px;">
+            <div style="position: relative;">
+                <img src="${url}" style="width: 80px; height: 80px; object-fit: cover; border-radius: 4px;">
+                <button onclick="removeGalleryImage(${i})" style="position: absolute; top: -5px; right: -5px; background: #dc2626; border: none; color: white; width: 20px; height: 20px; border-radius: 50%; cursor: pointer; font-size: 10px; display: flex; align-items: center; justify-content: center;">×</button>
+                <button id="rotateGalleryBtn_${i}" onclick="rotateGalleryImage(${i})" style="position: absolute; bottom: -5px; right: -5px; background: rgba(0,0,0,0.7); border: none; color: white; width: 24px; height: 24px; border-radius: 50%; cursor: pointer; font-size: 10px; display: flex; align-items: center; justify-content: center;" title="Otočit"><i class="fa-solid fa-rotate-right"></i></button>
+            </div>
+            <input type="text" value="${caption}" placeholder="Popisek..." onchange="updateGalleryCaption(${i}, this.value)" style="width: 80px; padding: 0.2rem; font-size: 0.7rem; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 3px; color: var(--text-color);">
         </div>
-    `).join('') : '<p style="color: var(--text-muted); font-size: 0.85rem;">Žádné obrázky</p>';
+    `}).join('') : '<p style="color: var(--text-muted); font-size: 0.85rem;">Žádné obrázky</p>';
+}
+
+function updateGalleryCaption(index, caption) {
+    if (typeof galleryImages[index] === 'string') {
+        galleryImages[index] = { url: galleryImages[index], caption };
+    } else {
+        galleryImages[index].caption = caption;
+    }
 }
 
 
@@ -1452,7 +1469,7 @@ function selectGalleryForThumbnail() {
 function selectGalleryForArticleGallery() {
     if (!window.showGalleryPicker) return;
     showGalleryPicker((url) => {
-        galleryImages.push(url);
+        galleryImages.push({ url, caption: '' });
         renderGallery();
     });
 }
@@ -1495,6 +1512,7 @@ window.addGalleryFromUrl = addGalleryFromUrl;
 window.addGalleryImages = addGalleryImages;
 window.removeGalleryImage = removeGalleryImage;
 window.rotateGalleryImage = rotateGalleryImage;
+window.updateGalleryCaption = updateGalleryCaption;
 window.selectGalleryForImageModal = selectGalleryForImageModal;
 window.selectGalleryForThumbnail = selectGalleryForThumbnail;
 window.selectGalleryForArticleGallery = selectGalleryForArticleGallery;
