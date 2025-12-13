@@ -581,10 +581,32 @@ function showImportPgnModal() {
     if (modal) {
         modal.style.display = 'flex';
         document.getElementById('importPgnInput').value = '';
+        document.getElementById('fileUploadLabel').textContent = 'Vybrat soubor .pgn';
+        document.getElementById('pgnFileInput').value = '';
         document.getElementById('importPgnInput').focus();
     }
 }
 window.showImportPgnModal = showImportPgnModal;
+
+// Handle PGN file selection
+function handlePgnFileSelect(input) {
+    const file = input.files[0];
+    if (!file) return;
+
+    const label = document.getElementById('fileUploadLabel');
+    label.textContent = file.name;
+
+    const reader = new FileReader();
+    reader.onload = function (e) {
+        document.getElementById('importPgnInput').value = e.target.result;
+    };
+    reader.onerror = function () {
+        alert('Nepodařilo se načíst soubor.');
+        label.textContent = 'Vybrat soubor .pgn';
+    };
+    reader.readAsText(file);
+}
+window.handlePgnFileSelect = handlePgnFileSelect;
 
 function closeImportPgnModal() {
     const modal = document.getElementById('importPgnModal');
