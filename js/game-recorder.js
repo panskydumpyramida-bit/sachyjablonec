@@ -216,23 +216,41 @@ function undoMove() {
 }
 
 // Playback controls - for reviewing recorded games
-// (Variables playbackMoves, playbackIndex, autoplayInterval are at top of file)
+// savedMoves stores the complete move history for navigation
+let savedMoves = [];
+let currentMoveIdx = 0;
+
+function saveCurrentHistory() {
+    // Save current game history for navigation
+    savedMoves = game.history({ verbose: true });
+    currentMoveIdx = savedMoves.length;
+}
 
 function goToStart() {
+    // Save history before navigation if not already saved
+    if (savedMoves.length === 0 && game.history().length > 0) {
+        saveCurrentHistory();
+    }
+
     // Reset to starting position
     game.reset();
     board.position('start');
-    playbackIndex = 0;
+    currentMoveIdx = 0;
     updateStatus();
     updateMoveHistory();
     removeHighlights();
 }
 
 function goBack() {
+    // Save history before first navigation
+    if (savedMoves.length === 0 && game.history().length > 0) {
+        saveCurrentHistory();
+    }
+
     const move = game.undo();
     if (move) {
+        currentMoveIdx = Math.max(0, currentMoveIdx - 1);
         board.position(game.fen());
-        playbackIndex = Math.max(0, playbackIndex - 1);
         updateStatus();
         updateMoveHistory();
         removeHighlights();
@@ -240,24 +258,64 @@ function goBack() {
 }
 
 function goForward() {
-    // This requires knowing the full move list
-    // For now, just replay from history if available
-    const history = game.history({ verbose: true });
-    // Cannot go forward past current position in recording mode
-    console.log('goForward not available in recording mode');
+    // Can only go forward if we have saved moves and aren't at the end
+    if (savedMoves.length === 0 || currentMoveIdx >= savedMoves.length) {
+        return;
+    }
+
+    const moveToPlay = savedMoves[currentMoveIdx];
+    if (moveToPlay) {
+        game.move(moveToPlay);
+        currentMoveIdx++;
+        board.position(game.fen());
+        updateStatus();
+        updateMoveHistory();
+        highlightMove(moveToPlay.from, moveToPlay.to);
+    }
 }
 
 function goToEnd() {
-    // In recording mode, already at end
-    console.log('Already at end in recording mode');
+    // Replay all remaining moves
+    while (currentMoveIdx < savedMoves.length) {
+        const moveToPlay = savedMoves[currentMoveIdx];
+        if (moveToPlay) {
+            game.move(moveToPlay);
+            currentMoveIdx++;
+        } else {
+            break;
+        }
+    }
+
+    board.position(game.fen());
+    updateStatus();
+    updateMoveHistory();
+
+    // Highlight last move
+    if (savedMoves.length > 0) {
+        const lastMove = savedMoves[savedMoves.length - 1];
+        highlightMove(lastMove.from, lastMove.to);
+    }
 }
 
 function toggleAutoplay() {
     if (autoplayInterval) {
         clearInterval(autoplayInterval);
         autoplayInterval = null;
+        document.getElementById('autoplayBtn').innerHTML = '<i class="fa-solid fa-play"></i>';
     } else {
+        // Save history if needed
+        if (savedMoves.length === 0 && game.history().length > 0) {
+            saveCurrentHistory();
+        }
+
+        document.getElementById('autoplayBtn').innerHTML = '<i class="fa-solid fa-pause"></i>';
         autoplayInterval = setInterval(() => {
+            if (currentMoveIdx >= savedMoves.length) {
+                clearInterval(autoplayInterval);
+                autoplayInterval = null;
+                document.getElementById('autoplayBtn').innerHTML = '<i class="fa-solid fa-play"></i>';
+                return;
+            }
             goForward();
         }, 1000);
     }
