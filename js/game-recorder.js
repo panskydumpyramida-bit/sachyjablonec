@@ -659,6 +659,10 @@ function importPgn() {
 
     // Update board and UI
     board.position(game.fen());
+
+    // Save history for navigation
+    saveCurrentHistory();
+
     updateStatus();
     updateMoveHistory();
 
