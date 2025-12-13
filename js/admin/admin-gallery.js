@@ -125,27 +125,59 @@ async function toggleGalleryVisibility(id, isPublic) {
 }
 
 async function deleteGalleryImage(id) {
-    // Use setTimeout to avoid Chrome focus issues with confirm dialogs
-    setTimeout(async () => {
-        if (!confirm('Opravdu chcete smazat tento obrázek? Tato akce je nevratná.')) return;
+    // Use custom modal instead of native confirm() to avoid Chrome focus issues
+    const confirmed = await showConfirm('Opravdu chcete smazat tento obrázek?', 'Tato akce je nevratná.');
+    if (!confirmed) return;
 
-        try {
-            const res = await fetch(`${API_URL}/images/${id}`, {
-                method: 'DELETE',
-                headers: { 'Authorization': `Bearer ${authToken}` }
-            });
+    try {
+        const res = await fetch(`${API_URL}/images/${id}`, {
+            method: 'DELETE',
+            headers: { 'Authorization': `Bearer ${authToken}` }
+        });
 
-            if (res.ok) {
-                showToast('Obrázek smazán');
-                loadAdminGallery();
-            } else {
-                showToast('Nepodařilo se smazat obrázek', 'error');
-            }
-        } catch (e) {
-            console.error(e);
-            showToast('Chyba při mazání', 'error');
+        if (res.ok) {
+            showToast('Obrázek smazán');
+            loadAdminGallery();
+        } else {
+            showToast('Nepodařilo se smazat obrázek', 'error');
         }
-    }, 100);
+    } catch (e) {
+        console.error(e);
+        showToast('Chyba při mazání', 'error');
+    }
+}
+
+// Custom confirm modal to replace native confirm() which has Chrome issues
+function showConfirm(title, message) {
+    return new Promise((resolve) => {
+        const modal = document.createElement('div');
+        modal.id = 'confirmModal';
+        modal.innerHTML = `
+            <div style="position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 100000; display: flex; align-items: center; justify-content: center;">
+                <div style="background: var(--surface-color, #1e1e1e); padding: 1.5rem; border-radius: 12px; max-width: 400px; width: 90%; box-shadow: 0 20px 60px rgba(0,0,0,0.5); border: 1px solid rgba(212,175,55,0.2);">
+                    <h3 style="color: var(--primary-color, #d4af37); margin: 0 0 0.5rem 0; font-size: 1.2rem;">${title}</h3>
+                    <p style="color: var(--text-muted, #a0a0a0); margin: 0 0 1.5rem 0;">${message}</p>
+                    <div style="display: flex; gap: 0.75rem; justify-content: flex-end;">
+                        <button id="confirmNo" style="padding: 0.5rem 1rem; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: white; border-radius: 6px; cursor: pointer;">Zrušit</button>
+                        <button id="confirmYes" style="padding: 0.5rem 1rem; background: #dc2626; border: none; color: white; border-radius: 6px; cursor: pointer; font-weight: 600;">Smazat</button>
+                    </div>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(modal);
+
+        modal.querySelector('#confirmNo').onclick = () => {
+            modal.remove();
+            resolve(false);
+        };
+        modal.querySelector('#confirmYes').onclick = () => {
+            modal.remove();
+            resolve(true);
+        };
+
+        // Focus the cancel button by default
+        modal.querySelector('#confirmNo').focus();
+    });
 }
 
 // Update image caption (altText)
