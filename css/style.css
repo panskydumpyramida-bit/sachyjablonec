@@ -328,6 +328,10 @@ section {
     transform: scale(1.05);
 }
 
+.card:hover .hover-overlay {
+    opacity: 1 !important;
+}
+
 .card-content {
     padding: 1.5rem;
 }
