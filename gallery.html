@@ -65,9 +65,9 @@
 
                 grid.innerHTML = window.galleryImages.map((img, index) => `
                     <div class="card" style="animation: fadeIn 0.5s ease-out;">
-                        <div class="card-image" style="height: 300px; cursor: pointer;" onclick="SJLightbox.open(window.galleryImages, ${index})">
+                        <div class="card-image" style="height: 300px; cursor: pointer; position: relative;" onclick="SJLightbox.open(window.galleryImages, ${index})">
                             <img src="${img.url}" alt="${img.altText || 'Fotografie z galerie'}" loading="lazy" style="transition: transform 0.5s ease;">
-                            <div style="position: absolute; inset: 0; background: rgba(0,0,0,0.2); opacity: 0; transition: opacity 0.3s; display: flex; align-items: center; justify-content: center;" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0">
+                            <div style="position: absolute; inset: 0; background: rgba(0,0,0,0.2); opacity: 0; transition: opacity 0.3s; display: flex; align-items: center; justify-content: center; pointer-events: none;" class="hover-overlay">
                                 <i class="fa-solid fa-expand" style="font-size: 2rem; color: white;"></i>
                             </div>
                         </div>
