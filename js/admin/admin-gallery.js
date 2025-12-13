@@ -371,7 +371,7 @@ async function showGalleryPicker(callback) {
         }
 
         grid.innerHTML = images.map(img => `
-            <div class="gallery-picker-item" onclick="selectFromGallery('${img.url}')">
+            <div class="gallery-picker-item" onclick="selectFromGallery('${img.url}', '${(img.altText || '').replace(/'/g, "\\'")}')">
                 <img src="${img.url}" alt="${img.originalName || 'Gallery image'}">
             </div>
         `).join('');
@@ -381,9 +381,9 @@ async function showGalleryPicker(callback) {
     }
 }
 
-function selectFromGallery(url) {
+function selectFromGallery(url, caption = '') {
     if (galleryPickerCallback) {
-        galleryPickerCallback(url);
+        galleryPickerCallback(url, caption);
     }
     closeGalleryPicker();
 }

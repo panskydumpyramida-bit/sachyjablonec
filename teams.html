@@ -14,6 +14,9 @@
         rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/game-viewer.css">
+    <link rel="stylesheet" href="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.css"
+        integrity="sha384-q94+BZtLrkL1/ohfjR8c6L+A6qzNH9R2hBLwyoAfu3i/WCvQjzL2RQJ3uNHDISdU" crossorigin="anonymous">
     <style>
         /* Modal Styles */
         .modal {
@@ -236,6 +239,67 @@
                     </div>
                 </div>
 
+                <!-- Game Viewer Section -->
+                <div id="game-viewer-wrapper" class="card" style="grid-column: 1 / -1; display: none;">
+                    <div class="card-content">
+                        <h2
+                            style="margin-bottom: 2rem; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 1rem;">
+                            Partie ze soutěží
+                        </h2>
+
+                        <div id="game-viewer-container" class="viewer-wrapper">
+                            <div class="viewer-toggle-bar" onclick="gameViewer.toggleViewer()">
+                                <h3><i class="fa-solid fa-chess-board"></i> Přehrávač partií</h3>
+                                <i id="viewerToggleIcon" class="fa-solid fa-chevron-up"></i>
+                            </div>
+                            <div id="appContainer" class="app-container">
+                                <header class="app-header">
+                                    <div>
+                                        <h1 id="gameViewerTitle">Partie</h1>
+                                        <p id="gameViewerSubtitle"
+                                            style="color: var(--viewer-text-muted); font-size: 0.8rem; margin: 0;"></p>
+                                    </div>
+                                </header>
+
+                                <main class="main-content">
+                                    <aside class="sidebar">
+                                        <div class="sidebar-header">
+                                            <h2>Seznam Partií</h2>
+                                        </div>
+                                        <div class="game-list" id="game-list-content">
+                                            <!-- Games will be populated here -->
+                                        </div>
+                                    </aside>
+
+                                    <section class="game-viewer">
+                                        <div class="iframe-container">
+                                            <iframe id="chess-frame" src="" frameborder="0"
+                                                allowtransparency="true"></iframe>
+                                        </div>
+                                        <div class="controls">
+                                            <button id="prevBtn" class="control-btn" onclick="gameViewer.prevGame()"
+                                                aria-label="Předchozí partie">
+                                                <i class="fa-solid fa-chevron-left"></i> <span
+                                                    class="btn-text">Předchozí</span>
+                                            </button>
+                                            <div class="game-info">
+                                                <span id="current-game-title" class="current-game-title">Vyberte
+                                                    partii</span>
+                                                <span id="game-counter" class="game-counter"></span>
+                                            </div>
+                                            <button id="nextBtn" class="control-btn" onclick="gameViewer.nextGame()"
+                                                aria-label="Další partie">
+                                                <span class="btn-text">Další</span> <i
+                                                    class="fa-solid fa-chevron-right"></i>
+                                            </button>
+                                        </div>
+                                    </section>
+                                </main>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Archive -->
                 <div class="card" style="grid-column: 1 / -1;">
                     <div class="card-content">
@@ -278,7 +342,32 @@
     <script src="js/main.js?v=2"></script>
     <script src="js/match-cards.js?v=2"></script>
     <script src="js/news-loader.js?v=2"></script>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script src="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
+    <script src="js/game-viewer.js"></script>
     <script>
+        // Game Viewer Loader
+        document.addEventListener('DOMContentLoaded', async () => {
+            try {
+                // Fetch games for category "Soutěže družstev"
+                const res = await fetch(`${API_URL}/viewer-games?category=Soutěže družstev`);
+                if (res.ok) {
+                    const games = await res.json();
+                    if (games && games.length > 0) {
+                        // Initialize viewer
+                        gameViewer.init(games, null); // No team grouping for now
+
+                        // Show the viewer card
+                        document.getElementById('game-viewer-wrapper').style.display = 'block';
+                    }
+                }
+            } catch (e) {
+                console.error("Failed to load games:", e);
+            }
+        });
+
         // Standings Loader Logic (similar to youth.html)
         document.addEventListener('DOMContentLoaded', () => {
             loadNews('Soutěže družstev', 'teamsNewsList', 'list');

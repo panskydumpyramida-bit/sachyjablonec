@@ -17,6 +17,7 @@ import memberRoutes from './routes/members.js';
 import messageRoutes from './routes/messages.js';
 import racerRoutes from './routes/racer.js';
 import gamesRoutes from './routes/games.js';
+import apiGamesRoutes from './routes/api-games.js';
 import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
@@ -156,6 +157,7 @@ app.use('/api/members', memberRoutes);
 app.use('/api/messages', messageRoutes);
 app.use('/api/racer', racerRoutes);
 app.use('/api/games', gamesRoutes);
+app.use('/api/viewer-games', apiGamesRoutes);
 
 // Helper: Clean HTML text
 const clean = (s) => {
