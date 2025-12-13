@@ -397,6 +397,33 @@
             text-align: center;
         }
 
+        .game-info {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.25rem;
+            flex: 1;
+            min-width: 0;
+        }
+
+        .current-game-title {
+            font-weight: 600;
+            font-size: 0.95rem;
+            text-align: center;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 100%;
+        }
+
+        .game-counter {
+            font-size: 0.75rem;
+            color: var(--viewer-text-muted);
+            background: rgba(255, 255, 255, 0.1);
+            padding: 0.15rem 0.5rem;
+            border-radius: 10px;
+        }
+
         /* Mobile Responsive */
         @media (max-width: 900px) {
             .app-container {
@@ -502,12 +529,15 @@
                                 <div class="controls">
                                     <button id="prevBtn" class="control-btn" onclick="prevGame()"
                                         aria-label="Předchozí partie">
-                                        <i class="fa-solid fa-chevron-left"></i> Předchozí
+                                        <i class="fa-solid fa-chevron-left"></i> <span class="btn-text">Předchozí</span>
                                     </button>
-                                    <span id="current-game-title" class="current-game-title">Vyberte partii</span>
+                                    <div class="game-info">
+                                        <span id="current-game-title" class="current-game-title">Vyberte partii</span>
+                                        <span id="game-counter" class="game-counter"></span>
+                                    </div>
                                     <button id="nextBtn" class="control-btn" onclick="nextGame()"
                                         aria-label="Další partie">
-                                        Další <i class="fa-solid fa-chevron-right"></i>
+                                        <span class="btn-text">Další</span> <i class="fa-solid fa-chevron-right"></i>
                                     </button>
                                 </div>
                             </section>
@@ -532,24 +562,11 @@
         </section>
     </main>
 
-    <!-- Lightbox Overlay -->
-    <div id="lightbox" onclick="closeLightbox()">
-        <div class="lightbox-close" onclick="closeLightbox()"><i class="fa-solid fa-times"></i></div>
-        <img id="lightboxImg" src="" alt="Zvětšený obrázek">
-    </div>
-
     <footer id="global-footer"></footer>
-
-    <!-- Lightbox -->
-    <div id="lightbox" class="sj-lightbox"
-        style="display: none; position: fixed; inset: 0; z-index: 9999; background: rgba(0,0,0,0.9); align-items: center; justify-content: center;">
-        <span class="sj-close" onclick="closeLightbox()"
-            style="position: absolute; top: 20px; right: 20px; color: white; font-size: 2rem; cursor: pointer;">&times;</span>
-        <img id="lightboxImg" src="" style="max-width: 90vw; max-height: 90vh; border-radius: 4px;">
-    </div>
 
     <script src="js/config.js"></script>
     <script src="js/layout-loader.js"></script>
+    <script src="js/lightbox.js"></script>
     <script src="js/main.js"></script>
     <script>
         // Article Loader
@@ -705,6 +722,11 @@
 
             document.getElementById('current-game-title').textContent = game.title;
 
+            // Count only playable games (not headers)
+            const playableGames = gamesData.filter(g => g.type !== 'header' && !g.isHeader);
+            const currentNum = playableGames.indexOf(game) + 1;
+            document.getElementById('game-counter').textContent = `${currentNum} / ${playableGames.length}`;
+
             let src = game.gameId || game.chessComId;
             if (src && !src.startsWith('http')) {
                 src = `https://www.chess.com/emboard?id=${src}`;
@@ -714,21 +736,9 @@
 
             document.getElementById('chess-frame').src = src || '';
 
-            // Highlight active
-            const items = document.querySelectorAll('.game-item');
-            items.forEach((item, idx) => {
-                // Note: logic is bit loose because we inserted team headers which are div children of list too
-                // We should filter only game-items
-                if (item.classList.contains('team-header')) return;
-
-                // How to map index to DOM elements? game-items match games index 1:1
-                // Let's rely on text content or re-query only .game-item
-            });
-
-            // Re-query strictly game items
+            // Re-query strictly game items and highlight active
             const gameItems = document.querySelectorAll('.game-item');
             gameItems.forEach((item) => {
-                // Check if this DOM item corresponds to the current game index
                 if (parseInt(item.dataset.index) === index) {
                     item.classList.add('active');
                     item.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
@@ -749,6 +759,62 @@
         function nextGame() {
             loadGame(currentGameIndex + 1);
         }
+
+        // Keyboard navigation for game viewer
+        document.addEventListener('keydown', function (e) {
+            const viewer = document.getElementById('game-viewer-container');
+            if (!viewer || viewer.classList.contains('hidden')) return;
+
+            // Check if viewer is visible on screen
+            const rect = viewer.getBoundingClientRect();
+            const isVisible = rect.top < window.innerHeight && rect.bottom > 0;
+            if (!isVisible) return;
+
+            // Don't trigger if user is typing in an input
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+
+            if (e.key === 'ArrowLeft') {
+                e.preventDefault();
+                prevGame();
+            } else if (e.key === 'ArrowRight') {
+                e.preventDefault();
+                nextGame();
+            }
+        });
+
+        // Swipe gestures for mobile
+        let touchStartX = 0;
+        let touchEndX = 0;
+
+        function handleSwipe() {
+            const swipeThreshold = 50;
+            const diff = touchStartX - touchEndX;
+
+            if (Math.abs(diff) < swipeThreshold) return;
+
+            if (diff > 0) {
+                // Swipe left = next
+                nextGame();
+            } else {
+                // Swipe right = prev
+                prevGame();
+            }
+        }
+
+        // Attach to game viewer section
+        document.addEventListener('DOMContentLoaded', function () {
+            const gameViewer = document.querySelector('.game-viewer');
+            if (!gameViewer) return;
+
+            gameViewer.addEventListener('touchstart', function (e) {
+                touchStartX = e.changedTouches[0].screenX;
+            }, { passive: true });
+
+            gameViewer.addEventListener('touchend', function (e) {
+                touchEndX = e.changedTouches[0].screenX;
+                handleSwipe();
+            }, { passive: true });
+        });
 
         function toggleViewer() {
             const container = document.getElementById('appContainer');
@@ -785,28 +851,21 @@
             }
         }
 
+        let articleGalleryImages = [];
+
         function renderGallery(images) {
             const container = document.getElementById('gallerySection');
             if (!images || images.length === 0) {
                 container.classList.add('hidden');
                 return;
             }
+            articleGalleryImages = images;
             container.classList.remove('hidden');
-            document.getElementById('galleryGrid').innerHTML = images.map(img => `
-                <div class="gallery-item" onclick="openLightbox('${img}')">
+            document.getElementById('galleryGrid').innerHTML = images.map((img, index) => `
+                <div class="gallery-item" onclick="SJLightbox.open(articleGalleryImages, ${index})">
                     <img src="${img}" loading="lazy">
                 </div>
             `).join('');
-        }
-
-        window.openLightbox = function (src) {
-            const lb = document.getElementById('lightbox');
-            lb.style.display = 'flex';
-            document.getElementById('lightboxImg').src = src;
-        }
-
-        window.closeLightbox = function () {
-            document.getElementById('lightbox').style.display = 'none';
         }
 
         function showError() {
