@@ -5,7 +5,7 @@ Backend API for the chess club website CMS.
 ## Tech Stack
 - Node.js + Express
 - Prisma ORM
-- SQLite (dev) / PostgreSQL (production)
+- PostgreSQL 
 - JWT Authentication
 
 ## Environment Variables
