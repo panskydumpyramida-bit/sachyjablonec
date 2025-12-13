@@ -543,12 +543,9 @@ async function loadGameById(id) {
 }
 
 function copyPgn() {
-    const pgnText = document.getElementById('pgnOutput');
-    pgnText.select();
-    document.execCommand('copy');
+    const pgnText = game.pgn();
     if (navigator.clipboard) {
-        navigator.clipboard.writeText(pgnText.value).then(() => {
-            // Find active element or fallback
+        navigator.clipboard.writeText(pgnText).then(() => {
             const btn = document.querySelector('button[onclick="copyPgn()"]');
             if (btn) {
                 const originalhtml = btn.innerHTML;
@@ -556,6 +553,14 @@ function copyPgn() {
                 setTimeout(() => btn.innerHTML = originalhtml, 2000);
             }
         });
+    } else {
+        // Fallback for older browsers
+        const textarea = document.createElement('textarea');
+        textarea.value = pgnText;
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textarea);
     }
 }
 
