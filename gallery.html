@@ -32,6 +32,18 @@
                     <p style="margin-top: 1rem; color: var(--text-muted);">Načítám galerii...</p>
                 </div>
             </div>
+
+            <!-- Pagination -->
+            <div id="galleryPagination"
+                style="display: none; justify-content: center; align-items: center; gap: 1rem; margin-top: 2rem; flex-wrap: wrap;">
+                <button id="prevPageBtn" class="btn-secondary" onclick="changePage(-1)" style="padding: 0.5rem 1rem;">
+                    <i class="fa-solid fa-chevron-left"></i> Předchozí
+                </button>
+                <span id="pageInfo" style="color: var(--text-muted); font-size: 0.9rem;"></span>
+                <button id="nextPageBtn" class="btn-secondary" onclick="changePage(1)" style="padding: 0.5rem 1rem;">
+                    Další <i class="fa-solid fa-chevron-right"></i>
+                </button>
+            </div>
         </section>
     </main>
 
@@ -43,6 +55,9 @@
     <script src="js/main.js"></script>
     <script>
         window.galleryImages = [];
+        const IMAGES_PER_PAGE = 9;
+        let currentPage = 1;
+        let totalPages = 1;
 
         document.addEventListener('DOMContentLoaded', async () => {
             const grid = document.getElementById('galleryGrid');
@@ -63,9 +78,35 @@
                     return;
                 }
 
-                grid.innerHTML = window.galleryImages.map((img, index) => `
+                totalPages = Math.ceil(window.galleryImages.length / IMAGES_PER_PAGE);
+                renderPage();
+
+            } catch (e) {
+                console.error('Gallery load error:', e);
+                grid.innerHTML = `
+                    <div style="grid-column: 1 / -1; text-align: center; padding: 2rem; color: #fca5a5;">
+                        <i class="fa-solid fa-triangle-exclamation"></i> Nepodařilo se načíst galerii.
+                    </div>
+                `;
+            }
+        });
+
+        function renderPage() {
+            const grid = document.getElementById('galleryGrid');
+            const pagination = document.getElementById('galleryPagination');
+            const pageInfo = document.getElementById('pageInfo');
+            const prevBtn = document.getElementById('prevPageBtn');
+            const nextBtn = document.getElementById('nextPageBtn');
+
+            const startIdx = (currentPage - 1) * IMAGES_PER_PAGE;
+            const endIdx = startIdx + IMAGES_PER_PAGE;
+            const pageImages = window.galleryImages.slice(startIdx, endIdx);
+
+            grid.innerHTML = pageImages.map((img, i) => {
+                const globalIndex = startIdx + i; // Pro lightbox používáme globální index
+                return `
                     <div class="card" style="animation: fadeIn 0.5s ease-out;">
-                        <div class="card-image" style="height: 300px; cursor: pointer; position: relative;" onclick="SJLightbox.open(window.galleryImages, ${index})">
+                        <div class="card-image" style="height: 300px; cursor: pointer; position: relative;" onclick="SJLightbox.open(window.galleryImages, ${globalIndex})">
                             <img src="${img.url}" alt="${img.altText || 'Fotografie z galerie'}" loading="lazy" style="transition: transform 0.5s ease;">
                             <div style="position: absolute; inset: 0; background: rgba(0,0,0,0.2); opacity: 0; transition: opacity 0.3s; display: flex; align-items: center; justify-content: center; pointer-events: none;" class="hover-overlay">
                                 <i class="fa-solid fa-expand" style="font-size: 2rem; color: white;"></i>
@@ -81,17 +122,32 @@
                             </p>
                         </div>
                     </div>
-                `).join('');
-
-            } catch (e) {
-                console.error('Gallery load error:', e);
-                grid.innerHTML = `
-                    <div style="grid-column: 1 / -1; text-align: center; padding: 2rem; color: #fca5a5;">
-                        <i class="fa-solid fa-triangle-exclamation"></i> Nepodařilo se načíst galerii.
-                    </div>
                 `;
+            }).join('');
+
+            // Show pagination only if more than 1 page
+            if (totalPages > 1) {
+                pagination.style.display = 'flex';
+                pageInfo.textContent = `Stránka ${currentPage} z ${totalPages}`;
+                prevBtn.disabled = currentPage === 1;
+                prevBtn.style.opacity = currentPage === 1 ? '0.5' : '1';
+                nextBtn.disabled = currentPage === totalPages;
+                nextBtn.style.opacity = currentPage === totalPages ? '0.5' : '1';
+            } else {
+                pagination.style.display = 'none';
             }
-        });
+
+            // Scroll to top of gallery on page change
+            document.getElementById('galleryGrid').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        function changePage(delta) {
+            const newPage = currentPage + delta;
+            if (newPage >= 1 && newPage <= totalPages) {
+                currentPage = newPage;
+                renderPage();
+            }
+        }
     </script>
 </body>
 
