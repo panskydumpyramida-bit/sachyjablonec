@@ -145,7 +145,7 @@ async function deleteGalleryImage(id) {
             console.error(e);
             showToast('Chyba při mazání', 'error');
         }
-    }, 10);
+    }, 100);
 }
 
 // Update image caption (altText)
