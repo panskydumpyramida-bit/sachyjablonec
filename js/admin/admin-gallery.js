@@ -125,24 +125,27 @@ async function toggleGalleryVisibility(id, isPublic) {
 }
 
 async function deleteGalleryImage(id) {
-    if (!confirm('Opravdu chcete smazat tento obrázek? Tato akce je nevratná.')) return;
+    // Use setTimeout to avoid Chrome focus issues with confirm dialogs
+    setTimeout(async () => {
+        if (!confirm('Opravdu chcete smazat tento obrázek? Tato akce je nevratná.')) return;
 
-    try {
-        const res = await fetch(`${API_URL}/images/${id}`, {
-            method: 'DELETE',
-            headers: { 'Authorization': `Bearer ${authToken}` }
-        });
+        try {
+            const res = await fetch(`${API_URL}/images/${id}`, {
+                method: 'DELETE',
+                headers: { 'Authorization': `Bearer ${authToken}` }
+            });
 
-        if (res.ok) {
-            showToast('Obrázek smazán');
-            loadAdminGallery();
-        } else {
-            showToast('Nepodařilo se smazat obrázek', 'error');
+            if (res.ok) {
+                showToast('Obrázek smazán');
+                loadAdminGallery();
+            } else {
+                showToast('Nepodařilo se smazat obrázek', 'error');
+            }
+        } catch (e) {
+            console.error(e);
+            showToast('Chyba při mazání', 'error');
         }
-    } catch (e) {
-        console.error(e);
-        showToast('Chyba při mazání', 'error');
-    }
+    }, 10);
 }
 
 // Update image caption (altText)
