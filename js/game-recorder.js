@@ -12,6 +12,47 @@ let autoplayInterval = null;
 // Track current game ID for updates (null = new game)
 let currentGameId = null;
 
+// --- Status and History Updates ---
+
+function updateStatus() {
+    // Update PGN output textarea
+    const pgnOutput = document.getElementById('pgnOutput');
+    if (pgnOutput) {
+        pgnOutput.value = game.pgn();
+    }
+}
+
+function updateMoveHistory() {
+    const moveListEl = document.getElementById('moveList');
+    if (!moveListEl) return;
+
+    const history = game.history({ verbose: true });
+
+    if (history.length === 0) {
+        moveListEl.innerHTML = '<span style="color: var(--text-muted); font-size: 0.9rem;">Partie začíná...</span>';
+        return;
+    }
+
+    // Build move list HTML
+    let html = '';
+    for (let i = 0; i < history.length; i += 2) {
+        const moveNumber = Math.floor(i / 2) + 1;
+        const whiteMove = history[i]?.san || '';
+        const blackMove = history[i + 1]?.san || '';
+
+        html += `<div class="move-pair">
+            <span class="move-number">${moveNumber}.</span>
+            <span class="move" data-ply="${i}">${whiteMove}</span>
+            ${blackMove ? `<span class="move" data-ply="${i + 1}">${blackMove}</span>` : ''}
+        </div>`;
+    }
+
+    moveListEl.innerHTML = html;
+
+    // Scroll to bottom
+    moveListEl.scrollTop = moveListEl.scrollHeight;
+}
+
 // --- Click-to-Move & Highlight Logic ---
 
 function removeHighlights() {
