@@ -408,6 +408,9 @@
                     msg.style.color = '#4ade80'; // green
                     msg.textContent = 'Přihláška byla úspěšně odeslána. Děkujeme!';
                     this.reset();
+                    // Update capacity and participants list BEFORE replacing the form
+                    await checkCapacity();
+                    // Now replace the form with success message
                     document.getElementById('regFormContainer').innerHTML = `
                         <div style="text-align:center; padding: 2rem;">
                             <i class="fa-solid fa-check-circle" style="font-size: 3rem; color: #4ade80; margin-bottom: 1rem;"></i>
@@ -415,8 +418,6 @@
                             <p>Těšíme se na vás na turnaji.</p>
                         </div>
                     `;
-                    // Update capacity after successful registration (optional, but nice)
-                    checkCapacity();
                 } else {
                     throw new Error('Chyba při odesílání');
                 }
