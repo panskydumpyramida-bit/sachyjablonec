@@ -243,18 +243,8 @@
         }
 
         .app-header {
-            padding: 0.75rem 1.5rem;
-            background-color: var(--viewer-sidebar);
-            border-bottom: 1px solid var(--viewer-border);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            /* Reset global header styles */
-            position: relative;
-            top: auto;
-            width: auto;
-            z-index: 1;
-            backdrop-filter: none;
+            display: none;
+            /* Hidden - adds no value */
         }
 
         .app-header h1 {
@@ -481,6 +471,20 @@
 
             .game-counter {
                 font-size: 0.7rem;
+            }
+
+            /* More compact iframe */
+            .iframe-container {
+                height: 500px;
+            }
+
+            /* Smaller game list */
+            .sidebar {
+                height: 200px;
+            }
+
+            .game-viewer {
+                padding: 1rem;
             }
         }
     </style>
