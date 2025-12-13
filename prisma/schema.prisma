@@ -52,6 +52,7 @@ model News {
   
   author        User?     @relation(fields: [authorId], references: [id])
   matchReport   MatchReport?
+  games         Game[]
   
   @@map("news")
 }
@@ -75,16 +76,23 @@ model MatchReport {
 
 model Game {
   id            Int      @id @default(autoincrement())
-  reportId      Int      @map("report_id")
   gameTitle     String   @map("game_title")
   chessComId    String   @map("chess_com_id")
-  team          String
-  positionOrder Int      @map("position_order")
+  whitePlayer   String?  @map("white_player")
+  blackPlayer   String?  @map("black_player")
+  team          String?
+  positionOrder Int?     @map("position_order")
   isCommented   Boolean  @default(false) @map("is_commented")
   
-  report        MatchReport @relation(fields: [reportId], references: [id], onDelete: Cascade)
+  // Flexible relations - game can belong to report OR news
+  reportId      Int?     @map("report_id")
+  newsId        Int?     @map("news_id")
+  
+  report        MatchReport? @relation(fields: [reportId], references: [id], onDelete: Cascade)
+  news          News?        @relation(fields: [newsId], references: [id], onDelete: Cascade)
   
   @@map("games")
+  @@index([chessComId])
 }
 
 model Image {
