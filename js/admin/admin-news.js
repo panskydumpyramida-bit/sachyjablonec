@@ -1204,7 +1204,21 @@ async function rotateImage() {
 // ATTACHED GAMES MANAGEMENT
 // ================================
 
+// Local utility to ensure availability
+function escapeHtml(text) {
+    if (text === null || text === undefined) return '';
+    const map = {
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#039;'
+    };
+    return String(text).replace(/[&<>"']/g, function (m) { return map[m]; });
+}
+
 function renderGames() {
+    console.log('Rendering games:', games); // DEBUG
     const list = document.getElementById('gamesList');
     if (!list) return; // Should exist
 
@@ -1276,6 +1290,8 @@ function addGame() {
 
     const title = titleInput.value.trim();
     const gameId = idInput.value.trim();
+
+    console.log('Adding game:', { title, gameId }); // DEBUG
 
     if (!title) {
         alert('Zadejte jméno partie (Kdo s kým)');
