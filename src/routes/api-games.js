@@ -62,7 +62,8 @@ router.get('/', async (req, res) => {
             newsId: g.newsId,
             newsTitle: g.news?.title,
             // Add team if we have it stored or derived? Schema has 'team' column
-            team: g.team
+            team: g.team,
+            commented: g.isCommented
         }));
 
         res.json(formattedGames);

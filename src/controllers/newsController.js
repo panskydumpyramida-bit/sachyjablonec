@@ -112,6 +112,62 @@ export const getNewsById = async (req, res) => {
     }
 };
 
+
+// Helper to sync games to global Game table
+const syncGamesData = async (newsId, gamesJson, teamName) => {
+    // 1. Delete existing games linked to this news
+    await prisma.game.deleteMany({
+        where: { newsId: newsId }
+    });
+
+    if (!gamesJson) return;
+
+    let games = [];
+    try {
+        games = JSON.parse(gamesJson);
+    } catch (e) {
+        console.error('Failed to parse gamesJson during sync:', e);
+        return;
+    }
+
+    if (!Array.isArray(games) || games.length === 0) return;
+
+    // 2. Prepare new game records
+    const gameRecords = games.map((g, index) => {
+        // Skip headers
+        if (g.type === 'header') return null;
+
+        // Try to parse players from title "White - Black"
+        let white = null;
+        let black = null;
+        if (g.title && g.title.includes('-')) {
+            const parts = g.title.split('-');
+            if (parts.length === 2) {
+                white = parts[0].trim();
+                black = parts[1].trim();
+            }
+        }
+
+        return {
+            gameTitle: g.title || 'Untitled',
+            chessComId: g.gameId || '', // Map gameId to chessComId
+            whitePlayer: white,
+            blackPlayer: black,
+            team: teamName || g.team || null, // Use article's category/team or game's team
+            positionOrder: index,
+            isCommented: g.isCommented || g.commented || false,
+            newsId: newsId
+        };
+    }).filter(g => g !== null);
+
+    // 3. Insert new records
+    if (gameRecords.length > 0) {
+        await prisma.game.createMany({
+            data: gameRecords
+        });
+    }
+};
+
 export const createNews = async (req, res) => {
     try {
         const { title, category, excerpt, content, thumbnailUrl, linkUrl, publishedDate, isPublished, gamesJson, teamsJson, galleryJson } = req.body;
@@ -139,6 +195,9 @@ export const createNews = async (req, res) => {
                 galleryJson
             }
         });
+
+        // Sync games
+        await syncGamesData(news.id, gamesJson, category); // Use category as broad team identifier
 
         res.status(201).json(news);
     } catch (error) {
@@ -173,6 +232,14 @@ export const updateNews = async (req, res) => {
             data: updateData
         });
 
+        // Sync games if gamesJson or category changed
+        // For simplicity, we sync on every update if gamesJson is present (it usually is sent)
+        // If gamesJson is not sent, we shouldn't wipe games unless intent is clear. 
+        // Admin usually sends full object.
+        if (gamesJson !== undefined) {
+            await syncGamesData(news.id, gamesJson, category || news.category);
+        }
+
         res.json(news);
     } catch (error) {
         console.error('Update news error:', error);
@@ -192,6 +259,8 @@ export const deleteNews = async (req, res) => {
         await prisma.news.delete({
             where: { id: parseInt(id) }
         });
+
+        // Games are cascade deleted by DB foreign key constraints
 
         res.json({ message: 'News deleted successfully' });
     } catch (error) {
@@ -223,3 +292,4 @@ export const togglePublish = async (req, res) => {
         res.status(500).json({ error: 'Failed to toggle publish status' });
     }
 };
+
