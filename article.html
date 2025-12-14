@@ -267,11 +267,15 @@
             }
             articleGalleryImages = images;
             container.classList.remove('hidden');
-            document.getElementById('galleryGrid').innerHTML = images.map((img, index) => `
-                <div class="gallery-item" onclick="SJLightbox.open(articleGalleryImages, ${index})">
-                    <img src="${img}" loading="lazy">
+            document.getElementById('galleryGrid').innerHTML = images.map((img, index) => {
+                const url = typeof img === 'string' ? img : img.url;
+                const caption = typeof img === 'string' ? '' : (img.caption || '');
+                return `
+                <div class="gallery-item" onclick="SJLightbox.open(articleGalleryImages, ${index})" title="${caption}">
+                    <img src="${url}" alt="${caption}" loading="lazy">
+                    ${caption ? `<div class="gallery-caption-overlay">${caption}</div>` : ''}
                 </div>
-            `).join('');
+            `}).join('');
         }
 
         function showError() {
