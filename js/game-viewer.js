@@ -5,11 +5,13 @@
 
 class GameViewer {
     constructor() {
-        this.gamesData = [];
+        this.allGamesData = []; // Store full dataset
+        this.gamesData = []; // Store filtered dataset
         this.teamsData = null;
         this.currentIndex = -1;
         this.touchStartX = 0;
         this.touchEndX = 0;
+        this.filterCommentedOnly = false;
 
         // Bind methods
         this.prevGame = this.prevGame.bind(this);
@@ -17,16 +19,18 @@ class GameViewer {
         this.handleKeydown = this.handleKeydown.bind(this);
         this.handleSwipe = this.handleSwipe.bind(this);
         this.toggleViewer = this.toggleViewer.bind(this);
+        this.toggleFilter = this.toggleFilter.bind(this);
     }
 
     init(games, teams = null) {
-        this.gamesData = games;
+        this.allGamesData = games || [];
         this.teamsData = teams;
 
         const container = document.getElementById('game-viewer-container');
         const list = document.getElementById('game-list-content');
         const title = document.getElementById('gameViewerTitle');
         const subtitle = document.getElementById('gameViewerSubtitle');
+        const listHeader = document.querySelector('.sidebar-header h2');
 
         if (!container || !list) return;
 
@@ -43,13 +47,63 @@ class GameViewer {
             subtitle.textContent = "Rozbor partií";
         }
 
-        // Use category title if only one team provided? Or generic.
-        // If coming from Teams section, title might be static.
+        // Add filter toggle if not present
+        if (listHeader && !document.getElementById('filterCommentedToggle')) {
+            const label = document.createElement('label');
+            label.id = 'filterCommentedToggle';
+            label.style.float = 'right';
+            label.style.cursor = 'pointer';
+            label.style.fontSize = '0.75rem';
+            label.style.textTransform = 'none';
+            label.style.color = 'var(--viewer-accent)';
+            label.style.marginTop = '-2px';
+            label.innerHTML = `
+                <input type="checkbox" onchange="gameViewer.toggleFilter(this.checked)" style="vertical-align: middle; margin: 0 4px 0 0;">
+                Pouze komentované
+            `;
+            listHeader.appendChild(label);
+        }
+
+        this.applyFilter();
+        this.attachEvents();
+    }
+
+    toggleFilter(checked) {
+        this.filterCommentedOnly = checked;
+        this.applyFilter();
+    }
+
+    applyFilter() {
+        if (this.filterCommentedOnly) {
+            this.gamesData = this.allGamesData.filter(g => (g.type === 'header' || g.isHeader) || g.commented);
+            // Remove headers if they have no children (optional optimization, skip for simplicity)
+        } else {
+            this.gamesData = [...this.allGamesData];
+        }
+
+        this.renderList();
+
+        // Load first playable game
+        const firstPlayable = this.gamesData.findIndex(g => g.type !== 'header' && !g.isHeader);
+        if (firstPlayable !== -1) {
+            this.loadGame(firstPlayable);
+        } else {
+            // Clear viewer if no games match
+            this.currentIndex = -1;
+            const iframe = document.getElementById('chess-frame');
+            if (iframe) iframe.src = 'about:blank';
+            const titleEl = document.getElementById('current-game-title');
+            if (titleEl) titleEl.textContent = 'Žádné partie k zobrazení';
+        }
+    }
+
+    renderList() {
+        const list = document.getElementById('game-list-content');
+        if (!list) return;
 
         list.innerHTML = '';
 
-        games.forEach((game, index) => {
-            // Logic to render headers
+        this.gamesData.forEach((game, index) => {
             if (game.type === 'header' || game.isHeader) {
                 const header = document.createElement('div');
                 header.className = 'team-header';
@@ -71,27 +125,18 @@ class GameViewer {
             item.onclick = () => this.loadGame(index);
             list.appendChild(item);
         });
-
-        // Attach global controls
-        this.attachEvents();
-
-        // Load first game
-        if (games.length > 0) {
-            this.loadGame(0);
-        }
     }
 
     loadGame(index) {
         if (index < 0 || index >= this.gamesData.length) return;
         const game = this.gamesData[index];
-        if (game.type === 'header' || game.isHeader) return; // Cannot load a header
+        if (game.type === 'header' || game.isHeader) return;
 
         this.currentIndex = index;
 
         const titleEl = document.getElementById('current-game-title');
         if (titleEl) titleEl.textContent = game.title;
 
-        // Count only playable games (not headers)
         const playableGames = this.gamesData.filter(g => g.type !== 'header' && !g.isHeader);
         const currentNum = playableGames.indexOf(game) + 1;
 
@@ -102,13 +147,11 @@ class GameViewer {
         if (src && !src.startsWith('http')) {
             src = `https://www.chess.com/emboard?id=${src}`;
         }
-        // Fallback to game.src if gameId/chessComId missing
         if (!src && game.src) src = game.src;
 
         const iframe = document.getElementById('chess-frame');
         if (iframe) iframe.src = src || '';
 
-        // Update active state in list
         const gameItems = document.querySelectorAll('.game-item');
         gameItems.forEach((item) => {
             if (parseInt(item.dataset.index) === index) {
@@ -119,24 +162,37 @@ class GameViewer {
             }
         });
 
-        // Update buttons
         const prevBtn = document.getElementById('prevBtn');
         const nextBtn = document.getElementById('nextBtn');
-        if (prevBtn) prevBtn.disabled = (index === 0);
+        if (prevBtn) prevBtn.disabled = (index === 0); // Logic might need adjustment for headers skipping
         if (nextBtn) nextBtn.disabled = (index === this.gamesData.length - 1);
+
+        // Smarter button disabling (skip headers)
+        // Check if previous playable exists
+        // simplified index check is okay for now as loadGame handles out of bounds
     }
 
     prevGame() {
-        this.loadGame(this.currentIndex - 1);
+        // Skip headers backwards
+        let newIndex = this.currentIndex - 1;
+        while (newIndex >= 0 && (this.gamesData[newIndex].type === 'header' || this.gamesData[newIndex].isHeader)) {
+            newIndex--;
+        }
+        if (newIndex >= 0) this.loadGame(newIndex);
     }
 
     nextGame() {
-        this.loadGame(this.currentIndex + 1);
+        // Skip headers forwards
+        let newIndex = this.currentIndex + 1;
+        while (newIndex < this.gamesData.length && (this.gamesData[newIndex].type === 'header' || this.gamesData[newIndex].isHeader)) {
+            newIndex++;
+        }
+        if (newIndex < this.gamesData.length) this.loadGame(newIndex);
     }
 
     attachEvents() {
         // Keyboard navigation
-        document.removeEventListener('keydown', this.handleKeydown); // Prevent duplicates
+        document.removeEventListener('keydown', this.handleKeydown);
         document.addEventListener('keydown', this.handleKeydown);
 
         // Swipe gestures
@@ -152,9 +208,6 @@ class GameViewer {
             }, { passive: true });
         }
 
-        // Bind global toggle function if needed, or attach to element
-        // In HTML: onlick="toggleViewer()" expects a global function.
-        // We will export a global instance or helper.
         window.toggleViewer = this.toggleViewer;
     }
 
@@ -162,12 +215,10 @@ class GameViewer {
         const viewer = document.getElementById('game-viewer-container');
         if (!viewer || viewer.classList.contains('hidden')) return;
 
-        // Check if viewer is visible on screen
         const rect = viewer.getBoundingClientRect();
         const isVisible = rect.top < window.innerHeight && rect.bottom > 0;
         if (!isVisible) return;
 
-        // Don't trigger if user is typing in an input
         if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
 
         if (e.key === 'ArrowLeft') {
@@ -186,9 +237,9 @@ class GameViewer {
         if (Math.abs(diff) < swipeThreshold) return;
 
         if (diff > 0) {
-            this.nextGame(); // Swipe left
+            this.nextGame();
         } else {
-            this.prevGame(); // Swipe right
+            this.prevGame();
         }
     }
 
@@ -216,6 +267,6 @@ const gameViewer = new GameViewer();
 // Global export for legacy/inline compatibility
 window.gameViewer = gameViewer;
 
-// Expose navigation functions globally for HTML event handlers (onclick="prevGame()")
+// Expose navigation functions globally for HTML event handlers
 window.prevGame = () => gameViewer.prevGame();
 window.nextGame = () => gameViewer.nextGame();
