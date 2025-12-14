@@ -36,11 +36,16 @@ router.get('/', async (req, res) => {
                     }
                 }
             },
-            orderBy: {
-                news: {
-                    publishedDate: 'desc'
+            orderBy: [
+                {
+                    news: {
+                        publishedDate: 'desc'
+                    }
+                },
+                {
+                    positionOrder: 'asc'
                 }
-            },
+            ],
             take: 200 // Reasonable limit for all games in a section
         });
 
