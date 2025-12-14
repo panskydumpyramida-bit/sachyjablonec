@@ -49,16 +49,22 @@ class GameViewer {
 
         // Add filter toggle if not present
         if (listHeader && !document.getElementById('filterCommentedToggle')) {
+            // Ensure header is flex container
+            listHeader.style.display = 'flex';
+            listHeader.style.justifyContent = 'space-between';
+            listHeader.style.alignItems = 'center';
+
             const label = document.createElement('label');
             label.id = 'filterCommentedToggle';
-            label.style.float = 'right';
             label.style.cursor = 'pointer';
             label.style.fontSize = '0.75rem';
             label.style.textTransform = 'none';
             label.style.color = 'var(--viewer-accent)';
-            label.style.marginTop = '-2px';
+            label.style.display = 'flex';
+            label.style.alignItems = 'center';
+            label.style.gap = '4px';
             label.innerHTML = `
-                <input type="checkbox" onchange="gameViewer.toggleFilter(this.checked)" style="vertical-align: middle; margin: 0 4px 0 0;">
+                <input type="checkbox" onchange="gameViewer.toggleFilter(this.checked)" style="margin: 0;">
                 Pouze komentované
             `;
             listHeader.appendChild(label);
