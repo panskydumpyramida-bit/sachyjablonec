@@ -17,6 +17,10 @@ echo "📦 Baselining existing migrations..."
 echo "🔄 Deploying pending migrations..."
 npx prisma migrate deploy || { echo "❌ Migration failed, stopping startup."; exit 1; }
 
-# 3. Start the application
+# 3. Sync existing games-json to Game table (for isCommented flag)
+echo "👾 Syncing games from Articles..."
+npm run sync-games || echo "⚠️ Game sync failed, but continuing..."
+
+# 4. Start the application
 echo "🟢 Starting application..."
 exec npm start
