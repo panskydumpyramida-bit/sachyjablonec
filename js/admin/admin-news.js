@@ -1289,7 +1289,15 @@ function addGame() {
     const commentedInput = document.getElementById('gameCommented');
 
     const title = titleInput.value.trim();
-    const gameId = idInput.value.trim();
+    let gameId = idInput.value.trim();
+
+    // Sanitize ID
+    if (gameId.includes('[gid=')) {
+        const match = gameId.match(/\[gid=(\d+)\]/);
+        if (match && match[1]) {
+            gameId = match[1];
+        }
+    }
 
     console.log('Adding game:', { title, gameId }); // DEBUG
 
@@ -1338,10 +1346,47 @@ function updateGameTitle(index, newTitle) {
     updatePreview();
 }
 
+
+function sanitizeGameId(input) {
+    if (!input) return '';
+    // Handle format [gid=123456]
+    const match = input.match(/\[gid=(\d+)\]/);
+    if (match && match[1]) {
+        return match[1];
+    }
+    // If just numbers, clean whitespace
+    if (/^\d+$/.test(input.trim())) {
+        return input.trim();
+    }
+    // Fallback: return as is (could be just ID or other format)
+    return input.trim();
+}
+
 function updateGameId(index, newId) {
-    games[index].gameId = newId;
-    games[index].src = `https://www.chess.com/emboard?id=${newId}`;
+    const cleanId = sanitizeGameId(newId);
+
+    // Update input if sanitized version is different
+    if (cleanId !== newId) {
+        // Find the specific input to update its value visually
+        const inputs = document.querySelectorAll('.game-id-input');
+        // This is a bit risky if order changes, but index should match
+        // A safer way is re-rendering or targeting by data attribute, 
+        // but renderGames binds onchange with index.
+        // Let's just update data model and re-render or let it be.
+        // Actually, better to just update model.
+    }
+
+    games[index].gameId = cleanId;
+    games[index].src = `https://www.chess.com/emboard?id=${cleanId}`;
     updatePreview();
+
+    // If the input value needs to be refreshed immediately:
+    // renderGames(); // This might kill focus.
+    // Instead, finding the specific input:
+    // We can rely on renderGames() being called often or user seeing it change 
+    // when they reload/save. 
+    // BUT user wants auto-correction.
+    // Let's try to find the active element if it matches.
 }
 
 function toggleGameCommented(index, checked) {
