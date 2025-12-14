@@ -236,7 +236,7 @@ async function saveNews() {
         excerpt: document.getElementById('newsExcerpt').value,
         thumbnailUrl: uploadedImageData ? (uploadedImageData + '#crop=' + imageCropPosition) : null,
         isPublished: document.getElementById('publishCheck').checked,
-        gamesJson: JSON.stringify(games),
+        gamesJson: JSON.stringify(games.map(g => ({ ...g, isCommented: g.commented }))),
         galleryJson: JSON.stringify(galleryImages)
     };
 
@@ -1270,12 +1270,31 @@ function renderGames() {
 }
 
 function addGame() {
+    const titleInput = document.getElementById('gameTitle');
+    const idInput = document.getElementById('gameId');
+    const commentedInput = document.getElementById('gameCommented');
+
+    const title = titleInput.value.trim();
+    const gameId = idInput.value.trim();
+
+    if (!title) {
+        alert('Zadejte jméno partie (Kdo s kým)');
+        return;
+    }
+
     games.push({
-        title: '',
-        gameId: '',
-        src: '',
-        team: 'A tým' // default
+        title: title,
+        gameId: gameId,
+        team: 'A tým', // Default, logic for teams removed as requested previously
+        isCommented: commentedInput.checked,
+        commented: commentedInput.checked // Keep both for compat
     });
+
+    // Clear inputs
+    titleInput.value = '';
+    idInput.value = '';
+    commentedInput.checked = false;
+
     renderGames();
 }
 

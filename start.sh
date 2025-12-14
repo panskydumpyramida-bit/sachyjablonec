@@ -9,7 +9,7 @@ echo "🚀 Starting deployment script..."
 # We use '|| true' to suppress errors if they are already marked applied (e.g. on second run)
 echo "📦 Baselining existing migrations..."
 npx prisma migrate resolve --applied 20251210194447_init_postgres_with_puzzle_racer || echo "⚠️ Migration 1 resolution skipped (already applied?)"
-npx prisma migrate resolve --applied 20251212122551_add_missing_tables || echo "⚠️ Migration 2 resolution skipped (already applied?)"
+
 npx prisma migrate resolve --applied 20251212143558_init_puzzle_modes || echo "⚠️ Migration 3 resolution skipped (already applied?)"
 
 # 2. Deploy any NEW migrations (this should run the puzzle_modes migration)
