@@ -97,7 +97,7 @@ const SJLightbox = (function () {
 
         // Podpora pro různé formáty dat (objekt s url/altText nebo přímo string URL)
         const imgUrl = typeof img === 'string' ? img : img.url;
-        const imgAlt = typeof img === 'string' ? '' : (img.altText || img.alt || '');
+        const imgAlt = typeof img === 'string' ? '' : (img.caption || img.altText || img.alt || '');
 
         imgEl.src = imgUrl;
         imgEl.alt = imgAlt || 'Obrázek z galerie';
