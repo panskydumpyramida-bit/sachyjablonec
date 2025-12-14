@@ -8,7 +8,7 @@ echo "🚀 Starting deployment script..."
 # 1. Baseline the migrations that are ALREADY in the database structure
 # We use '|| true' to suppress errors if they are already marked applied (e.g. on second run)
 echo "📦 Baselining existing migrations..."
-npx prisma migrate resolve --applied 20251210194447_init_postgres_with_puzzle_racer || echo "⚠️ Migration 1 resolution skipped (already applied?)"
+
 
 
 
