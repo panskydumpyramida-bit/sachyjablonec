@@ -144,11 +144,11 @@
 }
 
 .iframe-container {
+    max-width: 800px;
+    aspect-ratio: 15/8;
+    /* Responsive scaling (approx 800x426) */
     width: 100%;
-    max-width: 800px;
-    max-width: 800px;
-    /* aspect-ratio: 16/9; Removed to allow tighter height */
-    height: 425px;
+    /* height: 425px; Removed in favor of aspect-ratio */
     background-color: #000;
     border-radius: 0.75rem;
     overflow: hidden;
