@@ -11,7 +11,8 @@
     "db:migrate": "prisma migrate dev",
     "db:push": "prisma db push",
     "db:studio": "prisma studio",
-    "db:seed": "node src/utils/seed.js"
+    "db:seed": "node src/utils/seed.js",
+    "sync-games": "node scripts/sync_all_games.js"
   },
   "keywords": [
     "chess",
