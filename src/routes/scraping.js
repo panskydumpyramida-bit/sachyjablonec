@@ -31,43 +31,53 @@ router.get('/chess-results', async (req, res) => {
         const html = await response.text();
         const players = [];
 
-        // Split by TR to isolate rows
-        const rows = html.split('<tr');
+        // Regex to match TRs (case insensitive, multiline dots)
+        // We use a simple loop over matches to be safer
+        const rowRegex = /<tr[^>]*>([\s\S]*?)<\/tr>/gi;
+        let match;
 
-        // Column mapping for Start List (art=1? No, default start list)
-        // Adjust indices based on observation:
-        // 0: Rank (class CRc)
-        // 1: Empty
-        // 2: Name (class CR)
-        // 3: FideID
-        // 4: FED (class CR)
-        // 5: Rtg (class CRr)
-        // 6: Club (class CR)
+        while ((match = rowRegex.exec(html)) !== null) {
+            const rowContent = match[1];
 
-        rows.forEach(row => {
-            // Check for content rows (CRg1/CRg2) - Case insensitive check for safety
-            if (!row.match(/class=["']?CRg/i)) return;
+            // Check if it's a data row (contains CRg cells)
+            // It usually has class="CRg..." in the TR tag, but we already stripped that.
+            // So we check if inner content has CRc/CR classes or looks like data
+            // Actually, we can check the original full match if we needed, but checking content is fine.
+            // Data rows have multiple TDs.
 
-            const cells = row.split('</td>');
-            if (cells.length < 5) return;
+            const cellRegex = /<td[^>]*>([\s\S]*?)<\/td>/gi;
+            const cells = [];
+            let cellMatch;
+            while ((cellMatch = cellRegex.exec(rowContent)) !== null) {
+                cells.push(cellMatch[1]);
+            }
 
-            // Extract Name (Cell 2)
-            // Look for link content or just cell content
-            const cell2 = cells[2] || '';
-            let name = clean(cell2);
+            if (cells.length < 5) continue;
 
-            // Extract Rank (Cell 0)
-            let rank = clean(cells[0] || '');
+            // Mapping based on observation:
+            // 0: Rank
+            // 1: Empty
+            // 2: Name
+            // 3: FideID
+            // 4: FED
+            // 5: Rtg
+            // 6: Club
 
-            // Extract Elo (Cell 5)
-            let elo = clean(cells[5] || '');
-            if (!elo.match(/\d+/)) elo = ''; // clear if not number
+            // Verify if it is a player row: Name cell should not be empty
+            const nameRaw = cells[2];
+            if (!nameRaw) continue;
 
-            // Extract Club (Cell 6)
-            let club = clean(cells[6] || '');
+            const name = clean(nameRaw);
+            const rank = clean(cells[0]);
 
-            // Extract FED (Cell 4)
-            let fed = clean(cells[4] || '');
+            let elo = clean(cells[5]);
+            if (!elo.match(/^\d+$/)) elo = ''; // MUST be digits
+
+            const club = clean(cells[6]);
+            const fed = clean(cells[4]);
+
+            // Filter out header rows (where rank is "Čís." or similar)
+            if (!rank.match(/^\d+$/)) continue;
 
             if (name) {
                 players.push({
@@ -78,7 +88,7 @@ router.get('/chess-results', async (req, res) => {
                     fed
                 });
             }
-        });
+        }
 
         res.json({ players, count: players.length });
 
