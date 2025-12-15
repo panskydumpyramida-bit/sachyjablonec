@@ -354,17 +354,28 @@
                 }
             </style>
 
-            <div style="text-align: center; margin-top: 2rem;">
-                <p style="color: var(--text-muted); font-style: italic; margin-bottom: 0.5rem;">
-                    <i class="fa-solid fa-file-lines"></i> Startovní listina z Chess-Results bude přidána brzy.
-                </p>
-                <!--
-                <p style="font-size: 0.9em;">
-                    <i class="fa-solid fa-globe" style="color: var(--primary-color);"></i>
-                    Výsledky online na <a href="https://chess-results.com" target="_blank"
-                        style="color: var(--primary-color);">chess-results.com</a>
-                </p>
-                -->
+            <div style="max-width: 600px; margin: 2rem auto;">
+                <details id="crDetails" open
+                    style="background: rgba(255, 255, 255, 0.03); border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.1); overflow: hidden;">
+                    <summary
+                        style="padding: 1rem; cursor: pointer; font-weight: 600; list-style: none; display: flex; align-items: center; justify-content: space-between; user-select: none;">
+                        <span><i class="fa-solid fa-list-ol"
+                                style="color: var(--primary-color); margin-right: 0.5rem;"></i>
+                            Oficiální startovní listina (Chess-Results) <span id="crCountBadge"
+                                style="font-size: 0.8em; background: rgba(255,255,255,0.1); padding: 2px 8px; border-radius: 12px; margin-left: 0.5rem;">0</span></span>
+                        <i class="fa-solid fa-chevron-down" style="font-size: 0.8em; transition: transform 0.3s;"></i>
+                    </summary>
+                    <div id="crList" style="padding: 0 1rem 1rem 1rem; max-height: 500px; overflow-y: auto;">
+                        <p style="text-align: center; color: var(--text-muted); padding: 1rem;"><i
+                                class="fa-solid fa-circle-notch fa-spin"></i> Načítám data z Chess-Results...</p>
+                    </div>
+                    <div
+                        style="padding: 0.5rem 1rem; background: rgba(0,0,0,0.2); font-size: 0.8rem; text-align: right;">
+                        <a href="https://chess-results.com/tnr1317368.aspx?lan=5&art=0" target="_blank"
+                            style="color: var(--text-muted);">Zobrazit na Chess-Results <i
+                                class="fa-solid fa-external-link-alt"></i></a>
+                    </div>
+                </details>
             </div>
 
             <div style="text-align: center; margin-top: 3rem; margin-bottom: 3rem;">
@@ -513,11 +524,48 @@
             }
         }
 
+        async function loadChessResults() {
+            const listEl = document.getElementById('crList');
+            const badgeEl = document.getElementById('crCountBadge');
+            const url = 'https://s3.chess-results.com/tnr1317368.aspx?lan=5&SNode=S0'; // Vánnoční turnaj 2025
+
+            try {
+                const res = await fetch(`${API_URL}/scraping/chess-results?url=${encodeURIComponent(url)}`);
+                if (!res.ok) throw new Error('Failed to load');
+                const data = await res.json();
+
+                badgeEl.textContent = data.count || 0;
+
+                if (data.players && data.players.length > 0) {
+                    listEl.innerHTML = data.players.map(p => `
+                        <div class="participant-item" style="display: grid; grid-template-columns: 30px 1fr 60px; gap: 10px; align-items: center;">
+                            <span style="color: var(--text-muted); font-size: 0.9em;">${p.rank}.</span>
+                            <div>
+                                <div style="font-weight: 500;">${p.name}</div>
+                                <div style="font-size: 0.8em; color: var(--text-muted);">${p.club}</div>
+                            </div>
+                            <div style="text-align: right; font-family: monospace; color: var(--primary-color);">${p.elo}</div>
+                        </div>
+                    `).join('');
+                } else {
+                    listEl.innerHTML = '<p style="text-align: center; color: var(--text-muted); padding: 1rem;">Žádní hráči nenalezeni.</p>';
+                }
+
+            } catch (e) {
+                console.error(e);
+                listEl.innerHTML = '<p style="text-align: center; color: #ef4444; padding: 1rem;">Nepodařilo se načíst startovní listinu.</p>';
+            }
+        }
+
         // Run on load
         if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', checkCapacity);
+            document.addEventListener('DOMContentLoaded', () => {
+                checkCapacity();
+                loadChessResults();
+            });
         } else {
             checkCapacity();
+            loadChessResults();
         }
     </script>
 </body>
