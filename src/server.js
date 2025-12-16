@@ -789,7 +789,10 @@ async function updateStandings(competitions = null) {
             let standings = [];
             let competitionMatches = []; // Store full schedule
 
-            if (comp.type === 'chess-results') {
+            // Auto-detect type from URL (more reliable than DB field)
+            const isChessResults = comp.url && comp.url.includes('chess-results.com');
+
+            if (isChessResults) {
                 // 1. Fetch Schedule first (art=2)
                 competitionMatches = await scrapeCompetitionMatches(comp.url);
 
