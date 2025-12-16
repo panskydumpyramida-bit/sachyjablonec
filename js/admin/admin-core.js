@@ -94,16 +94,35 @@ function showAdmin() {
     document.getElementById('loginPage').classList.add('hidden');
     document.getElementById('adminPanel').classList.remove('hidden');
 
-    // Show tabs based on role
-    if (['admin', 'superadmin'].includes(currentUser.role)) {
-        const galleryBtn = document.getElementById('galleryTab');
-        if (galleryBtn) galleryBtn.style.display = 'inline-block';
+    // Role-based tab visibility
+    // Role hierarchy: USER < ADMIN < SUPERADMIN (uppercase from DB enum)
+    const role = (currentUser?.role || 'USER').toUpperCase();
+    const isAdmin = role === 'ADMIN' || role === 'SUPERADMIN';
+    const isSuperadmin = role === 'SUPERADMIN';
 
-        const usersBtn = document.getElementById('usersTab');
-        if (usersBtn) {
-            usersBtn.classList.remove('hidden');
-            usersBtn.style.display = 'inline-block';
+    // Tabs visible to ADMIN and SUPERADMIN
+    const adminTabs = ['galleryTab', 'usersTab', 'competitionsTab'];
+    adminTabs.forEach(tabId => {
+        const tab = document.getElementById(tabId);
+        if (tab) {
+            tab.style.display = isAdmin ? 'inline-flex' : 'none';
+            tab.classList.toggle('hidden', !isAdmin);
         }
+    });
+
+    // SUPERADMIN-only sections (backup, dangerous operations)
+    // These are controlled via backend RBAC, but we can hide UI hints
+    const superadminElements = document.querySelectorAll('[data-role="superadmin"]');
+    superadminElements.forEach(el => {
+        el.style.display = isSuperadmin ? '' : 'none';
+    });
+
+    // Show role badge in user info
+    const userInfo = document.getElementById('userInfo');
+    if (userInfo) {
+        const roleBadge = role === 'SUPERADMIN' ? '👑' : role === 'ADMIN' ? '⚙️' : '👤';
+        userInfo.textContent = `${roleBadge} ${currentUser.username}`;
+        userInfo.title = `Role: ${role}`;
     }
 
     loadDashboard();
@@ -181,7 +200,7 @@ async function loadDashboard() {
                 <td>
                     <button class="action-btn btn-edit" onclick="editNews(${item.id})"><i class="fa-solid fa-pen"></i></button>
                     <button class="action-btn btn-publish" onclick="togglePublish(${item.id})" title="${item.isPublished ? 'Skrýt' : 'Publikovat'}"><i class="fa-solid fa-${item.isPublished ? 'eye-slash' : 'eye'}"></i></button>
-                    ${['admin', 'superadmin'].includes(currentUser.role) ? `<button class="action-btn btn-delete" onclick="deleteNews(${item.id})"><i class="fa-solid fa-trash"></i></button>` : ''}
+                    ${['ADMIN', 'SUPERADMIN'].includes((currentUser?.role || '').toUpperCase()) ? `<button class="action-btn btn-delete" onclick="deleteNews(${item.id})"><i class="fa-solid fa-trash"></i></button>` : ''}
                 </td>
             </tr>
         `).join('');
