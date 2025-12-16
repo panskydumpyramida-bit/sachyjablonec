@@ -168,6 +168,10 @@ import { clean, isElo, simplify, isMatch, fetchWithHeaders } from './utils/helpe
 // =====================================================
 // NOTE: Helper functions (clean, isElo, simplify, isMatch, fetchWithHeaders)
 // have been moved to src/utils/helpers.js
+// =====================================================// =====================================================
+// TODO: These scraping functions should be moved to src/services/scrapingService.js
+// Functions: scrapeMatchDetails, scrapeTeamRoster, scrapeCompetitionMatches
+// Blocked by: Internal duplicate definitions of simplify/isMatch (should use imports)
 // =====================================================
 
 // Helper to scrape match details (art=3)
