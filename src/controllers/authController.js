@@ -28,7 +28,7 @@ export const register = async (req, res) => {
                 username,
                 email,
                 passwordHash,
-                role: 'user' // SECURITY FIX: Default to 'user', not 'admin'
+                role: 'USER' // SECURITY FIX: Default to 'USER', not 'ADMIN'
             }
         });
 
@@ -132,7 +132,7 @@ export const fixAdmins = async (req, res) => {
                         username: u.username,
                         email: u.email,
                         passwordHash,
-                        role: 'admin'
+                        role: 'ADMIN'
                     }
                 });
                 results.push(`Created user ${u.username}`);
