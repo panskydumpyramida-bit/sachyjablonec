@@ -162,88 +162,13 @@ app.use('/api/games', gamesRoutes);
 app.use('/api/viewer-games', apiGamesRoutes);
 app.use('/api/scraping', scrapingRoutes);
 
-// Helper: Clean HTML text
-const clean = (s) => {
-    if (!s) return '';
-    // Replace tags with space to prevent merging text
-    let txt = s.replace(/<[^>]*>/g, ' ').trim();
-    txt = txt.replace(/&nbsp;/g, ' ')
-        .replace(/&amp;/g, '&')
-        .replace(/&lt;/g, '<')
-        .replace(/&gt;/g, '>')
-        .replace(/&quot;/g, '"')
-        .replace(/&frac12;/g, '½')
-        .replace(/&#(\d+);/g, (match, dec) => String.fromCharCode(dec));
-    // Collapse multiple spaces
-    return txt.replace(/\s+/g, ' ').trim();
-};
+// Import helpers from utils
+import { clean, isElo, simplify, isMatch, fetchWithHeaders } from './utils/helpers.js';
 
-const isElo = (s) => {
-    if (!s) return false;
-    // Checks if string is a number (Elo) or standard placeholders like "-" or empty
-    // But we use this to select PREFERRED column, so we want "looks like Elo"
-    return /^\d{3,4}$/.test(s) || s === '-';
-};
-
-// Helper to fetch with headers
-const fetchWithHeaders = (url) => fetch(url, {
-    headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
-    }
-});
-
-// Helper for fuzzy matching
-const simplify = (str) => {
-    return str.toLowerCase()
-        .replace(/n\.n\./g, '')
-        .replace(/["']/g, '')
-        // Removed aggressive suffix stripping to distinguish teams like JR2 vs L
-        .replace(/\s+/g, ' ')
-        .trim();
-};
-
-const isMatch = (team, rowText) => {
-    const simpleTeam = simplify(team);
-    const rowLower = rowText.toLowerCase();
-
-    // 1. Direct weak match
-    if (rowLower.includes(simpleTeam)) return true;
-
-    const words = simpleTeam.split(' ');
-
-    // Critical Fix: Detect short identifiers (like "A", "B", "C", "D", "E") that differentiate teams
-    // Look for single letters at the end of the team name
-    const teamParts = team.replace(/["']/g, '').trim().split(/\s+/);
-    const lastPart = teamParts[teamParts.length - 1];
-
-    // If team ends with a single letter identifier (e.g. "A"), ensuring the row contains it is strict
-    // But we must be careful not to match "a" inside other words.
-    // We check if the last word is a single letter or "JR1"/"L" etc. and require it.
-    if (lastPart && (lastPart.length === 1 || lastPart.match(/^(A|B|C|D|E|F|G|L|JR\d+)$/i))) {
-        const identifier = lastPart.toLowerCase();
-        // Check if identifier exists as a minimal word in rowText (with boundaries)
-        // e.g. "a" must be " a " or at end/start. 
-        // We use regex for this identifier check
-        const idRegex = new RegExp(`(^|\\s|["'])${identifier}($|\\s|["'])`, 'i');
-        if (!idRegex.test(rowLower)) {
-            // Identifier missing in row -> mismatch
-            return false;
-        }
-    }
-
-    // 2. Keyword match (if > 60% of LONG keywords match)
-    const longWords = words.filter(w => w.length > 2);
-
-    // Also enforce digit-containing words (like JR2) if they were not caught by above logic
-    const digitWord = longWords.find(w => /\d/.test(w));
-    if (digitWord && !rowLower.includes(digitWord)) return false;
-
-    // If no long words (e.g. extremly short name), fall back to strict inclusion
-    if (longWords.length === 0) return rowLower.includes(simpleTeam);
-
-    const matches = longWords.filter(w => rowLower.includes(w));
-    return matches.length >= (longWords.length * 0.6);
-};
+// =====================================================
+// NOTE: Helper functions (clean, isElo, simplify, isMatch, fetchWithHeaders)
+// have been moved to src/utils/helpers.js
+// =====================================================
 
 // Helper to scrape match details (art=3)
 async function scrapeMatchDetails(compUrl, round, homeTeam, awayTeam) {
