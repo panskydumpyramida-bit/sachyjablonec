@@ -883,7 +883,13 @@ async function updateStandings(competitions = null) {
                 }
 
             } else {
-                // chess.cz logic
+                // =====================================================
+                // LEGACY: chess.cz parser (nepoužívaný, nefunkční)
+                // Všechny soutěže by měly mít URL z chess-results.com
+                // Tento kód je zde pouze pro zpětnou kompatibilitu
+                // a pravděpodobně nikdy nefungoval správně.
+                // =====================================================
+                console.warn(`⚠️ LEGACY: Using chess.cz parser for ${comp.name} - this is deprecated!`);
                 const response = await fetch(`https://www.chess.cz/soutez/${comp.id}/`);
                 const html = await response.text();
                 const lines = html.split('\n');
