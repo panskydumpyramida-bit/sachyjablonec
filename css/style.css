@@ -617,6 +617,7 @@ footer {
         align-self: flex-end;
     }
 }
+
 /* Header Actions responsive layout */
 .header-actions {
     display: flex;
@@ -632,13 +633,14 @@ footer {
         flex-direction: column;
         align-items: stretch;
     }
-    
+
     .header-actions .section-title {
         text-align: center;
         width: 100%;
-        margin-bottom: 0.5rem !important; /* Force spacing on mobile */
+        margin-bottom: 0.5rem !important;
+        /* Force spacing on mobile */
     }
-    
+
     .header-actions .read-more {
         justify-content: center;
         width: 100%;
@@ -809,5 +811,92 @@ footer {
 
     .sj-lightbox-content img {
         max-height: 70vh;
+    }
+}
+
+/* ==========================================
+   Mobile Responsivity Fixes (2025-12-17)
+   Fix: Horizontal scrolling on mobile devices
+   ========================================== */
+
+@media (max-width: 768px) {
+
+    /* Prevent horizontal scrolling */
+    html,
+    body {
+        overflow-x: hidden;
+        max-width: 100vw;
+    }
+
+    /* Force cards to fit within viewport */
+    .card-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+        padding: 0 0.5rem;
+    }
+
+    /* Container padding reduction */
+    .container {
+        padding: 0 1rem;
+    }
+
+    /* Section title size reduction */
+    .section-title {
+        font-size: 1.75rem;
+        margin-bottom: 2rem;
+    }
+
+    /* Card content adjustments */
+    .card-content {
+        padding: 1rem;
+    }
+
+    /* Ensure any wide elements don't overflow */
+    table,
+    pre,
+    code,
+    iframe,
+    .table-wrapper {
+        max-width: 100%;
+        overflow-x: auto;
+        display: block;
+    }
+
+    /* Competition cards on teams.html */
+    .competition-card,
+    .standings-card,
+    [class*="standings"],
+    [class*="competition"] {
+        max-width: 100%;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+}
+
+@media (max-width: 480px) {
+
+    /* Extra small screens */
+    .section-title {
+        font-size: 1.5rem;
+    }
+
+    .hero-content h1 {
+        font-size: 2rem;
+    }
+
+    .hero-content p {
+        font-size: 1.1rem;
+    }
+
+    .card-content h3,
+    .card-title {
+        font-size: 1.1rem;
+    }
+
+    /* Reduce button sizes */
+    .btn,
+    .btn-secondary {
+        padding: 0.6rem 1.2rem;
+        font-size: 0.9rem;
     }
 }
