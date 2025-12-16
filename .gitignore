@@ -28,3 +28,14 @@ uploads/
 data/competitions.json
 data/registrations.json
 data/standings.json
+
+# Debug and test files
+debug*.js
+debug*.html
+test-*.js
+*_dump.html
+*_dump.sql
+*.code-workspace
+
+# Agent/local tooling
+.agent/
