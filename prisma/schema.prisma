@@ -126,6 +126,7 @@ model Competition {
   url       String
   category  String
   chessczUrl String?  @map("chesscz_url")
+  sortOrder  Int      @default(0) @map("sort_order")
   active    Boolean  @default(true)
   createdAt DateTime @default(now()) @map("created_at")
   

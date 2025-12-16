@@ -1033,7 +1033,12 @@ app.get('/api/standings', async (req, res) => {
         const competitions = await prisma.competition.findMany({
             include: {
                 standings: true
-            }
+            },
+            orderBy: [
+                { category: 'asc' },
+                { sortOrder: 'asc' },
+                { name: 'asc' }
+            ]
         });
 
         // Transform to expected format: { standings: [ { competitionId, name, standings: [...] } ] }
@@ -1045,6 +1050,7 @@ app.get('/api/standings', async (req, res) => {
             name: comp.name,
             url: comp.url,
             category: comp.category,
+            sortOrder: comp.sortOrder,
             updatedAt: comp.updatedAt, // Use competition's updatedAt
             standings: comp.standings.map(s => ({
                 rank: s.rank,
