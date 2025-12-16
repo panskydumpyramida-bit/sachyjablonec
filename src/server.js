@@ -9,6 +9,7 @@ import { existsSync, writeFileSync } from 'fs'; // Import sync methods separatel
 // Import routes
 import authRoutes from './routes/auth.js';
 import { authMiddleware } from './middleware/auth.js';
+import { requireAdmin, requireSuperadmin } from './middleware/rbac.js';
 import newsRoutes from './routes/news.js';
 import reportsRoutes from './routes/reports.js';
 import imagesRoutes from './routes/images.js';
@@ -1323,7 +1324,7 @@ const seedDatabase = async () => {
 };
 
 // --- Backup Endpoint ---
-app.get('/api/admin/backup', authMiddleware, async (req, res) => {
+app.get('/api/admin/backup', authMiddleware, requireSuperadmin, async (req, res) => {
     try {
         console.log('Starting database backup...');
 
@@ -1382,7 +1383,7 @@ app.get('/api/admin/backup', authMiddleware, async (req, res) => {
 });
 
 // Manual Migration Endpoint (Protected)
-app.post('/api/admin/migrate', authMiddleware, async (req, res) => {
+app.post('/api/admin/migrate', authMiddleware, requireSuperadmin, async (req, res) => {
     if (req.user.role !== 'superadmin') return res.status(403).json({ error: 'Unauthorized' });
     try {
         const { exec } = await import('child_process');

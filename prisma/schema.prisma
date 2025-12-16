@@ -9,12 +9,19 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// Role hierarchy: USER < ADMIN < SUPERADMIN
+enum Role {
+  USER
+  ADMIN
+  SUPERADMIN
+}
+
 model User {
   id           Int      @id @default(autoincrement())
   username     String   @unique
   email        String   @unique
   passwordHash String   @map("password_hash")
-  role         String   @default("admin")
+  role         Role     @default(USER)
   createdAt    DateTime @default(now()) @map("created_at")
   
   news         News[]
