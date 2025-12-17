@@ -21,17 +21,28 @@ Plán budoucího vývoje webu sachyjablonec.cz.
 
 3. **Chybí role superadmin**
    - Všichni admini mají stejná práva
-   - **Řešení:** Přidat hierarchii: `user` → `admin` → `superadmin`
+1.  **`/api/auth/fix-admins` - Exposed bez autentizace**
+    -   Endpoint obsahuje hardcoded hesla (`sachy2025`)
+    -   Kdokoliv může vytvořit admin účty
+    -   **Řešení:** Odstranit nebo chránit auth middleware
 
-4. **Rate limiting**
-   - Žádná ochrana proti brute-force útokům na login
-   - **Řešení:** Přidat `express-rate-limit` na auth endpointy
+2.  **Registrace vytváří adminy automaticky**
+    -   `role: 'admin'` je default při registraci
+    -   **Řešení:** Změnit default na `'user'`, admin práva pouze přes superadmina
+
+3.  **Chybí role superadmin**
+    -   Všichni admini mají stejná práva
+    -   **Řešení:** Přidat hierarchii: `user` → `admin` → `superadmin`
+
+4.  **Rate limiting**
+    -   Žádná ochrana proti brute-force útokům na login
+    -   **Řešení:** Přidat `express-rate-limit` na auth endpointy
 
 ### Plánované změny
 - [x] Odstranit nebo zabezpečit `/fix-admins` endpoint
 - [x] Změnit default role na `'user'`
-- [ ] Přidat role `superadmin` do DB schématu
-- [ ] Implementovat role-based access control (RBAC)
+- [x] Přidat role `superadmin` do DB schématu
+- [x] Implementovat role-based access control (RBAC)
 - [x] Přidat rate limiting na `/api/auth/*`
 - [ ] Přidat rate limiting na Lichess API proxy
 
@@ -99,18 +110,18 @@ Refaktoring monolitického `admin.html` (3800+ řádků) na JS moduly.
 
 ---
 
-## 📱 Priorita 3: Mobilní optimalizace
+## ✅ Priorita 3: Mobilní optimalizace (HOTOVO)
 
-### Nalezené problémy
-- Některé stránky nejsou plně responzivní
-- Admin panel není použitelný na mobilu
-
-### Plánované změny
-- [ ] Audit všech stránek na mobilu (< 768px)
-- [ ] Oprava kritických UI problémů
-- [ ] Mobilní verze admin panelu (nebo alespoň čtení)
+### Vyřešené problémy (17. 12. 2025)
+- [x] Audit stránek youth.html a teams.html na mobilu
+- [x] Oprava tabulek standings - plná šířka na mobilu
+- [x] Odstranění `display: block` z tabulek v CSS
+- [x] Sjednocení paddingů v tabulkách
+- [x] Opraven RBAC v admin panelu (case-insensitive role check)
+- [x] Opraveno načítání tabů pro SUPERADMIN
 
 ### Budoucí funkce (Backlog)
+- [ ] Mobilní verze admin panelu (nebo alespoň čtení)
 - [ ] **Diskuzní fórum pod články**
   - **Fáze 1:** Anonymní příspěvky (s moderací)
   - **Fáze 2:** Přihlášení uživatelů a pokročilá správa (vyžaduje auth systém)
@@ -179,4 +190,23 @@ restartPolicyType = "on_failure"
 
 ---
 
-*Poslední aktualizace: 12. 12. 2025 (13:35)*
+## ✅ Dokončeno (17. 12. 2025)
+
+### Stabilita serveru
+- [x] Přidán 30s timeout na fetch požadavky scraperu
+- [x] Přidán `trust proxy` pro správné rate-limiting za Railway proxy
+- [x] Opraven startup scraping s ochranou proti timeoutům
+
+### Mobilní tabulky
+- [x] Odstranění `display: block` z CSS tabulek
+- [x] Sjednocení paddingů v th/td na 0.4rem
+- [x] Oprava `width: 100%` pro standings tabulky
+
+### Admin Panel
+- [x] Opraveny duplicitní script tagy v admin.html
+- [x] Opravena case-insensitive kontrola rolí
+- [x] Obnovené CSS pro `.highlight-name` a `.highlight-score`
+
+---
+
+*Poslední aktualizace: 17. 12. 2025 (09:15)*
