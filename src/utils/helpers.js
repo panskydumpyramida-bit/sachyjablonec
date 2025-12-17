@@ -88,14 +88,21 @@ export const isMatch = (team, rowText) => {
 };
 
 /**
- * Fetch URL with browser-like headers
+ * Fetch URL with browser-like headers and timeout
  * @param {string} url - URL to fetch
+ * @param {number} timeoutMs - Timeout in milliseconds (default: 30000)
  * @returns {Promise<Response>}
  */
-export const fetchWithHeaders = (url) => fetch(url, {
-    headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
-    }
-});
+export const fetchWithHeaders = (url, timeoutMs = 30000) => {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+
+    return fetch(url, {
+        headers: {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+        },
+        signal: controller.signal
+    }).finally(() => clearTimeout(timeoutId));
+};
 
 export default { clean, isElo, simplify, isMatch, fetchWithHeaders };
