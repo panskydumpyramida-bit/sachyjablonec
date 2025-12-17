@@ -851,25 +851,36 @@ footer {
         padding: 1rem;
     }
 
-    /* Ensure any wide elements don't overflow */
+    /* Ensure any wide elements can scroll horizontally */
     table,
     pre,
     code,
-    iframe,
     .table-wrapper {
-        max-width: 100%;
-        overflow-x: auto;
         display: block;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
     }
 
-    /* Competition cards on teams.html */
+    /* iframes need special handling */
+    iframe {
+        max-width: 100%;
+    }
+
+    /* Competition cards on teams.html - container scrolls, content full width */
     .competition-card,
     .standings-card,
     [class*="standings"],
     [class*="competition"] {
-        max-width: 100%;
+        width: 100%;
         overflow-x: auto;
         -webkit-overflow-scrolling: touch;
+    }
+
+    /* Allow tables inside cards to be wider than container */
+    .competition-card table,
+    .standings-card table,
+    [class*="standings"] table {
+        min-width: 320px;
     }
 }
 

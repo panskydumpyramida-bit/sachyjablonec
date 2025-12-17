@@ -34,6 +34,9 @@ const DATA_DIR = path.join(__dirname, '../data');
 const app = express();
 const PORT = process.env.PORT || 3001;
 
+// Trust proxy for Railway/Heroku (required for express-rate-limit behind reverse proxy)
+app.set('trust proxy', 1);
+
 // Redirect non-www to www (production only)
 app.use((req, res, next) => {
     const host = req.headers.host;
