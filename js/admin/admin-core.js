@@ -100,13 +100,19 @@ function showAdmin() {
     const isAdmin = role === 'ADMIN' || role === 'SUPERADMIN';
     const isSuperadmin = role === 'SUPERADMIN';
 
+    console.log('[RBAC] User:', currentUser?.username, 'Role:', currentUser?.role, '-> Normalized:', role);
+    console.log('[RBAC] isAdmin:', isAdmin, 'isSuperadmin:', isSuperadmin);
+
     // Tabs visible to ADMIN and SUPERADMIN
     const adminTabs = ['galleryTab', 'usersTab', 'competitionsTab'];
     adminTabs.forEach(tabId => {
         const tab = document.getElementById(tabId);
         if (tab) {
+            console.log('[RBAC] Tab:', tabId, 'found:', !!tab, 'setting display:', isAdmin ? 'inline-flex' : 'none');
+            tab.classList.remove('hidden');  // Remove hidden class first
             tab.style.display = isAdmin ? 'inline-flex' : 'none';
-            tab.classList.toggle('hidden', !isAdmin);
+        } else {
+            console.warn('[RBAC] Tab not found:', tabId);
         }
     });
 
