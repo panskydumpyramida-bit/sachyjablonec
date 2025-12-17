@@ -1906,22 +1906,32 @@
             document.getElementById('loginPage').classList.add('hidden');
             document.getElementById('adminPanel').classList.remove('hidden');
 
-            // Show tabs based on role
-            if (['admin', 'superadmin'].includes(currentUser.role)) {
+            // Show tabs based on role (case-insensitive check)
+            const role = (currentUser.role || '').toLowerCase();
+            const isAdminOrSuperadmin = ['admin', 'superadmin'].includes(role);
+
+            console.log('[RBAC-INLINE] User:', currentUser.username, 'Role:', currentUser.role, '-> normalized:', role, 'isAdmin:', isAdminOrSuperadmin);
+
+            if (isAdminOrSuperadmin) {
                 const galleryBtn = document.getElementById('galleryTab');
-                if (galleryBtn) galleryBtn.style.display = 'inline-block';
+                if (galleryBtn) {
+                    galleryBtn.classList.remove('hidden');
+                    galleryBtn.style.display = 'inline-block';
+                }
 
                 // Users tab
                 const usersBtn = document.getElementById('usersTab');
-
                 if (usersBtn) {
                     usersBtn.classList.remove('hidden');
                     usersBtn.style.display = 'inline-block';
                 }
 
-                // Settings tab (if implementation exists later)
-                // const settingsBtn = document.getElementById('settingsTab');
-                // if (settingsBtn) settingsBtn.style.display = 'inline-block';
+                // Competitions tab
+                const compBtn = document.getElementById('competitionsTab');
+                if (compBtn) {
+                    compBtn.classList.remove('hidden');
+                    compBtn.style.display = 'inline-block';
+                }
             }
 
             loadDashboard();
