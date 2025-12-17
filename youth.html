@@ -363,10 +363,10 @@
                             <table style="width: 100%; border-collapse: collapse; font-size: 0.75rem;">
                                 <thead>
                                     <tr style="background: rgba(0,0,0,0.3);">
-                                        <th style="width: 1px; text-align: center; padding: 0.4rem 0.25rem 0.4rem 1rem; color: var(--text-muted); font-weight: 600; font-size: 0.65rem; text-transform: uppercase; white-space: nowrap;">#</th>
-                                        <th style="text-align: left; padding: 0.4rem 0.25rem; color: var(--text-muted); font-weight: 600; font-size: 0.65rem; text-transform: uppercase; white-space: normal; word-break: break-word;">Družstvo</th>
-                                        <th style="width: 1px; text-align: center; padding: 0.4rem 0.25rem; color: var(--text-muted); font-weight: 600; font-size: 0.65rem; text-transform: uppercase; white-space: nowrap;" title="Výhry-Remízy-Prohry">V/R/P</th>
-                                        <th style="width: 1px; text-align: right; padding: 0.4rem 1rem 0.4rem 0.5rem; color: var(--text-muted); font-weight: 600; font-size: 0.65rem; text-transform: uppercase; white-space: nowrap;" title="Zápasové body">Body</th>
+                                        <th style="width: 1px; text-align: center; padding: 0.4rem; color: var(--text-muted); font-weight: 600; font-size: 0.65rem; text-transform: uppercase; white-space: nowrap;">#</th>
+                                        <th style="text-align: left; padding: 0.4rem; color: var(--text-muted); font-weight: 600; font-size: 0.65rem; text-transform: uppercase; white-space: normal; word-break: break-word;">Družstvo</th>
+                                        <th style="width: 1px; text-align: center; padding: 0.4rem; color: var(--text-muted); font-weight: 600; font-size: 0.65rem; text-transform: uppercase; white-space: nowrap;" title="Výhry-Remízy-Prohry">V/R/P</th>
+                                        <th style="width: 1px; text-align: right; padding: 0.4rem; color: var(--text-muted); font-weight: 600; font-size: 0.65rem; text-transform: uppercase; white-space: nowrap;" title="Zápasové body">Body</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -404,10 +404,10 @@
 
                             html += `
                                 <tr ${rowClickHandler} style="${rowStyle} transition: background 0.2s;" onmouseover="this.style.background='rgba(212,175,55,0.1)'" onmouseout="this.style.background='${isBizuterie ? 'linear-gradient(90deg, rgba(212,175,55,0.15) 0%, ' + bgColor + ' 100%)' : bgColor}'">
-                                    <td style="padding: 0.35rem 0.25rem 0.35rem 1rem; text-align: center;">${positionBadge}</td>
-                                    <td style="padding: 0.35rem 0.2rem; ${teamStyle} font-size: 0.78rem;">${s.team}</td>
-                                    <td style="padding: 0.35rem 0.5rem; text-align: center; font-family: monospace; font-size: 0.72rem; white-space: nowrap;">${wdl}</td>
-                                    <td style="padding: 0.35rem 1rem 0.35rem 0.5rem; text-align: right; font-weight: 700; font-family: monospace; font-size: 0.85rem;">${s.points !== null ? s.points : '-'}</td>
+                                    <td style="padding: 0.35rem 0.4rem; text-align: center;">${positionBadge}</td>
+                                    <td style="padding: 0.35rem 0.4rem; ${teamStyle} font-size: 0.78rem;">${s.team}</td>
+                                    <td style="padding: 0.35rem 0.4rem; text-align: center; font-family: monospace; font-size: 0.72rem; white-space: nowrap;">${wdl}</td>
+                                    <td style="padding: 0.35rem 0.4rem; text-align: right; font-weight: 700; font-family: monospace; font-size: 0.85rem;">${s.points !== null ? s.points : '-'}</td>
                                 </tr>
                             `;
                         });
