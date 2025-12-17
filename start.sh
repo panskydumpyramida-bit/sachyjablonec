@@ -13,9 +13,12 @@ echo "📦 Baselining existing migrations..."
 
 
 # 2. Deploy any NEW migrations (this should run the puzzle_modes migration)
-# 2. Deploy any NEW migrations (this should run the puzzle_modes migration)
 echo "🔄 Deploying pending migrations..."
 npx prisma migrate deploy || { echo "❌ Migration failed, stopping startup."; exit 1; }
+
+# 2.5 One-time fix: Set correct URL for Krajský přebor mládeže
+echo "🔧 Fixing competition URLs..."
+node scripts/fix_competition.mjs || echo "⚠️ Competition fix failed, but continuing..."
 
 # 3. Sync existing games-json to Game table (for isCommented flag)
 echo "👾 Syncing games from Articles..."
