@@ -1375,11 +1375,10 @@ const seedCompetitions = async () => {
             {
                 id: "3363",
                 name: "Krajský přebor mládeže",
-                type: "chess-cz",
-                chessczUrl: "https://www.chess.cz/soutez/3363/",
-                url: "",
+                type: "chess-results",  // Fixed: was chess-cz
+                url: "https://s2.chess-results.com/tnr1303510.aspx?lan=5&art=46&SNode=S0",  // Fixed: was empty
                 category: "youth",
-                active: false // Inactive by default until URL provided
+                active: true
             },
             {
                 id: "ks-st-zaku",
@@ -1411,15 +1410,9 @@ const seedCompetitions = async () => {
             await prisma.competition.upsert({
                 where: { id: comp.id },
                 update: {
+                    // Only update name and category - DON'T overwrite URL/type that user may have changed!
                     name: comp.name,
-                    url: comp.url,
-                    chessczUrl: comp.chessczUrl || null,
-                    type: comp.type,
                     category: comp.category,
-                    // Only update active if specific logic requires, or just keep DB state.
-                    // But for renaming/seeding new defaults, we might want to ensure default state.
-                    // However, we shouldn't overwrite user's manual "active" toggle on restart unless it's a structural change.
-                    // Let's only set 'active' on create, or if we want to enforce it for the new comp.
                 },
                 create: {
                     ...comp,
