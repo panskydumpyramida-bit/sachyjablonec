@@ -829,9 +829,10 @@ footer {
         padding: 0;
     }
 
-    /* Container - minimal padding on mobile */
+    /* Container - NO padding on mobile for edge-to-edge content */
     .container {
-        padding: 0 0.5rem;
+        padding: 0;
+        max-width: 100%;
     }
 
     /* Section title size reduction */
