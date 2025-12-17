@@ -1437,9 +1437,9 @@ app.listen(PORT, '0.0.0.0', async () => {
             await seedCompetitions();
 
             // Auto-refresh standings data on each deploy/restart
-            console.log('🔄 Auto-refreshing standings data skipped for stability...');
-            // await updateStandings();
-            console.log('✅ Standings data initialization skipped');
+            console.log('🔄 Auto-refreshing standings data...');
+            await updateStandings();
+            console.log('✅ Standings data initialization complete');
         } catch (error) {
             console.error('Startup initialization failed:', error.message);
         }
