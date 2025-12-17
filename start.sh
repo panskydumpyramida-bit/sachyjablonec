@@ -22,7 +22,8 @@ node scripts/fix_competition.mjs || echo "⚠️ Competition fix failed, but con
 
 # 3. Sync existing games-json to Game table (for isCommented flag)
 echo "👾 Syncing games from Articles..."
-npm run sync-games || echo "⚠️ Game sync failed, but continuing..."
+# npm run sync-games || echo "⚠️ Game sync failed, but continuing..."
+echo "⚠️ Game sync skipped for speed (data should be in DB)."
 
 # 4. Start the application
 echo "🟢 Starting application..."
