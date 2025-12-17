@@ -849,7 +849,6 @@ footer {
     }
 
     /* Ensure any wide elements can scroll horizontally */
-    table,
     pre,
     code,
     .table-wrapper {
