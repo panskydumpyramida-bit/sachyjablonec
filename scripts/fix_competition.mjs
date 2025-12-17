@@ -7,10 +7,25 @@ const CORRECT_URL = 'https://s2.chess-results.com/tnr1303510.aspx?lan=5&art=46&S
 
 async function fixCompetition() {
     try {
-        console.log('Fixing Krajský přebor mládeže...');
+        console.log('🔍 Finding Krajský přebor mládeže by name...');
 
+        // Find by name (more reliable than ID)
+        const comp = await prisma.competition.findFirst({
+            where: {
+                name: { contains: 'Krajský přebor mládeže' }
+            }
+        });
+
+        if (!comp) {
+            console.log('❌ Competition not found!');
+            return;
+        }
+
+        console.log(`Found: ID=${comp.id}, current URL=${comp.url || '(empty)'}, type=${comp.type}`);
+
+        // Update it
         const result = await prisma.competition.update({
-            where: { id: '3363' },
+            where: { id: comp.id },
             data: {
                 url: CORRECT_URL,
                 type: 'chess-results',
@@ -18,14 +33,13 @@ async function fixCompetition() {
             }
         });
 
-        console.log('Updated:');
+        console.log('✅ Updated:');
         console.log(`  Name: ${result.name}`);
         console.log(`  URL: ${result.url}`);
         console.log(`  Type: ${result.type}`);
         console.log(`  Active: ${result.active}`);
-        console.log('\n✅ Done!');
     } catch (err) {
-        console.error('Error:', err);
+        console.error('❌ Error:', err.message);
     } finally {
         await prisma.$disconnect();
     }
