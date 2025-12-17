@@ -822,27 +822,28 @@ footer {
 @media (max-width: 768px) {
     /* NOTE: Removed overflow-x:hidden on html/body - it was blocking table scrolling */
 
-    /* Force cards to fit within viewport */
+    /* Force cards to fit within viewport - NO SIDE PADDING on mobile */
     .card-grid {
         grid-template-columns: 1fr;
-        gap: 1rem;
-        padding: 0 0.5rem;
+        gap: 0.5rem;
+        padding: 0;
     }
 
-    /* Container padding reduction */
+    /* Container - minimal padding on mobile */
     .container {
-        padding: 0 1rem;
+        padding: 0 0.5rem;
     }
 
     /* Section title size reduction */
     .section-title {
         font-size: 1.75rem;
-        margin-bottom: 2rem;
+        margin-bottom: 1.5rem;
+        padding: 0 0.5rem;
     }
 
     /* Card content adjustments */
     .card-content {
-        padding: 1rem;
+        padding: 0.75rem;
     }
 
     /* Ensure any wide elements can scroll horizontally */
@@ -860,21 +861,23 @@ footer {
         max-width: 100%;
     }
 
-    /* Competition cards on teams.html - container scrolls, content full width */
+    /* Competition/standings cards - FULL WIDTH edge to edge */
     .competition-card,
     .standings-card,
     [class*="standings"],
     [class*="competition"] {
         width: 100%;
-        overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
+        margin-left: 0;
+        margin-right: 0;
+        border-radius: 0;
+        /* Remove rounded corners on mobile for full-width look */
     }
 
-    /* Allow tables inside cards to be wider than container */
+    /* Tables inside cards - full width */
     .competition-card table,
     .standings-card table,
     [class*="standings"] table {
-        min-width: 320px;
+        width: 100%;
     }
 }
 
