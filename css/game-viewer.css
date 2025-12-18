@@ -13,7 +13,7 @@
 }
 
 .viewer-wrapper {
-    margin: 2rem 0;
+    margin: 1rem 0;
     border: 1px solid var(--viewer-border);
     border-radius: var(--border-radius, 8px);
     overflow: hidden;

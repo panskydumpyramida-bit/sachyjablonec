@@ -4,41 +4,45 @@
  */
 
 document.addEventListener('DOMContentLoaded', () => {
-    loadFideRatings();
-});
+    // Load ELO from Rosada (Domestic Source)
+    async function loadRatings() {
+        const cards = document.querySelectorAll('.management-card[data-rosada-id]');
 
-async function loadFideRatings() {
-    const cards = document.querySelectorAll('.management-card[data-fide-id]');
+        const baseUrl = (typeof API_URL !== 'undefined') ? API_URL : '/api';
+        console.log('Loading Ratings from Rosada...');
 
-    // We can fetch in parallel or sequence. Parallel is better.
-    const promises = Array.from(cards).map(async card => {
-        const fideId = card.getAttribute('data-fide-id');
-        const eloEl = card.querySelector('.elo-value');
+        const promises = Array.from(cards).map(async card => {
+            const rosadaId = card.getAttribute('data-rosada-id');
+            const eloEl = card.querySelector('.elo-value');
 
-        if (!fideId || !eloEl) return;
+            if (!rosadaId || !eloEl) return;
 
-        try {
-            // Fallback for API_URL if not defined
-            const baseUrl = (typeof API_URL !== 'undefined') ? API_URL : '/api';
-            const response = await fetch(`${baseUrl}/scraping/fide/${fideId}`);
-            if (!response.ok) throw new Error('Failed');
+            try {
+                const response = await fetch(`${baseUrl}/scraping/rosada/${rosadaId}`);
+                if (!response.ok) throw new Error('Failed');
 
-            const data = await response.json();
+                const data = await response.json();
 
-            if (data.stdRating && data.stdRating !== 'N/A') {
-                eloEl.textContent = data.stdRating;
-                // Add a small highlight animation
-                eloEl.style.color = '#fff';
-                setTimeout(() => eloEl.style.color = '', 300);
-            } else {
+                // Prefer ELO CR, fallback to FIDE
+                const rating = (data.eloCr && data.eloCr !== 'N/A') ? data.eloCr : data.eloFide;
+
+                if (rating && rating !== 'N/A') {
+                    eloEl.textContent = rating;
+                    eloEl.style.color = '#fff';
+                    // Add tooltip about source
+                    eloEl.title = `ELO ČR: ${data.eloCr || '-'}, FIDE: ${data.eloFide || '-'}`;
+                } else {
+                    eloEl.textContent = '-';
+                }
+            } catch (error) {
+                console.error(`Error loading Rosada for ${rosadaId}`, error);
                 eloEl.textContent = '-';
             }
-        } catch (error) {
-            console.error(`Error loading FIDE for ${fideId}`, error);
-            eloEl.textContent = '?';
-            eloEl.title = 'Nepodařilo se načíst';
-        }
-    });
+        });
 
-    await Promise.allSettled(promises);
-}
+        await Promise.allSettled(promises);
+    }
+
+    // Initial load
+    loadRatings();
+});
