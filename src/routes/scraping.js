@@ -97,17 +97,17 @@ router.get('/chess-results', async (req, res) => {
         res.status(500).json({ error: 'Failed to scrape data', details: error.message });
     }
 });
-// FIDE Profile Scraping
-router.get('/fide/:id', async (req, res) => {
+// Rosada Profile Scraping
+router.get('/rosada/:id', async (req, res) => {
     const { id } = req.params;
     if (!id || !/^\d+$/.test(id)) {
-        return res.status(400).json({ error: 'Invalid FIDE ID' });
+        return res.status(400).json({ error: 'Invalid Rosada ID' });
     }
 
-    const url = `https://ratings.fide.com/profile/${id}`;
+    const url = `https://elo.rosada.cz/lide/id.php?id=${id}`;
 
     try {
-        console.log(`Scraping FIDE Profile: ${url}`);
+        console.log(`Scraping Rosada Profile: ${url}`);
         const response = await fetch(url, {
             headers: {
                 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
@@ -115,51 +115,29 @@ router.get('/fide/:id', async (req, res) => {
         });
 
         if (!response.ok) {
-            throw new Error(`Failed to fetch FIDE: ${response.statusText}`);
+            throw new Error(`Failed to fetch Rosada: ${response.statusText}`);
         }
 
         const html = await response.text();
-        
-        // Helper to find rating
-        const findRating = (html) => {
-            // Pattern 1: Standard layout
-            // <div class="profile-top-rating-header">Std. rating</div> <div class="profile-top-rating-data">2093</div>
-            const stdMatch = html.match(/Std\.\s*rating[\s\S]*?class="[^"]*profile-top-rating-data[^"]*"[^>]*>\s*(\d{3,4})/i);
-            if (stdMatch) return stdMatch[1];
-            
-            // Pattern 2: Digital layout or condensed
-            const rMatch = html.match(/rating\s*data[^>]*>\s*(\d{3,4})\s*<\/div>/i);
-            if (rMatch) return rMatch[1];
 
-            return null;
-        };
+        // Helper regex extraction
+        // Structure: <td>Elo ČR</td><td>2097</td>
+        const eloCrMatch = html.match(/Elo ČR<\/td><td>\s*(\d+)/i);
+        const eloFideMatch = html.match(/Elo FIDE<\/td><td>[\s\S]*?>(\d+)<\/a>/i);
 
-        let stdRating = findRating(html) || 'N/A';
-        
-        // If N/A, try one more time stripping all tags and looking for "Std. rating 2xxx"
-        if (stdRating === 'N/A') {
-            const textOnly = html.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ');
-            const textMatch = textOnly.match(/Std\.\s*rating\s*(\d{3,4})/i);
-            if (textMatch) stdRating = textMatch[1];
-        }
-        
-        // Extract Name if needed (optional)
-        // <div class="profile-top-info-name">Duda, Antonin</div>
-        let name = '';
-        const nameMatch = html.match(/class="profile-top-info-name">\s*([^<]+)\s*<\/div>/);
-        if (nameMatch) name = nameMatch[1].trim();
+        const eloCr = eloCrMatch ? eloCrMatch[1] : 'N/A';
+        const eloFide = eloFideMatch ? eloFideMatch[1] : 'N/A';
 
-        res.json({ 
-            id, 
-            stdRating,
-            name,
+        res.json({
+            id,
+            eloCr,
+            eloFide,
             url
         });
 
     } catch (error) {
-        console.error('FIDE Scraping error:', error);
-        // Fallback to avoid breaking frontend completely, return N/A
-        res.status(500).json({ error: 'Failed to scrape FIDE', stdRating: 'N/A' });
+        console.error('Rosada Scraping error:', error);
+        res.status(500).json({ error: 'Failed to scrape Rosada', eloCr: 'N/A', eloFide: 'N/A' });
     }
 });
 
