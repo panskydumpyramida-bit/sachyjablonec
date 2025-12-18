@@ -21,36 +21,187 @@
     <header id="global-header"></header>
 
     <main>
-        <section class="container" style="margin-top: 80px;">
-            <h1 class="section-title">O nás</h1>
+        <!-- 1. Hero / Intro Section -->
+        <section class="hero-section">
+            <div class="container">
+                <h1 class="page-title">Jsme šachový oddíl TJ Bižuterie Jablonec</h1>
+                <div class="hero-text">
+                    <p>
+                        Historie šachu v Jablonci sahá hluboko do minulosti. Náš oddíl navazuje na dlouholetou tradici.
+                        Jsme otevřená komunita pro všechny věkové kategorie, od mládeže po seniory.
+                    </p>
+                    <p>
+                        Pořádáme pravidelné tréninky, turnaje a účastníme se soutěží družstev i jednotlivců.
+                        Přijďte mezi nás!
+                    </p>
+                </div>
+            </div>
+        </section>
 
-            <div class="card-grid about-layout">
-                <div>
-                    <h2>Šachový oddíl TJ Bižuterie Jablonec</h2>
-                    <p style="margin-bottom: 1.5rem;">Jsme šachový oddíl s dlouholetou tradicí v Jablonci nad Nisou.
-                        Věnujeme se výchově mládeže i soutěžnímu šachu dospělých. Naše týmy pravidelně nastupují v
-                        krajských soutěžích.</p>
-                    <p style="margin-bottom: 1.5rem;">Přijďte si zahrát, ať už jste začátečník nebo zkušený hráč. Rádi
-                        přivítáme nové tváře.</p>
+        <!-- 2. Split Section: Location & Management -->
+        <section class="container">
+            <div class="split-section">
+                <!-- Left: Where to find us -->
+                <div class="split-col location-col">
+                    <h2 class="section-title">Kde nás najdete</h2>
+                    <div class="contact-card">
+                        <div class="contact-item">
+                            <i class="fa-solid fa-map-location-dot"></i>
+                            <div>
+                                <h3>Hrací místnost</h3>
+                                <p><strong>Městská hala</strong><br>
+                                    U Přehrady 4747/20<br>
+                                    466 01 Jablonec nad Nisou<br>
+                                    <span style="display: block; margin-top: 5px; font-size: 0.85em; color: #aaa;">
+                                        zasedací místnost v 1. patře<br>(dveře autoškola Bajgar)
+                                    </span>
+                                </p>
+                            </div>
+                        </div>
 
-                    <h3 style="margin-top: 2rem; color: var(--primary-color);">Kontaktní osoba</h3>
-                    <p><strong>Antonín Duda</strong></p>
-                    <p><a href="mailto:info@sachyjablonec.cz"
-                            style="color: var(--primary-color);">info@sachyjablonec.cz</a></p>
+                        <div class="contact-item">
+                            <i class="fa-solid fa-clock"></i>
+                            <div>
+                                <h3>Tréninky</h3>
+                                <p><strong>Úterý:</strong> 16:00 - 18:30 (Mládež)</p>
+                                <p><strong>Čtvrtek:</strong> 17:30 - 20:00 (Dospělí a pokročilí)</p>
+                            </div>
+                        </div>
+
+                        <div class="contact-item">
+                            <i class="fa-solid fa-phone"></i>
+                            <div>
+                                <h3>Telefon</h3>
+                                <p><a href="tel:+420731183859">731 183 859</a></p>
+                            </div>
+                        </div>
+
+                        <div class="contact-item">
+                            <i class="fa-solid fa-envelope"></i>
+                            <div>
+                                <h3>Email</h3>
+                                <p><a href="mailto:info@sachyjablonec.cz">info@sachyjablonec.cz</a></p>
+                            </div>
+                        </div>
+
+                        <div class="map-wrapper">
+                            <iframe style="border:none" src="https://mapy.cz/s/magutokeku" width="100%" height="280"
+                                frameborder="0"></iframe>
+                        </div>
+                    </div>
                 </div>
 
-                <div>
-                    <h2>Kde nás najdete</h2>
-                    <div class="map-card" style="padding: 2rem; border-radius: var(--border-radius);">
-                        <h3 style="color: var(--primary-color); margin-bottom: 1rem;"><i
-                                class="fa-solid fa-location-dot"></i> Hrací místnost</h3>
-                        <p><strong>Městská hala</strong></p>
-                        <p>U Přehrady 4747/20</p>
-                        <p>466 01 Jablonec nad Nisou</p>
+                <!-- Right: Who you will meet -->
+                <div class="split-col management-col">
+                    <h2 class="section-title">Koho potkáte</h2>
+                    <div class="management-grid">
+                        <!-- Antonín Duda -->
+                        <div class="management-card small-card" data-fide-id="326720">
+                            <div class="m-card-photo-wrapper">
+                                <div class="m-card-photo">
+                                    <img src="images/management_antonin.png" alt="Antonín Duda">
+                                </div>
+                                <div class="m-card-badge"><i class="fa-solid fa-chess-king"></i></div>
+                            </div>
+                            <div class="m-card-info">
+                                <div class="m-card-role">Předseda oddílu</div>
+                                <div class="m-card-name">Antonín Duda</div>
+                                <div class="m-card-extra">Kapitán A týmu<br>Mistr webu</div>
 
-                        <a href="https://goo.gl/maps/Mlvvw" target="_blank" class="btn map-btn">
-                            <i class="fa-solid fa-map-location-dot"></i> Zobrazit na mapě
-                        </a>
+                                <div class="m-card-details">
+                                    <div class="detail-row"><i class="fa-solid fa-book-open"></i> <span>Sicilská
+                                            obrana</span></div>
+                                    <div class="detail-row"><i class="fa-solid fa-crosshairs"></i> <span>Útočný
+                                            styl</span></div>
+                                </div>
+
+                                <a href="https://ratings.fide.com/profile/326720" target="_blank" class="m-card-stats">
+                                    <i class="fa-solid fa-chart-line"></i> ELO: <span class="elo-value"><i
+                                            class="fa-solid fa-spinner fa-spin"></i></span>
+                                </a>
+                            </div>
+                        </div>
+
+                        <!-- Filip Zadražil -->
+                        <div class="management-card small-card" data-fide-id="384437">
+                            <div class="m-card-photo-wrapper">
+                                <div class="m-card-photo">
+                                    <img src="images/management_filip.jpg" alt="Filip Zadražil">
+                                </div>
+                                <div class="m-card-badge"><i class="fa-solid fa-chess-queen"></i></div>
+                            </div>
+                            <div class="m-card-info">
+                                <div class="m-card-role">Místopředseda oddílu</div>
+                                <div class="m-card-name">Filip Zadražil</div>
+                                <div class="m-card-extra">Kapitán B týmu<br>Trenér ZŠ Liberecká</div>
+
+                                <div class="m-card-details">
+                                    <div class="detail-row"><i class="fa-solid fa-book-open"></i> <span>Dámský
+                                            gambit</span></div>
+                                    <div class="detail-row"><i class="fa-solid fa-chess-board"></i> <span>Poziční
+                                            styl</span></div>
+                                </div>
+
+                                <a href="https://ratings.fide.com/profile/384437" target="_blank" class="m-card-stats">
+                                    <i class="fa-solid fa-chart-line"></i> ELO: <span class="elo-value"><i
+                                            class="fa-solid fa-spinner fa-spin"></i></span>
+                                </a>
+                            </div>
+                        </div>
+
+                        <!-- Lukáš Sivák -->
+                        <div class="management-card small-card" data-fide-id="398020">
+                            <div class="m-card-photo-wrapper">
+                                <div class="m-card-photo">
+                                    <img src="images/management_lukas.png" alt="Lukáš Sivák">
+                                </div>
+                                <div class="m-card-badge"><i class="fa-solid fa-flag"></i></div>
+                            </div>
+                            <div class="m-card-info">
+                                <div class="m-card-role">Hlavní rozhodčí</div>
+                                <div class="m-card-name">Lukáš Sivák</div>
+                                <div class="m-card-extra">Zástupce kapitána A týmu<br>Pořadatel oddílových soutěží</div>
+
+                                <div class="m-card-details">
+                                    <div class="detail-row"><i class="fa-solid fa-book-open"></i> <span>Londýnský
+                                            systém</span></div>
+                                    <div class="detail-row"><i class="fa-solid fa-bolt"></i> <span>Taktický styl</span>
+                                    </div>
+                                </div>
+
+                                <a href="https://ratings.fide.com/profile/398020" target="_blank" class="m-card-stats">
+                                    <i class="fa-solid fa-chart-line"></i> ELO: <span class="elo-value"><i
+                                            class="fa-solid fa-spinner fa-spin"></i></span>
+                                </a>
+                            </div>
+                        </div>
+
+                        <!-- Radim Podrazký -->
+                        <div class="management-card small-card" data-fide-id="391735">
+                            <div class="m-card-photo-wrapper">
+                                <div class="m-card-photo">
+                                    <img src="images/management_radim.png" alt="Radim Podrazký">
+                                </div>
+                                <div class="m-card-badge"><i class="fa-solid fa-graduation-cap"></i></div>
+                            </div>
+                            <div class="m-card-info">
+                                <div class="m-card-role">Zastupující delegát</div>
+                                <div class="m-card-name">Radim Podrazký</div>
+                                <div class="m-card-extra">Kapitán dětských družstev<br>Trenér v ZŠ Rychnov</div>
+
+                                <div class="m-card-details">
+                                    <div class="detail-row"><i class="fa-solid fa-book-open"></i> <span>Španělská
+                                            hra</span></div>
+                                    <div class="detail-row"><i class="fa-solid fa-shield-halved"></i> <span>Pasivní
+                                            obrana</span></div>
+                                </div>
+
+                                <a href="https://ratings.fide.com/profile/391735" target="_blank" class="m-card-stats">
+                                    <i class="fa-solid fa-chart-line"></i> ELO: <span class="elo-value"><i
+                                            class="fa-solid fa-spinner fa-spin"></i></span>
+                                </a>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -61,6 +212,7 @@
 
     <script src="js/layout-loader.js"></script>
     <script src="js/main.js"></script>
+    <script src="js/about-loader.js"></script>
 </body>
 
 </html>

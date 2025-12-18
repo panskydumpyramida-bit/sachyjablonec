@@ -1,52 +1,188 @@
-/* About Page Specifics */
-.about-layout {
-    gap: 4rem;
-}
-
-@media (max-width: 768px) {
-    .about-layout {
-        grid-template-columns: 1fr;
-        /* Stack on mobile */
-        gap: 3rem;
-        /* Increased gap for breathing room */
-        text-align: center;
-    }
-
-    .map-card {
-        text-align: left;
-        /* Keep map details left aligned or center? Center is probably better for consistency */
-        text-align: center;
-    }
-}
-
-.map-card {
-    background: linear-gradient(145deg, var(--surface-color), #252525);
-    border: 1px solid rgba(212, 175, 55, 0.1);
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-}
-
-.map-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 12px 40px rgba(212, 175, 55, 0.15);
-    border-color: rgba(212, 175, 55, 0.3);
-}
-
-.map-btn {
-    width: 100%;
+/* Hero Section */
+.hero-section {
+    background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+    color: #fff;
+    padding: 4rem 1rem;
     text-align: center;
-    background: transparent;
-    border: 1px solid var(--primary-color);
-    color: var(--primary-color);
-    margin-top: 1.5rem;
-    padding: 1rem;
-    transition: all 0.3s;
+    border-bottom: 4px solid #d4af37;
+    margin-bottom: 3rem;
 }
 
-.map-btn:hover {
-    background: var(--primary-color);
-    color: var(--secondary-color);
-    transform: none;
-    /* Reset distinct hover from generic btn */
-    box-shadow: 0 0 15px rgba(212, 175, 55, 0.4);
+.hero-section .page-title {
+    font-size: 2.5rem;
+    margin-bottom: 1.5rem;
+    color: #d4af37;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.hero-text {
+    max-width: 800px;
+    margin: 0 auto;
+    font-size: 1.1rem;
+    line-height: 1.6;
+    color: #e0e0e0;
+}
+
+/* Split Layout */
+.split-section {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    /* 50/50 Split */
+    gap: 3rem;
+    align-items: start;
+    margin-bottom: 4rem;
+}
+
+.split-col {
+    background: #252525;
+    /* Dark background */
+    padding: 2rem;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    height: 100%;
+    color: #f0f0f0;
+    border: 1px solid #333;
+}
+
+.split-col .section-title {
+    text-align: left;
+    margin-bottom: 1.5rem;
+    border-bottom: 2px solid #333;
+    padding-bottom: 0.5rem;
+    color: #d4af37;
+    /* Gold title */
+    font-size: 1.8rem;
+}
+
+/* Management Grid in Split View */
+.management-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    /* Adaptive */
+    gap: 1.5rem;
+}
+
+/* Compact Card Style for Split View */
+.management-card.small-card {
+    padding: 1rem;
+    background: #303030;
+    /* Slightly lighter card bg */
+    border: 1px solid #3d3d3d;
+}
+
+.management-card.small-card .m-card-photo {
+    width: 80px;
+    height: 80px;
+    margin: 0 auto 0.5rem;
+}
+
+.management-card.small-card .m-card-photo img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border: 2px solid #d4af37;
+    /* Gold border */
+    border-radius: 50%;
+    transition: all 0.3s ease;
+    /* Smooth transition */
+}
+
+.management-card.small-card:hover .m-card-photo img {
+    transform: scale(1.1);
+    /* Gentle zoom */
+    border-color: #fff;
+    /* White border on hover to pop */
+    box-shadow: 0 0 15px rgba(212, 175, 55, 0.6);
+    /* Gold glow */
+}
+
+.management-card.small-card .m-card-role {
+    font-size: 0.65rem;
+    color: #aaa;
+}
+
+.management-card.small-card .m-card-name {
+    font-size: 1rem;
+    color: #fff;
+}
+
+.management-card.small-card .m-card-extra {
+    font-size: 0.75rem;
+    color: #ccc;
+}
+
+/* Contact Styles inside Split */
+.contact-item {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.contact-item i {
+    font-size: 1.5rem;
+    color: #d4af37;
+    margin-top: 0.2rem;
+}
+
+.contact-item h3 {
+    margin: 0 0 0.2rem;
+    font-size: 1.1rem;
+    color: #fff;
+}
+
+.contact-item p {
+    margin: 0;
+    color: #ccc;
+    font-size: 0.95rem;
+    line-height: 1.4;
+}
+
+.map-wrapper {
+    margin-top: 1rem;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Responsive */
+@media (max-width: 900px) {
+    .split-section {
+        grid-template-columns: 1fr;
+        /* Stack vertically */
+    }
+}
+
+/* Card Details - Premium Look */
+.m-card-details {
+    margin: 1rem 0;
+    padding: 0.8rem 0;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    text-align: left;
+}
+
+.detail-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 6px;
+    font-size: 0.9rem;
+    color: #ddd;
+}
+
+.detail-row:last-child {
+    margin-bottom: 0;
+}
+
+.detail-row i {
+    color: #d4af37;
+    /* Gold accent */
+    width: 20px;
+    text-align: center;
+    font-size: 1rem;
+    filter: drop-shadow(0 1px 2px rgba(212, 175, 55, 0.3));
+}
+
+.detail-row span {
+    font-weight: 500;
 }
