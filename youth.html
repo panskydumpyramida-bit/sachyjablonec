@@ -285,6 +285,18 @@
                     return;
                 }
 
+                // Custom Sort: 1. Liga > Krajská soutěž > Krajský přebor > Ostatní
+                youthStandings.sort((a, b) => {
+                    const getPriority = (name) => {
+                        const n = name.toLowerCase();
+                        if (n.includes('1. liga')) return 1;
+                        if (n.includes('krajská soutěž')) return 2;
+                        if (n.includes('krajský přebor')) return 3;
+                        return 4;
+                    };
+                    return getPriority(a.name || '') - getPriority(b.name || '');
+                });
+
                 // Prepare a list of cards to initialize after rendering
                 const cardsToInit = [];
                 container.innerHTML = ''; // Clear container
