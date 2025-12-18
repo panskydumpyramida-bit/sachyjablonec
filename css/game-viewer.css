@@ -50,7 +50,7 @@
 .app-container {
     display: flex;
     flex-direction: column;
-    height: 850px;
+    height: 650px;
     background-color: var(--viewer-bg);
     color: var(--viewer-text);
     transition: height 0.3s ease-out;
@@ -77,6 +77,8 @@
     display: flex;
     flex: 1;
     overflow: hidden;
+    min-height: 0;
+    /* Important for nested scrolling */
 }
 
 .sidebar {
