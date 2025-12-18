@@ -50,7 +50,7 @@
 .app-container {
     display: flex;
     flex-direction: column;
-    height: 650px;
+    height: 620px;
     background-color: var(--viewer-bg);
     color: var(--viewer-text);
     transition: height 0.3s ease-out;
@@ -74,7 +74,6 @@
 .iframe-container {
     max-width: 800px;
     width: 100%;
-    flex: 1;
     /* Fill remaining vertical space */
     min-height: 0;
     /* Enable flex shrinking if needed */
