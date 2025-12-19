@@ -1,6 +1,6 @@
 <!-- 
-  STATICKÉ HTML PRO ČLÁNEK 54 - Blicák 2024 Síň slávy
-  Vložit do pole "content" článku v databázi nebo přes admin panel.
+  STATICKÉ HTML PRO ČLÁNEK 54 - Blicák 2024
+  Vložit do pole "content" v Admin panelu.
 -->
 
 <!-- Report Section -->
@@ -126,344 +126,348 @@
         </div>
     </div>
 
-    <!-- Kompletní pořadí -->
+    <!-- Kompletní pořadí (CSS Only Toggle) -->
     <div style="margin-top: 3rem;">
-        <h4
-            style="color: #D4AF37; font-family: 'Playfair Display', serif; font-size: 1.4rem; margin-bottom: 1rem; border-bottom: 1px solid rgba(212,175,55,0.3); padding-bottom: 0.5rem;">
-            Celkové pořadí
-        </h4>
-        <div style="padding: 1rem; overflow-x: auto; background: rgba(255,255,255,0.03); border-radius: 8px;">
-            <table id="resultsTable"
-                style="width: 100%; border-collapse: collapse; color: #fff; min-width: 300px; font-size: 0.9rem;">
-                <thead>
-                    <tr style="border-bottom: 1px solid #D4AF37; text-align: left;">
-                        <th style="padding: 0.5rem; width: 50px; text-align: center;">Poř.</th>
-                        <th style="padding: 0.5rem;">Jméno</th>
-                        <th style="padding: 0.5rem; color: #aaa; text-align: center;">ELO</th>
-                        <th style="padding: 0.5rem;">Klub</th>
-                        <th style="padding: 0.5rem; text-align: right; width: 60px;">Body</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr style="border-bottom: 1px solid rgba(255,255,255,0.05); height: 40px;">
-                        <td style="padding: 0.5rem; text-align: center; font-weight: bold; color: #D4AF37;">1.</td>
-                        <td style="padding: 0.5rem; font-weight: 500;">Sýkora, Marek</td>
-                        <td style="padding: 0.5rem; text-align: center; color: #888; font-family: monospace;">2091
-                        </td>
-                        <td style="padding: 0.5rem; color: #ccc; font-size: 0.85rem;">ŠK ZIKUDA Turnov, z.s.</td>
-                        <td style="padding: 0.5rem; text-align: right; font-weight: bold; color: #D4AF37;">8</td>
-                    </tr>
-                    <tr style="border-bottom: 1px solid rgba(255,255,255,0.05); height: 40px;">
-                        <td style="padding: 0.5rem; text-align: center; font-weight: bold; color: #D4AF37;">2.</td>
-                        <td style="padding: 0.5rem; font-weight: 500;">Vltavský, Vladimír</td>
-                        <td style="padding: 0.5rem; text-align: center; color: #888; font-family: monospace;">2031
-                        </td>
-                        <td style="padding: 0.5rem; color: #ccc; font-size: 0.85rem;">ŠK ZIKUDA Turnov, z.s.</td>
-                        <td style="padding: 0.5rem; text-align: right; font-weight: bold; color: #D4AF37;">8</td>
-                    </tr>
-                    <tr style="border-bottom: 1px solid rgba(255,255,255,0.05); height: 40px;">
-                        <td style="padding: 0.5rem; text-align: center; font-weight: bold; color: #D4AF37;">3.</td>
-                        <td style="padding: 0.5rem; font-weight: 500;">Tsantsala, Kostiantyn</td>
-                        <td style="padding: 0.5rem; text-align: center; color: #888; font-family: monospace;">1651
-                        </td>
-                        <td style="padding: 0.5rem; color: #ccc; font-size: 0.85rem;">TJ Bižuterie Jablonec n.Nisou
-                        </td>
-                        <td style="padding: 0.5rem; text-align: right; font-weight: bold; color: #D4AF37;">7,5</td>
-                    </tr>
-                    <tr style="border-bottom: 1px solid rgba(255,255,255,0.05); height: 40px;">
-                        <td style="padding: 0.5rem; text-align: center; font-weight: bold; color: #888;">4.</td>
-                        <td style="padding: 0.5rem; font-weight: 500;">Joukl, Zdeněk</td>
-                        <td style="padding: 0.5rem; text-align: center; color: #888; font-family: monospace;">1827
-                        </td>
-                        <td style="padding: 0.5rem; color: #ccc; font-size: 0.85rem;">TJ Jiskra Tanvald</td>
-                        <td style="padding: 0.5rem; text-align: right; font-weight: bold; color: #D4AF37;">7</td>
-                    </tr>
-                    <tr style="border-bottom: 1px solid rgba(255,255,255,0.05); height: 40px;">
-                        <td style="padding: 0.5rem; text-align: center; font-weight: bold; color: #888;">5.</td>
-                        <td style="padding: 0.5rem; font-weight: 500;">Duda, Antonín</td>
-                        <td style="padding: 0.5rem; text-align: center; color: #888; font-family: monospace;">1970
-                        </td>
-                        <td style="padding: 0.5rem; color: #ccc; font-size: 0.85rem;">TJ Bižuterie Jablonec n.Nisou
-                        </td>
-                        <td style="padding: 0.5rem; text-align: right; font-weight: bold; color: #D4AF37;">7</td>
-                    </tr>
-                    <tr style="border-bottom: 1px solid rgba(255,255,255,0.05); height: 40px;">
-                        <td style="padding: 0.5rem; text-align: center; font-weight: bold; color: #888;">6.</td>
-                        <td style="padding: 0.5rem; font-weight: 500;">Sýkora, Ondřej</td>
-                        <td style="padding: 0.5rem; text-align: center; color: #888; font-family: monospace;">1994
-                        </td>
-                        <td style="padding: 0.5rem; color: #ccc; font-size: 0.85rem;">ŠK ZIKUDA Turnov, z.s.</td>
-                        <td style="padding: 0.5rem; text-align: right; font-weight: bold; color: #D4AF37;">7</td>
-                    </tr>
-                    <tr style="border-bottom: 1px solid rgba(255,255,255,0.05); height: 40px;">
-                        <td style="padding: 0.5rem; text-align: center; font-weight: bold; color: #888;">7.</td>
-                        <td style="padding: 0.5rem; font-weight: 500;">Kadeřábek, Jiří</td>
-                        <td style="padding: 0.5rem; text-align: center; color: #888; font-family: monospace;">1955
-                        </td>
-                        <td style="padding: 0.5rem; color: #ccc; font-size: 0.85rem;">TJ Desko Liberec</td>
-                        <td style="padding: 0.5rem; text-align: right; font-weight: bold; color: #D4AF37;">6,5</td>
-                    </tr>
-                    <tr style="border-bottom: 1px solid rgba(255,255,255,0.05); height: 40px;">
-                        <td style="padding: 0.5rem; text-align: center; font-weight: bold; color: #888;">8.</td>
-                        <td style="padding: 0.5rem; font-weight: 500;">Bradáč, Daniel</td>
-                        <td style="padding: 0.5rem; text-align: center; color: #888; font-family: monospace;">2038
-                        </td>
-                        <td style="padding: 0.5rem; color: #ccc; font-size: 0.85rem;">TJ Desko Liberec</td>
-                        <td style="padding: 0.5rem; text-align: right; font-weight: bold; color: #D4AF37;">6</td>
-                    </tr>
-                    <tr style="border-bottom: 1px solid rgba(255,255,255,0.05); height: 40px;">
-                        <td style="padding: 0.5rem; text-align: center; font-weight: bold; color: #888;">9.</td>
-                        <td style="padding: 0.5rem; font-weight: 500;">Zimovčák, Kryštof</td>
-                        <td style="padding: 0.5rem; text-align: center; color: #888; font-family: monospace;">1522
-                        </td>
-                        <td style="padding: 0.5rem; color: #ccc; font-size: 0.85rem;">Šachový klub Frýdlant, z.s.
-                        </td>
-                        <td style="padding: 0.5rem; text-align: right; font-weight: bold; color: #D4AF37;">6</td>
-                    </tr>
-                    <tr style="border-bottom: 1px solid rgba(255,255,255,0.05); height: 40px;">
-                        <td style="padding: 0.5rem; text-align: center; font-weight: bold; color: #888;">10.</td>
-                        <td style="padding: 0.5rem; font-weight: 500;">Zadražil, Filip</td>
-                        <td style="padding: 0.5rem; text-align: center; color: #888; font-family: monospace;">1539
-                        </td>
-                        <td style="padding: 0.5rem; color: #ccc; font-size: 0.85rem;">TJ Bižuterie Jablonec n.Nisou
-                        </td>
-                        <td style="padding: 0.5rem; text-align: right; font-weight: bold; color: #D4AF37;">6</td>
-                    </tr>
-                    <tr style="border-bottom: 1px solid rgba(255,255,255,0.05); height: 40px;">
-                        <td style="padding: 0.5rem; text-align: center; font-weight: bold; color: #888;">11.</td>
-                        <td style="padding: 0.5rem; font-weight: 500;">Žídek, Miroslav</td>
-                        <td style="padding: 0.5rem; text-align: center; color: #888; font-family: monospace;">1755
-                        </td>
-                        <td style="padding: 0.5rem; color: #ccc; font-size: 0.85rem;">TJ Bižuterie Jablonec n.Nisou
-                        </td>
-                        <td style="padding: 0.5rem; text-align: right; font-weight: bold; color: #D4AF37;">5,5</td>
-                    </tr>
-                    <tr style="border-bottom: 1px solid rgba(255,255,255,0.05); height: 40px;">
-                        <td style="padding: 0.5rem; text-align: center; font-weight: bold; color: #888;">12.</td>
-                        <td style="padding: 0.5rem; font-weight: 500;">Podrazký, Radim</td>
-                        <td style="padding: 0.5rem; text-align: center; color: #888; font-family: monospace;">1707
-                        </td>
-                        <td style="padding: 0.5rem; color: #ccc; font-size: 0.85rem;">TJ Bižuterie Jablonec n.Nisou
-                        </td>
-                        <td style="padding: 0.5rem; text-align: right; font-weight: bold; color: #D4AF37;">5,5</td>
-                    </tr>
-                    <tr style="border-bottom: 1px solid rgba(255,255,255,0.05); height: 40px;">
-                        <td style="padding: 0.5rem; text-align: center; font-weight: bold; color: #888;">13.</td>
-                        <td style="padding: 0.5rem; font-weight: 500;">Šafránek, David</td>
-                        <td style="padding: 0.5rem; text-align: center; color: #888; font-family: monospace;">1689
-                        </td>
-                        <td style="padding: 0.5rem; color: #ccc; font-size: 0.85rem;">DDM Praha 6</td>
-                        <td style="padding: 0.5rem; text-align: right; font-weight: bold; color: #D4AF37;">5,5</td>
-                    </tr>
-                    <tr style="border-bottom: 1px solid rgba(255,255,255,0.05); height: 40px;">
-                        <td style="padding: 0.5rem; text-align: center; font-weight: bold; color: #888;">14.</td>
-                        <td style="padding: 0.5rem; font-weight: 500;">Titěra, Libor</td>
-                        <td style="padding: 0.5rem; text-align: center; color: #888; font-family: monospace;">1855
-                        </td>
-                        <td style="padding: 0.5rem; color: #ccc; font-size: 0.85rem;">TJ Bižuterie Jablonec n.Nisou
-                        </td>
-                        <td style="padding: 0.5rem; text-align: right; font-weight: bold; color: #D4AF37;">5,5</td>
-                    </tr>
-                    <tr style="border-bottom: 1px solid rgba(255,255,255,0.05); height: 40px;">
-                        <td style="padding: 0.5rem; text-align: center; font-weight: bold; color: #888;">15.</td>
-                        <td style="padding: 0.5rem; font-weight: 500;">Křivánek, Jaroslav</td>
-                        <td style="padding: 0.5rem; text-align: center; color: #888; font-family: monospace;">1532
-                        </td>
-                        <td style="padding: 0.5rem; color: #ccc; font-size: 0.85rem;">TJ Bižuterie Jablonec n.Nisou
-                        </td>
-                        <td style="padding: 0.5rem; text-align: right; font-weight: bold; color: #D4AF37;">5,5</td>
-                    </tr>
-                    <tr style="border-bottom: 1px solid rgba(255,255,255,0.05); height: 40px;">
-                        <td style="padding: 0.5rem; text-align: center; font-weight: bold; color: #888;">16.</td>
-                        <td style="padding: 0.5rem; font-weight: 500;">Tománková, Lucie</td>
-                        <td style="padding: 0.5rem; text-align: center; color: #888; font-family: monospace;">1386
-                        </td>
-                        <td style="padding: 0.5rem; color: #ccc; font-size: 0.85rem;">ŠK ZIKUDA Turnov, z.s.</td>
-                        <td style="padding: 0.5rem; text-align: right; font-weight: bold; color: #D4AF37;">5,5</td>
-                    </tr>
-                    <tr style="border-bottom: 1px solid rgba(255,255,255,0.05); height: 40px;">
-                        <td style="padding: 0.5rem; text-align: center; font-weight: bold; color: #888;">17.</td>
-                        <td style="padding: 0.5rem; font-weight: 500;">Šalanda, Radovan</td>
-                        <td style="padding: 0.5rem; text-align: center; color: #888; font-family: monospace;">1343
-                        </td>
-                        <td style="padding: 0.5rem; color: #ccc; font-size: 0.85rem;">TJ Bižuterie Jablonec n.Nisou
-                        </td>
-                        <td style="padding: 0.5rem; text-align: right; font-weight: bold; color: #D4AF37;">5,5</td>
-                    </tr>
-                    <tr style="border-bottom: 1px solid rgba(255,255,255,0.05); height: 40px;">
-                        <td style="padding: 0.5rem; text-align: center; font-weight: bold; color: #888;">18.</td>
-                        <td style="padding: 0.5rem; font-weight: 500;">Láska, Štěpán</td>
-                        <td style="padding: 0.5rem; text-align: center; color: #888; font-family: monospace;">1229
-                        </td>
-                        <td style="padding: 0.5rem; color: #ccc; font-size: 0.85rem;">ŠK ZIKUDA Turnov, z.s.</td>
-                        <td style="padding: 0.5rem; text-align: right; font-weight: bold; color: #D4AF37;">5,5</td>
-                    </tr>
-                    <tr style="border-bottom: 1px solid rgba(255,255,255,0.05); height: 40px;">
-                        <td style="padding: 0.5rem; text-align: center; font-weight: bold; color: #888;">19.</td>
-                        <td style="padding: 0.5rem; font-weight: 500;">Vltavský, Jakub</td>
-                        <td style="padding: 0.5rem; text-align: center; color: #888; font-family: monospace;">1490
-                        </td>
-                        <td style="padding: 0.5rem; color: #ccc; font-size: 0.85rem;">TJ Bižuterie Jablonec n.Nisou
-                        </td>
-                        <td style="padding: 0.5rem; text-align: right; font-weight: bold; color: #D4AF37;">5</td>
-                    </tr>
-                    <tr style="border-bottom: 1px solid rgba(255,255,255,0.05); height: 40px;">
-                        <td style="padding: 0.5rem; text-align: center; font-weight: bold; color: #888;">20.</td>
-                        <td style="padding: 0.5rem; font-weight: 500;">Kačmar, Pavel</td>
-                        <td style="padding: 0.5rem; text-align: center; color: #888; font-family: monospace;">1661
-                        </td>
-                        <td style="padding: 0.5rem; color: #ccc; font-size: 0.85rem;">ŠK SLAVIA Liberec, z.s.</td>
-                        <td style="padding: 0.5rem; text-align: right; font-weight: bold; color: #D4AF37;">5</td>
-                    </tr>
-                    <tr style="border-bottom: 1px solid rgba(255,255,255,0.05); height: 40px;">
-                        <td style="padding: 0.5rem; text-align: center; font-weight: bold; color: #888;">21.</td>
-                        <td style="padding: 0.5rem; font-weight: 500;">Sivák, Lukáš</td>
-                        <td style="padding: 0.5rem; text-align: center; color: #888; font-family: monospace;">1682
-                        </td>
-                        <td style="padding: 0.5rem; color: #ccc; font-size: 0.85rem;">TJ Bižuterie Jablonec n.Nisou
-                        </td>
-                        <td style="padding: 0.5rem; text-align: right; font-weight: bold; color: #D4AF37;">5</td>
-                    </tr>
-                    <tr style="border-bottom: 1px solid rgba(255,255,255,0.05); height: 40px;">
-                        <td style="padding: 0.5rem; text-align: center; font-weight: bold; color: #888;">22.</td>
-                        <td style="padding: 0.5rem; font-weight: 500;">Červeň, Aleš</td>
-                        <td style="padding: 0.5rem; text-align: center; color: #888; font-family: monospace;">1196
-                        </td>
-                        <td style="padding: 0.5rem; color: #ccc; font-size: 0.85rem;">TJ Bižuterie Jablonec n.Nisou
-                        </td>
-                        <td style="padding: 0.5rem; text-align: right; font-weight: bold; color: #D4AF37;">5</td>
-                    </tr>
-                    <tr style="border-bottom: 1px solid rgba(255,255,255,0.05); height: 40px;">
-                        <td style="padding: 0.5rem; text-align: center; font-weight: bold; color: #888;">23.</td>
-                        <td style="padding: 0.5rem; font-weight: 500;">Švec, Luděk</td>
-                        <td style="padding: 0.5rem; text-align: center; color: #888; font-family: monospace;">1511
-                        </td>
-                        <td style="padding: 0.5rem; color: #ccc; font-size: 0.85rem;">TJ Desko Liberec</td>
-                        <td style="padding: 0.5rem; text-align: right; font-weight: bold; color: #D4AF37;">4,5</td>
-                    </tr>
-                    <tr style="border-bottom: 1px solid rgba(255,255,255,0.05); height: 40px;">
-                        <td style="padding: 0.5rem; text-align: center; font-weight: bold; color: #888;">24.</td>
-                        <td style="padding: 0.5rem; font-weight: 500;">Malý, Marek</td>
-                        <td style="padding: 0.5rem; text-align: center; color: #888; font-family: monospace;">1823
-                        </td>
-                        <td style="padding: 0.5rem; color: #ccc; font-size: 0.85rem;">TJ Lokomotiva Liberec</td>
-                        <td style="padding: 0.5rem; text-align: right; font-weight: bold; color: #D4AF37;">4,5</td>
-                    </tr>
-                    <tr style="border-bottom: 1px solid rgba(255,255,255,0.05); height: 40px;">
-                        <td style="padding: 0.5rem; text-align: center; font-weight: bold; color: #888;">25.</td>
-                        <td style="padding: 0.5rem; font-weight: 500;">Louda, Karel</td>
-                        <td style="padding: 0.5rem; text-align: center; color: #888; font-family: monospace;">1536
-                        </td>
-                        <td style="padding: 0.5rem; color: #ccc; font-size: 0.85rem;">TJ Bižuterie Jablonec n.Nisou
-                        </td>
-                        <td style="padding: 0.5rem; text-align: right; font-weight: bold; color: #D4AF37;">4,5</td>
-                    </tr>
-                    <tr style="border-bottom: 1px solid rgba(255,255,255,0.05); height: 40px;">
-                        <td style="padding: 0.5rem; text-align: center; font-weight: bold; color: #888;">26.</td>
-                        <td style="padding: 0.5rem; font-weight: 500;">Durda, Šimon</td>
-                        <td style="padding: 0.5rem; text-align: center; color: #888; font-family: monospace;">1066
-                        </td>
-                        <td style="padding: 0.5rem; color: #ccc; font-size: 0.85rem;">TJ Bižuterie Jablonec n.Nisou
-                        </td>
-                        <td style="padding: 0.5rem; text-align: right; font-weight: bold; color: #D4AF37;">4,5</td>
-                    </tr>
-                    <tr style="border-bottom: 1px solid rgba(255,255,255,0.05); height: 40px;">
-                        <td style="padding: 0.5rem; text-align: center; font-weight: bold; color: #888;">27.</td>
-                        <td style="padding: 0.5rem; font-weight: 500;">Kobylka, Vojtěch</td>
-                        <td style="padding: 0.5rem; text-align: center; color: #888; font-family: monospace;">0</td>
-                        <td style="padding: 0.5rem; color: #ccc; font-size: 0.85rem;">TJ Bižuterie Jablonec n.Nisou
-                        </td>
-                        <td style="padding: 0.5rem; text-align: right; font-weight: bold; color: #D4AF37;">4</td>
-                    </tr>
-                    <tr style="border-bottom: 1px solid rgba(255,255,255,0.05); height: 40px;">
-                        <td style="padding: 0.5rem; text-align: center; font-weight: bold; color: #888;">28.</td>
-                        <td style="padding: 0.5rem; font-weight: 500;">Chvátal, Jonáš</td>
-                        <td style="padding: 0.5rem; text-align: center; color: #888; font-family: monospace;">1322
-                        </td>
-                        <td style="padding: 0.5rem; color: #ccc; font-size: 0.85rem;">TJ Bižuterie Jablonec n.Nisou
-                        </td>
-                        <td style="padding: 0.5rem; text-align: right; font-weight: bold; color: #D4AF37;">4</td>
-                    </tr>
-                    <tr style="border-bottom: 1px solid rgba(255,255,255,0.05); height: 40px;">
-                        <td style="padding: 0.5rem; text-align: center; font-weight: bold; color: #888;">29.</td>
-                        <td style="padding: 0.5rem; font-weight: 500;">Petržilková, Eliška</td>
-                        <td style="padding: 0.5rem; text-align: center; color: #888; font-family: monospace;">1074
-                        </td>
-                        <td style="padding: 0.5rem; color: #ccc; font-size: 0.85rem;">TJ Bižuterie Jablonec n.Nisou
-                        </td>
-                        <td style="padding: 0.5rem; text-align: right; font-weight: bold; color: #D4AF37;">4</td>
-                    </tr>
-                    <tr style="border-bottom: 1px solid rgba(255,255,255,0.05); height: 40px;">
-                        <td style="padding: 0.5rem; text-align: center; font-weight: bold; color: #888;">30.</td>
-                        <td style="padding: 0.5rem; font-weight: 500;">Němec, Zdeněk</td>
-                        <td style="padding: 0.5rem; text-align: center; color: #888; font-family: monospace;">1397
-                        </td>
-                        <td style="padding: 0.5rem; color: #ccc; font-size: 0.85rem;">TJ Bižuterie Jablonec n.Nisou
-                        </td>
-                        <td style="padding: 0.5rem; text-align: right; font-weight: bold; color: #D4AF37;">4</td>
-                    </tr>
-                    <tr style="border-bottom: 1px solid rgba(255,255,255,0.05); height: 40px;">
-                        <td style="padding: 0.5rem; text-align: center; font-weight: bold; color: #888;">31.</td>
-                        <td style="padding: 0.5rem; font-weight: 500;">Šikola, Jakub</td>
-                        <td style="padding: 0.5rem; text-align: center; color: #888; font-family: monospace;">0</td>
-                        <td style="padding: 0.5rem; color: #ccc; font-size: 0.85rem;">TJ Bižuterie Jablonec n.Nisou
-                        </td>
-                        <td style="padding: 0.5rem; text-align: right; font-weight: bold; color: #D4AF37;">4</td>
-                    </tr>
-                    <tr style="border-bottom: 1px solid rgba(255,255,255,0.05); height: 40px;">
-                        <td style="padding: 0.5rem; text-align: center; font-weight: bold; color: #888;">32.</td>
-                        <td style="padding: 0.5rem; font-weight: 500;">Hurt, Marek</td>
-                        <td style="padding: 0.5rem; text-align: center; color: #888; font-family: monospace;">1219
-                        </td>
-                        <td style="padding: 0.5rem; color: #ccc; font-size: 0.85rem;">TJ Desko Liberec</td>
-                        <td style="padding: 0.5rem; text-align: right; font-weight: bold; color: #D4AF37;">3,5</td>
-                    </tr>
-                    <tr style="border-bottom: 1px solid rgba(255,255,255,0.05); height: 40px;">
-                        <td style="padding: 0.5rem; text-align: center; font-weight: bold; color: #888;">33.</td>
-                        <td style="padding: 0.5rem; font-weight: 500;">Sengr, Ivan</td>
-                        <td style="padding: 0.5rem; text-align: center; color: #888; font-family: monospace;">1037
-                        </td>
-                        <td style="padding: 0.5rem; color: #ccc; font-size: 0.85rem;">TJ Bižuterie Jablonec n.Nisou
-                        </td>
-                        <td style="padding: 0.5rem; text-align: right; font-weight: bold; color: #D4AF37;">3,5</td>
-                    </tr>
-                    <tr style="border-bottom: 1px solid rgba(255,255,255,0.05); height: 40px;">
-                        <td style="padding: 0.5rem; text-align: center; font-weight: bold; color: #888;">34.</td>
-                        <td style="padding: 0.5rem; font-weight: 500;">Adámek, Lukáš</td>
-                        <td style="padding: 0.5rem; text-align: center; color: #888; font-family: monospace;">1040
-                        </td>
-                        <td style="padding: 0.5rem; color: #ccc; font-size: 0.85rem;">TJ Bižuterie Jablonec n.Nisou
-                        </td>
-                        <td style="padding: 0.5rem; text-align: right; font-weight: bold; color: #D4AF37;">2,5</td>
-                    </tr>
-                    <tr style="border-bottom: 1px solid rgba(255,255,255,0.05); height: 40px;">
-                        <td style="padding: 0.5rem; text-align: center; font-weight: bold; color: #888;">35.</td>
-                        <td style="padding: 0.5rem; font-weight: 500;">Turczyniak, Petr</td>
-                        <td style="padding: 0.5rem; text-align: center; color: #888; font-family: monospace;">1072
-                        </td>
-                        <td style="padding: 0.5rem; color: #ccc; font-size: 0.85rem;">TJ Bižuterie Jablonec n.Nisou
-                        </td>
-                        <td style="padding: 0.5rem; text-align: right; font-weight: bold; color: #D4AF37;">2,5</td>
-                    </tr>
-                    <tr style="border-bottom: 1px solid rgba(255,255,255,0.05); height: 40px;">
-                        <td style="padding: 0.5rem; text-align: center; font-weight: bold; color: #888;">36.</td>
-                        <td style="padding: 0.5rem; font-weight: 500;">Hádek, Vojtěch</td>
-                        <td style="padding: 0.5rem; text-align: center; color: #888; font-family: monospace;">1216
-                        </td>
-                        <td style="padding: 0.5rem; color: #ccc; font-size: 0.85rem;">TJ Bižuterie Jablonec n.Nisou
-                        </td>
-                        <td style="padding: 0.5rem; text-align: right; font-weight: bold; color: #D4AF37;">2</td>
-                    </tr>
-                    <tr style="border-bottom: 1px solid rgba(255,255,255,0.05); height: 40px;">
-                        <td style="padding: 0.5rem; text-align: center; font-weight: bold; color: #888;">37.</td>
-                        <td style="padding: 0.5rem; font-weight: 500;">Solanki, Utkarshsinh B.</td>
-                        <td style="padding: 0.5rem; text-align: center; color: #888; font-family: monospace;">0</td>
-                        <td style="padding: 0.5rem; color: #ccc; font-size: 0.85rem;">Neregistrovaný</td>
-                        <td style="padding: 0.5rem; text-align: right; font-weight: bold; color: #D4AF37;">1</td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
+        <details>
+            <summary
+                style="cursor: pointer; color: #D4AF37; font-family: 'Playfair Display', serif; font-size: 1.4rem; margin-bottom: 1rem; border-bottom: 1px solid rgba(212,175,55,0.3); padding-bottom: 0.5rem; display: flex; align-items: center; justify-content: space-between; user-select: none; list-style: none;">
+                Celkové pořadí <i class="fa-solid fa-chevron-down"
+                    style="font-size: 1rem; transition: transform 0.3s;"></i>
+            </summary>
+
+            <div style="padding: 1rem; overflow-x: auto; background: rgba(255,255,255,0.03); border-radius: 8px;">
+                <table id="resultsTable"
+                    style="width: 100%; border-collapse: collapse; color: #fff; min-width: 300px; font-size: 0.9rem;">
+                    <thead>
+                        <tr style="border-bottom: 1px solid #D4AF37; text-align: left;">
+                            <th style="padding: 0.5rem; width: 50px; text-align: center;">Poř.</th>
+                            <th style="padding: 0.5rem;">Jméno</th>
+                            <th style="padding: 0.5rem; color: #aaa; text-align: center;">ELO</th>
+                            <th style="padding: 0.5rem;">Klub</th>
+                            <th style="padding: 0.5rem; text-align: right; width: 60px;">Body</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr style="border-bottom: 1px solid rgba(255,255,255,0.05); height: 40px;">
+                            <td style="padding: 0.5rem; text-align: center; font-weight: bold; color: #D4AF37;">1.</td>
+                            <td style="padding: 0.5rem; font-weight: 500;">Sýkora, Marek</td>
+                            <td style="padding: 0.5rem; text-align: center; color: #888; font-family: monospace;">2091
+                            </td>
+                            <td style="padding: 0.5rem; color: #ccc; font-size: 0.85rem;">ŠK ZIKUDA Turnov, z.s.</td>
+                            <td style="padding: 0.5rem; text-align: right; font-weight: bold; color: #D4AF37;">8</td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid rgba(255,255,255,0.05); height: 40px;">
+                            <td style="padding: 0.5rem; text-align: center; font-weight: bold; color: #D4AF37;">2.</td>
+                            <td style="padding: 0.5rem; font-weight: 500;">Vltavský, Vladimír</td>
+                            <td style="padding: 0.5rem; text-align: center; color: #888; font-family: monospace;">2031
+                            </td>
+                            <td style="padding: 0.5rem; color: #ccc; font-size: 0.85rem;">ŠK ZIKUDA Turnov, z.s.</td>
+                            <td style="padding: 0.5rem; text-align: right; font-weight: bold; color: #D4AF37;">8</td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid rgba(255,255,255,0.05); height: 40px;">
+                            <td style="padding: 0.5rem; text-align: center; font-weight: bold; color: #D4AF37;">3.</td>
+                            <td style="padding: 0.5rem; font-weight: 500;">Tsantsala, Kostiantyn</td>
+                            <td style="padding: 0.5rem; text-align: center; color: #888; font-family: monospace;">1651
+                            </td>
+                            <td style="padding: 0.5rem; color: #ccc; font-size: 0.85rem;">TJ Bižuterie Jablonec n.Nisou
+                            </td>
+                            <td style="padding: 0.5rem; text-align: right; font-weight: bold; color: #D4AF37;">7,5</td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid rgba(255,255,255,0.05); height: 40px;">
+                            <td style="padding: 0.5rem; text-align: center; font-weight: bold; color: #888;">4.</td>
+                            <td style="padding: 0.5rem; font-weight: 500;">Joukl, Zdeněk</td>
+                            <td style="padding: 0.5rem; text-align: center; color: #888; font-family: monospace;">1827
+                            </td>
+                            <td style="padding: 0.5rem; color: #ccc; font-size: 0.85rem;">TJ Jiskra Tanvald</td>
+                            <td style="padding: 0.5rem; text-align: right; font-weight: bold; color: #D4AF37;">7</td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid rgba(255,255,255,0.05); height: 40px;">
+                            <td style="padding: 0.5rem; text-align: center; font-weight: bold; color: #888;">5.</td>
+                            <td style="padding: 0.5rem; font-weight: 500;">Duda, Antonín</td>
+                            <td style="padding: 0.5rem; text-align: center; color: #888; font-family: monospace;">1970
+                            </td>
+                            <td style="padding: 0.5rem; color: #ccc; font-size: 0.85rem;">TJ Bižuterie Jablonec n.Nisou
+                            </td>
+                            <td style="padding: 0.5rem; text-align: right; font-weight: bold; color: #D4AF37;">7</td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid rgba(255,255,255,0.05); height: 40px;">
+                            <td style="padding: 0.5rem; text-align: center; font-weight: bold; color: #888;">6.</td>
+                            <td style="padding: 0.5rem; font-weight: 500;">Sýkora, Ondřej</td>
+                            <td style="padding: 0.5rem; text-align: center; color: #888; font-family: monospace;">1994
+                            </td>
+                            <td style="padding: 0.5rem; color: #ccc; font-size: 0.85rem;">ŠK ZIKUDA Turnov, z.s.</td>
+                            <td style="padding: 0.5rem; text-align: right; font-weight: bold; color: #D4AF37;">7</td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid rgba(255,255,255,0.05); height: 40px;">
+                            <td style="padding: 0.5rem; text-align: center; font-weight: bold; color: #888;">7.</td>
+                            <td style="padding: 0.5rem; font-weight: 500;">Kadeřábek, Jiří</td>
+                            <td style="padding: 0.5rem; text-align: center; color: #888; font-family: monospace;">1955
+                            </td>
+                            <td style="padding: 0.5rem; color: #ccc; font-size: 0.85rem;">TJ Desko Liberec</td>
+                            <td style="padding: 0.5rem; text-align: right; font-weight: bold; color: #D4AF37;">6,5</td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid rgba(255,255,255,0.05); height: 40px;">
+                            <td style="padding: 0.5rem; text-align: center; font-weight: bold; color: #888;">8.</td>
+                            <td style="padding: 0.5rem; font-weight: 500;">Bradáč, Daniel</td>
+                            <td style="padding: 0.5rem; text-align: center; color: #888; font-family: monospace;">2038
+                            </td>
+                            <td style="padding: 0.5rem; color: #ccc; font-size: 0.85rem;">TJ Desko Liberec</td>
+                            <td style="padding: 0.5rem; text-align: right; font-weight: bold; color: #D4AF37;">6</td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid rgba(255,255,255,0.05); height: 40px;">
+                            <td style="padding: 0.5rem; text-align: center; font-weight: bold; color: #888;">9.</td>
+                            <td style="padding: 0.5rem; font-weight: 500;">Zimovčák, Kryštof</td>
+                            <td style="padding: 0.5rem; text-align: center; color: #888; font-family: monospace;">1522
+                            </td>
+                            <td style="padding: 0.5rem; color: #ccc; font-size: 0.85rem;">Šachový klub Frýdlant, z.s.
+                            </td>
+                            <td style="padding: 0.5rem; text-align: right; font-weight: bold; color: #D4AF37;">6</td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid rgba(255,255,255,0.05); height: 40px;">
+                            <td style="padding: 0.5rem; text-align: center; font-weight: bold; color: #888;">10.</td>
+                            <td style="padding: 0.5rem; font-weight: 500;">Zadražil, Filip</td>
+                            <td style="padding: 0.5rem; text-align: center; color: #888; font-family: monospace;">1539
+                            </td>
+                            <td style="padding: 0.5rem; color: #ccc; font-size: 0.85rem;">TJ Bižuterie Jablonec n.Nisou
+                            </td>
+                            <td style="padding: 0.5rem; text-align: right; font-weight: bold; color: #D4AF37;">6</td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid rgba(255,255,255,0.05); height: 40px;">
+                            <td style="padding: 0.5rem; text-align: center; font-weight: bold; color: #888;">11.</td>
+                            <td style="padding: 0.5rem; font-weight: 500;">Žídek, Miroslav</td>
+                            <td style="padding: 0.5rem; text-align: center; color: #888; font-family: monospace;">1755
+                            </td>
+                            <td style="padding: 0.5rem; color: #ccc; font-size: 0.85rem;">TJ Bižuterie Jablonec n.Nisou
+                            </td>
+                            <td style="padding: 0.5rem; text-align: right; font-weight: bold; color: #D4AF37;">5,5</td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid rgba(255,255,255,0.05); height: 40px;">
+                            <td style="padding: 0.5rem; text-align: center; font-weight: bold; color: #888;">12.</td>
+                            <td style="padding: 0.5rem; font-weight: 500;">Podrazký, Radim</td>
+                            <td style="padding: 0.5rem; text-align: center; color: #888; font-family: monospace;">1707
+                            </td>
+                            <td style="padding: 0.5rem; color: #ccc; font-size: 0.85rem;">TJ Bižuterie Jablonec n.Nisou
+                            </td>
+                            <td style="padding: 0.5rem; text-align: right; font-weight: bold; color: #D4AF37;">5,5</td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid rgba(255,255,255,0.05); height: 40px;">
+                            <td style="padding: 0.5rem; text-align: center; font-weight: bold; color: #888;">13.</td>
+                            <td style="padding: 0.5rem; font-weight: 500;">Šafránek, David</td>
+                            <td style="padding: 0.5rem; text-align: center; color: #888; font-family: monospace;">1689
+                            </td>
+                            <td style="padding: 0.5rem; color: #ccc; font-size: 0.85rem;">DDM Praha 6</td>
+                            <td style="padding: 0.5rem; text-align: right; font-weight: bold; color: #D4AF37;">5,5</td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid rgba(255,255,255,0.05); height: 40px;">
+                            <td style="padding: 0.5rem; text-align: center; font-weight: bold; color: #888;">14.</td>
+                            <td style="padding: 0.5rem; font-weight: 500;">Titěra, Libor</td>
+                            <td style="padding: 0.5rem; text-align: center; color: #888; font-family: monospace;">1855
+                            </td>
+                            <td style="padding: 0.5rem; color: #ccc; font-size: 0.85rem;">TJ Bižuterie Jablonec n.Nisou
+                            </td>
+                            <td style="padding: 0.5rem; text-align: right; font-weight: bold; color: #D4AF37;">5,5</td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid rgba(255,255,255,0.05); height: 40px;">
+                            <td style="padding: 0.5rem; text-align: center; font-weight: bold; color: #888;">15.</td>
+                            <td style="padding: 0.5rem; font-weight: 500;">Křivánek, Jaroslav</td>
+                            <td style="padding: 0.5rem; text-align: center; color: #888; font-family: monospace;">1532
+                            </td>
+                            <td style="padding: 0.5rem; color: #ccc; font-size: 0.85rem;">TJ Bižuterie Jablonec n.Nisou
+                            </td>
+                            <td style="padding: 0.5rem; text-align: right; font-weight: bold; color: #D4AF37;">5,5</td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid rgba(255,255,255,0.05); height: 40px;">
+                            <td style="padding: 0.5rem; text-align: center; font-weight: bold; color: #888;">16.</td>
+                            <td style="padding: 0.5rem; font-weight: 500;">Tománková, Lucie</td>
+                            <td style="padding: 0.5rem; text-align: center; color: #888; font-family: monospace;">1386
+                            </td>
+                            <td style="padding: 0.5rem; color: #ccc; font-size: 0.85rem;">ŠK ZIKUDA Turnov, z.s.</td>
+                            <td style="padding: 0.5rem; text-align: right; font-weight: bold; color: #D4AF37;">5,5</td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid rgba(255,255,255,0.05); height: 40px;">
+                            <td style="padding: 0.5rem; text-align: center; font-weight: bold; color: #888;">17.</td>
+                            <td style="padding: 0.5rem; font-weight: 500;">Šalanda, Radovan</td>
+                            <td style="padding: 0.5rem; text-align: center; color: #888; font-family: monospace;">1343
+                            </td>
+                            <td style="padding: 0.5rem; color: #ccc; font-size: 0.85rem;">TJ Bižuterie Jablonec n.Nisou
+                            </td>
+                            <td style="padding: 0.5rem; text-align: right; font-weight: bold; color: #D4AF37;">5,5</td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid rgba(255,255,255,0.05); height: 40px;">
+                            <td style="padding: 0.5rem; text-align: center; font-weight: bold; color: #888;">18.</td>
+                            <td style="padding: 0.5rem; font-weight: 500;">Láska, Štěpán</td>
+                            <td style="padding: 0.5rem; text-align: center; color: #888; font-family: monospace;">1229
+                            </td>
+                            <td style="padding: 0.5rem; color: #ccc; font-size: 0.85rem;">ŠK ZIKUDA Turnov, z.s.</td>
+                            <td style="padding: 0.5rem; text-align: right; font-weight: bold; color: #D4AF37;">5,5</td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid rgba(255,255,255,0.05); height: 40px;">
+                            <td style="padding: 0.5rem; text-align: center; font-weight: bold; color: #888;">19.</td>
+                            <td style="padding: 0.5rem; font-weight: 500;">Vltavský, Jakub</td>
+                            <td style="padding: 0.5rem; text-align: center; color: #888; font-family: monospace;">1490
+                            </td>
+                            <td style="padding: 0.5rem; color: #ccc; font-size: 0.85rem;">TJ Bižuterie Jablonec n.Nisou
+                            </td>
+                            <td style="padding: 0.5rem; text-align: right; font-weight: bold; color: #D4AF37;">5</td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid rgba(255,255,255,0.05); height: 40px;">
+                            <td style="padding: 0.5rem; text-align: center; font-weight: bold; color: #888;">20.</td>
+                            <td style="padding: 0.5rem; font-weight: 500;">Kačmar, Pavel</td>
+                            <td style="padding: 0.5rem; text-align: center; color: #888; font-family: monospace;">1661
+                            </td>
+                            <td style="padding: 0.5rem; color: #ccc; font-size: 0.85rem;">ŠK SLAVIA Liberec, z.s.</td>
+                            <td style="padding: 0.5rem; text-align: right; font-weight: bold; color: #D4AF37;">5</td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid rgba(255,255,255,0.05); height: 40px;">
+                            <td style="padding: 0.5rem; text-align: center; font-weight: bold; color: #888;">21.</td>
+                            <td style="padding: 0.5rem; font-weight: 500;">Sivák, Lukáš</td>
+                            <td style="padding: 0.5rem; text-align: center; color: #888; font-family: monospace;">1682
+                            </td>
+                            <td style="padding: 0.5rem; color: #ccc; font-size: 0.85rem;">TJ Bižuterie Jablonec n.Nisou
+                            </td>
+                            <td style="padding: 0.5rem; text-align: right; font-weight: bold; color: #D4AF37;">5</td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid rgba(255,255,255,0.05); height: 40px;">
+                            <td style="padding: 0.5rem; text-align: center; font-weight: bold; color: #888;">22.</td>
+                            <td style="padding: 0.5rem; font-weight: 500;">Červeň, Aleš</td>
+                            <td style="padding: 0.5rem; text-align: center; color: #888; font-family: monospace;">1196
+                            </td>
+                            <td style="padding: 0.5rem; color: #ccc; font-size: 0.85rem;">TJ Bižuterie Jablonec n.Nisou
+                            </td>
+                            <td style="padding: 0.5rem; text-align: right; font-weight: bold; color: #D4AF37;">5</td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid rgba(255,255,255,0.05); height: 40px;">
+                            <td style="padding: 0.5rem; text-align: center; font-weight: bold; color: #888;">23.</td>
+                            <td style="padding: 0.5rem; font-weight: 500;">Švec, Luděk</td>
+                            <td style="padding: 0.5rem; text-align: center; color: #888; font-family: monospace;">1511
+                            </td>
+                            <td style="padding: 0.5rem; color: #ccc; font-size: 0.85rem;">TJ Desko Liberec</td>
+                            <td style="padding: 0.5rem; text-align: right; font-weight: bold; color: #D4AF37;">4,5</td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid rgba(255,255,255,0.05); height: 40px;">
+                            <td style="padding: 0.5rem; text-align: center; font-weight: bold; color: #888;">24.</td>
+                            <td style="padding: 0.5rem; font-weight: 500;">Malý, Marek</td>
+                            <td style="padding: 0.5rem; text-align: center; color: #888; font-family: monospace;">1823
+                            </td>
+                            <td style="padding: 0.5rem; color: #ccc; font-size: 0.85rem;">TJ Lokomotiva Liberec</td>
+                            <td style="padding: 0.5rem; text-align: right; font-weight: bold; color: #D4AF37;">4,5</td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid rgba(255,255,255,0.05); height: 40px;">
+                            <td style="padding: 0.5rem; text-align: center; font-weight: bold; color: #888;">25.</td>
+                            <td style="padding: 0.5rem; font-weight: 500;">Louda, Karel</td>
+                            <td style="padding: 0.5rem; text-align: center; color: #888; font-family: monospace;">1536
+                            </td>
+                            <td style="padding: 0.5rem; color: #ccc; font-size: 0.85rem;">TJ Bižuterie Jablonec n.Nisou
+                            </td>
+                            <td style="padding: 0.5rem; text-align: right; font-weight: bold; color: #D4AF37;">4,5</td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid rgba(255,255,255,0.05); height: 40px;">
+                            <td style="padding: 0.5rem; text-align: center; font-weight: bold; color: #888;">26.</td>
+                            <td style="padding: 0.5rem; font-weight: 500;">Durda, Šimon</td>
+                            <td style="padding: 0.5rem; text-align: center; color: #888; font-family: monospace;">1066
+                            </td>
+                            <td style="padding: 0.5rem; color: #ccc; font-size: 0.85rem;">TJ Bižuterie Jablonec n.Nisou
+                            </td>
+                            <td style="padding: 0.5rem; text-align: right; font-weight: bold; color: #D4AF37;">4,5</td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid rgba(255,255,255,0.05); height: 40px;">
+                            <td style="padding: 0.5rem; text-align: center; font-weight: bold; color: #888;">27.</td>
+                            <td style="padding: 0.5rem; font-weight: 500;">Kobylka, Vojtěch</td>
+                            <td style="padding: 0.5rem; text-align: center; color: #888; font-family: monospace;">0</td>
+                            <td style="padding: 0.5rem; color: #ccc; font-size: 0.85rem;">TJ Bižuterie Jablonec n.Nisou
+                            </td>
+                            <td style="padding: 0.5rem; text-align: right; font-weight: bold; color: #D4AF37;">4</td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid rgba(255,255,255,0.05); height: 40px;">
+                            <td style="padding: 0.5rem; text-align: center; font-weight: bold; color: #888;">28.</td>
+                            <td style="padding: 0.5rem; font-weight: 500;">Chvátal, Jonáš</td>
+                            <td style="padding: 0.5rem; text-align: center; color: #888; font-family: monospace;">1322
+                            </td>
+                            <td style="padding: 0.5rem; color: #ccc; font-size: 0.85rem;">TJ Bižuterie Jablonec n.Nisou
+                            </td>
+                            <td style="padding: 0.5rem; text-align: right; font-weight: bold; color: #D4AF37;">4</td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid rgba(255,255,255,0.05); height: 40px;">
+                            <td style="padding: 0.5rem; text-align: center; font-weight: bold; color: #888;">29.</td>
+                            <td style="padding: 0.5rem; font-weight: 500;">Petržilková, Eliška</td>
+                            <td style="padding: 0.5rem; text-align: center; color: #888; font-family: monospace;">1074
+                            </td>
+                            <td style="padding: 0.5rem; color: #ccc; font-size: 0.85rem;">TJ Bižuterie Jablonec n.Nisou
+                            </td>
+                            <td style="padding: 0.5rem; text-align: right; font-weight: bold; color: #D4AF37;">4</td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid rgba(255,255,255,0.05); height: 40px;">
+                            <td style="padding: 0.5rem; text-align: center; font-weight: bold; color: #888;">30.</td>
+                            <td style="padding: 0.5rem; font-weight: 500;">Němec, Zdeněk</td>
+                            <td style="padding: 0.5rem; text-align: center; color: #888; font-family: monospace;">1397
+                            </td>
+                            <td style="padding: 0.5rem; color: #ccc; font-size: 0.85rem;">TJ Bižuterie Jablonec n.Nisou
+                            </td>
+                            <td style="padding: 0.5rem; text-align: right; font-weight: bold; color: #D4AF37;">4</td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid rgba(255,255,255,0.05); height: 40px;">
+                            <td style="padding: 0.5rem; text-align: center; font-weight: bold; color: #888;">31.</td>
+                            <td style="padding: 0.5rem; font-weight: 500;">Šikola, Jakub</td>
+                            <td style="padding: 0.5rem; text-align: center; color: #888; font-family: monospace;">0</td>
+                            <td style="padding: 0.5rem; color: #ccc; font-size: 0.85rem;">TJ Bižuterie Jablonec n.Nisou
+                            </td>
+                            <td style="padding: 0.5rem; text-align: right; font-weight: bold; color: #D4AF37;">4</td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid rgba(255,255,255,0.05); height: 40px;">
+                            <td style="padding: 0.5rem; text-align: center; font-weight: bold; color: #888;">32.</td>
+                            <td style="padding: 0.5rem; font-weight: 500;">Hurt, Marek</td>
+                            <td style="padding: 0.5rem; text-align: center; color: #888; font-family: monospace;">1219
+                            </td>
+                            <td style="padding: 0.5rem; color: #ccc; font-size: 0.85rem;">TJ Desko Liberec</td>
+                            <td style="padding: 0.5rem; text-align: right; font-weight: bold; color: #D4AF37;">3,5</td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid rgba(255,255,255,0.05); height: 40px;">
+                            <td style="padding: 0.5rem; text-align: center; font-weight: bold; color: #888;">33.</td>
+                            <td style="padding: 0.5rem; font-weight: 500;">Sengr, Ivan</td>
+                            <td style="padding: 0.5rem; text-align: center; color: #888; font-family: monospace;">1037
+                            </td>
+                            <td style="padding: 0.5rem; color: #ccc; font-size: 0.85rem;">TJ Bižuterie Jablonec n.Nisou
+                            </td>
+                            <td style="padding: 0.5rem; text-align: right; font-weight: bold; color: #D4AF37;">3,5</td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid rgba(255,255,255,0.05); height: 40px;">
+                            <td style="padding: 0.5rem; text-align: center; font-weight: bold; color: #888;">34.</td>
+                            <td style="padding: 0.5rem; font-weight: 500;">Adámek, Lukáš</td>
+                            <td style="padding: 0.5rem; text-align: center; color: #888; font-family: monospace;">1040
+                            </td>
+                            <td style="padding: 0.5rem; color: #ccc; font-size: 0.85rem;">TJ Bižuterie Jablonec n.Nisou
+                            </td>
+                            <td style="padding: 0.5rem; text-align: right; font-weight: bold; color: #D4AF37;">2,5</td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid rgba(255,255,255,0.05); height: 40px;">
+                            <td style="padding: 0.5rem; text-align: center; font-weight: bold; color: #888;">35.</td>
+                            <td style="padding: 0.5rem; font-weight: 500;">Turczyniak, Petr</td>
+                            <td style="padding: 0.5rem; text-align: center; color: #888; font-family: monospace;">1072
+                            </td>
+                            <td style="padding: 0.5rem; color: #ccc; font-size: 0.85rem;">TJ Bižuterie Jablonec n.Nisou
+                            </td>
+                            <td style="padding: 0.5rem; text-align: right; font-weight: bold; color: #D4AF37;">2,5</td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid rgba(255,255,255,0.05); height: 40px;">
+                            <td style="padding: 0.5rem; text-align: center; font-weight: bold; color: #888;">36.</td>
+                            <td style="padding: 0.5rem; font-weight: 500;">Hádek, Vojtěch</td>
+                            <td style="padding: 0.5rem; text-align: center; color: #888; font-family: monospace;">1216
+                            </td>
+                            <td style="padding: 0.5rem; color: #ccc; font-size: 0.85rem;">TJ Bižuterie Jablonec n.Nisou
+                            </td>
+                            <td style="padding: 0.5rem; text-align: right; font-weight: bold; color: #D4AF37;">2</td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid rgba(255,255,255,0.05); height: 40px;">
+                            <td style="padding: 0.5rem; text-align: center; font-weight: bold; color: #888;">37.</td>
+                            <td style="padding: 0.5rem; font-weight: 500;">Solanki, Utkarshsinh B.</td>
+                            <td style="padding: 0.5rem; text-align: center; color: #888; font-family: monospace;">0</td>
+                            <td style="padding: 0.5rem; color: #ccc; font-size: 0.85rem;">Neregistrovaný</td>
+                            <td style="padding: 0.5rem; text-align: right; font-weight: bold; color: #D4AF37;">1</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </details>
         <style>
             .highlight-name {
                 color: var(--primary-color);
@@ -478,12 +482,33 @@
                 border-radius: 4px;
             }
 
+            /* Fix game overlap glitch */
+            header.app-header {
+                display: none !important;
+            }
+
             /* Podium name wrapping for mobile */
             .podium-name {
                 word-wrap: break-word;
                 overflow-wrap: break-word;
                 hyphens: auto;
                 max-width: 100%;
+            }
+
+            /* CSS Toggle Styles */
+            details>summary {
+                list-style: none;
+                /* Hide default marker */
+            }
+
+            details>summary::-webkit-details-marker {
+                display: none;
+                /* Hide default marker on WebKit */
+            }
+
+            /* Rotate icon when open */
+            details[open] summary i {
+                transform: rotate(180deg);
             }
 
             @media (max-width: 600px) {
