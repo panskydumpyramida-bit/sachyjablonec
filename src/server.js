@@ -137,6 +137,10 @@ app.get('/members.html', servePage('members.html'));
 app.get('/blicak', servePage('blicak.html'));
 app.get('/blicak.html', servePage('blicak.html'));
 
+app.get('/bleskovy_report', (req, res) => {
+    res.redirect(301, '/article.html?id=54');
+});
+
 app.get('/puzzle-racer', servePage('puzzle-racer.html'));
 app.get('/puzzle-racer.html', servePage('puzzle-racer.html'));
 
