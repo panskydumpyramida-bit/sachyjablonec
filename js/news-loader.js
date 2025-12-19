@@ -97,7 +97,7 @@ async function loadNews(options = {}) {
                 <article class="card" onclick="window.location.href='${getArticleUrl(item)}'" style="cursor: pointer;">
                     <div class="card-image">
                         ${(() => {
-                    let thumb = item.thumbnailUrl || 'images/chess_placeholder.png';
+                    let thumb = item.thumbnailUrl || 'images/chess_placeholder.jpg';
                     let crop = 'center';
                     if (thumb.includes('#crop=')) {
                         const parts = thumb.split('#crop=');
@@ -107,7 +107,7 @@ async function loadNews(options = {}) {
                     return `<img src="${thumb}" 
                                      alt="${escapeHtml(item.title)}"
                                      style="object-position: center ${crop};"
-                                     onerror="this.src='images/chess_placeholder.png'">`;
+                                     onerror="this.src='images/chess_placeholder.jpg'">`;
                 })()}
                     </div>
                     <div class="card-content">
