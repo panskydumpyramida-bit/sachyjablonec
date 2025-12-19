@@ -152,79 +152,94 @@ router.get('/chess-results', async (req, res) => {
 
             // Let's rely on relative positions found above or defaulting
 
-            if (nameIndex !== -1) {
-                // Try to match specific columns based on Name index
+            // Improved logic for standard Chess-Results tables (Layout B - Standings)
+            // Typical columns: Rank, SNo, Name, Rtg, Fed, Club, Pts, TB1...
 
-                // Fed is often Name + 1
-                // Rtg is often Name + 2 (or Name - 1?)
-                // Club is often Name + 3
+            // 1. Name is anchor.
+            // 2. Rtg (ELO) is usually the first 4-digit number (1000-2999) or "0" BEFORE or AFTER name.
+            //    In "Standings", Rtg is often column 3 or 4 (Name is 2 or 3).
 
-                // Let's try to be smart.
-                // Check if cell[nameIndex+1] is FED (3 letters uppercase)
-                const next = cleanedCells[nameIndex + 1];
-                const next2 = cleanedCells[nameIndex + 2];
+            // Let's reset and search relative to nameIndex.
 
-                if (next && /^[A-Z]{3}$/.test(next)) {
-                    fed = next;
-                    // Then next might be Rtg
-                    if (next2 && /^\d+$/.test(next2)) {
-                        elo = next2;
-                        club = cleanedCells[nameIndex + 3];
-                    } else {
-                        club = next2;
-                    }
+            // Search for ELO (Rtg)
+            // Usually within 2 columns distance of Name
+            let foundElo = false;
+            for (let i = Math.max(0, nameIndex - 2); i <= Math.min(cells.length - 1, nameIndex + 3); i++) {
+                if (i === nameIndex) continue;
+                const val = cleanedCells[i];
+                // Strict ELO check: 4 digits starting with 1 or 2, or exactly 0
+                if ((/^[12]\d{3}$/.test(val) || val === '0') && !foundElo) {
+                    elo = val;
+                    foundElo = true;
                 }
-                else if (next && /^\d+$/.test(next) && next.length >= 3) {
-                    // Name, Rtg, Club?
-                    elo = next;
-                    club = cleanedCells[nameIndex + 2];
-                }
-                else {
-                    // Name, Club, ...?
-                    club = next;
-                }
+            }
 
-                // Points detection for art=1
-                if (isResults) {
-                    // Try to find the Points column.
-                    // It's usually the first column after Club that is a generic number (formatted like points).
-                    // Or we can just grab the cell that corresponds to "Pts" in header... but we skipped header.
+            // Search for Points
+            // Points is usually further effectively the last main column before tiebreaks.
+            // It looks like a number (e.g. 5, 5.5, 6.0).
+            // It is rarely a 4 digit integer unless it's a huge tournament, so it's distinct from ELO.
 
-                    // Let's search for the first number-like cell after Club (or after Name+3)
-                    // that matches points pattern.
-                    let searchStart = nameIndex + 2;
-                    for (let i = searchStart; i < cells.length; i++) {
-                        const c = cleanedCells[i];
-                        // Points: 0, 0.5, 1, ..., 9.5, 10...
-                        // Regex: ^\d+([,.]5)?$
-                        if (/^\d+([,.]5)?$/.test(c.replace(',', '.'))) {
-                            // This is likely points
-                            points = c;
-                            break; // First number is usually total points
+            // Search from the end backwards, but be careful of Tiebreaks which also look like points.
+            // Actually, often Pts is the FIRST number after Club/Fed.
+
+            // Let's try finding the column that looks like Club (text)
+            // Club is often after Rtg/Fed
+
+            // Fallback approach:
+            // Find all numbers in the row.
+            // Exclude the one used for Rank (first column usually).
+            // Exclude the one used for SNo (integer, usually sequential).
+            // Exclude ELO (1000+).
+            // What remains? Points and TBs.
+            // Points is usually the largest value? Or simply the first one after Club.
+
+            // Let's try to specifically identify "Points" by pattern relative to end of row?
+            // No, let's look for the first float/int after name+2 that isn't ELO.
+
+            if (isResults) {
+                for (let i = nameIndex + 1; i < cells.length; i++) {
+                    const val = cleanedCells[i].replace(',', '.');
+
+                    // heuristic: Points is usually < 100 (for normal tournaments)
+                    // Tiebreaks can be larger.
+                    // But Points is usually the PRIMARY score.
+
+                    if (/^\d+(\.5)?$/.test(val)) {
+                        // verify it's not ELO
+                        if (/^[12]\d{3}$/.test(cleanedCells[i])) continue; // Likely ELO
+                        if (cleanedCells[i] === '0' && i < nameIndex + 3) continue; // Likely ELO 0 near name
+
+                        // Found a number that looks like points. 
+                        // If we haven't assigned points yet, take it.
+                        if (!points) {
+                            points = cleanedCells[i];
+                            // Don't break immediately, might be SNo if before name? 
+                            // But loop starts after name.
+                            break;
                         }
                     }
                 }
             }
-
-            // Fallback for Club if empty and looks like we missed it
-            if (!club && cleanedCells[nameIndex + 3]) club = cleanedCells[nameIndex + 3];
-
-            if (name) {
-                players.push({
-                    rank,
-                    name,
-                    elo: elo || '',
-                    club: club || '',
-                    fed,
-                    points: points || '', // Will be empty for startlist
-                    isResult: isResults && !!points
-                });
-            }
         }
 
-        // Auto-detect type if not clear
-        if (players.some(p => p.points)) {
-            isResults = true;
+        // Post-processing: If ELO ended up in Points (common error if logic is loose), swap if needed?
+        // Actually, ELO is usually > 20 points (unless 100 rounds).
+        if (points && parseInt(points) > 100 && !elo) {
+            // If "points" is 2000, it's actually ELO.
+            elo = points;
+            points = '';
+        }
+
+        // Fallback for Club: If we didn't search explicitly, try generic text after name
+        if (!club) {
+            for (let i = nameIndex + 1; i < cells.length; i++) {
+                const c = cleanedCells[i];
+                // Club is usually text, not number, not Fed (3 chars)
+                if (/[a-zA-Z]{4,}/.test(c) && !/^\d/.test(c)) {
+                    club = c;
+                    break;
+                }
+            }
         }
 
         res.json({ players, count: players.length, type: isResults ? 'results' : 'startlist' });

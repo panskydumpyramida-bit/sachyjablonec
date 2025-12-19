@@ -744,28 +744,32 @@
                     <!-- Full Results Table -->
                     <div style="margin-top: 4rem; overflow-x: auto;">
                         <h3 style="text-align: center; color: var(--primary-color); margin-bottom: 2rem; font-family: 'Playfair Display', serif;">Kompletní pořadí</h3>
-                        <table style="width: 100%; border-collapse: collapse; color: #fff; min-width: 600px;">
+                        <table style="width: 100%; border-collapse: collapse; color: #fff; min-width: 600px; font-size: 0.9rem;">
                             <thead>
-                                <tr style="border-bottom: 2px solid var(--primary-color); text-align: left;">
-                                    <th style="padding: 1rem; width: 80px; text-align: center;">Poř.</th>
-                                    <th style="padding: 1rem;">Jméno</th>
-                                    <th style="padding: 1rem;">Klub</th>
-                                    <th style="padding: 1rem; text-align: right; width: 100px;">Body</th>
+                                <tr style="border-bottom: 1px solid var(--primary-color); text-align: left;">
+                                    <th style="padding: 0.5rem; width: 50px; text-align: center;">Poř.</th>
+                                    <th style="padding: 0.5rem;">Jméno</th>
+                                    <th style="padding: 0.5rem; color: #aaa; text-align: center;">ELO</th>
+                                    <th style="padding: 0.5rem;">Klub</th>
+                                    <th style="padding: 0.5rem; text-align: right; width: 80px;">Body</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 ${players.map((p, index) => `
-                                    <tr style="border-bottom: 1px solid rgba(255,255,255,0.1); transition: background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background='transparent'">
-                                        <td style="padding: 1rem; text-align: center; font-weight: bold; color: ${index < 3 ? 'var(--primary-color)' : '#aaa'};">
+                                    <tr style="border-bottom: 1px solid rgba(255,255,255,0.05); height: 40px; transition: background 0.1s;" onmouseover="this.style.background='rgba(255,255,255,0.03)'" onmouseout="this.style.background='transparent'">
+                                        <td style="padding: 0.5rem; text-align: center; font-weight: bold; color: ${index < 3 ? 'var(--primary-color)' : '#888'};">
                                             ${p.rank || index + 1}.
                                         </td>
-                                        <td style="padding: 1rem; font-weight: 500;">
+                                        <td style="padding: 0.5rem; font-weight: 500;">
                                             ${p.name}
                                         </td>
-                                        <td style="padding: 1rem; color: #ccc;">
+                                        <td style="padding: 0.5rem; text-align: center; color: #888; font-family: monospace;">
+                                            ${p.elo || '-'}
+                                        </td>
+                                        <td style="padding: 0.5rem; color: #ccc; font-size: 0.85rem;">
                                             ${p.club || ''}
                                         </td>
-                                        <td style="padding: 1rem; text-align: right; font-weight: bold;">
+                                        <td style="padding: 0.5rem; text-align: right; font-weight: bold; color: var(--primary-color);">
                                             ${p.points || ''}
                                         </td>
                                     </tr>
