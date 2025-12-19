@@ -10,7 +10,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
-        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@400;700&display=swap"
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@400;700&family=Shadows+Into+Light&display=swap"
         rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="css/style.css">
@@ -649,9 +649,9 @@
 
             let html = `
                 <div style="max-width: 800px; margin: -2rem auto 3rem auto; text-align: center;">
-                    <h2 class="section-title" style="margin-bottom: 2rem;">Výsledky 2024</h2>
+                    <h2 class="section-title" style="margin-bottom: 2rem;">🏆 Síň slávy</h2>
                     
-                    <div style="display: flex; justify-content: center; align-items: flex-end; gap: 1rem; flex-wrap: wrap;">
+                    <div style="display: flex; justify-content: center; align-items: flex-end; gap: 1rem; flex-wrap: wrap; margin-bottom: 3rem;">
                         
                         <!-- 2nd Place -->
                          <div style="order: 1; flex: 1; min-width: 200px; padding: 1.5rem; background: rgba(192, 192, 192, 0.1); border-radius: 12px; border-top: 4px solid #C0C0C0; display: flex; flex-direction: column; align-items: center;">
@@ -675,6 +675,19 @@
                             <div style="font-weight: bold; font-size: 1.2rem; color: #fff; margin-bottom: 0.5rem;">${top3[2] ? top3[2].name : '-'}</div>
                             <div style="font-size: 0.9rem; color: var(--text-muted);">${top3[2] ? top3[2].club : ''}</div>
                              <div style="margin-top: 1rem; font-weight: bold; color: var(--primary-color); font-size: 1.5rem;">${top3[2] ? top3[2].points : 0}</div>
+                        </div>
+                    </div>
+
+                    <!-- Witty Photo Section -->
+                    <div style="position: relative; margin: 2rem auto; max-width: 400px; transform: rotate(-2deg); transition: transform 0.3s;" onmouseenter="this.style.transform='rotate(0deg) scale(1.02)'" onmouseleave="this.style.transform='rotate(-2deg)'">
+                        <div style="background: #fff; padding: 10px 10px 40px 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.5);">
+                            <img src="images/winners_2024.png" alt="Stupně vítězů" style="width: 100%; display: block; filter: sepia(20%);">
+                            <div style="font-family: 'Shadows Into Light', cursive, sans-serif; color: #333; font-size: 1.2rem; position: absolute; bottom: 10px; width: 100%; text-align: center; font-weight: bold;">
+                                Takhle vypadá radost po 10 kolech nervů! 😅
+                            </div>
+                        </div>
+                        <div style="position: absolute; top: -15px; right: -15px; background: var(--primary-color); color: #000; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; box-shadow: 0 2px 5px rgba(0,0,0,0.3); transform: rotate(15deg);">
+                            <i class="fa-solid fa-camera"></i>
                         </div>
                     </div>
 
