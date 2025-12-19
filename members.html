@@ -680,6 +680,7 @@
             for (const file of files) {
                 const formData = new FormData();
                 formData.append('image', file);
+                formData.append('category', 'members');
 
                 try {
                     const res = await fetch(`${API_URL}/images/upload`, {

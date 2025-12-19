@@ -1716,10 +1716,18 @@
     <div id="galleryView" class="hidden">
         <div class="header-actions">
             <h2><i class="fa-regular fa-images"></i>Správa Galerie</h2>
-            <div style="display: flex; gap: 1rem;"><button id="batchDeleteBtn" class="action-btn btn-danger" disabled
-                    onclick="deleteSelectedImages()"><i class="fa-solid fa-trash"></i>Smazat vybrané (<span
-                        id="selectedCount">0</span>) </button><button class="primary-btn"
-                    onclick="document.getElementById('imageUploadInput').click()"><i
+            <div style="display: flex; gap: 1rem; align-items: center;">
+                <select id="galleryCategoryFilter" onchange="loadAdminGallery()"
+                    style="padding: 0.5rem; border-radius: 4px; border: 1px solid var(--editor-border); background: rgba(255,255,255,0.05); color: var(--text-color);">
+                    <option value="">Všechny kategorie</option>
+                    <option value="members">Členové</option>
+                    <option value="news">Články</option>
+                    <option value="intro">Úvodní</option>
+                    <option value="blicak">Blicák</option>
+                </select>
+                <button id="batchDeleteBtn" class="action-btn btn-danger" disabled onclick="deleteSelectedImages()"><i
+                        class="fa-solid fa-trash"></i>Smazat vybrané (<span id="selectedCount">0</span>)
+                </button><button class="primary-btn" onclick="document.getElementById('imageUploadInput').click()"><i
                         class="fa-solid fa-cloud-arrow-up"></i>Nahrát fotky </button>
             </div><input type="file" id="imageUploadInput" multiple accept="image/*" style="display: none;"
                 onchange="handleAdminGalleryUpload(this)">
@@ -1732,8 +1740,10 @@
                             <th style="width: 40px;"><input type="checkbox" id="selectAllGallery"
                                     onclick="toggleSelectAllGallery(this)"></th>
                             <th>Náhled</th>
+                            <th style="width: 80px;">Pořadí</th>
                             <th>Název / Popisek</th>
-                            <th>Veřejné</th>
+                            <th style="width: 120px;">Kategorie</th>
+                            <th>Skryté</th>
                             <th>Datum nahrání</th>
                             <th>Akce</th>
                         </tr>
