@@ -254,17 +254,15 @@ router.get('/chess-results', async (req, res) => {
             });
         }
     }
+
+    // Auto-detect type if not clear
+    if (players.some(p => p.points)) {
+        isResults = true;
     }
-}
 
-// Auto-detect type if not clear
-if (players.some(p => p.points)) {
-    isResults = true;
-}
+    res.json({ players, count: players.length, type: isResults ? 'results' : 'startlist' });
 
-res.json({ players, count: players.length, type: isResults ? 'results' : 'startlist' });
-
-    } catch (error) {
+} catch (error) {
     console.error('Scraping error:', error);
     res.status(500).json({ error: 'Failed to scrape data', details: error.message });
 }
