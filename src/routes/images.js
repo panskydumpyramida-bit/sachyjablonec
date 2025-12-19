@@ -200,14 +200,21 @@ router.put('/:id/toggle', checkClubPassword, async (req, res) => {
 router.put('/:id/caption', checkClubPassword, async (req, res) => {
     try {
         const { id } = req.params;
-        const { altText, category } = req.body; // Allow category update too
+        const { altText, category } = req.body;
+
+        console.log(`Update caption/category for ID: ${id}`, req.body);
+
+        const idInt = parseInt(id);
+        if (isNaN(idInt)) {
+            return res.status(400).json({ error: 'Invalid ID' });
+        }
 
         const data = {};
         if (altText !== undefined) data.altText = altText || null;
         if (category !== undefined) data.category = category || null;
 
         const image = await prisma.image.update({
-            where: { id: parseInt(id) },
+            where: { id: idInt },
             data: data
         });
 
