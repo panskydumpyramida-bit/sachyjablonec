@@ -576,7 +576,7 @@
                 if ((data.type === 'results' || data.players.some(p => p.isResult)) && data.players.length > 0) {
 
                     // 1. Render Top 3 Podium
-                    renderResultsTop(data.players);
+                    renderResultsTop(data.players, startListUrl);
 
                     // 2. Update the "Details" List to show Full Standings
                     badgeEl.textContent = data.count || 0;
@@ -639,7 +639,7 @@
             }
         }
 
-        function renderResultsTop(players) {
+        function renderResultsTop(players, startListUrl) {
             const container = document.getElementById('topResultsPlaceholder');
             if (!container) return;
 
