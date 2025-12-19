@@ -65,6 +65,11 @@
     transition: height 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
 }
 
+/* Fix: Hide redundant header that was conflicting with global site header */
+.app-container .app-header {
+    display: none !important;
+}
+
 .main-content {
     display: flex;
     /* Critical fix: Restore flex layout */
