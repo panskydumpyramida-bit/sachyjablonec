@@ -693,41 +693,45 @@
                 <div style="max-width: 800px; margin: -2rem auto 3rem auto; text-align: center;">
                     <h2 class="section-title" style="margin-bottom: 2rem; left: auto; transform: none; position: relative;">🏆 Síň slávy</h2>
                     
-                    <div style="display: flex; justify-content: center; align-items: flex-end; gap: 1rem; flex-wrap: wrap; margin-bottom: 3rem;">
-                        
-                        <!-- 2nd Place -->
-                         <div class="podium-card" style="order: 1; flex: 1; min-width: 200px; padding: 1.5rem; background: rgba(192, 192, 192, 0.1); border-radius: 12px; border-top: 4px solid #C0C0C0; display: flex; flex-direction: column; align-items: center; min-height: 300px; justify-content: space-between;">
-                            <div style="margin-bottom: auto; width: 100%;">
-                                <div style="font-size: 2rem; margin-bottom: 0.5rem;">🥈</div>
-                                <div style="font-weight: bold; font-size: 1.2rem; color: #fff; margin-bottom: 0.5rem; word-wrap: break-word;">${top3[1] ? top3[1].name : '-'}</div>
-                                <div style="font-size: 0.9rem; color: var(--text-muted);">${top3[1] ? top3[1].club : ''}</div>
-                            </div>
-                            <div style="margin-top: 1rem; font-weight: bold; color: var(--primary-color); font-size: 1.5rem;">${top3[1] ? top3[1].points : 0}</div>
+                    <div style="display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 4rem; margin-bottom: 4rem;">
+                
+                <!-- Podium Section -->
+                <div style="flex: 1; min-width: 300px; display: flex; justify-content: center; align-items: flex-end; gap: 1rem;">
+                    
+                    <!-- 2nd Place -->
+                     <div class="podium-card" style="order: 1; flex: 1; min-width: 140px; padding: 1.5rem 1rem; background: rgba(192, 192, 192, 0.1); border-radius: 12px; border-top: 4px solid #C0C0C0; display: flex; flex-direction: column; align-items: center; min-height: 300px; justify-content: space-between;">
+                        <div style="margin-bottom: auto; width: 100%;">
+                            <div style="font-size: 2rem; margin-bottom: 0.5rem;">🥈</div>
+                            <div style="font-weight: bold; font-size: 1.1rem; color: #fff; margin-bottom: 0.5rem; word-wrap: break-word;">${top3[1] ? top3[1].name : '-'}</div>
+                            <div style="font-size: 0.85rem; color: var(--text-muted);">${top3[1] ? top3[1].club : ''}</div>
                         </div>
-
-                        <!-- 1st Place -->
-                        <div class="podium-card first-place" style="order: 2; flex: 1.2; min-width: 220px; padding: 2rem; background: rgba(212, 175, 55, 0.15); border-radius: 12px; border-top: 4px solid #FFD700; transform: translateY(-1rem); display: flex; flex-direction: column; align-items: center; box-shadow: 0 10px 30px rgba(212, 175, 55, 0.2); min-height: 320px; justify-content: space-between;">
-                            <div style="margin-bottom: auto; width: 100%;">
-                                <div style="font-size: 3rem; margin-bottom: 0.5rem;">🥇</div>
-                                <div style="font-weight: bold; font-size: 1.4rem; color: #FFD700; margin-bottom: 0.5rem; word-wrap: break-word;">${top3[0] ? top3[0].name : '-'}</div>
-                                <div style="font-size: 0.9rem; color: var(--text-muted);">${top3[0] ? top3[0].club : ''}</div>
-                            </div>
-                            <div style="margin-top: 1rem; font-weight: bold; color: #FFD700; font-size: 2rem;">${top3[0] ? top3[0].points : 0}</div>
-                        </div>
-
-                        <!-- 3rd Place -->
-                         <div class="podium-card" style="order: 3; flex: 1; min-width: 200px; padding: 1.5rem; background: rgba(205, 127, 50, 0.1); border-radius: 12px; border-top: 4px solid #CD7F32; display: flex; flex-direction: column; align-items: center; min-height: 240px; justify-content: space-between;">
-                            <div style="margin-bottom: auto; width: 100%;">
-                                <div style="font-size: 2rem; margin-bottom: 0.5rem;">🥉</div>
-                                <div style="font-weight: bold; font-size: 1.2rem; color: #fff; margin-bottom: 0.5rem; word-wrap: break-word;">${top3[2] ? top3[2].name : '-'}</div>
-                                <div style="font-size: 0.9rem; color: var(--text-muted);">${top3[2] ? top3[2].club : ''}</div>
-                            </div>
-                            <div style="margin-top: 1rem; font-weight: bold; color: var(--primary-color); font-size: 1.5rem;">${top3[2] ? top3[2].points : 0}</div>
-                        </div>
+                        <div style="margin-top: 1rem; font-weight: bold; color: var(--primary-color); font-size: 1.5rem;">${top3[1] ? top3[1].points : 0}</div>
                     </div>
 
-                    <!-- Witty Photo Section -->
-                    <div style="position: relative; margin: 2rem auto; max-width: 320px; transform: rotate(-2deg); transition: transform 0.3s;" onmouseenter="this.style.transform='rotate(0deg) scale(1.02)'" onmouseleave="this.style.transform='rotate(-2deg)'">
+                    <!-- 1st Place -->
+                    <div class="podium-card first-place" style="order: 2; flex: 1.2; min-width: 160px; padding: 2rem 1rem; background: rgba(212, 175, 55, 0.15); border-radius: 12px; border-top: 4px solid #FFD700; transform: translateY(-1rem); display: flex; flex-direction: column; align-items: center; box-shadow: 0 10px 30px rgba(212, 175, 55, 0.2); min-height: 320px; justify-content: space-between;">
+                        <div style="margin-bottom: auto; width: 100%;">
+                            <div style="font-size: 3rem; margin-bottom: 0.5rem;">🥇</div>
+                            <div style="font-weight: bold; font-size: 1.3rem; color: #FFD700; margin-bottom: 0.5rem; word-wrap: break-word;">${top3[0] ? top3[0].name : '-'}</div>
+                            <div style="font-size: 0.85rem; color: var(--text-muted);">${top3[0] ? top3[0].club : ''}</div>
+                        </div>
+                        <div style="margin-top: 1rem; font-weight: bold; color: #FFD700; font-size: 2rem;">${top3[0] ? top3[0].points : 0}</div>
+                    </div>
+
+                    <!-- 3rd Place -->
+                     <div class="podium-card" style="order: 3; flex: 1; min-width: 140px; padding: 1.5rem 1rem; background: rgba(205, 127, 50, 0.1); border-radius: 12px; border-top: 4px solid #CD7F32; display: flex; flex-direction: column; align-items: center; min-height: 240px; justify-content: space-between;">
+                        <div style="margin-bottom: auto; width: 100%;">
+                            <div style="font-size: 2rem; margin-bottom: 0.5rem;">🥉</div>
+                            <div style="font-weight: bold; font-size: 1.1rem; color: #fff; margin-bottom: 0.5rem; word-wrap: break-word;">${top3[2] ? top3[2].name : '-'}</div>
+                            <div style="font-size: 0.85rem; color: var(--text-muted);">${top3[2] ? top3[2].club : ''}</div>
+                        </div>
+                        <div style="margin-top: 1rem; font-weight: bold; color: var(--primary-color); font-size: 1.5rem;">${top3[2] ? top3[2].points : 0}</div>
+                    </div>
+                </div>
+
+                <!-- Witty Photo Section -->
+                <div style="flex: 1; min-width: 300px; display: flex; justify-content: center; align-items: center;">
+                    <div style="position: relative; max-width: 320px; transform: rotate(-2deg); transition: transform 0.3s;" onmouseenter="this.style.transform='rotate(0deg) scale(1.02)'" onmouseleave="this.style.transform='rotate(-2deg)'">
                         <div style="background: #fff; padding: 10px 10px 40px 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.5);">
                             <img src="images/winners_2024.png" alt="Stupně vítězů" style="width: 100%; display: block; filter: sepia(20%);">
                             <div style="font-family: 'Shadows Into Light', cursive, sans-serif; color: #333; font-size: 1.2rem; position: absolute; bottom: 10px; width: 100%; text-align: center; font-weight: bold;">
@@ -737,6 +741,9 @@
                         <div style="position: absolute; top: -15px; right: -15px; background: var(--primary-color); color: #000; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; box-shadow: 0 2px 5px rgba(0,0,0,0.3); transform: rotate(15deg);">
                             <i class="fa-solid fa-camera"></i>
                         </div>
+                    </div>
+                </div>
+            </div>
                     </div>
 
                 </div>
