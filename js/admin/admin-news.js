@@ -1591,6 +1591,100 @@ function selectGalleryForArticleGallery() {
 }
 
 // ================================
+// GALLERY DRAG & DROP
+// ================================
+
+function setupGalleryDropzone() {
+    // Find the gallery panel section
+    const galleryPreview = document.getElementById('galleryPreview');
+    if (!galleryPreview) return;
+
+    const dropzone = galleryPreview.parentElement; // panel-section containing gallery
+    if (!dropzone || dropzone.dataset.dropzoneInitialized) return;
+    dropzone.dataset.dropzoneInitialized = 'true';
+
+    // Add visual styling for dropzone
+    dropzone.style.position = 'relative';
+
+    // Create drop overlay
+    const overlay = document.createElement('div');
+    overlay.id = 'galleryDropOverlay';
+    overlay.innerHTML = '<i class="fa-solid fa-cloud-upload-alt"></i><span>Pusťte obrázky zde</span>';
+    overlay.style.cssText = `
+        display: none;
+        position: absolute;
+        inset: 0;
+        background: rgba(212, 175, 55, 0.15);
+        border: 2px dashed var(--primary-color);
+        border-radius: 8px;
+        z-index: 10;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        color: var(--primary-color);
+        font-size: 1.2rem;
+        pointer-events: none;
+    `;
+    dropzone.appendChild(overlay);
+
+    // Drag events
+    dropzone.addEventListener('dragenter', (e) => {
+        e.preventDefault();
+        overlay.style.display = 'flex';
+    });
+
+    dropzone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        overlay.style.display = 'flex';
+    });
+
+    dropzone.addEventListener('dragleave', (e) => {
+        if (!dropzone.contains(e.relatedTarget)) {
+            overlay.style.display = 'none';
+        }
+    });
+
+    dropzone.addEventListener('drop', async (e) => {
+        e.preventDefault();
+        overlay.style.display = 'none';
+
+        const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/'));
+        if (files.length === 0) return;
+
+        // Upload each file
+        for (const file of files) {
+            const formData = new FormData();
+            formData.append('image', file);
+            try {
+                const res = await fetch(`${API_URL}/images/upload`, {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${authToken}` },
+                    body: formData
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    const baseUrl = window.location.origin;
+                    const imageUrl = data.url.startsWith('http') ? data.url : `${baseUrl}${data.url}`;
+                    galleryImages.push({ url: imageUrl, caption: '' });
+                }
+            } catch (err) {
+                console.error('Drop upload error:', err);
+            }
+        }
+
+        renderGallery();
+    });
+
+    console.log('Gallery dropzone initialized');
+}
+
+// Initialize dropzone when editor is shown
+document.addEventListener('DOMContentLoaded', () => {
+    setTimeout(setupGalleryDropzone, 500);
+});
+
+// ================================
 // EXPORTS
 // ================================
 
@@ -1635,3 +1729,4 @@ window.selectGalleryForArticleGallery = selectGalleryForArticleGallery;
 window.updatePreview = updatePreview;
 window.checkDraft = checkDraft;
 window.addHeader = addHeader;
+window.setupGalleryDropzone = setupGalleryDropzone;
