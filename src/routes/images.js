@@ -105,12 +105,15 @@ router.get('/public', async (req, res) => {
                 orderBy: { uploadedAt: 'desc' }
             });
         } catch (dbError) {
-            // Fallback if category column doesn't exist
-            console.warn('Category query failed:', dbError.message);
-            images = await prisma.image.findMany({
-                where: { isPublic: true },
-                orderBy: { uploadedAt: 'desc' }
-            });
+            // Fallback using raw SQL to bypass schema validation
+            console.warn('Category query failed, using raw SQL:', dbError.message);
+            images = await prisma.$queryRaw`
+                SELECT id, filename, original_name as "originalName", url, alt_text as "altText", 
+                       is_public as "isPublic", uploaded_at as "uploadedAt"
+                FROM images 
+                WHERE is_public = true 
+                ORDER BY uploaded_at DESC
+            `;
         }
 
         res.json(images);
@@ -136,11 +139,14 @@ router.get('/', checkClubPassword, async (req, res) => {
                 orderBy: { uploadedAt: 'desc' }
             });
         } catch (dbError) {
-            // Fallback if category column doesn't exist
-            console.warn('Category query failed in admin route:', dbError.message);
-            images = await prisma.image.findMany({
-                orderBy: { uploadedAt: 'desc' }
-            });
+            // Fallback using raw SQL to bypass schema validation
+            console.warn('Category query failed in admin route, using raw SQL:', dbError.message);
+            images = await prisma.$queryRaw`
+                SELECT id, filename, original_name as "originalName", url, alt_text as "altText", 
+                       is_public as "isPublic", uploaded_at as "uploadedAt"
+                FROM images 
+                ORDER BY uploaded_at DESC
+            `;
         }
 
         res.json(images);
