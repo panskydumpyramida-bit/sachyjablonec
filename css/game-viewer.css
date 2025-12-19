@@ -50,7 +50,7 @@
 .app-container {
     display: flex;
     flex-direction: column;
-    height: 620px;
+    height: 580px;
     background-color: var(--viewer-bg);
     color: var(--viewer-text);
     transition: height 0.3s ease-out;
