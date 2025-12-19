@@ -89,6 +89,48 @@
             margin-bottom: 0.5rem;
             font-size: 1.1rem;
         }
+
+        /* Podium Hover Effects */
+        .podium-card {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            cursor: pointer;
+        }
+
+        /* Shine effect */
+        .podium-card::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 50%;
+            height: 100%;
+            background: linear-gradient(to right, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 0.4) 50%, rgba(255, 255, 255, 0) 100%);
+            transform: skewX(-25deg);
+            z-index: 2;
+            pointer-events: none;
+            transition: none;
+        }
+
+        .podium-card:hover::after {
+            left: 200%;
+            transition: left 0.7s ease-in-out;
+        }
+
+        /* Scale/Lift adjustments preserving original offsets */
+        .podium-card:not(.first-place):hover {
+            transform: translateY(-8px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5);
+            z-index: 10;
+        }
+
+        .podium-card.first-place:hover {
+            transform: translateY(-1.5rem) scale(1.02);
+            /* -1rem is base, so move up a bit more */
+            box-shadow: 0 15px 40px rgba(212, 175, 55, 0.4) !important;
+            z-index: 10;
+        }
     </style>
 </head>
 
@@ -654,7 +696,7 @@
                     <div style="display: flex; justify-content: center; align-items: flex-end; gap: 1rem; flex-wrap: wrap; margin-bottom: 3rem;">
                         
                         <!-- 2nd Place -->
-                         <div style="order: 1; flex: 1; min-width: 200px; padding: 1.5rem; background: rgba(192, 192, 192, 0.1); border-radius: 12px; border-top: 4px solid #C0C0C0; display: flex; flex-direction: column; align-items: center; min-height: 280px; justify-content: space-between;">
+                         <div class="podium-card" style="order: 1; flex: 1; min-width: 200px; padding: 1.5rem; background: rgba(192, 192, 192, 0.1); border-radius: 12px; border-top: 4px solid #C0C0C0; display: flex; flex-direction: column; align-items: center; min-height: 280px; justify-content: space-between;">
                             <div style="margin-bottom: auto; width: 100%;">
                                 <div style="font-size: 2rem; margin-bottom: 0.5rem;">🥈</div>
                                 <div style="font-weight: bold; font-size: 1.2rem; color: #fff; margin-bottom: 0.5rem; word-wrap: break-word;">${top3[1] ? top3[1].name : '-'}</div>
@@ -664,7 +706,7 @@
                         </div>
 
                         <!-- 1st Place -->
-                        <div style="order: 2; flex: 1.2; min-width: 220px; padding: 2rem; background: rgba(212, 175, 55, 0.15); border-radius: 12px; border-top: 4px solid #FFD700; transform: translateY(-1rem); display: flex; flex-direction: column; align-items: center; box-shadow: 0 10px 30px rgba(212, 175, 55, 0.2); min-height: 320px; justify-content: space-between;">
+                        <div class="podium-card first-place" style="order: 2; flex: 1.2; min-width: 220px; padding: 2rem; background: rgba(212, 175, 55, 0.15); border-radius: 12px; border-top: 4px solid #FFD700; transform: translateY(-1rem); display: flex; flex-direction: column; align-items: center; box-shadow: 0 10px 30px rgba(212, 175, 55, 0.2); min-height: 320px; justify-content: space-between;">
                             <div style="margin-bottom: auto; width: 100%;">
                                 <div style="font-size: 3rem; margin-bottom: 0.5rem;">🥇</div>
                                 <div style="font-weight: bold; font-size: 1.4rem; color: #FFD700; margin-bottom: 0.5rem; word-wrap: break-word;">${top3[0] ? top3[0].name : '-'}</div>
@@ -674,7 +716,7 @@
                         </div>
 
                         <!-- 3rd Place -->
-                         <div style="order: 3; flex: 1; min-width: 200px; padding: 1.5rem; background: rgba(205, 127, 50, 0.1); border-radius: 12px; border-top: 4px solid #CD7F32; display: flex; flex-direction: column; align-items: center; min-height: 260px; justify-content: space-between;">
+                         <div class="podium-card" style="order: 3; flex: 1; min-width: 200px; padding: 1.5rem; background: rgba(205, 127, 50, 0.1); border-radius: 12px; border-top: 4px solid #CD7F32; display: flex; flex-direction: column; align-items: center; min-height: 260px; justify-content: space-between;">
                             <div style="margin-bottom: auto; width: 100%;">
                                 <div style="font-size: 2rem; margin-bottom: 0.5rem;">🥉</div>
                                 <div style="font-weight: bold; font-size: 1.2rem; color: #fff; margin-bottom: 0.5rem; word-wrap: break-word;">${top3[2] ? top3[2].name : '-'}</div>
