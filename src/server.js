@@ -104,7 +104,7 @@ app.use(async (req, res, next) => {
 // Static Files Serving
 // Static Files Serving with Cache Policy
 const staticOptions = {
-    maxAge: '1y', // 1 year cache for static assets
+    maxAge: 31536000000, // 1 year in milliseconds
     etag: true
 };
 
@@ -581,15 +581,11 @@ app.use(cors({
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Serve uploaded files
-// Serve uploaded files
-app.use('/uploads', express.static(path.join(__dirname, '../uploads'), staticOptions));
-
 // Serve specific static directories
-// Serve specific static directories
-['css', 'js', 'images', 'data', 'components'].forEach(dir => {
-    app.use(`/${dir}`, express.static(path.join(__dirname, `../${dir}`), staticOptions));
-});
+// (Redundant block removed - already handled at top of file)
+// ['css', 'js', 'images', 'data', 'components'].forEach(dir => {
+//    app.use(`/${dir}`, express.static(path.join(__dirname, `../${dir}`), staticOptions));
+// });
 
 // Serve HTML files from root
 const allowedHtmlFiles = [
