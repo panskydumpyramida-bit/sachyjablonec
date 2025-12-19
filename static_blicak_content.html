@@ -15,48 +15,51 @@
 
         <!-- Podium Section -->
         <div
-            style="flex: 2; min-width: 350px; display: flex; justify-content: center; align-items: flex-end; gap: 0.5rem; max-width: 100%;">
+            style="flex: 2; min-width: 280px; display: flex; justify-content: center; align-items: flex-end; gap: 0.5rem; max-width: 100%;">
 
             <!-- 2nd Place - Vltavský -->
-            <div style="order: 1; flex: 1 1 0%; min-width: 0px; padding: 1.5rem 1rem; background: rgba(192, 192, 192, 0.1); border-radius: 12px; border-top-width: 4px; border-top-style: solid; border-top-color: rgb(192, 192, 192); display: flex; flex-direction: column; align-items: center; min-height: 280px; justify-content: space-between; transition: transform 0.2s, box-shadow 0.2s; cursor: default; transform: scale(1); box-shadow: none;"
+            <div class="podium-card podium-silver"
+                style="order: 1; flex: 1 1 0%; min-width: 0px; padding: 1.5rem 0.8rem; background: rgba(192, 192, 192, 0.1); border-radius: 12px; border-top: 4px solid rgb(192, 192, 192); display: flex; flex-direction: column; align-items: center; min-height: 280px; justify-content: space-between; transition: transform 0.2s, box-shadow 0.2s; cursor: default;"
                 onmouseenter="this.style.transform='scale(1.03)'; this.style.boxShadow='0 8px 25px rgba(192,192,192,0.3)';"
                 onmouseleave="this.style.transform='scale(1)'; this.style.boxShadow='none';">
                 <div style="margin-bottom: auto; width: 100%; text-align: center;">
                     <div style="font-size: 2rem; margin-bottom: 0.5rem;">🥈</div>
-                    <div style="font-size: 2rem; margin-bottom: 0.5rem;"><span
-                            style="caret-color: rgb(255, 255, 255); color: rgb(255, 255, 255); font-size: 17.6px; font-weight: 700; font-family: var(--font-main);">Vladimír&nbsp;</span><span
-                            style="color: rgb(255, 255, 255); font-size: 1.1rem; font-weight: bold; font-family: var(--font-main);">Vltavský&nbsp;</span>
-                    </div>
+                    <div class="podium-name"
+                        style="font-size: 1.1rem; font-weight: 700; color: #fff; margin-bottom: 0.5rem; word-wrap: break-word; overflow-wrap: break-word; hyphens: auto;">
+                        Vladimír Vltavský</div>
                     <div style="font-size: 0.85rem; color: #888;">ŠK ZIKUDA Turnov</div>
                 </div>
-                <div style="margin-top: 1rem; font-weight: bold; color: #D4AF37; font-size: 1.5rem;">8&nbsp;</div>
+                <div style="margin-top: 1rem; font-weight: bold; color: #D4AF37; font-size: 1.5rem;">8</div>
             </div>
 
             <!-- 1st Place - Sýkora -->
-            <div style="order: 2; flex: 1.2 1 0%; min-width: 0px; padding: 2rem 1rem; background: rgba(212, 175, 55, 0.15); border-radius: 12px; border-top-width: 4px; border-top-style: solid; border-top-color: rgb(255, 215, 0); transform: translateY(-1rem) scale(1); display: flex; flex-direction: column; align-items: center; box-shadow: rgba(212, 175, 55, 0.2) 0px 10px 30px; min-height: 300px; justify-content: space-between; transition: transform 0.2s, box-shadow 0.2s; cursor: default;"
+            <div class="podium-card podium-gold"
+                style="order: 2; flex: 1.2 1 0%; min-width: 0px; padding: 2rem 0.8rem; background: rgba(212, 175, 55, 0.15); border-radius: 12px; border-top: 4px solid rgb(255, 215, 0); transform: translateY(-1rem); display: flex; flex-direction: column; align-items: center; box-shadow: rgba(212, 175, 55, 0.2) 0px 10px 30px; min-height: 300px; justify-content: space-between; transition: transform 0.2s, box-shadow 0.2s; cursor: default;"
                 onmouseenter="this.style.transform='translateY(-1rem) scale(1.05)'; this.style.boxShadow='0 15px 40px rgba(212,175,55,0.4)';"
-                onmouseleave="this.style.transform='translateY(-1rem) scale(1)'; this.style.boxShadow='0 10px 30px rgba(212,175,55,0.2)';">
+                onmouseleave="this.style.transform='translateY(-1rem)'; this.style.boxShadow='0 10px 30px rgba(212,175,55,0.2)';">
                 <div style="margin-bottom: auto; width: 100%; text-align: center;">
                     <div style="font-size: 3rem; margin-bottom: 0.5rem;">🥇</div>
-                    <div style="font-weight: bold; font-size: 1.3rem; color: #FFD700; margin-bottom: 0.5rem;">Marek
-                        Sýkora</div>
+                    <div class="podium-name"
+                        style="font-weight: bold; font-size: 1.3rem; color: #FFD700; margin-bottom: 0.5rem; word-wrap: break-word; overflow-wrap: break-word; hyphens: auto;">
+                        Marek Sýkora</div>
                     <div style="font-size: 0.85rem; color: #888;">ŠK ZIKUDA Turnov</div>
                 </div>
-                <div style="margin-top: 1rem; font-weight: bold; color: #FFD700; font-size: 2rem;">8&nbsp;</div>
+                <div style="margin-top: 1rem; font-weight: bold; color: #FFD700; font-size: 2rem;">8</div>
             </div>
 
             <!-- 3rd Place - Tsantsala -->
-            <div style="order: 3; flex: 1 1 0%; min-width: 0px; padding: 1rem 0.8rem; background: rgba(205, 127, 50, 0.1); border-radius: 12px; border-top-width: 4px; border-top-style: solid; border-top-color: rgb(205, 127, 50); display: flex; flex-direction: column; align-items: center; min-height: 200px; justify-content: space-between; transition: transform 0.2s, box-shadow 0.2s; cursor: default; transform: scale(1); box-shadow: none;"
+            <div class="podium-card podium-bronze"
+                style="order: 3; flex: 1 1 0%; min-width: 0px; padding: 1rem 0.5rem; background: rgba(205, 127, 50, 0.1); border-radius: 12px; border-top: 4px solid rgb(205, 127, 50); display: flex; flex-direction: column; align-items: center; min-height: 200px; justify-content: space-between; transition: transform 0.2s, box-shadow 0.2s; cursor: default;"
                 onmouseenter="this.style.transform='scale(1.03)'; this.style.boxShadow='0 8px 25px rgba(205,127,50,0.3)';"
                 onmouseleave="this.style.transform='scale(1)'; this.style.boxShadow='none';">
                 <div style="margin-bottom: auto; width: 100%; text-align: center;">
                     <div style="font-size: 2rem; margin-bottom: 0.5rem;">🥉</div>
-                    <div style="font-weight: bold; font-size: 1.1rem; color: #fff; margin-bottom: 0.5rem;"><span
-                            style="font-size: 17.6px; font-family: var(--font-main);">Kostiantyn&nbsp;</span>Tsantsala
-                    </div>
-                    <div style="font-size: 0.85rem; color: #888;">TJ Bižuterie Jablonec</div>
+                    <div class="podium-name"
+                        style="font-weight: bold; font-size: 1rem; color: #fff; margin-bottom: 0.5rem; word-wrap: break-word; overflow-wrap: break-word; hyphens: auto;">
+                        Kostiantyn Tsantsala</div>
+                    <div style="font-size: 0.8rem; color: #888;">TJ Bižuterie Jablonec</div>
                 </div>
-                <div style="margin-top: 1rem; font-weight: bold; color: #D4AF37; font-size: 1.5rem;">7,5&nbsp;</div>
+                <div style="margin-top: 1rem; font-weight: bold; color: #D4AF37; font-size: 1.5rem;">7,5</div>
             </div>
         </div>
 
@@ -87,7 +90,7 @@
                 Kompletní pořadí
             </summary>
             <div style="padding: 1rem; overflow-x: auto;">
-                <table
+                <table id="resultsTable"
                     style="width: 100%; border-collapse: collapse; color: #fff; min-width: 300px; font-size: 0.9rem;">
                     <thead>
                         <tr style="border-bottom: 1px solid #D4AF37; text-align: left;">
@@ -99,6 +102,7 @@
                         </tr>
                     </thead>
                     <tbody>
+                        <!-- Top 10 - always visible -->
                         <tr style="border-bottom: 1px solid rgba(255,255,255,0.05); height: 40px;">
                             <td style="padding: 0.5rem; text-align: center; font-weight: bold; color: #D4AF37;">1.</td>
                             <td style="padding: 0.5rem; font-weight: 500;">Sýkora, Marek</td>
@@ -184,7 +188,205 @@
                             <td style="padding: 0.5rem; text-align: right; font-weight: bold; color: #D4AF37;">6</td>
                         </tr>
                     </tbody>
+                    <!-- Extended results - hidden by default -->
+                    <tbody id="extendedResults" style="display: none;">
+                        <tr style="border-bottom: 1px solid rgba(255,255,255,0.05); height: 40px;">
+                            <td style="padding: 0.5rem; text-align: center; font-weight: bold; color: #888;">11.</td>
+                            <td style="padding: 0.5rem; font-weight: 500;">Žídek, Miroslav</td>
+                            <td style="padding: 0.5rem; text-align: center; color: #888; font-family: monospace;">-</td>
+                            <td style="padding: 0.5rem; color: #ccc; font-size: 0.85rem;">-</td>
+                            <td style="padding: 0.5rem; text-align: right; font-weight: bold; color: #D4AF37;">-</td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid rgba(255,255,255,0.05); height: 40px;">
+                            <td style="padding: 0.5rem; text-align: center; font-weight: bold; color: #888;">12.</td>
+                            <td style="padding: 0.5rem; font-weight: 500;">Podrazký, Radim</td>
+                            <td style="padding: 0.5rem; text-align: center; color: #888; font-family: monospace;">-</td>
+                            <td style="padding: 0.5rem; color: #ccc; font-size: 0.85rem;">-</td>
+                            <td style="padding: 0.5rem; text-align: right; font-weight: bold; color: #D4AF37;">-</td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid rgba(255,255,255,0.05); height: 40px;">
+                            <td style="padding: 0.5rem; text-align: center; font-weight: bold; color: #888;">13.</td>
+                            <td style="padding: 0.5rem; font-weight: 500;">Šafránek, David</td>
+                            <td style="padding: 0.5rem; text-align: center; color: #888; font-family: monospace;">-</td>
+                            <td style="padding: 0.5rem; color: #ccc; font-size: 0.85rem;">-</td>
+                            <td style="padding: 0.5rem; text-align: right; font-weight: bold; color: #D4AF37;">-</td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid rgba(255,255,255,0.05); height: 40px;">
+                            <td style="padding: 0.5rem; text-align: center; font-weight: bold; color: #888;">14.</td>
+                            <td style="padding: 0.5rem; font-weight: 500;">Titěra, Libor</td>
+                            <td style="padding: 0.5rem; text-align: center; color: #888; font-family: monospace;">-</td>
+                            <td style="padding: 0.5rem; color: #ccc; font-size: 0.85rem;">-</td>
+                            <td style="padding: 0.5rem; text-align: right; font-weight: bold; color: #D4AF37;">-</td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid rgba(255,255,255,0.05); height: 40px;">
+                            <td style="padding: 0.5rem; text-align: center; font-weight: bold; color: #888;">15.</td>
+                            <td style="padding: 0.5rem; font-weight: 500;">Křivánek, Jaroslav</td>
+                            <td style="padding: 0.5rem; text-align: center; color: #888; font-family: monospace;">-</td>
+                            <td style="padding: 0.5rem; color: #ccc; font-size: 0.85rem;">-</td>
+                            <td style="padding: 0.5rem; text-align: right; font-weight: bold; color: #D4AF37;">-</td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid rgba(255,255,255,0.05); height: 40px;">
+                            <td style="padding: 0.5rem; text-align: center; font-weight: bold; color: #888;">16.</td>
+                            <td style="padding: 0.5rem; font-weight: 500;">Tománková, Lucie</td>
+                            <td style="padding: 0.5rem; text-align: center; color: #888; font-family: monospace;">-</td>
+                            <td style="padding: 0.5rem; color: #ccc; font-size: 0.85rem;">-</td>
+                            <td style="padding: 0.5rem; text-align: right; font-weight: bold; color: #D4AF37;">-</td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid rgba(255,255,255,0.05); height: 40px;">
+                            <td style="padding: 0.5rem; text-align: center; font-weight: bold; color: #888;">17.</td>
+                            <td style="padding: 0.5rem; font-weight: 500;">Šalanda, Radovan</td>
+                            <td style="padding: 0.5rem; text-align: center; color: #888; font-family: monospace;">-</td>
+                            <td style="padding: 0.5rem; color: #ccc; font-size: 0.85rem;">-</td>
+                            <td style="padding: 0.5rem; text-align: right; font-weight: bold; color: #D4AF37;">-</td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid rgba(255,255,255,0.05); height: 40px;">
+                            <td style="padding: 0.5rem; text-align: center; font-weight: bold; color: #888;">18.</td>
+                            <td style="padding: 0.5rem; font-weight: 500;">Láska, Štěpán</td>
+                            <td style="padding: 0.5rem; text-align: center; color: #888; font-family: monospace;">-</td>
+                            <td style="padding: 0.5rem; color: #ccc; font-size: 0.85rem;">-</td>
+                            <td style="padding: 0.5rem; text-align: right; font-weight: bold; color: #D4AF37;">-</td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid rgba(255,255,255,0.05); height: 40px;">
+                            <td style="padding: 0.5rem; text-align: center; font-weight: bold; color: #888;">19.</td>
+                            <td style="padding: 0.5rem; font-weight: 500;">Vltavský, Jakub</td>
+                            <td style="padding: 0.5rem; text-align: center; color: #888; font-family: monospace;">-</td>
+                            <td style="padding: 0.5rem; color: #ccc; font-size: 0.85rem;">-</td>
+                            <td style="padding: 0.5rem; text-align: right; font-weight: bold; color: #D4AF37;">-</td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid rgba(255,255,255,0.05); height: 40px;">
+                            <td style="padding: 0.5rem; text-align: center; font-weight: bold; color: #888;">20.</td>
+                            <td style="padding: 0.5rem; font-weight: 500;">Kačmar, Pavel</td>
+                            <td style="padding: 0.5rem; text-align: center; color: #888; font-family: monospace;">-</td>
+                            <td style="padding: 0.5rem; color: #ccc; font-size: 0.85rem;">-</td>
+                            <td style="padding: 0.5rem; text-align: right; font-weight: bold; color: #D4AF37;">-</td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid rgba(255,255,255,0.05); height: 40px;">
+                            <td style="padding: 0.5rem; text-align: center; font-weight: bold; color: #888;">21.</td>
+                            <td style="padding: 0.5rem; font-weight: 500;">Sivák, Lukáš</td>
+                            <td style="padding: 0.5rem; text-align: center; color: #888; font-family: monospace;">-</td>
+                            <td style="padding: 0.5rem; color: #ccc; font-size: 0.85rem;">-</td>
+                            <td style="padding: 0.5rem; text-align: right; font-weight: bold; color: #D4AF37;">-</td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid rgba(255,255,255,0.05); height: 40px;">
+                            <td style="padding: 0.5rem; text-align: center; font-weight: bold; color: #888;">22.</td>
+                            <td style="padding: 0.5rem; font-weight: 500;">Červeň, Aleš</td>
+                            <td style="padding: 0.5rem; text-align: center; color: #888; font-family: monospace;">-</td>
+                            <td style="padding: 0.5rem; color: #ccc; font-size: 0.85rem;">-</td>
+                            <td style="padding: 0.5rem; text-align: right; font-weight: bold; color: #D4AF37;">-</td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid rgba(255,255,255,0.05); height: 40px;">
+                            <td style="padding: 0.5rem; text-align: center; font-weight: bold; color: #888;">23.</td>
+                            <td style="padding: 0.5rem; font-weight: 500;">Švec, Luděk</td>
+                            <td style="padding: 0.5rem; text-align: center; color: #888; font-family: monospace;">-</td>
+                            <td style="padding: 0.5rem; color: #ccc; font-size: 0.85rem;">-</td>
+                            <td style="padding: 0.5rem; text-align: right; font-weight: bold; color: #D4AF37;">-</td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid rgba(255,255,255,0.05); height: 40px;">
+                            <td style="padding: 0.5rem; text-align: center; font-weight: bold; color: #888;">24.</td>
+                            <td style="padding: 0.5rem; font-weight: 500;">Malý, Marek</td>
+                            <td style="padding: 0.5rem; text-align: center; color: #888; font-family: monospace;">-</td>
+                            <td style="padding: 0.5rem; color: #ccc; font-size: 0.85rem;">-</td>
+                            <td style="padding: 0.5rem; text-align: right; font-weight: bold; color: #D4AF37;">-</td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid rgba(255,255,255,0.05); height: 40px;">
+                            <td style="padding: 0.5rem; text-align: center; font-weight: bold; color: #888;">25.</td>
+                            <td style="padding: 0.5rem; font-weight: 500;">Louda, Karel</td>
+                            <td style="padding: 0.5rem; text-align: center; color: #888; font-family: monospace;">-</td>
+                            <td style="padding: 0.5rem; color: #ccc; font-size: 0.85rem;">-</td>
+                            <td style="padding: 0.5rem; text-align: right; font-weight: bold; color: #D4AF37;">-</td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid rgba(255,255,255,0.05); height: 40px;">
+                            <td style="padding: 0.5rem; text-align: center; font-weight: bold; color: #888;">26.</td>
+                            <td style="padding: 0.5rem; font-weight: 500;">Durda, Šimon</td>
+                            <td style="padding: 0.5rem; text-align: center; color: #888; font-family: monospace;">-</td>
+                            <td style="padding: 0.5rem; color: #ccc; font-size: 0.85rem;">-</td>
+                            <td style="padding: 0.5rem; text-align: right; font-weight: bold; color: #D4AF37;">-</td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid rgba(255,255,255,0.05); height: 40px;">
+                            <td style="padding: 0.5rem; text-align: center; font-weight: bold; color: #888;">27.</td>
+                            <td style="padding: 0.5rem; font-weight: 500;">Kobylka, Vojtěch</td>
+                            <td style="padding: 0.5rem; text-align: center; color: #888; font-family: monospace;">-</td>
+                            <td style="padding: 0.5rem; color: #ccc; font-size: 0.85rem;">-</td>
+                            <td style="padding: 0.5rem; text-align: right; font-weight: bold; color: #D4AF37;">-</td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid rgba(255,255,255,0.05); height: 40px;">
+                            <td style="padding: 0.5rem; text-align: center; font-weight: bold; color: #888;">28.</td>
+                            <td style="padding: 0.5rem; font-weight: 500;">Chvátal, Jonáš</td>
+                            <td style="padding: 0.5rem; text-align: center; color: #888; font-family: monospace;">-</td>
+                            <td style="padding: 0.5rem; color: #ccc; font-size: 0.85rem;">-</td>
+                            <td style="padding: 0.5rem; text-align: right; font-weight: bold; color: #D4AF37;">-</td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid rgba(255,255,255,0.05); height: 40px;">
+                            <td style="padding: 0.5rem; text-align: center; font-weight: bold; color: #888;">29.</td>
+                            <td style="padding: 0.5rem; font-weight: 500;">Petržilková, Eliška</td>
+                            <td style="padding: 0.5rem; text-align: center; color: #888; font-family: monospace;">-</td>
+                            <td style="padding: 0.5rem; color: #ccc; font-size: 0.85rem;">-</td>
+                            <td style="padding: 0.5rem; text-align: right; font-weight: bold; color: #D4AF37;">-</td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid rgba(255,255,255,0.05); height: 40px;">
+                            <td style="padding: 0.5rem; text-align: center; font-weight: bold; color: #888;">30.</td>
+                            <td style="padding: 0.5rem; font-weight: 500;">Němec, Zdeněk</td>
+                            <td style="padding: 0.5rem; text-align: center; color: #888; font-family: monospace;">-</td>
+                            <td style="padding: 0.5rem; color: #ccc; font-size: 0.85rem;">-</td>
+                            <td style="padding: 0.5rem; text-align: right; font-weight: bold; color: #D4AF37;">-</td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid rgba(255,255,255,0.05); height: 40px;">
+                            <td style="padding: 0.5rem; text-align: center; font-weight: bold; color: #888;">31.</td>
+                            <td style="padding: 0.5rem; font-weight: 500;">Šikola, Jakub</td>
+                            <td style="padding: 0.5rem; text-align: center; color: #888; font-family: monospace;">-</td>
+                            <td style="padding: 0.5rem; color: #ccc; font-size: 0.85rem;">-</td>
+                            <td style="padding: 0.5rem; text-align: right; font-weight: bold; color: #D4AF37;">-</td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid rgba(255,255,255,0.05); height: 40px;">
+                            <td style="padding: 0.5rem; text-align: center; font-weight: bold; color: #888;">32.</td>
+                            <td style="padding: 0.5rem; font-weight: 500;">Hurt, Marek</td>
+                            <td style="padding: 0.5rem; text-align: center; color: #888; font-family: monospace;">-</td>
+                            <td style="padding: 0.5rem; color: #ccc; font-size: 0.85rem;">-</td>
+                            <td style="padding: 0.5rem; text-align: right; font-weight: bold; color: #D4AF37;">-</td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid rgba(255,255,255,0.05); height: 40px;">
+                            <td style="padding: 0.5rem; text-align: center; font-weight: bold; color: #888;">33.</td>
+                            <td style="padding: 0.5rem; font-weight: 500;">Sengr, Ivan</td>
+                            <td style="padding: 0.5rem; text-align: center; color: #888; font-family: monospace;">-</td>
+                            <td style="padding: 0.5rem; color: #ccc; font-size: 0.85rem;">-</td>
+                            <td style="padding: 0.5rem; text-align: right; font-weight: bold; color: #D4AF37;">-</td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid rgba(255,255,255,0.05); height: 40px;">
+                            <td style="padding: 0.5rem; text-align: center; font-weight: bold; color: #888;">34.</td>
+                            <td style="padding: 0.5rem; font-weight: 500;">Adámek, Lukáš</td>
+                            <td style="padding: 0.5rem; text-align: center; color: #888; font-family: monospace;">-</td>
+                            <td style="padding: 0.5rem; color: #ccc; font-size: 0.85rem;">-</td>
+                            <td style="padding: 0.5rem; text-align: right; font-weight: bold; color: #D4AF37;">-</td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid rgba(255,255,255,0.05); height: 40px;">
+                            <td style="padding: 0.5rem; text-align: center; font-weight: bold; color: #888;">35.</td>
+                            <td style="padding: 0.5rem; font-weight: 500;">Turczyniak, Petr</td>
+                            <td style="padding: 0.5rem; text-align: center; color: #888; font-family: monospace;">-</td>
+                            <td style="padding: 0.5rem; color: #ccc; font-size: 0.85rem;">-</td>
+                            <td style="padding: 0.5rem; text-align: right; font-weight: bold; color: #D4AF37;">-</td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid rgba(255,255,255,0.05); height: 40px;">
+                            <td style="padding: 0.5rem; text-align: center; font-weight: bold; color: #888;">36.</td>
+                            <td style="padding: 0.5rem; font-weight: 500;">Hádek, Vojtěch</td>
+                            <td style="padding: 0.5rem; text-align: center; color: #888; font-family: monospace;">-</td>
+                            <td style="padding: 0.5rem; color: #ccc; font-size: 0.85rem;">-</td>
+                            <td style="padding: 0.5rem; text-align: right; font-weight: bold; color: #D4AF37;">-</td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid rgba(255,255,255,0.05); height: 40px;">
+                            <td style="padding: 0.5rem; text-align: center; font-weight: bold; color: #888;">37.</td>
+                            <td style="padding: 0.5rem; font-weight: 500;">Solanki, Utkarshsinh B.</td>
+                            <td style="padding: 0.5rem; text-align: center; color: #888; font-family: monospace;">-</td>
+                            <td style="padding: 0.5rem; color: #ccc; font-size: 0.85rem;">-</td>
+                            <td style="padding: 0.5rem; text-align: right; font-weight: bold; color: #D4AF37;">-</td>
+                        </tr>
+                    </tbody>
                 </table>
+                <!-- Toggle button for extended results -->
+                <button id="toggleResultsBtn" onclick="toggleExtendedResults()"
+                    style="margin-top: 1rem; padding: 0.5rem 1rem; background: rgba(212, 175, 55, 0.15); border: 1px solid #D4AF37; color: #D4AF37; border-radius: 4px; cursor: pointer; font-size: 0.85rem; display: flex; align-items: center; gap: 0.5rem; width: 100%; justify-content: center;">
+                    <i class="fa-solid fa-chevron-down"></i>
+                    Zobrazit dalších 27 hráčů
+                </button>
             </div>
         </details>
         <style>
@@ -196,6 +398,14 @@
                 display: none;
             }
 
+            /* Podium name wrapping for mobile */
+            .podium-name {
+                word-wrap: break-word;
+                overflow-wrap: break-word;
+                hyphens: auto;
+                max-width: 100%;
+            }
+
             @media (max-width: 600px) {
 
                 details table td:nth-child(3),
@@ -204,8 +414,30 @@
                 details table th:nth-child(4) {
                     display: none !important;
                 }
+
+                .podium-card {
+                    padding: 0.8rem 0.3rem !important;
+                }
+
+                .podium-name {
+                    font-size: 0.9rem !important;
+                    line-height: 1.2;
+                }
             }
         </style>
+        <script>
+            function toggleExtendedResults() {
+                const extended = document.getElementById('extendedResults');
+                const btn = document.getElementById('toggleResultsBtn');
+                if (extended.style.display === 'none') {
+                    extended.style.display = '';
+                    btn.innerHTML = '<i class="fa-solid fa-chevron-up"></i> Skrýt rozšířené pořadí';
+                } else {
+                    extended.style.display = 'none';
+                    btn.innerHTML = '<i class="fa-solid fa-chevron-down"></i> Zobrazit dalších 27 hráčů';
+                }
+            }
+        </script>
     </div>
 
     <!-- Link na Chess-Results -->
