@@ -237,8 +237,23 @@ router.get('/chess-results', async (req, res) => {
                 // Club is usually text, not number, not Fed (3 chars)
                 if (/[a-zA-Z]{4,}/.test(c) && !/^\d/.test(c)) {
                     club = c;
-                    isResult: isResults && !!points
-                });
+                    break;
+                }
+            }
+        }
+
+        if (name) {
+            players.push({
+                rank,
+                name,
+                elo: elo || '',
+                club: club || '',
+                fed,
+                points: points || '',
+                isResult: isResults && !!points
+            });
+        }
+    }
     }
 }
 
