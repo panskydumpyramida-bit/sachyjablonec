@@ -237,28 +237,13 @@ router.get('/chess-results', async (req, res) => {
                 // Club is usually text, not number, not Fed (3 chars)
                 if (/[a-zA-Z]{4,}/.test(c) && !/^\d/.test(c)) {
                     club = c;
-                    break;
-                }
-            }
-        }
-
-    }
-
-        if (name) {
-        players.push({
-            rank,
-            name,
-            elo: elo || '',
-            club: club || '',
-            fed,
-            points: points || '',
-            isResult: isResults && !!points
-        });
+                    isResult: isResults && !!points
+                });
     }
 }
 
-        // Auto-detect type if not clear
-        if (players.some(p => p.points)) {
+// Auto-detect type if not clear
+if (players.some(p => p.points)) {
     isResults = true;
 }
 
