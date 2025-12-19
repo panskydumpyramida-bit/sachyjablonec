@@ -72,7 +72,7 @@
 }
 
 .iframe-container {
-    max-width: 800px;
+    max-width: 620px;
     width: 100%;
     /* Fill remaining vertical space */
     min-height: 0;
