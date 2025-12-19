@@ -109,6 +109,10 @@ app.use('/css', express.static(path.join(__dirname, '../css')));
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 app.use('/images', express.static(path.join(__dirname, '../images')));
 
+// SEO Files - Explicit rules to ensure they are served correctly
+app.get('/robots.txt', (req, res) => res.sendFile(path.join(__dirname, '../robots.txt')));
+app.get('/sitemap.xml', (req, res) => res.sendFile(path.join(__dirname, '../sitemap.xml')));
+
 // Serve specific HTML pages (since they are in root)
 // Serve specific HTML pages (Clean URLs support)
 const servePage = (page) => (req, res) => res.sendFile(path.join(__dirname, `../${page}`));

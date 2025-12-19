@@ -93,7 +93,7 @@ async function loadNews(options = {}) {
 
         // Render based on display mode
         if (displayMode === 'cards') {
-            htmlContent = news.map(item => `
+            htmlContent = news.map((item, index) => `
                 <article class="card" onclick="window.location.href='${getArticleUrl(item)}'" style="cursor: pointer;">
                     <div class="card-image">
                         ${(() => {
@@ -104,9 +104,10 @@ async function loadNews(options = {}) {
                         thumb = parts[0];
                         crop = parts[1]; // e.g. "25%" or "50%"
                     }
+                    const loadingAttr = index < 2 ? 'eager' : 'lazy';
                     return `<img src="${thumb}" 
                                      alt="${escapeHtml(item.title)}"
-                                     loading="lazy"
+                                     loading="${loadingAttr}"
                                      width="400" height="300"
                                      style="object-position: center ${crop};"
                                      onerror="this.src='images/chess_placeholder.jpg'">`;
