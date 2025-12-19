@@ -19,8 +19,9 @@
             style="flex: 2; min-width: 350px; display: flex; justify-content: center; align-items: flex-end; gap: 0.5rem; max-width: 100%;">
 
             <!-- 2nd Place - Vltavský -->
-            <div
-                style="order: 1; flex: 1; min-width: 0; padding: 1.5rem 1rem; background: rgba(192, 192, 192, 0.1); border-radius: 12px; border-top: 4px solid #C0C0C0; display: flex; flex-direction: column; align-items: center; min-height: 280px; justify-content: space-between;">
+            <div style="order: 1; flex: 1; min-width: 0; padding: 1.5rem 1rem; background: rgba(192, 192, 192, 0.1); border-radius: 12px; border-top: 4px solid #C0C0C0; display: flex; flex-direction: column; align-items: center; min-height: 280px; justify-content: space-between; transition: transform 0.2s, box-shadow 0.2s; cursor: default;"
+                onmouseenter="this.style.transform='scale(1.03)'; this.style.boxShadow='0 8px 25px rgba(192,192,192,0.3)';"
+                onmouseleave="this.style.transform='scale(1)'; this.style.boxShadow='none';">
                 <div style="margin-bottom: auto; width: 100%; text-align: center;">
                     <div style="font-size: 2rem; margin-bottom: 0.5rem;">🥈</div>
                     <div style="font-weight: bold; font-size: 1.1rem; color: #fff; margin-bottom: 0.5rem;">Vltavský,
@@ -31,8 +32,9 @@
             </div>
 
             <!-- 1st Place - Sýkora -->
-            <div
-                style="order: 2; flex: 1.2; min-width: 0; padding: 2rem 1rem; background: rgba(212, 175, 55, 0.15); border-radius: 12px; border-top: 4px solid #FFD700; transform: translateY(-1rem); display: flex; flex-direction: column; align-items: center; box-shadow: 0 10px 30px rgba(212, 175, 55, 0.2); min-height: 300px; justify-content: space-between;">
+            <div style="order: 2; flex: 1.2; min-width: 0; padding: 2rem 1rem; background: rgba(212, 175, 55, 0.15); border-radius: 12px; border-top: 4px solid #FFD700; transform: translateY(-1rem); display: flex; flex-direction: column; align-items: center; box-shadow: 0 10px 30px rgba(212, 175, 55, 0.2); min-height: 300px; justify-content: space-between; transition: transform 0.2s, box-shadow 0.2s; cursor: default;"
+                onmouseenter="this.style.transform='translateY(-1rem) scale(1.05)'; this.style.boxShadow='0 15px 40px rgba(212,175,55,0.4)';"
+                onmouseleave="this.style.transform='translateY(-1rem) scale(1)'; this.style.boxShadow='0 10px 30px rgba(212,175,55,0.2)';">
                 <div style="margin-bottom: auto; width: 100%; text-align: center;">
                     <div style="font-size: 3rem; margin-bottom: 0.5rem;">🥇</div>
                     <div style="font-weight: bold; font-size: 1.3rem; color: #FFD700; margin-bottom: 0.5rem;">Sýkora,
@@ -43,8 +45,9 @@
             </div>
 
             <!-- 3rd Place - Tsantsala -->
-            <div
-                style="order: 3; flex: 1; min-width: 0; padding: 1rem 0.8rem; background: rgba(205, 127, 50, 0.1); border-radius: 12px; border-top: 4px solid #CD7F32; display: flex; flex-direction: column; align-items: center; min-height: 200px; justify-content: space-between;">
+            <div style="order: 3; flex: 1; min-width: 0; padding: 1rem 0.8rem; background: rgba(205, 127, 50, 0.1); border-radius: 12px; border-top: 4px solid #CD7F32; display: flex; flex-direction: column; align-items: center; min-height: 200px; justify-content: space-between; transition: transform 0.2s, box-shadow 0.2s; cursor: default;"
+                onmouseenter="this.style.transform='scale(1.03)'; this.style.boxShadow='0 8px 25px rgba(205,127,50,0.3)';"
+                onmouseleave="this.style.transform='scale(1)'; this.style.boxShadow='none';">
                 <div style="margin-bottom: auto; width: 100%; text-align: center;">
                     <div style="font-size: 2rem; margin-bottom: 0.5rem;">🥉</div>
                     <div style="font-weight: bold; font-size: 1.1rem; color: #fff; margin-bottom: 0.5rem;">Tsantsala,
@@ -58,7 +61,9 @@
         <!-- Photo Section -->
         <div
             style="flex: 1; min-width: 180px; max-width: 220px; display: flex; justify-content: center; align-items: center;">
-            <div style="position: relative; max-width: 200px; transform: rotate(-2deg); transition: transform 0.3s;">
+            <div style="position: relative; max-width: 200px; transform: rotate(-2deg); transition: transform 0.3s;"
+                onmouseenter="this.style.transform='rotate(0deg) scale(1.05)';"
+                onmouseleave="this.style.transform='rotate(-2deg)';">
                 <div style="background: #fff; padding: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.5);">
                     <img src="/images/winners_2024.jpg" alt="Stupně vítězů Blicák 2024"
                         style="width: 100%; display: block; filter: sepia(20%); object-fit: cover;">
