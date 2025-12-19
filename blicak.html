@@ -696,36 +696,36 @@
                     <div style="display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 4rem; margin-bottom: 4rem;">
                 
                 <!-- Podium Section -->
-                <div style="flex: 1; min-width: 300px; display: flex; justify-content: center; align-items: flex-end; gap: 1rem;">
+                <div style="flex: 1; min-width: 300px; display: flex; justify-content: center; align-items: flex-end; gap: 0.5rem; max-width: 100%;">
                     
                     <!-- 2nd Place -->
-                     <div class="podium-card" style="order: 1; flex: 1; min-width: 140px; padding: 1.5rem 1rem; background: rgba(192, 192, 192, 0.1); border-radius: 12px; border-top: 4px solid #C0C0C0; display: flex; flex-direction: column; align-items: center; min-height: 300px; justify-content: space-between;">
+                     <div class="podium-card" style="order: 1; flex: 1; min-width: 0; padding: 1.5rem 1rem; background: rgba(192, 192, 192, 0.1); border-radius: 12px; border-top: 4px solid #C0C0C0; display: flex; flex-direction: column; align-items: center; min-height: 300px; justify-content: space-between;">
                         <div style="margin-bottom: auto; width: 100%;">
-                            <div style="font-size: 2rem; margin-bottom: 0.5rem;">🥈</div>
-                            <div style="font-weight: bold; font-size: 1.1rem; color: #fff; margin-bottom: 0.5rem; word-wrap: break-word;">${top3[1] ? top3[1].name : '-'}</div>
-                            <div style="font-size: 0.85rem; color: var(--text-muted);">${top3[1] ? top3[1].club : ''}</div>
+                            <div class="podium-rank" style="font-size: 2rem; margin-bottom: 0.5rem;">🥈</div>
+                            <div class="podium-name" style="font-weight: bold; font-size: 1.1rem; color: #fff; margin-bottom: 0.5rem; word-wrap: break-word;">${top3[1] ? top3[1].name : '-'}</div>
+                            <div class="podium-club" style="font-size: 0.85rem; color: var(--text-muted);">${top3[1] ? top3[1].club : ''}</div>
                         </div>
-                        <div style="margin-top: 1rem; font-weight: bold; color: var(--primary-color); font-size: 1.5rem;">${top3[1] ? top3[1].points : 0}</div>
+                        <div class="podium-points" style="margin-top: 1rem; font-weight: bold; color: var(--primary-color); font-size: 1.5rem;">${top3[1] ? top3[1].points : 0}</div>
                     </div>
 
                     <!-- 1st Place -->
-                    <div class="podium-card first-place" style="order: 2; flex: 1.2; min-width: 160px; padding: 2rem 1rem; background: rgba(212, 175, 55, 0.15); border-radius: 12px; border-top: 4px solid #FFD700; transform: translateY(-1rem); display: flex; flex-direction: column; align-items: center; box-shadow: 0 10px 30px rgba(212, 175, 55, 0.2); min-height: 320px; justify-content: space-between;">
+                    <div class="podium-card first-place" style="order: 2; flex: 1.2; min-width: 0; padding: 2rem 1rem; background: rgba(212, 175, 55, 0.15); border-radius: 12px; border-top: 4px solid #FFD700; transform: translateY(-1rem); display: flex; flex-direction: column; align-items: center; box-shadow: 0 10px 30px rgba(212, 175, 55, 0.2); min-height: 320px; justify-content: space-between;">
                         <div style="margin-bottom: auto; width: 100%;">
-                            <div style="font-size: 3rem; margin-bottom: 0.5rem;">🥇</div>
-                            <div style="font-weight: bold; font-size: 1.3rem; color: #FFD700; margin-bottom: 0.5rem; word-wrap: break-word;">${top3[0] ? top3[0].name : '-'}</div>
-                            <div style="font-size: 0.85rem; color: var(--text-muted);">${top3[0] ? top3[0].club : ''}</div>
+                            <div class="podium-rank" style="font-size: 3rem; margin-bottom: 0.5rem;">🥇</div>
+                            <div class="podium-name" style="font-weight: bold; font-size: 1.3rem; color: #FFD700; margin-bottom: 0.5rem; word-wrap: break-word;">${top3[0] ? top3[0].name : '-'}</div>
+                            <div class="podium-club" style="font-size: 0.85rem; color: var(--text-muted);">${top3[0] ? top3[0].club : ''}</div>
                         </div>
-                        <div style="margin-top: 1rem; font-weight: bold; color: #FFD700; font-size: 2rem;">${top3[0] ? top3[0].points : 0}</div>
+                        <div class="podium-points" style="margin-top: 1rem; font-weight: bold; color: #FFD700; font-size: 2rem;">${top3[0] ? top3[0].points : 0}</div>
                     </div>
 
                     <!-- 3rd Place -->
-                     <div class="podium-card" style="order: 3; flex: 1; min-width: 140px; padding: 1.5rem 1rem; background: rgba(205, 127, 50, 0.1); border-radius: 12px; border-top: 4px solid #CD7F32; display: flex; flex-direction: column; align-items: center; min-height: 240px; justify-content: space-between;">
+                     <div class="podium-card" style="order: 3; flex: 1; min-width: 0; padding: 1.5rem 1rem; background: rgba(205, 127, 50, 0.1); border-radius: 12px; border-top: 4px solid #CD7F32; display: flex; flex-direction: column; align-items: center; min-height: 240px; justify-content: space-between;">
                         <div style="margin-bottom: auto; width: 100%;">
-                            <div style="font-size: 2rem; margin-bottom: 0.5rem;">🥉</div>
-                            <div style="font-weight: bold; font-size: 1.1rem; color: #fff; margin-bottom: 0.5rem; word-wrap: break-word;">${top3[2] ? top3[2].name : '-'}</div>
-                            <div style="font-size: 0.85rem; color: var(--text-muted);">${top3[2] ? top3[2].club : ''}</div>
+                            <div class="podium-rank" style="font-size: 2rem; margin-bottom: 0.5rem;">🥉</div>
+                            <div class="podium-name" style="font-weight: bold; font-size: 1.1rem; color: #fff; margin-bottom: 0.5rem; word-wrap: break-word;">${top3[2] ? top3[2].name : '-'}</div>
+                            <div class="podium-club" style="font-size: 0.85rem; color: var(--text-muted);">${top3[2] ? top3[2].club : ''}</div>
                         </div>
-                        <div style="margin-top: 1rem; font-weight: bold; color: var(--primary-color); font-size: 1.5rem;">${top3[2] ? top3[2].points : 0}</div>
+                        <div class="podium-points" style="margin-top: 1rem; font-weight: bold; color: var(--primary-color); font-size: 1.5rem;">${top3[2] ? top3[2].points : 0}</div>
                     </div>
                 </div>
 
@@ -744,6 +744,49 @@
                     </div>
                 </div>
             </div>
+
+            <style>
+                @media (max-width: 768px) {
+                    /* On mobile, allow podium items to shrink below min-width to fit 3 in a row */
+                    .podium-card {
+                        min-width: 0 !important;
+                        padding: 0.5rem !important;
+                        border-radius: 8px !important;
+                        min-height: 180px !important; /* Smaller height for mobile */
+                    }
+                    
+                    /* Adjust heights for hierarchy on mobile */
+                    .podium-card.first-place {
+                        min-height: 210px !important;
+                    }
+                    
+                    /* Hide non-essential info on mobile to save space */
+                    .podium-card .club-info, 
+                    .podium-card .points-info {
+                         /* User said: "nemusi tam byt team a elo" -> Hide club */
+                         /* But maybe keep points? User said "team a elo". Points is crucial for result. */
+                         /* Let's hide Club. Elo is not there anyway in podium view (was never there). */
+                    }
+                    .podium-club {
+                        display: none !important;
+                    }
+                    
+                    .podium-name {
+                         font-size: 0.9rem !important;
+                         line-height: 1.1;
+                         margin-bottom: 0.2rem !important;
+                    }
+                    
+                    .podium-points {
+                        font-size: 1.2rem !important;
+                        margin-top: 0.5rem !important;
+                    }
+
+                    .podium-rank {
+                        font-size: 1.5rem !important;
+                    }
+                }
+            </style>
                     </div>
 
                 </div>

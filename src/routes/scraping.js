@@ -242,12 +242,32 @@ router.get('/chess-results', async (req, res) => {
             }
         }
 
-        res.json({ players, count: players.length, type: isResults ? 'results' : 'startlist' });
+    }
+
+            if (name) {
+        players.push({
+            rank,
+            name,
+            elo: elo || '',
+            club: club || '',
+            fed,
+            points: points || '',
+            isResult: isResults && !!points
+        });
+    }
+}
+
+        // Auto-detect type if not clear
+        if (players.some(p => p.points)) {
+    isResults = true;
+}
+
+res.json({ players, count: players.length, type: isResults ? 'results' : 'startlist' });
 
     } catch (error) {
-        console.error('Scraping error:', error);
-        res.status(500).json({ error: 'Failed to scrape data', details: error.message });
-    }
+    console.error('Scraping error:', error);
+    res.status(500).json({ error: 'Failed to scrape data', details: error.message });
+}
 });
 // Rosada Profile Scraping
 router.get('/rosada/:id', async (req, res) => {
