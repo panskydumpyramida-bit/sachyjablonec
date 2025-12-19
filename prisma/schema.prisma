@@ -108,6 +108,7 @@ model Image {
   originalName String?  @map("original_name")
   url          String
   altText      String?  @map("alt_text")
+  category     String?  @map("category") // e.g. "blicak"
   isPublic     Boolean  @default(true) @map("is_public")
   uploadedAt   DateTime @default(now()) @map("uploaded_at")
   
