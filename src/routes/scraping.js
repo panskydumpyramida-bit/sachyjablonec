@@ -244,7 +244,7 @@ router.get('/chess-results', async (req, res) => {
 
     }
 
-            if (name) {
+        if (name) {
         players.push({
             rank,
             name,
