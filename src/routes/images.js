@@ -77,7 +77,8 @@ router.post('/upload', checkClubPassword, (req, res, next) => {
                 filename,
                 originalName: req.file.originalname,
                 url,
-                altText: req.body.altText || null
+                altText: req.body.altText || null,
+                category: req.body.category || null
             }
         });
 
@@ -91,8 +92,15 @@ router.post('/upload', checkClubPassword, (req, res, next) => {
 // Get public images (all visible)
 router.get('/public', async (req, res) => {
     try {
+        const { category } = req.query;
+        const where = { isPublic: true };
+
+        if (category) {
+            where.category = category;
+        }
+
         const images = await prisma.image.findMany({
-            where: { isPublic: true },
+            where,
             orderBy: {
                 uploadedAt: 'desc'
             }
@@ -108,7 +116,15 @@ router.get('/public', async (req, res) => {
 // Get all images
 router.get('/', checkClubPassword, async (req, res) => {
     try {
+        const { category } = req.query;
+        const where = {};
+
+        if (category) {
+            where.category = category;
+        }
+
         const images = await prisma.image.findMany({
+            where,
             orderBy: {
                 uploadedAt: 'desc'
             }

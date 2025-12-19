@@ -1151,16 +1151,10 @@
                     novinka</div>
                 <div class="nav-tab" onclick="switchTab('members')" style="display: none;"><i
                         class="fa-solid fa-address-book"></i>Členové </div>
-                <div class="nav-tab hidden" id="usersTab" onclick="switchTab('users')"><i
-                        class="fa-solid fa-users"></i>Uživatelé</div>
-                <div class="nav-tab" id="messagesTab" onclick="switchTab('messages')"><i
-                        class="fa-solid fa-comments"></i>Vzkazovník</div>
-                <div class="nav-tab" id="blicakTab" onclick="switchTab('blicak')"><i
-                        class="fa-solid fa-bolt"></i>Vánoční blesk</div>
-                <div class="nav-tab" id="competitionsTab" onclick="switchTab('competitions')"><i
-                        class="fa-solid fa-table"></i>Tabulky družstva</div>
-                <div class="nav-tab" id="galleryTab" onclick="switchTab('gallery')" style="display: none;"><i
+                <div class="nav-tab" onclick="switchTab('gallery')" id="galleryTab" style="display: none;"><i
                         class="fa-regular fa-images"></i>Galerie</div>
+                <div class="nav-tab" onclick="switchTab('blicak')" id="blicakTab"><i class="fa-solid fa-bolt"></i>Blicák
+                </div>
                 <div class="nav-tab" id="puzzleRacerTab" onclick="switchTab('puzzleRacer')"><i
                         class="fa-solid fa-puzzle-piece"></i>Puzzle Racer</div>
             </div>
@@ -1532,6 +1526,22 @@
         </table>
         <div id="noBlicakInfo" style="text-align: center; padding: 2rem; color: var(--text-muted); display: none;">
             Žádné registrace. </div>
+
+        <!-- Blicák Gallery Management -->
+        <div style="margin-top: 3rem; border-top: 1px solid var(--editor-border); padding-top: 2rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <h3 style="margin: 0;"><i class="fa-solid fa-camera"></i> Fotografie z turnaje</h3>
+                <button class="btn-primary" onclick="document.getElementById('blicakUploadInput').click()">
+                    <i class="fa-solid fa-cloud-arrow-up"></i> Nahrát fotky
+                </button>
+                <input type="file" id="blicakUploadInput" multiple accept="image/*" style="display: none;"
+                    onchange="handleAdminGalleryUpload(this, 'blicak').then(() => showToast('Fotky nahrány', 'success'))">
+            </div>
+            <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1rem;">
+                Zde nahrané fotografie se automaticky zařadí do kategorie "blicak" a zobrazí se v galerii na stránce
+                turnaje.
+            </p>
+        </div>
     </div>
     <!-- Competitions View -->
     <div id="competitionsView" class="hidden">
@@ -2171,11 +2181,10 @@
         }
 
         async function loadBlicakRegistrations() {
+            // Load Registrations
             try {
                 const res = await fetch(`${API_URL}/registration/blicak`, {
-                    headers: {
-                        'Authorization': `Bearer ${authToken}`
-                    }
+                    headers: { 'Authorization': `Bearer ${authToken}` }
                 });
 
                 if (res.ok) {
@@ -2186,25 +2195,23 @@
                     if (regs.length === 0) {
                         tbody.innerHTML = '';
                         info.style.display = 'block';
-                        return;
+                    } else {
+                        info.style.display = 'none';
+                        tbody.innerHTML = regs.map(reg => `
+                            <tr>
+                                <td><strong>${escapeHtml(reg.name)}</strong></td>
+                                <td>${escapeHtml(reg.club || '-')}</td>
+                                <td>${escapeHtml(reg.lok || '-')}</td>
+                                <td>${escapeHtml(reg.birthYear)}</td>
+                                <td>${new Date(reg.createdAt).toLocaleString('cs-CZ')}</td>
+                            </tr>`).join('');
                     }
-
-                    info.style.display = 'none';
-
-                    tbody.innerHTML = regs.map(reg => `
-                        <tr>
-                            <td><strong>${escapeHtml(reg.name)}</strong></td>
-                            <td>${escapeHtml(reg.club || '-')}</td>
-                            <td>${escapeHtml(reg.lok || '-')}</td>
-                            <td>${escapeHtml(reg.birthYear)}</td>
-                            <td>${new Date(reg.createdAt).toLocaleString('cs-CZ')}</td>
-                        </tr>`).join('');
                 }
-            }
-
-            catch (e) {
+            } catch (e) {
                 console.error(e);
             }
+
+            // Load Blicák Gallery Preview (Optional, for now just the upload button is handled in the view)
         }
 
         // Editor

@@ -29,22 +29,19 @@ router.get('/chess-results', async (req, res) => {
         }
 
         const html = await response.text();
+        const isResults = url.includes('art=1') || url.includes('art=4'); // art=1 is standings, art=4 is cross table but maybe art=1 is safer
         const players = [];
 
-        // Regex to match TRs (case insensitive, multiline dots)
-        // We use a simple loop over matches to be safer
+        // Parsing logic
+        // We look for rows. 
+        // For Standings (art=1): Rank, ..., Name, ..., Pts, ...
+        // We reuse the row regex approach but interpret cells differently.
+
         const rowRegex = /<tr[^>]*>([\s\S]*?)<\/tr>/gi;
         let match;
 
         while ((match = rowRegex.exec(html)) !== null) {
             const rowContent = match[1];
-
-            // Check if it's a data row (contains CRg cells)
-            // It usually has class="CRg..." in the TR tag, but we already stripped that.
-            // So we check if inner content has CRc/CR classes or looks like data
-            // Actually, we can check the original full match if we needed, but checking content is fine.
-            // Data rows have multiple TDs.
-
             const cellRegex = /<td[^>]*>([\s\S]*?)<\/td>/gi;
             const cells = [];
             let cellMatch;
@@ -55,42 +52,114 @@ router.get('/chess-results', async (req, res) => {
             if (cells.length < 5) continue;
 
             // Mapping based on observation:
-            // 0: Rank
-            // 1: Empty
-            // 2: Name
-            // 3: FideID
-            // 4: FED
-            // 5: Rtg
-            // 6: Club
+            // Rank cell is usually first or second depending on if there is a 'No.' col
+            // Let's assume standard Chess-Results structure for art=1
+            // Col 0: Rank
+            // Col 1: SNo (maybe)
+            // Col 2: Name (usually with link)
+            // ...
+            // Points usually near end
+            // We need to be a bit robust.
 
-            // Verify if it is a player row: Name cell should not be empty
-            const nameRaw = cells[2];
-            if (!nameRaw) continue;
+            // Clean all cells
+            const cleanedCells = cells.map(c => clean(c));
 
-            const name = clean(nameRaw);
-            const rank = clean(cells[0]);
+            // Heuristic for data row: Rank is a number, content is not just header text
+            const firstCell = cleanedCells[0];
+            const secondCell = cleanedCells[1];
 
-            let elo = clean(cells[5]);
-            if (!elo.match(/^\d+$/)) elo = ''; // MUST be digits
+            // Start List (art=0 or default) Logic
+            if (!isResults) {
+                // Usually: Rank/No., Name, ID, Fed, Rtg, Club...
+                const nameRaw = cells[2];
+                if (!nameRaw) continue; // Must have name col
+                const name = clean(nameRaw);
+                const rank = clean(cells[0]);
 
-            const club = clean(cells[6]);
-            const fed = clean(cells[4]);
+                if (!rank.match(/^\d+$/)) continue; // Header row check
 
-            // Filter out header rows (where rank is "Čís." or similar)
-            if (!rank.match(/^\d+$/)) continue;
+                let elo = clean(cells[5]);
+                if (!elo.match(/^\d+$/)) elo = '';
+                const club = clean(cells[6]);
+                const fed = clean(cells[4]);
 
-            if (name) {
+                if (name) {
+                    players.push({ rank, name, elo, club, fed });
+                }
+            }
+            // Results (art=1) Logic
+            else {
+                // Usually: Rank, SNo, Name, Rtg, Club, Pts, TB1, TB2...
+                // Index might vary. Let's find Name column by content link or position?
+                // Standard: 0:Rank, 1:SNo, 2:Name, 3:Fed, 4:Rtg, 5:Club, 6:Pts...
+
+                const rank = cleanedCells[0];
+                if (!rank.match(/^\d+$/)) continue; // Header check
+
+                // Name is typically index 2 or 3 depending on formatting
+                // Let's verify commonly Name is at index 3 if there is a Title/Sex col, or 2 if simple.
+                // We'll search for the longest string index among first 5 that looks like name?
+                // Or sticky to 2.
+
+                // Let's try flexible search for Name (has text, not number)
+                let name = cleanedCells[2];
+                let club = cleanedCells[5];
+                let points = cleanedCells[6]; // Guess
+
+                // Refined mapping for typical Rapid tournament
+                // 0: Rk
+                // 1: SNo
+                // 2: Name
+                // 3: Fed
+                // 4: Rtg
+                // 5: Club/City
+                // 6: Pts
+                // 7: TB1
+                // 8: TB2 
+                // 9: TB3
+
+                // Correction if Name is at 3 (sometimes Title is at 2)
+                // Just simpler: If cell 3 is FED (3 letters), then Name is 2.
+
+                name = clean(cells[2]); // Name typically has link <a>
+                club = cleanedCells[5];
+                const rtg = cleanedCells[4];
+                points = cleanedCells[cleanedCells.length - 4]; // Points often locally fixed or from end? 
+                // Actually scraping standard table is safer by fixed index if layout is standard.
+                // Re-check standard: 
+
+                // Let's assume standard layout.
+                // If it fails we might need user feedback or more advanced scraping.
+                // For now, let's trust index 2=Name, 4=Rtg, 5=Club, last-but-3=Pts? NO.
+                // Let's find "Pts." column index in Header and map dynamically? Too complex for regex scrape.
+
+                // Simplified assumptions:
+                // Find "Name" cell
+                const nameLinkMatch = cells[2].match(/<a[^>]*>(.*?)<\/a>/);
+                if (nameLinkMatch) name = clean(nameLinkMatch[1]);
+
+                // Points: usually the cell with number/half (e.g. "6,5" or "7") after club.
+                // Let's grab specific cells for now.
+                points = cleanedCells[6]; // Common
+                const tb1 = cleanedCells[7];
+                const tb2 = cleanedCells[8];
+                const tb3 = cleanedCells[9];
+
                 players.push({
                     rank,
                     name,
-                    elo,
+                    elo: rtg,
                     club,
-                    fed
+                    points,
+                    tb1,
+                    tb2,
+                    tb3,
+                    isResult: true
                 });
             }
         }
 
-        res.json({ players, count: players.length });
+        res.json({ players, count: players.length, type: isResults ? 'results' : 'startlist' });
 
     } catch (error) {
         console.error('Scraping error:', error);

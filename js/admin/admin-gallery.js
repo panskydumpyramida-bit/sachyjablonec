@@ -278,7 +278,7 @@ async function deleteSelectedImages() {
     }
 }
 
-async function handleAdminGalleryUpload(input) {
+async function handleAdminGalleryUpload(input, category = null) {
     if (!input.files || input.files.length === 0) return;
 
     const files = Array.from(input.files);
@@ -287,6 +287,9 @@ async function handleAdminGalleryUpload(input) {
     for (const file of files) {
         const formData = new FormData();
         formData.append('image', file);
+        if (category) {
+            formData.append('category', category);
+        }
 
         try {
             const res = await fetch(`${API_URL}/images/upload`, {
