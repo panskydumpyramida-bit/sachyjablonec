@@ -61,6 +61,8 @@ model News {
   matchReport   MatchReport?
   games         Game[]
   
+  images        Image[]
+  
   @@map("news")
 }
 
@@ -109,9 +111,13 @@ model Image {
   url          String
   altText      String?  @map("alt_text")
   category     String?  @map("category") // e.g. "blicak"
-  isPublic     Boolean  @default(true) @map("is_public")
+  newsId       Int?     @map("news_id")
+  sortOrder    Int      @default(0) @map("sort_order")
+  isPublic     Boolean  @default(false) @map("is_public")
   uploadedAt   DateTime @default(now()) @map("uploaded_at")
   
+  news         News?    @relation(fields: [newsId], references: [id], onDelete: SetNull)
+
   @@map("images")
 }
 

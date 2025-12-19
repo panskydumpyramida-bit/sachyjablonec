@@ -88,7 +88,7 @@ router.post('/upload', checkClubPassword, (req, res, next) => {
             console.warn('Create with category failed, using raw SQL:', dbError.message);
             const result = await prisma.$queryRaw`
                 INSERT INTO images (filename, original_name, url, alt_text, is_public, uploaded_at)
-                VALUES (${filename}, ${req.file.originalname}, ${url}, ${req.body.altText || null}, true, NOW())
+                VALUES (${filename}, ${req.file.originalname}, ${url}, ${req.body.altText || null}, false, NOW())
                 RETURNING id, filename, original_name as "originalName", url, alt_text as "altText", 
                           is_public as "isPublic", uploaded_at as "uploadedAt"
             `;
@@ -115,17 +115,23 @@ router.get('/public', async (req, res) => {
             }
             images = await prisma.image.findMany({
                 where,
-                orderBy: { uploadedAt: 'desc' }
+                orderBy: [
+                    { sortOrder: 'asc' },
+                    { uploadedAt: 'desc' }
+                ]
             });
         } catch (dbError) {
-            // Fallback using raw SQL to bypass schema validation
+            // Fallback using raw SQL
             console.warn('Category query failed, using raw SQL:', dbError.message);
+            // Note: sort_order might not exist in fallback if schema is out of sync, 
+            // but we assume migration ran. If not, raw query needs conditional logic or just sorted by time.
             images = await prisma.$queryRaw`
                 SELECT id, filename, original_name as "originalName", url, alt_text as "altText", 
-                       is_public as "isPublic", uploaded_at as "uploadedAt"
+                       is_public as "isPublic", uploaded_at as "uploadedAt", sort_order as "sortOrder"
                 FROM images 
                 WHERE is_public = true 
-                ORDER BY uploaded_at DESC
+                ${category ? Prisma.sql`AND category = ${category}` : Prisma.empty}
+                ORDER BY sort_order ASC, uploaded_at DESC
             `;
         }
 
@@ -136,7 +142,7 @@ router.get('/public', async (req, res) => {
     }
 });
 
-// Get all images
+// Get all images (Admin)
 router.get('/', checkClubPassword, async (req, res) => {
     try {
         const { category } = req.query;
@@ -149,16 +155,19 @@ router.get('/', checkClubPassword, async (req, res) => {
             }
             images = await prisma.image.findMany({
                 where,
-                orderBy: { uploadedAt: 'desc' }
+                orderBy: [
+                    { sortOrder: 'asc' },
+                    { uploadedAt: 'desc' }
+                ]
             });
         } catch (dbError) {
-            // Fallback using raw SQL to bypass schema validation
             console.warn('Category query failed in admin route, using raw SQL:', dbError.message);
             images = await prisma.$queryRaw`
                 SELECT id, filename, original_name as "originalName", url, alt_text as "altText", 
-                       is_public as "isPublic", uploaded_at as "uploadedAt"
+                       is_public as "isPublic", uploaded_at as "uploadedAt", sort_order as "sortOrder"
                 FROM images 
-                ORDER BY uploaded_at DESC
+                ${category ? Prisma.sql`WHERE category = ${category}` : Prisma.empty}
+                ORDER BY sort_order ASC, uploaded_at DESC
             `;
         }
 
@@ -191,17 +200,39 @@ router.put('/:id/toggle', checkClubPassword, async (req, res) => {
 router.put('/:id/caption', checkClubPassword, async (req, res) => {
     try {
         const { id } = req.params;
-        const { altText } = req.body;
+        const { altText, category } = req.body; // Allow category update too
+
+        const data = {};
+        if (altText !== undefined) data.altText = altText || null;
+        if (category !== undefined) data.category = category || null;
 
         const image = await prisma.image.update({
             where: { id: parseInt(id) },
-            data: { altText: altText || null }
+            data: data
         });
 
         res.json(image);
     } catch (error) {
         console.error('Update caption error:', error);
         res.status(500).json({ error: 'Failed to update caption' });
+    }
+});
+
+// Update image sort order
+router.put('/:id/order', checkClubPassword, async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { sortOrder } = req.body;
+
+        const image = await prisma.image.update({
+            where: { id: parseInt(id) },
+            data: { sortOrder: parseInt(sortOrder) || 0 }
+        });
+
+        res.json(image);
+    } catch (error) {
+        console.error('Update order error:', error);
+        res.status(500).json({ error: 'Failed to update sort order' });
     }
 });
 

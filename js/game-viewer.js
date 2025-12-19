@@ -47,6 +47,9 @@ class GameViewer {
             subtitle.textContent = "Rozbor partií";
         }
 
+        // Check if there are any commented games
+        const hasCommentedGames = games.some(g => g.commented);
+
         // Add filter toggle if not present
         if (listHeader && !document.getElementById('filterCommentedToggle')) {
             // Ensure header is flex container
@@ -56,18 +59,46 @@ class GameViewer {
 
             const label = document.createElement('label');
             label.id = 'filterCommentedToggle';
-            label.style.cursor = 'pointer';
+            label.style.cursor = hasCommentedGames ? 'pointer' : 'not-allowed';
             label.style.fontSize = '0.75rem';
             label.style.textTransform = 'none';
             label.style.color = 'var(--viewer-accent)';
             label.style.display = 'flex';
             label.style.alignItems = 'center';
             label.style.gap = '4px';
-            label.innerHTML = `
-                <input type="checkbox" onchange="gameViewer.toggleFilter(this.checked)" style="margin: 0;">
-                Pouze komentované
-            `;
+            if (!hasCommentedGames) {
+                label.style.opacity = '0.5';
+                label.title = 'V tomto seznamu nejsou žádné komentované partie';
+            }
+
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.style.margin = '0';
+            checkbox.onchange = (e) => gameViewer.toggleFilter(e.target.checked);
+            if (!hasCommentedGames) {
+                checkbox.disabled = true;
+            }
+
+            label.appendChild(checkbox);
+            label.appendChild(document.createTextNode(' Pouze komentované'));
+
             listHeader.appendChild(label);
+        } else if (document.getElementById('filterCommentedToggle')) {
+            // Update existing toggle if it exists (e.g. re-init)
+            const label = document.getElementById('filterCommentedToggle');
+            const checkbox = label.querySelector('input');
+
+            label.style.cursor = hasCommentedGames ? 'pointer' : 'not-allowed';
+            if (!hasCommentedGames) {
+                label.style.opacity = '0.5';
+                label.title = 'V tomto seznamu nejsou žádné komentované partie';
+                checkbox.disabled = true;
+                checkbox.checked = false; // Reset if disabled
+            } else {
+                label.style.opacity = '1';
+                label.title = '';
+                checkbox.disabled = false;
+            }
         }
 
         this.applyFilter();
@@ -124,8 +155,7 @@ class GameViewer {
             item.dataset.index = index;
 
             if (game.commented) {
-                item.innerHTML += '&nbsp;💬';
-                item.title = 'Okomentováno';
+                item.innerHTML += '<span class="comment-icon" title="Okomentováno">💬</span>';
             }
 
             item.onclick = () => this.loadGame(index);

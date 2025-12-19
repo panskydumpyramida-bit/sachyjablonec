@@ -168,53 +168,119 @@ const syncGamesData = async (newsId, gamesJson, teamName) => {
     }
 };
 
+// Helper to sync gallery images to Image table
+const syncGalleryImages = async (galleryJson, category, newsId) => {
+    if (!galleryJson) return;
+
+    let images = [];
+    try {
+        images = JSON.parse(galleryJson);
+    } catch (e) {
+        console.error('Failed to parse galleryJson during sync:', e);
+        return;
+    }
+
+    if (!Array.isArray(images) || images.length === 0) return;
+
+    // Iterate and sync each image
+    for (const img of images) {
+        // Ensure we have at least a URL
+        const url = typeof img === 'string' ? img : img.url;
+        if (!url) continue;
+
+        const filename = url.split('/').pop();
+        const altText = typeof img === 'string' ? '' : (img.caption || img.altText || '');
+
+        try {
+            // Upsert image to global table
+            await prisma.image.upsert({
+                where: { url: url },
+                update: {
+                    altText: altText || undefined, // Only update if we have a value
+                    category: category || undefined,
+                    newsId: newsId || undefined // Link to article
+                },
+                create: {
+                    url: url,
+                    filename: filename,
+                    altText: altText,
+                    category: category || 'news',
+                    newsId: newsId, // Link to article
+                    isPublic: true
+                }
+            });
+        } catch (e) {
+            console.error(`Failed to sync image ${url}:`, e);
+        }
+    }
+    console.log(`Synced ${images.length} images for news category: ${category}, ID: ${newsId}`);
+};
+
 export const createNews = async (req, res) => {
     try {
-        const { title, category, excerpt, content, thumbnailUrl, linkUrl, publishedDate, isPublished, gamesJson, teamsJson, galleryJson } = req.body;
+        const { title, category, excerpt, content, thumbnailUrl, linkUrl, publishedDate, isPublished, gamesJson, teamsJson, galleryJson, introJson } = req.body;
 
         if (!title || !category || !excerpt || !publishedDate) {
             return res.status(400).json({ error: 'Required fields missing' });
         }
 
-        const slug = createSlug(title);
+        let slug = createSlug(title); // Using existing createSlug
+
+        // Ensure unique slug
+        let uniqueSlug = slug;
+        let counter = 1;
+        while (await prisma.news.findUnique({ where: { slug: uniqueSlug } })) {
+            uniqueSlug = `${slug}-${counter}`;
+            counter++;
+        }
 
         const news = await prisma.news.create({
             data: {
                 title,
-                slug,
+                slug: uniqueSlug,
                 category,
                 excerpt,
                 content,
                 thumbnailUrl,
                 linkUrl,
-                publishedDate: new Date(publishedDate),
-                isPublished: isPublished || false,
-                authorId: req.user.id,
                 gamesJson,
                 teamsJson,
-                galleryJson
+                galleryJson,
+                introJson,
+                publishedDate: publishedDate ? new Date(publishedDate) : new Date(),
+                isPublished: isPublished || false,
+                authorId: req.user ? req.user.id : null
             }
         });
 
         // Sync games
-        await syncGamesData(news.id, gamesJson, category); // Use category as broad team identifier
+        if (gamesJson) {
+            await syncGamesData(news.id, gamesJson, category); // Use category as broad team identifier
+        }
+
+        // Sync gallery
+        if (galleryJson) {
+            await syncGalleryImages(galleryJson, category, news.id);
+        }
 
         res.status(201).json(news);
     } catch (error) {
-        console.error('Create news error:', error);
-        res.status(500).json({ error: 'Failed to create news' });
+        console.error('Error creating news:', error);
+        res.status(500).json({ error: 'Failed to create news article' });
     }
 };
 
 export const updateNews = async (req, res) => {
     try {
         const { id } = req.params;
-        const { title, category, excerpt, content, thumbnailUrl, linkUrl, publishedDate, isPublished, gamesJson, teamsJson, galleryJson } = req.body;
+        const { title, category, excerpt, content, thumbnailUrl, linkUrl, publishedDate, isPublished, gamesJson, teamsJson, galleryJson, introJson } = req.body;
 
         const updateData = {};
         if (title) {
             updateData.title = title;
-            updateData.slug = createSlug(title);
+            // Optionally update slug if title changes (usually we keep slug stable for SEO)
+            // updateData.slug = slugify(title, { lower: true, strict: true }); // Using existing createSlug
+            updateData.slug = createSlug(title); // Using existing createSlug
         }
         if (category) updateData.category = category;
         if (excerpt) updateData.excerpt = excerpt;
@@ -226,6 +292,7 @@ export const updateNews = async (req, res) => {
         if (gamesJson !== undefined) updateData.gamesJson = gamesJson;
         if (teamsJson !== undefined) updateData.teamsJson = teamsJson;
         if (galleryJson !== undefined) updateData.galleryJson = galleryJson;
+        if (introJson !== undefined) updateData.introJson = introJson;
 
         const news = await prisma.news.update({
             where: { id: parseInt(id) },
@@ -240,10 +307,15 @@ export const updateNews = async (req, res) => {
             await syncGamesData(news.id, gamesJson, category || news.category);
         }
 
+        // Sync gallery
+        if (galleryJson !== undefined) {
+            await syncGalleryImages(galleryJson, category || news.category, news.id);
+        }
+
         res.json(news);
     } catch (error) {
-        console.error('Update news error:', error);
-        res.status(500).json({ error: 'Failed to update news' });
+        console.error('Error updating news:', error);
+        res.status(500).json({ error: 'Failed to update news article' });
     }
 };
 

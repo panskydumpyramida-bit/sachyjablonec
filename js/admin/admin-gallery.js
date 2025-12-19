@@ -28,20 +28,27 @@ async function loadAdminGallery() {
         batchBtn.innerHTML = '<i class="fa-solid fa-trash"></i> Smazat vybrané (<span id="selectedCount">0</span>)';
     }
 
-    tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">Načítám...</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="8" style="text-align: center;">Načítám...</td></tr>';
 
     if (!authToken) {
         console.error('No auth token available');
-        tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: red;">Chyba: Chybí přihlášení</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; color: red;">Chyba: Chybí přihlášení</td></tr>';
         return;
     }
+
+    const categoryFilter = document.getElementById('galleryCategoryFilter')?.value || '';
 
     try {
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 8000);
 
-        console.log('Fetching images from', `${API_URL}/images`);
-        const res = await fetch(`${API_URL}/images`, {
+        let url = `${API_URL}/images`;
+        if (categoryFilter) {
+            url += `?category=${encodeURIComponent(categoryFilter)}`;
+        }
+
+        console.log('Fetching images from', url);
+        const res = await fetch(url, {
             headers: { 'Authorization': `Bearer ${authToken}` },
             signal: controller.signal
         });
@@ -58,7 +65,7 @@ async function loadAdminGallery() {
         if (!Array.isArray(images)) throw new Error('Invalid response format');
 
         if (images.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="6" style="text-align: center;">Žádné obrázky</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="8" style="text-align: center;">Žádné obrázky</td></tr>';
             return;
         }
 
@@ -71,17 +78,29 @@ async function loadAdminGallery() {
                     <img src="${img.url}" style="width: 60px; height: 40px; object-fit: cover; border-radius: 4px; cursor: pointer;" onclick="window.open('${img.url}', '_blank')">
                 </td>
                 <td>
-                    <div style="font-weight: 500; font-size: 0.85rem; margin-bottom: 0.3rem;">${img.originalName || 'Bez názvu'}</div>
+                    <input type="number" 
+                           value="${img.sortOrder || 0}" 
+                           onchange="updateImageOrder(${img.id}, this.value)"
+                           style="width: 60px; padding: 0.3rem; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 4px; color: var(--text-color); text-align: center;">
+                </td>
+                <td>
+                    <div style="font-weight: 500; font-size: 0.85rem; margin-bottom: 0.3rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 200px;" title="${img.originalName}">${img.originalName || 'Bez názvu'}</div>
                     <input type="text" 
                            class="caption-input" 
                            value="${img.altText || ''}" 
                            placeholder="Přidat popisek..." 
-                           data-id="${img.id}"
                            onblur="updateImageCaption(${img.id}, this.value)"
                            style="width: 100%; padding: 0.3rem 0.5rem; font-size: 0.8rem; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 4px; color: var(--text-color);">
                 </td>
+                <td>
+                    <input type="text" list="categoryList"
+                           value="${img.category || ''}" 
+                           placeholder="Kategorie"
+                           onchange="updateImageCategory(${img.id}, this.value)"
+                           style="width: 100%; padding: 0.3rem 0.5rem; font-size: 0.8rem; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 4px; color: var(--text-color);">
+                </td>
                 <td style="text-align: center;">
-                    <input type="checkbox" ${img.isPublic ? 'checked' : ''} onchange="toggleGalleryVisibility(${img.id}, this.checked)">
+                    <input type="checkbox" ${!img.isPublic ? 'checked' : ''} onchange="toggleGalleryVisibility(${img.id}, !this.checked)">
                 </td>
                 <td style="font-size: 0.85rem; color: var(--text-muted);">
                     ${new Date(img.uploadedAt).toLocaleString('cs-CZ')}
@@ -94,9 +113,22 @@ async function loadAdminGallery() {
             </tr>
         `).join('');
 
+        // Ensure datalist exists
+        if (!document.getElementById('categoryList')) {
+            const dl = document.createElement('datalist');
+            dl.id = 'categoryList';
+            dl.innerHTML = `
+                <option value="members">
+                <option value="news">
+                <option value="intro">
+                <option value="blicak">
+            `;
+            document.body.appendChild(dl);
+        }
+
     } catch (e) {
         console.error('Gallery load error:', e);
-        tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: #fca5a5;">Chyba načítání: ${e.message}</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; color: #fca5a5;">Chyba načítání: ${e.message}</td></tr>`;
     }
 }
 
@@ -193,13 +225,61 @@ async function updateImageCaption(id, altText) {
         });
 
         if (res.ok) {
-            showAlert('✓ Popisek uložen', 'success');
+            showToast('✓ Popisek uložen', 'success');
         } else {
-            showAlert('Nepodařilo se uložit popisek', 'error');
+            showToast('Nepodařilo se uložit popisek', 'error');
         }
     } catch (e) {
         console.error('Update caption error:', e);
-        showAlert('Chyba při ukládání', 'error');
+        showToast('Chyba při ukládání', 'error');
+    }
+}
+
+async function updateImageOrder(id, sortOrder) {
+    try {
+        const res = await fetch(`${API_URL}/images/${id}/order`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${authToken}`
+            },
+            body: JSON.stringify({ sortOrder: parseInt(sortOrder, 10) })
+        });
+
+        if (res.ok) {
+            showToast('✓ Pořadí uloženo', 'success');
+            // Optional: reload to re-sort, but might be annoying while editing multiple. 
+            // Better to let user reload manually or just update UI locally if needed.
+        } else {
+            showToast('Nepodařilo se uložit pořadí', 'error');
+        }
+    } catch (e) {
+        console.error('Update order error:', e);
+        showToast('Chyba při ukládání', 'error');
+    }
+}
+
+async function updateImageCategory(id, category) {
+    try {
+        // We reuse caption endpoint as it supports category now, or we should create specific one?
+        // Let's use caption endpoint as I updated it to handle category too.
+        const res = await fetch(`${API_URL}/images/${id}/caption`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${authToken}`
+            },
+            body: JSON.stringify({ category })
+        });
+
+        if (res.ok) {
+            showToast('✓ Kategorie uložena', 'success');
+        } else {
+            showToast('Nepodařilo se uložit kategorii', 'error');
+        }
+    } catch (e) {
+        console.error('Update category error:', e);
+        showToast('Chyba při ukládání', 'error');
     }
 }
 
@@ -280,6 +360,12 @@ async function deleteSelectedImages() {
 
 async function handleAdminGalleryUpload(input, category = null) {
     if (!input.files || input.files.length === 0) return;
+
+    // Use selected filter category as default if not specified
+    if (!category) {
+        const filterVal = document.getElementById('galleryCategoryFilter')?.value;
+        if (filterVal) category = filterVal;
+    }
 
     const files = Array.from(input.files);
     let successCount = 0;
@@ -408,4 +494,6 @@ window.closeGalleryPicker = closeGalleryPicker;
 window.updateBatchActions = updateBatchActions;
 window.toggleSelectAllGallery = toggleSelectAllGallery;
 window.toggleGalleryVisibility = toggleGalleryVisibility;
+window.updateImageOrder = updateImageOrder;
+window.updateImageCategory = updateImageCategory;
 window.deleteSelectedImages = deleteSelectedImages;
