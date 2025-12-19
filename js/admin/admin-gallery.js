@@ -75,7 +75,7 @@ async function loadAdminGallery() {
                     <input type="checkbox" class="gallery-checkbox" value="${img.id}" onchange="updateBatchActions()">
                 </td>
                 <td style="width: 80px;">
-                    <img src="${img.url}" style="width: 60px; height: 40px; object-fit: cover; border-radius: 4px; cursor: pointer;" onclick="window.open('${img.url}', '_blank')">
+                    <img src="${img.url}" style="width: 60px; height: 40px; object-fit: cover; border-radius: 4px; cursor: pointer;" onclick="openAdminImagePreview('${img.url}', '${(img.originalName || '').replace(/'/g, "\\'")}', '${(img.altText || '').replace(/'/g, "\\'")}')">
                 </td>
                 <td>
                     <input type="number" 
@@ -401,6 +401,154 @@ async function handleAdminGalleryUpload(input, category = null) {
 }
 
 // ================================
+// ADMIN IMAGE PREVIEW MODAL
+// ================================
+
+function openAdminImagePreview(url, filename, caption) {
+    let modal = document.getElementById('adminImagePreviewModal');
+    if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'adminImagePreviewModal';
+        modal.innerHTML = `
+            <div class="modal-overlay" onclick="closeAdminImagePreview()"></div>
+            <div class="preview-content">
+                <button type="button" class="close-btn" onclick="closeAdminImagePreview()">&times;</button>
+                <img src="" alt="Preview">
+                <div class="preview-caption">
+                    <h4 id="previewFilename"></h4>
+                    <p id="previewAltText"></p>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(modal);
+
+        // Inject Styles
+        const style = document.createElement('style');
+        style.textContent = `
+            #adminImagePreviewModal {
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                z-index: 5000;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                opacity: 0;
+                visibility: hidden;
+                transition: opacity 0.3s ease;
+            }
+            #adminImagePreviewModal.active {
+                opacity: 1;
+                visibility: visible;
+            }
+            #adminImagePreviewModal .modal-overlay {
+                position: absolute;
+                inset: 0;
+                background: rgba(0, 0, 0, 0.9);
+                backdrop-filter: blur(5px);
+            }
+            #adminImagePreviewModal .preview-content {
+                position: relative;
+                max-width: 90vw;
+                max-height: 90vh;
+                display: flex;
+                flex-direction: column;
+                z-index: 10;
+            }
+            #adminImagePreviewModal img {
+                max-width: 100%;
+                max-height: 80vh;
+                object-fit: contain;
+                border-radius: 4px;
+                box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+            }
+            #adminImagePreviewModal .preview-caption {
+                margin-top: 1rem;
+                color: #fff;
+                text-align: center;
+                background: rgba(0,0,0,0.5);
+                padding: 1rem;
+                border-radius: 8px;
+            }
+            #adminImagePreviewModal h4 {
+                margin: 0;
+                font-size: 0.9rem;
+                color: var(--primary-color, #d4af37);
+                margin-bottom: 0.25rem;
+            }
+            #adminImagePreviewModal p {
+                margin: 0;
+                font-size: 0.85rem;
+                color: #ccc;
+            }
+            #adminImagePreviewModal .close-btn {
+                position: absolute;
+                top: -40px;
+                right: -40px;
+                background: none;
+                border: none;
+                color: #fff;
+                font-size: 2rem;
+                cursor: pointer;
+                transition: transform 0.2s;
+            }
+            #adminImagePreviewModal .close-btn:hover {
+                transform: scale(1.2);
+                color: var(--primary-color, #d4af37);
+            }
+            @media (max-width: 768px) {
+                #adminImagePreviewModal .close-btn {
+                    top: 10px;
+                    right: 10px;
+                    background: rgba(0,0,0,0.5);
+                    width: 40px;
+                    height: 40px;
+                    border-radius: 50%;
+                    line-height: 1;
+                }
+            }
+        `;
+        document.head.appendChild(style);
+
+        // Escape key listener
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && modal.classList.contains('active')) {
+                closeAdminImagePreview();
+            }
+        });
+    }
+
+    const img = modal.querySelector('img');
+    const h4 = document.getElementById('previewFilename');
+    const p = document.getElementById('previewAltText');
+
+    img.src = url;
+    h4.textContent = filename || 'Obrázek';
+    p.textContent = caption ? caption : '(bez popisku)';
+
+    // Reset display before fading in
+    modal.style.display = 'flex';
+    // Small delay to allow transition
+    requestAnimationFrame(() => {
+        modal.classList.add('active');
+    });
+}
+
+function closeAdminImagePreview() {
+    const modal = document.getElementById('adminImagePreviewModal');
+    if (modal) {
+        modal.classList.remove('active');
+        setTimeout(() => {
+            if (!modal.classList.contains('active')) {
+                // Keep modal in DOM but hide completely if needed, or just let CSS handle visibility
+            }
+        }, 300);
+    }
+}
+
+// ================================
 // GALLERY PICKER MODAL
 // ================================
 
@@ -497,3 +645,5 @@ window.toggleGalleryVisibility = toggleGalleryVisibility;
 window.updateImageOrder = updateImageOrder;
 window.updateImageCategory = updateImageCategory;
 window.deleteSelectedImages = deleteSelectedImages;
+window.openAdminImagePreview = openAdminImagePreview;
+window.closeAdminImagePreview = closeAdminImagePreview;
