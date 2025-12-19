@@ -113,7 +113,7 @@
                             </div>
                         </div>
                         <div class="card-content">
-                            <h3 class="card-title">${img.altText || 'Fotografie'}</h3>
+                            ${img.altText ? `<h3 class="card-title">${img.altText}</h3>` : ''}
                             <p class="card-excerpt" style="display: flex; justify-content: space-between; align-items: center;">
                                 <span style="font-size: 0.8em; opacity: 0.7;">
                                     <i class="fa-regular fa-calendar" style="margin-right: 4px;"></i>
