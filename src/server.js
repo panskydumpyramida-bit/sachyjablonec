@@ -102,12 +102,17 @@ app.use(async (req, res, next) => {
 });
 
 // Static Files Serving
-// Explicitly serve static directories
-app.use(express.static(path.join(__dirname, '../public')));
-app.use('/js', express.static(path.join(__dirname, '../js')));
-app.use('/css', express.static(path.join(__dirname, '../css')));
-app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
-app.use('/images', express.static(path.join(__dirname, '../images')));
+// Static Files Serving with Cache Policy
+const staticOptions = {
+    maxAge: '1y', // 1 year cache for static assets
+    etag: true
+};
+
+app.use(express.static(path.join(__dirname, '../public'), staticOptions));
+app.use('/js', express.static(path.join(__dirname, '../js'), staticOptions));
+app.use('/css', express.static(path.join(__dirname, '../css'), staticOptions));
+app.use('/uploads', express.static(path.join(__dirname, '../uploads'), staticOptions));
+app.use('/images', express.static(path.join(__dirname, '../images'), staticOptions));
 
 // SEO Files - Explicit rules to ensure they are served correctly
 app.get('/robots.txt', (req, res) => res.sendFile(path.join(__dirname, '../robots.txt')));
@@ -578,12 +583,12 @@ app.use(express.urlencoded({ extended: true }));
 
 // Serve uploaded files
 // Serve uploaded files
-app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
+app.use('/uploads', express.static(path.join(__dirname, '../uploads'), staticOptions));
 
 // Serve specific static directories
 // Serve specific static directories
 ['css', 'js', 'images', 'data', 'components'].forEach(dir => {
-    app.use(`/${dir}`, express.static(path.join(__dirname, `../${dir}`)));
+    app.use(`/${dir}`, express.static(path.join(__dirname, `../${dir}`), staticOptions));
 });
 
 // Serve HTML files from root
