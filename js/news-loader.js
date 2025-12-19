@@ -106,6 +106,8 @@ async function loadNews(options = {}) {
                     }
                     return `<img src="${thumb}" 
                                      alt="${escapeHtml(item.title)}"
+                                     loading="lazy"
+                                     width="400" height="300"
                                      style="object-position: center ${crop};"
                                      onerror="this.src='images/chess_placeholder.jpg'">`;
                 })()}
@@ -157,6 +159,8 @@ async function loadNews(options = {}) {
                                 <div class="news-cols-image">
                                     <img src="${thumb}" 
                                          alt="${escapeHtml(item.title)}"
+                                         loading="lazy"
+                                         width="280" height="210"
                                          style="object-position: center ${crop};"
                                          onerror="this.style.display='none'">
                                 </div>`;
