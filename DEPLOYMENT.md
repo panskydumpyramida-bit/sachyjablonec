@@ -43,3 +43,6 @@ After deployment and migration:
 postgresql://postgres:OtipCqePUylBIvIqGxGBNJNpeDYDMHfc@ballast.proxy.rlwy.net:53432/railway
 ```
 *Keep this safe. It allows direct access to the production database.*
+
+## 5. URL Aliases
+- `/bleskovy_report` -> `/article.html?id=54`
