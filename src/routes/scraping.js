@@ -220,52 +220,51 @@ router.get('/chess-results', async (req, res) => {
                     }
                 }
             }
-        }
 
-        // Post-processing: If ELO ended up in Points (common error if logic is loose), swap if needed?
-        // Actually, ELO is usually > 20 points (unless 100 rounds).
-        if (points && parseInt(points) > 100 && !elo) {
-            // If "points" is 2000, it's actually ELO.
-            elo = points;
-            points = '';
-        }
+            // Post-processing: If ELO ended up in Points (common error if logic is loose), swap if needed?
+            // Actually, ELO is usually > 20 points (unless 100 rounds).
+            if (points && parseInt(points) > 100 && !elo) {
+                // If "points" is 2000, it's actually ELO.
+                elo = points;
+                points = '';
+            }
 
-        // Fallback for Club: If we didn't search explicitly, try generic text after name
-        if (!club) {
-            for (let i = nameIndex + 1; i < cells.length; i++) {
-                const c = cleanedCells[i];
-                // Club is usually text, not number, not Fed (3 chars)
-                if (/[a-zA-Z]{4,}/.test(c) && !/^\d/.test(c)) {
-                    club = c;
-                    break;
+            // Fallback for Club: If we didn't search explicitly, try generic text after name
+            if (!club) {
+                for (let i = nameIndex + 1; i < cells.length; i++) {
+                    const c = cleanedCells[i];
+                    // Club is usually text, not number, not Fed (3 chars)
+                    if (/[a-zA-Z]{4,}/.test(c) && !/^\d/.test(c)) {
+                        club = c;
+                        break;
+                    }
                 }
+            }
+
+            if (name) {
+                players.push({
+                    rank,
+                    name,
+                    elo: elo || '',
+                    club: club || '',
+                    fed,
+                    points: points || '',
+                    isResult: isResults && !!points
+                });
             }
         }
 
-        if (name) {
-            players.push({
-                rank,
-                name,
-                elo: elo || '',
-                club: club || '',
-                fed,
-                points: points || '',
-                isResult: isResults && !!points
-            });
+        // Auto-detect type if not clear
+        if (players.some(p => p.points)) {
+            isResults = true;
         }
+
+        res.json({ players, count: players.length, type: isResults ? 'results' : 'startlist' });
+
+    } catch (error) {
+        console.error('Scraping error:', error);
+        res.status(500).json({ error: 'Failed to scrape data', details: error.message });
     }
-
-    // Auto-detect type if not clear
-    if (players.some(p => p.points)) {
-        isResults = true;
-    }
-
-    res.json({ players, count: players.length, type: isResults ? 'results' : 'startlist' });
-
-} catch (error) {
-    console.error('Scraping error:', error);
-    res.status(500).json({ error: 'Failed to scrape data', details: error.message });
-}
 });
 // Rosada Profile Scraping
 router.get('/rosada/:id', async (req, res) => {
