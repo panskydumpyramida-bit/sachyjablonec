@@ -43,3 +43,6 @@ After deployment and migration:
 ${REMOTE_DATABASE_URL}
 ```
 *Keep this safe. It allows direct access to the production database.*
+
+## 5. URL Aliases
+- `/bleskovy_report` -> `/article.html?id=54`
