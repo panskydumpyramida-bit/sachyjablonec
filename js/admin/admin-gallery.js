@@ -126,9 +126,41 @@ async function loadAdminGallery() {
             document.body.appendChild(dl);
         }
 
+        // ... existing code ...
     } catch (e) {
         console.error('Gallery load error:', e);
         tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; color: #fca5a5;">Chyba načítání: ${e.message}</td></tr>`;
+    }
+
+    // Load dynamic categories for datalist
+    loadCategoryDatalist();
+}
+
+async function loadCategoryDatalist() {
+    try {
+        // Ensure datalist exists
+        let dl = document.getElementById('categoryList');
+        if (!dl) {
+            dl = document.createElement('datalist');
+            dl.id = 'categoryList';
+            document.body.appendChild(dl);
+        }
+
+        const res = await fetch(`${API_URL}/images/categories`, {
+            headers: { 'Authorization': `Bearer ${authToken}` }
+        });
+
+        if (res.ok) {
+            const categories = await res.json();
+            // Default categories that should always be there
+            const defaults = ['members', 'news', 'intro', 'blicak'];
+            // Merge and dedup
+            const allCats = [...new Set([...defaults, ...categories])].sort();
+
+            dl.innerHTML = allCats.map(c => `<option value="${c}">`).join('');
+        }
+    } catch (e) {
+        console.error('Failed to load categories:', e);
     }
 }
 
@@ -269,7 +301,7 @@ async function updateImageCategory(id, category) {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${authToken}`
             },
-            body: JSON.stringify({ category })
+            body: JSON.stringify({ category: category.trim() })
         });
 
         if (res.ok) {

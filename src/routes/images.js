@@ -283,4 +283,34 @@ router.delete('/:id', checkClubPassword, async (req, res) => {
     }
 });
 
+// Get list of all unique categories
+router.get('/categories', checkClubPassword, async (req, res) => {
+    try {
+        const categories = await prisma.image.findMany({
+            distinct: ['category'],
+            select: {
+                category: true
+            },
+            where: {
+                category: {
+                    not: null
+                }
+            },
+            orderBy: {
+                category: 'asc'
+            }
+        });
+
+        // Filter out empty strings if any and map to array
+        const result = categories
+            .map(c => c.category)
+            .filter(c => c && c.trim().length > 0);
+
+        res.json(result);
+    } catch (error) {
+        console.error('Get categories error:', error);
+        res.status(500).json({ error: 'Failed to get categories' });
+    }
+});
+
 export default router;
