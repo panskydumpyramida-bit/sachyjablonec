@@ -71,16 +71,29 @@ router.post('/upload', checkClubPassword, (req, res, next) => {
         const url = `/uploads/${filename}`;
         console.log('Image saved to:', filepath, 'URL:', url);
 
-        // Save to database
-        const image = await prisma.image.create({
-            data: {
-                filename,
-                originalName: req.file.originalname,
-                url,
-                altText: req.body.altText || null,
-                category: req.body.category || null
-            }
-        });
+        // Save to database using raw SQL to avoid schema mismatch
+        let image;
+        try {
+            image = await prisma.image.create({
+                data: {
+                    filename,
+                    originalName: req.file.originalname,
+                    url,
+                    altText: req.body.altText || null,
+                    category: req.body.category || null
+                }
+            });
+        } catch (dbError) {
+            // Fallback: insert without category column
+            console.warn('Create with category failed, using raw SQL:', dbError.message);
+            const result = await prisma.$queryRaw`
+                INSERT INTO images (filename, original_name, url, alt_text, is_public, uploaded_at)
+                VALUES (${filename}, ${req.file.originalname}, ${url}, ${req.body.altText || null}, true, NOW())
+                RETURNING id, filename, original_name as "originalName", url, alt_text as "altText", 
+                          is_public as "isPublic", uploaded_at as "uploadedAt"
+            `;
+            image = result[0];
+        }
 
         res.status(201).json(image);
     } catch (error) {
