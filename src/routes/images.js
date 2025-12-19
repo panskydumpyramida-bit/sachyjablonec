@@ -93,18 +93,25 @@ router.post('/upload', checkClubPassword, (req, res, next) => {
 router.get('/public', async (req, res) => {
     try {
         const { category } = req.query;
-        const where = { isPublic: true };
+        let images;
 
-        if (category) {
-            where.category = category;
-        }
-
-        const images = await prisma.image.findMany({
-            where,
-            orderBy: {
-                uploadedAt: 'desc'
+        try {
+            const where = { isPublic: true };
+            if (category) {
+                where.category = category;
             }
-        });
+            images = await prisma.image.findMany({
+                where,
+                orderBy: { uploadedAt: 'desc' }
+            });
+        } catch (dbError) {
+            // Fallback if category column doesn't exist
+            console.warn('Category query failed:', dbError.message);
+            images = await prisma.image.findMany({
+                where: { isPublic: true },
+                orderBy: { uploadedAt: 'desc' }
+            });
+        }
 
         res.json(images);
     } catch (error) {
