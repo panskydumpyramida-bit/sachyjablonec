@@ -799,14 +799,14 @@
                                 Kompletní pořadí (${players.length} hráčů)
                             </summary>
                             <div style="padding: 1rem; overflow-x: auto;">
-                        <table style="width: 100%; border-collapse: collapse; color: #fff; min-width: 600px; font-size: 0.9rem;">
+                        <table class="standings-table" style="width: 100%; border-collapse: collapse; color: #fff; min-width: 300px; font-size: 0.9rem;">
                             <thead>
                                 <tr style="border-bottom: 1px solid var(--primary-color); text-align: left;">
                                     <th style="padding: 0.5rem; width: 50px; text-align: center;">Poř.</th>
                                     <th style="padding: 0.5rem;">Jméno</th>
-                                    <th style="padding: 0.5rem; color: #aaa; text-align: center;">ELO</th>
-                                    <th style="padding: 0.5rem;">Klub</th>
-                                    <th style="padding: 0.5rem; text-align: right; width: 80px;">Body</th>
+                                    <th class="standings-elo" style="padding: 0.5rem; color: #aaa; text-align: center;">ELO</th>
+                                    <th class="standings-club" style="padding: 0.5rem;">Klub</th>
+                                    <th style="padding: 0.5rem; text-align: right; width: 60px;">Body</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -818,10 +818,10 @@
                                         <td style="padding: 0.5rem; font-weight: 500;">
                                             ${p.name}
                                         </td>
-                                        <td style="padding: 0.5rem; text-align: center; color: #888; font-family: monospace;">
+                                        <td class="standings-elo" style="padding: 0.5rem; text-align: center; color: #888; font-family: monospace;">
                                             ${p.elo || '-'}
                                         </td>
-                                        <td style="padding: 0.5rem; color: #ccc; font-size: 0.85rem;">
+                                        <td class="standings-club" style="padding: 0.5rem; color: #ccc; font-size: 0.85rem;">
                                             ${p.club || ''}
                                         </td>
                                         <td style="padding: 0.5rem; text-align: right; font-weight: bold; color: var(--primary-color);">
@@ -839,6 +839,15 @@
                             }
                             details summary::-webkit-details-marker {
                                 display: none;
+                            }
+                            @media (max-width: 600px) {
+                                .standings-club,
+                                .standings-elo {
+                                    display: none !important;
+                                }
+                                .standings-table {
+                                    font-size: 0.85rem !important;
+                                }
                             }
                         </style>
                     </div>
