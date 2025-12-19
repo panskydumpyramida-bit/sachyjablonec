@@ -208,10 +208,16 @@ nav {
     align-items: center;
     justify-content: center;
     text-align: center;
-    background: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), url('https://images.unsplash.com/photo-1529699211952-734e80c4d42b?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80');
+    background: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), url('../images/hero-mobile.webp');
     background-size: cover;
     background-position: center;
     margin-top: 60px;
+}
+
+@media (min-width: 768px) {
+    .hero {
+        background-image: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), url('../images/hero-desktop.webp');
+    }
 }
 
 .hero-content h1 {
@@ -999,6 +1005,7 @@ footer {
         padding: 1rem 0.5rem 0.4rem;
     }
 }
+
 /* Article Gallery Grid */
 .article-gallery {
     display: grid;
@@ -1040,7 +1047,7 @@ footer {
     left: 0;
     width: 100%;
     padding: 0.8rem;
-    background: linear-gradient(to top, rgba(0,0,0,0.9), transparent);
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.9), transparent);
     color: white;
     font-size: 0.85rem;
     opacity: 0;
