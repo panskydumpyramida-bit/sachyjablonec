@@ -719,7 +719,7 @@
                     </div>
 
                     <!-- 3rd Place -->
-                     <div class="podium-card" style="order: 3; flex: 1; min-width: 0; padding: 1.5rem 1rem; background: rgba(205, 127, 50, 0.1); border-radius: 12px; border-top: 4px solid #CD7F32; display: flex; flex-direction: column; align-items: center; min-height: 240px; justify-content: space-between;">
+                     <div class="podium-card" style="order: 3; flex: 1; min-width: 0; padding: 1.5rem 1rem; background: rgba(205, 127, 50, 0.1); border-radius: 12px; border-top: 4px solid #CD7F32; display: flex; flex-direction: column; align-items: center; min-height: 220px; justify-content: space-between; transform: translateY(2rem);">
                         <div style="margin-bottom: auto; width: 100%;">
                             <div class="podium-rank" style="font-size: 2rem; margin-bottom: 0.5rem;">🥉</div>
                             <div class="podium-name" style="font-weight: bold; font-size: 1.1rem; color: #fff; margin-bottom: 0.5rem; word-wrap: break-word;">${top3[2] ? top3[2].name : '-'}</div>
@@ -730,10 +730,10 @@
                 </div>
 
                 <!-- Witty Photo Section -->
-                <div style="flex: 1; min-width: 300px; display: flex; justify-content: center; align-items: center;">
-                    <div style="position: relative; max-width: 320px; transform: rotate(-2deg); transition: transform 0.3s;" onmouseenter="this.style.transform='rotate(0deg) scale(1.02)'" onmouseleave="this.style.transform='rotate(-2deg)'">
-                        <div style="background: #fff; padding: 10px 10px 40px 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.5);">
-                            <img src="images/winners_2024.png" alt="Stupně vítězů" style="width: 100%; display: block; filter: sepia(20%);">
+                <div style="flex: 0.6; min-width: 200px; max-width: 250px; display: flex; justify-content: center; align-items: center;">
+                    <div style="position: relative; max-width: 200px; transform: rotate(-2deg); transition: transform 0.3s;" onmouseenter="this.style.transform='rotate(0deg) scale(1.02)'" onmouseleave="this.style.transform='rotate(-2deg)'">
+                        <div style="background: #fff; padding: 8px 8px 30px 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.5);">
+                            <img src="images/winners_2024.png" alt="Stupně vítězů" style="width: 100%; display: block; filter: sepia(20%); object-fit: cover;">
                             <div style="font-family: 'Shadows Into Light', cursive, sans-serif; color: #333; font-size: 1.2rem; position: absolute; bottom: 10px; width: 100%; text-align: center; font-weight: bold;">
                                 Takhle vypadá radost po 10 kolech nervů! 😅
                             </div>
@@ -791,9 +791,14 @@
 
                 </div>
 
-                    <!-- Full Results Table -->
-                    <div style="margin-top: 4rem; overflow-x: auto;">
-                        <h3 style="text-align: center; color: var(--primary-color); margin-bottom: 2rem; font-family: 'Playfair Display', serif;">Kompletní pořadí</h3>
+                    <!-- Full Results Table (Collapsible) -->
+                    <div style="margin-top: 4rem;">
+                        <details style="border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; overflow: hidden;">
+                            <summary style="cursor: pointer; padding: 1rem 1.5rem; background: rgba(255,255,255,0.03); color: var(--primary-color); font-family: 'Playfair Display', serif; font-size: 1.2rem; font-weight: 600; display: flex; align-items: center; gap: 0.5rem; user-select: none;">
+                                <i class="fa-solid fa-chevron-right" style="transition: transform 0.2s; font-size: 0.8rem;"></i>
+                                Kompletní pořadí (${players.length} hráčů)
+                            </summary>
+                            <div style="padding: 1rem; overflow-x: auto;">
                         <table style="width: 100%; border-collapse: collapse; color: #fff; min-width: 600px; font-size: 0.9rem;">
                             <thead>
                                 <tr style="border-bottom: 1px solid var(--primary-color); text-align: left;">
@@ -826,6 +831,16 @@
                                 `).join('')}
                             </tbody>
                         </table>
+                            </div>
+                        </details>
+                        <style>
+                            details[open] summary i.fa-chevron-right {
+                                transform: rotate(90deg);
+                            }
+                            details summary::-webkit-details-marker {
+                                display: none;
+                            }
+                        </style>
                     </div>
 
                     <div style="margin-top: 2rem; text-align: center;">
