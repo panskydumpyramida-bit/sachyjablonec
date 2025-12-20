@@ -68,8 +68,18 @@ router.post('/upload', checkClubPassword, (req, res, next) => {
             .webp({ quality: 85 })
             .toFile(filepath);
 
+        // Generate thumbnail (400px width)
+        const thumbName = filename.replace('.webp', '-thumb.webp');
+        const thumbPath = path.join(__dirname, '../../uploads', thumbName);
+        await sharp(req.file.buffer)
+            .resize(400, null, {
+                withoutEnlargement: true
+            })
+            .webp({ quality: 80 })
+            .toFile(thumbPath);
+
         const url = `/uploads/${filename}`;
-        console.log('Image saved to:', filepath, 'URL:', url);
+        console.log('Image saved to:', filepath, 'Thumbnail:', thumbPath, 'URL:', url);
 
         // Save to database using raw SQL to avoid schema mismatch
         let image;
