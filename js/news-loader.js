@@ -104,13 +104,22 @@ async function loadNews(options = {}) {
                         thumb = parts[0];
                         crop = parts[1]; // e.g. "25%" or "50%"
                     }
+
+                    // Use thumbnail version for local uploads if available
+                    // We assume thumbnail exists if it matches our upload pattern
+                    let src = thumb;
+                    if (thumb.startsWith('/uploads/') && !thumb.includes('-thumb')) {
+                        const ext = thumb.split('.').pop();
+                        src = thumb.replace(`.${ext}`, `-thumb.${ext}`);
+                    }
+
                     const loadingAttr = index < 2 ? 'eager' : 'lazy';
-                    return `<img src="${thumb}" 
+                    return `<img src="${src}" 
                                      alt="${escapeHtml(item.title)}"
                                      loading="${loadingAttr}"
                                      width="400" height="300"
                                      style="object-position: center ${crop};"
-                                     onerror="this.src='images/chess_placeholder.jpg'">`;
+                                     onerror="this.src='${thumb}'; this.onerror=null; this.src='images/chess_placeholder.jpg'">`;
                 })()}
                     </div>
                     <div class="card-content">
