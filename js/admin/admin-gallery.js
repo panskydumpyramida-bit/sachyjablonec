@@ -101,6 +101,13 @@ async function loadAdminGallery() {
                            placeholder="Přidat popisek..." 
                            onblur="updateImageCaption(${img.id}, this.value)"
                            style="width: 100%; padding: 0.3rem 0.5rem; font-size: 0.8rem; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 4px; color: var(--text-color);">
+                    ${img.usedInNews ? `
+                        <div style="margin-top: 0.3rem; font-size: 0.75rem;">
+                            <span style="background: rgba(212,175,55,0.2); color: #d4af37; padding: 2px 6px; border-radius: 4px; border: 1px solid rgba(212,175,55,0.3);">
+                                <i class="fa-solid fa-newspaper"></i> Náhled: <a href="article.html?id=${img.usedInNews.id}" target="_blank" style="color: inherit; text-decoration: underline;">${img.usedInNews.title.substring(0, 20)}${img.usedInNews.title.length > 20 ? '...' : ''}</a>
+                            </span>
+                        </div>
+                    ` : ''}
                 </td>
                 <td>
                     <input type="text" list="categoryList"

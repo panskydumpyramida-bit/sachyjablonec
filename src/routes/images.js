@@ -181,7 +181,38 @@ router.get('/', checkClubPassword, async (req, res) => {
             `;
         }
 
-        res.json(images);
+        // Fetch news that use these images as thumbnails
+        const newsWithThumbnails = await prisma.news.findMany({
+            where: {
+                thumbnailUrl: { not: null }
+            },
+            select: {
+                id: true,
+                title: true,
+                thumbnailUrl: true
+            }
+        });
+
+        // Enrich images with usage info
+        // We need to handle potential crop parameters in thumbnailUrl (e.g. url#crop=...)
+        const usageMap = new Map();
+        newsWithThumbnails.forEach(n => {
+            if (!n.thumbnailUrl) return;
+            const cleanUrl = n.thumbnailUrl.split('#')[0];
+            // If multiple news use the same image, we just show one (or list them)
+            // For simplicity, last one wins or we could make an array
+            usageMap.set(cleanUrl, { id: n.id, title: n.title });
+        });
+
+        const enrichedImages = images.map(img => {
+            const usage = usageMap.get(img.url);
+            return {
+                ...img,
+                usedInNews: usage || null
+            };
+        });
+
+        res.json(enrichedImages);
     } catch (error) {
         console.error('Get images error:', error);
         res.status(500).json({ error: 'Failed to get images' });
