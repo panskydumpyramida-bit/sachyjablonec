@@ -75,7 +75,17 @@ async function loadAdminGallery() {
                     <input type="checkbox" class="gallery-checkbox" value="${img.id}" onchange="updateBatchActions()">
                 </td>
                 <td style="width: 80px;">
-                    <img src="${img.url}" style="width: 60px; height: 40px; object-fit: cover; border-radius: 4px; cursor: pointer;" onclick="openAdminImagePreview('${img.url}', '${(img.originalName || '').replace(/'/g, "\\'")}', '${(img.altText || '').replace(/'/g, "\\'")}')">
+                    ${(() => {
+                let thumbUrl = img.url;
+                if (img.url.startsWith('/uploads/') && !img.url.includes('-thumb')) {
+                    const ext = img.url.split('.').pop();
+                    thumbUrl = img.url.replace(`.${ext}`, `-thumb.${ext}`);
+                }
+                return `<img src="${thumbUrl}" 
+                                     style="width: 60px; height: 40px; object-fit: cover; border-radius: 4px; cursor: pointer;" 
+                                     onclick="openAdminImagePreview('${img.url}', '${(img.originalName || '').replace(/'/g, "\\'")}', '${(img.altText || '').replace(/'/g, "\\'")}')"
+                                     onerror="this.src='${img.url}'">`;
+            })()}
                 </td>
                 <td>
                     <input type="number" 
@@ -639,11 +649,18 @@ async function showGalleryPicker(callback) {
             return;
         }
 
-        grid.innerHTML = images.map(img => `
+        grid.innerHTML = images.map(img => {
+            let thumbUrl = img.url;
+            if (img.url.startsWith('/uploads/') && !img.url.includes('-thumb')) {
+                const ext = img.url.split('.').pop();
+                thumbUrl = img.url.replace(`.${ext}`, `-thumb.${ext}`);
+            }
+            return `
             <div class="gallery-picker-item" onclick="selectFromGallery('${img.url}', '${(img.altText || '').replace(/'/g, "\\'")}')">
-                <img src="${img.url}" alt="${img.originalName || 'Gallery image'}">
+                <img src="${thumbUrl}" alt="${img.originalName || 'Gallery image'}" onerror="this.src='${img.url}'">
             </div>
-        `).join('');
+            `;
+        }).join('');
     } catch (e) {
         console.error('Gallery picker error:', e);
         grid.innerHTML = '<p style="color: #fca5a5; grid-column: 1 / -1; text-align: center;">Nepodařilo se načíst galerii.</p>';
