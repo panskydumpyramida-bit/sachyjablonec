@@ -98,6 +98,16 @@ Refaktoring monolitického `admin.html` (3800+ řádků) na JS moduly.
 - [ ] Univerzální přehrávač partií
 - [ ] Import PGN souborů do centrální databáze
 
+### 🔴 Známý problém: Stránka /partie - Tab "Z článků"
+**Stav:** Tab "Z článků" na `/partie` je prázdný - žádné partie nejsou propojeny s články.
+
+**Příčina:** Hry v tabulce `Game` nemají `newsId` nebo news není `isPublished: true`. Starší články ukládaly hry v `gamesJson` formátu, ne v relační tabulce.
+
+**Možná řešení:**
+1. Migrovat staré `gamesJson` z News do tabulky `Game` s správným `newsId`
+2. Odstranit tab "Z článků" pokud není potřeba
+3. Ponechat a dokumentovat jako "work in progress"
+
 ---
 
 ## ✅ Priorita 2: Puzzle Racer - Admin nastavení (HOTOVO)
