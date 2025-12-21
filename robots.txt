@@ -1,3 +1,10 @@
 User-agent: *
 Allow: /
+
+# Block admin and internal pages
+Disallow: /admin
+Disallow: /api/
+Disallow: /game-recorder
+
+# Sitemap
 Sitemap: https://www.sachyjablonec.cz/sitemap.xml
