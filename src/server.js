@@ -159,6 +159,12 @@ app.get('/game-recorder.html', servePage('game-recorder.html'));
 app.get('/club-tournaments', servePage('club-tournaments.html'));
 app.get('/club-tournaments.html', servePage('club-tournaments.html'));
 
+app.get('/partie', servePage('partie.html'));
+app.get('/partie.html', servePage('partie.html'));
+
+app.get('/games', servePage('games.html'));
+app.get('/games.html', servePage('games.html'));
+
 app.get('/article', servePage('article.html')); // Dynamic article page often uses query params
 app.get('/article.html', servePage('article.html'));
 
@@ -591,7 +597,7 @@ app.use(express.urlencoded({ extended: true }));
 const allowedHtmlFiles = [
     'index.html', 'about.html', 'teams.html', 'club-tournaments.html',
     'youth.html', 'gallery.html', 'admin.html', 'article.html',
-    'members.html', 'calendar.html', 'blicak.html'
+    'members.html', 'calendar.html', 'blicak.html', 'partie.html', 'games.html'
 ];
 
 // --- Blicak Registration Endpoints ---

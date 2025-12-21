@@ -220,7 +220,7 @@ router.get('/', checkClubPassword, async (req, res) => {
 });
 
 // Toggle image visibility
-router.put('/:id/toggle', checkClubPassword, async (req, res) => {
+router.patch('/:id/visibility', checkClubPassword, async (req, res) => {
     try {
         const { id } = req.params;
         const { isPublic } = req.body;
@@ -298,13 +298,56 @@ router.delete('/:id', checkClubPassword, async (req, res) => {
             return res.status(404).json({ error: 'Image not found' });
         }
 
+        // Check for usage in News (thumbnail, content, galleryJson)
+        // We search for the filename or URL match.
+        // Prisma doesn't have partial string match on all fields easily with findFirst/findMany easily for high scale,
+        // but for this size, we can check.
+
+        // 1. Check direct relation
+        /* 
+           The relation `news News?` exists, but `onDelete: SetNull` means it handles itself DB-wise. 
+           However, we want to prevent deletion if it's "used". 
+           If it has newsId, it's explicitly part of a news item.
+        */
+        if (image.newsId) {
+            const news = await prisma.news.findUnique({ where: { id: image.newsId }, select: { title: true } });
+            if (news) {
+                return res.status(409).json({ error: `Obrázek je přiřazen k novince: "${news.title}". Nejdříve ho odeberte z novinky.` });
+            }
+        }
+
+        // 2. Check string usage (Thumbnail, Content, Gallery)
+        // We use like/contains. Note: url is absolute path usually "/uploads/..."
+        const urlPart = image.url;
+
+        const usedInNews = await prisma.news.findFirst({
+            where: {
+                OR: [
+                    { thumbnailUrl: { contains: urlPart } },
+                    { content: { contains: urlPart } },
+                    { galleryJson: { contains: urlPart } }
+                ]
+            },
+            select: { title: true }
+        });
+
+        if (usedInNews) {
+            return res.status(409).json({ error: `Obrázek je použit v novince "${usedInNews.title}" (náhled, text nebo galerie).` });
+        }
+
         // Delete the physical file from disk
         if (image.filename) {
             const filepath = path.join(__dirname, '../../uploads', image.filename);
+            const thumbPath = path.join(__dirname, '../../uploads', image.filename.replace('.', '-thumb.'));
+
             try {
                 if (fs.existsSync(filepath)) {
                     fs.unlinkSync(filepath);
                     console.log('Deleted file:', filepath);
+                }
+                if (fs.existsSync(thumbPath)) {
+                    fs.unlinkSync(thumbPath);
+                    console.log('Deleted thumbnail:', thumbPath);
                 }
             } catch (fileErr) {
                 console.error('Error deleting file (continuing anyway):', fileErr);

@@ -12,13 +12,152 @@ let autoplayInterval = null;
 // Track current game ID for updates (null = new game)
 let currentGameId = null;
 
+// Comments storage: FEN -> Comment String
+let moveComments = {};
+// NAG storage: FEN -> NAG String (e.g. "$1")
+let moveNags = {};
+
+// Helper: Normalize FEN (remove move counters for more stable keying if needed, but standard FEN is fine for specific positions)
+// We will use full FEN to ensure unique positions (including castling rights/en passant) have their own comments.
+const getFenKey = () => game.fen();
+
 // --- Status and History Updates ---
 
 function updateStatus() {
     // Update PGN output textarea
     const pgnOutput = document.getElementById('pgnOutput');
     if (pgnOutput) {
-        pgnOutput.value = game.pgn();
+        pgnOutput.value = generateAnnotatedPgn();
+    }
+
+    const key = getFenKey();
+
+    // Sync Comment Textarea
+    const commentBox = document.getElementById('moveComment');
+    if (commentBox) {
+        commentBox.value = moveComments[key] || '';
+    }
+
+    // Sync Bubble Overlay
+    const bubble = document.getElementById('recorder-board-overlay');
+    if (bubble) {
+        const comment = moveComments[key];
+        const nag = moveNags[key];
+        const nagSymbols = { '$1': '!', '$2': '?', '$3': '!!', '$4': '??', '$5': '!?', '$6': '?!' };
+
+        let text = '';
+        if (nag && nagSymbols[nag]) text += `<strong>${nagSymbols[nag]}</strong> `;
+        if (comment) text += comment;
+
+        if (text) {
+            bubble.innerHTML = text;
+            bubble.style.display = 'block';
+        } else {
+            bubble.style.display = 'none';
+        }
+    }
+
+    // Highlight Active NAG Button
+    const buttons = document.querySelectorAll('button[onclick^="toggleNag"]');
+    buttons.forEach(btn => {
+        const nagCode = btn.getAttribute('onclick').match(/'([^']+)'/)[1];
+        if (moveNags[key] === nagCode) {
+            btn.style.border = '2px solid #fff';
+            btn.style.transform = 'scale(1.1)';
+            btn.style.boxShadow = '0 0 10px rgba(255,255,255,0.5)';
+        } else {
+            btn.style.border = 'none';
+            btn.style.transform = 'none';
+            btn.style.boxShadow = 'none';
+        }
+    });
+
+    updateNagMarkerOnBoard(key);
+}
+
+function updateNagMarkerOnBoard(fenKey) {
+    // Remove existing
+    const existing = document.querySelectorAll('.board-nag-marker');
+    existing.forEach(e => e.remove());
+
+    const nag = moveNags[fenKey];
+    if (!nag) return;
+
+    // We need the move that CAUSED this position to know the target square.
+    // FEN doesn't tell us the last move target square directly.
+    // But we have `game.history({verbose:true})`. The last move in history corresponds to current position IF we are at end.
+    // But if we are navigating history? 
+    // `game-recorder.js` uses `game` object that represents CURRENT board state.
+    // So `game.history().pop()` is the move that led to current state.
+
+    const history = game.history({ verbose: true });
+    const lastMove = history[history.length - 1];
+
+    if (!lastMove) return; // Start position
+
+    const target = lastMove.to;
+    const nagSymbols = { '$1': '!', '$2': '?', '$3': '!!', '$4': '??', '$5': '!?', '$6': '?!' };
+    const symbol = nagSymbols[nag];
+    const colorMap = { '$1': '#4ade80', '$2': '#f87171', '$3': '#22c55e', '$4': '#ef4444', '$5': '#60a5fa', '$6': '#fbbf24' };
+    const color = colorMap[nag] || '#fff';
+
+    if (!symbol) return;
+
+    // Position calc
+    const files = 'abcdefgh';
+    const fileIdx = files.indexOf(target[0]);
+    const rankIdx = parseInt(target[1]) - 1;
+
+    const orientation = board.orientation();
+
+    let topP, leftP;
+    const squareSize = 12.5;
+
+    // Position at Top-Right quadrant of the square (approx 85% x 10%)
+    if (orientation === 'white') {
+        leftP = (fileIdx * squareSize) + (squareSize * 0.85);
+        topP = ((7 - rankIdx) * squareSize) + (squareSize * 0.1);
+    } else {
+        leftP = ((7 - fileIdx) * squareSize) + (squareSize * 0.85);
+        topP = (rankIdx * squareSize) + (squareSize * 0.1);
+    }
+
+    const marker = document.createElement('div');
+    marker.className = 'board-nag-marker';
+    marker.innerText = symbol;
+
+    // Inline styles for recorder
+    marker.style.position = 'absolute';
+    marker.style.left = leftP + '%';
+    marker.style.top = topP + '%';
+    marker.style.width = '2rem';
+    marker.style.height = '2rem';
+    marker.style.display = 'flex';
+    marker.style.alignItems = 'center';
+    marker.style.justifyContent = 'center';
+    marker.style.fontWeight = '800';
+    marker.style.fontSize = '1.2rem';
+    marker.style.color = '#fff';
+    marker.style.backgroundColor = color;
+    marker.style.borderRadius = '50%';
+    marker.style.boxShadow = '0 2px 5px rgba(0,0,0,0.5)';
+    marker.style.border = '2px solid white';
+    marker.style.zIndex = '100';
+    marker.style.pointerEvents = 'none';
+    marker.style.transform = 'translate(-50%, -50%)';
+
+    // Append to board container
+    const boardEl = document.getElementById('board');
+    if (!boardEl) return;
+
+    // We attach to the parent of the board to overlay the marker
+    // Ensure parent is positioned relatively so absolute marker coordinates work
+    const boardContainer = boardEl.parentNode;
+    if (boardContainer) {
+        if (getComputedStyle(boardContainer).position === 'static') {
+            boardContainer.style.position = 'relative';
+        }
+        boardContainer.appendChild(marker);
     }
 }
 
@@ -443,7 +582,7 @@ async function saveGame() {
     }
 
     const pgnHeader = `[White "${white}"]\n[Black "${black}"]\n[Result "${result}"]\n[Date "${new Date().toISOString().split('T')[0]}"]\n\n`;
-    const fullPgn = pgnHeader + game.pgn();
+    const fullPgn = pgnHeader + generateAnnotatedPgn();
 
     const btn = document.querySelector('.main-btn');
     const status = document.getElementById('saveStatus');
@@ -491,6 +630,43 @@ async function saveGame() {
     }
 }
 
+function extractAnnotationsFromPgn(pgnText) {
+    if (!pgnText) return;
+
+    // Clean headers
+    const body = pgnText.replace(/\[.*?\]/g, '');
+
+    // Simple tokenizer: match comments {...}, NAGs $n, moves/numbers
+    // Note: We strip variations (...) for simplicity in Recorder for now as we don't fully support editing trees yet
+    const cleanBody = body.replace(/\([^\)]*\)/g, '');
+
+    const tokens = cleanBody.match(/(\{[^}]+\})|(\$[0-9]+)|([a-zA-Z0-9_+#=:-]+)/g);
+    if (!tokens) return;
+
+    const tempGame = new Chess();
+    // Reset global stores
+    moveComments = {};
+    moveNags = {};
+
+    tokens.forEach(token => {
+        if (token.startsWith('{')) {
+            const comment = token.replace(/^\{|\}$/g, '').trim();
+            if (comment) moveComments[tempGame.fen()] = comment;
+        } else if (token.startsWith('$')) {
+            moveNags[tempGame.fen()] = token;
+        } else {
+            // Skip move numbers
+            if (token.match(/^[0-9]+\.$/)) return;
+
+            // Attempt move
+            tempGame.move(token);
+        }
+    });
+
+    // Update UI
+    updateStatus();
+}
+
 async function loadGameById(id) {
     try {
         const apiUrl = window.API_URL || '/api';
@@ -523,12 +699,16 @@ async function loadGameById(id) {
 
         if (gameData.pgn) {
             game.load_pgn(gameData.pgn);
+            extractAnnotationsFromPgn(gameData.pgn);
             board.position(game.fen());
-            updateStatus();
 
             // Initialize playback history
             moveHistory = game.history({ verbose: true });
             currentMoveIndex = moveHistory.length - 1;
+
+            saveCurrentHistory(); // Initialize navigation history
+            updateStatus();       // Update markers and textareas
+            updateMoveHistory();  // RENDER THE MOVE LIST
         }
 
         // Update save button text to indicate update mode
@@ -542,8 +722,9 @@ async function loadGameById(id) {
     }
 }
 
+
 function copyPgn() {
-    const pgnText = game.pgn();
+    const pgnText = generateAnnotatedPgn();
     if (navigator.clipboard) {
         navigator.clipboard.writeText(pgnText).then(() => {
             const btn = document.querySelector('button[onclick="copyPgn()"]');
@@ -565,7 +746,7 @@ function copyPgn() {
 }
 
 function downloadPgn() {
-    const pgn = game.pgn();
+    const pgn = generateAnnotatedPgn();
     const white = document.getElementById('whitePlayer').value || 'White';
     const black = document.getElementById('blackPlayer').value || 'Black';
     const filename = `${white}_vs_${black}.pgn`.replace(/[^a-z0-9]/gi, '_');
@@ -582,6 +763,13 @@ function downloadPgn() {
 // --- Import PGN Modal ---
 
 function showImportPgnModal() {
+    // Prevent accidental overwrite
+    if (game.history().length > 0) {
+        if (!confirm('Vložení PGN přepíše aktuální partii. Chcete pokračovat?')) {
+            return;
+        }
+    }
+
     const modal = document.getElementById('importPgnModal');
     if (modal) {
         modal.style.display = 'flex';
@@ -592,6 +780,14 @@ function showImportPgnModal() {
     }
 }
 window.showImportPgnModal = showImportPgnModal;
+
+function closeImportPgnModal() {
+    const modal = document.getElementById('importPgnModal');
+    if (modal) {
+        modal.style.display = 'none';
+    }
+}
+window.closeImportPgnModal = closeImportPgnModal;
 
 // Handle PGN file selection
 function handlePgnFileSelect(input) {
@@ -613,11 +809,23 @@ function handlePgnFileSelect(input) {
 }
 window.handlePgnFileSelect = handlePgnFileSelect;
 
-function closeImportPgnModal() {
-    const modal = document.getElementById('importPgnModal');
-    if (modal) modal.style.display = 'none';
+function resetEditor() {
+    if (confirm('Opravdu chcete resetovat celou partii? Přijdete o neuložená data.')) {
+        game.reset();
+        board.position('start');
+        moveComments = {};
+        moveNags = {};
+        updateStatus();
+        updateMoveHistory();
+        removeHighlights();
+
+        // Clear inputs
+        document.getElementById('whitePlayer').value = '';
+        document.getElementById('blackPlayer').value = '';
+        document.getElementById('result').value = '*';
+    }
 }
-window.closeImportPgnModal = closeImportPgnModal;
+window.resetEditor = resetEditor;
 
 function importPgn() {
     const pgnText = document.getElementById('importPgnInput').value.trim();
@@ -629,6 +837,7 @@ function importPgn() {
 
     // Reset game and try to load
     game.reset();
+    moveComments = {}; // Clear previous comments
 
     // Try to load PGN (chess.js loads the FIRST game if multiple)
     const success = game.load_pgn(pgnText);
@@ -637,6 +846,8 @@ function importPgn() {
         alert('Nepodařilo se načíst PGN. Zkontrolujte formát zápisu.');
         return;
     }
+
+    extractAnnotationsFromPgn(pgnText);
 
     // Extract header info if present
     const whiteMatch = pgnText.match(/\[White\s+"([^"]+)"\]/i);
@@ -678,6 +889,118 @@ function importPgn() {
 }
 window.importPgn = importPgn;
 
+function toggleNag(nagCode) {
+    const key = getFenKey();
+    if (moveNags[key] === nagCode) {
+        delete moveNags[key]; // Toggle off
+    } else {
+        moveNags[key] = nagCode;
+    }
+    updateStatus();
+}
+window.toggleNag = toggleNag;
+
+// --- Comment Logic ---
+
+document.addEventListener('DOMContentLoaded', () => {
+    const commentBox = document.getElementById('moveComment');
+    if (commentBox) {
+        commentBox.addEventListener('input', (e) => {
+            const key = getFenKey();
+            // Don't use .trim() - it removes trailing spaces while typing!
+            const val = e.target.value;
+            if (val.trim()) {
+                moveComments[key] = val;
+            } else {
+                delete moveComments[key];
+            }
+            // Don't call updateStatus() here - it overwrites the textarea and kills spaces
+            // Just update the bubble overlay directly
+            const bubble = document.getElementById('recorder-board-overlay');
+            if (bubble) {
+                const nag = moveNags[key];
+                const nagSymbols = { '$1': '!', '$2': '?', '$3': '!!', '$4': '??', '$5': '!?', '$6': '?!' };
+                let text = '';
+                if (nag && nagSymbols[nag]) text += `<strong>${nagSymbols[nag]}</strong> `;
+                if (val.trim()) text += val;
+                if (text) {
+                    bubble.innerHTML = text;
+                    bubble.style.display = 'block';
+                } else {
+                    bubble.style.display = 'none';
+                }
+            }
+        });
+    }
+});
+
+
+// Custom PGN Generator to include comments
+function generateAnnotatedPgn() {
+    const header = game.header();
+    let headerStr = '';
+    // Reconstruct header (chess.js .pgn() does this, but we are building manually)
+    // Actually, let's use game.pgn() output as base IS NOT ENOUGH because it lacks custom comments.
+    // We must iterate history.
+
+    // Header
+    /* 
+       We only have access to raw header via game.header() object.
+       We should reconstruct standard headers.
+    */
+    // Default Header keys
+    const tags = ['Event', 'Site', 'Date', 'Round', 'White', 'Black', 'Result'];
+    // Merge with UI inputs just in case? 
+    // Actually `saveGame` constructs header manually.
+    // For specific PGN export, let's just minimal header or use what's in game object
+
+    // Let's iterate history and build the movetext.
+
+    const history = game.history({ verbose: true });
+    if (history.length === 0) return ''; // Or just headers?
+
+    let pgn = '';
+
+    // We need to replay to get FENs to match comments
+    let tempGame = new Chess();
+    // Copy headers?
+    // tempGame.header(game.header()); 
+    // Just build string.
+
+    let moveText = '';
+    let row = '';
+
+    // Check for initial comment (start pos)
+    if (moveComments[tempGame.fen()]) {
+        moveText += `{ ${moveComments[tempGame.fen()]} } `;
+    }
+
+    history.forEach((move, i) => {
+        const moveNum = Math.floor(i / 2) + 1;
+
+        if (i % 2 === 0) {
+            moveText += `${moveNum}. ${move.san} `;
+        } else {
+            moveText += `${move.san} `;
+        }
+
+        // Apply move to temp to get new FEN
+        tempGame.move(move);
+        const fen = tempGame.fen();
+
+        // Append NAG if any
+        if (moveNags[fen]) {
+            moveText += `${moveNags[fen]} `;
+        }
+
+        if (moveComments[fen]) {
+            moveText += `{ ${moveComments[fen]} } `;
+        }
+    });
+
+    return moveText.trim();
+}
+
 // Mobile Modal Logic
 function openGameInfo() {
     document.getElementById('gameSidebar').classList.add('active');
@@ -692,6 +1015,12 @@ function closeGameInfo() {
 // --- Initialization ---
 
 document.addEventListener('DOMContentLoaded', () => {
+    // Simple keyboard event isolation for inputs
+    // Prevents keyboard shortcuts from triggering while typing
+    document.querySelectorAll('input, textarea').forEach(input => {
+        input.addEventListener('keydown', (e) => e.stopPropagation());
+    });
+
     // Mobile Modal Logic - explicitly attached
     const infoBtn = document.querySelector('.mobile-only-btn');
     if (infoBtn) {
@@ -807,4 +1136,15 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
     }, true);
+
+    // FIX: Persistence for comments while typing
+    const commentBox = document.getElementById('moveComment');
+    if (commentBox) {
+        commentBox.addEventListener('input', () => {
+            const key = game.fen();
+            moveComments[key] = commentBox.value;
+        });
+    }
+
+
 });

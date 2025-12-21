@@ -149,14 +149,15 @@ const syncGamesData = async (newsId, gamesJson, teamName) => {
         }
 
         return {
-            gameTitle: g.title || 'Untitled',
-            chessComId: g.gameId || '', // Map gameId to chessComId
-            whitePlayer: white,
-            blackPlayer: black,
+            gameTitle: String(g.title || 'Untitled'),
+            chessComId: String(g.gameId || ''), // Map gameId to chessComId
+            whitePlayer: g.white || white || null, // Prefer explicit property if available
+            blackPlayer: g.black || black || null,
             team: teamName || g.team || null, // Use article's category/team or game's team
             positionOrder: index,
-            isCommented: g.isCommented || g.commented || false,
-            newsId: newsId
+            isCommented: !!(g.isCommented || g.commented),
+            newsId: newsId,
+            pgn: g.pgn || null // Map PGN content
         };
     }).filter(g => g !== null);
 
@@ -266,7 +267,7 @@ export const createNews = async (req, res) => {
         res.status(201).json(news);
     } catch (error) {
         console.error('Error creating news:', error);
-        res.status(500).json({ error: 'Failed to create news article' });
+        res.status(500).json({ error: 'Failed to create news article: ' + error.message });
     }
 };
 
@@ -278,9 +279,16 @@ export const updateNews = async (req, res) => {
         const updateData = {};
         if (title) {
             updateData.title = title;
-            // Optionally update slug if title changes (usually we keep slug stable for SEO)
-            // updateData.slug = slugify(title, { lower: true, strict: true }); // Using existing createSlug
-            updateData.slug = createSlug(title); // Using existing createSlug
+            let slug = createSlug(title);
+
+            // Ensure unique slug (exclude current news id)
+            let uniqueSlug = slug;
+            let counter = 1;
+            while (await prisma.news.findFirst({ where: { slug: uniqueSlug, NOT: { id: parseInt(id) } } })) {
+                uniqueSlug = `${slug}-${counter}`;
+                counter++;
+            }
+            updateData.slug = uniqueSlug;
         }
         if (category) updateData.category = category;
         if (excerpt) updateData.excerpt = excerpt;
@@ -315,7 +323,7 @@ export const updateNews = async (req, res) => {
         res.json(news);
     } catch (error) {
         console.error('Error updating news:', error);
-        res.status(500).json({ error: 'Failed to update news article' });
+        res.status(500).json({ error: 'Failed to update news article: ' + error.message });
     }
 };
 

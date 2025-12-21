@@ -7,10 +7,18 @@
 // GALLERY MANAGEMENT
 // ================================
 
-async function loadAdminGallery() {
-    console.log('loadAdminGallery called');
-    const tbody = document.getElementById('galleryTableBody');
-    if (!tbody) { console.error('Gallery tbody not found'); return; }
+// Pagination State
+let currentGalleryPage = 1;
+let galleryItemsPerPage = 50;
+
+async function loadAdminGallery(page = 1) {
+    console.log('loadAdminGallery called, page:', page);
+    currentGalleryPage = page;
+
+    const grid = document.getElementById('galleryGrid');
+    const paginationContainer = document.getElementById('galleryPagination');
+
+    if (!grid) { console.error('Gallery grid not found'); return; }
 
     // Reset batch actions state
     const selectAll = document.getElementById('selectAllGallery');
@@ -18,21 +26,12 @@ async function loadAdminGallery() {
         selectAll.checked = false;
         selectAll.indeterminate = false;
     }
-    const batchBtn = document.getElementById('batchDeleteBtn');
-    if (batchBtn) {
-        // batchBtn.style.display = 'none'; // Keep visible but disabled
-        batchBtn.disabled = true;
-        batchBtn.style.opacity = '0.5';
-        batchBtn.style.cursor = 'not-allowed';
-        // Reset button content if it was stuck in loading state
-        batchBtn.innerHTML = '<i class="fa-solid fa-trash"></i> Smazat vybrané (<span id="selectedCount">0</span>)';
-    }
+    updateBatchActions();
 
-    tbody.innerHTML = '<tr><td colspan="8" style="text-align: center;">Načítám...</td></tr>';
+    grid.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: var(--text-muted); padding: 2rem;">Načítám...</p>';
 
     if (!authToken) {
-        console.error('No auth token available');
-        tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; color: red;">Chyba: Chybí přihlášení</td></tr>';
+        grid.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: #fca5a5;">Chyba: Chybí přihlášení</p>';
         return;
     }
 
@@ -42,9 +41,9 @@ async function loadAdminGallery() {
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 8000);
 
-        let url = `${API_URL}/images`;
+        let url = `${API_URL}/images?page=${page}&limit=${galleryItemsPerPage}`;
         if (categoryFilter) {
-            url += `?category=${encodeURIComponent(categoryFilter)}`;
+            url += `&category=${encodeURIComponent(categoryFilter)}`;
         }
 
         console.log('Fetching images from', url);
@@ -55,103 +54,126 @@ async function loadAdminGallery() {
         clearTimeout(timeoutId);
 
         if (!res.ok) {
-            const txt = await res.text();
-            console.error('Fetch failed:', txt);
             throw new Error(`Failed to load images: ${res.status}`);
         }
 
-        const images = await res.json();
+        const responseData = await res.json();
+        // Handle both paginated and non-paginated (legacy/fallback) responses
+        const images = responseData.data || responseData;
+        const pagination = responseData.pagination || null;
 
-        if (!Array.isArray(images)) throw new Error('Invalid response format');
-
-        if (images.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="8" style="text-align: center;">Žádné obrázky</td></tr>';
+        if (!Array.isArray(images) || images.length === 0) {
+            grid.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: var(--text-muted); padding: 2rem;">Žádné obrázky</p>';
+            paginationContainer.innerHTML = '';
             return;
         }
 
-        tbody.innerHTML = images.map(img => `
-            <tr>
-                <td style="text-align: center; width: 40px;">
-                    <input type="checkbox" class="gallery-checkbox" value="${img.id}" onchange="updateBatchActions()">
-                </td>
-                <td style="width: 80px;">
-                    ${(() => {
-                let thumbUrl = img.url;
-                if (img.url.startsWith('/uploads/') && !img.url.includes('-thumb')) {
-                    const ext = img.url.split('.').pop();
-                    thumbUrl = img.url.replace(`.${ext}`, `-thumb.${ext}`);
-                }
-                return `<img src="${thumbUrl}" 
-                                     style="width: 60px; height: 40px; object-fit: cover; border-radius: 4px; cursor: pointer;" 
-                                     onclick="openAdminImagePreview('${img.url}', '${(img.originalName || '').replace(/'/g, "\\'")}', '${(img.altText || '').replace(/'/g, "\\'")}')"
-                                     onerror="this.src='${img.url}'">`;
-            })()}
-                </td>
-                <td>
-                    <input type="number" 
-                           value="${img.sortOrder || 0}" 
-                           onchange="updateImageOrder(${img.id}, this.value)"
-                           style="width: 60px; padding: 0.3rem; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 4px; color: var(--text-color); text-align: center;">
-                </td>
-                <td>
-                    <div style="font-weight: 500; font-size: 0.85rem; margin-bottom: 0.3rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 200px;" title="${img.originalName}">${img.originalName || 'Bez názvu'}</div>
-                    <input type="text" 
-                           class="caption-input" 
-                           value="${img.altText || ''}" 
-                           placeholder="Přidat popisek..." 
-                           onblur="updateImageCaption(${img.id}, this.value)"
-                           style="width: 100%; padding: 0.3rem 0.5rem; font-size: 0.8rem; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 4px; color: var(--text-color);">
-                    ${img.usedInNews ? `
-                        <div style="margin-top: 0.3rem; font-size: 0.75rem;">
-                            <span style="background: rgba(212,175,55,0.2); color: #d4af37; padding: 2px 6px; border-radius: 4px; border: 1px solid rgba(212,175,55,0.3);">
-                                <i class="fa-solid fa-newspaper"></i> Náhled: <a href="article.html?id=${img.usedInNews.id}" target="_blank" style="color: inherit; text-decoration: underline;">${img.usedInNews.title.substring(0, 20)}${img.usedInNews.title.length > 20 ? '...' : ''}</a>
-                            </span>
-                        </div>
-                    ` : ''}
-                </td>
-                <td>
-                    <input type="text" list="categoryList"
-                           value="${img.category || ''}" 
-                           placeholder="Kategorie"
-                           onchange="updateImageCategory(${img.id}, this.value)"
-                           style="width: 100%; padding: 0.3rem 0.5rem; font-size: 0.8rem; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 4px; color: var(--text-color);">
-                </td>
-                <td style="text-align: center;">
-                    <input type="checkbox" ${!img.isPublic ? 'checked' : ''} onchange="toggleGalleryVisibility(${img.id}, !this.checked)">
-                </td>
-                <td style="font-size: 0.85rem; color: var(--text-muted);">
-                    ${new Date(img.uploadedAt).toLocaleString('cs-CZ')}
-                </td>
-                <td>
-                    <button class="action-btn btn-danger" onclick="deleteGalleryImage(${img.id})" title="Smazat">
-                        <i class="fa-solid fa-trash"></i>
-                    </button>
-                </td>
-            </tr>
-        `).join('');
+        grid.innerHTML = images.map(img => renderGalleryCard(img)).join('');
 
-        // Ensure datalist exists
-        if (!document.getElementById('categoryList')) {
-            const dl = document.createElement('datalist');
-            dl.id = 'categoryList';
-            dl.innerHTML = `
-                <option value="members">
-                <option value="news">
-                <option value="intro">
-                <option value="blicak">
-            `;
-            document.body.appendChild(dl);
+        // Render Pagination Controls
+        if (pagination) {
+            renderPagination(pagination, paginationContainer);
+        } else {
+            paginationContainer.innerHTML = '';
         }
 
-        // ... existing code ...
     } catch (e) {
         console.error('Gallery load error:', e);
-        tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; color: #fca5a5;">Chyba načítání: ${e.message}</td></tr>`;
+        grid.innerHTML = `<p style="grid-column: 1/-1; text-align: center; color: #fca5a5;">Chyba načítání: ${e.message}</p>`;
     }
 
-    // Load dynamic categories for datalist
+    // Load dynamic categories for batch select and filter
     loadCategoryDatalist();
 }
+
+function renderGalleryCard(img) {
+    let thumbUrl = img.url;
+    if (img.url.startsWith('/uploads/') && !img.url.includes('-thumb')) {
+        const ext = img.url.split('.').pop();
+        thumbUrl = img.url.replace(`.${ext}`, `-thumb.${ext}`);
+    }
+
+    const visibilityIcon = img.isPublic ? 'fa-eye' : 'fa-eye-slash';
+    const visibilityColor = img.isPublic ? '#4ade80' : '#f87171'; // Green : Red
+    const visibilityTitle = img.isPublic ? 'Veřejný' : 'Skrytý';
+
+    return `
+    <div class="gallery-card ${img.isPublic ? '' : 'is-hidden'}" id="card-${img.id}">
+        <div class="gallery-card-img" 
+             onclick="openAdminImagePreview('${img.url}', '${(img.originalName || '').replace(/'/g, "\\'")}', '${(img.altText || '').replace(/'/g, "\\'")}', ${img.isPublic})">
+            <img src="${thumbUrl}" 
+                 onerror="this.style.display='none';this.parentElement.classList.add('img-error')" 
+                 loading="lazy">
+            <div class="gallery-card-overlay">
+                <i class="fa-solid fa-magnifying-glass-plus" style="font-size: 1.5rem; color: white;"></i>
+            </div>
+            ${!img.isPublic ? '<div class="gallery-status-badge">Skryto</div>' : ''}
+        </div>
+        
+        <input type="checkbox" class="gallery-checkbox gallery-card-select" value="${img.id}" onchange="updateBatchActions()">
+        
+        <div class="gallery-card-content">
+            <input type="text" value="${img.altText || ''}" placeholder="Popisek..." 
+                   onchange="updateImageCaption(${img.id}, this.value)">
+            
+            <input type="text" list="categoryList" value="${img.category || ''}" placeholder="Kategorie" 
+                   onchange="updateImageCategory(${img.id}, this.value)">
+
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 0.25rem;">
+                <div style="display: flex; align-items: center; gap: 0.5rem; background: rgba(0,0,0,0.2); padding: 0.2rem 0.4rem; border-radius: 4px;">
+                    <i class="fa-solid fa-sort" style="font-size: 0.7rem; color: var(--text-muted);"></i>
+                    <input type="number" value="${img.sortOrder || 0}" 
+                           style="width: 40px; padding: 0.1rem; border: none; background: transparent; color: var(--text-color); font-size: 0.8rem; text-align: center;"
+                           onchange="updateSortOrder(${img.id}, this.value)">
+                </div>
+
+                <div style="display: flex; gap: 0.5rem;">
+                    <button class="action-btn" onclick="toggleImageVisibility(${img.id}, ${!img.isPublic})" title="${visibilityTitle}">
+                        <i class="fa-solid ${visibilityIcon}" style="color: ${visibilityColor};"></i>
+                    </button>
+                    <button class="action-btn btn-delete" onclick="deleteGalleryImage(${img.id})" title="Smazat">
+                        <i class="fa-solid fa-trash"></i>
+                    </button>
+                </div>
+            </div>
+
+            ${img.usedInNews ? `
+                <div style="font-size: 0.75rem; margin-top: 0.25rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                    <span style="color: #d4af37;">
+                        <i class="fa-solid fa-newspaper"></i> <a href="article.html?id=${img.usedInNews.id}" target="_blank" style="color: inherit; text-decoration: underline;" title="${img.usedInNews.title}">Použito v článku</a>
+                    </span>
+                </div>
+            ` : ''}
+        </div>
+    </div>
+    `;
+}
+
+function renderPagination(pagination, container) {
+    const { page, pages, total } = pagination;
+
+    let html = `
+        <span style="font-size: 0.9rem; color: var(--text-muted);">
+            Celkem: <strong style="color: var(--text-color);">${total}</strong> | Strana ${page} z ${pages}
+        </span>
+    `;
+
+    if (pages > 1) {
+        html += `
+            <div style="display: flex; gap: 0.5rem;">
+                <button class="btn-secondary btn-small" ${page <= 1 ? 'disabled' : ''} onclick="loadAdminGallery(${page - 1})">
+                    <i class="fa-solid fa-chevron-left"></i> Předchozí
+                </button>
+                <button class="btn-secondary btn-small" ${page >= pages ? 'disabled' : ''} onclick="loadAdminGallery(${page + 1})">
+                    Další <i class="fa-solid fa-chevron-right"></i>
+                </button>
+            </div>
+        `;
+    }
+
+    container.innerHTML = html;
+}
+
 
 async function loadCategoryDatalist() {
     try {
@@ -170,39 +192,96 @@ async function loadCategoryDatalist() {
         if (res.ok) {
             const categories = await res.json();
             // Default categories that should always be there
-            const defaults = ['members', 'news', 'intro', 'blicak'];
+            const defaults = ['news', 'members', 'intro', 'blicak'];
             // Merge and dedup
-            const allCats = [...new Set([...defaults, ...categories])].sort();
+            const allCats = [...new Set([...defaults, ...categories])].filter(c => c).sort();
 
             dl.innerHTML = allCats.map(c => `<option value="${c}">`).join('');
+
+            // Also populate batch category select
+            const batchSelect = document.getElementById('batchCategorySelect');
+            if (batchSelect) {
+                // Keep the first default option
+                const firstOpt = batchSelect.querySelector('option[value=""]');
+                batchSelect.innerHTML = '';
+                if (firstOpt) batchSelect.appendChild(firstOpt);
+                else batchSelect.innerHTML = '<option value="">Změnit kategorii...</option>';
+
+                allCats.forEach(c => {
+                    const opt = document.createElement('option');
+                    opt.value = c;
+                    opt.textContent = c;
+                    batchSelect.appendChild(opt);
+                });
+            }
         }
     } catch (e) {
         console.error('Failed to load categories:', e);
     }
 }
 
-async function toggleGalleryVisibility(id, isPublic) {
+async function applyBatchCategory() {
+    const checkboxes = document.querySelectorAll('.gallery-checkbox:checked');
+    if (checkboxes.length === 0) return;
+
+    const category = document.getElementById('batchCategorySelect').value;
+    if (!category) {
+        showToast('Vyberte kategorii', 'error');
+        return;
+    }
+
+    const btn = document.querySelector('button[onclick="applyBatchCategory()"]');
+    const originalContent = btn.innerHTML;
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
+    btn.disabled = true;
+
     try {
-        const res = await fetch(`${API_URL}/images/${id}/toggle`, {
-            method: 'PUT',
+        const ids = Array.from(checkboxes).map(cb => cb.value);
+        let successCount = 0;
+
+        // Process in parallel with concurrency limit effectively handled by browser per-domain limit (usually 6)
+        // or just Promise.all since we likely don't have thousands selected
+        const promises = ids.map(id =>
+            updateImageCategory(id, category).then(res => 1).catch(() => 0)
+        );
+
+        // Note: updateImageCategory shows toast on individual success, which might spam. 
+        // Ideally refactor updateImageCategory to return status and handle global toast here.
+        // For now, let's just wait.
+
+        await Promise.all(promises);
+
+        showToast(`Kategorie aktualizována`); // Simple summary
+        loadAdminGallery(currentGalleryPage); // Reload to reflect changes
+
+    } catch (e) {
+        console.error(e);
+        showToast('Chyba při hromadné úpravě', 'error');
+    } finally {
+        btn.innerHTML = originalContent;
+        btn.disabled = false;
+    }
+}
+
+async function toggleImageVisibility(id, newState) {
+    try {
+        const res = await fetch(`${API_URL}/images/${id}/visibility`, {
+            method: 'PATCH',
             headers: {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${authToken}`
             },
-            body: JSON.stringify({ isPublic })
+            body: JSON.stringify({ isPublic: newState })
         });
 
         if (res.ok) {
-            showToast(isPublic ? 'Obrázek je veřejný' : 'Obrázek je skrytý');
+            // Update UI directly without full reload if possible, but loadAdminGallery is safer for sync
+            // showToast(newState ? 'Obrázek je nyní veřejný' : 'Obrázek je nyní skrytý', 'success');
+            loadAdminGallery(currentGalleryPage);
         } else {
-            showToast('Nepodařilo se změnit viditelnost', 'error');
-            loadAdminGallery(); // Reload to reset checkbox state
+            showToast('Chyba při změně viditelnosti', 'error');
         }
-    } catch (e) {
-        console.error(e);
-        showToast('Chyba komunikace', 'error');
-        loadAdminGallery();
-    }
+    } catch (e) { console.error(e); }
 }
 
 async function deleteGalleryImage(id) {
@@ -218,9 +297,10 @@ async function deleteGalleryImage(id) {
 
         if (res.ok) {
             showToast('Obrázek smazán');
-            loadAdminGallery();
+            loadAdminGallery(currentGalleryPage);
         } else {
-            showToast('Nepodařilo se smazat obrázek', 'error');
+            const data = await res.json();
+            showToast(data.error || 'Nepodařilo se smazat obrázek', 'error');
         }
     } catch (e) {
         console.error(e);
@@ -284,7 +364,7 @@ async function updateImageCaption(id, altText) {
     }
 }
 
-async function updateImageOrder(id, sortOrder) {
+async function updateSortOrder(id, sortOrder) {
     try {
         const res = await fetch(`${API_URL}/images/${id}/order`, {
             method: 'PUT',
@@ -336,28 +416,44 @@ async function updateImageCategory(id, category) {
 function updateBatchActions() {
     const checkboxes = document.querySelectorAll('.gallery-checkbox:checked');
     const count = checkboxes.length;
-    const btn = document.getElementById('batchDeleteBtn');
-    const countSpan = document.getElementById('selectedCount');
 
-    if (btn && countSpan) {
+    const actionBar = document.getElementById('batchActionsBar');
+    const countSpan = document.getElementById('selectedCount');
+    const batchBtn = document.getElementById('batchDeleteBtn');
+
+    if (actionBar && countSpan) {
+        countSpan.textContent = count;
+
         if (count > 0) {
-            btn.disabled = false;
-            btn.style.opacity = '1';
-            btn.style.cursor = 'pointer';
-            countSpan.textContent = count;
+            actionBar.style.opacity = '1';
+            actionBar.style.pointerEvents = 'auto';
+            if (batchBtn) batchBtn.disabled = false;
         } else {
-            btn.disabled = true;
-            btn.style.opacity = '0.5';
-            btn.style.cursor = 'not-allowed';
-            countSpan.textContent = '0';
+            actionBar.style.opacity = '0.5';
+            actionBar.style.pointerEvents = 'none';
+            if (batchBtn) batchBtn.disabled = true;
         }
     }
+
+    // Update visuals for selected cards
+    document.querySelectorAll('.gallery-card').forEach(card => {
+        card.classList.remove('selected');
+    });
+    checkboxes.forEach(cb => {
+        const card = document.getElementById(`card-${cb.value}`);
+        if (card) card.classList.add('selected');
+    });
 
     const selectAll = document.getElementById('selectAllGallery');
     const allCheckboxes = document.querySelectorAll('.gallery-checkbox');
     if (selectAll) {
-        selectAll.checked = allCheckboxes.length > 0 && checkboxes.length === allCheckboxes.length;
-        selectAll.indeterminate = count > 0 && count < allCheckboxes.length;
+        if (allCheckboxes.length > 0) {
+            selectAll.checked = checkboxes.length === allCheckboxes.length;
+            selectAll.indeterminate = count > 0 && count < allCheckboxes.length;
+        } else {
+            selectAll.checked = false;
+            selectAll.indeterminate = false;
+        }
     }
 }
 
@@ -453,147 +549,67 @@ async function handleAdminGalleryUpload(input, category = null) {
 // ADMIN IMAGE PREVIEW MODAL
 // ================================
 
-function openAdminImagePreview(url, filename, caption) {
-    let modal = document.getElementById('adminImagePreviewModal');
-    if (!modal) {
-        modal = document.createElement('div');
-        modal.id = 'adminImagePreviewModal';
-        modal.innerHTML = `
-            <div class="modal-overlay" onclick="closeAdminImagePreview()"></div>
-            <div class="preview-content">
-                <button type="button" class="close-btn" onclick="closeAdminImagePreview()">&times;</button>
-                <img src="" alt="Preview">
-                <div class="preview-caption">
-                    <h4 id="previewFilename"></h4>
-                    <p id="previewAltText"></p>
+let adminImagePreviewModal = null;
+
+function openAdminImagePreview(url, originalName, altText, isPublic) {
+    if (!adminImagePreviewModal) {
+        // Create modal DOM if not exists
+        adminImagePreviewModal = document.createElement('div');
+        adminImagePreviewModal.className = 'modal-overlay';
+        adminImagePreviewModal.style.zIndex = '100000';
+        adminImagePreviewModal.style.display = 'none';
+
+        adminImagePreviewModal.innerHTML = `
+            <div class="modal-content" style="max-width: 90vw; max-height: 90vh; width: auto; height: auto; padding: 0; background: transparent; display: flex; flex-direction: column; align-items: center; position: relative;">
+                <button onclick="closeAdminImagePreview()" style="position: absolute; top: -40px; right: 0; background: none; border: none; color: white; font-size: 2rem; cursor: pointer;">&times;</button>
+                <img id="adminPreviewImage" src="" style="max-width: 100%; max-height: 80vh; border-radius: 4px; box-shadow: 0 10px 40px rgba(0,0,0,0.5);">
+                <div id="adminPreviewCaption" style="background: rgba(0,0,0,0.8); color: white; padding: 1rem; margin-top: 1rem; border-radius: 8px; text-align: center; min-width: 300px;">
+                    <h4 id="adminPreviewTitle" style="margin: 0 0 0.5rem 0; color: #d4af37;"></h4>
+                    <p id="adminPreviewAlt" style="margin: 0; font-style: italic; color: #ccc;"></p>
+                    <div id="adminPreviewWarning" style="margin-top: 0.5rem; color: #f87171; font-weight: bold; display: none;">
+                        <i class="fa-solid fa-eye-slash"></i> Obrázek je skrytý ve veřejné galerii
+                    </div>
                 </div>
             </div>
         `;
-        document.body.appendChild(modal);
+        document.body.appendChild(adminImagePreviewModal);
 
-        // Inject Styles
-        const style = document.createElement('style');
-        style.textContent = `
-            #adminImagePreviewModal {
-                position: fixed;
-                top: 0;
-                left: 0;
-                right: 0;
-                bottom: 0;
-                z-index: 5000;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                opacity: 0;
-                visibility: hidden;
-                transition: opacity 0.3s ease;
-            }
-            #adminImagePreviewModal.active {
-                opacity: 1;
-                visibility: visible;
-            }
-            #adminImagePreviewModal .modal-overlay {
-                position: absolute;
-                inset: 0;
-                background: rgba(0, 0, 0, 0.9);
-                backdrop-filter: blur(5px);
-            }
-            #adminImagePreviewModal .preview-content {
-                position: relative;
-                max-width: 90vw;
-                max-height: 90vh;
-                display: flex;
-                flex-direction: column;
-                z-index: 10;
-            }
-            #adminImagePreviewModal img {
-                max-width: 100%;
-                max-height: 80vh;
-                object-fit: contain;
-                border-radius: 4px;
-                box-shadow: 0 10px 40px rgba(0,0,0,0.5);
-            }
-            #adminImagePreviewModal .preview-caption {
-                margin-top: 1rem;
-                color: #fff;
-                text-align: center;
-                background: rgba(0,0,0,0.5);
-                padding: 1rem;
-                border-radius: 8px;
-            }
-            #adminImagePreviewModal h4 {
-                margin: 0;
-                font-size: 0.9rem;
-                color: var(--primary-color, #d4af37);
-                margin-bottom: 0.25rem;
-            }
-            #adminImagePreviewModal p {
-                margin: 0;
-                font-size: 0.85rem;
-                color: #ccc;
-            }
-            #adminImagePreviewModal .close-btn {
-                position: absolute;
-                top: -40px;
-                right: -40px;
-                background: none;
-                border: none;
-                color: #fff;
-                font-size: 2rem;
-                cursor: pointer;
-                transition: transform 0.2s;
-            }
-            #adminImagePreviewModal .close-btn:hover {
-                transform: scale(1.2);
-                color: var(--primary-color, #d4af37);
-            }
-            @media (max-width: 768px) {
-                #adminImagePreviewModal .close-btn {
-                    top: 10px;
-                    right: 10px;
-                    background: rgba(0,0,0,0.5);
-                    width: 40px;
-                    height: 40px;
-                    border-radius: 50%;
-                    line-height: 1;
-                }
-            }
-        `;
-        document.head.appendChild(style);
-
-        // Escape key listener
+        // Close on escape
         document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape' && modal.classList.contains('active')) {
+            if (e.key === 'Escape' && adminImagePreviewModal.style.display === 'flex') {
                 closeAdminImagePreview();
             }
         });
+
+        // Close on click outside
+        adminImagePreviewModal.addEventListener('click', (e) => {
+            if (e.target === adminImagePreviewModal) closeAdminImagePreview();
+        });
     }
 
-    const img = modal.querySelector('img');
-    const h4 = document.getElementById('previewFilename');
-    const p = document.getElementById('previewAltText');
+    const img = adminImagePreviewModal.querySelector('#adminPreviewImage');
+    const title = adminImagePreviewModal.querySelector('#adminPreviewTitle');
+    const alt = adminImagePreviewModal.querySelector('#adminPreviewAlt');
+    const warning = adminImagePreviewModal.querySelector('#adminPreviewWarning');
 
     img.src = url;
-    h4.textContent = filename || 'Obrázek';
-    p.textContent = caption ? caption : '(bez popisku)';
+    title.textContent = originalName || 'Bez názvu';
+    alt.textContent = altText || '';
 
-    // Reset display before fading in
-    modal.style.display = 'flex';
-    // Small delay to allow transition
-    requestAnimationFrame(() => {
-        modal.classList.add('active');
-    });
+    if (isPublic === false) {
+        warning.style.display = 'block';
+        img.style.border = '2px solid #f87171';
+    } else {
+        warning.style.display = 'none';
+        img.style.border = 'none';
+    }
+
+    adminImagePreviewModal.style.display = 'flex';
 }
 
 function closeAdminImagePreview() {
-    const modal = document.getElementById('adminImagePreviewModal');
-    if (modal) {
-        modal.classList.remove('active');
-        setTimeout(() => {
-            if (!modal.classList.contains('active')) {
-                // Keep modal in DOM but hide completely if needed, or just let CSS handle visibility
-            }
-        }, 300);
+    if (adminImagePreviewModal) {
+        adminImagePreviewModal.style.display = 'none';
     }
 }
 
@@ -697,8 +713,8 @@ window.selectFromGallery = selectFromGallery;
 window.closeGalleryPicker = closeGalleryPicker;
 window.updateBatchActions = updateBatchActions;
 window.toggleSelectAllGallery = toggleSelectAllGallery;
-window.toggleGalleryVisibility = toggleGalleryVisibility;
-window.updateImageOrder = updateImageOrder;
+window.toggleImageVisibility = toggleImageVisibility;
+window.updateSortOrder = updateSortOrder;
 window.updateImageCategory = updateImageCategory;
 window.deleteSelectedImages = deleteSelectedImages;
 window.openAdminImagePreview = openAdminImagePreview;

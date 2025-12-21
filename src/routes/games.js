@@ -5,33 +5,7 @@ import { checkClubPassword } from '../controllers/messageController.js';
 const router = express.Router();
 const prisma = new PrismaClient();
 
-// Use club password check for all routes (allows optional user token too)
-router.use(checkClubPassword);
-
-// Create new game record
-router.post('/', async (req, res) => {
-    try {
-        const { white, black, result, date, event, pgn } = req.body;
-
-        const game = await prisma.gameRecorded.create({
-            data: {
-                white: white || '?',
-                black: black || '?',
-                result: result || '*',
-                date: date ? new Date(date) : new Date(),
-                event: event || 'Casual Game',
-                pgn: pgn || '',
-                uploadedBy: req.user ? req.user.id : null // User ID is optional
-            }
-        });
-
-        res.status(201).json(game);
-    } catch (error) {
-        console.error('Error saving game:', error);
-        res.status(500).json({ error: 'Failed to save game' });
-    }
-});
-
+// Public Game Read Routes
 // List games (latest first)
 router.get('/', async (req, res) => {
     try {
@@ -82,6 +56,38 @@ router.get('/:id', async (req, res) => {
     } catch (error) {
         console.error('Error fetching game:', error);
         res.status(500).json({ error: 'Failed to fetch game' });
+    }
+});
+
+// Use club password check for all modification routes
+router.use(checkClubPassword);
+
+// Create new game record
+router.post('/', async (req, res) => {
+    try {
+        const { white, black, result, date, event, pgn } = req.body;
+
+        // Basic validation
+        if (!white || !black) {
+            return res.status(400).json({ error: 'Missing player names' });
+        }
+
+        const game = await prisma.gameRecorded.create({
+            data: {
+                white,
+                black,
+                result: result || '*',
+                date: date ? new Date(date) : new Date(),
+                event: event || 'Casual Game',
+                pgn: pgn || '',
+                // uploadedBy: req.userId // Optional: link to user if authenticated as specific user
+            }
+        });
+
+        res.json(game);
+    } catch (error) {
+        console.error('Error creating game:', error);
+        res.status(500).json({ error: 'Failed to create game' });
     }
 });
 
