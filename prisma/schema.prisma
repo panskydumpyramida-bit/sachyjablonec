@@ -100,6 +100,8 @@ model Game {
   report        MatchReport? @relation(fields: [reportId], references: [id], onDelete: Cascade)
   news          News?        @relation(fields: [newsId], references: [id], onDelete: Cascade)
   
+  pgn           String?  @map("pgn")
+  
   @@map("games")
   @@index([chessComId])
 }

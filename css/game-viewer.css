@@ -267,6 +267,11 @@
     opacity: 0.8;
 }
 
+/* Hide button text globally - navigation buttons are icon-only circles */
+.btn-text {
+    display: none;
+}
+
 /* Mobile Responsive */
 @media (max-width: 1024px) {
     .app-container {
@@ -314,7 +319,7 @@
         margin-top: 0.5rem;
     }
 
-    /* Hide button text, show only icons on small screens */
+    /* Hide button text on all screen sizes - circles are icon-only */
     .btn-text {
         display: none;
     }

@@ -68,6 +68,7 @@ router.get('/', async (req, res) => {
             newsTitle: g.news?.title,
             // Add team if we have it stored or derived? Schema has 'team' column
             team: g.team,
+            pgn: g.pgn, // Expose PGN for new viewer
             commented: g.isCommented
         }));
 

@@ -10,6 +10,8 @@
         rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/game-viewer2.css">
+    <link rel="stylesheet" href="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.css">
     <style>
         .auth-container {
             max-width: 450px;
@@ -346,10 +348,10 @@
                             <i class="fa-solid fa-puzzle-piece"></i>
                             <span>Puzzle Racer</span>
                         </a>
-                        <div class="hub-tile tile-games" onclick="showSection('games')">
+                        <a href="/partie" class="hub-tile tile-games">
                             <i class="fa-solid fa-chess-board"></i>
                             <span>Editor Partií</span>
-                        </div>
+                        </a>
                         <div class="hub-tile tile-messages" onclick="showSection('messages')">
                             <i class="fa-solid fa-comments"></i>
                             <span>Vzkazovník</span>
@@ -376,16 +378,24 @@
                             style="display: inline-flex; align-items: center; gap: 0.5rem;">
                             <i class="fa-solid fa-plus"></i> Nahrát novou partii
                         </a>
-                        <a href="/game-recorder" class="btn-secondary"
-                            style="display: inline-flex; align-items: center; gap: 0.5rem; background: rgba(74, 222, 128, 0.1); border-color: rgba(74, 222, 128, 0.3); color: #4ade80;">
+                        <button onclick="showPgnImportModal()" class="btn-secondary"
+                            style="display: inline-flex; align-items: center; gap: 0.5rem; background: rgba(74, 222, 128, 0.1); border-color: rgba(74, 222, 128, 0.3); color: #4ade80; cursor: pointer;">
                             <i class="fa-solid fa-file-import"></i> Vložit PGN
-                        </a>
+                        </button>
                     </div>
                     <h3 style="color: var(--text-muted); margin-bottom: 1rem;">
                         <i class="fa-solid fa-list"></i> Poslední nahrané partie
                     </h3>
                     <div id="gamesList">
                         <p style="color: var(--text-muted);"><i class="fa-solid fa-spinner fa-spin"></i> Načítám...</p>
+                    </div>
+
+                    <!-- Game Viewer Container -->
+                    <div id="memberGameViewer" style="display: none; margin-top: 2rem;">
+                        <h3 style="color: var(--primary-color); margin-bottom: 1rem;">
+                            <i class="fa-solid fa-play-circle"></i> Přehrávač partie
+                        </h3>
+                        <div id="memberViewerContainer" class="game-viewer-2-container"></div>
                     </div>
                 </div>
 
@@ -446,11 +456,44 @@
         </section>
     </main>
 
+    <!-- PGN Import Modal -->
+    <div id="pgnImportModal"
+        style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.85); z-index: 10000; display: none; align-items: center; justify-content: center; backdrop-filter: blur(5px);">
+        <div
+            style="background: var(--surface-color, #1e1e1e); max-width: 600px; width: 90%; max-height: 80vh; overflow-y: auto; padding: 2rem; border-radius: 12px; border: 1px solid rgba(74, 222, 128, 0.3); box-shadow: 0 20px 60px rgba(0,0,0,0.6);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                <h3 style="margin: 0; color: #4ade80;"><i class="fa-solid fa-file-import"></i> Vložit PGN</h3>
+                <button onclick="closePgnImportModal()"
+                    style="background: none; border: none; color: #aaa; font-size: 24px; cursor: pointer;">&times;</button>
+            </div>
+            <p style="color: var(--text-muted, #888); font-size: 0.9rem; margin-bottom: 1rem;">
+                Vložte PGN notaci. Pokud PGN obsahuje více partií, všechny budou uloženy.
+            </p>
+            <textarea id="pgnImportText" rows="12"
+                placeholder="[Event &quot;Turnaj&quot;]&#10;[White &quot;Bílý&quot;]&#10;[Black &quot;Černý&quot;]&#10;[Result &quot;1-0&quot;]&#10;&#10;1. e4 e5 2. Nf3 Nc6..."
+                style="width: 100%; padding: 1rem; background: #0a0a0a; border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; color: #e0e0e0; font-family: monospace; font-size: 0.9rem; resize: vertical;"></textarea>
+            <div id="pgnImportStatus" style="display: none; margin-top: 1rem; padding: 0.75rem; border-radius: 6px;">
+            </div>
+            <div style="display: flex; gap: 0.5rem; margin-top: 1.5rem; justify-content: flex-end;">
+                <button onclick="closePgnImportModal()" class="btn-secondary"
+                    style="padding: 0.75rem 1rem;">Zrušit</button>
+                <button onclick="importPgnGames()" class="btn-primary" id="pgnImportBtn"
+                    style="padding: 0.75rem 1.5rem; background: #4ade80; color: #000;">
+                    <i class="fa-solid fa-save"></i> Uložit partie
+                </button>
+            </div>
+        </div>
+    </div>
+
     <footer id="global-footer"></footer>
 
     <script src="js/config.js" defer></script>
     <script src="js/layout-loader.js" defer></script>
     <script src="js/main.js" defer></script>
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script src="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
+    <script src="js/game-viewer2.js"></script>
     <script>
         const PASSWORD_KEY = 'club_auth_token';
 
@@ -581,6 +624,9 @@
         }
 
         // Games
+        let memberGamesData = []; // Store for viewer
+        let memberViewer = null;
+
         async function loadGames() {
             const password = localStorage.getItem(PASSWORD_KEY);
             const container = document.getElementById('gamesList');
@@ -590,25 +636,29 @@
                     headers: { 'X-Club-Password': password }
                 });
                 const games = await res.json();
+                memberGamesData = games; // Store for viewer
 
                 if (games.length === 0) {
                     container.innerHTML = '<p style="color: var(--text-muted); text-align: center;">Zatím žádné nahrané partie.</p>';
                     return;
                 }
 
-                container.innerHTML = games.map(game => `
-                    <div class="game-card">
-                        <div>
-                            <div style="font-weight: 700; color: var(--text-main);"><i class="fa-solid fa-chess"></i> ${escapeHtml(game.white)} vs ${escapeHtml(game.black)}</div>
-                            <div style="color: #4ade80; font-weight: 700;">${game.result}</div>
-                            <div style="color: var(--text-muted); font-size: 0.85rem;">${new Date(game.date).toLocaleDateString('cs-CZ')}</div>
+                container.innerHTML = games.map((game, index) => `
+                    <div class="game-card" style="cursor: pointer; padding: 0.6rem 1rem; margin-bottom: 0.5rem;" onclick="playGameInViewer(${index})">
+                        <div style="display: flex; align-items: center; gap: 0.75rem; flex: 1; min-width: 0;">
+                            <span style="font-weight: 600; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${escapeHtml(game.white)} - ${escapeHtml(game.black)}</span>
+                            <span style="color: #4ade80; font-weight: 700; font-size: 0.9rem;">${game.result}</span>
+                            <span style="color: var(--text-muted); font-size: 0.75rem;">${new Date(game.date).toLocaleDateString('cs-CZ')}</span>
                         </div>
-                        <div style="display: flex; gap: 0.5rem;">
-                            <button onclick="downloadGamePgn(${game.id})" class="btn-secondary" style="padding: 0.5rem 0.75rem; font-size: 0.8rem;">
-                                <i class="fa-solid fa-download"></i> PGN
+                        <div style="display: flex; gap: 0.25rem;" onclick="event.stopPropagation()">
+                            <button onclick="playGameInViewer(${index})" style="padding: 0.3rem 0.5rem; font-size: 0.7rem; background: #3b82f6; color: white; border: none; border-radius: 4px; cursor: pointer;" title="Přehrát">
+                                <i class="fa-solid fa-play"></i>
                             </button>
-                            <a href="game-recorder.html?id=${game.id}" class="btn-primary" style="padding: 0.5rem 0.75rem; font-size: 0.8rem;">
-                                <i class="fa-solid fa-edit"></i> Upravit
+                            <button onclick="downloadGamePgn(${game.id})" style="padding: 0.3rem 0.5rem; font-size: 0.7rem; background: transparent; color: var(--text-muted); border: 1px solid rgba(255,255,255,0.1); border-radius: 4px; cursor: pointer;" title="PGN">
+                                <i class="fa-solid fa-download"></i>
+                            </button>
+                            <a href="game-recorder.html?id=${game.id}" style="padding: 0.3rem 0.5rem; font-size: 0.7rem; background: transparent; color: var(--text-muted); border: 1px solid rgba(255,255,255,0.1); border-radius: 4px; text-decoration: none; display: flex; align-items: center;" title="Upravit">
+                                <i class="fa-solid fa-edit"></i>
                             </a>
                         </div>
                     </div>
@@ -616,6 +666,37 @@
             } catch (e) {
                 console.error(e);
                 container.innerHTML = '<p style="color: #fca5a5;">Chyba načítání.</p>';
+            }
+        }
+
+        function playGameInViewer(index) {
+            const game = memberGamesData[index];
+            if (!game || !game.pgn) {
+                alert('Tato partie nemá PGN data.');
+                return;
+            }
+
+            // Show viewer container
+            const viewerContainer = document.getElementById('memberGameViewer');
+            viewerContainer.style.display = 'block';
+
+            // Scroll to viewer
+            viewerContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+            // Initialize or update viewer
+            const container = document.getElementById('memberViewerContainer');
+            container.innerHTML = ''; // Clear previous
+
+            // Create viewer with this game's PGN
+            if (typeof GameViewer2 !== 'undefined') {
+                memberViewer = new GameViewer2(container, {
+                    pgn: game.pgn,
+                    showHeader: true,
+                    showControls: true,
+                    showNotation: true
+                });
+            } else {
+                container.innerHTML = '<p style="color: #fca5a5;">GameViewer2 není dostupný.</p>';
             }
         }
 
@@ -707,6 +788,120 @@
             div.textContent = text;
             return div.innerHTML;
         }
+
+        // PGN Import Modal Functions
+        function showPgnImportModal() {
+            const modal = document.getElementById('pgnImportModal');
+            modal.style.display = 'flex';
+            document.getElementById('pgnImportText').value = '';
+            document.getElementById('pgnImportStatus').style.display = 'none';
+        }
+
+        function closePgnImportModal() {
+            document.getElementById('pgnImportModal').style.display = 'none';
+        }
+
+        // Parse PGN text that may contain multiple games
+        function parsePgnIntoGames(pgnText) {
+            const games = [];
+            // Split by empty line followed by [Event - handles multi-game PGN
+            const rawGames = pgnText.split(/\n\n(?=\[Event\s)/);
+
+            for (const gamePgn of rawGames) {
+                if (!gamePgn.trim()) continue;
+
+                // Extract headers
+                const whiteMatch = gamePgn.match(/\[White\s+"([^"]+)"\]/);
+                const blackMatch = gamePgn.match(/\[Black\s+"([^"]+)"\]/);
+                const resultMatch = gamePgn.match(/\[Result\s+"([^"]+)"\]/);
+                const eventMatch = gamePgn.match(/\[Event\s+"([^"]+)"\]/);
+                const dateMatch = gamePgn.match(/\[Date\s+"([^"]+)"\]/);
+
+                games.push({
+                    white: whiteMatch ? whiteMatch[1] : 'N/A',
+                    black: blackMatch ? blackMatch[1] : 'N/A',
+                    result: resultMatch ? resultMatch[1] : '*',
+                    event: eventMatch ? eventMatch[1] : '',
+                    date: dateMatch ? dateMatch[1].replace(/\./g, '-') : new Date().toISOString().split('T')[0],
+                    pgn: gamePgn.trim()
+                });
+            }
+
+            return games;
+        }
+
+        async function importPgnGames() {
+            const pgnText = document.getElementById('pgnImportText').value.trim();
+            const statusDiv = document.getElementById('pgnImportStatus');
+            const btn = document.getElementById('pgnImportBtn');
+
+            if (!pgnText) {
+                statusDiv.style.display = 'block';
+                statusDiv.style.background = 'rgba(252, 165, 165, 0.2)';
+                statusDiv.style.color = '#fca5a5';
+                statusDiv.innerHTML = '<i class="fa-solid fa-exclamation-circle"></i> Vložte PGN notaci.';
+                return;
+            }
+
+            const games = parsePgnIntoGames(pgnText);
+
+            if (games.length === 0) {
+                statusDiv.style.display = 'block';
+                statusDiv.style.background = 'rgba(252, 165, 165, 0.2)';
+                statusDiv.style.color = '#fca5a5';
+                statusDiv.innerHTML = '<i class="fa-solid fa-exclamation-circle"></i> Nepodařilo se rozpoznat žádné partie.';
+                return;
+            }
+
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Ukládám...';
+            statusDiv.style.display = 'block';
+            statusDiv.style.background = 'rgba(96, 165, 250, 0.2)';
+            statusDiv.style.color = '#60a5fa';
+            statusDiv.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Ukládám ${games.length} partii...`;
+
+            const password = localStorage.getItem(PASSWORD_KEY);
+            let savedCount = 0;
+
+            for (const game of games) {
+                try {
+                    const res = await fetch(`${API_URL}/games`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-Club-Password': password
+                        },
+                        body: JSON.stringify(game)
+                    });
+                    if (res.ok) savedCount++;
+                } catch (e) {
+                    console.error('Error saving game:', e);
+                }
+            }
+
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fa-solid fa-save"></i> Uložit partie';
+
+            if (savedCount > 0) {
+                statusDiv.style.background = 'rgba(74, 222, 128, 0.2)';
+                statusDiv.style.color = '#4ade80';
+                statusDiv.innerHTML = `<i class="fa-solid fa-check-circle"></i> Uloženo ${savedCount} z ${games.length} partií.`;
+                loadGames(); // Refresh list
+                setTimeout(closePgnImportModal, 1500);
+            } else {
+                statusDiv.style.background = 'rgba(252, 165, 165, 0.2)';
+                statusDiv.style.color = '#fca5a5';
+                statusDiv.innerHTML = '<i class="fa-solid fa-exclamation-circle"></i> Nepodařilo se uložit žádnou partii.';
+            }
+        }
+
+        // Close modal on escape or outside click
+        document.getElementById('pgnImportModal')?.addEventListener('click', (e) => {
+            if (e.target.id === 'pgnImportModal') closePgnImportModal();
+        });
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') closePgnImportModal();
+        });
     </script>
 </body>
 
