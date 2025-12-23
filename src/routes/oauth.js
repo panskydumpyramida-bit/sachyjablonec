@@ -8,10 +8,21 @@ const router = express.Router();
 const prisma = new PrismaClient();
 
 // Initiate Google OAuth
-router.get('/google', passport.authenticate('google', {
-    scope: ['profile', 'email'],
-    session: false
-}));
+// Initiate Google OAuth (supports Login and Linking)
+router.get('/google', (req, res, next) => {
+    const token = req.query.token;
+    const options = {
+        scope: ['profile', 'email'],
+        session: false
+    };
+
+    // If token is provided, pass it as state for linking account
+    if (token) {
+        options.state = token;
+    }
+
+    passport.authenticate('google', options)(req, res, next);
+});
 
 // Google OAuth callback
 router.get('/google/callback',
@@ -30,11 +41,23 @@ router.get('/google/callback',
                 { expiresIn: '7d' }
             );
 
+            // Check if this was likely a linking action
+            // If we have a state token (we can't check it easily here unless we passed it through), 
+            // but we can check if the user object looks "setup".
+            // Actually, for linking, we want to go back to Account page.
+
+            // Check state from query (Google echoes it back)
+            const wasLinking = req.query.state ? true : false;
+
+            if (wasLinking) {
+                // If linking, redirect back to account page with success indicator
+                return res.redirect(`/account.html?auth_token=${token}&linked=true`);
+            }
+
+            // Normal Login Flow
             // Check if user needs to set username (temp username pattern)
             const needsUsername = user.username.startsWith('user_') || user.needsUsername;
 
-            // Redirect to frontend with token
-            // The frontend will handle storing the token and showing username modal if needed
             const redirectUrl = needsUsername
                 ? `/?auth_token=${token}&needs_username=true`
                 : `/?auth_token=${token}`;
