@@ -6,7 +6,14 @@ Plán budoucího vývoje webu sachyjablonec.cz.
 
 ---
 
-## ✅ Dokončeno (22. 12. 2025)
+## ✅ Dokončeno (23. 12. 2025)
+
+### Opravy a Vylepšení
+- [x] **Google Account Linking Fix:** Propojení účtu již nevyžaduje zadání jména
+- [x] **Graceful Shutdown:** Server se při deployi ukončuje čistě (bez npm errorů)
+- [x] **Cache Busting:** Vynucení načtení nových verzí JS/CSS (`?v=4`)
+- [x] **UI/UX:** Odstranění A/B testu widgetu, lepší náhledy článků (ikony komentářů)
+- [x] **Game Viewer:** Sjednocení vzhledu v sekci Soutěže družstev
 
 ### Google OAuth Přihlášení
 - [x] Passport.js konfigurace s Google OAuth 2.0
@@ -16,6 +23,7 @@ Plán budoucího vývoje webu sachyjablonec.cz.
 - [x] Propojení existujících účtů s Google
 
 ### Uživatelský Systém
+- [x] Změna hesla v nastavení účtu
 - [x] Nová role MEMBER (hierarchie: USER < MEMBER < ADMIN < SUPERADMIN)
 - [x] Stránka nastavení účtu (`/account.html`)
 - [x] Editovatelná pole: jméno, oddíl
@@ -38,25 +46,31 @@ Plán budoucího vývoje webu sachyjablonec.cz.
 
 ## 🔧 V Práci / Plánováno
 
-### Priorita 1: Email Služba
+### Priorita 1: Členská Sekce - Interní Info 🆕
+> **Cíl:** Zobrazovat přihlášeným členům (role MEMBER) interní informace.
+- [ ] Sekce "Turnaje a Akce" (neveřejné info, propozice, termíny)
+- [ ] Zápisy ze schůzí / Dokumenty
+- [ ] Správa tohoto obsahu přes Admin panel (CRUD pro "Interní oznámení")
+
+### Priorita 2: Email Služba
 > **Blokováno:** Potřebujeme nastavit email službu (SendGrid, Resend, apod.)
 
 - [ ] Integrace email poskytovatele
 - [ ] "Zapomenuté heslo" - reset link přes email
 - [ ] Email notifikace (volitelné)
 
-### Priorita 2: Game Viewer Responsivita
+### Priorita 3: Game Viewer Responsivita
 - [x] Základní CSS úpravy pro menší přetékání
 - [ ] Plně responsivní šachovnice v článcích
 - [ ] Chess.com iframe alternativa s vlastním parserem
 
-### Priorita 3: Backend Refaktoring
+### Priorita 4: Backend Refaktoring
 - [ ] Rozdělit `server.js` (1470+ řádků) do modulů:
   - `src/services/scrapingService.js`
   - `src/services/standingsService.js`
 - [ ] Centralizovat helper funkce
 
-### Priorita 4: Admin Panel Dokončení
+### Priorita 5: Admin Panel Dokončení
 - [ ] Plná migrace `admin-core.js` (auth, routing)
 - [ ] Odstranění veškerého inline JS z `admin.html`
 
@@ -76,9 +90,9 @@ Plán budoucího vývoje webu sachyjablonec.cz.
 
 ### Funkce
 - [ ] Mobilní verze admin panelu
-- [ ] Změna hesla v nastavení účtu
 - [ ] Notifikace o nových komentářích
 - [ ] Hledání v partiích
+- [ ] Hledání v článcích
 
 ### Technické
 - [ ] Rate limiting na Lichess API proxy
