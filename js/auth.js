@@ -481,9 +481,33 @@ class AuthManager {
 // Global instance
 const auth = new AuthManager();
 
-// Initialize auth after DOM is ready (ensures config.js is loaded)
+// Wait for API_URL to be defined (handles race condition with config.js)
+const waitForConfig = (maxWait = 5000) => {
+    return new Promise((resolve) => {
+        if (typeof API_URL !== 'undefined') {
+            resolve();
+            return;
+        }
+        const start = Date.now();
+        const check = () => {
+            if (typeof API_URL !== 'undefined') {
+                resolve();
+            } else if (Date.now() - start > maxWait) {
+                console.error('Auth: API_URL not defined after 5s');
+                resolve(); // Continue anyway
+            } else {
+                setTimeout(check, 50);
+            }
+        };
+        check();
+    });
+};
+
 // Initialize auth after DOM is ready (ensures config.js is loaded)
 const initAuth = async () => {
+    // Wait for API_URL to be defined
+    await waitForConfig();
+
     // Check for OAuth callback (Google login redirect)
     const urlParams = new URLSearchParams(window.location.search);
     const authToken = urlParams.get('auth_token');

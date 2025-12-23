@@ -103,7 +103,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Dynamically load auth scripts if not already loaded
     if (typeof API_URL === 'undefined') {
         const configScript = document.createElement('script');
-        configScript.src = '/js/config.js';
+        configScript.src = '/js/config.js?v=4';
         configScript.onload = () => {
             if (typeof auth === 'undefined') {
                 const authScript = document.createElement('script');
@@ -114,7 +114,7 @@ document.addEventListener('DOMContentLoaded', () => {
         document.head.appendChild(configScript);
     } else if (typeof auth === 'undefined') {
         const authScript = document.createElement('script');
-        authScript.src = '/js/auth.js?v=3';
+        authScript.src = '/js/auth.js?v=4';
         document.head.appendChild(authScript);
     }
 
