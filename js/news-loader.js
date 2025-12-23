@@ -17,6 +17,41 @@ function getGamesIndicator(item) {
     </span>`;
 }
 
+// Helper: Get comment indicator with count and latest info
+function getCommentsIndicator(item) {
+    const count = item._count?.comments || 0;
+    if (count === 0) return '';
+
+    let items = [`<span title="${count} komentářů"><i class="fa-solid fa-comment"></i> ${count}</span>`];
+
+    // Add latest comment info if available
+    if (item.comments && item.comments.length > 0) {
+        const last = item.comments[0];
+        const date = new Date(last.createdAt);
+        const timeStr = date.toLocaleTimeString('cs-CZ', { hour: '2-digit', minute: '2-digit' });
+        const dateStr = date.toLocaleDateString('cs-CZ');
+
+        let authorName = 'Anonym';
+        if (last.author) {
+            authorName = (last.author.useRealName && last.author.realName) ? last.author.realName : (last.author.username || 'Anonym');
+        }
+
+        items.push(`<span class="latest-comment-info" title="Poslední komentář: ${authorName}, ${dateStr} ${timeStr}">
+            <i class="fa-solid fa-clock-rotate-left"></i> ${timeStr} • ${escapeHtml(authorName)}
+        </span>`);
+    }
+
+    const commentLink = (item.comments && item.comments.length > 0)
+        ? `${getArticleUrl(item)}#comment-${item.comments[0].id}`
+        : `${getArticleUrl(item)}#comments-section`;
+
+    return `<div class="card-meta-comments">
+        <a href="${commentLink}" onclick="event.stopPropagation()" class="meta-comment-link">
+            ${items.join('')}
+        </a>
+    </div>`;
+}
+
 // Load and render news
 async function loadNews(options = {}) {
     const {
@@ -68,6 +103,9 @@ async function loadNews(options = {}) {
 
         let news = await response.json();
 
+        // Save full list for stats before applying limit
+        const fullNewsList = [...news];
+
         // Apply limit logic
         let hasMore = false;
         if (limit && limit > 0 && news.length > limit) {
@@ -87,6 +125,33 @@ async function loadNews(options = {}) {
                 container.innerHTML = `<p style="color: var(--text-muted); font-style: italic;">Žádné novinky</p>`;
             }
             return;
+        }
+
+        // Check if we should show stats header (data-news-show-stats attribute)
+        const showStats = container.hasAttribute('data-news-show-stats');
+        let statsHtml = '';
+
+        if (showStats && fullNewsList && fullNewsList.length > 0) {
+            const totalCount = fullNewsList.length;
+            const latestPost = fullNewsList[0]; // First item is the latest (sorted by date)
+            const latestDate = formatDate(latestPost.publishedDate);
+            const latestTitle = escapeHtml(latestPost.title);
+
+            statsHtml = `
+                <div class="news-stats-header" style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem; padding: 0.75rem; margin-bottom: 0.75rem; background: rgba(255,255,255,0.03); border-radius: 8px; border: 1px solid rgba(255,255,255,0.05);">
+                    <div style="display: flex; align-items: center; gap: 1rem;">
+                        <span style="display: flex; align-items: center; gap: 0.4rem; color: var(--primary-color); font-weight: 600; font-size: 0.85rem;">
+                            <i class="fa-solid fa-newspaper"></i>
+                            ${totalCount} příspěvků
+                        </span>
+                    </div>
+                    <a href="${getArticleUrl(latestPost)}" style="display: flex; align-items: center; gap: 0.5rem; color: var(--text-muted); font-size: 0.8rem; text-decoration: none; transition: color 0.2s;" onmouseover="this.style.color='var(--primary-color)'" onmouseout="this.style.color='var(--text-muted)'">
+                        <i class="fa-solid fa-clock" style="color: var(--primary-color);"></i>
+                        <span>Poslední: <strong style="color: var(--text-light);">${latestTitle.length > 40 ? latestTitle.substring(0, 40) + '...' : latestTitle}</strong></span>
+                        <span style="opacity: 0.7;">${latestDate}</span>
+                    </a>
+                </div>
+            `;
         }
 
         let htmlContent = '';
@@ -127,6 +192,7 @@ async function loadNews(options = {}) {
                         <span class="card-date">${formatDate(item.publishedDate)}</span>
                         <h3 class="card-title">${escapeHtml(item.title)}</h3>
                         <p class="card-excerpt">${item.excerpt}</p>
+                        ${getCommentsIndicator(item)}
                         <a href="${getArticleUrl(item)}" class="read-more" onclick="event.stopPropagation()">
                             Číst více <i class="fa-solid fa-arrow-right"></i>
                         </a>
@@ -231,7 +297,7 @@ async function loadNews(options = {}) {
             }
         }
 
-        container.innerHTML = htmlContent;
+        container.innerHTML = statsHtml + htmlContent;
 
     } catch (error) {
         console.error('Error loading news:', error);
@@ -364,5 +430,47 @@ style.textContent = `
     .sq { display: block; }
     .sq-light { background: #f0d9b5; }
     .sq-dark { background: #b58863; }
+
+    /* Comment Indicators */
+    .card-meta-comments {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin-top: 0.5rem;
+        margin-bottom: 1rem;
+        font-size: 0.85rem;
+        color: var(--text-muted);
+        border-top: 1px solid rgba(255,255,255,0.05);
+        padding-top: 0.5rem;
+    }
+    .card-meta-comments i {
+        color: var(--primary-color);
+        margin-right: 0.3rem;
+    }
+    .latest-comment-info {
+        display: inline-flex;
+        align-items: center;
+        opacity: 0.8;
+        font-size: 0.8rem;
+    }
+
+    .meta-comment-link {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        color: inherit;
+        text-decoration: none;
+        transition: color 0.2s;
+        width: 100%;
+    }
+    
+    .meta-comment-link:hover {
+        color: var(--primary-color);
+        text-decoration: none;
+    }
+    .meta-comment-link:hover .latest-comment-info {
+        opacity: 1;
+        color: var(--primary-color);
+    }
 `;
 document.head.appendChild(style);

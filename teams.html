@@ -77,53 +77,7 @@
             font-weight: 600;
         }
 
-        /* Split-view responsive for game viewer */
-        .gv-split-view {
-            display: grid;
-            grid-template-columns: 300px 1fr;
-            gap: 0;
-            min-height: 550px;
-        }
-
-        .gv-games-panel {
-            background: rgba(0, 0, 0, 0.3);
-            border-right: 1px solid rgba(255, 255, 255, 0.1);
-            display: flex;
-            flex-direction: column;
-            max-height: 600px;
-            overflow: hidden;
-        }
-
-        .gv-viewer-panel {
-            display: flex;
-            flex-direction: column;
-        }
-
-        @media (max-width: 900px) {
-            .gv-split-view {
-                grid-template-columns: 1fr;
-                min-height: auto;
-            }
-
-            .gv-games-panel {
-                order: 2;
-                /* Games list moves BELOW viewer */
-                max-height: 200px;
-                border-right: none;
-                border-top: 1px solid rgba(255, 255, 255, 0.1);
-            }
-
-            .gv-viewer-panel {
-                order: 1;
-                /* Viewer first on mobile */
-            }
-        }
-
-        @media (max-width: 600px) {
-            .gv-games-panel {
-                max-height: 150px;
-            }
-        }
+        /* Teams-specific game list styling handled via centralized CSS */
     </style>
     <link rel="icon" type="image/png" href="images/favicon.png">
 </head>
@@ -220,7 +174,7 @@
                                 </h4>
                             </div>
                             <div id="teamsNewsList" data-news-category="Soutěže družstev" data-news-display="full-short"
-                                data-news-limit="3" style="padding: 1rem;">
+                                data-news-limit="3" data-news-show-stats style="padding: 1rem;">
                             </div>
                         </div>
                     </div>
@@ -287,53 +241,10 @@
                     </div>
                 </div>
 
-                <!-- Game Viewer Section - Split View Layout -->
+                <!-- Game Viewer Section - Created by GameViewer2.create() -->
                 <div id="teams-games-section" class="card" style="grid-column: 1 / -1; display: none;">
-                    <div class="card-content" style="padding: 0;">
-                        <!-- Split View Container -->
-                        <div class="gv-split-view">
-                            <!-- Games List Panel (Left) -->
-                            <div class="gv-games-panel">
-                                <div
-                                    style="padding: 1rem 1.25rem; background: rgba(0,0,0,0.4); border-bottom: 1px solid rgba(255,255,255,0.1);">
-                                    <h3
-                                        style="margin: 0; color: var(--primary-color); font-size: 1rem; display: flex; align-items: center; gap: 0.5rem;">
-                                        <i class="fa-solid fa-chess-board"></i> Partie ze soutěží
-                                    </h3>
-                                </div>
-                                <div id="teams-games-list" style="flex: 1; overflow-y: auto; padding: 0.5rem;"></div>
-                            </div>
-
-                            <!-- Viewer Panel (Right) -->
-                            <div class="gv-viewer-panel">
-                                <div
-                                    style="padding: 0.75rem 1.25rem; background: rgba(0,0,0,0.4); border-bottom: 1px solid rgba(255,255,255,0.1); display: flex; justify-content: space-between; align-items: center;">
-                                    <span
-                                        style="color: var(--primary-color); font-weight: 600; display: flex; align-items: center; gap: 0.5rem;">
-                                        <i class="fa-solid fa-play-circle"></i> Přehrávač
-                                    </span>
-                                    <span id="viewerType" style="font-size: 0.8rem; color: var(--text-muted);"></span>
-                                </div>
-                                <div style="flex: 1; padding: 1rem; position: relative;">
-                                    <!-- GameViewer2 Wrapper -->
-                                    <div id="game-viewer-wrapper" class="game-viewer">
-                                        <!-- Iframe for Chess.com fallback -->
-                                        <div class="iframe-container" style="display:none;">
-                                            <iframe id="chess-frame" src="" frameborder="0" allowtransparency="true"
-                                                style="width:100%;height:480px;border:none;border-radius:8px;"></iframe>
-                                        </div>
-                                        <!-- GameViewer2 will inject its DOM here -->
-                                    </div>
-                                    <!-- Empty state shown initially -->
-                                    <div id="teamsViewerEmpty" class="viewer-empty"
-                                        style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 380px; color: var(--text-muted); position: absolute; inset: 0;">
-                                        <i class="fa-solid fa-chess-king"
-                                            style="font-size: 3rem; opacity: 0.15; margin-bottom: 1rem;"></i>
-                                        <p>Načítám partie...</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+                    <div class="card-content" style="padding: 0; overflow: hidden; border-radius: 12px;">
+                        <!-- GameViewer2.create() will inject the entire structure here -->
                     </div>
                 </div>
 
@@ -400,8 +311,7 @@
                         // Show the games section
                         document.getElementById('teams-games-section').style.display = 'block';
 
-                        // CRITICAL: Transform and initialize GameViewer2 ONCE with ALL games
-                        // This prevents the sidebar from being overwritten on each game select
+                        // Transform games for GameViewer2
                         const transformedGames = teamsGames.map((g, i) => ({
                             id: g.id || i,
                             white: g.white || g.whitePlayer || 'Bílý',
@@ -415,88 +325,17 @@
                             chessComId: g.chessComId || g.gameId
                         }));
 
-                        // Initialize GameViewer2 with ALL games
-                        window.gameViewer2 = new GameViewer2();
-                        window.gameViewer2.init(transformedGames);
-
-                        // Render custom game list (separate from GV2's internal list)
-                        renderTeamsGameList();
-
-                        // Auto-select first game
-                        selectTeamsGame(0);
+                        // Use self-contained plugin - creates everything!
+                        GameViewer2.create('#teams-games-section .card-content', transformedGames, {
+                            title: 'Partie ze soutěží',
+                            maxHeight: 600
+                        });
                     }
                 }
             } catch (e) {
                 console.error("Failed to load games:", e);
             }
         });
-
-        function renderTeamsGameList() {
-            const el = document.getElementById('teams-games-list');
-            if (!teamsGames.length) {
-                el.innerHTML = '<div style="padding: 2rem; text-align: center; color: var(--text-muted);">Žádné partie</div>';
-                return;
-            }
-            el.innerHTML = teamsGames.map((g, i) => `
-                <div class="game-card ${teamsSelected === i ? 'active' : ''}" onclick="selectTeamsGame(${i})"
-                     style="display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; 
-                            padding: 0.5rem 0.75rem; margin-bottom: 0.25rem; border-radius: 6px; cursor: pointer; 
-                            transition: all 0.15s; font-size: 0.85rem;
-                            border-left: 3px solid ${teamsSelected === i ? 'var(--primary-color)' : 'transparent'};
-                            background: ${teamsSelected === i ? 'linear-gradient(90deg, rgba(212,175,55,0.15), transparent)' : 'rgba(255,255,255,0.02)'};">
-                    <span style="flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--text-color);">
-                        ${escTeams(g.white || g.whitePlayer || '?')} - ${escTeams(g.black || g.blackPlayer || '?')}
-                    </span>
-                    <span style="color: var(--accent-green, #10b981); font-weight: 600; font-size: 0.8rem;">${g.result || '*'}</span>
-                </div>
-            `).join('');
-        }
-
-        function selectTeamsGame(i) {
-            teamsSelected = i;
-            renderTeamsGameList();
-
-            const g = teamsGames[i];
-            const viewerWrapper = document.getElementById('game-viewer-wrapper');
-            const viewerEmpty = document.getElementById('teamsViewerEmpty');
-            const iframeContainer = viewerWrapper?.querySelector('.iframe-container');
-            const iframe = document.getElementById('chess-frame');
-
-            // Hide empty state
-            if (viewerEmpty) viewerEmpty.style.display = 'none';
-
-            if (g.pgn) {
-                // Native game with PGN - GameViewer2 already initialized with all games
-                if (iframeContainer) iframeContainer.style.display = 'none';
-
-                // Just load the game by index (no re-initialization!)
-                if (window.gameViewer2) {
-                    window.gameViewer2.loadGame(i);
-                }
-
-            } else if (g.chessComId || g.gameId) {
-                // Chess.com game - use iframe
-                if (iframeContainer) iframeContainer.style.display = 'block';
-                const gameId = g.chessComId || g.gameId;
-                if (iframe) iframe.src = `https://www.chess.com/emboard?id=${gameId}`;
-
-                // Hide GameViewer2 native container if exists
-                const gv2Container = document.getElementById('gv2-main-container');
-                if (gv2Container) gv2Container.style.display = 'none';
-
-            } else {
-                // No data available - show empty state
-                if (viewerEmpty) viewerEmpty.style.display = 'flex';
-                if (iframeContainer) iframeContainer.style.display = 'none';
-            }
-        }
-
-        function escTeams(s) {
-            if (!s) return '?';
-            const d = document.createElement('div');
-            d.textContent = s;
-            return d.innerHTML;
-        }
 
         // Standings Loader Logic (similar to youth.html)
         document.addEventListener('DOMContentLoaded', () => {
@@ -538,7 +377,7 @@
                     const team = comp.standings?.find(s => mapping.pattern.test(s.team));
                     if (!team || !team.schedule) continue;
 
-                    // Find last match with actual result (has digits, not just ' :  ' placeholder)
+                    // Find last match with actual result (has digits, not just ' : ' placeholder)
                     const hasActualResult = (r) => r && /\d/.test(r);
                     let lastPlayedIndex = -1;
 
@@ -549,9 +388,8 @@
                             lastPlayedIndex = i;
                         }
                     }
-
                     // Default to last played, or first if none played, or 0
-                    let initialIndex = lastPlayedIndex >= 0 ? lastPlayedIndex : 0;
+                    const initialIndex = lastPlayedIndex >= 0 ? lastPlayedIndex : 0;
 
                     // Store data globally
                     window.teamData[mapping.containerId] = {
@@ -602,14 +440,10 @@
                         bgColor = 'rgba(74,222,128,0.15)';
                         borderColor = '#4ade80';
                     } else if (ourScore < theirScore) {
-                        statusIcon = '❌';
-                        statusColor = '#f87171';
-                        bgColor = 'rgba(248,113,113,0.15)';
+                        statusIcon = '❌'; statusColor = '#f87171'; bgColor = 'rgba(248,113,113,0.15)';
                         borderColor = '#f87171';
                     } else {
-                        statusIcon = '🤝';
-                        statusColor = '#fbbf24';
-                        bgColor = 'rgba(251,191,36,0.15)';
+                        statusIcon = '🤝'; statusColor = '#fbbf24'; bgColor = 'rgba(251,191,36,0.15)';
                         borderColor = '#fbbf24';
                     }
                 }
@@ -631,8 +465,7 @@
             try {
                 // Determine format
                 if (match.date.includes('/')) {
-                    // Assume YYYY/MM/DD or DD/MM/YYYY? 
-                    // Based on screenshot 2025/12/07, likely YYYY/MM/DD from scraper
+                    // Assume YYYY/MM/DD or DD/MM/YYYY
                     const parts = match.date.split('/');
                     if (parts.length === 3) {
                         // If part[0] is year (4 digits)
@@ -665,70 +498,88 @@
             const homeAwayBg = isHome ? 'rgba(255, 255, 255, 0.1)' : 'transparent';
 
             container.innerHTML = `
-                <div style="display: flex; align-items: center; gap: 0.25rem;">
-                    <!-- Prev Button -->
-                    <button onclick="changeMatch('${containerId}', -1)" 
-                        style="background: transparent; border: none; color: var(--text-muted); width: 32px; height: 32px; cursor: pointer; display: flex; align-items: center; justify-content: center; opacity: ${isFirst ? 0.2 : 0.8}; pointer-events: ${isFirst ? 'none' : 'auto'}; transition: all 0.2s; font-size: 1.1rem; border-radius: 50%;"
-                        onmouseover="this.style.backgroundColor='rgba(255,255,255,0.05)'; this.style.color='var(--text-color)'"
-                        onmouseout="this.style.backgroundColor='transparent'; this.style.color='var(--text-muted)'">
-                        <i class="fa-solid fa-chevron-left"></i>
-                    </button>
+            <div style="display: flex; align-items: center; gap: 0.25rem;">
+                <!-- Prev Button -->
+                <button onclick="changeMatch('${containerId}', -1)"
+                    style="background: transparent; border: none; color: var(--text-muted); width: 32px; height: 32px; cursor: pointer; display: flex; align-items: center; justify-content: center; opacity: ${isFirst ? 0.2 : 0.8}; pointer-events: ${isFirst ? 'none' : 'auto'}; transition: all 0.2s; font-size: 1.1rem; border-radius: 50%;"
+                    onmouseover="this.style.backgroundColor='rgba(255,255,255,0.05)'; this.style.color='var(--text-color)'"
+                    onmouseout="this.style.backgroundColor='transparent'; this.style.color='var(--text-muted)'">
+                    <i class="fa-solid fa-chevron-left"></i>
+                </button>
 
-                    <!-- Main Badge -->
-                    <!-- Main Badge -->
-                    <div onclick="${canShowDetails ? `toggleMatchBadgeDetails('${detailsId}', '${encodeURIComponent(matchUrl)}', '${match.round}', '${encodeURIComponent(data.teamName)}', '${encodeURIComponent(match.opponent)}', this)` : `openScheduleModal(teamData['${containerId}'].schedule, teamData['${containerId}'].teamName)`}" 
-                         style="flex: 1; padding: 0.6rem 0.75rem; background: linear-gradient(135deg, ${bgColor} 0%, rgba(0,0,0,0.3) 100%); border-radius: 12px; border: 1px solid ${borderColor}; cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 15px rgba(0,0,0,0.2); position: relative; overflow: hidden;"
-                         onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 8px 25px rgba(0,0,0,0.3)'" 
-                         onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='0 4px 15px rgba(0,0,0,0.2)'">
-                                                
-                        <!-- Status Strip -->
-                        <div style="position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background-color: ${statusColor};"></div>
+                <!-- Main Badge -->
+                <!-- Main Badge -->
+                <div onclick="${canShowDetails ? `toggleMatchBadgeDetails('${detailsId}', '${encodeURIComponent(matchUrl)}', '${match.round}', '${encodeURIComponent(data.teamName)}', '${encodeURIComponent(match.opponent)}', this)` : `openScheduleModal(teamData['${containerId}'].schedule, teamData['${containerId}'].teamName)`}"
+                    style="flex: 1; padding: 0.6rem 0.75rem; background: linear-gradient(135deg, ${bgColor} 0%, rgba(0,0,0,0.3) 100%); border-radius: 12px; border: 1px solid ${borderColor}; cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 15px rgba(0,0,0,0.2); position: relative; overflow: hidden;"
+                    onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 8px 25px rgba(0,0,0,0.3)'"
+                    onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='0 4px 15px rgba(0,0,0,0.2)'">
 
-                        <div style="display: flex; flex-direction: column; gap: 0.2rem; padding-left: 0.5rem;">
-                             <!-- Top Row: Round + Home/Away -->
-                             <div style="display: flex; align-items: center; justify-content: space-between; font-size: 0.75em; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted);">
-                                <span>${match.round}. KOLO • ${formattedDate}</span>
-                                <span style="font-weight: 700; color: ${homeAwayColor}; background: ${homeAwayBg}; padding: 1px 6px; border-radius: 4px; font-size: 0.9em;">${homeAwayLabel}</span>
-                             </div>
-
-                             <!-- Middle Row: Result and Status -->
-                             <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 0.2rem;">
-                                <div style="display: flex; align-items: center; gap: 0.75rem;">
-                                    <span style="font-size: 1.4em; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));">${statusIcon}</span>
-                                    <div style="font-weight: 700; color: ${statusColor}; font-size: 1.5em; line-height: 1; text-shadow: 0 2px 4px rgba(0,0,0,0.5);">${hasResult ? match.result : ' - : - '}</div>
-                                </div>
-                                
-                                ${canShowDetails ? `
-                                <div style="display: flex; align-items: center; gap: 0.5rem; background: rgba(0,0,0,0.2); padding: 0.2rem 0.6rem; border-radius: 20px; border: 1px solid rgba(255,255,255,0.05);">
-                                    <span style="font-size: 0.7em; color: var(--text-muted); font-weight: 500; text-transform: uppercase;">Detail</span>
-                                    <i class="fa-solid fa-chevron-down details-icon" style="color: var(--primary-color); font-size: 0.7em; transition: transform 0.2s;"></i>
-                                </div>
-                                ` : `
-                                 <div style="display: flex; align-items: center; gap: 0.5rem; background: rgba(212,175,55,0.1); padding: 0.2rem 0.6rem; border-radius: 20px; border: 1px solid rgba(212,175,55,0.2);">
-                                    <i class="fa-regular fa-calendar-days" style="color: var(--primary-color); font-size: 0.8em;"></i>
-                                    <span style="font-size: 0.7em; color: var(--primary-color); font-weight: 600; text-transform: uppercase;">Rozpis</span>
-                                </div>
-                                `}
-                            </div>
-                            
-                            <!-- Bottom Row: Opponent -->
-                            <div style="margin-top: 0.5rem; padding-top: 0.4rem; border-top: 1px solid rgba(255,255,255,0.05); color: var(--text-light); font-size: 0.9em;">
-                                <span style="color: var(--text-muted); font-size: 0.9em;">vs</span> <strong style="color: var(--text-color); font-size: 1.05em;">${match.opponent}</strong>
-                            </div>
-                        </div>
+                    <!-- Status Strip -->
+                    <div
+                        style="position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background-color: ${statusColor};">
                     </div>
 
-                    <!-- Next Button -->
-                    <button onclick="changeMatch('${containerId}', 1)" 
-                        style="background: transparent; border: none; color: var(--text-muted); width: 32px; height: 32px; cursor: pointer; display: flex; align-items: center; justify-content: center; opacity: ${isLast ? 0.2 : 0.8}; pointer-events: ${isLast ? 'none' : 'auto'}; transition: all 0.2s; font-size: 1.1rem; border-radius: 50%;"
-                        onmouseover="this.style.backgroundColor='rgba(255,255,255,0.05)'; this.style.color='var(--text-color)'"
-                        onmouseout="this.style.backgroundColor='transparent'; this.style.color='var(--text-muted)'">
-                        <i class="fa-solid fa-chevron-right"></i>
-                    </button>
+                    <div style="display: flex; flex-direction: column; gap: 0.2rem; padding-left: 0.5rem;">
+                        <!-- Top Row: Round + Home/Away -->
+                        <div
+                            style="display: flex; align-items: center; justify-content: space-between; font-size: 0.75em; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted);">
+                            <span>${match.round}. KOLO • ${formattedDate}</span>
+                            <span
+                                style="font-weight: 700; color: ${homeAwayColor}; background: ${homeAwayBg}; padding: 1px 6px; border-radius: 4px; font-size: 0.9em;">${homeAwayLabel}</span>
+                        </div>
+
+                        <!-- Middle Row: Result and Status -->
+                        <div
+                            style="display: flex; align-items: center; justify-content: space-between; margin-top: 0.2rem;">
+                            <div style="display: flex; align-items: center; gap: 0.75rem;">
+                                <span
+                                    style="font-size: 1.4em; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));">${statusIcon}</span>
+                                <div
+                                    style="font-weight: 700; color: ${statusColor}; font-size: 1.5em; line-height: 1; text-shadow: 0 2px 4px rgba(0,0,0,0.5);">
+                                    ${hasResult ? match.result : ' - : - '}</div>
+                            </div>
+
+                            ${canShowDetails ? `
+                            <div
+                                style="display: flex; align-items: center; gap: 0.5rem; background: rgba(0,0,0,0.2); padding: 0.2rem 0.6rem; border-radius: 20px; border: 1px solid rgba(255,255,255,0.05);">
+                                <span
+                                    style="font-size: 0.7em; color: var(--text-muted); font-weight: 500; text-transform: uppercase;">Detail</span>
+                                <i class="fa-solid fa-chevron-down details-icon"
+                                    style="color: var(--primary-color); font-size: 0.7em; transition: transform 0.2s;"></i>
+                            </div>
+                            ` : `
+                            <div
+                                style="display: flex; align-items: center; gap: 0.5rem; background: rgba(212,175,55,0.1); padding: 0.2rem 0.6rem; border-radius: 20px; border: 1px solid rgba(212,175,55,0.2);">
+                                <i class="fa-regular fa-calendar-days"
+                                    style="color: var(--primary-color); font-size: 0.8em;"></i>
+                                <span
+                                    style="font-size: 0.7em; color: var(--primary-color); font-weight: 600; text-transform: uppercase;">Rozpis</span>
+                            </div>
+                            `}
+                        </div>
+
+                        <!-- Bottom Row: Opponent -->
+                        <div
+                            style="margin-top: 0.5rem; padding-top: 0.4rem; border-top: 1px solid rgba(255,255,255,0.05); color: var(--text-light); font-size: 0.9em;">
+                            <span style="color: var(--text-muted); font-size: 0.9em;">vs</span> <strong
+                                style="color: var(--text-color); font-size: 1.05em;">${match.opponent}</strong>
+                        </div>
+                    </div>
                 </div>
-                
-                <!-- Expanded Details Container -->
-                <div id="${detailsId}" style="display: none; margin-top: 0.5rem; padding: 0.6rem; background: rgba(0,0,0,0.3); border-radius: 8px; font-size: 0.85rem; border: 1px solid rgba(255,255,255,0.1);"></div>
+
+                <!-- Next Button -->
+                <button onclick="changeMatch('${containerId}', 1)"
+                    style="background: transparent; border: none; color: var(--text-muted); width: 32px; height: 32px; cursor: pointer; display: flex; align-items: center; justify-content: center; opacity: ${isLast ? 0.2 : 0.8}; pointer-events: ${isLast ? 'none' : 'auto'}; transition: all 0.2s; font-size: 1.1rem; border-radius: 50%;"
+                    onmouseover="this.style.backgroundColor='rgba(255,255,255,0.05)'; this.style.color='var(--text-color)'"
+                    onmouseout="this.style.backgroundColor='transparent'; this.style.color='var(--text-muted)'">
+                    <i class="fa-solid fa-chevron-right"></i>
+                </button>
+            </div>
+
+            <!-- Expanded Details Container -->
+            <div id="${detailsId}"
+                style="display: none; margin-top: 0.5rem; padding: 0.6rem; background: rgba(0,0,0,0.3); border-radius: 8px; font-size: 0.85rem; border: 1px solid rgba(255,255,255,0.1);">
+            </div>
             `;
 
             // Restore details state if it was open?
@@ -755,42 +606,42 @@
             const isHidden = container.style.display === 'none';
             container.style.display = isHidden ? 'block' : 'none';
             if (icon) icon.style.transform = isHidden ? 'rotate(180deg)' : 'rotate(0deg)';
-
             if (!isHidden) return; // Hiding
 
             // If empty, fetch data
             if (container.innerHTML.trim() === '' || container.innerHTML.includes('Načítám')) {
-                container.innerHTML = '<div style="text-align: center; padding: 0.5rem;"><i class="fa-solid fa-spinner fa-spin"></i> Načítám...</div>';
-
+                container.innerHTML = `<div style="text-align: center; padding: 0.5rem;"><i class="fa-solid fa-spinner fa-spin"></i> Načítám...</div>`;
                 try {
                     const url = decodeURIComponent(urlEncoded);
                     const home = decodeURIComponent(homeEncoded);
                     const away = decodeURIComponent(awayEncoded);
-
                     if (!url) {
-                        container.innerHTML = '<p style="color: var(--text-muted); text-align: center;">Detaily nejsou k dispozici.</p>';
+                        container.innerHTML = `<p style="color: var(--text-muted); text-align: center;">Detaily nejsou k dispozici.</p>`;
                         return;
                     }
-
                     const res = await fetch(`${API_URL}/standings/match-details?url=${encodeURIComponent(url)}&round=${round}&home=${encodeURIComponent(home)}&away=${encodeURIComponent(away)}`);
                     if (!res.ok) throw new Error('Fetch failed');
                     const data = await res.json();
-
                     if (data.boards && data.boards.length > 0) {
-                        let html = '<table style="width: 100%; border-collapse: collapse; font-size: 0.85rem;">';
-                        html += '<thead><tr style="border-bottom: 1px solid rgba(255,255,255,0.1);"><th style="padding: 0.3rem; text-align: left; width: 1.5rem;">Š</th><th style="padding: 0.3rem; text-align: left;">Domácí</th><th style="padding: 0.3rem; text-align: center; white-space: nowrap;">Výs.</th><th style="padding: 0.3rem; text-align: right;">Hosté</th></tr></thead><tbody>';
+                        let html = `<table style="width: 100%; border-collapse: collapse; font-size: 0.85rem;">`;
+                        html += `<thead>
+                            <tr style="border-bottom: 1px solid rgba(255,255,255,0.1);">
+                                <th style="padding: 0.3rem; text-align: left; width: 1.5rem;">Š</th>
+                                <th style="padding: 0.3rem; text-align: left;">Domácí</th>
+                                <th style="padding: 0.3rem; text-align: center; white-space: nowrap;">Výs.</th>
+                                <th style="padding: 0.3rem; text-align: right;">Hosté</th>
+                            </tr>
+                        </thead>
+                        <tbody>`;
                         data.boards.forEach((b, idx) => {
-                            // Use index as board number (1-based)
                             const boardNum = idx + 1;
-                            // Format player name with ELO
                             const formatPlayer = (name, elo) => {
                                 if (!name || name === '-') return '-';
-                                const eloStr = elo && elo !== '-' ? `<span style="color: var(--text-muted); font-size: 0.8em;"> (${elo})</span>` : '';
+                                const eloStr = elo && elo !== '-' ? `<span style="color: var(--text-muted); font-size: 0.8em;">(${elo})</span>` : '';
                                 return name + eloStr;
                             };
                             const homeName = formatPlayer(b.white || b.homePlayer, b.whiteElo || b.homeElo);
                             const guestName = formatPlayer(b.black || b.guestPlayer, b.blackElo || b.guestElo);
-
                             html += `<tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
                                 <td style="padding: 0.3rem; color: var(--text-muted);">${boardNum}</td>
                                 <td style="padding: 0.3rem;">${homeName}</td>
@@ -798,14 +649,14 @@
                                 <td style="padding: 0.3rem; text-align: right;">${guestName}</td>
                             </tr>`;
                         });
-                        html += '</tbody></table>';
+                        html += `</tbody></table>`;
                         container.innerHTML = html;
                     } else {
-                        container.innerHTML = '<p style="color: var(--text-muted); text-align: center;">Detaily nejsou k dispozici.</p>';
+                        container.innerHTML = `<p style="color: var(--text-muted); text-align: center;">Detaily nejsou k dispozici.</p>`;
                     }
                 } catch (e) {
                     console.error('Error loading match details:', e);
-                    container.innerHTML = '<p style="color: #fca5a5; text-align: center;">Chyba načítání.</p>';
+                    container.innerHTML = `<p style="color: #fca5a5; text-align: center;">Chyba načítání.</p>`;
                 }
             }
         }
@@ -842,7 +693,7 @@
 
             // If empty, fetch data
             if (container.innerHTML.trim() === '') {
-                container.innerHTML = '<div style="text-align: center; padding: 0.5rem;"><i class="fa-solid fa-spinner fa-spin"></i> Načítám soupisku...</div>';
+                container.innerHTML = `<div style="text-align: center; padding: 0.5rem;"><i class="fa-solid fa-spinner fa-spin"></i> Načítám soupisku...</div>`;
 
                 try {
                     const res = await fetch(`${API_URL}/standings/team-roster?url=${encodeURIComponent(url)}&snr=${snr}`);
@@ -852,17 +703,22 @@
                     if (data.players && data.players.length > 0) {
                         let html = `<div style="background: linear-gradient(135deg, rgba(212,175,55,0.1) 0%, rgba(0,0,0,0.3) 100%); border-radius: 8px; overflow: hidden; border: 1px solid rgba(255,255,255,0.1);">`;
                         html += `<table style="width: 100%; border-collapse: collapse; font-size: 0.85rem;">`;
-                        html += `<thead><tr style="background: linear-gradient(90deg, rgba(212,175,55,0.2) 0%, rgba(212,175,55,0.05) 100%);">
-                            <th style="padding: 0.6rem 0.4rem; text-align: center; font-weight: 600; color: var(--primary-color); width: 2rem;">#</th>
-                            <th style="padding: 0.6rem 0.4rem; text-align: left; font-weight: 600; color: var(--primary-color);">Hráč</th>
-                            <th style="padding: 0.6rem 0.4rem; text-align: right; font-weight: 600; color: var(--primary-color);">ELO</th>
-                            <th style="padding: 0.6rem 0.4rem; text-align: center; font-weight: 600; color: var(--primary-color);">Body</th>
-                            <th style="padding: 0.6rem 0.4rem; text-align: right; font-weight: 600; color: var(--primary-color);" title="Průměr ELO soupeřů">Ø ELO</th>
-                        </tr></thead><tbody>`;
+                        html += `<thead>
+                            <tr style="background: linear-gradient(90deg, rgba(212,175,55,0.2) 0%, rgba(212,175,55,0.05) 100%);">
+                                <th style="padding: 0.6rem 0.4rem; text-align: center; font-weight: 600; color: var(--primary-color); width: 2rem;">#</th>
+                                <th style="padding: 0.6rem 0.4rem; text-align: left; font-weight: 600; color: var(--primary-color);">Hráč</th>
+                                <th style="padding: 0.6rem 0.4rem; text-align: right; font-weight: 600; color: var(--primary-color);">ELO</th>
+                                <th style="padding: 0.6rem 0.4rem; text-align: center; font-weight: 600; color: var(--primary-color);">Body</th>
+                                <th style="padding: 0.6rem 0.4rem; text-align: right; font-weight: 600; color: var(--primary-color);" title="Průměr ELO soupeřů">Ø ELO</th>
+                            </tr>
+                        </thead>
+                        <tbody>`;
                         data.players.forEach((p, idx) => {
                             const bgColor = idx % 2 === 0 ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.1)';
                             const scoreColor = p.score !== '-' ? (parseFloat(p.score) > 0.5 * parseInt(p.score.split('/')[1] || 1) ? '#4ade80' : '#f87171') : 'var(--text-muted)';
-                            html += `<tr style="background: ${bgColor}; transition: background 0.2s;" onmouseover="this.style.background='rgba(212,175,55,0.1)'" onmouseout="this.style.background='${bgColor}'">
+                            html += `<tr style="background: ${bgColor}; transition: background 0.2s;"
+                                onmouseover="this.style.background='rgba(212,175,55,0.1)'"
+                                onmouseout="this.style.background='${bgColor}'">
                                 <td style="padding: 0.5rem 0.4rem; text-align: center; color: var(--text-muted); font-size: 0.8rem;">${p.rank}</td>
                                 <td style="padding: 0.5rem 0.4rem; font-weight: 500;">${p.name}</td>
                                 <td style="padding: 0.5rem 0.4rem; text-align: right; color: var(--text-muted); font-family: monospace;">${p.elo || '-'}</td>
@@ -870,14 +726,14 @@
                                 <td style="padding: 0.5rem 0.4rem; text-align: right; color: var(--text-muted); font-family: monospace; font-size: 0.8rem;">${p.perf || '-'}</td>
                             </tr>`;
                         });
-                        html += '</tbody></table></div>';
+                        html += `</tbody></table></div>`;
                         container.innerHTML = html;
                     } else {
-                        container.innerHTML = '<p style="color: var(--text-muted); text-align: center;">Soupiska není k dispozici.</p>';
+                        container.innerHTML = `<p style="color: var(--text-muted); text-align: center;">Soupiska není k dispozici.</p>`;
                     }
                 } catch (e) {
                     console.error('Error loading roster:', e);
-                    container.innerHTML = '<p style="color: #fca5a5; text-align: center;">Chyba načítání soupisky.</p>';
+                    container.innerHTML = `<p style="color: #fca5a5; text-align: center;">Chyba načítání soupisky.</p>`;
                 }
             }
         }
@@ -891,7 +747,7 @@
                 <div style="text-align: center; padding: 2rem; color: var(--text-muted);">
                     <i class="fa-solid fa-spinner fa-spin"></i> Načítám tabulku...
                 </div>
-            `;
+                `;
 
             try {
                 // Determine API URL - in this case we use the main standings endpoint which returns ALL competitions
@@ -902,15 +758,15 @@
                 // I need to check if /api/standings exists as a static file server or GET route.
                 // Assuming it serves the 'data/standings.json' file or similar.
 
-                // Let's assume there is an endpoint or file. 
-                // Based on youth.html context (Step 225 from previous conv), it fetches './data/standings.json' or '/api/standings'.
+                // Let's assume there is an endpoint or file.
+                // Based on youth.html context, it fetches './data/standings.json' or '/api/standings'.
                 // I will use fetch('/api/standings') if it exists, or check how youth.html does it exactly.
 
                 // Correction: The backend code showed app.post('/api/standings/update').
                 // It usually saves to a file. I assumed there is a GET route serving it.
                 // If not, I should add it or use the static file if exposed.
                 // Let's assume '/data/standings.json' is available if static folder is mapped?
-                // Or I can add a GET route in server.js to be safe. 
+                // Or I can add a GET route in server.js to be safe.
                 // But for now, let's look at youth.html lines 220-302 (viewed in Step 1378).
                 // It calls `/api/standings`.
 
@@ -931,34 +787,43 @@
 
                 if (!competition || !competition.standings || competition.standings.length === 0) {
                     container.innerHTML = `
-                        <div style="text-align: center; padding: 1rem; color: var(--text-muted); font-style: italic;">
-                            Tabulka zatím není k dispozici.
-                        </div>
-                    `;
+                <div style="text-align: center; padding: 1rem; color: var(--text-muted); font-style: italic;">
+                    Tabulka zatím není k dispozici.
+                </div>
+                `;
                     return;
                 }
 
                 // Render Table with improved UI
                 const compName = competition.name || 'Tabulka';
                 let html = `
-                    <div style="background: linear-gradient(135deg, rgba(30,30,40,0.9) 0%, rgba(20,20,30,0.95) 100%); border-radius: 12px; overflow: hidden; border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 4px 20px rgba(0,0,0,0.3);">
-                        <div style="background: linear-gradient(90deg, rgba(212,175,55,0.15) 0%, rgba(212,175,55,0.05) 100%); padding: 0.75rem 1rem; border-bottom: 1px solid rgba(255,255,255,0.1);">
-                            <h4 style="margin: 0; color: var(--primary-color); font-size: 0.95rem; display: flex; align-items: center; gap: 0.5rem;">
-                                <i class="fa-solid fa-trophy"></i> ${compName}
-                            </h4>
-                        </div>
-                        <div style="overflow-x: auto; -webkit-overflow-scrolling: touch;">
+                <div
+                    style="background: linear-gradient(135deg, rgba(30,30,40,0.9) 0%, rgba(20,20,30,0.95) 100%); border-radius: 12px; overflow: hidden; border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 4px 20px rgba(0,0,0,0.3);">
+                    <div
+                        style="background: linear-gradient(90deg, rgba(212,175,55,0.15) 0%, rgba(212,175,55,0.05) 100%); padding: 0.75rem 1rem; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                        <h4
+                            style="margin: 0; color: var(--primary-color); font-size: 0.95rem; display: flex; align-items: center; gap: 0.5rem;">
+                            <i class="fa-solid fa-trophy"></i> ${compName}
+                        </h4>
+                    </div>
+                    <div style="overflow-x: auto; -webkit-overflow-scrolling: touch;">
                         <table style="width: 100%; border-collapse: collapse; font-size: 0.8rem;">
                             <thead>
                                 <tr style="background: rgba(0,0,0,0.3);">
-                                    <th style="text-align: center; padding: 0.4rem 0.25rem; color: var(--text-muted); font-weight: 600; font-size: 0.65rem; text-transform: uppercase; white-space: nowrap;">#</th>
-                                    <th style="text-align: left; padding: 0.4rem 0.25rem; color: var(--text-muted); font-weight: 600; font-size: 0.65rem; text-transform: uppercase;">Družstvo</th>
-                                    <th style="text-align: center; padding: 0.4rem 0.5rem; color: var(--text-muted); font-weight: 600; font-size: 0.65rem; text-transform: uppercase; white-space: nowrap;" title="Výhry-Remízy-Prohry">V/R/P</th>
-                                    <th style="text-align: right; padding: 0.4rem 0.5rem; color: var(--text-muted); font-weight: 600; font-size: 0.65rem; text-transform: uppercase; white-space: nowrap;" title="Zápasové body">Body</th>
+                                    <th
+                                        style="text-align: center; padding: 0.4rem 0.25rem; color: var(--text-muted); font-weight: 600; font-size: 0.65rem; text-transform: uppercase; white-space: nowrap;">
+                                        #</th>
+                                    <th
+                                        style="text-align: left; padding: 0.4rem 0.25rem; color: var(--text-muted); font-weight: 600; font-size: 0.65rem; text-transform: uppercase;">
+                                        Družstvo</th>
+                                    <th style="text-align: center; padding: 0.4rem 0.5rem; color: var(--text-muted); font-weight: 600; font-size: 0.65rem; text-transform: uppercase; white-space: nowrap;"
+                                        title="Výhry-Remízy-Prohry">V/R/P</th>
+                                    <th style="text-align: right; padding: 0.4rem 0.5rem; color: var(--text-muted); font-weight: 600; font-size: 0.65rem; text-transform: uppercase; white-space: nowrap;"
+                                        title="Zápasové body">Body</th>
                                 </tr>
                             </thead>
                             <tbody>
-                `;
+                                `;
 
                 competition.standings.forEach((s, idx) => {
                     const isBizuterie = s.isBizuterie || s.team.toLowerCase().includes('bižuterie');
@@ -967,23 +832,26 @@
                     // Position badge styling (compact)
                     let positionBadge = '';
                     if (s.rank === 1) {
-                        positionBadge = '<span style="display: inline-flex; align-items: center; justify-content: center; width: 1.1rem; height: 1.1rem; background: linear-gradient(135deg, #ffd700, #b8860b); border-radius: 50%; font-size: 0.55rem; font-weight: 700; color: #000;">1</span>';
+                        positionBadge = `<span style="display: inline-flex; align-items: center; justify-content: center; width: 1.1rem; height: 1.1rem; background: linear-gradient(135deg, #ffd700, #b8860b); border-radius: 50%; font-size: 0.55rem; font-weight: 700; color: #000;">1</span>`;
                     } else if (s.rank === 2) {
-                        positionBadge = '<span style="display: inline-flex; align-items: center; justify-content: center; width: 1.1rem; height: 1.1rem; background: linear-gradient(135deg, #c0c0c0, #808080); border-radius: 50%; font-size: 0.55rem; font-weight: 700; color: #000;">2</span>';
+                        positionBadge = `<span style="display: inline-flex; align-items: center; justify-content: center; width: 1.1rem; height: 1.1rem; background: linear-gradient(135deg, #c0c0c0, #808080); border-radius: 50%; font-size: 0.55rem; font-weight: 700; color: #000;">2</span>`;
                     } else if (s.rank === 3) {
-                        positionBadge = '<span style="display: inline-flex; align-items: center; justify-content: center; width: 1.1rem; height: 1.1rem; background: linear-gradient(135deg, #cd7f32, #8b4513); border-radius: 50%; font-size: 0.55rem; font-weight: 700; color: #fff;">3</span>';
+                        positionBadge = `<span style="display: inline-flex; align-items: center; justify-content: center; width: 1.1rem; height: 1.1rem; background: linear-gradient(135deg, #cd7f32, #8b4513); border-radius: 50%; font-size: 0.55rem; font-weight: 700; color: #fff;">3</span>`;
                     } else {
                         positionBadge = `<span style="color: var(--text-muted); font-size: 0.7rem;">${s.rank}</span>`;
                     }
 
                     // Bižuterie highlight
                     const rowStyle = isBizuterie
-                        ? `background: linear-gradient(90deg, rgba(212,175,55,0.15) 0%, ${bgColor} 100%); border-left: 3px solid var(--primary-color);`
+                        ? `background: linear-gradient(90deg, rgba(212,175,55,0.15) 0%, ${bgColor} 100%);
+                                border-left: 3px solid var(--primary-color);`
                         : `background: ${bgColor};`;
                     const teamStyle = isBizuterie ? 'font-weight: 600; color: var(--primary-color);' : '';
 
                     // W/D/L display
-                    const wdl = (s.wins !== undefined) ? `<span style="color:#4ade80">${s.wins}</span>/<span style="color:#fbbf24">${s.draws || 0}</span>/<span style="color:#f87171">${s.losses || 0}</span>` : '-';
+                    const wdl = (s.wins !== undefined) ? `<span style="color:#4ade80">${s.wins}</span>/<span
+                                    style="color:#fbbf24">${s.draws || 0}</span>/<span style="color:#f87171">${s.losses
+                        || 0}</span>` : '-';
 
                     // Determine team anchor and roster ID for Bižuterie teams
                     let teamClickHandler = '';
@@ -992,42 +860,63 @@
                         const teamLower = s.team.toLowerCase();
                         let anchorId = '', rosterId = '', rosterUrl = '', rosterSnr = '';
                         if (teamLower.includes('"a"') || /\\ba\\b/.test(teamLower) || teamLower.endsWith(' a')) {
-                            anchorId = 'team-kp-A'; rosterId = 'roster-kp-A'; rosterUrl = 'https://chess-results.com/tnr1276470.aspx?lan=5'; rosterSnr = '1';
-                        } else if (teamLower.includes('"b"') || /\\bb\\b/.test(teamLower) || teamLower.endsWith(' b')) {
-                            anchorId = 'team-kp-B'; rosterId = 'roster-kp-B'; rosterUrl = 'https://chess-results.com/tnr1276470.aspx?lan=5'; rosterSnr = '10';
-                        } else if (teamLower.includes('"c"') || /\\bc\\b/.test(teamLower) || teamLower.endsWith(' c')) {
-                            anchorId = 'team-ks-C'; rosterId = 'roster-ks-C'; rosterUrl = 'https://chess-results.com/tnr1278502.aspx?lan=5'; rosterSnr = '4';
-                        } else if (teamLower.includes('"d"') || /\\bd\\b/.test(teamLower) || teamLower.endsWith(' d')) {
-                            anchorId = 'team-ks-D'; rosterId = 'roster-ks-D'; rosterUrl = 'https://chess-results.com/tnr1278502.aspx?lan=5'; rosterSnr = '5';
+                            anchorId = 'team-kp-A'; rosterId = 'roster-kp-A'; rosterUrl =
+                                'https://chess-results.com/tnr1276470.aspx?lan=5'; rosterSnr = '1';
+                        } else if (teamLower.includes('"b"') || /\\bb\\b/.test(teamLower) ||
+                            teamLower.endsWith(' b')) {
+                            anchorId = 'team-kp-B'; rosterId = 'roster-kp-B'; rosterUrl =
+                                'https://chess-results.com/tnr1276470.aspx?lan=5'; rosterSnr = '10';
+                        } else if (teamLower.includes('"c"') || /\\bc\\b/.test(teamLower) ||
+                            teamLower.endsWith(' c')) {
+                            anchorId = 'team-ks-C'; rosterId = 'roster-ks-C'; rosterUrl =
+                                'https://chess-results.com/tnr1278502.aspx?lan=5'; rosterSnr = '4';
+                        } else if (teamLower.includes('"d"') || /\\bd\\b/.test(teamLower) ||
+                            teamLower.endsWith(' d')) {
+                            anchorId = 'team-ks-D'; rosterId = 'roster-ks-D'; rosterUrl =
+                                'https://chess-results.com/tnr1278502.aspx?lan=5'; rosterSnr = '5';
                         }
                         if (anchorId) {
-                            teamClickHandler = `onclick="navigateToTeam('${anchorId}', '${rosterId}', '${rosterUrl}', ${rosterSnr})" style="cursor: pointer; text-decoration: underline; text-decoration-style: dotted;"`;
+                            teamClickHandler = `onclick="navigateToTeam('${anchorId}', '${rosterId}',
+                                '${rosterUrl}', ${rosterSnr})" style="cursor: pointer; text-decoration: underline;
+                                text-decoration-style: dotted;"`;
                         }
                     }
 
                     html += `
-                        <tr style="${rowStyle} transition: background 0.2s;" onmouseover="this.style.background='rgba(212,175,55,0.1)'" onmouseout="this.style.background='${isBizuterie ? 'linear-gradient(90deg, rgba(212,175,55,0.15) 0%, ' + bgColor + ' 100%)' : bgColor}'">
-                            <td style="padding: 0.35rem 0.2rem; text-align: center;">${positionBadge}</td>
-                            <td style="padding: 0.35rem 0.2rem; ${teamStyle} font-size: 0.78rem;" ${teamClickHandler}>${s.team}</td>
-                            <td style="padding: 0.35rem 0.5rem; text-align: center; font-family: monospace; font-size: 0.72rem; white-space: nowrap;">${wdl}</td>
-                            <td style="padding: 0.35rem 0.5rem; text-align: right; font-weight: 700; font-family: monospace; font-size: 0.85rem;">${s.points !== null ? s.points : '-'}</td>
-                        </tr>
-                    `;
+                                <tr style="${rowStyle} transition: background 0.2s;"
+                                    onmouseover="this.style.background='rgba(212,175,55,0.1)'"
+                                    onmouseout="this.style.background='${isBizuterie ? 'linear-gradient(90deg, rgba(212,175,55,0.15) 0%, ' + bgColor + ' 100%)' : bgColor}'">
+                                    <td style="padding: 0.35rem 0.2rem; text-align: center;">${positionBadge}</td>
+                                    <td style="padding: 0.35rem 0.2rem; ${teamStyle} font-size: 0.78rem;"
+                                        ${teamClickHandler}>${s.team}</td>
+                                    <td
+                                        style="padding: 0.35rem 0.5rem; text-align: center; font-family: monospace; font-size: 0.72rem; white-space: nowrap;">
+                                        ${wdl}</td>
+                                    <td
+                                        style="padding: 0.35rem 0.5rem; text-align: right; font-weight: 700; font-family: monospace; font-size: 0.85rem;">
+                                        ${s.points !== null ? s.points : '-'}</td>
+                                </tr>
+                                `;
                 });
 
-                const sourceName = (competition.url && competition.url.includes('chess-results')) ? 'Chess-Results.com' : 'ŠSČR';
+                const sourceName = (competition.url && competition.url.includes('chess-results')) ?
+                    'Chess-Results.com' : 'ŠSČR';
                 const sourceUrl = competition.url || competition.chessczUrl || '#';
 
                 html += `
                             </tbody>
                         </table>
-                        </div>
-                        <div style="padding: 0.75rem 1rem; background: rgba(0,0,0,0.2); border-top: 1px solid rgba(255,255,255,0.05); display: flex; justify-content: flex-end;">
-                            <a href="${sourceUrl}" target="_blank" style="color: var(--text-muted); text-decoration: none; font-size: 0.75rem; display: flex; align-items: center; gap: 0.3rem; transition: color 0.2s;" onmouseover="this.style.color='var(--primary-color)'" onmouseout="this.style.color='var(--text-muted)'">
-                                <i class="fa-solid fa-external-link-alt"></i> ${sourceName}
-                            </a>
-                        </div>
                     </div>
+                    <div
+                        style="padding: 0.75rem 1rem; background: rgba(0,0,0,0.2); border-top: 1px solid rgba(255,255,255,0.05); display: flex; justify-content: flex-end;">
+                        <a href="${sourceUrl}" target="_blank"
+                            style="color: var(--text-muted); text-decoration: none; font-size: 0.75rem; display: flex; align-items: center; gap: 0.3rem; transition: color 0.2s;"
+                            onmouseover="this.style.color='var(--primary-color)'"
+                            onmouseout="this.style.color='var(--text-muted)'">
+                            <i class="fa-solid fa-external-link-alt"></i> ${sourceName}
+                        </a>
+                    </div>
+                </div>
                 `;
 
                 container.innerHTML = html;
@@ -1035,15 +924,16 @@
             } catch (e) {
                 console.error(e);
                 container.innerHTML = `
-                    <div style="text-align: center; padding: 1rem; color: #fca5a5;">
-                        Chyba při načítání dat.
-                    </div>
+                <div style="text-align: center; padding: 1rem; color: #fca5a5;">
+                    Chyba při načítání dat.
+                </div>
                 `;
             }
         }
 
         window.openScheduleModal = function (scheduleData, teamName) {
-            const schedule = (typeof scheduleData === 'string') ? JSON.parse(decodeURIComponent(scheduleData)) : scheduleData;
+            const schedule = (typeof scheduleData === 'string') ? JSON.parse(decodeURIComponent(scheduleData)) :
+                scheduleData;
             const modalBody = document.getElementById('modalBody');
             document.getElementById('modalTeamName').textContent = teamName;
 
@@ -1058,20 +948,20 @@
                         </tr>
                     </thead>
                     <tbody>
-            `;
+                        `;
 
             schedule.forEach(m => {
                 html += `
-                    <tr>
-                        <td>${m.round}.</td>
-                        <td>${m.date}</td>
-                        <td>${m.opponent}</td>
-                        <td style="text-align:right; font-weight:bold;">${m.result}</td>
-                    </tr>
-                `;
+                        <tr>
+                            <td>${m.round}.</td>
+                            <td>${m.date}</td>
+                            <td>${m.opponent}</td>
+                            <td style="text-align:right; font-weight:bold;">${m.result}</td>
+                        </tr>
+                        `;
             });
 
-            html += '</tbody></table>';
+            html += `</tbody></table>`;
             modalBody.innerHTML = html;
             document.getElementById('scheduleModal').style.display = 'block';
         }

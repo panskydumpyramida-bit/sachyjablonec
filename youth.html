@@ -153,24 +153,17 @@
             </div>
 
 
-
-            <!-- Game Viewer Section - GameViewer2 -->
-            <div id="game-viewer-section" class="card" style="display: none; margin-bottom: 3rem;">
-                <div class="card-content">
-                    <h2 style="margin-bottom: 1.5rem; color: var(--primary-color);">
-                        <i class="fa-solid fa-chess"></i> Partie mládeže
-                    </h2>
-                    <div id="game-viewer-wrapper" class="game-viewer">
-                        <!-- GameViewer2 will inject its DOM here -->
-                    </div>
-                </div>
+            <!-- Game Viewer Section - Created by GameViewer2.create() -->
+            <div id="game-viewer-section"
+                style="display: none; margin-bottom: 3rem; border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; overflow: hidden;">
+                <!-- GameViewer2.create() will inject the entire structure here -->
             </div>
 
             <!-- Dynamic News from API - Full Content Display -->
             <h2 style="margin-bottom: 1.5rem; color: var(--primary-color);"><i class="fa-solid fa-newspaper"></i>
                 Aktuality z mládeže</h2>
             <div id="youthNewsGrid" class="card-grid" data-news-category="Mládež" data-news-display="full-short"
-                data-news-limit="3" style="margin-bottom: 3rem; grid-template-columns: 1fr;"></div>
+                data-news-limit="3" data-news-show-stats style="margin-bottom: 3rem; grid-template-columns: 1fr;"></div>
 
         </section>
     </main>
@@ -191,7 +184,7 @@
 
     <script src="js/game-viewer2.js?v=3" defer></script>
     <script>
-        // Game Viewer Loader
+        // Game Viewer Loader - Using GameViewer2.create()
         document.addEventListener('DOMContentLoaded', async () => {
             try {
                 // Fetch games for category "Mládež"
@@ -199,11 +192,11 @@
                 if (res.ok) {
                     const games = await res.json();
                     if (games && games.length > 0) {
-                        // Initialize viewer
-                        gameViewer2.init(games);
-
-                        // Show the viewer card
-                        document.getElementById('game-viewer-section').style.display = 'block';
+                        // Use self-contained plugin - creates everything!
+                        GameViewer2.create('#game-viewer-section', games, {
+                            title: 'Partie mládeže',
+                            maxHeight: 600
+                        });
                     }
                 }
             } catch (e) {

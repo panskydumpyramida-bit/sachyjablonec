@@ -9,9 +9,10 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// Role hierarchy: USER < ADMIN < SUPERADMIN
+// Role hierarchy: USER < MEMBER < ADMIN < SUPERADMIN
 enum Role {
   USER
+  MEMBER
   ADMIN
   SUPERADMIN
 }
@@ -20,15 +21,40 @@ model User {
   id           Int      @id @default(autoincrement())
   username     String   @unique
   email        String   @unique
-  passwordHash String   @map("password_hash")
+  passwordHash String?  @map("password_hash")  // Optional for OAuth users
+  googleId     String?  @unique @map("google_id")  // Google OAuth ID
+  realName     String?  @map("real_name")  // Actual name (editable)
+  club         String?  // Club affiliation (editable)
+  useRealName  Boolean  @default(false) @map("use_real_name") // Show real name in comments?
   role         Role     @default(USER)
   createdAt    DateTime @default(now()) @map("created_at")
   
   news         News[]
   puzzleResults PuzzleRaceResult[]
   recordedGames GameRecorded[]
+  comments      Comment[]
   
   @@map("users")
+}
+
+model Comment {
+  id        Int      @id @default(autoincrement())
+  content   String
+  newsId    Int      @map("news_id")
+  authorId  Int      @map("author_id")
+  parentId  Int?     @map("parent_id")
+  isHidden  Boolean  @default(false) @map("is_hidden")
+  isDeleted Boolean  @default(false) @map("is_deleted")
+  deletedBy Int?     @map("deleted_by") // user ID who deleted it
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  
+  news      News     @relation(fields: [newsId], references: [id], onDelete: Cascade)
+  author    User     @relation(fields: [authorId], references: [id])
+  parent    Comment? @relation("CommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
+  replies   Comment[] @relation("CommentReplies")
+  
+  @@map("comments")
 }
 
 model Message {
@@ -60,6 +86,7 @@ model News {
   author        User?     @relation(fields: [authorId], references: [id])
   matchReport   MatchReport?
   games         Game[]
+  comments      Comment[]
   
   images        Image[]
   

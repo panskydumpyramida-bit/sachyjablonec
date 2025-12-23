@@ -78,7 +78,12 @@ export const login = async (req, res) => {
                 id: user.id,
                 username: user.username,
                 email: user.email,
-                role: user.role
+                role: user.role,
+                realName: user.realName,
+                club: user.club,
+                useRealName: user.useRealName,
+                googleId: user.googleId,
+                createdAt: user.createdAt
             }
         });
     } catch (error) {
@@ -96,6 +101,10 @@ export const me = async (req, res) => {
                 username: true,
                 email: true,
                 role: true,
+                realName: true,
+                club: true,
+                useRealName: true,
+                googleId: true,
                 createdAt: true
             }
         });
@@ -108,6 +117,113 @@ export const me = async (req, res) => {
     } catch (error) {
         console.error('Get user error:', error);
         res.status(500).json({ error: 'Failed to get user info' });
+    }
+};
+
+export const updateProfile = async (req, res) => {
+    try {
+        const { realName, club, useRealName } = req.body;
+        const userId = req.user.id;
+
+        const updatedUser = await prisma.user.update({
+            where: { id: userId },
+            data: {
+                realName: realName || null,
+                club: club || null,
+                useRealName: useRealName === true
+            },
+            select: {
+                id: true,
+                username: true,
+                email: true,
+                role: true,
+                realName: true,
+                club: true,
+                useRealName: true,
+                googleId: true,
+                createdAt: true
+            }
+        });
+
+        res.json({
+            success: true,
+            user: updatedUser
+        });
+    } catch (error) {
+        console.error('Update profile error:', error);
+        res.status(500).json({ error: 'Failed to update profile' });
+    }
+};
+
+export const changePassword = async (req, res) => {
+    try {
+        const { currentPassword, newPassword } = req.body;
+        const userId = req.user.id;
+
+        if (!currentPassword || !newPassword) {
+            return res.status(400).json({ error: 'Současné i nové heslo jsou povinné' });
+        }
+
+        if (newPassword.length < 6) {
+            return res.status(400).json({ error: 'Nové heslo musí mít alespoň 6 znaků' });
+        }
+
+        // Get current user
+        const user = await prisma.user.findUnique({
+            where: { id: userId }
+        });
+
+        if (!user) {
+            return res.status(404).json({ error: 'Uživatel nenalezen' });
+        }
+
+        // Check if user has a password (OAuth users might not)
+        if (!user.passwordHash) {
+            return res.status(400).json({ error: 'Tento účet používá přihlášení přes Google a nemá nastavené heslo' });
+        }
+
+        // Verify current password
+        const validPassword = await bcrypt.compare(currentPassword, user.passwordHash);
+        if (!validPassword) {
+            return res.status(401).json({ error: 'Nesprávné současné heslo' });
+        }
+
+        // Hash new password
+        const newPasswordHash = await bcrypt.hash(newPassword, 10);
+
+        // Update password
+        await prisma.user.update({
+            where: { id: userId },
+            data: { passwordHash: newPasswordHash }
+        });
+
+        res.json({ success: true, message: 'Heslo bylo úspěšně změněno' });
+    } catch (error) {
+        console.error('Change password error:', error);
+        res.status(500).json({ error: 'Nepodařilo se změnit heslo' });
+    }
+};
+
+export const deleteAccount = async (req, res) => {
+    try {
+        const userId = req.user.id;
+
+        // Delete user's comments first (foreign key constraint)
+        await prisma.comment.deleteMany({ where: { userId } });
+
+        // Delete user's puzzle results
+        await prisma.puzzleRaceResult.deleteMany({ where: { userId } });
+
+        // Delete user's recorded games
+        await prisma.gameRecorded.deleteMany({ where: { userId } });
+
+        // Delete the user
+        await prisma.user.delete({ where: { id: userId } });
+
+        res.json({ success: true, message: 'Účet byl smazán' });
+    } catch (error) {
+        console.error('Delete account error:', error);
+        res.status(500).json({ error: 'Failed to delete account' });
     }
 };
 

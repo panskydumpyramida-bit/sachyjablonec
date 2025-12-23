@@ -30,6 +30,34 @@ export const getAllNews = async (req, res) => {
                         id: true,
                         username: true
                     }
+                },
+                _count: {
+                    select: {
+                        comments: {
+                            where: {
+                                isHidden: false,
+                                isDeleted: false
+                            }
+                        }
+                    }
+                },
+                comments: {
+                    where: {
+                        isHidden: false,
+                        isDeleted: false
+                    },
+                    orderBy: { createdAt: 'desc' },
+                    take: 1,
+                    include: {
+                        author: {
+                            select: {
+                                id: true,
+                                username: true,
+                                realName: true,
+                                useRealName: true
+                            }
+                        }
+                    }
                 }
             },
             orderBy: {
