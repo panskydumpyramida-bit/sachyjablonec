@@ -188,10 +188,10 @@ class AuthManager {
         } else {
             authContainer.innerHTML = `
                 <button class="auth-btn" onclick="auth.showLoginModal()">
-                    <i class="fa-solid fa-sign-in-alt"></i> Přihlásit
+                    <i class="fa-solid fa-sign-in-alt"></i><span>Přihlásit</span>
                 </button>
                 <button class="auth-btn auth-btn-outline" onclick="auth.showRegisterModal()">
-                    <i class="fa-solid fa-user-plus"></i> Registrace
+                    <i class="fa-solid fa-user-plus"></i><span>Registrace</span>
                 </button>
             `;
         }
