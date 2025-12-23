@@ -1453,21 +1453,44 @@ const seedCompetitions = async () => {
 };
 
 // Start server
-app.listen(PORT, '0.0.0.0', async () => {
+
+// --- Graceful Shutdown ---
+const gracefulShutdown = async (signal) => {
+    console.log(`[${signal}] Received signal to terminate: starting graceful shutdown`);
+
+    // 1. Close HTTP Server
+    if (server) {
+        server.close(() => {
+            console.log('HTTP server closed');
+        });
+    }
+
+    // 2. Disconnect Database
+    try {
+        await prisma.$disconnect();
+        console.log('Database disconnected');
+    } catch (e) {
+        console.error('Error disconnecting database:', e);
+    }
+
+    console.log('Graceful shutdown completed. Exiting.');
+    process.exit(0);
+};
+
+// Handle termination signals
+process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+process.on('SIGINT', () => gracefulShutdown('SIGINT'));
+
+// Start Server
+const server = app.listen(PORT, '0.0.0.0', async () => {
     console.log(`🚀 Server running on http://0.0.0.0:${PORT}`);
     console.log(`📝 Environment: ${process.env.NODE_ENV}`);
 
-    // Attempt to seed competitions on startup (delayed to allow fast boot)
-    setTimeout(async () => {
-        try {
-            await seedCompetitions();
+    // Initial Seeding logic
+    await seedCompetitions();
 
-            // Auto-refresh standings data on each deploy/restart
-            console.log('🔄 Auto-refreshing standings data...');
-            await updateStandings();
-            console.log('✅ Standings data initialization complete');
-        } catch (error) {
-            console.error('Startup initialization failed:', error.message);
-        }
-    }, 5000); // 5 second delay to ensure /health is responsive immediately
+    // Initial Standings Update
+    console.log('🔄 Auto-refreshing standings data...');
+    await updateStandings();
+    console.log('✅ Standings data initialization complete');
 });
