@@ -139,9 +139,15 @@ class AuthManager {
     }
 
     // Update header UI
-    updateUI() {
+    updateUI(retryCount = 0) {
         const authContainer = document.getElementById('auth-container');
-        if (!authContainer) return;
+        if (!authContainer) {
+            // Header may not be loaded yet, retry a few times
+            if (retryCount < 5) {
+                setTimeout(() => this.updateUI(retryCount + 1), 100);
+            }
+            return;
+        }
 
         // Show/hide members link based on login status
         const membersNav = document.getElementById('nav-members');
