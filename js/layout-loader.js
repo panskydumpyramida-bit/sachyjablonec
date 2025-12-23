@@ -16,7 +16,7 @@ async function loadComponent(id, file) {
                 if (!document.querySelector('link[href*="auth.css"]')) {
                     const authCss = document.createElement('link');
                     authCss.rel = 'stylesheet';
-                    authCss.href = '/css/auth.css?v=6';
+                    authCss.href = '/css/auth.css?v=7';
                     document.head.appendChild(authCss);
                 }
 
@@ -107,7 +107,7 @@ document.addEventListener('DOMContentLoaded', () => {
         configScript.onload = () => {
             if (typeof auth === 'undefined') {
                 const authScript = document.createElement('script');
-                authScript.src = '/js/auth.js?v=3';
+                authScript.src = '/js/auth.js?v=4';
                 document.head.appendChild(authScript);
             }
         };

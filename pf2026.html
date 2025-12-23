@@ -1,0 +1,606 @@
+<div class="pf-container">
+    <style>
+        .pf-container {
+            --glass-bg: rgba(22, 33, 62, 0.85);
+            --glass-border: 1px solid rgba(255, 255, 255, 0.1);
+            --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+            --gold: #d4af37;
+            --gold-hover: #f3ce5a;
+            --text-main: #e0e0e0;
+            --text-muted: #a0a0a0;
+            --accent-blue: #3b82f6;
+            --accent-green: #4ade80;
+            --accent-purple: #a78bfa;
+            --accent-red: #f87171;
+
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            border-radius: 16px;
+            padding: 2.5rem;
+            color: var(--text-main);
+            margin: 2rem 0;
+            box-shadow: var(--glass-shadow);
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Decorative background elements */
+        .pf-container::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle at center, rgba(212, 175, 55, 0.05) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .pf-content {
+            position: relative;
+            z-index: 1;
+        }
+
+        .pf-header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .pf-icon-large {
+            font-size: 4rem;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(to bottom, #ffd700, #b8860b);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            filter: drop-shadow(0 0 10px rgba(212, 175, 55, 0.3));
+        }
+
+        .pf-title {
+            font-size: 3rem;
+            font-weight: 800;
+            color: var(--gold);
+            margin: 0;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+        }
+
+        .pf-subtitle {
+            font-size: 1.1rem;
+            color: var(--text-muted);
+            margin-top: 0.5rem;
+            letter-spacing: 1px;
+        }
+
+        .pf-message {
+            text-align: center;
+            margin-bottom: 3rem;
+            font-size: 1.15rem;
+            line-height: 1.8;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .pf-highlight-text {
+            font-size: 1.5rem;
+            color: var(--gold);
+            font-weight: 700;
+            margin: 1.5rem 0;
+            display: block;
+            text-shadow: 0 0 20px rgba(212, 175, 55, 0.2);
+        }
+
+        .pf-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            transition: transform 0.2s ease, background 0.2s ease;
+        }
+
+        .pf-card:hover {
+            background: rgba(255, 255, 255, 0.05);
+            transform: translateY(-2px);
+        }
+
+        .pf-card-memorial {
+            background: linear-gradient(to right, rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.2));
+            border-left: 4px solid var(--text-muted);
+        }
+
+        .pf-section-title {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            color: var(--gold);
+            margin: 0 0 1.5rem 0;
+            font-size: 1.4rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding-bottom: 0.75rem;
+        }
+
+        .pf-grid {
+            display: grid;
+            gap: 1rem;
+        }
+
+        .pf-item {
+            display: flex;
+            gap: 1rem;
+            padding: 1rem;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+            border: 1px solid transparent;
+            transition: all 0.2s;
+        }
+
+        .pf-item:hover {
+            border-color: rgba(255, 255, 255, 0.1);
+            background: rgba(0, 0, 0, 0.3);
+        }
+
+        .pf-item-icon {
+            font-size: 1.5rem;
+            min-width: 2rem;
+            text-align: center;
+        }
+
+        .pf-item-content {
+            flex: 1;
+        }
+
+        .pf-item-title {
+            color: #fff;
+            font-weight: 600;
+            display: block;
+            margin-bottom: 0.25rem;
+        }
+
+        .pf-item-desc {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            line-height: 1.5;
+            margin: 0;
+        }
+
+        /* Details/Summary Styling for Quick View */
+        details.pf-details {
+            margin-top: 0.5rem;
+        }
+
+        details.pf-details summary {
+            cursor: pointer;
+            color: var(--gold);
+            font-size: 0.9rem;
+            font-weight: 500;
+            user-select: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: color 0.2s;
+            list-style: none;
+            /* Hide default triangle */
+        }
+
+        details.pf-details summary::-webkit-details-marker {
+            display: none;
+        }
+
+        details.pf-details summary::after {
+            content: '›';
+            font-size: 1.2rem;
+            transition: transform 0.2s;
+            line-height: 0.8;
+        }
+
+        details.pf-details[open] summary::after {
+            transform: rotate(90deg);
+        }
+
+        details.pf-details summary:hover {
+            color: var(--gold-hover);
+            text-decoration: underline;
+        }
+
+        .pf-quick-view {
+            margin-top: 0.75rem;
+            padding: 1rem;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
+            font-size: 0.9rem;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            animation: slideDown 0.2s ease-out;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-5px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .pf-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 0.5rem 0;
+            font-size: 0.9rem;
+        }
+
+        .pf-table th {
+            text-align: left;
+            color: var(--text-muted);
+            padding: 0.5rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            font-weight: 500;
+        }
+
+        .pf-table td {
+            padding: 0.5rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .pf-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .pf-rank-1 {
+            color: #ffd700;
+            font-weight: bold;
+        }
+
+        .pf-rank-2 {
+            color: #c0c0c0;
+            font-weight: bold;
+        }
+
+        .pf-rank-3 {
+            color: #cd7f32;
+            font-weight: bold;
+        }
+
+        .pf-btn-link {
+            display: inline-block;
+            margin-top: 0.75rem;
+            padding: 0.4rem 0.8rem;
+            background: rgba(212, 175, 55, 0.15);
+            color: var(--gold);
+            text-decoration: none;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .pf-btn-link:hover {
+            background: rgba(212, 175, 55, 0.25);
+            color: #fff;
+        }
+
+        .pf-puzzle-img {
+            max-width: 400px;
+            width: 100%;
+            height: auto;
+            border-radius: 8px;
+            display: block;
+            margin: 1.5rem auto;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .pf-footer {
+            text-align: center;
+            padding-top: 2rem;
+            margin-top: 2rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        /* Mobile tweaks */
+        @media (max-width: 600px) {
+            .pf-container {
+                padding: 1.5rem;
+            }
+
+            .pf-title {
+                font-size: 2rem;
+            }
+
+            .pf-highlight-text {
+                font-size: 1.2rem;
+            }
+        }
+    </style>
+
+    <div class="pf-content">
+        <!-- Hlavička -->
+        <div class="pf-header">
+            <div class="pf-icon-large">♔</div>
+            <h2 class="pf-title">PF 2026</h2>
+            <p class="pf-subtitle">Šachový oddíl TJ Bižuterie Jablonec nad Nisou</p>
+        </div>
+
+        <!-- Přání -->
+        <div class="pf-message">
+            <p>Vážení šachisté, milí přátelé a příznivci královské hry,</p>
+            <p>děkujeme vám za přízeň v uplynulém roce a do nového roku 2026 vám přejeme</p>
+            <span class="pf-highlight-text">
+                🎄 Veselé Vánoce a šťastný nový rok! 🎄
+            </span>
+            <p>Ať se vám daří nejen na 64 polích, ale i v osobním životě. Přejeme vám pevné zdraví, ostrý taktický zrak
+                a mnoho vítězných partií.</p>
+        </div>
+
+        <!-- Vzpomínka na Čestmíra -->
+        <div class="pf-card pf-card-memorial">
+            <div style="display: flex; gap: 1rem; align-items: flex-start;">
+                <div style="font-size: 2rem;">🕯️</div>
+                <div>
+                    <h3 style="color: #fff; margin: 0 0 0.5rem 0; font-size: 1.2rem;">Vzpomínka na Čestmíra Drobníka
+                    </h3>
+                    <p style="color: var(--text-muted); margin: 0 0 0.5rem 0; line-height: 1.5;">
+                        Rok 2025 byl pro nás rokem loučení. Opustil nás náš dlouholetý předseda, srdcař a duše oddílu,
+                        který pro jablonecký šach vykonal neskutečné množství práce.
+                    </p>
+                    <a href="https://sachyjablonec.blogspot.com/2025/07/vzpominka-na-cestmira-drobnika.html"
+                        target="_blank" class="pf-btn-link">Přečíst vzpomínku →</a>
+                </div>qw
+            </div>
+        </div>
+
+        <!-- Změny v oddíle -->
+        <div class="pf-card">
+            <h3 class="pf-section-title" style="color: var(--accent-blue);">
+                <span>🔄</span> Novinky v klubu
+            </h3>
+            <div class="pf-grid">
+                <div class="pf-item">
+                    <div class="pf-item-icon">⚡</div>
+                    <div class="pf-item-content">
+                        <strong class="pf-item-title">Nové vedení oddílu</strong>
+                        <p class="pf-item-desc">
+                            Ujal jsem se vedení oddílu. Přes nečekané změny pokračujeme naplno
+                            v trénincích i soutěžích. <strong>Scházíme se každý čtvrtek</strong> a máme bohatý oddílový
+                            život – hrajeme vlastní přebory ve skupinách A, B a C.
+                        </p>
+                    </div>
+                </div>
+                <div class="pf-item">
+                    <div class="pf-item-icon">🌐</div>
+                    <div class="pf-item-content">
+                        <strong class="pf-item-title">Moderní webové stránky</strong>
+                        <p class="pf-item-desc">
+                            Spustili jsme nový web! Najdete zde profil každého hráče, automatické tabulky, fotogalerie a
+                            nyní i <strong>možnost komentování článků</strong> (po přihlášení). Vyzkoušejte to!
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Úspěchy roku 2025 -->
+        <div class="pf-card">
+            <h3 class="pf-section-title">
+                <span>🏆</span> Naše úspěchy v roce 2025
+            </h3>
+            <div class="pf-grid">
+
+                <!-- Mládež -->
+                <div class="pf-item"
+                    style="border-left: 3px solid var(--accent-green); background: linear-gradient(90deg, rgba(74, 222, 128, 0.05), transparent);">
+                    <div class="pf-item-icon">⬆️</div>
+                    <div class="pf-item-content">
+                        <strong class="pf-item-title" style="color: var(--accent-green);">Postup do 1. ligy
+                            mládeže!</strong>
+                        <p class="pf-item-desc">
+                            Historický úspěch naší mládeže. Po skvělých výkonech v krajských soutěžích se našim talentům
+                            podařilo vybojovat postup mezi českou elitu.
+                        </p>
+                        <a href="article.html?id=3" class="pf-btn-link">Týmy mládeže →</a>
+                    </div>
+                </div>
+
+                <!-- Zajímavé partie - ADDED SECTION -->
+                <div class="pf-item"
+                    style="border-left: 3px solid var(--accent-red); background: linear-gradient(90deg, rgba(248, 113, 113, 0.05), transparent);">
+                    <div class="pf-item-icon">♟️</div>
+                    <div class="pf-item-content">
+                        <strong class="pf-item-title" style="color: var(--accent-red);">Zajímavé partie</strong>
+                        <p class="pf-item-desc">
+                            Vybrali jsme pro vás několik zajímavých momentů z partií našich členů.
+                        </p>
+                        <!-- PLACEHOLDER FOR GAMES - User will fill game IDs here -->
+                        <div
+                            style="margin-top: 0.5rem; padding: 0.5rem; background: rgba(0,0,0,0.2); border-radius: 4px; font-size: 0.85rem; color: var(--text-muted); border: 1px dashed var(--text-muted);">
+                            <em>[Zde budou vloženy partie. Prosím doplňte Game IDs do konfigurace níže]</em><br>
+                            <!-- Příklad: <div class="game-viewer" data-game-id="YOUR_GAME_ID"></div> -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Družstva -->
+                <div class="pf-item" style="border-left: 3px solid var(--accent-blue);">
+                    <div class="pf-item-icon">♟️</div>
+                    <div class="pf-item-content">
+                        <strong class="pf-item-title" style="color: var(--accent-blue);">4 týmy dospělých</strong>
+                        <p class="pf-item-desc">
+                            V letošní sezóně nasazujeme rekordní počet týmů. A-tým bojuje v Krajském přeboru, další týmy
+                            sbírají zkušenosti v nižších soutěžích.
+                        </p>
+                        <a href="teams.html" class="pf-btn-link">Přehled soutěží →</a>
+                    </div>
+                </div>
+
+                <!-- Liberec Open -->
+                <div class="pf-item" style="border-left: 3px solid #22d3ee;">
+                    <div class="pf-item-icon">🥇</div>
+                    <div class="pf-item-content">
+                        <strong class="pf-item-title" style="color: #22d3ee;">Liberec Open 2025</strong>
+                        <p class="pf-item-desc">
+                            Skvělý individuální úspěch na silně obsazeném turnaji v Liberci.
+                        </p>
+                        <details class="pf-details">
+                            <summary>Zobrazit výsledek</summary>
+                            <div class="pf-quick-view">
+                                <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
+                                    <span style="font-size: 1.2rem;">🏆</span>
+                                    <span><strong>1. místo:</strong> Antonín Duda</span>
+                                </div>
+                                <p class="pf-item-desc">V konkurenci silných hráčů se mi podařilo
+                                    zvítězit s bodovým náskokem.</p>
+                                <a href="https://s2.chess-results.com/tnr1248842.aspx?lan=1&art=1&rd=9&SNode=S0"
+                                    target="_blank" class="pf-btn-link" style="margin-top: 0.5rem;">Kompletní výsledky
+                                    na Chess-Results →</a>
+                            </div>
+                        </details>
+                    </div>
+                </div>
+
+                <!-- Desko Open -->
+                <div class="pf-item" style="border-left: 3px solid var(--accent-red);">
+                    <div class="pf-item-icon">🎯</div>
+                    <div class="pf-item-content">
+                        <strong class="pf-item-title" style="color: var(--accent-red);">ATMEN Desko Open</strong>
+                        <p class="pf-item-desc">
+                            Další cenné umístění z letního turnajového okruhu.
+                        </p>
+                        <details class="pf-details">
+                            <summary>Zobrazit výsledek</summary>
+                            <div class="pf-quick-view">
+                                <p class="pf-item-desc" style="margin-bottom: 0.5rem;">
+                                    <strong>5. místo:</strong> Antonín Duda
+                                </p>
+                                <a href="https://s1.chess-results.com/tnr1196274.aspx?lan=1&art=1&rd=9&SNode=S0"
+                                    target="_blank" class="pf-btn-link">Kompletní výsledky →</a>
+                            </div>
+                        </details>
+                    </div>
+                </div>
+
+                <!-- Memoriál Zikudy -->
+                <div class="pf-item" style="border-left: 3px solid var(--accent-purple);">
+                    <div class="pf-item-icon">👥</div>
+                    <div class="pf-item-content">
+                        <strong class="pf-item-title" style="color: var(--accent-purple);">Memoriál Františka
+                            Zikudy</strong>
+                        <p class="pf-item-desc">
+                            Turnaj dvojic v Turnově - obhajoba loňského vítězství!
+                        </p>
+                        <details class="pf-details">
+                            <summary>Zobrazit pořadí</summary>
+                            <div class="pf-quick-view">
+                                <table class="pf-table">
+                                    <tr>
+                                        <td class="pf-rank-1">1.</td>
+                                        <td><strong>Tsantsala + Maršálek</strong></td>
+                                        <td>Bižuterie Jablonec</td>
+                                    </tr>
+                                </table>
+                                <a href="https://s3.chess-results.com/tnr1292599.aspx?lan=1&SNode=S0" target="_blank"
+                                    class="pf-btn-link">Celkové pořadí →</a>
+                            </div>
+                        </details>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- Akce -->
+        <div class="pf-card">
+            <h3 class="pf-section-title" style="color: var(--accent-purple);">
+                <span>🎪</span> Naše akce
+            </h3>
+            <div class="pf-grid">
+                <div class="pf-item">
+                    <div class="pf-item-icon">⚡</div>
+                    <div class="pf-item-content">
+                        <strong class="pf-item-title">XIX. Vánoční blicák</strong>
+                        <p class="pf-item-desc">
+                            Memoriál Čestmíra Drobníka přilákal 37 hráčů.
+                        </p>
+                        <details class="pf-details">
+                            <summary>Stupně vítězů</summary>
+                            <div class="pf-quick-view">
+                                <table class="pf-table">
+                                    <tr>
+                                        <td class="pf-rank-1">1.</td>
+                                        <td>Marek Sýkora</td>
+                                        <td>Zikuda Turnov</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="pf-rank-2">2.</td>
+                                        <td>Vláďa Vltavský</td>
+                                        <td>Zikuda Turnov</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="pf-rank-3">3.</td>
+                                        <td><strong>Kosťa Tsantsala</strong></td>
+                                        <td>Bižuterie Jablonec</td>
+                                    </tr>
+                                </table>
+                                <a href="blicak.html" class="pf-btn-link">Reportáž z turnaje →</a>
+                            </div>
+                        </details>
+                    </div>
+                </div>
+
+                <div class="pf-item">
+                    <div class="pf-item-icon">📅</div>
+                    <div class="pf-item-content">
+                        <strong class="pf-item-title">Velká cena Bižuterie</strong>
+                        <p class="pf-item-desc">
+                            Tradiční turnaj v rapid šachu, který každoročně pořádáme pro širokou šachovou veřejnost.
+                        </p>
+                        <a href="article.html?id=10" class="pf-btn-link">Více informací →</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Hádanka -->
+        <div class="pf-card">
+            <h3 class="pf-section-title">
+                <span>🧩</span> Vánoční šachová hádanka
+            </h3>
+            <div style="text-align: center;">
+                <p class="pf-message" style="margin-bottom: 1rem; font-size: 1rem;">
+                    Najdi 6 ukrytých šachových figurek! (Král, dáma, věž, střelec, jezdec, pěšec)
+                </p>
+                <img src="https://www.sachyjablonec.cz/uploads/1766505134149-989121832.webp" alt="Vánoční šachový rébus"
+                    class="pf-puzzle-img">
+
+                <details class="pf-details">
+                    <summary style="justify-content: center;">Zobrazit nápovědu</summary>
+                    <div class="pf-quick-view" style="max-width: 500px; margin: 1rem auto; text-align: left;">
+                        <strong>Kde hledat?</strong>
+                        <ul style="margin: 0.5rem 0 0 1.5rem; color: var(--text-muted);">
+                            <li>Svíčka na stole</li>
+                            <li>Stín na zdi</li>
+                            <li>Ozdoba na stromečku</li>
+                            <li>Dekorace na krbové římse</li>
+                            <li>Vzor na okně</li>
+                            <li>Mezi louskáčky</li>
+                        </ul>
+                    </div>
+                </details>
+            </div>
+        </div>
+
+        <!-- Patička -->
+        <div class="pf-footer">
+            <p style="color: var(--text-muted);">Těšíme se na setkání u šachovnic v roce 2026!</p>
+            <p style="color: var(--gold); font-weight: 600; font-size: 1.2rem; margin-top: 0.5rem;">
+                Za Šachový oddíl TJ Bižuterie Jablonec<br>
+                <span style="font-size: 1rem; font-weight: 400; color: var(--text-muted);">Antonín Duda, předseda</span>
+            </p>
+        </div>
+    </div>
+</div>
