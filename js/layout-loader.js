@@ -107,14 +107,14 @@ document.addEventListener('DOMContentLoaded', () => {
         configScript.onload = () => {
             if (typeof auth === 'undefined') {
                 const authScript = document.createElement('script');
-                authScript.src = '/js/auth.js?v=4';
+                authScript.src = '/js/auth.js?v=5';
                 document.head.appendChild(authScript);
             }
         };
         document.head.appendChild(configScript);
     } else if (typeof auth === 'undefined') {
         const authScript = document.createElement('script');
-        authScript.src = '/js/auth.js?v=4';
+        authScript.src = '/js/auth.js?v=5';
         document.head.appendChild(authScript);
     }
 
