@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="cs">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pravidla diskuze - Šachový oddíl TJ Bižuterie Jablonec nad Nisou</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .rules-container {
+            max-width: 800px;
+            margin: 4rem auto;
+            padding: 2rem;
+            background: rgba(0, 0, 0, 0.4);
+            border-radius: 12px;
+            border: 1px solid rgba(212, 175, 55, 0.1);
+        }
+
+        .rules-list {
+            list-style: none;
+            padding: 0;
+            counter-reset: rule-counter;
+        }
+
+        .rules-list li {
+            margin-bottom: 2rem;
+            position: relative;
+            padding-left: 3rem;
+        }
+
+        .rules-list li::before {
+            counter-increment: rule-counter;
+            content: counter(rule-counter);
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 2rem;
+            height: 2rem;
+            background: var(--primary-color);
+            color: #000;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 2rem;
+            font-weight: bold;
+        }
+
+        .rule-title {
+            display: block;
+            font-size: 1.2rem;
+            color: var(--primary-color);
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+        }
+    </style>
+</head>
+
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="index.html" class="logo">
+                <i class="fa-solid fa-chess-knight"></i>
+                <span>TJ Bižuterie</span>
+            </a>
+            <a href="index.html" class="back-link"><i class="fa-solid fa-arrow-left"></i> Zpět na hlavní stranu</a>
+        </div>
+    </nav>
+
+    <main class="rules-container">
+        <h1><i class="fa-solid fa-scale-balanced"></i> Pravidla diskuze</h1>
+        <p class="intro-text">Slušná a věcná diskuze je základem naší komunity. Prosíme o dodržování následujících
+            pravidel.</p>
+
+        <ul class="rules-list">
+            <li>
+                <span class="rule-title">Vzájemný respekt</span>
+                Diskutujte slušně. Urážky, vulgarismy, vyhrožování nebo jakékoliv útoky na ostatní uživatele nebudou
+                tolerovány.
+            </li>
+            <li>
+                <span class="rule-title">Žádný spam</span>
+                Nevkládejte opakovaně stejné příspěvky, reklamu nebo odkazy nesouvisející s tématem.
+            </li>
+            <li>
+                <span class="rule-title">Ochrana soukromí</span>
+                Nezveřejňujte osobní údaje (telefonní čísla, adresy) své ani ostatních uživatelů bez jejich souhlasu.
+            </li>
+            <li>
+                <span class="rule-title">Dodržování zákonů</span>
+                Je zakázáno vkládat obsah, který je v rozporu se zákony České republiky (podpora nenávistných hnutí,
+                rasismus, atd.).
+            </li>
+            <li>
+                <span class="rule-title">Právo moderátora</span>
+                Administrátoři si vyhrazují právo smazat jakýkoliv komentář, který porušuje tato pravidla nebo je jinak
+                nevhodný, a trvale zablokovat jeho autora.
+            </li>
+        </ul>
+    </main>
+
+    <footer class="footer">
+        <p>&copy; 2025 TJ Bižuterie Jablonec nad Nisou, z.s. - Šachový oddíl</p>
+    </footer>
+</body>
+
+</html>

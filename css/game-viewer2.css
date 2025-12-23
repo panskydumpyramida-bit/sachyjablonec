@@ -37,7 +37,8 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding-bottom: 0.75rem;
+    padding: 0.5rem 0 0.75rem 0;
+    /* Added top padding for spacing from edge */
     border-bottom: 1px solid var(--gv-border-color);
     margin-bottom: 0.5rem;
     position: relative;
@@ -67,6 +68,8 @@
     flex-direction: row;
     width: 100%;
     align-items: stretch;
+    /* Use auto overflow for scrolling if needed */
+    overflow: auto;
 }
 
 .gv2-sidebar-left {
@@ -83,7 +86,7 @@
     display: flex;
     flex-direction: row;
     min-width: 0;
-    /* Enable flex shrinking */
+    overflow: hidden;
 }
 
 .gv2-board-section {
@@ -94,20 +97,23 @@
     align-items: center;
     position: relative;
     background: radial-gradient(circle at center, #2a2a2a 0%, #1a1a1a 100%);
-    padding: 1rem;
-    min-height: 450px;
-    max-height: 550px;
+    padding: 0.75rem;
+    min-height: 420px;
+    /* Increased to fit board + controls */
+    /* Allow scrolling within section if needed */
+    overflow: auto;
 }
 
 .gv2-info-panel {
-    width: 260px;
+    width: 220px;
     flex-shrink: 0;
     border-left: 1px solid var(--gv-border-color);
     display: flex;
     flex-direction: column;
     background: var(--gv-bg-color);
-    min-height: 450px;
-    max-height: 550px;
+    min-height: 350px;
+    max-height: 500px;
+    overflow: hidden;
 }
 
 /* Responsive adjustments - Tablet */
@@ -269,16 +275,12 @@
 /* Board Area */
 .gv2-board-wrapper {
     width: 100%;
-    max-width: 500px;
-    /* Smaller board for better fit */
-    max-height: 65vh;
-    /* Ensure controls are visible on mobile */
+    max-width: min(400px, calc(100% - 2rem));
     margin: 0 auto;
     aspect-ratio: 1;
     position: relative;
     display: block;
     box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
-    /* Shadow for board */
     z-index: 1;
 }
 
@@ -628,6 +630,26 @@
     padding: 0 2px;
 }
 
+/* Variation move styling */
+.gv2-var-move {
+    cursor: pointer;
+    padding: 2px 4px;
+    border-radius: 3px;
+    transition: all 0.15s ease;
+}
+
+.gv2-var-move:hover {
+    background: rgba(212, 175, 55, 0.2);
+    color: var(--gv-active-color);
+}
+
+.gv2-var-move.active {
+    background: var(--gv-active-color);
+    color: #000;
+    font-weight: 600;
+    box-shadow: 0 2px 6px rgba(212, 175, 55, 0.4);
+}
+
 .gv2-nag {
     font-weight: bold;
     color: #17a2b8;
@@ -773,6 +795,18 @@
     border-left: 4px solid #fff;
 }
 
+.game-item .game-result {
+    margin-left: 0.5rem;
+    color: #10b981;
+    font-weight: 700;
+    font-size: 0.85em;
+    flex-shrink: 0;
+}
+
+.game-item.active .game-result {
+    color: #065f46;
+}
+
 .team-header {
     background: rgba(0, 0, 0, 0.4);
     padding: 10px 15px;
@@ -838,4 +872,90 @@
 
 .gv2-var-choice.gv2-var-main:hover {
     background: #e6c35a;
+}
+
+/* ==========================================================================
+   Unified Wrapper Styles for Split-View Game Viewer Layout
+   Used by: article.html, teams.html, partie.html
+   ========================================================================== */
+
+.gv-split-view {
+    display: grid;
+    grid-template-columns: 220px 1fr;
+    max-height: 600px;
+    /* Constrain height to prevent overflow */
+    overflow: hidden;
+    /* Contain content within bounds */
+    background: rgba(15, 15, 20, 0.95);
+}
+
+.gv-games-panel {
+    display: flex;
+    flex-direction: column;
+    border-right: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(0, 0, 0, 0.3);
+    overflow: hidden;
+    min-height: 0;
+}
+
+.gv-games-panel-title {
+    padding: 1rem 1.25rem;
+    background: rgba(0, 0, 0, 0.4);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.gv-games-panel-title h3 {
+    margin: 0;
+    color: var(--gv-active-color, #d4af37);
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.gv-viewer-panel {
+    display: flex;
+    flex-direction: column;
+    overflow: auto;
+    /* Allow scrolling within the constrained height */
+    min-height: 0;
+}
+
+.gv-viewer-header {
+    padding: 0.75rem 1.25rem;
+    background: rgba(0, 0, 0, 0.4);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.gv-viewer-body {
+    flex: 1;
+    padding: 1rem;
+    overflow: auto;
+    /* Allow scrolling for game content */
+    min-height: 0;
+}
+
+/* Responsive: Mobile-first for split view */
+@media (max-width: 900px) {
+    .gv-split-view {
+        grid-template-columns: 1fr;
+        max-height: none;
+    }
+
+    .gv-games-panel {
+        order: 2;
+        max-height: 180px;
+        border-right: none;
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .gv-viewer-panel {
+        order: 1;
+    }
+}
+
+@media (max-width: 600px) {
+    .gv-games-panel {
+        max-height: 140px;
+    }
 }

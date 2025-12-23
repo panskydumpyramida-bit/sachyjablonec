@@ -1,0 +1,681 @@
+<!DOCTYPE html>
+<html lang="cs">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nastavení účtu - Šachový oddíl TJ Bižuterie Jablonec</title>
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;700&family=Inter:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+    <!-- Styles -->
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="/css/auth.css">
+
+    <style>
+        .account-container {
+            max-width: 600px;
+            margin: 3rem auto;
+            padding: 2rem;
+        }
+
+        .account-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .account-header h1 {
+            color: var(--primary-color);
+            font-family: 'Playfair Display', serif;
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .account-header p {
+            color: var(--text-muted);
+        }
+
+        .account-card {
+            background: var(--card-background, #242444);
+            border: 1px solid rgba(212, 175, 55, 0.2);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .account-card h3 {
+            color: var(--primary-color);
+            margin: 0 0 1rem;
+            font-size: 1.1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .account-field {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .account-field:last-child {
+            border-bottom: none;
+        }
+
+        .account-field-label {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        .account-field-value {
+            color: var(--text-light);
+            font-weight: 500;
+        }
+
+        .account-field-value.muted {
+            color: var(--text-muted);
+            font-style: italic;
+        }
+
+        .account-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 6px;
+            color: var(--text-light);
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .account-btn:hover {
+            border-color: var(--primary-color);
+            color: var(--primary-color);
+        }
+
+        .account-btn-primary {
+            background: var(--primary-color);
+            color: var(--secondary-color);
+            border: none;
+        }
+
+        .account-btn-primary:hover {
+            background: var(--primary-dark);
+            color: var(--secondary-color);
+        }
+
+        .account-btn-sm {
+            padding: 0.35rem 0.75rem;
+            font-size: 0.8rem;
+        }
+
+        .login-required {
+            text-align: center;
+            padding: 3rem;
+        }
+
+        .login-required i {
+            font-size: 3rem;
+            color: var(--text-muted);
+            margin-bottom: 1rem;
+        }
+
+        .login-required h2 {
+            color: var(--text-light);
+            margin-bottom: 0.5rem;
+        }
+
+        .login-required p {
+            color: var(--text-muted);
+            margin-bottom: 1.5rem;
+        }
+
+        .connected-accounts {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .connected-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.4rem 0.75rem;
+            background: rgba(34, 197, 94, 0.1);
+            border: 1px solid rgba(34, 197, 94, 0.3);
+            color: #86efac;
+            border-radius: 20px;
+            font-size: 0.85rem;
+        }
+
+        .connected-badge i {
+            font-size: 1rem;
+        }
+
+        /* Editable field */
+        .editable-field {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .editable-field input {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 6px;
+            padding: 0.4rem 0.75rem;
+            color: var(--text-light);
+            font-size: 0.9rem;
+            width: 180px;
+        }
+
+        .editable-field input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+
+        /* Toggle switch */
+        .toggle-container {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .toggle-switch {
+            position: relative;
+            width: 50px;
+            height: 26px;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(255, 255, 255, 0.1);
+            transition: 0.3s;
+            border-radius: 26px;
+        }
+
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 20px;
+            width: 20px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: 0.3s;
+            border-radius: 50%;
+        }
+
+        .toggle-switch input:checked+.toggle-slider {
+            background-color: var(--primary-color);
+        }
+
+        .toggle-switch input:checked+.toggle-slider:before {
+            transform: translateX(24px);
+        }
+
+        .toggle-label {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .toggle-label.active {
+            color: var(--primary-color);
+        }
+
+        .save-status {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-left: 1rem;
+            font-size: 0.85rem;
+            color: #86efac;
+        }
+
+        .save-status.error {
+            color: #fca5a5;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Header -->
+    <div id="global-header"></div>
+
+    <main>
+        <div class="account-container" id="account-content">
+            <div class="login-required">
+                <i class="fa-solid fa-spinner fa-spin"></i>
+                <p>Načítám...</p>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <div id="global-footer"></div>
+
+    <!-- Scripts -->
+    <script src="/js/config.js"></script>
+    <script src="/js/layout-loader.js"></script>
+    <script src="/js/auth.js"></script>
+
+    <script>
+        let currentUser = null;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            setTimeout(() => {
+                renderAccountPage();
+            }, 600);
+        });
+
+        function renderAccountPage() {
+            const container = document.getElementById('account-content');
+
+            if (!auth.isLoggedIn()) {
+                container.innerHTML = `
+                    <div class="login-required">
+                        <i class="fa-solid fa-user-lock"></i>
+                        <h2>Přihlášení vyžadováno</h2>
+                        <p>Pro přístup k nastavení účtu se prosím přihlaste.</p>
+                        <button class="account-btn account-btn-primary" onclick="auth.showLoginModal()">
+                            <i class="fa-solid fa-sign-in-alt"></i> Přihlásit se
+                        </button>
+                    </div>
+                `;
+                return;
+            }
+
+            currentUser = auth.user;
+            const user = currentUser;
+            const roleLabels = {
+                'USER': 'Registrovaný uživatel',
+                'MEMBER': 'Člen oddílu',
+                'ADMIN': 'Administrátor',
+                'SUPERADMIN': 'Superadministrátor'
+            };
+
+            const hasGoogle = user.googleId ? true : false;
+
+            container.innerHTML = `
+                <div class="account-header">
+                    <h1><i class="fa-solid fa-user-gear"></i> Nastavení účtu</h1>
+                    <p>Spravujte své osobní údaje a nastavení</p>
+                </div>
+                
+                <div class="account-card">
+                    <h3><i class="fa-solid fa-user"></i> Základní údaje</h3>
+                    <div class="account-field">
+                        <span class="account-field-label">Přezdívka</span>
+                        <span class="account-field-value">${escapeHtml(user.username)}</span>
+                    </div>
+                    <div class="account-field">
+                        <span class="account-field-label">Email</span>
+                        <span class="account-field-value">${escapeHtml(user.email)}</span>
+                    </div>
+                    <div class="account-field">
+                        <span class="account-field-label">Role</span>
+                        <span class="account-field-value">${roleLabels[user.role] || user.role}</span>
+                    </div>
+                </div>
+                
+                <div class="account-card">
+                    <h3><i class="fa-solid fa-id-card"></i> Profil</h3>
+                    <div class="account-field">
+                        <span class="account-field-label">Jméno</span>
+                        <div class="editable-field">
+                            <input type="text" id="realName" value="${escapeHtml(user.realName || '')}" placeholder="Vaše jméno">
+                            <button class="account-btn account-btn-sm" onclick="saveProfile()">
+                                <i class="fa-solid fa-save"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="account-field">
+                        <span class="account-field-label">Oddíl</span>
+                        <div class="editable-field">
+                            <input type="text" id="club" value="${escapeHtml(user.club || '')}" placeholder="Název oddílu">
+                            <button class="account-btn account-btn-sm" onclick="saveProfile()">
+                                <i class="fa-solid fa-save"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="account-field">
+                        <span class="account-field-label">Zobrazit v komentářích</span>
+                        <div class="toggle-container">
+                            <span class="toggle-label ${!user.useRealName ? 'active' : ''}">Přezdívka</span>
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="useRealName" ${user.useRealName ? 'checked' : ''} onchange="saveProfile()">
+                                <span class="toggle-slider"></span>
+                            </label>
+                            <span class="toggle-label ${user.useRealName ? 'active' : ''}">Jméno</span>
+                        </div>
+                    </div>
+                    <div id="save-status"></div>
+                </div>
+                
+                <div class="account-card">
+                    <h3><i class="fa-solid fa-link"></i> Propojené účty</h3>
+                    <div class="connected-accounts">
+                        ${hasGoogle ? `
+                            <span class="connected-badge">
+                                <i class="fa-brands fa-google"></i> Google propojeno
+                            </span>
+                        ` : `
+                            <button class="account-btn" onclick="auth.loginWithGoogle()">
+                                <i class="fa-brands fa-google"></i> Propojit s Google
+                            </button>
+                        `}
+                    </div>
+                </div>
+                
+                <div class="account-card">
+                    <h3><i class="fa-solid fa-shield-halved"></i> Zabezpečení</h3>
+                    <div class="account-field">
+                        <span class="account-field-label">Heslo</span>
+                        <button class="account-btn" onclick="showChangePasswordModal()">
+                            <i class="fa-solid fa-key"></i> Změnit heslo
+                        </button>
+                    </div>
+                </div>
+                
+                <div style="text-align: center; margin-top: 2rem;">
+                    <button class="account-btn" onclick="auth.logout()" style="color: #fca5a5; border-color: rgba(239, 68, 68, 0.3);">
+                        <i class="fa-solid fa-sign-out-alt"></i> Odhlásit se
+                    </button>
+                </div>
+            `;
+        }
+
+        async function saveProfile() {
+            const realName = document.getElementById('realName').value.trim();
+            const club = document.getElementById('club').value.trim();
+            const useRealName = document.getElementById('useRealName').checked;
+            const statusDiv = document.getElementById('save-status');
+
+            statusDiv.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Ukládám...';
+            statusDiv.className = 'save-status';
+
+            try {
+                const response = await fetch(`${API_URL}/auth/profile`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        ...auth.getHeaders()
+                    },
+                    body: JSON.stringify({ realName, club, useRealName })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    // Update local user data
+                    auth.user = { ...auth.user, ...data.user };
+                    currentUser = auth.user;
+
+                    // Update toggle labels
+                    document.querySelectorAll('.toggle-label').forEach((label, i) => {
+                        label.classList.toggle('active', i === (useRealName ? 1 : 0));
+                    });
+
+                    statusDiv.innerHTML = '<i class="fa-solid fa-check"></i> Uloženo';
+                    setTimeout(() => { statusDiv.innerHTML = ''; }, 2000);
+                } else {
+                    throw new Error(data.error || 'Nepodařilo se uložit');
+                }
+            } catch (error) {
+                statusDiv.innerHTML = '<i class="fa-solid fa-exclamation-triangle"></i> ' + error.message;
+                statusDiv.className = 'save-status error';
+            }
+        }
+
+        function showChangePasswordModal() {
+            // Check if user is OAuth-only (no password set)
+            if (currentUser?.googleId && !currentUser?.passwordHash) {
+                alert('Tento účet používá přihlášení přes Google a nemá nastavené heslo.');
+                return;
+            }
+
+            // Create modal
+            const modal = document.createElement('div');
+            modal.id = 'change-password-modal';
+            modal.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background: rgba(0, 0, 0, 0.7);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                z-index: 1000;
+            `;
+
+            modal.innerHTML = `
+                <div style="
+                    background: var(--card-background, #242444);
+                    border: 1px solid rgba(212, 175, 55, 0.3);
+                    border-radius: 12px;
+                    padding: 2rem;
+                    width: 100%;
+                    max-width: 400px;
+                    margin: 1rem;
+                ">
+                    <h3 style="color: var(--primary-color); margin: 0 0 1.5rem; font-size: 1.2rem;">
+                        <i class="fa-solid fa-key"></i> Změnit heslo
+                    </h3>
+                    
+                    <div id="password-error" style="
+                        display: none;
+                        background: rgba(239, 68, 68, 0.1);
+                        border: 1px solid rgba(239, 68, 68, 0.3);
+                        color: #fca5a5;
+                        padding: 0.75rem;
+                        border-radius: 6px;
+                        margin-bottom: 1rem;
+                        font-size: 0.9rem;
+                    "></div>
+                    
+                    <div style="margin-bottom: 1rem;">
+                        <label style="display: block; color: var(--text-muted); font-size: 0.85rem; margin-bottom: 0.5rem;">
+                            Současné heslo
+                        </label>
+                        <input type="password" id="currentPassword" style="
+                            width: 100%;
+                            box-sizing: border-box;
+                            background: rgba(255, 255, 255, 0.05);
+                            border: 1px solid rgba(255, 255, 255, 0.15);
+                            border-radius: 6px;
+                            padding: 0.75rem;
+                            color: var(--text-light);
+                            font-size: 0.95rem;
+                        " placeholder="Zadejte současné heslo">
+                    </div>
+                    
+                    <div style="margin-bottom: 1rem;">
+                        <label style="display: block; color: var(--text-muted); font-size: 0.85rem; margin-bottom: 0.5rem;">
+                            Nové heslo
+                        </label>
+                        <input type="password" id="newPassword" style="
+                            width: 100%;
+                            box-sizing: border-box;
+                            background: rgba(255, 255, 255, 0.05);
+                            border: 1px solid rgba(255, 255, 255, 0.15);
+                            border-radius: 6px;
+                            padding: 0.75rem;
+                            color: var(--text-light);
+                            font-size: 0.95rem;
+                        " placeholder="Minimálně 6 znaků">
+                    </div>
+                    
+                    <div style="margin-bottom: 1.5rem;">
+                        <label style="display: block; color: var(--text-muted); font-size: 0.85rem; margin-bottom: 0.5rem;">
+                            Potvrdit nové heslo
+                        </label>
+                        <input type="password" id="confirmPassword" style="
+                            width: 100%;
+                            box-sizing: border-box;
+                            background: rgba(255, 255, 255, 0.05);
+                            border: 1px solid rgba(255, 255, 255, 0.15);
+                            border-radius: 6px;
+                            padding: 0.75rem;
+                            color: var(--text-light);
+                            font-size: 0.95rem;
+                        " placeholder="Zopakujte nové heslo">
+                    </div>
+                    
+                    <div style="display: flex; gap: 1rem; justify-content: flex-end;">
+                        <button onclick="closePasswordModal()" style="
+                            padding: 0.6rem 1.2rem;
+                            background: transparent;
+                            border: 1px solid rgba(255, 255, 255, 0.2);
+                            border-radius: 6px;
+                            color: var(--text-light);
+                            cursor: pointer;
+                            font-size: 0.9rem;
+                        ">Zrušit</button>
+                        <button onclick="changePassword()" id="change-password-btn" style="
+                            padding: 0.6rem 1.2rem;
+                            background: var(--primary-color);
+                            border: none;
+                            border-radius: 6px;
+                            color: var(--secondary-color);
+                            cursor: pointer;
+                            font-size: 0.9rem;
+                            font-weight: 500;
+                        ">Změnit heslo</button>
+                    </div>
+                </div>
+            `;
+
+            document.body.appendChild(modal);
+
+            // Focus on first input
+            setTimeout(() => document.getElementById('currentPassword').focus(), 100);
+
+            // Close on background click
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) closePasswordModal();
+            });
+
+            // Close on Escape
+            document.addEventListener('keydown', handleEscapeKey);
+        }
+
+        function handleEscapeKey(e) {
+            if (e.key === 'Escape') closePasswordModal();
+        }
+
+        function closePasswordModal() {
+            const modal = document.getElementById('change-password-modal');
+            if (modal) {
+                modal.remove();
+                document.removeEventListener('keydown', handleEscapeKey);
+            }
+        }
+
+        async function changePassword() {
+            const currentPassword = document.getElementById('currentPassword').value;
+            const newPassword = document.getElementById('newPassword').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            const errorDiv = document.getElementById('password-error');
+            const btn = document.getElementById('change-password-btn');
+
+            // Validation
+            if (!currentPassword || !newPassword || !confirmPassword) {
+                errorDiv.textContent = 'Všechna pole jsou povinná';
+                errorDiv.style.display = 'block';
+                return;
+            }
+
+            if (newPassword.length < 6) {
+                errorDiv.textContent = 'Nové heslo musí mít alespoň 6 znaků';
+                errorDiv.style.display = 'block';
+                return;
+            }
+
+            if (newPassword !== confirmPassword) {
+                errorDiv.textContent = 'Nová hesla se neshodují';
+                errorDiv.style.display = 'block';
+                return;
+            }
+
+            // Disable button
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Měním...';
+            errorDiv.style.display = 'none';
+
+            try {
+                const response = await fetch(`${API_URL}/auth/change-password`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        ...auth.getHeaders()
+                    },
+                    body: JSON.stringify({ currentPassword, newPassword })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    closePasswordModal();
+                    // Show success message
+                    const statusDiv = document.getElementById('save-status');
+                    if (statusDiv) {
+                        statusDiv.innerHTML = '<i class="fa-solid fa-check"></i> Heslo bylo změněno';
+                        statusDiv.className = 'save-status';
+                        setTimeout(() => { statusDiv.innerHTML = ''; }, 3000);
+                    } else {
+                        alert('Heslo bylo úspěšně změněno');
+                    }
+                } else {
+                    errorDiv.textContent = data.error || 'Nepodařilo se změnit heslo';
+                    errorDiv.style.display = 'block';
+                    btn.disabled = false;
+                    btn.textContent = 'Změnit heslo';
+                }
+            } catch (error) {
+                errorDiv.textContent = 'Chyba sítě. Zkuste to prosím znovu.';
+                errorDiv.style.display = 'block';
+                btn.disabled = false;
+                btn.textContent = 'Změnit heslo';
+            }
+        }
+
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Listen for auth changes
+        if (typeof auth !== 'undefined') {
+            auth.onChange(() => renderAccountPage());
+        }
+    </script>
+</body>
+
+</html>

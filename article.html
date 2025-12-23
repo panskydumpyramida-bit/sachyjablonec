@@ -12,6 +12,8 @@
         rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/auth.css">
+    <link rel="stylesheet" href="css/comments.css">
     <link rel="stylesheet" href="css/game-viewer2.css">
     <link rel="stylesheet" href="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.css"
         integrity="sha384-q94+BZtLrkL1/ohfjR8c6L+A6qzNH9R2hBLwyoAfu3i/WCvQjzL2RQJ3uNHDISdU" crossorigin="anonymous">
@@ -40,49 +42,12 @@
         }
 
         /* Split-view responsive for game viewer */
-        .gv-split-view {
-            display: grid;
-            grid-template-columns: 220px 1fr;
-            gap: 0;
-            min-height: 500px;
-        }
-
-        .gv-games-panel {
-            background: rgba(0, 0, 0, 0.3);
-            border-right: 1px solid rgba(255, 255, 255, 0.1);
-            display: flex;
-            flex-direction: column;
-        }
-
-        .gv-viewer-panel {
-            display: flex;
-            flex-direction: column;
-        }
-
-        @media (max-width: 900px) {
-            .gv-split-view {
-                grid-template-columns: 1fr;
-                min-height: auto;
-            }
-
-            .gv-games-panel {
-                order: 2;
-                /* Games list moves BELOW viewer */
-                max-height: 200px;
-                border-right: none;
-                border-top: 1px solid rgba(255, 255, 255, 0.1);
-            }
-
-            .gv-viewer-panel {
-                order: 1;
-                /* Viewer first on mobile */
-            }
-        }
-
-        @media (max-width: 600px) {
-            .gv-games-panel {
-                max-height: 150px;
-            }
+        /* Article-specific game list styling */
+        #article-games-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 0.5rem;
+            min-height: 0;
         }
     </style>
     <link rel="icon" type="image/png" href="images/favicon.png">
@@ -128,45 +93,10 @@
 
 
 
-                <!-- Game Viewer Section - Split View Layout -->
+                <!-- Game Viewer Section - Created by GameViewer2.create() -->
                 <div id="game-viewer-section" class="hidden"
                     style="margin-top: 3rem; border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; overflow: hidden;">
-                    <!-- Split View Container -->
-                    <div class="gv-split-view">
-                        <!-- Games List Panel (Left) -->
-                        <div class="gv-games-panel">
-                            <div
-                                style="padding: 1rem 1.25rem; background: rgba(0,0,0,0.4); border-bottom: 1px solid rgba(255,255,255,0.1);">
-                                <h3
-                                    style="margin: 0; color: var(--primary-color); font-size: 1rem; display: flex; align-items: center; gap: 0.5rem;">
-                                    <i class="fa-solid fa-chess-board"></i> Partie z článku
-                                </h3>
-                            </div>
-                            <div id="article-games-list" style="flex: 1; overflow-y: auto; padding: 0.5rem;"></div>
-                        </div>
-
-                        <!-- Viewer Panel (Right) -->
-                        <div class="gv-viewer-panel">
-                            <div
-                                style="padding: 0.75rem 1.25rem; background: rgba(0,0,0,0.4); border-bottom: 1px solid rgba(255,255,255,0.1);">
-                                <span
-                                    style="color: var(--primary-color); font-weight: 600; display: flex; align-items: center; gap: 0.5rem;">
-                                    <i class="fa-solid fa-play-circle"></i> Přehrávač
-                                </span>
-                            </div>
-                            <div style="flex: 1; padding: 1rem;">
-                                <!-- GameViewer2 Wrapper -->
-                                <div id="game-viewer-wrapper" class="game-viewer">
-                                    <!-- Iframe for Chess.com fallback -->
-                                    <div class="iframe-container" style="display:none;">
-                                        <iframe id="chess-frame" src="" frameborder="0" allowtransparency="true"
-                                            style="width:100%;height:480px;border:none;border-radius:8px;"></iframe>
-                                    </div>
-                                    <!-- GameViewer2 will inject its DOM here -->
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                    <!-- GameViewer2.create() will inject the entire structure here -->
                 </div>
 
 
@@ -177,6 +107,9 @@
                         Fotogalerie</h2>
                     <div id="galleryGrid" class="article-gallery"></div>
                 </div>
+
+                <!-- Comments Section -->
+                <div id="comments-section" data-news-id=""></div>
             </article>
 
             <div id="error" class="hidden" style="text-align: center; padding: 4rem;">
@@ -255,6 +188,14 @@
             document.getElementById('articleCategory').innerHTML = `<i class="fa-solid fa-tag"></i> ${article.category}`;
             document.getElementById('articleBody').innerHTML = article.content || '';
 
+            // Set newsId for comments section
+            document.getElementById('comments-section').dataset.newsId = article.id;
+
+            // Initialize comments (after newsId is set)
+            if (typeof CommentsManager !== 'undefined') {
+                commentsManager = new CommentsManager(article.id);
+            }
+
             // Handle Games
             if (article.gamesJson && article.gamesJson !== '[]' && article.gamesJson !== 'null') {
                 try {
@@ -269,60 +210,36 @@
                     }
 
                     if (games && games.length > 0) {
-                        // Show the game section
-                        const gameSection = document.getElementById('game-viewer-section');
-                        if (gameSection) gameSection.classList.remove('hidden');
+                        // Format games for GameViewer2
+                        const formattedGames = games.map((g, index) => {
+                            const pgnHeaders = parsePgnHeaders(g.pgn);
+                            const white = g.white || g.whitePlayer || pgnHeaders.White || 'Bílý';
+                            const black = g.black || g.blackPlayer || pgnHeaders.Black || 'Černý';
 
-                        // Store games globally for click handlers
-                        window.articleGames = games;
-                        window.articleSelectedGame = -1;
+                            return {
+                                id: g.id || index,
+                                white: white,
+                                black: black,
+                                result: g.result || pgnHeaders.Result || '*',
+                                pgn: g.pgn,
+                                date: g.date || pgnHeaders.Date || '',
+                                event: g.event || g.tournament || pgnHeaders.Event || '',
+                                round: g.round || pgnHeaders.Round || '',
+                                title: g.title || `${white} - ${black}`,
+                                chessComId: g.chessComId || g.gameId
+                            };
+                        });
 
-                        // Render game list
-                        renderArticleGameList(games);
-
-                        // Auto-load first game (deferred to ensure all functions are defined)
-                        setTimeout(() => {
-                            if (window.selectArticleGame) {
-                                window.selectArticleGame(0);
-                            }
-                        }, 100);
+                        // Use the self-contained plugin - creates everything!
+                        GameViewer2.create('#game-viewer-section', formattedGames, {
+                            title: 'Partie z článku',
+                            maxHeight: 600
+                        });
                     }
                 } catch (e) {
                     console.error('Error initializing games:', e);
                     console.log('No games data');
                 }
-            }
-
-            function renderArticleGameList(games) {
-                const listEl = document.getElementById('article-games-list');
-                if (!listEl) return;
-
-                listEl.innerHTML = games.map((g, i) => {
-                    // Parse PGN headers for player names
-                    const headers = {};
-                    if (g.pgn) {
-                        const regex = /\[(\w+)\s+"([^"]+)"\]/g;
-                        let match;
-                        while ((match = regex.exec(g.pgn)) !== null) {
-                            headers[match[1]] = match[2];
-                        }
-                    }
-                    const white = g.white || g.whitePlayer || headers.White || '?';
-                    const black = g.black || g.blackPlayer || headers.Black || '?';
-                    const result = g.result || headers.Result || '*';
-
-                    return `
-                    <div class="game-card ${window.articleSelectedGame === i ? 'active' : ''}" onclick="selectArticleGame(${i})"
-                         style="display: flex; align-items: center; gap: 0.5rem; padding: 0.4rem 0.6rem; margin-bottom: 0.25rem;
-                                border-radius: 6px; cursor: pointer; transition: all 0.15s;
-                                border-left: 2px solid ${window.articleSelectedGame === i ? 'var(--primary-color)' : 'transparent'};
-                                background: ${window.articleSelectedGame === i ? 'rgba(212,175,55,0.15)' : 'rgba(255,255,255,0.02)'};">
-                        <span style="font-size: 0.8rem; color: var(--text-color); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-                            ${escapeHtml(white)} - ${escapeHtml(black)}
-                        </span>
-                        <span style="color: #10b981; font-weight: 700; font-size: 0.75rem; flex-shrink: 0;">${result}</span>
-                    </div>
-                `}).join('');
             }
 
             // Parse PGN headers for player names and other metadata
@@ -335,43 +252,6 @@
                     headers[match[1]] = match[2];
                 }
                 return headers;
-            }
-
-            window.selectArticleGame = function (index) {
-                if (!window.articleGames || index < 0 || index >= window.articleGames.length) return;
-
-                window.articleSelectedGame = index;
-                renderArticleGameList(window.articleGames);
-
-                const g = window.articleGames[index];
-
-                // Parse PGN headers to get player names if not in data
-                const pgnHeaders = parsePgnHeaders(g.pgn);
-
-                // Format game data with title - prefer explicit data, then PGN headers, then fallback
-                const white = g.white || g.whitePlayer || pgnHeaders.White || 'Bílý';
-                const black = g.black || g.blackPlayer || pgnHeaders.Black || 'Černý';
-
-                const gameData = {
-                    id: g.id || index,
-                    white: white,
-                    black: black,
-                    result: g.result || pgnHeaders.Result || '*',
-                    pgn: g.pgn,
-                    date: g.date || pgnHeaders.Date || '',
-                    event: g.event || g.tournament || pgnHeaders.Event || '',
-                    round: g.round || pgnHeaders.Round || '',
-                    title: `${white} - ${black}`,
-                    chessComId: g.chessComId || g.gameId
-                };
-
-                // Initialize GameViewer2 if not already done
-                if (!window.gameViewer2) {
-                    window.gameViewer2 = new GameViewer2();
-                }
-
-                window.gameViewer2.init([gameData]);
-                window.gameViewer2.loadGame(0);
             }
 
             function escapeHtml(s) {
@@ -448,7 +328,47 @@
             @keyframes spin { to { transform: rotate(360deg); } }
         `;
         document.head.appendChild(style);
+
+        // Keyboard navigation for games (Arrow Up/Down only - Left/Right is for moves)
+        document.addEventListener('keydown', function (e) {
+            // Only if we have games loaded
+            if (!window.articleGames || window.articleGames.length === 0) return;
+
+            // Don't interfere with input fields
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+
+            const currentIndex = window.articleSelectedGame || 0;
+            const totalGames = window.articleGames.length;
+
+            // Only Up/Down for game switching (Left/Right handled by GameViewer2 for moves)
+            if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                const newIndex = currentIndex > 0 ? currentIndex - 1 : totalGames - 1;
+                selectArticleGame(newIndex);
+                scrollToActiveGame();
+            } else if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                const newIndex = currentIndex < totalGames - 1 ? currentIndex + 1 : 0;
+                selectArticleGame(newIndex);
+                scrollToActiveGame();
+            }
+        });
+
+        // Scroll to make active game visible in the list
+        function scrollToActiveGame() {
+            // Small delay to wait for DOM update
+            setTimeout(() => {
+                const listEl = document.getElementById('article-games-list');
+                const currentIndex = window.articleSelectedGame || 0;
+                const activeCard = listEl?.querySelector(`[data-game-index="${currentIndex}"]`);
+                if (activeCard && listEl) {
+                    activeCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                }
+            }, 50);
+        }
     </script>
+    <script src="js/auth.js" defer></script>
+    <script src="js/comments.js" defer></script>
 </body>
 
 </html>

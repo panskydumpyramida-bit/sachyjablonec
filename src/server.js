@@ -20,6 +20,9 @@ import racerRoutes from './routes/racer.js';
 import gamesRoutes from './routes/games.js';
 import apiGamesRoutes from './routes/api-games.js';
 import scrapingRoutes from './routes/scraping.js';
+import commentsRoutes from './routes/comments.js';
+import oauthRoutes from './routes/oauth.js';
+import passport from './config/passport.js';
 import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
@@ -143,6 +146,9 @@ app.get('/about.html', servePage('about.html'));
 app.get('/members', servePage('members.html'));
 app.get('/members.html', servePage('members.html'));
 
+app.get('/account', servePage('account.html'));
+app.get('/account.html', servePage('account.html'));
+
 app.get('/blicak', servePage('blicak.html'));
 app.get('/blicak.html', servePage('blicak.html'));
 
@@ -171,8 +177,12 @@ app.get('/article.html', servePage('article.html'));
 app.get('/index', servePage('index.html'));
 app.get('/index.html', servePage('index.html'));
 
+// Initialize Passport for OAuth
+app.use(passport.initialize());
+
 // API Routes - MUST be before static catch-all
 app.use('/api/auth', authRoutes);
+app.use('/api/auth', oauthRoutes);  // OAuth routes (Google login)
 app.use('/api/news', newsRoutes);
 app.use('/api/reports', reportsRoutes);
 app.use('/api/images', imagesRoutes);
@@ -183,6 +193,7 @@ app.use('/api/racer', racerRoutes);
 app.use('/api/games', gamesRoutes);
 app.use('/api/viewer-games', apiGamesRoutes);
 app.use('/api/scraping', scrapingRoutes);
+app.use('/api/comments', commentsRoutes);
 
 // Import helpers from utils
 import { clean, isElo, simplify, isMatch, fetchWithHeaders } from './utils/helpers.js';

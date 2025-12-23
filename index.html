@@ -18,6 +18,7 @@
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     </noscript>
     <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/auth.css">
     <link rel="icon" type="image/png" href="images/favicon.png">
     <link rel="preconnect" href="https://cdnjs.cloudflare.com">
     <link rel="preload" as="image" href="images/hero-mobile.webp" media="(max-width: 767px)" fetchpriority="high">
@@ -28,8 +29,20 @@
     <header id="global-header"></header>
 
     <main>
-        <section class="hero">
+        <section class="hero" style="position: relative;">
+            <!-- A/B Test: Top Widget Location (Overlay) -->
+            <div id="latest-comment-widget-top" class="container hidden" style="
+                position: absolute; 
+                top: 40px; 
+                left: 0; 
+                right: 0; 
+                z-index: 10; 
+                width: 100%; 
+                pointer-events: none; /* Let clicks pass through container but not children */
+            "></div>
+
             <div class="container hero-content">
+
                 <h1><a href="/about" style="text-decoration: none; color: inherit;">Šachový oddíl TJ Bižuterie
                         Jablonec</a></h1>
                 <p>Tradice, vášeň, strategie. Vítejte na našem novém webu.</p>
@@ -90,6 +103,11 @@
             </div>
         </section>
 
+        </section>
+
+        <!-- Latest Comment Widget Container -->
+        <div id="latest-comment-widget" class="container hidden" style="margin-bottom: 2rem;"></div>
+
         <section id="news" class="container">
             <h2 class="section-title">Novinky</h2>
             <div class="card-grid" id="newsGrid" data-news-limit="6">
@@ -98,12 +116,150 @@
         </section>
     </main>
 
+    <style>
+        .latest-comment-card {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            background: rgba(36, 36, 68, 0.9);
+            border: 1px solid rgba(212, 175, 55, 0.3);
+            border-radius: 50px;
+            padding: 0.6rem 1.5rem;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            max-width: 900px;
+            margin: 0 auto;
+            backdrop-filter: blur(5px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            color: #fff;
+            white-space: nowrap;
+            overflow: hidden;
+            font-size: 0.9rem;
+            line-height: 1.2;
+            pointer-events: auto;
+            /* Re-enable clicks */
+        }
+
+        .latest-comment-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(212, 175, 55, 0.15);
+            border-color: rgba(212, 175, 55, 0.6);
+        }
+
+        .lc-badge-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            flex-shrink: 0;
+            color: var(--primary-color);
+            font-weight: 700;
+            text-transform: uppercase;
+            font-size: 0.8rem;
+        }
+
+        .lc-time-inline {
+            color: var(--text-muted);
+            font-weight: 400;
+            text-transform: none;
+        }
+
+        .lc-separator {
+            width: 1px;
+            height: 1.2em;
+            background: rgba(255, 255, 255, 0.2);
+            flex-shrink: 0;
+        }
+
+        .lc-content-inline {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            min-width: 0;
+            /* Enable truncation in flex item */
+        }
+
+        .lc-author {
+            font-weight: 700;
+            color: #fff;
+            flex-shrink: 0;
+        }
+
+        .lc-text {
+            color: #d1d5db;
+            font-style: italic;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .lc-meta-inline {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            flex-shrink: 0;
+        }
+
+        .lc-article-title {
+            max-width: 200px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .lc-time {
+            white-space: nowrap;
+        }
+
+        @media (max-width: 768px) {
+            .latest-comment-card {
+                flex-direction: column;
+                border-radius: 12px;
+                align-items: flex-start;
+                gap: 0.5rem;
+                padding: 1rem;
+                white-space: normal;
+                line-height: 1.4;
+            }
+
+            .lc-separator {
+                display: none;
+            }
+
+            .desktop-only {
+                display: none;
+            }
+
+            .lc-content-inline {
+                flex-wrap: wrap;
+                width: 100%;
+            }
+
+            .lc-meta-inline {
+                width: 100%;
+                justify-content: flex-end;
+                border-top: 1px solid rgba(255, 255, 255, 0.1);
+                padding-top: 0.5rem;
+                margin-top: 0.2rem;
+            }
+
+            .lc-article-title {
+                max-width: none;
+            }
+        }
+    </style>
+
+    <script src="js/latest-comment.js" defer></script>
+
     <footer id="global-footer"></footer>
 
     <script src="js/config.js?v=2" defer></script>
     <script src="js/layout-loader.js?v=2" defer></script>
     <script src="js/main.js?v=2" defer></script>
     <script src="js/news-loader.js?v=2" defer></script>
+    <script src="js/auth.js" defer></script>
 </body>
 
 </html>

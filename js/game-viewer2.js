@@ -120,6 +120,7 @@ class GameViewer2 {
             container = document.createElement('div');
             container.id = 'gv2-main-container';
             container.className = 'game-viewer-2-container hidden';
+            container.tabIndex = -1; // Make focusable for keyboard events
 
             // New Layout Structure
             container.innerHTML = `
@@ -181,8 +182,9 @@ class GameViewer2 {
                         position: 'start',
                         draggable: false,
                         pieceTheme: 'https://chessboardjs.com/img/chesspieces/wikipedia/{piece}.png',
-                        moveSpeed: 300,
-                        appearSpeed: 200
+                        moveSpeed: 200,
+                        appearSpeed: 150,
+                        snapSpeed: 75
                     });
                     console.log('[GV2 Init] Chessboard instance created:', this.board);
                 } catch (e) {
@@ -269,7 +271,11 @@ class GameViewer2 {
                 triggerResize();
                 // Double check after a small delay for DOM reflows
                 setTimeout(triggerResize, 50);
-                setTimeout(triggerResize, 200);
+                setTimeout(() => {
+                    triggerResize();
+                    // Focus container for immediate keyboard control
+                    if (gv2Container) gv2Container.focus();
+                }, 200);
             });
 
         } else {
@@ -939,14 +945,36 @@ class GameViewer2 {
             } else {
                 const item = document.createElement('div');
                 item.className = 'game-item';
-                item.innerHTML = `<span>${game.title}</span>`;
-                if (game.pgn) item.innerHTML += '<i class="fa-solid fa-chess-board" style="opacity:0.5; font-size:0.8em; margin-left:auto;"></i>';
+                if (index === this.currentIndex) item.classList.add('active');
 
+                // Build title with result (hide * and ?)
+                let titleHtml = `<span>${this.escapeHtml(game.title || 'Partie')}</span>`;
+                const result = game.result || '';
+                if (result && result !== '*' && result !== '?' && result.trim()) {
+                    titleHtml += `<span class="game-result">${result}</span>`;
+                }
+                if (game.pgn) {
+                    titleHtml += '<i class="fa-solid fa-chess-board" style="opacity:0.5; font-size:0.8em; margin-left:auto;"></i>';
+                }
+
+                item.innerHTML = titleHtml;
                 item.dataset.index = index;
                 item.onclick = () => this.loadGame(index);
                 list.appendChild(item);
             }
         });
+    }
+
+    // Scroll active game item into view
+    scrollToActiveGame() {
+        const list = document.getElementById('game-list-content');
+        if (!list) return;
+        const activeItem = list.querySelector('.game-item.active');
+        if (activeItem) {
+            setTimeout(() => {
+                activeItem.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }, 50);
+        }
     }
 
     handleKeydown(e) {
@@ -972,7 +1000,11 @@ class GameViewer2 {
         while (newIndex >= 0 && (this.gamesData[newIndex].type === 'header' || this.gamesData[newIndex].isHeader)) {
             newIndex--;
         }
-        if (newIndex >= 0) this.loadGame(newIndex);
+        if (newIndex >= 0) {
+            this.loadGame(newIndex);
+            this.renderList();
+            this.scrollToActiveGame();
+        }
     }
 
     nextGame() {
@@ -980,7 +1012,11 @@ class GameViewer2 {
         while (newIndex < this.gamesData.length && (this.gamesData[newIndex].type === 'header' || this.gamesData[newIndex].isHeader)) {
             newIndex++;
         }
-        if (newIndex < this.gamesData.length) this.loadGame(newIndex);
+        if (newIndex < this.gamesData.length) {
+            this.loadGame(newIndex);
+            this.renderList();
+            this.scrollToActiveGame();
+        }
     }
     updateCommentBubble() {
         const overlay = document.querySelector('.gv2-board-overlay');
@@ -1350,4 +1386,138 @@ window.debugBubble = function () {
     };
 
     console.log('Bubble debug mode AKTIVNÍ - taháním myší umísti bublinu, pozice bude v konzoli');
+};
+
+/**
+ * Self-Contained Game Viewer Factory
+ * Creates the entire split-view structure with games list and viewer panel
+ * 
+ * Usage:
+ *   GameViewer2.create('#container', gamesArray, { title: 'Partie', maxHeight: 600 });
+ */
+GameViewer2.create = function (containerSelector, games, options = {}) {
+    const targetContainer = document.querySelector(containerSelector);
+    if (!targetContainer) {
+        console.error('[GameViewer2.create] Container not found:', containerSelector);
+        return null;
+    }
+
+    const title = options.title || 'Partie';
+    const maxHeight = options.maxHeight || 600;
+    const listId = options.listId || 'gv2-games-list';
+
+    // Create the complete split-view structure
+    targetContainer.innerHTML = `
+        <div class="gv-split-view" style="max-height: ${maxHeight}px;">
+            <!-- Games List Panel (Left) -->
+            <div class="gv-games-panel">
+                <div style="padding: 1rem 1.25rem; background: rgba(0,0,0,0.4); border-bottom: 1px solid rgba(255,255,255,0.1);">
+                    <h3 style="margin: 0; color: var(--primary-color); font-size: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+                        <i class="fa-solid fa-chess-board"></i> ${title}
+                    </h3>
+                </div>
+                <div id="${listId}" style="flex: 1; overflow-y: auto; padding: 0.5rem;"></div>
+            </div>
+
+            <!-- Viewer Panel (Right) -->
+            <div class="gv-viewer-panel">
+                <div style="flex: 1; padding: 1rem;">
+                    <!-- GameViewer2 Wrapper - the class will inject here -->
+                    <div id="game-viewer-wrapper" class="game-viewer">
+                        <!-- Iframe for Chess.com fallback -->
+                        <div class="iframe-container" style="display:none;">
+                            <iframe id="chess-frame" src="" frameborder="0" allowtransparency="true"
+                                style="width:100%;height:480px;border:none;border-radius:8px;"></iframe>
+                        </div>
+                        <!-- GameViewer2 main container will be injected here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+
+    // Show the container
+    targetContainer.classList.remove('hidden');
+    targetContainer.style.display = 'block';
+
+    // Initialize the viewer with games
+    if (games && games.length > 0) {
+        // Use setTimeout to ensure DOM is ready
+        setTimeout(() => {
+            gameViewer2.init(games);
+
+            // Override the list container to use our custom ID
+            const listContainer = document.getElementById(listId);
+            if (listContainer) {
+                gameViewer2.renderListToElement(listContainer);
+            }
+        }, 50);
+    }
+
+    return gameViewer2;
+};
+
+/**
+ * Render games list to a specific element (for split-view layout)
+ */
+GameViewer2.prototype.renderListToElement = function (listElement) {
+    if (!listElement) return;
+    listElement.innerHTML = '';
+
+    this.gamesData.forEach((game, index) => {
+        if (game.type === 'header' || game.isHeader) {
+            const header = document.createElement('div');
+            header.className = 'team-header';
+            header.textContent = game.title || game.name || 'Skupina';
+            listElement.appendChild(header);
+        } else {
+            const item = document.createElement('div');
+            item.className = 'game-item';
+            if (index === this.currentIndex) item.classList.add('active');
+
+            // Build clean title (player names without asterisks)
+            let displayTitle = game.title || 'Partie';
+            // Remove any asterisks from title
+            displayTitle = displayTitle.replace(/\*/g, '').trim();
+
+            let titleHtml = `<span>${this.escapeHtml(displayTitle)}</span>`;
+            const result = game.result || '';
+            if (result && result !== '*' && result !== '?' && result.trim()) {
+                titleHtml += `<span class="game-result">${result}</span>`;
+            }
+            if (game.pgn) {
+                titleHtml += '<i class="fa-solid fa-chess-board" style="opacity:0.5; font-size:0.8em; margin-left:auto;"></i>';
+            }
+
+            item.innerHTML = titleHtml;
+            item.dataset.index = index;
+            item.onclick = () => this.loadGame(index);
+            listElement.appendChild(item);
+        }
+    });
+
+    // Store reference for updating active state
+    this.externalListElement = listElement;
+};
+
+/**
+ * Update active state in external list (for split-view)
+ */
+const originalLoadGame = GameViewer2.prototype.loadGame;
+GameViewer2.prototype.loadGame = function (index) {
+    // Call original
+    originalLoadGame.call(this, index);
+
+    // Update external list if present and scroll into view
+    if (this.externalListElement) {
+        this.externalListElement.querySelectorAll('.game-item').forEach((item) => {
+            const isActive = parseInt(item.dataset.index) === index;
+            item.classList.toggle('active', isActive);
+
+            // Scroll active item into view
+            if (isActive) {
+                item.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }
+        });
+    }
 };

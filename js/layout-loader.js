@@ -11,6 +11,19 @@ async function loadComponent(id, file) {
             if (file === 'header.html') {
                 setActiveLink();
                 initMobileMenu(); // Re-init mobile menu after loading header
+
+                // Inject auth.css if not already present
+                if (!document.querySelector('link[href*="auth.css"]')) {
+                    const authCss = document.createElement('link');
+                    authCss.rel = 'stylesheet';
+                    authCss.href = '/css/auth.css';
+                    document.head.appendChild(authCss);
+                }
+
+                // Initialize auth UI after header is loaded
+                if (typeof auth !== 'undefined' && auth.updateUI) {
+                    auth.updateUI();
+                }
             }
         }
     } catch (e) {
@@ -76,6 +89,24 @@ function initMobileMenu() {
 document.addEventListener('DOMContentLoaded', () => {
     loadComponent('global-header', 'header.html');
     loadComponent('global-footer', 'footer.html');
+
+    // Dynamically load auth scripts if not already loaded
+    if (typeof API_URL === 'undefined') {
+        const configScript = document.createElement('script');
+        configScript.src = '/js/config.js';
+        configScript.onload = () => {
+            if (typeof auth === 'undefined') {
+                const authScript = document.createElement('script');
+                authScript.src = '/js/auth.js';
+                document.head.appendChild(authScript);
+            }
+        };
+        document.head.appendChild(configScript);
+    } else if (typeof auth === 'undefined') {
+        const authScript = document.createElement('script');
+        authScript.src = '/js/auth.js';
+        document.head.appendChild(authScript);
+    }
 
     // Google Analytics
     const gaId = 'G-GMHL4VL852';

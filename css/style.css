@@ -1060,3 +1060,17 @@ footer {
     opacity: 1;
     transform: translateY(0);
 }
+
+/* ===========================================
+   Chessboard.js Animation Fix
+   =========================================== 
+   The chessboard.js library (v1.0.0) requires pieces to be position:absolute
+   for animations (jQuery's animate() on top/left) to work. The default
+   chessboard CSS omits this rule, causing pieces to teleport instead of slide.
+*/
+.piece-417db,
+.board-b72b1 .piece-417db,
+#board .piece-417db,
+#gv2-board .piece-417db {
+    position: absolute !important;
+}
