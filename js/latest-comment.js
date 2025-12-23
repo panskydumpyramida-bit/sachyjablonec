@@ -5,14 +5,8 @@
 
 class LatestCommentWidget {
     constructor() {
-        // Always use bottom container (under hero image) - A/B test showed this is better
-        const bottomContainer = document.getElementById('latest-comment-widget');
-        const topContainer = document.getElementById('latest-comment-widget-top');
-
-        // Hide top container if exists, use bottom
-        if (topContainer) topContainer.style.display = 'none';
-
-        this.container = bottomContainer;
+        // Always use bottom container (under hero image)
+        this.container = document.getElementById('latest-comment-widget');
 
         if (this.container) {
             this.load();
