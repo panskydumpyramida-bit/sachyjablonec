@@ -16,7 +16,7 @@ async function loadComponent(id, file) {
                 if (!document.querySelector('link[href*="auth.css"]')) {
                     const authCss = document.createElement('link');
                     authCss.rel = 'stylesheet';
-                    authCss.href = '/css/auth.css';
+                    authCss.href = '/css/auth.css?v=4';
                     document.head.appendChild(authCss);
                 }
 

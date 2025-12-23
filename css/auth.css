@@ -425,28 +425,29 @@
 /* Responsive */
 @media (max-width: 768px) {
     #auth-container {
-        display: flex;
+        display: flex !important;
         gap: 0.35rem;
         flex-shrink: 0;
     }
 
     .auth-btn {
-        padding: 0.5rem;
-        font-size: 1rem;
-        min-width: 38px;
-        min-height: 38px;
+        padding: 0.4rem !important;
+        font-size: 0.9rem;
+        min-width: 32px;
+        min-height: 32px;
         justify-content: center;
-        border-radius: 8px;
+        border-radius: 6px;
+        gap: 0 !important;
     }
 
     /* Hide text, show only icon on mobile */
     .auth-btn span {
-        display: none;
+        display: none !important;
     }
 
     .auth-btn i {
-        margin: 0;
-        font-size: 1.1rem;
+        margin: 0 !important;
+        font-size: 0.95rem !important;
     }
 
     .user-menu-toggle {
