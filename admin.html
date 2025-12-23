@@ -2060,7 +2060,8 @@
 
         // Init
         window.addEventListener('DOMContentLoaded', () => {
-            authToken = localStorage.getItem('authToken');
+            // Use 'auth_token' (same as main site) with fallback to old 'authToken' for compatibility
+            authToken = localStorage.getItem('auth_token') || localStorage.getItem('authToken');
 
             if (authToken) {
                 verifyToken();
@@ -2591,7 +2592,7 @@
                     const data = await res.json();
                     authToken = data.token;
                     currentUser = data.user;
-                    localStorage.setItem('authToken', authToken);
+                    localStorage.setItem('auth_token', authToken);
                     showAdmin();
                 }
 
@@ -2617,7 +2618,8 @@
         });
 
         function logout() {
-            localStorage.removeItem('authToken');
+            localStorage.removeItem('auth_token');
+            localStorage.removeItem('authToken'); // Clean up old key too
             location.reload();
         }
 
