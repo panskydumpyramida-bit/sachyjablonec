@@ -51,10 +51,18 @@ class AuthManager {
                 this.user = await response.json();
                 this.notify();
             } else {
-                this.logout();
+                // Only logout if unauthorized (401) or forbidden (403)
+                // If server error (500) or network issue, keep the token
+                if (response.status === 401 || response.status === 403) {
+                    console.warn('Auth: Token invalid or expired, logging out.');
+                    this.logout();
+                } else {
+                    console.error(`Auth: Failed to load user (Status ${response.status}), keeping session locally.`);
+                }
             }
         } catch (e) {
             console.error('Failed to load user:', e);
+            // Do not logout on network error - allow retry later
         }
 
         return this.user;
