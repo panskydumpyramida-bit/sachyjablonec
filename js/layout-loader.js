@@ -21,9 +21,19 @@ async function loadComponent(id, file) {
                 }
 
                 // Initialize auth UI after header is loaded
-                if (typeof auth !== 'undefined' && auth.updateUI) {
-                    auth.updateUI();
-                }
+                // Handle race condition: auth may or may not be initialized yet
+                const initAuthUI = () => {
+                    if (typeof auth !== 'undefined' && auth.updateUI) {
+                        auth.updateUI();
+                    }
+                };
+
+                // Try immediately
+                initAuthUI();
+
+                // Also retry after a short delay in case auth.js hasn't initialized yet
+                setTimeout(initAuthUI, 100);
+                setTimeout(initAuthUI, 500);
             }
         }
     } catch (e) {
