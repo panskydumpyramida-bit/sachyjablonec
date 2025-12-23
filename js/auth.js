@@ -11,14 +11,22 @@ class AuthManager {
 
     // Initialize auth manager - call this after DOM and config are ready
     async init() {
+        console.log('[Auth] init() called, initialized:', this.initialized);
         if (this.initialized) return;
         this.initialized = true;
 
         // Check both storages - localStorage (remember me) or sessionStorage (session only)
-        this.token = localStorage.getItem('auth_token') || sessionStorage.getItem('auth_token');
+        const lsToken = localStorage.getItem('auth_token');
+        const ssToken = sessionStorage.getItem('auth_token');
+        console.log('[Auth] localStorage token:', lsToken ? lsToken.substring(0, 20) + '...' : 'null');
+        console.log('[Auth] sessionStorage token:', ssToken ? ssToken.substring(0, 20) + '...' : 'null');
+
+        this.token = lsToken || ssToken;
         if (this.token) {
+            console.log('[Auth] Token found, calling loadUser()');
             await this.loadUser();
         } else {
+            console.log('[Auth] No token found, showing login buttons');
             // For guests, still update UI to show login/register buttons
             this.updateUI();
         }
@@ -40,28 +48,32 @@ class AuthManager {
 
     // Load user from token
     async loadUser() {
+        console.log('[Auth] loadUser() called, token:', this.token ? this.token.substring(0, 20) + '...' : 'null');
         if (!this.token) return null;
 
         try {
+            console.log('[Auth] Fetching', API_URL + '/auth/me');
             const response = await fetch(`${API_URL}/auth/me`, {
                 headers: { 'Authorization': `Bearer ${this.token}` }
             });
 
+            console.log('[Auth] Response status:', response.status);
             if (response.ok) {
                 this.user = await response.json();
+                console.log('[Auth] User loaded:', this.user.username);
                 this.notify();
             } else {
                 // Only logout if unauthorized (401) or forbidden (403)
                 // If server error (500) or network issue, keep the token
                 if (response.status === 401 || response.status === 403) {
-                    console.warn('Auth: Token invalid or expired, logging out.');
+                    console.warn('[Auth] Token invalid or expired, logging out.');
                     this.logout();
                 } else {
-                    console.error(`Auth: Failed to load user (Status ${response.status}), keeping session locally.`);
+                    console.error(`[Auth] Failed to load user (Status ${response.status}), keeping session locally.`);
                 }
             }
         } catch (e) {
-            console.error('Failed to load user:', e);
+            console.error('[Auth] Failed to load user:', e);
             // Do not logout on network error - allow retry later
         }
 
@@ -491,9 +503,10 @@ const waitForConfig = (maxWait = 5000) => {
         const start = Date.now();
         const check = () => {
             if (typeof API_URL !== 'undefined') {
+                console.log('[Auth] waitForConfig: API_URL is defined:', API_URL);
                 resolve();
             } else if (Date.now() - start > maxWait) {
-                console.error('Auth: API_URL not defined after 5s');
+                console.error('[Auth] waitForConfig: API_URL not defined after 5s');
                 resolve(); // Continue anyway
             } else {
                 setTimeout(check, 50);
@@ -505,8 +518,12 @@ const waitForConfig = (maxWait = 5000) => {
 
 // Initialize auth after DOM is ready (ensures config.js is loaded)
 const initAuth = async () => {
+    console.log('[Auth] initAuth() starting, readyState:', document.readyState);
+
     // Wait for API_URL to be defined
     await waitForConfig();
+
+    console.log('[Auth] API_URL ready, checking for OAuth callback');
 
     // Check for OAuth callback (Google login redirect)
     const urlParams = new URLSearchParams(window.location.search);
@@ -514,6 +531,7 @@ const initAuth = async () => {
     const needsUsername = urlParams.get('needs_username');
 
     if (authToken) {
+        console.log('[Auth] OAuth callback detected, storing token');
         // Store OAuth token
         localStorage.setItem('auth_token', authToken);
         auth.token = authToken;
@@ -529,15 +547,20 @@ const initAuth = async () => {
             auth.showUsernameSetupModal();
         }
     } else {
+        console.log('[Auth] No OAuth callback, calling auth.init()');
         // Normal init
         await auth.init();
     }
+
+    console.log('[Auth] initAuth() complete, user:', auth.user?.username || 'null');
 };
 
 if (document.readyState === 'loading') {
+    console.log('[Auth] DOM loading, adding DOMContentLoaded listener');
     document.addEventListener('DOMContentLoaded', initAuth);
 } else {
     // DOM is already ready (dynamic load), run immediately
+    console.log('[Auth] DOM ready, running initAuth immediately');
     initAuth();
 }
 
