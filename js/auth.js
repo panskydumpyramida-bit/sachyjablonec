@@ -18,6 +18,9 @@ class AuthManager {
         this.token = localStorage.getItem('auth_token') || sessionStorage.getItem('auth_token');
         if (this.token) {
             await this.loadUser();
+        } else {
+            // For guests, still update UI to show login/register buttons
+            this.updateUI();
         }
     }
 
