@@ -4,67 +4,71 @@ import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
-// Configure Google Strategy
-passport.use(new GoogleStrategy({
-    clientID: process.env.GOOGLE_CLIENT_ID,
-    clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-    callbackURL: process.env.GOOGLE_CALLBACK_URL
-}, async (accessToken, refreshToken, profile, done) => {
-    try {
-        const email = profile.emails?.[0]?.value;
-        const googleId = profile.id;
+// Configure Google Strategy ONLY if credentials are available
+if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
+    passport.use(new GoogleStrategy({
+        clientID: process.env.GOOGLE_CLIENT_ID,
+        clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+        callbackURL: process.env.GOOGLE_CALLBACK_URL || '/auth/google/callback'
+    }, async (accessToken, refreshToken, profile, done) => {
+        try {
+            const email = profile.emails?.[0]?.value;
+            const googleId = profile.id;
 
-        if (!email) {
-            return done(new Error('No email provided by Google'), null);
-        }
-
-        // Check if user exists by googleId first
-        let user = await prisma.user.findUnique({
-            where: { googleId: googleId }
-        });
-
-        if (user) {
-            return done(null, user);
-        }
-
-        // Check if user exists by email (to link existing account)
-        user = await prisma.user.findUnique({
-            where: { email: email }
-        });
-
-        if (user) {
-            // Link existing account with Google
-            user = await prisma.user.update({
-                where: { id: user.id },
-                data: { googleId: googleId }
-            });
-            return done(null, user);
-        }
-
-        // New user - create with unique temporary username
-        const timestamp = Date.now().toString(36);
-        const randomPart = Math.random().toString(36).substring(2, 6);
-        const tempUsername = `user_${timestamp}${randomPart}`;
-
-        user = await prisma.user.create({
-            data: {
-                email: email,
-                googleId: googleId,
-                username: tempUsername,
-                role: 'USER'
-                // passwordHash is null for OAuth users
+            if (!email) {
+                return done(new Error('No email provided by Google'), null);
             }
-        });
 
-        // Mark as needing username setup
-        user.needsUsername = true;
+            // Check if user exists by googleId first
+            let user = await prisma.user.findUnique({
+                where: { googleId: googleId }
+            });
 
-        return done(null, user);
-    } catch (error) {
-        console.error('Google OAuth error:', error);
-        return done(error, null);
-    }
-}));
+            if (user) {
+                return done(null, user);
+            }
+
+            // Check if user exists by email (to link existing account)
+            user = await prisma.user.findUnique({
+                where: { email: email }
+            });
+
+            if (user) {
+                // Link existing account with Google
+                user = await prisma.user.update({
+                    where: { id: user.id },
+                    data: { googleId: googleId }
+                });
+                return done(null, user);
+            }
+
+            // New user - create with unique temporary username
+            const timestamp = Date.now().toString(36);
+            const randomPart = Math.random().toString(36).substring(2, 6);
+            const tempUsername = `user_${timestamp}${randomPart}`;
+
+            user = await prisma.user.create({
+                data: {
+                    email: email,
+                    googleId: googleId,
+                    username: tempUsername,
+                    role: 'USER'
+                    // passwordHash is null for OAuth users
+                }
+            });
+
+            // Mark as needing username setup
+            user.needsUsername = true;
+
+            return done(null, user);
+        } catch (error) {
+            console.error('Google OAuth error:', error);
+            return done(error, null);
+        }
+    }));
+} else {
+    console.log('Google OAuth not configured - GOOGLE_CLIENT_ID or GOOGLE_CLIENT_SECRET missing');
+}
 
 // Serialize user for session (we don't use sessions, using JWT instead)
 passport.serializeUser((user, done) => {
