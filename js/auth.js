@@ -471,7 +471,8 @@ class AuthManager {
 const auth = new AuthManager();
 
 // Initialize auth after DOM is ready (ensures config.js is loaded)
-document.addEventListener('DOMContentLoaded', async () => {
+// Initialize auth after DOM is ready (ensures config.js is loaded)
+const initAuth = async () => {
     // Check for OAuth callback (Google login redirect)
     const urlParams = new URLSearchParams(window.location.search);
     const authToken = urlParams.get('auth_token');
@@ -496,7 +497,14 @@ document.addEventListener('DOMContentLoaded', async () => {
         // Normal init
         await auth.init();
     }
-});
+};
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initAuth);
+} else {
+    // DOM is already ready (dynamic load), run immediately
+    initAuth();
+}
 
 // Username setup modal for OAuth users
 AuthManager.prototype.showUsernameSetupModal = function () {
