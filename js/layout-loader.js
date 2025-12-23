@@ -23,8 +23,13 @@ async function loadComponent(id, file) {
                 // Initialize auth UI after header is loaded
                 // Handle race condition: auth may or may not be initialized yet
                 const initAuthUI = () => {
-                    if (typeof auth !== 'undefined' && auth.updateUI) {
-                        auth.updateUI();
+                    if (typeof auth !== 'undefined') {
+                        if (!auth.initialized && auth.init) {
+                            console.log('LayoutLoader: Calling auth.init() explicitely');
+                            auth.init();
+                        } else if (auth.updateUI) {
+                            auth.updateUI();
+                        }
                     }
                 };
 
@@ -107,14 +112,14 @@ document.addEventListener('DOMContentLoaded', () => {
         configScript.onload = () => {
             if (typeof auth === 'undefined') {
                 const authScript = document.createElement('script');
-                authScript.src = '/js/auth.js?v=5';
+                authScript.src = '/js/auth.js?v=6';
                 document.head.appendChild(authScript);
             }
         };
         document.head.appendChild(configScript);
     } else if (typeof auth === 'undefined') {
         const authScript = document.createElement('script');
-        authScript.src = '/js/auth.js?v=5';
+        authScript.src = '/js/auth.js?v=6';
         document.head.appendChild(authScript);
     }
 
