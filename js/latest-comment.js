@@ -5,24 +5,14 @@
 
 class LatestCommentWidget {
     constructor() {
-        // A/B Test Logic
-        // Select one of the available containers: 'latest-comment-widget' (bottom) or 'latest-comment-widget-top' (top)
-
+        // Always use bottom container (under hero image) - A/B test showed this is better
         const bottomContainer = document.getElementById('latest-comment-widget');
         const topContainer = document.getElementById('latest-comment-widget-top');
 
-        // Simple 50/50 Random Split
-        const showTop = Math.random() < 0.5;
+        // Hide top container if exists, use bottom
+        if (topContainer) topContainer.style.display = 'none';
 
-        if (showTop && topContainer) {
-            this.container = topContainer;
-            if (bottomContainer) bottomContainer.style.display = 'none'; // Ensure other is hidden
-            console.log('A/B Test: Showing Top Widget');
-        } else if (bottomContainer) {
-            this.container = bottomContainer;
-            if (topContainer) topContainer.style.display = 'none'; // Ensure other is hidden
-            console.log('A/B Test: Showing Bottom Widget');
-        }
+        this.container = bottomContainer;
 
         if (this.container) {
             this.load();

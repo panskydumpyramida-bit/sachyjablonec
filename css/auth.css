@@ -425,20 +425,119 @@
 /* Responsive */
 @media (max-width: 768px) {
     #auth-container {
-        flex-wrap: wrap;
-        gap: 0.5rem;
+        display: flex;
+        gap: 0.35rem;
+        flex-shrink: 0;
     }
 
     .auth-btn {
-        padding: 0.5rem 0.75rem;
-        font-size: 0.85rem;
+        padding: 0.5rem;
+        font-size: 1rem;
+        min-width: 38px;
+        min-height: 38px;
+        justify-content: center;
+        border-radius: 8px;
     }
 
+    /* Hide text, show only icon on mobile */
     .auth-btn span {
         display: none;
     }
 
+    .auth-btn i {
+        margin: 0;
+        font-size: 1.1rem;
+    }
+
+    .user-menu-toggle {
+        padding: 0.5rem 0.75rem;
+        font-size: 0.85rem;
+    }
+
     .user-menu-toggle span {
         display: none;
+    }
+
+    .user-menu-toggle i:first-child {
+        font-size: 1.1rem;
+    }
+
+    .user-menu-toggle .fa-chevron-down {
+        display: none;
+    }
+
+    /* Auth modal improvements for mobile */
+    .auth-modal {
+        width: 95%;
+        max-width: 380px;
+        padding: 1.5rem;
+        margin: 1rem;
+        max-height: 90vh;
+        overflow-y: auto;
+    }
+
+    .auth-modal h2 {
+        font-size: 1.5rem;
+        margin-bottom: 1.25rem;
+    }
+
+    .form-group {
+        margin-bottom: 1rem;
+    }
+
+    .form-group input {
+        padding: 0.875rem 1rem;
+        font-size: 16px;
+        /* Prevent iOS zoom on focus */
+    }
+
+    .auth-submit {
+        padding: 0.875rem;
+        font-size: 1rem;
+    }
+
+    .google-signin-btn {
+        padding: 0.875rem;
+        font-size: 0.9rem;
+    }
+
+    .auth-divider {
+        margin: 1rem 0;
+    }
+
+    .auth-switch {
+        margin-top: 1.25rem;
+        font-size: 0.85rem;
+    }
+
+    /* User dropdown on mobile */
+    .user-dropdown {
+        right: -10px;
+        min-width: 180px;
+    }
+}
+
+/* Extra small screens */
+@media (max-width: 380px) {
+    #auth-container {
+        gap: 0.25rem;
+    }
+
+    .auth-btn {
+        padding: 0.4rem;
+        min-width: 34px;
+        min-height: 34px;
+    }
+
+    .auth-btn i {
+        font-size: 1rem;
+    }
+
+    .auth-modal {
+        padding: 1.25rem;
+    }
+
+    .auth-modal h2 {
+        font-size: 1.35rem;
     }
 }
