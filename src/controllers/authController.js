@@ -209,7 +209,7 @@ export const deleteAccount = async (req, res) => {
         const userId = req.user.id;
 
         // Delete user's comments first (foreign key constraint)
-        await prisma.comment.deleteMany({ where: { userId } });
+        await prisma.comment.deleteMany({ where: { authorId: userId } });
 
         // Delete user's puzzle results
         await prisma.puzzleRaceResult.deleteMany({ where: { userId } });
