@@ -348,6 +348,12 @@ class AuthManager {
         window.location.href = `${API_URL}/auth/google`;
     }
 
+    // Link existing account with Google
+    linkWithGoogle() {
+        if (!this.token) return;
+        window.location.href = `${API_URL}/auth/google?token=${this.token}`;
+    }
+
     // Show forgot password modal
     showForgotPasswordModal() {
         const existing = document.getElementById('auth-modal');
