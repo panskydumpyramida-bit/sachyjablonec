@@ -447,7 +447,8 @@
     /* Hide text, show only icon on mobile */
     #auth-container .auth-btn span,
     .auth-btn span,
-    button.auth-btn span {
+    button.auth-btn span,
+    .mobile-text {
         display: none !important;
         width: 0 !important;
         overflow: hidden !important;

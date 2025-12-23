@@ -142,9 +142,12 @@ class AuthManager {
     updateUI(retryCount = 0) {
         const authContainer = document.getElementById('auth-container');
         if (!authContainer) {
-            // Header may not be loaded yet, retry a few times
-            if (retryCount < 5) {
-                setTimeout(() => this.updateUI(retryCount + 1), 100);
+            // Header may not be loaded yet, retry a few times (max 10 seconds)
+            if (retryCount < 50) {
+                // Exponential backoff or just linear? Linear 200ms is fine.
+                setTimeout(() => this.updateUI(retryCount + 1), 200);
+            } else {
+                console.error('Auth: Failed to find #auth-container after 10s');
             }
             return;
         }
@@ -197,10 +200,10 @@ class AuthManager {
         } else {
             authContainer.innerHTML = `
                 <button class="auth-btn" onclick="auth.showLoginModal()">
-                    <i class="fa-solid fa-sign-in-alt"></i><span>Přihlásit</span>
+                    <i class="fa-solid fa-sign-in-alt"></i><span class="mobile-text">Přihlásit</span>
                 </button>
                 <button class="auth-btn auth-btn-outline" onclick="auth.showRegisterModal()">
-                    <i class="fa-solid fa-user-plus"></i><span>Registrace</span>
+                    <i class="fa-solid fa-user-plus"></i><span class="mobile-text">Registrace</span>
                 </button>
             `;
         }
