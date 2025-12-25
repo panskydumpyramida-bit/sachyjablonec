@@ -144,11 +144,12 @@ const AdminEvents = {
      */
     async loadEvents() {
         try {
-            const token = localStorage.getItem('authToken') || localStorage.getItem('token');
+            const token = localStorage.getItem('authToken') || localStorage.getItem('token') || (window.authToken);
 
             if (!token) {
                 console.warn('No authToken found, cannot load events');
-                this.showNotification('Nejste přihlášeni', 'error');
+                this.showNotification('Nejste přihlášeni. Prosím přihlašte se znovu.', 'error');
+                if (typeof window.logout === 'function') setTimeout(() => window.logout(), 1500);
                 return;
             }
 
