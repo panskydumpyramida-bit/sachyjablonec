@@ -163,6 +163,10 @@ const servePage = (page) => async (req, res) => {
 app.get('/admin', servePage('admin.html'));
 app.get('/admin.html', servePage('admin.html'));
 
+// Explicitly serve root to ensure version injection
+app.get('/', servePage('index.html'));
+app.get('/index.html', servePage('index.html'));
+
 app.get('/gallery', servePage('gallery.html'));
 app.get('/gallery.html', servePage('gallery.html'));
 
