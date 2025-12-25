@@ -125,7 +125,36 @@ app.get('/sitemap.xml', (req, res) => res.sendFile(path.join(__dirname, '../site
 
 // Serve specific HTML pages (since they are in root)
 // Serve specific HTML pages (Clean URLs support)
-const servePage = (page) => (req, res) => res.sendFile(path.join(__dirname, `../${page}`));
+// Generate a unique version ID at server start (e.g. timestamp)
+const APP_VERSION = process.env.RAILWAY_GIT_COMMIT_SHA
+    ? process.env.RAILWAY_GIT_COMMIT_SHA.substring(0, 7) // Use commit hash if available
+    : Date.now().toString(); // Fallback to timestamp
+
+console.log(`🚀 Starting server with APP_VERSION: ${APP_VERSION}`);
+
+// Enhanced servePage with Automatic Cache Busting
+const servePage = (page) => async (req, res) => {
+    try {
+        const filePath = path.join(__dirname, `../${page}`);
+        let html = await fs.readFile(filePath, 'utf-8');
+
+        // Regex to find local JS and CSS imports
+        // Matches src="..." or href="..." where the value ends in .js or .css (ignoring external links starting with http)
+        // Also captures existing query params if any
+        // Group 1: src=" or href=" without the closing quote
+        // Group 2: The URL path
+        // Group 3: Extension
+        html = html.replace(/(src|href)="((?!http)[^"]+\.(css|js))(\?v=[^"]*)?"/g, (match, attrName, url) => {
+            // Reconstruct with new version
+            return `${attrName}="${url}?v=${APP_VERSION}"`;
+        });
+
+        res.send(html);
+    } catch (err) {
+        console.error(`Error serving page ${page}:`, err);
+        res.status(500).send('Internal Server Error');
+    }
+};
 
 app.get('/admin', servePage('admin.html'));
 app.get('/admin.html', servePage('admin.html'));
