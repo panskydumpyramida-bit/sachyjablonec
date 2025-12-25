@@ -568,21 +568,16 @@ footer {
     }
 
     .nav-links>li>a {
-        font-size: 1rem;
-        /* Compact size */
+        font-size: 0.95rem;
+        /* Slightly smaller for compactness */
         font-weight: 500;
         margin: 0;
         display: block;
         color: var(--text-color);
         width: 100%;
-        padding: 0.75rem 1rem;
+        padding: 0.6rem 1rem;
+        /* Reduced padding */
         transition: background 0.2s;
-    }
-
-    .nav-links>li>a:hover {
-        color: var(--primary-color);
-        background: rgba(212, 175, 55, 0.1);
-        /* Hover highlight */
     }
 
     /* Dropdown in Mobile - Indented Submenu */
@@ -598,7 +593,7 @@ footer {
     }
 
     .nav-links.active .dropdown>a {
-        font-size: 1rem;
+        font-size: 0.95rem;
         font-weight: 600;
         color: var(--primary-color);
         margin: 0;
@@ -606,9 +601,17 @@ footer {
         text-transform: none;
         letter-spacing: normal;
         border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-        padding: 0.75rem 1rem;
+        padding: 0.6rem 1rem;
         background: rgba(212, 175, 55, 0.05);
-        /* Header bg */
+    }
+
+    /* Ensure icons have space */
+    .nav-links a i,
+    .dropdown-menu a i {
+        margin-right: 0.5rem;
+        width: 1.2em;
+        /* Fixed width for alignment */
+        text-align: center;
     }
 
     .nav-links.active .dropdown-menu {
@@ -626,16 +629,41 @@ footer {
         margin-top: 0;
     }
 
-    opacity: 1 !important;
-    visibility: visible !important;
-    transform: none !important;
-    box-shadow: none;
+    .dropdown-menu li {
+        text-align: left;
+        width: 100%;
+        margin: 0;
+    }
+
+    .dropdown-menu a {
+        padding: 0.5rem 1rem 0.5rem 1.75rem;
+        /* Indent sub-items more distinctively */
+        font-size: 0.9rem;
+        color: var(--text-muted);
+        display: block;
+        width: 100%;
+        border-left: 2px solid transparent;
+        line-height: 1.4;
+    }
+
     border: none;
     background-color: transparent;
     width: 100%;
     padding: 0;
     min-width: unset;
     margin-top: 0;
+}
+
+opacity: 1 !important;
+visibility: visible !important;
+transform: none !important;
+box-shadow: none;
+border: none;
+background-color: transparent;
+width: 100%;
+padding: 0;
+min-width: unset;
+margin-top: 0;
 }
 
 .dropdown-menu li {

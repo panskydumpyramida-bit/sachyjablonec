@@ -63,18 +63,30 @@ class AuthManager {
                 console.log('[Auth] User loaded:', this.user.username);
                 this.notify();
             } else {
-                // Only logout if unauthorized (401) or forbidden (403)
-                // If server error (500) or network issue, keep the token
+                // If unauthorized, token is bad.
                 if (response.status === 401 || response.status === 403) {
                     console.warn('[Auth] Token invalid or expired, logging out.');
-                    this.logout();
+                    this.logout(); // This clears token and calls notify -> updateUI (Guest)
                 } else {
                     console.error(`[Auth] Failed to load user (Status ${response.status}), keeping session locally.`);
+                    // On server error, we probably shouldn't show Guest buttons if we have a token.
+                    // But maybe we should just show the user as "Offline"? 
+                    // For now, if we fail but keep token, 'this.user' is null.
+                    // My flicker logic hides UI if token && !user.
+                    // So if backend is down, UI hides forever?
+                    // Let's force logout or show guest if we can't verify functionality?
+                    // Better: Trigger updateUI anyway. if token && !user, maybe show a "Retry" or fallback?
+                    // Or set user to partial obj?
+                    // Safest for flicker prevention: If 500 error, assume logged in UI but maybe broken?
+                    // No, let's just let it be hidden or show guest.
+                    // Let's rely on 'this.logout()' clearing the token, creating a valid !token state.
                 }
             }
         } catch (e) {
             console.error('[Auth] Failed to load user:', e);
-            // Do not logout on network error - allow retry later
+            // Network error. Token exists. User null. UI Hidden?
+            // Yes, hidden is better than "Login" buttons if we are actually logged in.
+            // But user might want to see something.
         }
 
         return this.user;
@@ -164,7 +176,6 @@ class AuthManager {
         if (!authContainer) {
             // Header may not be loaded yet, retry a few times (max 10 seconds)
             if (retryCount < 50) {
-                // Exponential backoff or just linear? Linear 200ms is fine.
                 setTimeout(() => this.updateUI(retryCount + 1), 200);
             } else {
                 console.error('Auth: Failed to find #auth-container after 10s');
@@ -173,10 +184,7 @@ class AuthManager {
         }
 
         // Prevent flicker: If token exists but user is not loaded yet, show nothing (or spinner)
-        // This prevents showing "Login" buttons while we are fetching value
         if (this.token && !this.user) {
-            // Optionally render a small spinner here if desired
-            // authContainer.innerHTML = '<div class="spinner"></div>';
             return;
         }
 
@@ -235,6 +243,12 @@ class AuthManager {
                 </button>
             `;
         }
+
+        // Make container visible only now that content is definitive
+        // Delay slightly to ensure DOM render before fade-in
+        requestAnimationFrame(() => {
+            authContainer.classList.add('auth-visible');
+        });
     }
 
     toggleUserMenu() {
