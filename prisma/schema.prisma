@@ -263,3 +263,36 @@ model PuzzleRacerSettings {
 
   @@map("puzzle_racer_settings")
 }
+
+model Event {
+  id          Int       @id @default(autoincrement())
+  title       String
+  description String?
+  startDate   DateTime  @map("start_date")
+  endDate     DateTime? @map("end_date")
+  location    String?
+  
+  // Event categorization
+  category    String    @default("tournament") // tournament, training, camp, meeting, other
+  ageGroup    String?   @map("age_group")      // youth, adults, all
+  eventType   String?   @map("event_type")     // individual, team
+  timeControl String?   @map("time_control")   // blitz, rapid, classical
+  
+  // Tournament-specific fields
+  registrationDeadline DateTime? @map("registration_deadline") // přihlášky do
+  presentationEnd      DateTime? @map("presentation_end")      // konec prezentace
+  entryFee             String?   @map("entry_fee")             // startovné
+  organizerContact     String?   @map("organizer_contact")     // kontakt na pořadatele
+  url                  String?                                  // odkaz na stránky akce
+  
+  // Visibility
+  isInternal  Boolean   @default(false) @map("is_internal") // true = only MEMBER+
+  isPublic    Boolean   @default(true) @map("is_public")
+  
+  createdBy   Int?      @map("created_by")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+  
+  @@map("events")
+}
+

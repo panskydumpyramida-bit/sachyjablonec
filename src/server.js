@@ -1,3 +1,4 @@
+// Main server file
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
@@ -21,6 +22,7 @@ import gamesRoutes from './routes/games.js';
 import apiGamesRoutes from './routes/api-games.js';
 import scrapingRoutes from './routes/scraping.js';
 import commentsRoutes from './routes/comments.js';
+import eventsRoutes from './routes/events.js';
 import oauthRoutes from './routes/oauth.js';
 import passport from './config/passport.js';
 import { PrismaClient } from '@prisma/client';
@@ -140,6 +142,9 @@ app.get('/teams.html', servePage('teams.html'));
 app.get('/calendar', servePage('calendar.html'));
 app.get('/calendar.html', servePage('calendar.html'));
 
+app.get('/tournaments', servePage('tournaments.html'));
+app.get('/tournaments.html', servePage('tournaments.html'));
+
 app.get('/about', servePage('about.html'));
 app.get('/about.html', servePage('about.html'));
 
@@ -194,6 +199,7 @@ app.use('/api/games', gamesRoutes);
 app.use('/api/viewer-games', apiGamesRoutes);
 app.use('/api/scraping', scrapingRoutes);
 app.use('/api/comments', commentsRoutes);
+app.use('/api/events', eventsRoutes);
 
 // Import helpers from utils
 import { clean, isElo, simplify, isMatch, fetchWithHeaders } from './utils/helpers.js';
@@ -608,7 +614,8 @@ app.use(express.urlencoded({ extended: true }));
 const allowedHtmlFiles = [
     'index.html', 'about.html', 'teams.html', 'club-tournaments.html',
     'youth.html', 'gallery.html', 'admin.html', 'article.html',
-    'members.html', 'calendar.html', 'blicak.html', 'partie.html', 'games.html'
+    'members.html', 'calendar.html', 'blicak.html', 'partie.html', 'games.html',
+    'tournaments.html'
 ];
 
 // --- Blicak Registration Endpoints ---

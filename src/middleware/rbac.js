@@ -1,20 +1,21 @@
 /**
  * Role-Based Access Control (RBAC) Middleware
  * 
- * Role hierarchy: USER < ADMIN < SUPERADMIN
+ * Role hierarchy: USER < MEMBER < ADMIN < SUPERADMIN
  * Each higher role has all permissions of lower roles.
  */
 
 // Role hierarchy values (higher = more permissions)
 const ROLE_HIERARCHY = {
     USER: 1,
-    ADMIN: 2,
-    SUPERADMIN: 3
+    MEMBER: 2,
+    ADMIN: 3,
+    SUPERADMIN: 4
 };
 
 /**
  * Middleware factory that requires a minimum role level
- * @param {string} minRole - Minimum required role ('USER', 'ADMIN', 'SUPERADMIN')
+ * @param {string} minRole - Minimum required role ('USER', 'MEMBER', 'ADMIN', 'SUPERADMIN')
  * @returns {Function} Express middleware
  */
 export function requireRole(minRole) {
@@ -42,6 +43,11 @@ export function requireRole(minRole) {
 }
 
 /**
+ * Convenience middleware for member-only routes
+ */
+export const requireMember = requireRole('MEMBER');
+
+/**
  * Convenience middleware for admin-only routes
  */
 export const requireAdmin = requireRole('ADMIN');
@@ -64,4 +70,5 @@ export function hasRole(user, minRole) {
     return userLevel >= requiredLevel;
 }
 
-export default { requireRole, requireAdmin, requireSuperadmin, hasRole };
+export default { requireRole, requireMember, requireAdmin, requireSuperadmin, hasRole };
+

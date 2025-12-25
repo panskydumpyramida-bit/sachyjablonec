@@ -1,0 +1,1113 @@
+<!DOCTYPE html>
+<html lang="cs">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Turnaje a akce - Šachový oddíl TJ Bižuterie Jablonec</title>
+    <meta name="description" content="Přehled šachových turnajů, tréninků a dalších akcí v okolí Jablonce nad Nisou.">
+
+    <!-- Favicons -->
+    <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="assets/favicon-16x16.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="assets/apple-touch-icon.png">
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@400;700&display=swap"
+        rel="stylesheet">
+
+    <!-- Styles -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css">
+
+    <style>
+        .filter-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            justify-content: center;
+            margin-bottom: 2rem;
+        }
+
+        .filter-btn {
+            padding: 0.6rem 1.2rem;
+            border-radius: 25px;
+            border: 1px solid rgba(34, 211, 238, 0.3);
+            background: rgba(34, 211, 238, 0.1);
+            color: #22d3ee;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .filter-btn:hover {
+            background: rgba(34, 211, 238, 0.2);
+            border-color: #22d3ee;
+        }
+
+        .filter-btn.active {
+            background: linear-gradient(135deg, #22d3ee, #06b6d4);
+            color: #000;
+            border-color: transparent;
+            font-weight: 600;
+        }
+
+        .filter-section {
+            margin-bottom: 1.5rem;
+        }
+
+        .filter-section-title {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-bottom: 0.75rem;
+            text-align: center;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .events-grid {
+            display: grid;
+            gap: 1rem;
+        }
+
+        .event-card {
+            background: linear-gradient(135deg, rgba(30, 45, 60, 0.95), rgba(25, 35, 50, 0.98));
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(34, 211, 238, 0.2);
+            border-left: 3px solid transparent;
+            border-radius: 12px;
+            padding: 1.25rem;
+            display: flex;
+            gap: 1rem;
+            align-items: flex-start;
+            transition: all 0.3s ease;
+        }
+
+        .event-card.region-home {
+            border-left-color: #22d3ee;
+        }
+
+        .event-card.region-away {
+            border-left-color: #94a3b8;
+        }
+
+        .event-card:hover {
+            border-color: rgba(34, 211, 238, 0.4);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(34, 211, 238, 0.1);
+        }
+
+        .event-date {
+            text-align: center;
+            min-width: 55px;
+        }
+
+        .event-date-day {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #22d3ee;
+        }
+
+        .event-date-name {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+        }
+
+        .event-date-time {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            margin-top: 0.25rem;
+        }
+
+        .event-content {
+            flex: 1;
+        }
+
+        .event-category {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-bottom: 0.25rem;
+        }
+
+        .event-category i {
+            color: #22d3ee;
+            margin-right: 0.25rem;
+        }
+
+        .event-title {
+            font-weight: 600;
+            color: var(--text-color);
+            margin-bottom: 0.35rem;
+            font-size: 1.05rem;
+        }
+
+        .event-tags {
+            display: flex;
+            gap: 0.35rem;
+            flex-wrap: wrap;
+            margin-top: 0.35rem;
+        }
+
+        .event-tag {
+            padding: 0.1rem 0.4rem;
+            border-radius: 4px;
+            font-size: 0.65rem;
+        }
+
+        .tag-age {
+            background: rgba(74, 222, 128, 0.15);
+            color: #4ade80;
+        }
+
+        .tag-type {
+            background: rgba(96, 165, 250, 0.15);
+            color: #60a5fa;
+        }
+
+        .tag-tempo-blitz {
+            background: rgba(251, 191, 36, 0.15);
+            color: #fbbf24;
+        }
+
+        .tag-tempo-rapid {
+            background: rgba(251, 146, 60, 0.15);
+            color: #fb923c;
+        }
+
+        .tag-tempo-classical {
+            background: rgba(167, 139, 250, 0.15);
+            color: #a78bfa;
+        }
+
+        .event-location {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-top: 0.35rem;
+        }
+
+        .event-location i {
+            margin-right: 0.25rem;
+        }
+
+        .event-description {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-top: 0.5rem;
+            line-height: 1.4;
+        }
+
+        .event-details {
+            margin-top: 0.75rem;
+            padding-top: 0.75rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            font-size: 0.75rem;
+        }
+
+        .event-detail-row {
+            color: var(--text-muted);
+            margin-bottom: 0.25rem;
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+        }
+
+        .event-detail-row i.fa-clock {
+            color: #f87171;
+        }
+
+        .event-detail-row i.fa-coins {
+            color: #fbbf24;
+        }
+
+        .event-detail-row strong {
+            color: #f87171;
+        }
+
+        .event-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .event-action-btn {
+            color: var(--text-muted);
+            font-size: 1.1rem;
+            padding: 0.5rem;
+            transition: color 0.2s;
+            text-decoration: none;
+        }
+
+        .event-action-btn:hover {
+            color: #22d3ee;
+        }
+
+        .event-details-expanded {
+            display: none;
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid #f1f5f9;
+            animation: slideDown 0.3s ease-out;
+        }
+
+        .event-details-expanded.open {
+            display: block;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .details-toggle {
+            background: none;
+            border: none;
+            color: #64748b;
+            cursor: pointer;
+            padding: 0;
+            font-size: 0.875rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-top: auto;
+            /* Push to bottom */
+            padding-top: 1rem;
+            transition: color 0.2s;
+        }
+
+        .details-toggle:hover {
+            color: #22d3ee;
+        }
+
+        .details-toggle i {
+            transition: transform 0.3s;
+        }
+
+        .details-toggle.open i {
+            transform: rotate(180deg);
+        }
+
+        .no-events {
+            text-align: center;
+            padding: 3rem 1rem;
+            color: var(--text-muted);
+        }
+
+        .no-events i {
+            font-size: 3rem;
+            color: #22d3ee;
+            opacity: 0.5;
+            margin-bottom: 1rem;
+        }
+
+        .month-header {
+            color: #22d3ee;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 1.1rem;
+        }
+
+        .month-section {
+            margin-bottom: 2rem;
+        }
+
+        /* Mini Czech Map */
+        .event-map {
+            width: 140px;
+            height: 105px;
+            flex-shrink: 0;
+            background: rgba(255, 255, 255, 0.03);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            margin-left: 0.5rem;
+        }
+
+        .event-map svg {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        .event-map .region {
+            fill: rgba(255, 255, 255, 0.05);
+            stroke: rgba(255, 255, 255, 0.1);
+            stroke-width: 0.5;
+            transition: fill 0.3s ease;
+        }
+
+        .event-map .region.highlight {
+            fill: #22d3ee;
+            stroke: #22d3ee;
+        }
+
+        .event-map .region.home {
+            fill: rgba(34, 211, 238, 0.2);
+            stroke: #22d3ee;
+        }
+
+        /* New Card Styles */
+        .gcal-icon-link {
+            position: absolute;
+            top: 0;
+            right: 0;
+            color: #94a3b8;
+            font-size: 1.2rem;
+            padding: 0.5rem;
+            transition: color 0.2s;
+            z-index: 10;
+        }
+
+        .gcal-icon-link:hover {
+            color: #22d3ee;
+        }
+
+        .event-meta-top {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+            margin-bottom: 0.25rem;
+        }
+
+        .event-badges-inline {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.4rem;
+        }
+
+        .feature-highlight {
+            color: #e2e8f0;
+            border-left: 3px solid #f59e0b;
+            padding-left: 0.5rem;
+        }
+
+        .text-warning {
+            color: #fca5a5;
+        }
+
+        .badge-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 2rem;
+            height: 2rem;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.05);
+            color: #94a3b8;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            cursor: help;
+        }
+
+        .badge-icon:hover {
+            background: rgba(34, 211, 238, 0.1);
+            color: #22d3ee;
+        }
+
+        .location-link {
+            text-decoration: none;
+            color: #94a3b8;
+            transition: color 0.2s;
+            position: relative;
+            z-index: 5;
+        }
+
+        .location-link:hover {
+            color: #22d3ee;
+            text-decoration: underline;
+        }
+
+        .badge-control {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            padding: 0.25rem 0.6rem;
+            background: rgba(245, 158, 11, 0.1);
+            color: #fbbf24;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+
+
+
+
+        @media (max-width: 768px) {
+            .filter-container {
+                gap: 0.5rem;
+            }
+
+            .filter-btn {
+                padding: 0.5rem 0.9rem;
+                font-size: 0.8rem;
+            }
+
+            .event-card {
+                flex-direction: column;
+                padding: 1rem;
+            }
+
+            .event-date {
+                display: flex;
+                align-items: center;
+                gap: 0.5rem;
+            }
+
+            .event-actions {
+                flex-direction: row;
+                justify-content: flex-end;
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <header id="global-header"></header>
+
+    <main class="page-wrapper">
+        <section class="content-section" style="max-width: 900px; margin: 0 auto;">
+            <!-- Hero -->
+            <div class="hero-compact" style="text-align: center; margin-bottom: 2rem;">
+                <h1 style="display: flex; align-items: center; justify-content: center; gap: 0.75rem;">
+                    <i class="fa-solid fa-trophy" style="color: #22d3ee;"></i>
+                    Turnaje a akce
+                </h1>
+                <p class="subtitle" style="color: var(--text-muted);">
+                    Přehled nadcházejících šachových turnajů a dalších akcí v okolí.
+                </p>
+            </div>
+
+            <!-- Compact Filters -->
+            <!-- Styled Filter Bar (Matching Calendar) -->
+            <div class="events-filter-bar"
+                style="margin-bottom: 2rem; background: linear-gradient(135deg, rgba(30, 45, 60, 0.95), rgba(25, 35, 50, 0.98)); backdrop-filter: blur(10px); padding: 1rem; border-radius: 16px; border: 1px solid rgba(34, 211, 238, 0.2); box-shadow: 0 8px 32px rgba(0,0,0,0.3);">
+
+                <div class="filter-row"
+                    style="display: flex; flex-wrap: wrap; gap: 1rem; align-items: center; justify-content: center;">
+
+                    <!-- Age Group Pills -->
+                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                        <span style="color: var(--text-muted); font-size: 0.8rem; font-weight: 500;">Věk:</span>
+                        <div id="age-filters"
+                            style="display: flex; background: rgba(0,0,0,0.3); border-radius: 50px; padding: 2px; gap: 2px;">
+                            <button class="filter-btn active" data-filter="all" onclick="filterByAge('all')"
+                                style="padding: 0.35rem 0.8rem; border-radius: 50px; border: none; background: #d4af37; color: #000; font-weight: 600; font-size: 0.75rem; cursor: pointer; transition: all 0.2s;">
+                                Vše
+                            </button>
+                            <button class="filter-btn" data-filter="youth" onclick="filterByAge('youth')"
+                                style="padding: 0.35rem 0.8rem; border-radius: 50px; border: none; background: transparent; color: var(--text-muted); font-weight: 500; font-size: 0.75rem; cursor: pointer; transition: all 0.2s;">
+                                <i class="fa-solid fa-child" style="color: #4ade80; margin-right: 0.3rem;"></i>Mládež
+                            </button>
+                            <button class="filter-btn" data-filter="adults" onclick="filterByAge('adults')"
+                                style="padding: 0.35rem 0.8rem; border-radius: 50px; border: none; background: transparent; color: var(--text-muted); font-weight: 500; font-size: 0.75rem; cursor: pointer; transition: all 0.2s;">
+                                <i class="fa-solid fa-chess-knight"
+                                    style="color: #FFD700; margin-right: 0.3rem;"></i>Dospělí
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Tempo Pills -->
+                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                        <span style="color: var(--text-muted); font-size: 0.8rem; font-weight: 500;">Tempo:</span>
+                        <div id="tempo-filters"
+                            style="display: flex; background: rgba(0,0,0,0.3); border-radius: 50px; padding: 2px; gap: 2px;">
+                            <button class="filter-btn active" data-filter="all" onclick="filterByTempo('all')"
+                                style="padding: 0.35rem 0.8rem; border-radius: 50px; border: none; background: #d4af37; color: #000; font-weight: 600; font-size: 0.75rem; cursor: pointer; transition: all 0.2s;">
+                                Vše
+                            </button>
+                            <button class="filter-btn" data-filter="blitz" onclick="filterByTempo('blitz')"
+                                style="padding: 0.35rem 0.8rem; border-radius: 50px; border: none; background: transparent; color: var(--text-muted); font-weight: 500; font-size: 0.75rem; cursor: pointer; transition: all 0.2s;"
+                                title="Bleskový šach">
+                                <i class="fa-solid fa-bolt" style="color: #fbbf24; margin-right: 0.3rem;"></i>Blesk
+                            </button>
+                            <button class="filter-btn" data-filter="rapid" onclick="filterByTempo('rapid')"
+                                style="padding: 0.35rem 0.8rem; border-radius: 50px; border: none; background: transparent; color: var(--text-muted); font-weight: 500; font-size: 0.75rem; cursor: pointer; transition: all 0.2s;"
+                                title="Rapid šach">
+                                <i class="fa-solid fa-stopwatch" style="color: #fb923c; margin-right: 0.3rem;"></i>Rapid
+                            </button>
+                            <button class="filter-btn" data-filter="classical" onclick="filterByTempo('classical')"
+                                style="padding: 0.35rem 0.8rem; border-radius: 50px; border: none; background: transparent; color: var(--text-muted); font-weight: 500; font-size: 0.75rem; cursor: pointer; transition: all 0.2s;"
+                                title="Vážná partie">
+                                <i class="fa-solid fa-chess-king"
+                                    style="color: #60a5fa; margin-right: 0.3rem;"></i>Vážná
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Past Events Toggle -->
+                    <label style="display: flex; align-items: center; gap: 0.3rem; cursor: pointer; user-select: none;"
+                        title="Zobrazit/skrýt proběhlé turnaje">
+                        <span style="color: var(--text-muted); font-size: 0.75rem; font-weight: 500;">Historie</span>
+                        <div style="position: relative; width: 36px; height: 20px;">
+                            <input type="checkbox" id="show-past" onchange="togglePastEvents()"
+                                style="opacity: 0; width: 100%; height: 100%; position: absolute; cursor: pointer; z-index: 2;">
+                            <div id="toggleTrack"
+                                style="position: absolute; inset: 0; background: rgba(255,255,255,0.1); border-radius: 10px; transition: all 0.3s;">
+                            </div>
+                            <div id="toggleThumb"
+                                style="position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; background: white; border-radius: 50%; transition: all 0.3s; box-shadow: 0 1px 3px rgba(0,0,0,0.2);">
+                            </div>
+                        </div>
+                        <i id="toggleIcon" class="fa-solid fa-eye-slash"
+                            style="color: var(--text-muted); font-size: 0.7rem;"></i>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Events Container -->
+            <div id="events-container">
+                <div style="text-align: center; padding: 3rem;">
+                    <i class="fa-solid fa-spinner fa-spin fa-2x" style="color: #22d3ee;"></i>
+                    <p style="margin-top: 1rem;">Načítám události...</p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer id="global-footer"></footer>
+
+    <script src="js/config.js?v=4" defer></script>
+    <script src="js/layout-loader.js?v=5" defer></script>
+    <script src="js/main.js" defer></script>
+    <script>
+        let allEvents = [];
+        let currentAge = 'all';
+        let currentTempo = 'all';
+        let showPast = false;
+
+        document.addEventListener('DOMContentLoaded', loadEvents);
+
+        async function loadEvents() {
+            try {
+                const response = await fetch(`${API_URL}/events`);
+                if (response.ok) {
+                    allEvents = await response.json();
+                    renderEvents();
+                } else {
+                    showError();
+                }
+            } catch (error) {
+                console.error('Error loading events:', error);
+                showError();
+            }
+        }
+
+        function filterByAge(age) {
+            currentAge = age;
+            // Reset all age buttons
+            document.querySelectorAll('#age-filters .filter-btn').forEach(btn => {
+                btn.style.background = 'transparent';
+                btn.style.color = 'var(--text-muted)';
+                btn.classList.remove('active');
+            });
+            // highlight active
+            const activeBtn = document.querySelector(`#age-filters .filter-btn[data-filter="${age}"]`);
+            if (activeBtn) {
+                activeBtn.style.background = '#d4af37';
+                activeBtn.style.color = '#000';
+                activeBtn.classList.add('active');
+            }
+            renderEvents();
+        }
+
+        function filterByTempo(tempo) {
+            currentTempo = tempo;
+            // Reset all tempo buttons
+            document.querySelectorAll('#tempo-filters .filter-btn').forEach(btn => {
+                btn.style.background = 'transparent';
+                btn.style.color = 'var(--text-muted)';
+                btn.classList.remove('active');
+            });
+            // highlight active
+            const activeBtn = document.querySelector(`#tempo-filters .filter-btn[data-filter="${tempo}"]`);
+            if (activeBtn) {
+                activeBtn.style.background = '#d4af37';
+                activeBtn.style.color = '#000';
+                activeBtn.classList.add('active');
+            }
+            renderEvents();
+        }
+
+        function togglePastEvents() {
+            const checkbox = document.getElementById('show-past');
+            showPast = checkbox.checked;
+
+            // Visual update for custom toggle
+            const track = document.getElementById('toggleTrack');
+            const thumb = document.getElementById('toggleThumb');
+            const icon = document.getElementById('toggleIcon');
+
+            if (showPast) {
+                if (track) track.style.background = '#d4af37'; // primary color
+                if (thumb) thumb.style.left = '18px';
+                if (icon) { icon.className = 'fa-solid fa-eye'; icon.style.color = '#d4af37'; }
+            } else {
+                if (track) track.style.background = 'rgba(255,255,255,0.1)';
+                if (thumb) thumb.style.left = '2px';
+                if (icon) { icon.className = 'fa-solid fa-eye-slash'; icon.style.color = 'var(--text-muted)'; }
+            }
+
+            renderEvents();
+        }
+
+        function renderEvents() {
+            const container = document.getElementById('events-container');
+            const now = new Date();
+
+            let filtered = allEvents.filter(event => {
+                // Age filter
+                if (currentAge !== 'all' && event.ageGroup !== currentAge) return false;
+
+                // Tempo filter
+                if (currentTempo !== 'all' && event.timeControl !== currentTempo) return false;
+
+                // Past events filter
+                if (!showPast && new Date(event.startDate) < now) return false;
+
+                return true;
+            });
+
+            // Sort by date
+            filtered.sort((a, b) => new Date(a.startDate) - new Date(b.startDate));
+
+            if (filtered.length === 0) {
+                container.innerHTML = `
+                    <div class="no-events">
+                        <i class="fa-solid fa-calendar-xmark"></i>
+                        <p>Žádné události neodpovídají zvoleným filtrům.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            // Group by month
+            const grouped = {};
+            filtered.forEach(event => {
+                const date = new Date(event.startDate);
+                const monthKey = date.toLocaleString('cs-CZ', { month: 'long', year: 'numeric' });
+                if (!grouped[monthKey]) grouped[monthKey] = [];
+                grouped[monthKey].push(event);
+            });
+
+            let html = '';
+            for (const [month, events] of Object.entries(grouped)) {
+                html += `
+                    <div class="month-section">
+                        <h3 class="month-header">
+                            <i class="fa-regular fa-calendar"></i>${month.charAt(0).toUpperCase() + month.slice(1)}
+                        </h3>
+                        <div class="events-grid">
+                            ${events.map(renderEventCard).join('')}
+                        </div>
+                    </div>
+                `;
+            }
+
+            container.innerHTML = html;
+        }
+
+        // Map Logic
+        let czechMapSvgContent = null;
+
+        // Approximate coordinates for cities (normalized 0-1 relative to CR bounds)
+        // Bounds: West 12.09, East 18.86, North 51.05, South 48.55
+        const cityToCoords = {
+            'jablonec': { lat: 50.72, lon: 15.17, region: 'LI' },
+            'liberec': { lat: 50.76, lon: 15.05, region: 'LI' },
+            'turnov': { lat: 50.58, lon: 15.15, region: 'LI' },
+            'česká lípa': { lat: 50.68, lon: 14.54, region: 'LI' },
+            'semily': { lat: 50.60, lon: 15.33, region: 'LI' },
+            'rokytnice': { lat: 50.73, lon: 15.44, region: 'LI' },
+            'tanvald': { lat: 50.74, lon: 15.30, region: 'LI' },
+            'harrachov': { lat: 50.77, lon: 15.43, region: 'LI' },
+            'libštát': { lat: 50.56, lon: 15.41, region: 'LI' },
+            'světlá nad sázavou': { lat: 49.66, lon: 15.40 },
+            'praha': { lat: 50.07, lon: 14.43 },
+            'brno': { lat: 49.19, lon: 16.60 },
+            'ostrava': { lat: 49.82, lon: 18.26 },
+            'plzeň': { lat: 49.73, lon: 13.37 },
+            'hradec králové': { lat: 50.21, lon: 15.83 },
+            'pardubice': { lat: 50.03, lon: 15.78 },
+            'ústí nad labem': { lat: 50.66, lon: 14.05 },
+            'české budějovice': { lat: 48.97, lon: 14.47 },
+            'karlovy vary': { lat: 50.23, lon: 12.87 },
+            'zlín': { lat: 49.22, lon: 17.66 },
+            'olomouc': { lat: 49.59, lon: 17.25 },
+            'vysočina': { lat: 49.40, lon: 15.59 }, // Jihlava area
+            'nový bor': { lat: 50.76, lon: 14.55, region: 'LI' },
+            'zákupy': { lat: 50.68, lon: 14.65, region: 'LI' },
+            'frýdlant': { lat: 50.92, lon: 15.08, region: 'LI' },
+            'jilemnice': { lat: 50.61, lon: 15.50, region: 'LI' },
+            'desná': { lat: 50.76, lon: 15.30, region: 'LI' },
+            'klatovy': { lat: 49.39, lon: 13.29 },
+            'frýdek-místek': { lat: 49.68, lon: 18.35 },
+            'vsetín': { lat: 49.34, lon: 17.99 },
+            'kroměříž': { lat: 49.30, lon: 17.39 },
+            'teplice': { lat: 50.64, lon: 13.82 }
+        };
+
+        // Initialize map
+        fetch('images/Cesko-kraje.svg')
+            .then(r => r.text())
+            .then(text => {
+                // Simplify SVG for embedding: remove metadata, defs, ensure viewBox
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(text, 'image/svg+xml');
+                const svg = doc.querySelector('svg');
+                if (svg) {
+                    // Set preserveAspectRatio to allow scaling
+                    svg.setAttribute('preserveAspectRatio', 'xMidYMid meet');
+                    // Ensure ID for potential CSS usage
+                    svg.id = 'cz-map-svg';
+                    // Remove large metadata to save memory if needed, but styling is key
+                    czechMapSvgContent = svg.outerHTML;
+                    // Re-render events if they are already loaded
+                    if (allEvents.length > 0) renderEvents();
+                }
+            })
+            .catch(e => console.error('Error loading map:', e));
+
+        function getCoordsFromLocation(location) {
+            if (!location) return null;
+            const loc = location.toLowerCase();
+            // Direct match
+            for (const [city, coords] of Object.entries(cityToCoords)) {
+                if (loc.includes(city)) return coords;
+            }
+            // If location is not found, but we are a chess club in Jablonec,
+            // we default to home coords? No, user said only if in Liberec region, show Liberec region map.
+            // If unknown, show CZ map. Use Jablonec as home marker always.
+            return null;
+        }
+
+        function getEventMapHtml(location) {
+            if (!czechMapSvgContent) return '<div class="map-placeholder"></div>'; // Loading state
+
+            const coords = getCoordsFromLocation(location);
+            const homeCoords = cityToCoords['jablonec'];
+
+            // Determine view mode: 'LI' (Liberec Region) or 'CZ' (Full Map)
+            const isLiberecRegion = coords && coords.region === 'LI';
+
+            // Generate markers
+            let markersHtml = '';
+
+            // Function to map Lat/Lon to SVG viewBox coordinates
+            // Map Bounds (approximate for the SVG projection):
+            // The SVG seems to be loosely Mercator or similar.
+            // Linear interpolation on bounding box:
+            // West: 12.09, East: 18.88
+            // North: 51.06, South: 48.55
+            // ViewBox: 0 0 3508 2480
+
+            const mapLoc = (lat, lon) => {
+                const minLon = 12.09;
+                const maxLon = 18.88;
+                const minLat = 48.55;
+                const maxLat = 51.06;
+
+                const x = ((lon - minLon) / (maxLon - minLon)) * 3508;
+                const y = ((maxLat - lat) / (maxLat - minLat)) * 2480;
+                return { x, y };
+            };
+
+            // Calculate ViewBox and Marker Sizes based on zoom
+            // Full CZ: viewBox="0 0 3508 2480", Marker R = 180 / 120
+            // Liberec Zoom: viewBox="1100 0 800 700", Zoom Factor approx 4x
+            // Scaled markers: R = 45 / 30 for zoom 4x to appear same physical size, or slightly larger to be clearer.
+
+            let currentViewBox = '0 0 3508 2480';
+            let rHome = 45; // Small dot
+            let rEvent = 150; // Big visible target
+            let strokeHome = 0; // No stroke for small dot
+            let strokeEvent = 30;
+
+            if (isLiberecRegion) {
+                // Zoom into Liberec Region (North Bohemia)
+                currentViewBox = '1100 0 800 700';
+                // Adjust marker sizes to not look huge in zoomed view
+                rHome = 15;
+                rEvent = 50;
+                strokeHome = 0;
+                strokeEvent = 10;
+            }
+
+            // Home Marker (Jablonec)
+            const home = mapLoc(homeCoords.lat, homeCoords.lon);
+            markersHtml += `<circle cx="${home.x}" cy="${home.y}" r="${rHome}" fill="#64748b" />`; // Grey small dot for home
+
+            if (isLiberecRegion) {
+                // Add label for Jablonec in detailed view
+                markersHtml += `<text x="${home.x}" y="${home.y + 120}" font-family="Arial" font-size="50" fill="#334155" text-anchor="middle" font-weight="900" style="text-shadow: 0 2px 4px rgba(255,255,255,0.8);">Jablonec</text>`;
+            }
+
+            // Event Marker
+            if (coords) {
+                const pt = mapLoc(coords.lat, coords.lon);
+
+                if (Math.abs(pt.x - home.x) > 1 || Math.abs(pt.y - home.y) > 1) {
+                    markersHtml += `
+                        <circle cx="${pt.x}" cy="${pt.y}" r="${rEvent}" fill="#22d3ee" stroke="white" stroke-width="${strokeEvent}" />
+                        <circle cx="${pt.x}" cy="${pt.y}" r="${rEvent * 0.3}" fill="white" />
+                    `;
+                } else {
+                    // Start of event is home -> make it prominent
+                    markersHtml += `
+                        <circle cx="${pt.x}" cy="${pt.y}" r="${rEvent}" fill="#22d3ee" stroke="white" stroke-width="${strokeEvent}" />
+                        <circle cx="${pt.x}" cy="${pt.y}" r="${rEvent * 0.3}" fill="white" />
+                    `;
+                }
+            }
+
+            // Inject markers AND update viewBox
+            let svgContent = czechMapSvgContent;
+            svgContent = svgContent.replace(/viewBox="[^"]*"/, `viewBox="${currentViewBox}"`);
+            return svgContent.replace('</svg>', `${markersHtml}</svg>`);
+        }
+
+        function renderEventCard(event) {
+            const date = new Date(event.startDate);
+            const day = date.getDate();
+            const dayName = date.toLocaleString('cs-CZ', { weekday: 'short' });
+            const time = date.toLocaleString('cs-CZ', { hour: '2-digit', minute: '2-digit' });
+
+            const categoryIcons = {
+                tournament: 'fa-trophy',
+                training: 'fa-chess-pawn',
+                camp: 'fa-campground',
+                meeting: 'fa-users',
+                other: 'fa-calendar'
+            };
+
+            const categoryLabels = {
+                tournament: 'Turnaj',
+                training: 'Trénink',
+                camp: 'Soustředění',
+                meeting: 'Schůze',
+                other: 'Ostatní'
+            };
+
+            const tags = [];
+            if (event.isInternal) tags.push('<span class="event-tag internal"><i class="fa-solid fa-lock"></i> Interní</span>');
+
+            // --- BADGE LOGIC UPDATED ---
+
+            // 1. Age Badge (Icon + Text)
+            let ageIconHtml = '';
+            // Always show Adults if not Youth (since we merged 'all' -> 'adults')
+            // Or if undefined? User said "slucovali jen do dvou".
+            // Let's assume input is correct.
+            if (event.ageGroup) {
+                const isYouth = event.ageGroup === 'youth';
+                const label = isYouth ? 'Mládež' : 'Dospělí';
+                const icon = isYouth ? 'fa-child' : 'fa-user-tie';
+                const style = isYouth
+                    ? 'background: rgba(74, 222, 128, 0.15); color: #4ade80;'
+                    : 'background: rgba(167, 139, 250, 0.15); color: #a78bfa;'; // Purple for adults
+                ageIconHtml = `<span class="badge badge-control" style="${style}"><i class="fa-solid ${icon}"></i> ${label}</span>`;
+            }
+
+
+            // 2. Type Badge (Icon + Text)
+            let typeIconHtml = '';
+            if (event.eventType) {
+                const isTeam = event.eventType === 'team';
+                const label = isTeam ? 'Družstva' : 'Jednotlivci';
+                const icon = isTeam ? 'fa-users' : 'fa-user';
+                // Blue for type
+                typeIconHtml = `<span class="badge badge-control" style="background: rgba(34, 211, 238, 0.15); color: #22d3ee;"><i class="fa-solid ${icon}"></i> ${label}</span>`;
+            }
+
+            // 3. Time Control (Text + Icon)
+            let timeControlHtml = '';
+            if (event.timeControl) {
+                let label = event.timeControl;
+                let icon = 'fa-stopwatch';
+                let tcStyle = 'background: rgba(251, 146, 60, 0.15); color: #fb923c;'; // Default Orange (Rapid)
+
+                if (label === 'blitz') {
+                    label = 'Blesk';
+                    icon = 'fa-bolt';
+                    tcStyle = 'background: rgba(251, 191, 36, 0.15); color: #fbbf24;'; // Amber (Blitz)
+                } else if (label === 'rapid') {
+                    label = 'Rapid';
+                    icon = 'fa-stopwatch'; // Keep stopwatch
+                    tcStyle = 'background: rgba(251, 146, 60, 0.15); color: #fb923c;'; // Orange
+                } else if (label === 'classical') {
+                    label = 'Vážná';
+                    icon = 'fa-chess-king';
+                    tcStyle = 'background: rgba(96, 165, 250, 0.15); color: #60a5fa;'; // Blue
+                } else {
+                    // Capitalize first letter for other values
+                    label = label.charAt(0).toUpperCase() + label.slice(1);
+                }
+
+                timeControlHtml = `<span class="badge badge-control" style="${tcStyle}"><i class="fa-solid ${icon}"></i> ${label}</span>`;
+            }
+
+            // 4. Presence (Text + Icon) - MOVED TO TOP
+            let presenceHtml = '';
+            if (event.presentationEnd) {
+                const pTime = new Date(event.presentationEnd).toLocaleTimeString('cs-CZ', { hour: '2-digit', minute: '2-digit' });
+                presenceHtml = `<span class="badge badge-control" style="background: rgba(16, 185, 129, 0.1); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.2);"><i class="fa-solid fa-user-check"></i> ${pTime}</span>`;
+            }
+
+            // Generate details HTML parts
+            const mainInfoParts = [];
+
+            // Map Logic & Border Class
+            let mapHtml = '';
+            let borderClass = 'region-away'; // Default
+            if (event.location) {
+                mapHtml = `<div class="event-map" title="${event.location}">${getEventMapHtml(event.location)}</div>`;
+                const coords = getCoordsFromLocation(event.location);
+                if (coords && coords.region === 'LI') {
+                    borderClass = 'region-home';
+                }
+            } else {
+                if (event.isInternal) borderClass = 'region-home';
+            }
+
+            const googleCalUrl = generateGoogleCalendarUrl(event);
+
+            return `
+                <div class="event-card ${borderClass}">
+                    <div class="event-content" style="position: relative;">
+                         <!-- Google Calendar Icon (Top Right) -->
+                        <a href="${googleCalUrl}" target="_blank" class="gcal-icon-link" title="Přidat do Google kalendáře">
+                            <i class="fa-regular fa-calendar-plus"></i>
+                        </a>
+
+                        <div class="event-header">
+                            <div class="event-date-box">
+                                <span class="day">${day}</span>
+                                <span class="month">${date.toLocaleString('cs-CZ', { month: 'short' }).toUpperCase()}</span>
+                                <span class="time">${time}</span>
+                            </div>
+                            
+                            <div class="event-main-info">
+                                <h3 class="event-title" style="margin-bottom: 0.4rem;">
+                                    ${event.url ? `<a href="${event.url}" target="_blank" class="hover:underline" style="color: #f1f5f9;">${event.title} <i class="fa-solid fa-external-link-alt text-sm ml-1" style="color: #94a3b8; font-size: 0.8em;"></i></a>` : `<span style="color: #f1f5f9;">${event.title}</span>`}
+                                </h3>
+
+                                <!-- Top Row: Category + Icons -->
+                                <div class="event-meta-top">
+                                   <!-- Main Category Badge -->
+                                   <span class="event-category"><i class="fa-solid ${categoryIcons[event.category] || 'fa-calendar'}"></i> ${categoryLabels[event.category] || event.category}</span>
+                                   
+                                   <div class="event-badges-inline">
+                                        ${ageIconHtml}
+                                        ${typeIconHtml}
+                                        ${timeControlHtml}
+                                        ${presenceHtml}
+                                   </div>
+                                </div>
+
+                                <div class="event-location-row">
+                                    <i class="fa-solid fa-location-dot"></i>
+                                    ${event.url ? `<a href="https://mapy.cz/zakladni?q=${encodeURIComponent(event.location)}" target="_blank" class="location-link">${event.location}</a>` : `<span class="location-text">${event.location || 'Místo neuvedeno'}</span>`}
+                                </div>
+
+                                ${event.description ? `<div class="event-description">${event.description.replace(/\n/g, '<br>')}</div>` : ''}
+
+                                <div class="event-footer-details">
+                                     ${event.registrationDeadline ? `
+                                        <div class="detail-item alert-deadline">
+                                            <i class="fa-regular fa-clock"></i> 
+                                            <span>Přihlášky do: <strong style="color: #f87171;">${new Date(event.registrationDeadline).toLocaleDateString('cs-CZ')} ${new Date(event.registrationDeadline).toLocaleTimeString('cs-CZ', { hour: '2-digit', minute: '2-digit' })}</strong></span>
+                                        </div>` : ''}
+                                     
+
+                                     
+                                     ${event.entryFee ? `
+                                        <div class="detail-item gold-text">
+                                            <i class="fa-solid fa-coins"></i> 
+                                            <span>${event.entryFee}</span>
+                                        </div>` : ''}
+
+                                     ${event.organizerContact ? `
+                                        <div class="detail-item">
+                                            <i class="fa-solid fa-phone"></i> 
+                                            <span>${event.organizerContact}</span>
+                                        </div>` : ''}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    ${mapHtml}
+                </div>
+            `;
+        }
+
+        // Add global toggle function
+        window.toggleDetails = function (btn) {
+            const content = btn.previousElementSibling; // The .event-details-expanded div
+            // Note: In structure above, toggleBtn comes AFTER expandedHtml.
+            // But mainInfoHtml is before expandedHtml.
+            // Structure: mainInfo -> expanded -> toggle.
+            // So btn.previousElementSibling is correct (expandedHtml).
+
+            // Wait, previousElementSibling in text string might catch whitespace? DOM handles it.
+            // Let's use a safer selector relative to card.
+            const cardContent = btn.closest('.event-content');
+            const details = cardContent.querySelector('.event-details-expanded');
+
+            details.classList.toggle('open');
+            btn.classList.toggle('open');
+            btn.innerHTML = details.classList.contains('open')
+                ? 'Méně informací <i class="fa-solid fa-chevron-down" style="transform: rotate(180deg)"></i>'
+                : 'Více informací <i class="fa-solid fa-chevron-down"></i>';
+        };
+        function generateGoogleCalendarUrl(event) {
+            const formatDateTime = (date) => {
+                return new Date(date).toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+            };
+
+            const start = formatDateTime(event.startDate);
+            const end = event.endDate ? formatDateTime(event.endDate) : formatDateTime(new Date(new Date(event.startDate).getTime() + 2 * 60 * 60 * 1000));
+
+            const params = new URLSearchParams({
+                action: 'TEMPLATE',
+                text: event.title,
+                dates: `${start}/${end}`,
+                details: event.description || '',
+                location: event.location || ''
+            });
+
+            return `https://calendar.google.com/calendar/render?${params.toString()}`;
+        }
+
+        function showError() {
+            document.getElementById('events-container').innerHTML = `
+                <div class="no-events">
+                    <i class="fa-solid fa-exclamation-triangle"></i>
+                    <p>Nepodařilo se načíst události.</p>
+                    <button onclick="loadEvents()" class="btn" style="margin-top: 1rem;">Zkusit znovu</button>
+                </div>
+            `;
+        }
+    </script>
+</body>
+
+</html>

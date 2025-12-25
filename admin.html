@@ -169,9 +169,10 @@
 
         .editor-layout {
             display: grid;
-            grid-template-columns: 1fr 350px;
-            gap: 2rem;
+            grid-template-columns: 1fr 320px;
+            gap: 1.5rem;
             min-height: 80vh;
+            align-items: start;
         }
 
         .editor-main,
@@ -179,31 +180,56 @@
             background: var(--surface-color);
             border-radius: var(--border-radius);
             border: 1px solid var(--editor-border);
-            padding: 1.5rem;
+            padding: 1.25rem;
         }
 
+        /* Sticky Side Panel logic */
+        /* Assuming the second child of editor-layout is the sidebar */
+        .editor-layout>div:last-child {
+            position: sticky;
+            top: 100px;
+            /* Offset for header */
+            max-height: calc(100vh - 120px);
+            overflow-y: auto;
+            /* Scrollbar styling */
+            scrollbar-width: thin;
+            scrollbar-color: var(--primary-color) rgba(0, 0, 0, 0.1);
+        }
+
+        /* Compact Form Styles */
         .form-group {
-            margin-bottom: 1.25rem;
+            margin-bottom: 0.85rem;
         }
 
         .form-group label {
             display: block;
-            margin-bottom: 0.5rem;
+            margin-bottom: 0.35rem;
             color: var(--primary-color);
             font-weight: 600;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
         }
 
         .form-group input,
         .form-group select,
         .form-group textarea {
             width: 100%;
-            padding: 0.75rem;
+            padding: 0.5rem 0.75rem;
+            /* Reduced vertical padding */
             background: rgba(255, 255, 255, 0.05);
             border: 1px solid var(--editor-border);
             border-radius: 6px;
             color: var(--text-color);
             font-family: inherit;
+            font-size: 0.9rem;
+            /* Slightly smaller text */
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            background: rgba(255, 255, 255, 0.08);
         }
 
         .wysiwyg-toolbar {
@@ -1216,6 +1242,9 @@
                         class="fa-solid fa-chess-board"></i>Partie</div>
                 <div class="nav-tab" onclick="switchTab('blicak')" id="blicakTab"><i class="fa-solid fa-bolt"></i>Blicák
                 </div>
+                <div class="nav-tab" onclick="switchTab('events')" id="eventsTab"><i
+                        class="fa-regular fa-calendar-days"></i>Události
+                </div>
                 <div class="nav-tab" id="puzzleRacerTab" onclick="switchTab('puzzleRacer')"><i
                         class="fa-solid fa-puzzle-piece"></i>Puzzle Racer <i class="fa-solid fa-lock"
                         style="font-size: 0.7em; margin-left: 0.4rem; color: #fbbf24; opacity: 0.8;"
@@ -1679,6 +1708,253 @@
             <div id="standingsResult" style="margin-top: 1rem; display: none;"></div>
         </div>
     </div>
+    <!-- Events Management View -->
+    <div id="eventsView" class="hidden">
+        <div
+            style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+            <h2 style="margin: 0;"><i class="fa-regular fa-calendar-days"></i>Správa událostí</h2>
+            <button class="btn-secondary" onclick="AdminEvents.loadEvents()"><i
+                    class="fa-solid fa-sync"></i>Obnovit</button>
+        </div>
+
+        <!-- Events Form -->
+        <div class="card" style="margin-bottom: 2rem;">
+            <h3 id="event-form-title" style="margin-top: 0; color: var(--primary-color);"><i
+                    class="fa-solid fa-plus"></i>Nová událost</h3>
+            <form id="event-form">
+                <div class="editor-layout">
+                    <!-- Main Content -->
+                    <div class="editor-main">
+                        <div class="form-group">
+                            <label>Název události *</label>
+                            <input type="text" name="title" required placeholder="např. Vánoční rapid">
+                        </div>
+                        <div class="form-group">
+                            <label>Popis</label>
+                            <textarea name="description" rows="5" placeholder="Podrobnosti o události..."></textarea>
+                        </div>
+
+                        <h4
+                            style="margin: 1.5rem 0 1rem; color: var(--text-muted); font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.05em;">
+                            Čas a Místo</h4>
+
+                        <div
+                            style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+                            <div class="form-group">
+                                <label>Začátek *</label>
+                                <input type="datetime-local" name="startDate" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Konec</label>
+                                <input type="datetime-local" name="endDate">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Místo konání</label>
+                            <div class="autocomplete-wrapper" style="position: relative;">
+                                <input type="text" name="location" id="eventLocationInput"
+                                    placeholder="např. Hala Bižuterie, Jablonec n.N." autocomplete="off">
+                                <div id="locationSuggestions" class="suggestions-list"></div>
+                            </div>
+                        </div>
+
+                        <h4
+                            style="margin: 1.5rem 0 1rem; color: var(--text-muted); font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.05em;">
+                            Odkazy a Kontakt</h4>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                            <div class="form-group">
+                                <label>Kontakt</label>
+                                <input type="text" name="organizerContact" placeholder="Email, telefon">
+                            </div>
+                            <div class="form-group">
+                                <label>Web akce</label>
+                                <input type="text" name="url" placeholder="https://...">
+                            </div>
+                        </div>
+
+                        <div class="form-group" style="margin-top: 2rem;">
+                            <button type="submit" class="btn-primary"
+                                style="width: 100%; justify-content: center; padding: 1rem;"><i
+                                    class="fa-solid fa-save"></i> Uložit událost</button>
+                            <button type="button" id="event-cancel-btn" class="btn-secondary"
+                                style="width: 100%; justify-content: center; margin-top: 0.5rem; display: none;"><i
+                                    class="fa-solid fa-times"></i> Zrušit úpravy</button>
+                        </div>
+                    </div>
+
+                    <!-- Sidebar Content -->
+                    <div class="editor-sidebar">
+                        <h4 style="margin-top: 0; margin-bottom: 1rem; color: var(--primary-color);">Nastavení</h4>
+
+                        <div class="form-group">
+                            <label>Kategorie</label>
+                            <select name="category" required>
+                                <option value="tournament">Turnaj</option>
+                                <option value="training">Trénink</option>
+                                <option value="camp">Soustředění</option>
+                                <option value="meeting">Schůze</option>
+                                <option value="other">Ostatní</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Věková kategorie</label>
+                            <select name="ageGroup">
+                                <option value="">-- Nespecifikováno --</option>
+                                <option value="youth">Mládež</option>
+                                <option value="adults">Dospělí</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Typ události</label>
+                            <select name="eventType">
+                                <option value="">-- Nespecifikováno --</option>
+                                <option value="individual">Jednotlivci</option>
+                                <option value="team">Družstva</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Tempo hry</label>
+                            <select name="timeControl">
+                                <option value="">-- Nespecifikováno --</option>
+                                <option value="blitz">Blitz</option>
+                                <option value="rapid">Rapid</option>
+                                <option value="classical">Vážný šach</option>
+                            </select>
+                        </div>
+
+                        <div class="divider" style="height: 1px; background: rgba(255,255,255,0.1); margin: 1.5rem 0;">
+                        </div>
+
+                        <h4 style="margin-bottom: 1rem; color: var(--text-color); font-size: 0.9rem;">Registrace</h4>
+
+                        <div class="form-group">
+                            <label>Přihlášky do</label>
+                            <input type="datetime-local" name="registrationDeadline">
+                        </div>
+                        <div class="form-group">
+                            <label>Konec prezence</label>
+                            <input type="datetime-local" name="presentationEnd">
+                        </div>
+                        <div class="form-group">
+                            <label>Startovné</label>
+                            <input type="text" name="entryFee" placeholder="např. 100 Kč">
+                        </div>
+
+                        <div class="form-group"
+                            style="margin-top: 1rem; background: rgba(255,255,255,0.02); padding: 0.75rem; border-radius: 6px; border: 1px solid rgba(255,255,255,0.05);">
+                            <label
+                                style="display: flex; align-items: center; gap: 0.75rem; cursor: pointer; margin: 0;">
+                                <input type="checkbox" name="isInternal" style="width: auto;">
+                                <span style="font-weight: normal;">Pouze pro členy (interní)</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Suggestions moved inside style tag or kept global -->
+                <style>
+                    /* Kept suggestions CSS here for context */
+                    .suggestions-list {
+                        position: absolute;
+                        top: 100%;
+                        left: 0;
+                        right: 0;
+                        background: #1a1a2e;
+                        border: 1px solid rgba(255, 255, 255, 0.1);
+                        border-radius: 0 0 8px 8px;
+                        max-height: 200px;
+                        overflow-y: auto;
+                        z-index: 1000;
+                        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+                        display: none;
+                    }
+
+                    /* ... other suggestion styles ... */
+                    /* Simplified here as styles are unchanged basically */
+                </style>
+            </form>
+        </div>
+
+        <!-- Events Table -->
+        <div class="card">
+            <h3 style="margin-top: 0;"><i class="fa-solid fa-list"></i>Seznam událostí</h3>
+
+            <!-- Desktop Table -->
+            <div class="desktop-view">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Datum</th>
+                            <th>Název</th>
+                            <th>Kategorie</th>
+                            <th>Tagy</th>
+                            <th>Místo</th>
+                            <th>Akce</th>
+                        </tr>
+                    </thead>
+                    <tbody id="events-table-body"></tbody>
+                </table>
+            </div>
+
+            <!-- Mobile List (Cards) -->
+            <div id="events-mobile-list" class="mobile-view"></div>
+
+            <style>
+                .desktop-view {
+                    display: block;
+                }
+
+                .mobile-view {
+                    display: none;
+                }
+
+                @media (max-width: 768px) {
+                    .desktop-view {
+                        display: none;
+                    }
+
+                    .mobile-view {
+                        display: grid;
+                        gap: 1rem;
+                    }
+                }
+
+                .mobile-event-card {
+                    background: rgba(255, 255, 255, 0.03);
+                    border: 1px solid rgba(255, 255, 255, 0.1);
+                    border-radius: 12px;
+                    padding: 1rem;
+                    display: flex;
+                    flex-direction: column;
+                    gap: 0.5rem;
+                }
+
+                .mobile-event-header {
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: flex-start;
+                }
+
+                .mobile-event-date {
+                    font-size: 0.85rem;
+                    color: var(--primary-color);
+                    font-weight: 600;
+                }
+
+                .mobile-event-actions {
+                    display: flex;
+                    gap: 0.5rem;
+                    margin-top: 0.5rem;
+                    padding-top: 0.75rem;
+                    border-top: 1px solid rgba(255, 255, 255, 0.05);
+                    justify-content: flex-end;
+                }
+            </style>
+        </div>
+    </div>
     <!-- Puzzle Racer Settings View -->
     <div id="puzzleRacerView" class="hidden">
         <div class="card">
@@ -2049,6 +2325,7 @@
     <script src="js/admin/admin-messages.js"></script>
     <script src="js/admin/admin-competitions.js?v=20251212_1"></script>
     <script src="js/admin/admin-games.js?v=20251221_1"></script>
+    <script src="js/admin/admin-events.js?v=20251225"></script>
     <script> // Admin Panel Logic - use API_URL from config.js
         var authToken = null;
         let currentUser = null;
@@ -2261,6 +2538,7 @@
                 'competitions',
                 'gallery',
                 'games',
+                'events',
                 'puzzleRacer'].forEach(v => {
                     const el = document.getElementById(v + 'View');
                     if (el) el.classList.add('hidden');
@@ -2277,6 +2555,7 @@
             else if (tab === 'competitions') loadCompetitions();
             else if (tab === 'gallery') loadAdminGallery();
             else if (tab === 'games') loadRecordedGames();
+            else if (tab === 'events' && window.AdminEvents) AdminEvents.init();
             else if (tab === 'puzzleRacer') loadPuzzleRacerSettings();
         }
 
