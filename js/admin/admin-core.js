@@ -167,7 +167,7 @@ function switchTab(tab) {
     if (activeTab) activeTab.classList.add('active');
 
     // Hide all views
-    ['dashboard', 'editor', 'members', 'users', 'messages', 'blicak', 'competitions', 'gallery'].forEach(v => {
+    ['dashboard', 'editor', 'members', 'users', 'messages', 'blicak', 'competitions', 'gallery', 'games', 'events', 'puzzleRacer'].forEach(v => {
         const el = document.getElementById(v + 'View');
         if (el) el.classList.add('hidden');
     });
@@ -184,6 +184,9 @@ function switchTab(tab) {
     else if (tab === 'blicak') loadBlicakRegistrations();
     else if (tab === 'competitions') loadCompetitions();
     else if (tab === 'gallery') loadAdminGallery();
+    else if (tab === 'games') loadRecordedGames();
+    else if (tab === 'events' && window.AdminEvents) AdminEvents.init();
+    else if (tab === 'puzzleRacer' && window.loadPuzzleRacerSettings) loadPuzzleRacerSettings();
 }
 
 // ================================

@@ -1,109 +1,202 @@
-# Roadmap - Šachy Jablonec
+# Roadmap – Šachy Jablonec
 
-Plán budoucího vývoje webu sachyjablonec.cz.
+> **Poslední aktualizace:** 25. 12. 2025
 
-*Poslední aktualizace: 22. 12. 2025*
-
----
-
-## ✅ Dokončeno (23. 12. 2025)
-
-### Opravy a Vylepšení
-- [x] **Google Account Linking Fix:** Propojení účtu již nevyžaduje zadání jména
-- [x] **Graceful Shutdown:** Server se při deployi ukončuje čistě (bez npm errorů)
-- [x] **Cache Busting:** Vynucení načtení nových verzí JS/CSS (`?v=4`)
-- [x] **UI/UX:** Odstranění A/B testu widgetu, lepší náhledy článků (ikony komentářů)
-- [x] **Game Viewer:** Sjednocení vzhledu v sekci Soutěže družstev
-
-### Google OAuth Přihlášení
-- [x] Passport.js konfigurace s Google OAuth 2.0
-- [x] Backend OAuth routes (`/api/auth/google`, callback, set-username)
-- [x] Frontend tlačítko "Přihlásit přes Google" v login modalu
-- [x] Username setup modal pro nové Google uživatele
-- [x] Propojení existujících účtů s Google
-
-### Uživatelský Systém
-- [x] Změna hesla v nastavení účtu
-- [x] Nová role MEMBER (hierarchie: USER < MEMBER < ADMIN < SUPERADMIN)
-- [x] Stránka nastavení účtu (`/account.html`)
-- [x] Editovatelná pole: jméno, oddíl
-- [x] Přepínátko pro zobrazení jména/přezdívky v komentářích
-- [x] Role badges v user menu (Superadmin, Admin, Člen)
-- [x] User dropdown menu: Nastavení účtu, Členská sekce, Administrace
-
-### Komentáře pod články
-- [x] Databázový model Comment s vnořenými odpověďmi
-- [x] CRUD API endpoints s autentizací
-- [x] Dark theme UI inspirovaný chess.cz
-- [x] Odpovídání na komentáře (neomezená hloubka)
-- [x] Moderace (skrytí komentářů)
-
-### Auth na všech stránkách
-- [x] Dynamické načítání auth.js přes layout-loader.js
-- [x] User menu funkční na všech stránkách
+Plán budoucího vývoje webu [sachyjablonec.cz](https://www.sachyjablonec.cz).
 
 ---
 
-## 🔧 V Práci / Plánováno
+## 📋 Obsah
 
-### Priorita 1: Členská Sekce - Interní Info 🆕
-> **Cíl:** Zobrazovat přihlášeným členům (role MEMBER) interní informace.
-- [ ] Sekce "Turnaje a Akce" (neveřejné info, propozice, termíny)
-- [ ] Zápisy ze schůzí / Dokumenty
-- [ ] Správa tohoto obsahu přes Admin panel (CRUD pro "Interní oznámení")
+1. [Aktuální práce](#-aktuální-práce)
+2. [Plánované funkce](#-plánované-funkce)
+3. [Technický dluh](#-technický-dluh)
+4. [Backlog](#-backlog)
+5. [Testování](#-testování)
+6. [Dokončeno](#-dokončeno)
+7. [Technické poznámky](#-technické-poznámky)
 
-### Priorita 2: Email Služba
-> **Blokováno:** Potřebujeme nastavit email službu (SendGrid, Resend, apod.)
+---
 
-- [ ] Integrace email poskytovatele
-- [ ] "Zapomenuté heslo" - reset link přes email
-- [ ] Email notifikace (volitelné)
+## 🚀 Aktuální práce
 
-### Priorita 3: Game Viewer Responsivita
+> Právě rozpracované úkoly s vysokou prioritou.
+
+| Úkol | Stav | Poznámka |
+|------|------|----------|
+| Kalendář událostí | ✅ Hotovo | Backend + Admin + Frontend implementováno |
+| Členská sekce – rozšíření | 🟡 Plánováno | Dokumenty, fórum, interní oznámení |
+| Admin panel – redesign | 🟡 Plánováno | Modularizace, dashboard, lepší UX |
+| Email služba (reset hesla) | 🔴 Blokováno | Čeká na výběr poskytovatele |
+
+---
+
+## 📌 Plánované funkce
+
+### ✅ Priorita 1: Kalendář událostí (HOTOVO)
+> Implementováno 25. 12. 2025
+
+- [x] **Veřejný kalendář** – turnaje, zápasy, akce oddílu
+- [x] **Interní kalendář** – tréninky, schůze (pouze MEMBER+)
+- [x] Export do Google Calendar (iCal)
+- [x] Filtry podle kategorie (mládež/dospělí) a typu (turnaj/trénink)
+- [x] Admin CRUD pro správu událostí
+
+
+### Priorita 2: Rozšíření členské sekce 🆕
+> Inspirace: NSS.cz Klub, Chess.com club features
+
+- [ ] **Interní oznámení** – důležité zprávy pro členy
+- [ ] **Dokumenty** – zápisy ze schůzí, stanovy, formuláře
+- [ ] **Diskuzní fórum** – místo pro interní diskuze
+- [ ] **Audit log** – historie změn pro adminy
+- [ ] Sekce "Turnaje a Akce" (neveřejné propozice, termíny)
+
+### Priorita 3: Admin panel – redesign 🆕
+> Řešení bottlenecku: `admin-news.js` (78 KB)
+
+- [ ] **Dashboard** – přehled klíčových metrik na úvodní stránce
+- [ ] **Sidebar navigace** – místo tabů pro lepší orientaci
+- [ ] **Rychlé akce** – frequently used actions na jeden klik
+- [ ] Modularizace `admin-news.js` do menších souborů
+- [ ] Odstranit veškerý inline JavaScript z `admin.html`
+
+### Priorita 4: Email služba
+> Integrace emailového poskytovatele pro notifikace a reset hesla.
+
+- [ ] Integrace poskytovatele (SendGrid / Resend / Mailgun)
+- [ ] "Zapomenuté heslo" – reset link přes email
+- [ ] Volitelné email notifikace (nový komentář, odpověď)
+
+### Priorita 5: Game Viewer
+> Zlepšení responsivity prohlížeče šachových partií.
+
 - [x] Základní CSS úpravy pro menší přetékání
 - [ ] Plně responsivní šachovnice v článcích
-- [ ] Chess.com iframe alternativa s vlastním parserem
+- [ ] Vlastní PGN parser jako alternativa k Chess.com iframe
 
-### Priorita 4: Backend Refaktoring
-- [ ] Rozdělit `server.js` (1470+ řádků) do modulů:
+---
+
+## 🔧 Technický dluh
+
+> Identifikované bottlenecks vyžadující refaktoring.
+
+### Vysoká priorita
+
+| Problém | Soubor | Detail |
+|---------|--------|--------|
+| Monolitický server | `src/server.js` | 1500 řádků, inline scraping |
+| Obří admin modul | `js/admin/admin-news.js` | 78 KB |
+| Inline CSS/JS | `admin.html` | 2800 řádků |
+| Žádné testy | – | Riziko regrese |
+
+### Plánované řešení
+
+- [ ] Rozdělit `server.js` do modulů:
   - `src/services/scrapingService.js`
   - `src/services/standingsService.js`
 - [ ] Centralizovat helper funkce
-
-### Priorita 5: Admin Panel Dokončení
-- [ ] Plná migrace `admin-core.js` (auth, routing)
-- [ ] Odstranění veškerého inline JS z `admin.html`
+- [ ] Přesunout seeding do `src/utils/seed.js`
+- [ ] Sjednotit `game-viewer.js` a `game-viewer2.js`
 
 ---
 
-## 🔒 Bezpečnost (Vyřešeno)
+## 📝 Backlog
 
-- [x] Endpoint `/api/auth/fix-admins` odstraněn/zabezpečen
-- [x] Default role změněna na `USER`
-- [x] Role hierarchie: USER < MEMBER < ADMIN < SUPERADMIN
-- [x] RBAC middleware implementován
-- [x] Rate limiting na auth endpointy
-
----
-
-## 📝 Backlog (Nízká Priorita)
+> Nižší priorita, bude řešeno později.
 
 ### Funkce
 - [ ] Mobilní verze admin panelu
-- [ ] Notifikace o nových komentářích
-- [ ] Hledání v partiích
-- [ ] Hledání v článcích
+- [ ] Notifikace o nových komentářích (in-app)
+- [ ] Fulltextové hledání v partiích
+- [ ] Fulltextové hledání v článcích
+- [ ] ELO tracker – sledování vývoje ELO hráčů
 
 ### Technické
 - [ ] Rate limiting na Lichess API proxy
 - [ ] Přesunout debug/test soubory do `/scripts`
-- [ ] Stránka `/partie` - tab "Z článků" prázdný (migrace gamesJson)
+- [ ] Opravit prázdný tab "Z článků" na stránce `/partie`
+- [ ] TypeScript migrace (dlouhodobě)
 
 ---
 
-## 🚀 Railway Deployment
+## 🧪 Testování
 
-### Konfigurace
+> Plán pro ověření funkčnosti klíčových částí aplikace.
+
+### Manuální testy
+| Oblast | Co testovat | Stav |
+|--------|-------------|------|
+| Přihlášení | Login jménem/heslem, Google OAuth | ⬜ |
+| Registrace | Nový uživatel, validace polí | ⬜ |
+| Komentáře | Přidání, odpověď, moderace | ⬜ |
+| Galerie | Upload, kategorizace, hromadné mazání | ⬜ |
+| Články | CRUD v admin panelu, zobrazení na webu | ⬜ |
+| Puzzle Racer | Vanilla a Thematic módy | ⬜ |
+| Mobilní zobrazení | Responsivita hlavních stránek | ⬜ |
+
+### Automatizované testy (plánováno)
+- [ ] Setup test frameworku (Vitest nebo Jest)
+- [ ] API testy – auth endpointy
+- [ ] API testy – CRUD pro články a komentáře
+- [ ] E2E testy – základní user flow (Playwright)
+
+---
+
+## ✅ Dokončeno
+
+<details>
+<summary><strong>Prosinec 2025</strong></summary>
+
+#### 23. 12. 2025 – Opravy a vylepšení
+- ✅ Google Account Linking – propojení účtu bez zadávání jména
+- ✅ Graceful Shutdown – čisté ukončení serveru při deployi
+- ✅ Cache Busting – vynucení načtení nových verzí JS/CSS (`?v=4`)
+- ✅ UI/UX – odstranění A/B testu, lepší náhledy článků
+- ✅ Game Viewer – sjednocení vzhledu v sekci Soutěže družstev
+
+#### 22. 12. 2025 – Google OAuth & Komentáře
+- ✅ Passport.js konfigurace s Google OAuth 2.0
+- ✅ Backend OAuth routes (`/api/auth/google`, callback, set-username)
+- ✅ Frontend tlačítko "Přihlásit přes Google"
+- ✅ Komentáře pod články (CRUD, vnořené odpovědi, moderace)
+
+#### 22. 12. 2025 – Uživatelský systém
+- ✅ Role MEMBER (hierarchie: USER < MEMBER < ADMIN < SUPERADMIN)
+- ✅ Stránka nastavení účtu (`/account.html`)
+- ✅ Editace profilu (jméno, oddíl, přepínač zobrazení)
+- ✅ Role badges v user menu
+
+#### Bezpečnost
+- ✅ Endpoint `/api/auth/fix-admins` zabezpečen
+- ✅ Default role změněna na USER
+- ✅ RBAC middleware implementován
+- ✅ Rate limiting na auth endpointy
+
+</details>
+
+<details>
+<summary><strong>Starší změny</strong></summary>
+
+#### 17. 12. 2025
+- ✅ Mobilní optimalizace tabulek
+- ✅ Stabilita serveru (timeout, trust proxy)
+
+#### 12. 12. 2025
+- ✅ Puzzle Racer admin nastavení
+- ✅ Members Hub redesign
+- ✅ Admin panel modularizace
+
+</details>
+
+---
+
+## 🔧 Technické poznámky
+
+<details>
+<summary><strong>Railway Deployment</strong></summary>
+
+### Konfigurace (`railway.toml`)
 ```toml
 [build]
 buildCommand = "npm install && npx prisma generate"
@@ -114,32 +207,42 @@ healthcheckPath = "/health"
 healthcheckTimeout = 200
 ```
 
-### Pravidla pro Prisma migrace:
+### Pravidla pro Prisma migrace
 1. `prisma generate` → v **build** fázi
 2. `prisma migrate deploy` → v **start** fázi
-3. NIKDY nedávat `prisma migrate deploy` do `buildCommand`
+3. ⚠️ NIKDY nedávat `prisma migrate deploy` do `buildCommand`
 
-### Přidání nové tabulky:
-1. Přidat model do `prisma/schema.prisma`
-2. Lokálně: `npx prisma migrate dev --name nazev`
-3. Push: `git add -f prisma/migrations/ && git commit && git push`
+### Přidání nové tabulky
+```bash
+# 1. Přidat model do prisma/schema.prisma
+# 2. Lokálně vytvořit migraci
+npx prisma migrate dev --name nazev_migrace
+
+# 3. Commitnout a pushnout
+git add -f prisma/migrations/
+git commit -m "feat: Add new table"
+git push
+```
+
+</details>
+
+<details>
+<summary><strong>Konkurenční inspirace</strong></summary>
+
+### NSS.cz
+- Kalendář turnajů s filtry
+- ELO tracker
+- Akademie (tréninkové skupiny)
+- Klub sekce pro členy
+
+### Chess.com
+- Role hierarchy (Coordinator → Admin → Super Admin)
+- Club tournaments a Team Matches
+- Diskuzní fóra a chat
+- Audit log pro akce adminů
+
+</details>
 
 ---
 
-## 🗓️ Historie změn
-
-### 22. 12. 2025
-- Google OAuth přihlášení
-- Uživatelský profil (jméno, oddíl, přepínátko zobrazení)
-- MEMBER role
-- Komentáře pod články
-- Auth na všech stránkách
-
-### 17. 12. 2025
-- Mobilní optimalizace tabulek
-- Stabilita serveru (timeout, trust proxy)
-
-### 12. 12. 2025
-- Puzzle Racer admin nastavení
-- Members Hub redesign
-- Admin panel modularizace
+*Tento dokument je živý a bude průběžně aktualizován.*

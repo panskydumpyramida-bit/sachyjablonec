@@ -295,11 +295,13 @@
 
     <main>
         <section class="container" style="margin-top: 80px;">
-            <h1 class="section-title">Kalendář zápasů</h1>
-            <p
-                style="margin-bottom: 2rem; color: var(--text-muted); text-align: center; max-width: 600px; margin-left: auto; margin-right: auto;">
-                Přehled všech plánovaných utkání a turnajů našich družstev v aktuální sezóně.
-            </p>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+                <h1 class="section-title" style="margin: 0;">Kalendář zápasů</h1>
+                <a href="tournaments.html" class="btn"
+                    style="background: rgba(34, 211, 238, 0.1); color: #22d3ee; border: 1px solid rgba(34, 211, 238, 0.2); font-size: 0.9rem;">
+                    <i class="fa-solid fa-trophy" style="margin-right: 0.5rem;"></i>Turnaje
+                </a>
+            </div>
 
             <!-- Single Row Filter Bar -->
             <div class="calendar-filters"
@@ -746,6 +748,8 @@
                 const hasResult = match.result &&
                     match.result !== '-' &&
                     match.result !== '' &&
+                    match.result.trim() !== ':' &&
+                    !/^\s*:\s*$/.test(match.result) && // Just colon with spaces
                     /[\d½]/.test(match.result) && // Must contain digits or ½
                     !/^\d{2}:\d{2}$/.test(match.result); // Must NOT be just time (HH:MM)
 
@@ -754,11 +758,18 @@
                 const safeTeam2 = team2.replace(/"/g, '&quot;');
                 const safeComp = match.competition.replace(/"/g, '&quot;');
 
+                // Only show result if it's a valid score (not empty, not just colon)
+                const isValidDisplayResult = match.result &&
+                    match.result.trim() !== '' &&
+                    match.result.trim() !== '-' &&
+                    match.result.trim() !== ':' &&
+                    !/^\s*:\s*$/.test(match.result.trim());
+
                 const resultHtml = hasResult
                     ? `<span class="match-result clickable" onclick="toggleMatchDetails('${safeComp}', '${match.round}', '${safeTeam1}', '${safeTeam2}', this)" 
                            style="cursor: pointer; text-decoration: underline; text-decoration-style: dotted; text-underline-offset: 4px;" 
                            title="Zobrazit detailní výsledky">${match.result}</span>`
-                    : (match.result && match.result !== '-' ? `<span class="match-result">${match.result}</span>` : '');
+                    : (isValidDisplayResult ? `<span class="match-result">${match.result}</span>` : '');
 
                 // Inline Details Container ID
                 const detailsId = `details-${match.competition.replace(/\s+/g, '-')}-${match.round}-${team1.replace(/\s+/g, '-')}`.replace(/[^a-zA-Z0-9-]/g, '');
@@ -767,6 +778,19 @@
                 const isYouth = match.category === 'youth';
                 const categoryIcon = isYouth ? '<i class="fa-solid fa-child" style="margin-right: 0.3rem; color: #4ade80;"></i>' : '';
                 const categoryBorder = isYouth ? 'border-left-color: #4ade80;' : '';
+
+                // Generate Google Calendar URL for upcoming matches
+                const generateMatchCalendarUrl = () => {
+                    const title = encodeURIComponent(`${match.competition}: ${team1} - ${team2}`);
+                    const startDate = match.date.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+                    const endDate = new Date(match.date.getTime() + 4 * 60 * 60 * 1000).toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+                    const details = encodeURIComponent(`${match.round}. kolo - ${match.competition}`);
+                    return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${startDate}/${endDate}&details=${details}`;
+                };
+
+                const calendarBtn = !isPast && !matchHasResult
+                    ? `<a href="${generateMatchCalendarUrl()}" target="_blank" title="Přidat do kalendáře" style="color: var(--text-muted); padding: 0.25rem; transition: color 0.2s;" onmouseover="this.style.color='#22d3ee'" onmouseout="this.style.color='var(--text-muted)'"><i class="fa-solid fa-calendar-plus"></i></a>`
+                    : '';
 
                 html += `
                     <div class="match-card ${isPast ? 'past-match' : ''}" style="border-left: 2px solid ${isYouth ? '#4ade80' : (isPast ? 'var(--text-muted)' : 'var(--primary-color)')};">
@@ -787,7 +811,8 @@
                                     ${resultHtml}
                                 </div>
                             </div>
-                            <div class="match-actions match-status-desktop">
+                            <div class="match-actions match-status-desktop" style="display: flex; align-items: center; gap: 0.5rem;">
+                                ${calendarBtn}
                                 <span class="status-badge ${statusClass}">${statusText}</span>
                             </div>
                         </div>
