@@ -3,7 +3,8 @@ async function loadComponent(id, file) {
         const element = document.getElementById(id);
         if (!element) return;
 
-        const response = await fetch(`components/${file}`);
+        const version = window.APP_VERSION || Date.now();
+        const response = await fetch(`components/${file}?v=${version}`);
         if (response.ok) {
             const html = await response.text();
             element.innerHTML = html;

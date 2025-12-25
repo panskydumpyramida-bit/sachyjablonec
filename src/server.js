@@ -138,6 +138,10 @@ const servePage = (page) => async (req, res) => {
         const filePath = path.join(__dirname, `../${page}`);
         let html = await fs.readFile(filePath, 'utf-8');
 
+        // Inject APP_VERSION to window for client-side scripts
+        const versionScript = `<script>window.APP_VERSION = '${APP_VERSION}';</script>\n`;
+        html = html.replace('<head>', '<head>\n' + versionScript);
+
         // Regex to find local JS and CSS imports
         // Matches src="..." or href="..." where the value ends in .js or .css (ignoring external links starting with http)
         // Also captures existing query params if any

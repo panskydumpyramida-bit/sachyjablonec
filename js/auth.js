@@ -172,6 +172,14 @@ class AuthManager {
             return;
         }
 
+        // Prevent flicker: If token exists but user is not loaded yet, show nothing (or spinner)
+        // This prevents showing "Login" buttons while we are fetching value
+        if (this.token && !this.user) {
+            // Optionally render a small spinner here if desired
+            // authContainer.innerHTML = '<div class="spinner"></div>';
+            return;
+        }
+
         // Show/hide members link based on login status
         const membersNav = document.getElementById('nav-members');
         if (membersNav) {
