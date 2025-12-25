@@ -474,41 +474,89 @@ footer {
 
     .nav-links {
         display: none;
-        position: absolute;
-        top: 100%;
-        left: 0;
+        position: fixed;
+        inset: 0;
         width: 100%;
-        background-color: var(--secondary-color);
+        height: 100vh;
+        background-color: rgba(18, 18, 18, 0.75);
+        -webkit-backdrop-filter: blur(25px);
+        backdrop-filter: blur(25px);
         flex-direction: column;
-        padding: 2rem;
+        padding: 5rem 2rem 2rem;
         text-align: center;
-        border-bottom: 1px solid rgba(212, 175, 55, 0.2);
+        z-index: 999;
+        overflow-y: auto;
+        opacity: 0;
+        visibility: hidden;
+        transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        transform: translateY(-20px);
     }
 
     .nav-links.active {
         display: flex;
+        opacity: 1;
+        visibility: visible;
+        transform: translateY(0);
     }
 
+    /* Close Button (using menu-toggle logic) */
     .menu-toggle {
-        display: block;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 44px;
+        height: 44px;
+        z-index: 1001;
+        /* Above nav overlay */
+        position: relative;
     }
 
-    /* Mobile Menu - Always Expanded */
-    /* Ensure dropdowns take full width in the column layout */
+    .menu-toggle i {
+        transition: transform 0.3s ease;
+    }
+
+    .menu-toggle.active i {
+        transform: rotate(90deg);
+    }
+
+    /* Link Styles */
+    .nav-links>li>a {
+        font-size: 1.5rem;
+        font-weight: 600;
+        margin-bottom: 1rem;
+        display: inline-block;
+        color: var(--text-color);
+        width: 100%;
+        padding: 0.5rem;
+    }
+
+    .nav-links>li>a:hover {
+        color: var(--primary-color);
+    }
+
+    /* Dropdown in Mobile */
     .nav-links.active .dropdown {
         display: block;
         width: 100%;
-        margin-bottom: 0.5rem;
+        margin-bottom: 1.5rem;
+        background: rgba(255, 255, 255, 0.03);
+        border-radius: 12px;
+        padding: 1rem;
+        border: 1px solid rgba(255, 255, 255, 0.05);
     }
 
     .nav-links.active .dropdown>a {
+        font-size: 1.1rem;
         font-weight: 700;
         color: var(--primary-color);
-        margin-bottom: 0.25rem;
+        margin-bottom: 0.75rem;
         display: block;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        border-bottom: 1px solid rgba(212, 175, 55, 0.2);
+        padding-bottom: 0.5rem;
     }
 
-    /* Force the menu to be visible when parent nav is active */
     .nav-links.active .dropdown-menu {
         display: block !important;
         position: static !important;
@@ -517,34 +565,34 @@ footer {
         transform: none !important;
         box-shadow: none;
         border: none;
-        background-color: rgba(255, 255, 255, 0.03);
+        background-color: transparent;
         width: 100%;
-        padding: 0.5rem 0;
+        padding: 0;
         min-width: unset;
-        border-radius: 4px;
         margin-top: 0;
-    }
-
-    /* Additional specificity to override any other rules */
-    @media (max-width: 768px) {
-        .dropdown-menu {
-            display: block !important;
-            /* Fallback */
-        }
     }
 
     .dropdown-menu li {
         text-align: center;
         width: 100%;
+        margin-bottom: 0.25rem;
     }
 
     .dropdown-menu a {
         padding: 0.6rem 0;
-        font-size: 0.95rem;
+        font-size: 1rem;
         color: var(--text-muted);
         display: block;
         width: 100%;
+        transition: color 0.2s;
     }
+
+    .dropdown-menu a:hover {
+        background-color: transparent;
+        color: #fff;
+        transform: translateX(5px);
+    }
+
 
     .dropdown-menu a:hover {
         background-color: rgba(255, 255, 255, 0.05);
