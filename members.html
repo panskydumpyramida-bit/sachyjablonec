@@ -326,18 +326,16 @@
                 <!-- Login View -->
                 <div id="loginView" class="auth-container">
                     <div class="lock-icon">
-                        <i class="fa-solid fa-lock"></i>
+                        <i class="fa-solid fa-user-lock"></i>
                     </div>
                     <h2>Vstup pro členy</h2>
-                    <p class="subtitle">Zadejte heslo oddílu</p>
-                    <div style="margin-bottom: 1.5rem;">
-                        <input type="password" id="clubPassword" placeholder="••••••••">
-                    </div>
-                    <button class="btn-primary" onclick="login()" style="width: 100%; padding: 1rem;">
-                        <i class="fa-solid fa-sign-in-alt"></i> Vstoupit
+                    <p class="subtitle">Přihlaste se svým účtem</p>
+                    <button class="btn-primary" onclick="window.location.href='/login.html?redirect=/members.html'"
+                        style="width: 100%; padding: 1rem;">
+                        <i class="fa-brands fa-google"></i> Přihlásit se přes Google
                     </button>
-                    <p id="loginError" style="color: #fca5a5; margin-top: 1rem; display: none;">
-                        <i class="fa-solid fa-exclamation-circle"></i> Nesprávné heslo
+                    <p style="color: var(--text-muted); margin-top: 1rem; font-size: 0.85rem;">
+                        Přístup pouze pro členy klubu s propojený účtem.
                     </p>
                 </div>
 
@@ -504,48 +502,39 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
     <script src="js/game-viewer2.js?v=12"></script>
     <script>
-        const PASSWORD_KEY = 'club_auth_token';
+        // Use OAuth token instead of club password
+        function getAuthToken() {
+            return localStorage.getItem('auth_token') || sessionStorage.getItem('auth_token');
+        }
 
-        document.addEventListener('DOMContentLoaded', () => {
-            const savedPassword = localStorage.getItem(PASSWORD_KEY);
-            if (savedPassword) {
-                verifyAccess(savedPassword);
+        document.addEventListener('DOMContentLoaded', async () => {
+            const token = getAuthToken();
+            if (token) {
+                // Verify token is valid
+                try {
+                    const res = await fetch(`${API_URL}/auth/me`, {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    });
+                    if (res.ok) {
+                        const user = await res.json();
+                        if (user.role === 'MEMBER' || user.role === 'ADMIN') {
+                            document.getElementById('loginView').classList.add('hidden');
+                            document.getElementById('hubView').classList.remove('hidden');
+                            return;
+                        }
+                    }
+                } catch (e) {
+                    console.error('Auth check failed:', e);
+                }
             }
-
-            document.getElementById('clubPassword').addEventListener('keypress', function (e) {
-                if (e.key === 'Enter') login();
-            });
+            // Show login view
+            document.getElementById('loginView').classList.remove('hidden');
         });
 
-        async function login() {
-            const password = document.getElementById('clubPassword').value;
-            if (!password) return;
-            verifyAccess(password);
-        }
-
-        async function verifyAccess(password) {
-            try {
-                const res = await fetch(`${API_URL}/messages`, {
-                    headers: { 'X-Club-Password': password }
-                });
-
-                if (res.ok) {
-                    localStorage.setItem(PASSWORD_KEY, password);
-                    document.getElementById('loginView').classList.add('hidden');
-                    document.getElementById('hubView').classList.remove('hidden');
-                } else {
-                    document.getElementById('loginError').style.display = 'block';
-                    localStorage.removeItem(PASSWORD_KEY);
-                }
-            } catch (e) {
-                console.error(e);
-                alert('Chyba spojení se serverem');
-            }
-        }
-
         function logout() {
-            localStorage.removeItem(PASSWORD_KEY);
-            location.reload();
+            localStorage.removeItem('auth_token');
+            sessionStorage.removeItem('auth_token');
+            window.location.href = '/';
         }
 
         // Section Navigation
@@ -576,12 +565,12 @@
 
         // Messages
         async function loadMessages() {
-            const password = localStorage.getItem(PASSWORD_KEY);
+            const token = getAuthToken();
             const container = document.getElementById('messageList');
 
             try {
                 const res = await fetch(`${API_URL}/messages`, {
-                    headers: { 'X-Club-Password': password }
+                    headers: { 'Authorization': `Bearer ${token}` }
                 });
                 const messages = await res.json();
 
@@ -608,7 +597,7 @@
         async function postMessage() {
             const author = document.getElementById('msgAuthor').value;
             const content = document.getElementById('msgContent').value;
-            const password = localStorage.getItem(PASSWORD_KEY);
+            const token = getAuthToken();
 
             if (!author || !content) {
                 alert('Vyplňte prosím jméno a vzkaz.');
@@ -620,7 +609,7 @@
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'X-Club-Password': password
+                        'Authorization': `Bearer ${token}`
                     },
                     body: JSON.stringify({ author, content })
                 });
@@ -637,12 +626,12 @@
         let memberViewer = null;
 
         async function loadGames() {
-            const password = localStorage.getItem(PASSWORD_KEY);
+            const token = getAuthToken();
             const container = document.getElementById('gamesList');
 
             try {
                 const res = await fetch(`${API_URL}/games`, {
-                    headers: { 'X-Club-Password': password }
+                    headers: { 'Authorization': `Bearer ${token}` }
                 });
                 const games = await res.json();
                 memberGamesData = games; // Store for viewer
