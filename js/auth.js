@@ -564,6 +564,9 @@ const initAuth = async () => {
         localStorage.setItem('auth_token', authToken);
         auth.token = authToken;
 
+        // Check if this was a linking action
+        const wasLinked = urlParams.get('linked') === 'true';
+
         // Clean URL
         window.history.replaceState({}, document.title, window.location.pathname);
 
@@ -573,6 +576,9 @@ const initAuth = async () => {
         // Show username setup modal if needed
         if (needsUsername === 'true') {
             auth.showUsernameSetupModal();
+        } else if (wasLinked) {
+            // Show confirmation that Google was linked
+            auth.showLinkingSuccess();
         }
     } else {
         console.log('[Auth] No OAuth callback, calling auth.init()');
@@ -695,6 +701,55 @@ AuthManager.prototype.handleUsernameSetup = async function (event) {
         submitBtn.disabled = false;
         submitBtn.textContent = 'Uložit přezdívku';
     }
+};
+
+// Show success notification after linking Google account
+AuthManager.prototype.showLinkingSuccess = function () {
+    // Create toast notification
+    const toast = document.createElement('div');
+    toast.className = 'auth-toast';
+    toast.innerHTML = `
+        <i class="fa-brands fa-google" style="color: #4285f4;"></i>
+        <span>Google účet byl úspěšně propojen!</span>
+    `;
+    toast.style.cssText = `
+        position: fixed;
+        top: 1rem;
+        right: 1rem;
+        background: rgba(16, 185, 129, 0.95);
+        color: white;
+        padding: 1rem 1.5rem;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        font-size: 0.95rem;
+        font-weight: 500;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+        z-index: 10000;
+        animation: slideIn 0.3s ease;
+    `;
+
+    // Add animation keyframes if not present
+    if (!document.getElementById('auth-toast-styles')) {
+        const style = document.createElement('style');
+        style.id = 'auth-toast-styles';
+        style.textContent = `
+            @keyframes slideIn {
+                from { transform: translateX(100%); opacity: 0; }
+                to { transform: translateX(0); opacity: 1; }
+            }
+        `;
+        document.head.appendChild(style);
+    }
+
+    document.body.appendChild(toast);
+
+    // Remove after 4 seconds
+    setTimeout(() => {
+        toast.style.animation = 'slideIn 0.3s ease reverse';
+        setTimeout(() => toast.remove(), 300);
+    }, 4000);
 };
 
 // Close dropdown when clicking outside
