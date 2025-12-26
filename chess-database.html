@@ -7,66 +7,58 @@
     <title>Šachová databáze | Šachy Jablonec</title>
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link
-        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@400;700&display=swap"
-        rel="stylesheet">
-    <!-- Chessboard.js -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.css">
     <style>
-        /* Chess Database Split-Screen Layout */
         .chess-db-container {
-            max-width: 1600px;
+            max-width: 1800px;
             margin: 0 auto;
-            padding: 1.5rem;
-            height: calc(100vh - 100px);
+            padding: 1rem;
+            height: calc(100vh - 90px);
             display: flex;
             flex-direction: column;
         }
 
         .search-section {
             background: var(--surface-color);
-            border-radius: 12px;
-            padding: 1.5rem;
-            margin-bottom: 1rem;
+            border-radius: 10px;
+            padding: 1rem 1.25rem;
+            margin-bottom: 0.75rem;
             border: 1px solid rgba(255, 255, 255, 0.05);
-        }
-
-        .search-box {
             display: flex;
             gap: 1rem;
-            flex-wrap: wrap;
             align-items: center;
+            flex-wrap: wrap;
         }
 
         .search-input-wrapper {
             flex: 1;
-            min-width: 250px;
+            min-width: 200px;
             position: relative;
         }
 
         .search-input {
             width: 100%;
-            padding: 0.8rem 0.8rem 0.8rem 2.5rem;
-            font-size: 1rem;
+            padding: 0.6rem 0.6rem 0.6rem 2.2rem;
+            font-size: 0.95rem;
             background: rgba(255, 255, 255, 0.05);
             border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 8px;
+            border-radius: 6px;
             color: var(--text-color);
-            transition: all 0.3s;
         }
 
         .search-input:focus {
             outline: none;
             border-color: var(--primary-color);
-            box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.1);
         }
 
         .search-icon {
             position: absolute;
-            left: 0.8rem;
+            left: 0.7rem;
             top: 50%;
             transform: translateY(-50%);
             color: var(--text-muted);
+            font-size: 0.85rem;
         }
 
         .filter-group {
@@ -75,14 +67,13 @@
         }
 
         .filter-btn {
-            padding: 0.6rem 1rem;
+            padding: 0.5rem 0.75rem;
             background: rgba(255, 255, 255, 0.05);
             border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 6px;
+            border-radius: 5px;
             color: var(--text-color);
             cursor: pointer;
-            transition: all 0.2s;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
         }
 
         .filter-btn:hover,
@@ -92,7 +83,6 @@
             color: var(--primary-color);
         }
 
-        /* Autocomplete */
         .autocomplete-results {
             position: absolute;
             top: 100%;
@@ -100,81 +90,95 @@
             right: 0;
             background: var(--surface-color);
             border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 0 0 8px 8px;
-            max-height: 300px;
+            border-radius: 0 0 6px 6px;
+            max-height: 250px;
             overflow-y: auto;
             z-index: 100;
             display: none;
         }
 
         .autocomplete-item {
-            padding: 0.6rem 1rem;
+            padding: 0.5rem 0.75rem;
             cursor: pointer;
             border-bottom: 1px solid rgba(255, 255, 255, 0.05);
             display: flex;
             justify-content: space-between;
+            font-size: 0.9rem;
         }
 
         .autocomplete-item:hover {
             background: rgba(212, 175, 55, 0.1);
         }
 
-        /* Split Layout */
-        .split-layout {
+        /* 3-Column Layout */
+        .three-col-layout {
             flex: 1;
             display: grid;
-            grid-template-columns: 380px 1fr;
-            gap: 1rem;
+            grid-template-columns: 280px 1fr 320px;
+            gap: 0.75rem;
             min-height: 0;
         }
 
-        @media (max-width: 1024px) {
-            .split-layout {
-                grid-template-columns: 1fr;
+        @media (max-width: 1200px) {
+            .three-col-layout {
+                grid-template-columns: 250px 1fr;
             }
 
-            .detail-panel {
+            .tree-panel {
                 display: none;
-            }
-
-            .split-layout.game-active .games-panel {
-                display: none;
-            }
-
-            .split-layout.game-active .detail-panel {
-                display: flex;
             }
         }
 
-        /* Games Panel */
-        .games-panel {
+        @media (max-width: 768px) {
+            .three-col-layout {
+                grid-template-columns: 1fr;
+            }
+
+            .games-panel {
+                display: none;
+            }
+
+            .three-col-layout.game-active .games-panel {
+                display: none;
+            }
+        }
+
+        .panel {
             background: var(--surface-color);
-            border-radius: 12px;
+            border-radius: 10px;
             border: 1px solid rgba(255, 255, 255, 0.05);
             display: flex;
             flex-direction: column;
             overflow: hidden;
         }
 
-        .games-header {
-            padding: 1rem;
+        .panel-header {
+            padding: 0.75rem 1rem;
             background: rgba(0, 0, 0, 0.2);
             border-bottom: 1px solid rgba(255, 255, 255, 0.05);
             display: flex;
             justify-content: space-between;
             align-items: center;
+            font-size: 0.85rem;
+            font-weight: 600;
         }
 
-        .games-list {
+        .panel-header i {
+            margin-right: 0.4rem;
+        }
+
+        .panel-body {
             flex: 1;
             overflow-y: auto;
+            padding: 0;
         }
 
+        /* Games List */
         .game-row {
-            padding: 0.8rem 1rem;
+            padding: 0.6rem 0.75rem;
             border-bottom: 1px solid rgba(255, 255, 255, 0.05);
             cursor: pointer;
-            transition: all 0.2s;
+            transition: background 0.15s;
         }
 
         .game-row:hover,
@@ -187,21 +191,21 @@
         }
 
         .game-meta {
-            font-size: 0.75rem;
+            font-size: 0.7rem;
             color: var(--text-muted);
-            margin-bottom: 0.25rem;
+            margin-bottom: 0.2rem;
         }
 
         .game-players-line {
             display: flex;
             align-items: center;
-            gap: 0.5rem;
-            font-size: 0.9rem;
+            gap: 0.4rem;
+            font-size: 0.8rem;
         }
 
         .player-color {
-            width: 10px;
-            height: 10px;
+            width: 8px;
+            height: 8px;
             border-radius: 2px;
             border: 1px solid #666;
         }
@@ -216,8 +220,8 @@
 
         .game-result-badge {
             margin-left: auto;
-            font-size: 0.8rem;
-            padding: 0.15rem 0.4rem;
+            font-size: 0.7rem;
+            padding: 0.1rem 0.3rem;
             border-radius: 3px;
         }
 
@@ -236,247 +240,17 @@
             color: #9ca3af;
         }
 
-        /* Detail Panel */
-        .detail-panel {
-            background: var(--surface-color);
-            border-radius: 12px;
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-        }
-
-        .detail-tabs {
-            display: flex;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .detail-tab {
-            padding: 1rem 1.5rem;
-            background: none;
-            border: none;
-            color: var(--text-muted);
-            cursor: pointer;
-            border-bottom: 2px solid transparent;
-            transition: all 0.2s;
-        }
-
-        .detail-tab:hover {
-            color: var(--text-color);
-        }
-
-        .detail-tab.active {
-            color: var(--primary-color);
-            border-bottom-color: var(--primary-color);
-        }
-
-        .tab-content {
-            display: none;
-            flex: 1;
-            overflow: auto;
-            padding: 1.5rem;
-        }
-
-        .tab-content.active {
-            display: block;
-        }
-
-        /* Game Viewer Tab */
-        .game-viewer-layout {
-            display: grid;
-            grid-template-columns: min(400px, 45%) 1fr;
-            gap: 1.5rem;
-            height: 100%;
-        }
-
-        @media (max-width: 900px) {
-            .game-viewer-layout {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        .board-container {
-            aspect-ratio: 1;
-            max-height: 400px;
-        }
-
-        #chessBoard {
-            width: 100% !important;
-        }
-
-        .board-controls {
-            display: flex;
-            justify-content: center;
-            gap: 0.5rem;
-            margin-top: 1rem;
-        }
-
-        .board-controls button {
-            padding: 0.5rem 1rem;
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 4px;
-            color: var(--text-color);
-            cursor: pointer;
-        }
-
-        .board-controls button:hover {
-            background: rgba(212, 175, 55, 0.15);
-        }
-
-        .moves-panel {
-            background: rgba(0, 0, 0, 0.2);
-            border-radius: 8px;
-            padding: 1rem;
-            max-height: 400px;
-            overflow-y: auto;
-        }
-
-        .move-pair {
-            display: grid;
-            grid-template-columns: 30px 1fr 1fr;
-            gap: 0.5rem;
-            padding: 0.25rem 0;
-        }
-
-        .move-number {
-            color: var(--text-muted);
-            font-size: 0.85rem;
-        }
-
-        .move {
-            padding: 0.2rem 0.5rem;
-            border-radius: 3px;
-            cursor: pointer;
-            font-family: monospace;
-        }
-
-        .move:hover {
-            background: rgba(212, 175, 55, 0.15);
-        }
-
-        .move.active {
-            background: var(--primary-color);
-            color: var(--secondary-color);
-        }
-
-        /* Opening Tree Tab */
-        .tree-container {
-            height: 100%;
-        }
-
-        .tree-header {
-            margin-bottom: 1rem;
-            padding-bottom: 1rem;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-        }
-
-        .tree-moves {
-            display: flex;
-            flex-direction: column;
-            gap: 0.5rem;
-        }
-
-        .tree-node {
-            display: grid;
-            grid-template-columns: 80px 1fr 60px 100px;
-            align-items: center;
-            padding: 0.75rem 1rem;
-            background: rgba(0, 0, 0, 0.2);
-            border-radius: 8px;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .tree-node:hover {
-            background: rgba(212, 175, 55, 0.1);
-        }
-
-        .tree-move {
-            font-family: monospace;
-            font-size: 1.1rem;
-            font-weight: 600;
-        }
-
-        .tree-bar {
-            height: 8px;
-            background: linear-gradient(to right, #4ade80 var(--win-pct), #9ca3af var(--win-pct), #9ca3af var(--draw-end), #f87171 var(--draw-end));
-            border-radius: 4px;
-        }
-
-        .tree-games {
-            text-align: right;
-            color: var(--text-muted);
-            font-size: 0.85rem;
-        }
-
-        .tree-pct {
-            text-align: right;
-            color: var(--primary-color);
-            font-weight: 600;
-        }
-
-        /* PGN Tab */
-        .pgn-content textarea {
-            width: 100%;
-            min-height: 300px;
-            background: rgba(0, 0, 0, 0.3);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 8px;
-            padding: 1rem;
-            font-family: monospace;
-            font-size: 0.9rem;
-            color: var(--text-color);
-            resize: vertical;
-        }
-
-        /* States */
-        .loading,
-        .empty-state {
-            text-align: center;
-            padding: 3rem;
-            color: var(--text-muted);
-        }
-
-        .loading i {
-            font-size: 2rem;
-            animation: spin 1s linear infinite;
-        }
-
-        @keyframes spin {
-            to {
-                transform: rotate(360deg);
-            }
-        }
-
-        .access-denied {
-            text-align: center;
-            padding: 4rem 2rem;
-            background: var(--surface-color);
-            border-radius: 12px;
-        }
-
-        .access-denied i {
-            font-size: 4rem;
-            color: var(--primary-color);
-            margin-bottom: 1.5rem;
-        }
-
-        .hidden {
-            display: none !important;
-        }
-
         .pagination {
+            padding: 0.5rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
             display: flex;
             justify-content: center;
-            gap: 0.5rem;
-            padding: 0.75rem;
-            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            gap: 0.4rem;
         }
 
         .pagination button {
-            padding: 0.4rem 0.8rem;
-            font-size: 0.85rem;
+            padding: 0.3rem 0.6rem;
+            font-size: 0.75rem;
             background: rgba(255, 255, 255, 0.05);
             border: 1px solid rgba(255, 255, 255, 0.1);
             border-radius: 4px;
@@ -488,11 +262,203 @@
             opacity: 0.4;
             cursor: not-allowed;
         }
+
+        /* Game Panel (Center) */
+        .game-panel .panel-body {
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .game-info {
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .game-info h3 {
+            margin: 0 0 0.3rem;
+            font-size: 1rem;
+        }
+
+        .game-info-meta {
+            color: var(--text-muted);
+            font-size: 0.8rem;
+        }
+
+        .board-area {
+            display: flex;
+            gap: 1rem;
+            flex: 1;
+            min-height: 0;
+        }
+
+        .board-wrapper {
+            width: min(350px, 50%);
+            flex-shrink: 0;
+        }
+
+        #chessBoard {
+            width: 100% !important;
+        }
+
+        .board-controls {
+            display: flex;
+            justify-content: center;
+            gap: 0.4rem;
+            margin-top: 0.5rem;
+        }
+
+        .board-controls button {
+            padding: 0.4rem 0.7rem;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            color: var(--text-color);
+            cursor: pointer;
+        }
+
+        .board-controls button:hover {
+            background: rgba(212, 175, 55, 0.15);
+        }
+
+        .moves-wrapper {
+            flex: 1;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 6px;
+            padding: 0.75rem;
+            overflow-y: auto;
+        }
+
+        .move-pair {
+            display: grid;
+            grid-template-columns: 25px 1fr 1fr;
+            gap: 0.25rem;
+            padding: 0.15rem 0;
+        }
+
+        .move-number {
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .move {
+            padding: 0.15rem 0.3rem;
+            border-radius: 3px;
+            cursor: pointer;
+            font-family: monospace;
+            font-size: 0.85rem;
+        }
+
+        .move:hover {
+            background: rgba(212, 175, 55, 0.15);
+        }
+
+        .move.active {
+            background: var(--primary-color);
+            color: var(--secondary-color);
+        }
+
+        /* Tree Panel */
+        .tree-panel .panel-body {
+            padding: 0.75rem;
+        }
+
+        .tree-position {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .tree-position strong {
+            color: var(--primary-color);
+        }
+
+        .tree-moves {
+            display: flex;
+            flex-direction: column;
+            gap: 0.4rem;
+        }
+
+        .tree-node {
+            display: grid;
+            grid-template-columns: 55px 1fr 45px 55px;
+            align-items: center;
+            padding: 0.5rem 0.6rem;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.8rem;
+        }
+
+        .tree-node:hover {
+            background: rgba(212, 175, 55, 0.1);
+        }
+
+        .tree-move {
+            font-family: monospace;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .tree-bar {
+            height: 6px;
+            background: linear-gradient(to right, #4ade80 var(--win-pct), #9ca3af var(--win-pct), #9ca3af var(--draw-end), #f87171 var(--draw-end));
+            border-radius: 3px;
+        }
+
+        .tree-games {
+            text-align: right;
+            color: var(--text-muted);
+        }
+
+        .tree-pct {
+            text-align: right;
+            color: var(--primary-color);
+            font-weight: 600;
+        }
+
+        /* States */
+        .loading,
+        .empty-state {
+            text-align: center;
+            padding: 2rem;
+            color: var(--text-muted);
+        }
+
+        .loading i {
+            font-size: 1.5rem;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .access-denied {
+            text-align: center;
+            padding: 3rem;
+            background: var(--surface-color);
+            border-radius: 12px;
+        }
+
+        .access-denied i {
+            font-size: 3rem;
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+        }
+
+        .hidden {
+            display: none !important;
+        }
     </style>
 </head>
 
 <body>
-    <!-- Header -->
     <header>
         <nav class="container">
             <a href="index.html" class="logo">
@@ -524,85 +490,66 @@
             <div id="mainContent" class="hidden" style="display: flex; flex-direction: column; height: 100%;">
                 <!-- Search -->
                 <div class="search-section">
-                    <div class="search-box">
-                        <div class="search-input-wrapper">
-                            <i class="fa-solid fa-search search-icon"></i>
-                            <input type="text" id="playerSearch" class="search-input" placeholder="Hledat hráče..."
-                                autocomplete="off">
-                            <div id="autocompleteResults" class="autocomplete-results"></div>
-                        </div>
-                        <div class="filter-group">
-                            <button class="filter-btn active" data-color="both">Všechny</button>
-                            <button class="filter-btn" data-color="white"><i class="fa-regular fa-chess-king"></i>
-                                Bílý</button>
-                            <button class="filter-btn" data-color="black"><i class="fa-solid fa-chess-king"></i>
-                                Černý</button>
-                        </div>
-                        <span id="dbStats" style="color: var(--text-muted); font-size: 0.85rem;"></span>
+                    <div class="search-input-wrapper">
+                        <i class="fa-solid fa-search search-icon"></i>
+                        <input type="text" id="playerSearch" class="search-input" placeholder="Hledat hráče..."
+                            autocomplete="off">
+                        <div id="autocompleteResults" class="autocomplete-results"></div>
                     </div>
+                    <div class="filter-group">
+                        <button class="filter-btn active" data-color="both">Vše</button>
+                        <button class="filter-btn" data-color="white">⬜ Bílý</button>
+                        <button class="filter-btn" data-color="black">⬛ Černý</button>
+                    </div>
+                    <span id="dbStats" style="color: var(--text-muted); font-size: 0.8rem;"></span>
                 </div>
 
-                <!-- Split Layout -->
-                <div class="split-layout" id="splitLayout">
+                <!-- 3-Column Layout -->
+                <div class="three-col-layout" id="threeColLayout">
                     <!-- Games Panel (Left) -->
-                    <div class="games-panel">
-                        <div class="games-header">
-                            <h3 style="margin: 0; font-size: 0.95rem;"><i class="fa-solid fa-chess-board"></i> Partie
-                            </h3>
-                            <span id="gamesCount" style="color: var(--text-muted); font-size: 0.85rem;"></span>
+                    <div class="panel games-panel">
+                        <div class="panel-header">
+                            <span><i class="fa-solid fa-list"></i>Partie</span>
+                            <span id="gamesCount" style="color: var(--text-muted);"></span>
                         </div>
-                        <div class="games-list" id="gamesList">
+                        <div class="panel-body" id="gamesList">
                             <div class="empty-state">
                                 <i class="fa-solid fa-magnifying-glass"
-                                    style="font-size: 2rem; margin-bottom: 1rem;"></i>
+                                    style="font-size: 1.5rem; margin-bottom: 0.5rem;"></i>
                                 <p>Zadejte jméno hráče</p>
                             </div>
                         </div>
                         <div class="pagination hidden" id="pagination">
                             <button id="prevPage"><i class="fa-solid fa-chevron-left"></i></button>
-                            <span id="pageInfo" style="color: var(--text-muted); font-size: 0.85rem;"></span>
+                            <span id="pageInfo" style="font-size: 0.75rem; color: var(--text-muted);"></span>
                             <button id="nextPage"><i class="fa-solid fa-chevron-right"></i></button>
                         </div>
                     </div>
 
-                    <!-- Detail Panel (Right) -->
-                    <div class="detail-panel" id="detailPanel">
-                        <div class="detail-tabs">
-                            <button class="detail-tab active" data-tab="game"><i class="fa-solid fa-chess"></i>
-                                Partie</button>
-                            <button class="detail-tab" data-tab="tree"><i class="fa-solid fa-sitemap"></i>
-                                Strom</button>
-                            <button class="detail-tab" data-tab="pgn"><i class="fa-solid fa-code"></i> PGN</button>
+                    <!-- Game Panel (Center) -->
+                    <div class="panel game-panel">
+                        <div class="panel-header">
+                            <span><i class="fa-solid fa-chess"></i>Partie</span>
+                            <span id="gameTitle" style="color: var(--text-muted);"></span>
                         </div>
-
-                        <!-- Game Tab -->
-                        <div class="tab-content active" id="tabGame">
-                            <div id="gameViewerContent">
-                                <div class="empty-state">
-                                    <i class="fa-solid fa-hand-pointer"
-                                        style="font-size: 2rem; margin-bottom: 1rem;"></i>
-                                    <p>Vyberte partii ze seznamu</p>
-                                </div>
+                        <div class="panel-body" id="gameContent">
+                            <div class="empty-state">
+                                <i class="fa-solid fa-hand-pointer"
+                                    style="font-size: 1.5rem; margin-bottom: 0.5rem;"></i>
+                                <p>Vyberte partii ze seznamu</p>
                             </div>
                         </div>
+                    </div>
 
-                        <!-- Tree Tab -->
-                        <div class="tab-content" id="tabTree">
-                            <div id="treeContent">
-                                <div class="empty-state">
-                                    <i class="fa-solid fa-sitemap" style="font-size: 2rem; margin-bottom: 1rem;"></i>
-                                    <p>Vyberte hráče pro zobrazení stromu</p>
-                                </div>
-                            </div>
+                    <!-- Tree Panel (Right) -->
+                    <div class="panel tree-panel">
+                        <div class="panel-header">
+                            <span><i class="fa-solid fa-sitemap"></i>Strom zahájení</span>
                         </div>
-
-                        <!-- PGN Tab -->
-                        <div class="tab-content" id="tabPgn">
-                            <div class="pgn-content" id="pgnContent">
-                                <div class="empty-state">
-                                    <i class="fa-solid fa-code" style="font-size: 2rem; margin-bottom: 1rem;"></i>
-                                    <p>Vyberte partii pro zobrazení PGN</p>
-                                </div>
+                        <div class="panel-body" id="treeContent">
+                            <div class="empty-state">
+                                <i class="fa-solid fa-sitemap" style="font-size: 1.5rem; margin-bottom: 0.5rem;"></i>
+                                <p>Vyberte hráče</p>
                             </div>
                         </div>
                     </div>
@@ -611,9 +558,9 @@
         </div>
     </main>
 
-    <!-- Scripts -->
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <script src="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
     <script src="js/main.js"></script>
     <script src="js/auth.js"></script>
     <script src="js/chess-database.js"></script>

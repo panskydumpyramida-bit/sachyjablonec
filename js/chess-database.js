@@ -1,5 +1,5 @@
 /**
- * Chess Database Frontend with Game Viewer and Opening Tree
+ * Chess Database - 3 Column Layout with Synchronized Tree
  */
 
 const ChessDB = {
@@ -16,12 +16,13 @@ const ChessDB = {
     currentMoveIndex: 0,
     moves: [],
     board: null,
+    chessGame: null, // chess.js instance
 
     // Opening tree state
     treeData: null,
 
     getToken() {
-        return localStorage.getItem('authToken');
+        return localStorage.getItem('auth_token') || sessionStorage.getItem('auth_token');
     },
 
     async checkAccess() {
@@ -100,16 +101,6 @@ const ChessDB = {
             });
         });
 
-        // Tabs
-        document.querySelectorAll('.detail-tab').forEach(tab => {
-            tab.addEventListener('click', () => {
-                document.querySelectorAll('.detail-tab').forEach(t => t.classList.remove('active'));
-                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-                tab.classList.add('active');
-                document.getElementById(`tab${tab.dataset.tab.charAt(0).toUpperCase() + tab.dataset.tab.slice(1)}`).classList.add('active');
-            });
-        });
-
         // Pagination
         document.getElementById('prevPage').addEventListener('click', () => {
             if (this.currentPage > 0) { this.currentPage--; this.loadGames(); }
@@ -118,7 +109,7 @@ const ChessDB = {
             if ((this.currentPage + 1) * this.pageSize < this.totalGames) { this.currentPage++; this.loadGames(); }
         });
 
-        // Keyboard navigation for board
+        // Keyboard navigation
         document.addEventListener('keydown', (e) => {
             if (!this.currentGame) return;
             if (e.key === 'ArrowLeft') this.prevMove();
@@ -145,7 +136,7 @@ const ChessDB = {
                 resultsDiv.innerHTML = players.map(p => `
                     <div class="autocomplete-item" onclick="ChessDB.selectPlayer('${p.name.replace(/'/g, "\\'")}')">
                         <span>${p.name}</span>
-                        <span style="color: var(--text-muted); font-size: 0.85rem;">${p.totalGames} partií</span>
+                        <span style="color: var(--text-muted);">${p.totalGames}</span>
                     </div>
                 `).join('');
             }
@@ -183,7 +174,7 @@ const ChessDB = {
             const data = await response.json();
             this.totalGames = data.total;
 
-            document.getElementById('gamesCount').textContent = `${data.total} partií`;
+            document.getElementById('gamesCount').textContent = data.total;
 
             if (data.games.length === 0) {
                 listDiv.innerHTML = '<div class="empty-state"><p>Žádné partie</p></div>';
@@ -193,7 +184,6 @@ const ChessDB = {
 
             listDiv.innerHTML = data.games.map(g => this.renderGameRow(g)).join('');
 
-            // Pagination
             const totalPages = Math.ceil(this.totalGames / this.pageSize);
             document.getElementById('pageInfo').textContent = `${this.currentPage + 1}/${totalPages}`;
             document.getElementById('prevPage').disabled = this.currentPage === 0;
@@ -217,13 +207,11 @@ const ChessDB = {
                 <div class="game-players-line">
                     <span class="player-color white"></span>
                     <span>${g.whitePlayer}</span>
-                    ${g.whiteElo ? `<small style="color:var(--text-muted)">(${g.whiteElo})</small>` : ''}
+                    <span class="game-result-badge ${resultClass}">${g.result}</span>
                 </div>
                 <div class="game-players-line">
                     <span class="player-color black"></span>
                     <span>${g.blackPlayer}</span>
-                    ${g.blackElo ? `<small style="color:var(--text-muted)">(${g.blackElo})</small>` : ''}
-                    <span class="game-result-badge ${resultClass}">${g.result}</span>
                 </div>
             </div>
         `;
@@ -235,14 +223,8 @@ const ChessDB = {
         document.querySelectorAll('.game-row').forEach(r => r.classList.remove('active'));
         document.querySelector(`.game-row[data-id="${id}"]`)?.classList.add('active');
 
-        const content = document.getElementById('gameViewerContent');
+        const content = document.getElementById('gameContent');
         content.innerHTML = '<div class="loading"><i class="fa-solid fa-spinner"></i></div>';
-
-        // Switch to game tab
-        document.querySelectorAll('.detail-tab').forEach(t => t.classList.remove('active'));
-        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-        document.querySelector('.detail-tab[data-tab="game"]').classList.add('active');
-        document.getElementById('tabGame').classList.add('active');
 
         const token = this.getToken();
         try {
@@ -256,8 +238,14 @@ const ChessDB = {
             this.moves = game.moves ? game.moves.split(' ').filter(m => m) : [];
             this.currentMoveIndex = 0;
 
+            // Initialize chess.js
+            this.chessGame = new Chess();
+
             this.renderGameViewer(game);
-            this.renderPgnTab(game);
+            document.getElementById('gameTitle').textContent = `${game.whitePlayer} - ${game.blackPlayer}`;
+
+            // Update tree to starting position
+            this.updateTreeForPosition();
         } catch (e) {
             console.error('Open game error:', e);
             content.innerHTML = '<div class="empty-state"><p>Chyba</p></div>';
@@ -265,21 +253,19 @@ const ChessDB = {
     },
 
     renderGameViewer(game) {
-        const content = document.getElementById('gameViewerContent');
+        const content = document.getElementById('gameContent');
         const date = game.date ? new Date(game.date).toLocaleDateString('cs-CZ') : '—';
 
         content.innerHTML = `
-            <div style="margin-bottom: 1rem; padding-bottom: 1rem; border-bottom: 1px solid rgba(255,255,255,0.1);">
-                <h3 style="margin: 0 0 0.5rem;">${game.whitePlayer} vs ${game.blackPlayer}</h3>
-                <div style="color: var(--text-muted); font-size: 0.85rem;">
+            <div class="game-info">
+                <h3>${game.whitePlayer} vs ${game.blackPlayer}</h3>
+                <div class="game-info-meta">
                     ${game.event || ''} • ${date} • ${game.eco || ''} • <strong>${game.result}</strong>
                 </div>
             </div>
-            <div class="game-viewer-layout">
-                <div>
-                    <div class="board-container">
-                        <div id="chessBoard"></div>
-                    </div>
+            <div class="board-area">
+                <div class="board-wrapper">
+                    <div id="chessBoard"></div>
                     <div class="board-controls">
                         <button onclick="ChessDB.goToStart()" title="Na začátek"><i class="fa-solid fa-backward-fast"></i></button>
                         <button onclick="ChessDB.prevMove()" title="Předchozí"><i class="fa-solid fa-chevron-left"></i></button>
@@ -287,13 +273,12 @@ const ChessDB = {
                         <button onclick="ChessDB.goToEnd()" title="Na konec"><i class="fa-solid fa-forward-fast"></i></button>
                     </div>
                 </div>
-                <div class="moves-panel" id="movesPanel">
+                <div class="moves-wrapper" id="movesPanel">
                     ${this.renderMovesList()}
                 </div>
             </div>
         `;
 
-        // Initialize board
         this.initBoard();
     },
 
@@ -307,8 +292,8 @@ const ChessDB = {
             pieceTheme: 'https://chessboardjs.com/img/chesspieces/wikipedia/{piece}.png'
         });
 
-        // Start position
         this.currentMoveIndex = 0;
+        this.chessGame = new Chess();
         this.updateBoardPosition();
     },
 
@@ -331,37 +316,28 @@ const ChessDB = {
     },
 
     updateBoardPosition() {
-        // Simple FEN calculation using chess.js logic (if available) or just show start
-        // For now, we'll use a simplified approach
-        const position = this.calculatePosition(this.currentMoveIndex);
+        // Reset chess.js and replay moves up to currentMoveIndex
+        this.chessGame = new Chess();
+        for (let i = 0; i < this.currentMoveIndex && i < this.moves.length; i++) {
+            try {
+                this.chessGame.move(this.moves[i]);
+            } catch (e) {
+                console.warn('Invalid move:', this.moves[i]);
+            }
+        }
+
         if (this.board) {
-            this.board.position(position);
+            this.board.position(this.chessGame.fen());
         }
 
         // Update moves highlight
-        document.getElementById('movesPanel').innerHTML = this.renderMovesList();
-    },
-
-    calculatePosition(moveIndex) {
-        // Create a simple chess game simulation
-        // In production, use chess.js for proper move validation
-        if (moveIndex === 0) return 'start';
-
-        // For demo, we'll use chessboard's position method with FEN
-        // This is a simplified version - ideally use chess.js
-        try {
-            if (typeof Chess !== 'undefined') {
-                const game = new Chess();
-                for (let i = 0; i < moveIndex && i < this.moves.length; i++) {
-                    game.move(this.moves[i]);
-                }
-                return game.fen();
-            }
-        } catch (e) {
-            console.warn('Chess.js not available, showing start position');
+        const movesPanel = document.getElementById('movesPanel');
+        if (movesPanel) {
+            movesPanel.innerHTML = this.renderMovesList();
         }
 
-        return 'start';
+        // Sync tree to current position
+        this.updateTreeForPosition();
     },
 
     goToMove(idx) {
@@ -393,25 +369,6 @@ const ChessDB = {
         this.updateBoardPosition();
     },
 
-    // ==================== PGN TAB ====================
-    renderPgnTab(game) {
-        const content = document.getElementById('pgnContent');
-        content.innerHTML = `
-            <textarea readonly>${game.pgn || 'PGN není k dispozici'}</textarea>
-            <button onclick="ChessDB.copyPgn()" style="margin-top: 1rem; padding: 0.6rem 1.2rem; background: var(--primary-color); color: var(--secondary-color); border: none; border-radius: 6px; cursor: pointer;">
-                <i class="fa-solid fa-copy"></i> Kopírovat PGN
-            </button>
-        `;
-    },
-
-    copyPgn() {
-        const textarea = document.querySelector('#pgnContent textarea');
-        navigator.clipboard.writeText(textarea.value);
-        const btn = document.querySelector('#pgnContent button');
-        btn.innerHTML = '<i class="fa-solid fa-check"></i> Zkopírováno!';
-        setTimeout(() => btn.innerHTML = '<i class="fa-solid fa-copy"></i> Kopírovat PGN', 2000);
-    },
-
     // ==================== OPENING TREE ====================
     async loadOpeningTree() {
         const content = document.getElementById('treeContent');
@@ -421,67 +378,99 @@ const ChessDB = {
         const color = this.currentColor === 'both' ? 'white' : this.currentColor;
 
         try {
-            const response = await fetch(`${this.API_URL}/tree?player=${encodeURIComponent(this.currentPlayer)}&color=${color}&depth=10`, {
+            const response = await fetch(`${this.API_URL}/tree?player=${encodeURIComponent(this.currentPlayer)}&color=${color}&depth=15`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             if (!response.ok) throw new Error('Failed');
             const data = await response.json();
 
             this.treeData = data;
-            this.renderOpeningTree(data.tree, color);
+            this.updateTreeForPosition();
         } catch (e) {
             console.error('Load tree error:', e);
             content.innerHTML = '<div class="empty-state"><p>Chyba</p></div>';
         }
     },
 
-    renderOpeningTree(tree, color) {
-        const content = document.getElementById('treeContent');
-
-        if (!tree.children || tree.children.length === 0) {
-            content.innerHTML = '<div class="empty-state"><p>Nedostatek dat pro strom</p></div>';
+    updateTreeForPosition() {
+        if (!this.treeData || !this.treeData.tree) {
             return;
         }
 
+        const content = document.getElementById('treeContent');
+        const color = this.currentColor === 'both' ? 'white' : this.currentColor;
         const colorLabel = color === 'white' ? 'bílým' : 'černým';
 
+        // Navigate tree to current position
+        let currentNode = this.treeData.tree;
+        const movesPlayed = this.moves.slice(0, this.currentMoveIndex);
+
+        for (const move of movesPlayed) {
+            if (currentNode.children) {
+                const child = currentNode.children.find(c => c.move === move);
+                if (child) {
+                    currentNode = child;
+                } else {
+                    break;
+                }
+            } else {
+                break;
+            }
+        }
+
+        // Get next moves from this position
+        const nextMoves = currentNode.children || [];
+
+        if (nextMoves.length === 0) {
+            content.innerHTML = `
+                <div class="tree-position">
+                    <strong>${this.currentPlayer}</strong> (${colorLabel})<br>
+                    Pozice: ${movesPlayed.length > 0 ? movesPlayed.join(' ') : 'Startovní'}
+                </div>
+                <div class="empty-state" style="padding: 1rem;">
+                    <p>Žádná data pro tuto pozici</p>
+                </div>
+            `;
+            return;
+        }
+
+        // Sort by games
+        const sorted = [...nextMoves].sort((a, b) => b.games - a.games);
+
         content.innerHTML = `
-            <div class="tree-header">
-                <h3 style="margin: 0 0 0.5rem;"><i class="fa-solid fa-sitemap"></i> Strom zahájení</h3>
-                <p style="color: var(--text-muted); margin: 0;">Hráč: <strong>${this.currentPlayer}</strong> (${colorLabel}) • ${this.treeData.totalGames} partií</p>
+            <div class="tree-position">
+                <strong>${this.currentPlayer}</strong> (${colorLabel})<br>
+                Pozice: ${movesPlayed.length > 0 ? movesPlayed.join(' ') : 'Startovní'}
             </div>
-            <div class="tree-moves" id="treeMoves">
-                ${this.renderTreeLevel(tree.children)}
+            <div class="tree-moves">
+                ${sorted.slice(0, 10).map(node => {
+            const winPct = node.games > 0 ? (node.wins / node.games * 100) : 0;
+            const drawPct = node.games > 0 ? (node.draws / node.games * 100) : 0;
+            const drawEnd = winPct + drawPct;
+            const score = node.games > 0 ? ((node.wins + node.draws * 0.5) / node.games * 100).toFixed(0) : 0;
+
+            return `
+                        <div class="tree-node" onclick="ChessDB.playTreeMove('${node.move}')">
+                            <span class="tree-move">${node.move}</span>
+                            <div class="tree-bar" style="--win-pct: ${winPct}%; --draw-end: ${drawEnd}%;"></div>
+                            <span class="tree-games">${node.games}</span>
+                            <span class="tree-pct">${score}%</span>
+                        </div>
+                    `;
+        }).join('')}
             </div>
         `;
     },
 
-    renderTreeLevel(nodes, depth = 0) {
-        if (!nodes || nodes.length === 0) return '';
-
-        // Sort by games descending
-        const sorted = [...nodes].sort((a, b) => b.games - a.games);
-
-        return sorted.slice(0, 8).map(node => {
-            const winPct = node.games > 0 ? (node.wins / node.games * 100) : 0;
-            const drawPct = node.games > 0 ? (node.draws / node.games * 100) : 0;
-            const drawEnd = winPct + drawPct;
-            const score = node.games > 0 ? ((node.wins + node.draws * 0.5) / node.games * 100).toFixed(1) : 0;
-
-            return `
-                <div class="tree-node" style="margin-left: ${depth * 1.5}rem;" onclick="ChessDB.expandTreeNode(this, '${node.move}')">
-                    <span class="tree-move">${node.move}</span>
-                    <div class="tree-bar" style="--win-pct: ${winPct}%; --draw-end: ${drawEnd}%;"></div>
-                    <span class="tree-games">${node.games}</span>
-                    <span class="tree-pct">${score}%</span>
-                </div>
-            `;
-        }).join('');
-    },
-
-    expandTreeNode(el, move) {
-        // Future: drill down into tree
-        console.log('Expand:', move);
+    playTreeMove(move) {
+        // Find the move in current game's moves and go to it
+        const nextIndex = this.currentMoveIndex;
+        if (this.moves[nextIndex] === move) {
+            this.nextMove();
+        } else {
+            // Just show it in tree - can't navigate in current game
+            console.log('Tree move not matching game:', move);
+        }
     }
 };
 
