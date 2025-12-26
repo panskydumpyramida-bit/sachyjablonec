@@ -517,7 +517,7 @@
                     });
                     if (res.ok) {
                         const user = await res.json();
-                        if (user.role === 'MEMBER' || user.role === 'ADMIN') {
+                        if (user.role === 'MEMBER' || user.role === 'ADMIN' || user.role === 'SUPERADMIN') {
                             document.getElementById('loginView').classList.add('hidden');
                             document.getElementById('hubView').classList.remove('hidden');
                             return;

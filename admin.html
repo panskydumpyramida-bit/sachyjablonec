@@ -89,6 +89,8 @@
                         class="fa-solid fa-puzzle-piece"></i>Puzzle Racer <i class="fa-solid fa-lock"
                         style="font-size: 0.7em; margin-left: 0.4rem; color: #fbbf24; opacity: 0.8;"
                         title="Superadmin only"></i></div>
+                <div class="nav-tab" onclick="switchTab('chessdb')" id="chessdbTab"><i
+                        class="fa-solid fa-database"></i>Databáze</div>
                 <div class="nav-tab" onclick="switchTab('changelog')" id="changelogTab"><i
                         class="fa-solid fa-code-branch"></i>Changelog</div>
             </div>
@@ -1137,6 +1139,53 @@
     </div>
     </div>
     </div>
+    <!-- Chess Database View -->
+    <div id="chessdbView" class="hidden">
+        <h2><i class="fa-solid fa-database"></i> Šachová databáze</h2>
+        <p style="color: var(--text-muted); margin-bottom: 1.5rem;">
+            Import partií z PGN souborů do databáze. Duplicity (stejný bílý, černý, datum, turnaj, výsledek) budou
+            přeskočeny.
+        </p>
+
+        <div class="card" style="margin-bottom: 1.5rem;">
+            <h3 style="margin-bottom: 1rem;"><i class="fa-solid fa-chart-bar"></i> Statistiky</h3>
+            <div id="chessdbStats" style="display: flex; gap: 2rem; flex-wrap: wrap;">
+                <div style="text-align: center;">
+                    <div style="font-size: 2rem; font-weight: 700; color: var(--primary-color);" id="totalGamesCount">-
+                    </div>
+                    <div style="color: var(--text-muted); font-size: 0.85rem;">Celkem partií</div>
+                </div>
+                <div style="text-align: center;">
+                    <div style="font-size: 2rem; font-weight: 700; color: #4ade80;" id="totalPlayersCount">-</div>
+                    <div style="color: var(--text-muted); font-size: 0.85rem;">Hráčů</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h3 style="margin-bottom: 1rem;"><i class="fa-solid fa-file-import"></i> Import PGN</h3>
+            <textarea id="pgnImportText" rows="12" placeholder="Vložte PGN notaci zde...
+[Event &quot;Turnaj&quot;]
+[White &quot;Bílý&quot;]
+[Black &quot;Černý&quot;]
+[Result &quot;1-0&quot;]
+
+1. e4 e5 2. Nf3 Nc6..."
+                style="width: 100%; padding: 1rem; background: #0a0a0a; border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; color: #e0e0e0; font-family: monospace; font-size: 0.9rem; resize: vertical;"></textarea>
+
+            <div id="pgnImportResult" style="display: none; margin-top: 1rem; padding: 1rem; border-radius: 6px;"></div>
+
+            <div style="display: flex; gap: 0.5rem; margin-top: 1rem;">
+                <button onclick="importChessGames()" class="btn-primary" id="importPgnBtn">
+                    <i class="fa-solid fa-upload"></i> Importovat partie
+                </button>
+                <button onclick="document.getElementById('pgnFileInput').click()" class="btn-secondary">
+                    <i class="fa-solid fa-file"></i> Nahrát soubor
+                </button>
+                <input type="file" id="pgnFileInput" accept=".pgn" style="display: none;" onchange="loadPgnFile(this)">
+            </div>
+        </div>
+    </div>
     <!-- Changelog View -->
     <div id="changelogView" class="hidden">
         <!-- Roadmap Section -->
@@ -1437,6 +1486,7 @@
     <script src="js/admin/admin-users.js"></script>
     <script src="js/admin/admin-blicak.js"></script>
     <script src="js/admin/admin-puzzle-racer.js"></script>
+    <script src="js/admin/admin-chessdb.js"></script>
     <script>
         /**
          * Admin Panel - Minimal Inline Script

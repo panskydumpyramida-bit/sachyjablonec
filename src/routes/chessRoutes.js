@@ -10,7 +10,8 @@ import {
     getGames,
     getGameById,
     getPlayerStats,
-    getOpeningTree
+    getOpeningTree,
+    importGames
 } from '../controllers/chessController.js';
 
 const router = express.Router();
@@ -32,5 +33,8 @@ router.get('/games/:id', getGameById);
 
 // Opening tree
 router.get('/tree', getOpeningTree);
+
+// Import games (ADMIN only - bypasses MEMBER check internally)
+router.post('/import', importGames);
 
 export default router;

@@ -391,3 +391,114 @@ function formatTree(node) {
 
     return { ...node, children };
 }
+
+/**
+ * Import games from PGN text (with duplicate detection)
+ * POST /api/chess/import
+ * Body: { pgn: "..." }
+ */
+export const importGames = async (req, res) => {
+    try {
+        const { pgn } = req.body;
+
+        if (!pgn || typeof pgn !== 'string') {
+            return res.status(400).json({ error: 'PGN text required' });
+        }
+
+        // Dynamic import of pgn-parser
+        const { parse } = await import('pgn-parser');
+
+        // Parse PGN
+        let games;
+        try {
+            games = parse(pgn);
+        } catch (e) {
+            return res.status(400).json({ error: 'Invalid PGN format', details: e.message });
+        }
+
+        if (!games || games.length === 0) {
+            return res.status(400).json({ error: 'No games found in PGN' });
+        }
+
+        let imported = 0;
+        let duplicates = 0;
+        let failed = 0;
+
+        for (const game of games) {
+            const getHeader = (name) => {
+                const h = game.headers?.find(h => h.name === name);
+                return h ? h.value : null;
+            };
+
+            const whitePlayer = getHeader('White');
+            const blackPlayer = getHeader('Black');
+            const result = getHeader('Result') || '*';
+            const event = getHeader('Event');
+            const dateStr = getHeader('Date');
+
+            // Skip if missing required fields
+            if (!whitePlayer || !blackPlayer) {
+                failed++;
+                continue;
+            }
+
+            // Parse date
+            let date = null;
+            if (dateStr && !dateStr.includes('?')) {
+                try {
+                    const [y, m, d] = dateStr.split('.');
+                    date = new Date(parseInt(y), parseInt(m) - 1, parseInt(d));
+                } catch (e) { }
+            }
+
+            // Check for duplicate
+            const existingWhere = {
+                whitePlayer: { equals: whitePlayer, mode: 'insensitive' },
+                blackPlayer: { equals: blackPlayer, mode: 'insensitive' },
+                result
+            };
+            if (event) existingWhere.event = event;
+            if (date) existingWhere.date = date;
+
+            const existing = await prisma.chessGame.findFirst({ where: existingWhere });
+
+            if (existing) {
+                duplicates++;
+                continue;
+            }
+
+            // Extract moves
+            const moves = game.moves?.map(m => m.move).filter(Boolean).join(' ') || '';
+
+            // Insert new game
+            await prisma.chessGame.create({
+                data: {
+                    event,
+                    site: getHeader('Site'),
+                    date,
+                    round: getHeader('Round'),
+                    whitePlayer,
+                    blackPlayer,
+                    result,
+                    eco: getHeader('ECO'),
+                    whiteElo: parseInt(getHeader('WhiteElo')) || null,
+                    blackElo: parseInt(getHeader('BlackElo')) || null,
+                    plyCount: parseInt(getHeader('PlyCount')) || null,
+                    moves
+                }
+            });
+            imported++;
+        }
+
+        res.json({
+            success: true,
+            total: games.length,
+            imported,
+            duplicates,
+            failed
+        });
+    } catch (error) {
+        console.error('Import error:', error);
+        res.status(500).json({ error: 'Import failed', details: error.message });
+    }
+};
