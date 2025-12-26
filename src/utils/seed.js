@@ -16,7 +16,7 @@ async function main() {
             username: process.env.ADMIN_USERNAME || 'admin',
             email: process.env.ADMIN_EMAIL || 'admin@sachyjablonec.cz',
             passwordHash: hashedPassword,
-            role: 'superadmin'
+            role: 'SUPERADMIN'
         }
     });
 
