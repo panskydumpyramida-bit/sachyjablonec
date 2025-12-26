@@ -146,8 +146,12 @@ Plán budoucího vývoje webu [sachyjablonec.cz](https://www.sachyjablonec.cz).
 
 ## ✅ Dokončeno
 
-<details>
+<details open>
 <summary><strong>Prosinec 2025</strong></summary>
+
+#### 26. 12. 2025 – Admin Refactoring & Blicák
+- ✅ **Admin Panel**: Refactoring `admin-news.js` (modularizace) - probíhá
+- ✅ **Blicák**: Nasazení fotogalerie s paginací a externími fotkami (WEBP)
 
 #### 23. 12. 2025 – Opravy a vylepšení
 - ✅ Google Account Linking – propojení účtu bez zadávání jména

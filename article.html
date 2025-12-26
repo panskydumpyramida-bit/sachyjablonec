@@ -151,7 +151,7 @@
             }
         });
 
-        function renderArticle(article) {
+        async function renderArticle(article) {
             document.title = `${article.title} - Šachový oddíl TJ Bižuterie Jablonec`;
 
             // Navigation Links
@@ -260,7 +260,35 @@
             }
 
             // Handle Gallery
-            if (article.galleryJson) {
+            if (article.id == 54) {
+                try {
+                    const safarikRes = await fetch('images/blicak/2024-safarik/gallery.json');
+                    if (safarikRes.ok) {
+                        const safarikImages = await safarikRes.json();
+                        const mapped = safarikImages.map(url => ({
+                            url: url,
+                            caption: 'Foto: David Šafařík'
+                        }));
+
+                        let existing = [];
+                        if (article.galleryJson) {
+                            try { existing = JSON.parse(article.galleryJson); } catch (e) { }
+                        }
+
+                        const combined = existing.concat(mapped);
+                        renderGallery(combined);
+                    } else if (article.galleryJson) {
+                        const images = JSON.parse(article.galleryJson);
+                        if (images.length > 0) renderGallery(images);
+                    }
+                } catch (e) {
+                    console.warn('Extra gallery load failed', e);
+                    if (article.galleryJson) {
+                        const images = JSON.parse(article.galleryJson);
+                        if (images.length > 0) renderGallery(images);
+                    }
+                }
+            } else if (article.galleryJson) {
                 const images = JSON.parse(article.galleryJson);
                 if (images.length > 0) {
                     renderGallery(images);
@@ -294,6 +322,8 @@
         }
 
         let articleGalleryImages = [];
+        let currentGalleryPage = 1;
+        const galleryItemsPerPage = 12;
 
         function renderGallery(images) {
             const container = document.getElementById('gallerySection');
@@ -301,17 +331,73 @@
                 container.classList.add('hidden');
                 return;
             }
+
             articleGalleryImages = images;
             container.classList.remove('hidden');
-            document.getElementById('galleryGrid').innerHTML = images.map((img, index) => {
+
+            // Initial Render
+            renderGalleryPage(1);
+
+            // Pagination
+            const grid = document.getElementById('galleryGrid');
+            // Remove old pagination if exists
+            const oldPag = document.getElementById('articleGalleryPagination');
+            if (oldPag) oldPag.remove();
+
+            if (images.length > galleryItemsPerPage) {
+                const pag = document.createElement('div');
+                pag.id = 'articleGalleryPagination';
+                pag.style.cssText = 'display: flex; justify-content: center; align-items: center; gap: 1rem; margin-top: 1.5rem;';
+                grid.parentNode.appendChild(pag); // Append after grid
+                updateGalleryPagination();
+            }
+        }
+
+        function renderGalleryPage(page) {
+            currentGalleryPage = page;
+            const start = (page - 1) * galleryItemsPerPage;
+            const end = start + galleryItemsPerPage;
+            const pageItems = articleGalleryImages.slice(start, end);
+
+            document.getElementById('galleryGrid').innerHTML = pageItems.map((img, indexInPage) => {
+                const globalIndex = start + indexInPage;
                 const url = typeof img === 'string' ? img : img.url;
                 const caption = typeof img === 'string' ? '' : (img.caption || '');
+
                 return `
-                <div class="gallery-item" onclick="SJLightbox.open(articleGalleryImages, ${index})" title="${caption}">
+                <div class="gallery-item" onclick="SJLightbox.open(articleGalleryImages, ${globalIndex})" title="${caption}">
                     <img src="${url}" alt="${caption}" loading="lazy">
                     ${caption ? `<div class="gallery-caption-overlay">${caption}</div>` : ''}
                 </div>
             `}).join('');
+        }
+
+        function updateGalleryPagination() {
+            const pag = document.getElementById('articleGalleryPagination');
+            if (!pag) return;
+            const totalPages = Math.ceil(articleGalleryImages.length / galleryItemsPerPage);
+
+            pag.innerHTML = `
+                <button onclick="changeGalleryPage(${currentGalleryPage - 1})" 
+                    style="background: ${currentGalleryPage === 1 ? 'rgba(255,255,255,0.05)' : 'var(--primary-color)'}; color: ${currentGalleryPage === 1 ? '#555' : '#000'}; border: none; padding: 0.5rem 1rem; border-radius: 4px; cursor: ${currentGalleryPage === 1 ? 'default' : 'pointer'};">
+                    <i class="fa-solid fa-chevron-left"></i>
+                </button>
+                <span style="display:flex;align-items:center;color:var(--text-muted); font-variant-numeric: tabular-nums;">
+                    ${currentGalleryPage} / ${totalPages}
+                </span>
+                <button onclick="changeGalleryPage(${currentGalleryPage + 1})" 
+                    style="background: ${currentGalleryPage === totalPages ? 'rgba(255,255,255,0.05)' : 'var(--primary-color)'}; color: ${currentGalleryPage === totalPages ? '#555' : '#000'}; border: none; padding: 0.5rem 1rem; border-radius: 4px; cursor: ${currentGalleryPage === totalPages ? 'default' : 'pointer'};">
+                    <i class="fa-solid fa-chevron-right"></i>
+                </button>
+             `;
+        }
+
+        window.changeGalleryPage = function (newPage) {
+            const totalPages = Math.ceil(articleGalleryImages.length / galleryItemsPerPage);
+            if (newPage < 1 || newPage > totalPages) return;
+            renderGalleryPage(newPage);
+            updateGalleryPagination();
+            document.getElementById('gallerySection').scrollIntoView({ behavior: 'smooth' });
         }
 
         function showError() {

@@ -860,59 +860,159 @@
             container.innerHTML = html;
         }
 
+        let currentPage = 1;
+        const itemsPerPage = 12;
+
         async function loadGallery() {
             const container = document.getElementById('galleryGrid');
             if (!container) return;
 
-            try {
-                // Load gallery from article 54 (Blicák article)
-                const res = await fetch(`${API_URL}/news/54`);
-                if (!res.ok) {
-                    console.log('Article 54 not found');
-                    return;
-                }
-                const article = await res.json();
+            let allImages = [];
 
-                let images = [];
-                if (article.galleryJson) {
-                    try {
-                        images = JSON.parse(article.galleryJson);
-                    } catch (e) {
-                        console.error('Failed to parse galleryJson', e);
+            // 1. Load from Article 54 (official DB)
+            try {
+                const res = await fetch(`${API_URL}/news/54`);
+                if (res.ok) {
+                    const article = await res.json();
+                    if (article.galleryJson) {
+                        try {
+                            const dbImages = JSON.parse(article.galleryJson);
+                            // Ensure objects
+                            const normalizedDbImages = dbImages.map(img => {
+                                if (typeof img === 'string') return { url: img, caption: '', altText: '' };
+                                return img;
+                            });
+                            allImages = allImages.concat(normalizedDbImages);
+                        } catch (e) {
+                            console.error('Failed to parse DB galleryJson', e);
+                        }
                     }
                 }
+            } catch (e) {
+                console.warn('Gallery load from DB failed/skipped', e);
+            }
 
-                // Store globally for lightbox
-                window.blicakGalleryImages = images;
-
-                if (images.length > 0) {
-                    document.getElementById('gallerySection').style.display = 'block';
-                    container.innerHTML = images.map((img, index) => {
-                        const url = typeof img === 'string' ? img : img.url;
-                        const alt = typeof img === 'string' ? 'Foto z turnaje' : (img.caption || img.altText || 'Foto z turnaje');
-                        return `
-                        <div class="gallery-item" style="cursor: pointer; overflow: hidden; border-radius: 8px; position: relative; aspect-ratio: 4/3; group" onclick="SJLightbox.open(window.blicakGalleryImages, ${index})">
-                            <img src="${url}" alt="${alt}" style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.5s;">
-                            <div style="position: absolute; inset: 0; background: rgba(0,0,0,0.5); opacity: 0; transition: opacity 0.3s; display: flex; align-items: center; justify-content: center;">
-                                <i class="fa-solid fa-expand" style="color: #fff; font-size: 1.5rem;"></i>
-                            </div>
-                        </div>
-                    `}).join('');
-
-                    document.querySelectorAll('.gallery-item').forEach(item => {
-                        item.addEventListener('mouseenter', () => item.querySelector('div').style.opacity = '1');
-                        item.addEventListener('mouseleave', () => item.querySelector('div').style.opacity = '0');
-                        item.addEventListener('mouseenter', () => item.querySelector('img').style.transform = 'scale(1.1)');
-                        item.addEventListener('mouseleave', () => item.querySelector('img').style.transform = 'scale(1)');
-                    });
-                } else {
-                    // Hide gallery section if no images
-                    document.getElementById('gallerySection').style.display = 'none';
+            // 2. Load from David Safarik JSON (local static file)
+            try {
+                const res = await fetch('images/blicak/2024-safarik/gallery.json');
+                if (res.ok) {
+                    const safarikImages = await res.json();
+                    // Add credit metadata to these images
+                    const mappedSafarik = safarikImages.map(url => ({
+                        url: url,
+                        caption: 'Foto: David Šafařík',
+                        altText: 'Vánoční blicák 2024 - Foto: David Šafařík'
+                    }));
+                    allImages = allImages.concat(mappedSafarik);
                 }
             } catch (e) {
-                console.error('Gallery load failed', e);
+                console.warn('Gallery load from JSON failed', e);
+            }
+
+            // Store globally for lightbox
+            window.blicakGalleryImages = allImages;
+
+            if (allImages.length > 0) {
+                document.getElementById('gallerySection').style.display = 'block';
+                initPagination(allImages, container);
+            } else {
+                document.getElementById('gallerySection').style.display = 'none';
             }
         }
+
+        function initPagination(images, container) {
+            // Clear previous pagination if any
+            const existingPag = document.getElementById('galleryPagination');
+            if (existingPag) existingPag.remove();
+
+            // Render first page
+            renderGalleryPage(1, images, container);
+
+            // Create Pagination Controls if needed
+            if (images.length > itemsPerPage) {
+                const totalPages = Math.ceil(images.length / itemsPerPage);
+                const paginationDiv = document.createElement('div');
+                paginationDiv.id = 'galleryPagination';
+                paginationDiv.style.cssText = 'display: flex; justify-content: center; align-items: center; gap: 0.5rem; margin-top: 2rem; flex-wrap: wrap;';
+
+                container.parentNode.appendChild(paginationDiv);
+                updatePaginationControls(totalPages, images, container);
+            }
+        }
+
+        function renderGalleryPage(page, images, container) {
+            currentPage = page;
+            const start = (page - 1) * itemsPerPage;
+            const end = start + itemsPerPage;
+            const pageImages = images.slice(start, end);
+
+            container.innerHTML = pageImages.map((img, indexInPage) => {
+                // Calculate global index for lightbox
+                const globalIndex = start + indexInPage;
+                const url = img.url;
+                const alt = img.altText || 'Foto z turnaje';
+                const caption = img.caption || '';
+
+                return `
+                <div class="gallery-item" style="cursor: pointer; overflow: hidden; border-radius: 8px; position: relative; aspect-ratio: 4/3; group" onclick="SJLightbox.open(window.blicakGalleryImages, ${globalIndex})">
+                    <img src="${url}" alt="${alt}" loading="lazy" style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.5s;">
+                    <div style="position: absolute; inset: 0; background: rgba(0,0,0,0.5); opacity: 0; transition: opacity 0.3s; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 1rem; text-align: center;">
+                        <i class="fa-solid fa-expand" style="color: #fff; font-size: 1.5rem; margin-bottom: 0.5rem;"></i>
+                        ${caption ? `<span style="color: #fff; font-size: 0.8rem; font-weight: 500;">${caption}</span>` : ''}
+                    </div>
+                </div>
+            `}).join('');
+
+            // Re-attach hover listeners (inline onclick handles lightbox, but hover effect needs JS or CSS)
+            // CSS 'group' hover would be better, but let's stick to JS for compatibility with existing inline styles
+            document.querySelectorAll('.gallery-item').forEach(item => {
+                item.addEventListener('mouseenter', () => item.querySelector('div').style.opacity = '1');
+                item.addEventListener('mouseleave', () => item.querySelector('div').style.opacity = '0');
+                item.addEventListener('mouseenter', () => item.querySelector('img').style.transform = 'scale(1.1)');
+                item.addEventListener('mouseleave', () => item.querySelector('img').style.transform = 'scale(1)');
+            });
+        }
+
+        function updatePaginationControls(totalPages, images, container) {
+            const paginationDiv = document.getElementById('galleryPagination');
+            if (!paginationDiv) return;
+
+            let html = '';
+
+            // Prev Button
+            html += `<button onclick="changePage(${currentPage - 1}, ${totalPages})" 
+                     style="background: ${currentPage === 1 ? 'rgba(255,255,255,0.05)' : 'var(--primary-color)'}; 
+                            color: ${currentPage === 1 ? '#555' : '#000'}; 
+                            border: none; padding: 0.5rem 1rem; border-radius: 4px; cursor: ${currentPage === 1 ? 'default' : 'pointer'};">
+                     <i class="fa-solid fa-chevron-left"></i>
+                     </button>`;
+
+            // Page Numbers (Smart display: 1, 2, ... current ... last)
+            // For simplicity in this iteration: show current / total
+            html += `<span style="color: var(--text-muted); font-variant-numeric: tabular-nums;">
+                        Strana <strong style="color: var(--primary-color);">${currentPage}</strong> z ${totalPages}
+                     </span>`;
+
+            // Next Button
+            html += `<button onclick="changePage(${currentPage + 1}, ${totalPages})" 
+                     style="background: ${currentPage === totalPages ? 'rgba(255,255,255,0.05)' : 'var(--primary-color)'}; 
+                            color: ${currentPage === totalPages ? '#555' : '#000'}; 
+                            border: none; padding: 0.5rem 1rem; border-radius: 4px; cursor: ${currentPage === totalPages ? 'default' : 'pointer'};">
+                     <i class="fa-solid fa-chevron-right"></i>
+                     </button>`;
+
+            paginationDiv.innerHTML = html;
+        }
+
+        // Global function for onclick
+        window.changePage = function (newPage, totalPages) {
+            if (newPage < 1 || newPage > totalPages) return;
+            const container = document.getElementById('galleryGrid');
+            renderGalleryPage(newPage, window.blicakGalleryImages, container);
+            updatePaginationControls(totalPages, window.blicakGalleryImages, container);
+            // Scroll to gallery top
+            document.getElementById('gallerySection').scrollIntoView({ behavior: 'smooth' });
+        };
     </script>
 </body>
 
