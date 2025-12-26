@@ -181,6 +181,8 @@ async function verifyToken() {
 // ================================
 
 function switchTab(tab) {
+    if (!currentUser) return; // Guard against unauthenticated access
+
     // Cleanup any open modals from previous section
     const imageModal = document.getElementById('imageModal');
     if (imageModal) imageModal.style.display = 'none';
