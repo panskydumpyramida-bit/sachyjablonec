@@ -12,7 +12,22 @@ async function loadUsers() {
         const res = await fetch(`${API_URL}/users`, {
             headers: { 'Authorization': `Bearer ${authToken}` }
         });
+
+        if (!res.ok) {
+            const errorData = await res.json().catch(() => ({}));
+            console.error('Load users failed:', res.status, errorData);
+            showAlert(errorData.error || 'Nemáte oprávnění zobrazit uživatele', 'error');
+            document.getElementById('usersTableBody').innerHTML = '<tr><td colspan="5" style="text-align:center;color:#999;">Nelze načíst uživatele</td></tr>';
+            return;
+        }
+
         const users = await res.json();
+
+        if (!Array.isArray(users)) {
+            console.error('Load users: response is not an array', users);
+            document.getElementById('usersTableBody').innerHTML = '<tr><td colspan="5" style="text-align:center;color:#999;">Chyba formátu dat</td></tr>';
+            return;
+        }
 
         document.getElementById('usersTableBody').innerHTML = users.map(u => `
             <tr>
