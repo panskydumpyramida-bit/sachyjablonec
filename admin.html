@@ -9,8 +9,9 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <link rel="stylesheet" href="css/style.css?v=20251226">
-    <link rel="stylesheet" href="css/admin.css?v=1">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/admin.css">
+    <script src="js/version.js"></script>
 </head>
 
 <body>
@@ -86,6 +87,8 @@
                         class="fa-solid fa-puzzle-piece"></i>Puzzle Racer <i class="fa-solid fa-lock"
                         style="font-size: 0.7em; margin-left: 0.4rem; color: #fbbf24; opacity: 0.8;"
                         title="Superadmin only"></i></div>
+                <div class="nav-tab" onclick="switchTab('changelog')" id="changelogTab"><i
+                        class="fa-solid fa-code-branch"></i>Changelog</div>
             </div>
             <div id="alertContainer"></div>
             <!-- DASHBOARD -->
@@ -1131,6 +1134,200 @@
     </div>
     </div>
     </div>
+    <!-- Changelog View -->
+    <div id="changelogView" class="hidden">
+        <div class="card" style="margin-bottom: 2rem;">
+            <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem;">
+                <i class="fa-solid fa-code-branch" style="font-size: 2rem; color: var(--primary-color);"></i>
+                <div>
+                    <h2 style="margin: 0;">Changelog</h2>
+                    <p style="margin: 0.25rem 0 0; color: var(--text-muted); font-size: 0.9rem;">Historie změn a
+                        aktualizací webu</p>
+                </div>
+            </div>
+
+            <div class="changelog-timeline">
+                <!-- 2025-12-26 -->
+                <div class="changelog-entry">
+                    <div class="changelog-date">26. 12. 2025</div>
+                    <div class="changelog-version">v11</div>
+                    <div class="changelog-content">
+                        <h4>🔧 Opravy</h4>
+                        <ul>
+                            <li><strong>Admin panel:</strong> Opravena inicializace - duplicitní deklarace
+                                <code>API_URL</code> a <code>selectedImage</code>
+                            </li>
+                            <li><strong>Admin panel:</strong> Opravena race condition při <code>DOMContentLoaded</code>
+                            </li>
+                            <li><strong>Login tlačítko:</strong> Opraveno zobrazení na stránce "O nás" - chyběly auth
+                                skripty</li>
+                            <li><strong>Uživatelé:</strong> Opravena chyba při načítání (403 error handling)</li>
+                        </ul>
+                        <h4>🆕 Nové funkce</h4>
+                        <ul>
+                            <li><strong>Changelog:</strong> Přidána sekce Changelog do admin panelu</li>
+                            <li><strong>Verzování:</strong> Centralizované verzování přes <code>version.js</code> -
+                                APP_VERSION</li>
+                        </ul>
+                        <h4>♻️ Refaktoring</h4>
+                        <ul>
+                            <li>Extrakce <code>utils.js</code> - společné utility funkce (escapeHtml, debounce,
+                                throttle)</li>
+                            <li>Extrakce admin modulů: <code>admin-users.js</code>, <code>admin-blicak.js</code>,
+                                <code>admin-puzzle-racer.js</code>
+                            </li>
+                            <li>Snížení inline JS v admin.html z ~640 na ~60 řádků</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- 2025-12-25 -->
+                <div class="changelog-entry">
+                    <div class="changelog-date">25. 12. 2025</div>
+                    <div class="changelog-version">v10</div>
+                    <div class="changelog-content">
+                        <h4>🆕 Nové funkce</h4>
+                        <ul>
+                            <li><strong>Kalendář událostí:</strong> Kompletní správa událostí - turnaje, tréninky,
+                                soustředění</li>
+                            <li><strong>Admin Events:</strong> Nový modul pro správu kalendáře v admin panelu</li>
+                            <li><strong>Event tags:</strong> Šachově-specifické tagy (věková kategorie, tempo, typ)</li>
+                        </ul>
+                        <h4>♻️ Refaktoring</h4>
+                        <ul>
+                            <li>Separace admin-core.js pro sdílenou funkcionalitu</li>
+                            <li>URL hash persistence pro admin taby</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- 2025-12-12 -->
+                <div class="changelog-entry">
+                    <div class="changelog-date">12. 12. 2025</div>
+                    <div class="changelog-version">v8</div>
+                    <div class="changelog-content">
+                        <h4>🔧 Opravy</h4>
+                        <ul>
+                            <li><strong>Game Viewer:</strong> Opravena výška šachovnice a notace na mobilu</li>
+                            <li><strong>Caching:</strong> Cache busting pro produkční prostředí</li>
+                            <li><strong>Server:</strong> Graceful shutdown při deploymentu</li>
+                        </ul>
+                        <h4>🆕 Nové funkce</h4>
+                        <ul>
+                            <li><strong>Puzzle Racer:</strong> Rozlišení vanilla/thematic módů</li>
+                            <li><strong>Game Recorder:</strong> Nahrávání vlastních partií</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- 2025-12-11 -->
+                <div class="changelog-entry">
+                    <div class="changelog-date">11. 12. 2025</div>
+                    <div class="changelog-version">v7</div>
+                    <div class="changelog-content">
+                        <h4>🆕 Nové funkce</h4>
+                        <ul>
+                            <li><strong>Galerie:</strong> Lightbox s navigací mezi fotkami</li>
+                            <li><strong>Admin galerie:</strong> Batch operace - mazání více obrázků najednou</li>
+                            <li><strong>Captions:</strong> Zobrazení skutečných popisků místo placeholderů</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Starší -->
+                <div class="changelog-entry">
+                    <div class="changelog-date">Starší verze</div>
+                    <div class="changelog-version">v1-6</div>
+                    <div class="changelog-content">
+                        <ul>
+                            <li>Počáteční vývoj webu</li>
+                            <li>Admin panel pro správu novinek</li>
+                            <li>WYSIWYG editor</li>
+                            <li>Přehrávač partií z Chess.com</li>
+                            <li>Puzzle Racer hra</li>
+                            <li>Foto galerie s kategoriemi</li>
+                            <li>Autentizace a správa uživatelů</li>
+                            <li>Blicák turnaj s registrací</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <style>
+                .changelog-timeline {
+                    border-left: 3px solid var(--primary-color);
+                    margin-left: 1rem;
+                    padding-left: 1.5rem;
+                }
+
+                .changelog-entry {
+                    position: relative;
+                    margin-bottom: 2rem;
+                    padding-bottom: 1.5rem;
+                    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+                }
+
+                .changelog-entry:last-child {
+                    border-bottom: none;
+                    margin-bottom: 0;
+                }
+
+                .changelog-entry::before {
+                    content: '';
+                    position: absolute;
+                    left: -1.5rem;
+                    top: 0.3rem;
+                    width: 12px;
+                    height: 12px;
+                    background: var(--primary-color);
+                    border-radius: 50%;
+                    margin-left: -7.5px;
+                }
+
+                .changelog-date {
+                    font-weight: 600;
+                    color: var(--primary-color);
+                    font-size: 1rem;
+                    margin-bottom: 0.25rem;
+                }
+
+                .changelog-version {
+                    font-size: 0.75rem;
+                    color: var(--text-muted);
+                    margin-bottom: 0.75rem;
+                    font-family: monospace;
+                }
+
+                .changelog-content h4 {
+                    margin: 1rem 0 0.5rem;
+                    font-size: 0.9rem;
+                    color: var(--text-color);
+                }
+
+                .changelog-content h4:first-child {
+                    margin-top: 0;
+                }
+
+                .changelog-content ul {
+                    margin: 0;
+                    padding-left: 1.25rem;
+                }
+
+                .changelog-content li {
+                    margin-bottom: 0.4rem;
+                    font-size: 0.9rem;
+                    color: rgba(255, 255, 255, 0.8);
+                }
+
+                .changelog-content code {
+                    background: rgba(255, 255, 255, 0.1);
+                    padding: 0.1rem 0.4rem;
+                    border-radius: 4px;
+                    font-size: 0.8rem;
+                }
+            </style>
+        </div>
+    </div>
     <!-- Member Modal -->
     <div id="memberModal" class="modal-overlay" style="display: none;">
         <div class="modal-content" style="width: 500px;">
@@ -1155,22 +1352,22 @@
             </div>
         </div>
     </div>
-    <script src="js/config.js?v=4"></script>
-    <script src="js/utils.js?v=20251226b"></script>
-    <script src="js/admin/admin-core.js?v=20251226b"></script>
-    <script src="js/admin/admin-gallery.js?v=20251226b"></script>
-    <script src="js/admin/admin-wysiwyg.js?v=1"></script>
-    <script src="js/admin/admin-content-images.js?v=1"></script>
-    <script src="js/admin/admin-thumbnail.js?v=1"></script>
-    <script src="js/admin/admin-news.js?v=20251226b"></script>
-    <script src="js/admin/admin-members.js?v=20251226b"></script>
-    <script src="js/admin/admin-messages.js?v=20251226b"></script>
-    <script src="js/admin/admin-competitions.js?v=20251226b"></script>
-    <script src="js/admin/admin-games.js?v=20251226b"></script>
-    <script src="js/admin/admin-events.js?v=20251226b"></script>
-    <script src="js/admin/admin-users.js?v=20251226b"></script>
-    <script src="js/admin/admin-blicak.js?v=20251226b"></script>
-    <script src="js/admin/admin-puzzle-racer.js?v=20251226b"></script>
+    <script src="js/config.js"></script>
+    <script src="js/utils.js"></script>
+    <script src="js/admin/admin-core.js"></script>
+    <script src="js/admin/admin-gallery.js"></script>
+    <script src="js/admin/admin-wysiwyg.js"></script>
+    <script src="js/admin/admin-content-images.js"></script>
+    <script src="js/admin/admin-thumbnail.js"></script>
+    <script src="js/admin/admin-news.js"></script>
+    <script src="js/admin/admin-members.js"></script>
+    <script src="js/admin/admin-messages.js"></script>
+    <script src="js/admin/admin-competitions.js"></script>
+    <script src="js/admin/admin-games.js"></script>
+    <script src="js/admin/admin-events.js"></script>
+    <script src="js/admin/admin-users.js"></script>
+    <script src="js/admin/admin-blicak.js"></script>
+    <script src="js/admin/admin-puzzle-racer.js"></script>
     <script>
         /**
          * Admin Panel - Minimal Inline Script
