@@ -32,7 +32,7 @@ async function main() {
             username: 'filip',
             email: 'filip@sachyjablonec.cz',
             passwordHash: commonPasswordHash,
-            role: 'admin'
+            role: 'ADMIN'
         }
     });
     console.log('✅ Admin user created:', filip.username);
@@ -44,7 +44,7 @@ async function main() {
             username: 'lukas',
             email: 'lukas@sachyjablonec.cz',
             passwordHash: commonPasswordHash,
-            role: 'admin'
+            role: 'ADMIN'
         }
     });
     console.log('✅ Admin user created:', lukas.username);
