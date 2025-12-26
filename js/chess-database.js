@@ -1,6 +1,5 @@
 /**
- * Chess Database Frontend
- * Provides search, filtering, and game viewing for the chess database
+ * Chess Database Frontend with Game Viewer and Opening Tree
  */
 
 const ChessDB = {
@@ -8,30 +7,31 @@ const ChessDB = {
     currentPlayer: null,
     currentColor: 'both',
     currentPage: 0,
-    pageSize: 25,
+    pageSize: 30,
     totalGames: 0,
     debounceTimer: null,
 
-    /**
-     * Get auth token (OAuth only)
-     */
+    // Game viewer state
+    currentGame: null,
+    currentMoveIndex: 0,
+    moves: [],
+    board: null,
+
+    // Opening tree state
+    treeData: null,
+
     getToken() {
         return localStorage.getItem('authToken');
     },
 
-    /**
-     * Check if user is authenticated with MEMBER+ role
-     */
     async checkAccess() {
         const token = this.getToken();
-
         if (!token) {
             this.showAccessDenied();
             return false;
         }
 
         try {
-            // Try to fetch a simple endpoint to verify access
             const response = await fetch(`${this.API_URL}/games?limit=1`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
@@ -43,7 +43,7 @@ const ChessDB = {
 
             if (response.ok) {
                 const data = await response.json();
-                document.getElementById('totalGamesCount').textContent = data.total?.toLocaleString() || '0';
+                document.getElementById('dbStats').textContent = `${data.total?.toLocaleString() || 0} partií`;
                 this.showMainContent();
                 return true;
             }
@@ -63,39 +63,30 @@ const ChessDB = {
     showMainContent() {
         document.getElementById('accessDenied').classList.add('hidden');
         document.getElementById('mainContent').classList.remove('hidden');
+        document.getElementById('mainContent').style.display = 'flex';
     },
 
-    /**
-     * Initialize the chess database UI
-     */
     async init() {
         const hasAccess = await this.checkAccess();
         if (!hasAccess) return;
-
         this.bindEvents();
     },
 
-    /**
-     * Bind event handlers
-     */
     bindEvents() {
-        // Search input with debounce
+        // Search
         const searchInput = document.getElementById('playerSearch');
         searchInput.addEventListener('input', () => {
             clearTimeout(this.debounceTimer);
-            this.debounceTimer = setTimeout(() => {
-                this.handleSearch(searchInput.value);
-            }, 300);
+            this.debounceTimer = setTimeout(() => this.handleSearch(searchInput.value), 300);
         });
 
-        // Hide autocomplete when clicking outside
         document.addEventListener('click', (e) => {
             if (!e.target.closest('.search-input-wrapper')) {
                 document.getElementById('autocompleteResults').style.display = 'none';
             }
         });
 
-        // Color filter buttons
+        // Color filters
         document.querySelectorAll('.filter-btn[data-color]').forEach(btn => {
             btn.addEventListener('click', () => {
                 document.querySelectorAll('.filter-btn[data-color]').forEach(b => b.classList.remove('active'));
@@ -104,98 +95,77 @@ const ChessDB = {
                 if (this.currentPlayer) {
                     this.currentPage = 0;
                     this.loadGames();
+                    this.loadOpeningTree();
                 }
+            });
+        });
+
+        // Tabs
+        document.querySelectorAll('.detail-tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('.detail-tab').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                tab.classList.add('active');
+                document.getElementById(`tab${tab.dataset.tab.charAt(0).toUpperCase() + tab.dataset.tab.slice(1)}`).classList.add('active');
             });
         });
 
         // Pagination
         document.getElementById('prevPage').addEventListener('click', () => {
-            if (this.currentPage > 0) {
-                this.currentPage--;
-                this.loadGames();
-            }
+            if (this.currentPage > 0) { this.currentPage--; this.loadGames(); }
         });
-
         document.getElementById('nextPage').addEventListener('click', () => {
-            if ((this.currentPage + 1) * this.pageSize < this.totalGames) {
-                this.currentPage++;
-                this.loadGames();
-            }
+            if ((this.currentPage + 1) * this.pageSize < this.totalGames) { this.currentPage++; this.loadGames(); }
         });
 
-        // Close modal on Escape
+        // Keyboard navigation for board
         document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape') {
-                closeGameModal();
-            }
+            if (!this.currentGame) return;
+            if (e.key === 'ArrowLeft') this.prevMove();
+            if (e.key === 'ArrowRight') this.nextMove();
         });
     },
 
-    /**
-     * Handle search input - show autocomplete
-     */
+    // ==================== SEARCH ====================
     async handleSearch(query) {
         const resultsDiv = document.getElementById('autocompleteResults');
-
-        if (query.length < 2) {
-            resultsDiv.style.display = 'none';
-            return;
-        }
+        if (query.length < 2) { resultsDiv.style.display = 'none'; return; }
 
         const token = this.getToken();
         try {
             const response = await fetch(`${this.API_URL}/players?q=${encodeURIComponent(query)}&limit=10`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
-
             if (!response.ok) throw new Error('Search failed');
-
             const players = await response.json();
 
             if (players.length === 0) {
-                resultsDiv.innerHTML = '<div class="autocomplete-item"><span style="color: var(--text-muted);">Žádní hráči nenalezeni</span></div>';
+                resultsDiv.innerHTML = '<div class="autocomplete-item"><span style="color: var(--text-muted);">Žádný hráč</span></div>';
             } else {
                 resultsDiv.innerHTML = players.map(p => `
                     <div class="autocomplete-item" onclick="ChessDB.selectPlayer('${p.name.replace(/'/g, "\\'")}')">
-                        <span class="player-name">${p.name}</span>
-                        <span class="game-count">${p.totalGames} partií</span>
+                        <span>${p.name}</span>
+                        <span style="color: var(--text-muted); font-size: 0.85rem;">${p.totalGames} partií</span>
                     </div>
                 `).join('');
             }
-
             resultsDiv.style.display = 'block';
-        } catch (e) {
-            console.error('Search error:', e);
-        }
+        } catch (e) { console.error('Search error:', e); }
     },
 
-    /**
-     * Select a player from autocomplete
-     */
     async selectPlayer(name) {
         this.currentPlayer = name;
         this.currentPage = 0;
-
         document.getElementById('playerSearch').value = name;
         document.getElementById('autocompleteResults').style.display = 'none';
 
-        // Add sidebar for stats
-        document.getElementById('resultsSection').classList.add('with-sidebar');
-        document.getElementById('playerStats').classList.remove('hidden');
-
-        // Load games and stats in parallel
-        await Promise.all([
-            this.loadGames(),
-            this.loadPlayerStats(name)
-        ]);
+        await Promise.all([this.loadGames(), this.loadOpeningTree()]);
     },
 
-    /**
-     * Load games for current player/filters
-     */
+    // ==================== GAMES LIST ====================
     async loadGames() {
         const listDiv = document.getElementById('gamesList');
-        listDiv.innerHTML = '<div class="loading"><i class="fa-solid fa-spinner"></i><p>Načítám partie...</p></div>';
+        listDiv.innerHTML = '<div class="loading"><i class="fa-solid fa-spinner"></i></div>';
 
         const token = this.getToken();
         const params = new URLSearchParams({
@@ -209,219 +179,311 @@ const ChessDB = {
             const response = await fetch(`${this.API_URL}/games?${params}`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
-
-            if (!response.ok) throw new Error('Failed to load games');
-
+            if (!response.ok) throw new Error('Failed');
             const data = await response.json();
             this.totalGames = data.total;
 
-            // Update info
-            document.getElementById('resultsInfo').textContent = `${data.total.toLocaleString()} partií`;
+            document.getElementById('gamesCount').textContent = `${data.total} partií`;
 
             if (data.games.length === 0) {
-                listDiv.innerHTML = '<div class="empty-state"><i class="fa-solid fa-chess"></i><p>Žádné partie nenalezeny</p></div>';
+                listDiv.innerHTML = '<div class="empty-state"><p>Žádné partie</p></div>';
                 document.getElementById('pagination').classList.add('hidden');
                 return;
             }
 
-            // Render games
-            listDiv.innerHTML = data.games.map(game => this.renderGameRow(game)).join('');
+            listDiv.innerHTML = data.games.map(g => this.renderGameRow(g)).join('');
 
-            // Update pagination
+            // Pagination
             const totalPages = Math.ceil(this.totalGames / this.pageSize);
-            document.getElementById('pageInfo').textContent = `Strana ${this.currentPage + 1} z ${totalPages}`;
+            document.getElementById('pageInfo').textContent = `${this.currentPage + 1}/${totalPages}`;
             document.getElementById('prevPage').disabled = this.currentPage === 0;
             document.getElementById('nextPage').disabled = (this.currentPage + 1) >= totalPages;
             document.getElementById('pagination').classList.remove('hidden');
-
         } catch (e) {
             console.error('Load games error:', e);
-            listDiv.innerHTML = '<div class="empty-state"><i class="fa-solid fa-exclamation-triangle"></i><p>Chyba při načítání</p></div>';
+            listDiv.innerHTML = '<div class="empty-state"><p>Chyba</p></div>';
         }
     },
 
-    /**
-     * Render a single game row
-     */
-    renderGameRow(game) {
-        const date = game.date ? new Date(game.date).toLocaleDateString('cs-CZ') : '—';
-
+    renderGameRow(g) {
+        const date = g.date ? new Date(g.date).toLocaleDateString('cs-CZ', { day: 'numeric', month: 'numeric', year: '2-digit' }) : '';
         let resultClass = 'draw';
-        if (game.result === '1-0') resultClass = 'white-win';
-        else if (game.result === '0-1') resultClass = 'black-win';
+        if (g.result === '1-0') resultClass = 'white-win';
+        else if (g.result === '0-1') resultClass = 'black-win';
 
         return `
-            <div class="game-row" onclick="ChessDB.openGame(${game.id})">
-                <div class="game-date">${date}</div>
-                <div class="game-players">
-                    <div class="game-player white">
-                        <span>${game.whitePlayer}</span>
-                        ${game.whiteElo ? `<span class="elo">(${game.whiteElo})</span>` : ''}
-                    </div>
-                    <div class="game-player black">
-                        <span>${game.blackPlayer}</span>
-                        ${game.blackElo ? `<span class="elo">(${game.blackElo})</span>` : ''}
-                    </div>
+            <div class="game-row" data-id="${g.id}" onclick="ChessDB.openGame(${g.id})">
+                <div class="game-meta">${date} ${g.eco || ''}</div>
+                <div class="game-players-line">
+                    <span class="player-color white"></span>
+                    <span>${g.whitePlayer}</span>
+                    ${g.whiteElo ? `<small style="color:var(--text-muted)">(${g.whiteElo})</small>` : ''}
                 </div>
-                <div style="display: flex; gap: 0.5rem; align-items: center;">
-                    ${game.eco ? `<span class="game-eco">${game.eco}</span>` : ''}
-                    <span class="game-result ${resultClass}">${game.result}</span>
+                <div class="game-players-line">
+                    <span class="player-color black"></span>
+                    <span>${g.blackPlayer}</span>
+                    ${g.blackElo ? `<small style="color:var(--text-muted)">(${g.blackElo})</small>` : ''}
+                    <span class="game-result-badge ${resultClass}">${g.result}</span>
                 </div>
             </div>
         `;
     },
 
-    /**
-     * Load player statistics
-     */
-    async loadPlayerStats(name) {
-        const contentDiv = document.getElementById('playerStatsContent');
-        document.getElementById('playerStatsName').textContent = name;
-        contentDiv.innerHTML = '<div class="loading"><i class="fa-solid fa-spinner"></i></div>';
-
-        const token = this.getToken();
-        try {
-            const response = await fetch(`${this.API_URL}/players/${encodeURIComponent(name)}/stats`, {
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
-
-            if (!response.ok) throw new Error('Failed to load stats');
-
-            const stats = await response.json();
-
-            const whiteScore = stats.asWhite.games > 0
-                ? ((stats.asWhite.wins + stats.asWhite.draws * 0.5) / stats.asWhite.games * 100).toFixed(1)
-                : 0;
-            const blackScore = stats.asBlack.games > 0
-                ? ((stats.asBlack.wins + stats.asBlack.draws * 0.5) / stats.asBlack.games * 100).toFixed(1)
-                : 0;
-
-            contentDiv.innerHTML = `
-                <div class="stat-grid">
-                    <div class="stat-box">
-                        <div class="stat-value">${stats.totalGames}</div>
-                        <div class="stat-label">Celkem partií</div>
-                    </div>
-                    <div class="stat-box">
-                        <div class="stat-value">${stats.peakElo || '—'}</div>
-                        <div class="stat-label">Max ELO</div>
-                    </div>
-                </div>
-
-                <h4 style="margin: 1rem 0 0.5rem; font-size: 0.9rem; color: var(--text-muted);">Jako bílý</h4>
-                <div style="display: flex; gap: 0.5rem; font-size: 0.85rem; margin-bottom: 0.5rem;">
-                    <span style="color: #4ade80;">+${stats.asWhite.wins}</span>
-                    <span style="color: #9ca3af;">=${stats.asWhite.draws}</span>
-                    <span style="color: #f87171;">-${stats.asWhite.losses}</span>
-                    <span style="margin-left: auto; color: var(--primary-color);">${whiteScore}%</span>
-                </div>
-
-                <h4 style="margin: 1rem 0 0.5rem; font-size: 0.9rem; color: var(--text-muted);">Jako černý</h4>
-                <div style="display: flex; gap: 0.5rem; font-size: 0.85rem; margin-bottom: 1rem;">
-                    <span style="color: #4ade80;">+${stats.asBlack.wins}</span>
-                    <span style="color: #9ca3af;">=${stats.asBlack.draws}</span>
-                    <span style="color: #f87171;">-${stats.asBlack.losses}</span>
-                    <span style="margin-left: auto; color: var(--primary-color);">${blackScore}%</span>
-                </div>
-
-                ${stats.topOpenings?.length ? `
-                    <h4 style="margin: 1rem 0 0.5rem; font-size: 0.9rem; color: var(--text-muted);">Nejčastější zahájení</h4>
-                    <div style="font-size: 0.85rem;">
-                        ${stats.topOpenings.slice(0, 5).map(o => `
-                            <div style="display: flex; justify-content: space-between; padding: 0.25rem 0; border-bottom: 1px solid rgba(255,255,255,0.05);">
-                                <span class="game-eco">${o.eco}</span>
-                                <span style="color: var(--text-muted);">${o.count}×</span>
-                            </div>
-                        `).join('')}
-                    </div>
-                ` : ''}
-            `;
-
-        } catch (e) {
-            console.error('Load stats error:', e);
-            contentDiv.innerHTML = '<p style="color: var(--text-muted);">Nepodařilo se načíst statistiky</p>';
-        }
-    },
-
-    /**
-     * Open game in modal viewer
-     */
+    // ==================== GAME VIEWER ====================
     async openGame(id) {
-        const modal = document.getElementById('gameModal');
-        const modalBody = document.getElementById('modalBody');
-        const modalTitle = document.getElementById('modalTitle');
+        // Mark active
+        document.querySelectorAll('.game-row').forEach(r => r.classList.remove('active'));
+        document.querySelector(`.game-row[data-id="${id}"]`)?.classList.add('active');
 
-        modal.style.display = 'block';
-        modal.classList.remove('hidden');
-        modalBody.innerHTML = '<div class="loading"><i class="fa-solid fa-spinner"></i><p>Načítám partii...</p></div>';
+        const content = document.getElementById('gameViewerContent');
+        content.innerHTML = '<div class="loading"><i class="fa-solid fa-spinner"></i></div>';
+
+        // Switch to game tab
+        document.querySelectorAll('.detail-tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        document.querySelector('.detail-tab[data-tab="game"]').classList.add('active');
+        document.getElementById('tabGame').classList.add('active');
 
         const token = this.getToken();
         try {
             const response = await fetch(`${this.API_URL}/games/${id}`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
-
-            if (!response.ok) throw new Error('Failed to load game');
-
+            if (!response.ok) throw new Error('Failed');
             const game = await response.json();
 
-            modalTitle.textContent = `${game.whitePlayer} vs ${game.blackPlayer}`;
+            this.currentGame = game;
+            this.moves = game.moves ? game.moves.split(' ').filter(m => m) : [];
+            this.currentMoveIndex = 0;
 
-            // Display PGN and basic info
-            modalBody.innerHTML = `
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
-                    <div><strong>Turnaj:</strong> ${game.event || '—'}</div>
-                    <div><strong>Datum:</strong> ${game.date ? new Date(game.date).toLocaleDateString('cs-CZ') : '—'}</div>
-                    <div><strong>Kolo:</strong> ${game.round || '—'}</div>
-                    <div><strong>ECO:</strong> ${game.eco || '—'}</div>
-                    <div><strong>Výsledek:</strong> ${game.result}</div>
-                </div>
-                
-                <h4 style="margin-bottom: 0.5rem;">Tahy</h4>
-                <div style="background: rgba(0,0,0,0.3); padding: 1rem; border-radius: 8px; font-family: monospace; font-size: 0.9rem; line-height: 1.6; max-height: 300px; overflow-y: auto;">
-                    ${this.formatMoves(game.moves)}
-                </div>
-
-                <div style="margin-top: 1.5rem;">
-                    <h4 style="margin-bottom: 0.5rem;">PGN</h4>
-                    <textarea readonly style="width: 100%; height: 150px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 1rem; font-family: monospace; font-size: 0.85rem; color: var(--text-color); resize: vertical;">${game.pgn}</textarea>
-                    <button onclick="navigator.clipboard.writeText(document.querySelector('#modalBody textarea').value); this.textContent = 'Zkopírováno!'; setTimeout(() => this.textContent = 'Kopírovat PGN', 2000);" style="margin-top: 0.5rem; padding: 0.5rem 1rem; background: var(--primary-color); color: var(--secondary-color); border: none; border-radius: 4px; cursor: pointer;">
-                        Kopírovat PGN
-                    </button>
-                </div>
-            `;
-
+            this.renderGameViewer(game);
+            this.renderPgnTab(game);
         } catch (e) {
             console.error('Open game error:', e);
-            modalBody.innerHTML = '<div class="empty-state"><i class="fa-solid fa-exclamation-triangle"></i><p>Chyba při načítání partie</p></div>';
+            content.innerHTML = '<div class="empty-state"><p>Chyba</p></div>';
         }
     },
 
-    /**
-     * Format moves with move numbers
-     */
-    formatMoves(movesStr) {
-        if (!movesStr) return '—';
-        const moves = movesStr.split(' ');
-        let formatted = '';
-        for (let i = 0; i < moves.length; i++) {
-            if (i % 2 === 0) {
-                formatted += `<strong>${Math.floor(i / 2) + 1}.</strong> `;
-            }
-            formatted += moves[i] + ' ';
+    renderGameViewer(game) {
+        const content = document.getElementById('gameViewerContent');
+        const date = game.date ? new Date(game.date).toLocaleDateString('cs-CZ') : '—';
+
+        content.innerHTML = `
+            <div style="margin-bottom: 1rem; padding-bottom: 1rem; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                <h3 style="margin: 0 0 0.5rem;">${game.whitePlayer} vs ${game.blackPlayer}</h3>
+                <div style="color: var(--text-muted); font-size: 0.85rem;">
+                    ${game.event || ''} • ${date} • ${game.eco || ''} • <strong>${game.result}</strong>
+                </div>
+            </div>
+            <div class="game-viewer-layout">
+                <div>
+                    <div class="board-container">
+                        <div id="chessBoard"></div>
+                    </div>
+                    <div class="board-controls">
+                        <button onclick="ChessDB.goToStart()" title="Na začátek"><i class="fa-solid fa-backward-fast"></i></button>
+                        <button onclick="ChessDB.prevMove()" title="Předchozí"><i class="fa-solid fa-chevron-left"></i></button>
+                        <button onclick="ChessDB.nextMove()" title="Další"><i class="fa-solid fa-chevron-right"></i></button>
+                        <button onclick="ChessDB.goToEnd()" title="Na konec"><i class="fa-solid fa-forward-fast"></i></button>
+                    </div>
+                </div>
+                <div class="moves-panel" id="movesPanel">
+                    ${this.renderMovesList()}
+                </div>
+            </div>
+        `;
+
+        // Initialize board
+        this.initBoard();
+    },
+
+    initBoard() {
+        if (this.board) {
+            this.board.destroy();
         }
-        return formatted;
+
+        this.board = Chessboard('chessBoard', {
+            position: 'start',
+            pieceTheme: 'https://chessboardjs.com/img/chesspieces/wikipedia/{piece}.png'
+        });
+
+        // Start position
+        this.currentMoveIndex = 0;
+        this.updateBoardPosition();
+    },
+
+    renderMovesList() {
+        if (this.moves.length === 0) return '<p style="color: var(--text-muted);">Žádné tahy</p>';
+
+        let html = '';
+        for (let i = 0; i < this.moves.length; i += 2) {
+            const moveNum = Math.floor(i / 2) + 1;
+            const whiteMove = this.moves[i] || '';
+            const blackMove = this.moves[i + 1] || '';
+
+            html += `<div class="move-pair">
+                <span class="move-number">${moveNum}.</span>
+                <span class="move ${this.currentMoveIndex === i + 1 ? 'active' : ''}" onclick="ChessDB.goToMove(${i + 1})">${whiteMove}</span>
+                <span class="move ${this.currentMoveIndex === i + 2 ? 'active' : ''}" onclick="ChessDB.goToMove(${i + 2})">${blackMove}</span>
+            </div>`;
+        }
+        return html;
+    },
+
+    updateBoardPosition() {
+        // Simple FEN calculation using chess.js logic (if available) or just show start
+        // For now, we'll use a simplified approach
+        const position = this.calculatePosition(this.currentMoveIndex);
+        if (this.board) {
+            this.board.position(position);
+        }
+
+        // Update moves highlight
+        document.getElementById('movesPanel').innerHTML = this.renderMovesList();
+    },
+
+    calculatePosition(moveIndex) {
+        // Create a simple chess game simulation
+        // In production, use chess.js for proper move validation
+        if (moveIndex === 0) return 'start';
+
+        // For demo, we'll use chessboard's position method with FEN
+        // This is a simplified version - ideally use chess.js
+        try {
+            if (typeof Chess !== 'undefined') {
+                const game = new Chess();
+                for (let i = 0; i < moveIndex && i < this.moves.length; i++) {
+                    game.move(this.moves[i]);
+                }
+                return game.fen();
+            }
+        } catch (e) {
+            console.warn('Chess.js not available, showing start position');
+        }
+
+        return 'start';
+    },
+
+    goToMove(idx) {
+        this.currentMoveIndex = Math.max(0, Math.min(idx, this.moves.length));
+        this.updateBoardPosition();
+    },
+
+    prevMove() {
+        if (this.currentMoveIndex > 0) {
+            this.currentMoveIndex--;
+            this.updateBoardPosition();
+        }
+    },
+
+    nextMove() {
+        if (this.currentMoveIndex < this.moves.length) {
+            this.currentMoveIndex++;
+            this.updateBoardPosition();
+        }
+    },
+
+    goToStart() {
+        this.currentMoveIndex = 0;
+        this.updateBoardPosition();
+    },
+
+    goToEnd() {
+        this.currentMoveIndex = this.moves.length;
+        this.updateBoardPosition();
+    },
+
+    // ==================== PGN TAB ====================
+    renderPgnTab(game) {
+        const content = document.getElementById('pgnContent');
+        content.innerHTML = `
+            <textarea readonly>${game.pgn || 'PGN není k dispozici'}</textarea>
+            <button onclick="ChessDB.copyPgn()" style="margin-top: 1rem; padding: 0.6rem 1.2rem; background: var(--primary-color); color: var(--secondary-color); border: none; border-radius: 6px; cursor: pointer;">
+                <i class="fa-solid fa-copy"></i> Kopírovat PGN
+            </button>
+        `;
+    },
+
+    copyPgn() {
+        const textarea = document.querySelector('#pgnContent textarea');
+        navigator.clipboard.writeText(textarea.value);
+        const btn = document.querySelector('#pgnContent button');
+        btn.innerHTML = '<i class="fa-solid fa-check"></i> Zkopírováno!';
+        setTimeout(() => btn.innerHTML = '<i class="fa-solid fa-copy"></i> Kopírovat PGN', 2000);
+    },
+
+    // ==================== OPENING TREE ====================
+    async loadOpeningTree() {
+        const content = document.getElementById('treeContent');
+        content.innerHTML = '<div class="loading"><i class="fa-solid fa-spinner"></i></div>';
+
+        const token = this.getToken();
+        const color = this.currentColor === 'both' ? 'white' : this.currentColor;
+
+        try {
+            const response = await fetch(`${this.API_URL}/tree?player=${encodeURIComponent(this.currentPlayer)}&color=${color}&depth=10`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (!response.ok) throw new Error('Failed');
+            const data = await response.json();
+
+            this.treeData = data;
+            this.renderOpeningTree(data.tree, color);
+        } catch (e) {
+            console.error('Load tree error:', e);
+            content.innerHTML = '<div class="empty-state"><p>Chyba</p></div>';
+        }
+    },
+
+    renderOpeningTree(tree, color) {
+        const content = document.getElementById('treeContent');
+
+        if (!tree.children || tree.children.length === 0) {
+            content.innerHTML = '<div class="empty-state"><p>Nedostatek dat pro strom</p></div>';
+            return;
+        }
+
+        const colorLabel = color === 'white' ? 'bílým' : 'černým';
+
+        content.innerHTML = `
+            <div class="tree-header">
+                <h3 style="margin: 0 0 0.5rem;"><i class="fa-solid fa-sitemap"></i> Strom zahájení</h3>
+                <p style="color: var(--text-muted); margin: 0;">Hráč: <strong>${this.currentPlayer}</strong> (${colorLabel}) • ${this.treeData.totalGames} partií</p>
+            </div>
+            <div class="tree-moves" id="treeMoves">
+                ${this.renderTreeLevel(tree.children)}
+            </div>
+        `;
+    },
+
+    renderTreeLevel(nodes, depth = 0) {
+        if (!nodes || nodes.length === 0) return '';
+
+        // Sort by games descending
+        const sorted = [...nodes].sort((a, b) => b.games - a.games);
+
+        return sorted.slice(0, 8).map(node => {
+            const winPct = node.games > 0 ? (node.wins / node.games * 100) : 0;
+            const drawPct = node.games > 0 ? (node.draws / node.games * 100) : 0;
+            const drawEnd = winPct + drawPct;
+            const score = node.games > 0 ? ((node.wins + node.draws * 0.5) / node.games * 100).toFixed(1) : 0;
+
+            return `
+                <div class="tree-node" style="margin-left: ${depth * 1.5}rem;" onclick="ChessDB.expandTreeNode(this, '${node.move}')">
+                    <span class="tree-move">${node.move}</span>
+                    <div class="tree-bar" style="--win-pct: ${winPct}%; --draw-end: ${drawEnd}%;"></div>
+                    <span class="tree-games">${node.games}</span>
+                    <span class="tree-pct">${score}%</span>
+                </div>
+            `;
+        }).join('');
+    },
+
+    expandTreeNode(el, move) {
+        // Future: drill down into tree
+        console.log('Expand:', move);
     }
 };
 
-// Global function to close modal
-function closeGameModal() {
-    const modal = document.getElementById('gameModal');
-    modal.style.display = 'none';
-    modal.classList.add('hidden');
-}
-
-// Initialize on DOM ready
-document.addEventListener('DOMContentLoaded', () => {
-    ChessDB.init();
-});
+// Initialize
+document.addEventListener('DOMContentLoaded', () => ChessDB.init());

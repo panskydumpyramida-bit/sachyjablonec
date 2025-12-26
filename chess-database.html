@@ -10,19 +10,24 @@
     <link
         href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@400;700&display=swap"
         rel="stylesheet">
+    <!-- Chessboard.js -->
+    <link rel="stylesheet" href="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.css">
     <style>
-        /* Chess Database Specific Styles */
+        /* Chess Database Split-Screen Layout */
         .chess-db-container {
-            max-width: 1400px;
+            max-width: 1600px;
             margin: 0 auto;
-            padding: 2rem;
+            padding: 1.5rem;
+            height: calc(100vh - 100px);
+            display: flex;
+            flex-direction: column;
         }
 
         .search-section {
             background: var(--surface-color);
             border-radius: 12px;
-            padding: 2rem;
-            margin-bottom: 2rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
             border: 1px solid rgba(255, 255, 255, 0.05);
         }
 
@@ -30,6 +35,7 @@
             display: flex;
             gap: 1rem;
             flex-wrap: wrap;
+            align-items: center;
         }
 
         .search-input-wrapper {
@@ -40,8 +46,8 @@
 
         .search-input {
             width: 100%;
-            padding: 1rem 1rem 1rem 3rem;
-            font-size: 1.1rem;
+            padding: 0.8rem 0.8rem 0.8rem 2.5rem;
+            font-size: 1rem;
             background: rgba(255, 255, 255, 0.05);
             border: 1px solid rgba(255, 255, 255, 0.1);
             border-radius: 8px;
@@ -57,7 +63,7 @@
 
         .search-icon {
             position: absolute;
-            left: 1rem;
+            left: 0.8rem;
             top: 50%;
             transform: translateY(-50%);
             color: var(--text-muted);
@@ -65,18 +71,18 @@
 
         .filter-group {
             display: flex;
-            gap: 0.5rem;
-            align-items: center;
+            gap: 0.25rem;
         }
 
         .filter-btn {
-            padding: 0.75rem 1.25rem;
+            padding: 0.6rem 1rem;
             background: rgba(255, 255, 255, 0.05);
             border: 1px solid rgba(255, 255, 255, 0.1);
             border-radius: 6px;
             color: var(--text-color);
             cursor: pointer;
             transition: all 0.2s;
+            font-size: 0.9rem;
         }
 
         .filter-btn:hover,
@@ -102,50 +108,56 @@
         }
 
         .autocomplete-item {
-            padding: 0.75rem 1rem;
+            padding: 0.6rem 1rem;
             cursor: pointer;
             border-bottom: 1px solid rgba(255, 255, 255, 0.05);
             display: flex;
             justify-content: space-between;
-            align-items: center;
         }
 
         .autocomplete-item:hover {
             background: rgba(212, 175, 55, 0.1);
         }
 
-        .autocomplete-item .player-name {
-            font-weight: 500;
-        }
-
-        .autocomplete-item .game-count {
-            font-size: 0.85rem;
-            color: var(--text-muted);
-        }
-
-        /* Results Section */
-        .results-section {
+        /* Split Layout */
+        .split-layout {
+            flex: 1;
             display: grid;
-            grid-template-columns: 1fr;
-            gap: 2rem;
+            grid-template-columns: 380px 1fr;
+            gap: 1rem;
+            min-height: 0;
         }
 
-        @media (min-width: 1024px) {
-            .results-section.with-sidebar {
-                grid-template-columns: 1fr 350px;
+        @media (max-width: 1024px) {
+            .split-layout {
+                grid-template-columns: 1fr;
+            }
+
+            .detail-panel {
+                display: none;
+            }
+
+            .split-layout.game-active .games-panel {
+                display: none;
+            }
+
+            .split-layout.game-active .detail-panel {
+                display: flex;
             }
         }
 
-        /* Games List */
-        .games-list {
+        /* Games Panel */
+        .games-panel {
             background: var(--surface-color);
             border-radius: 12px;
             border: 1px solid rgba(255, 255, 255, 0.05);
+            display: flex;
+            flex-direction: column;
             overflow: hidden;
         }
 
         .games-header {
-            padding: 1rem 1.5rem;
+            padding: 1rem;
             background: rgba(0, 0, 0, 0.2);
             border-bottom: 1px solid rgba(255, 255, 255, 0.05);
             display: flex;
@@ -153,147 +165,153 @@
             align-items: center;
         }
 
-        .games-header h3 {
-            margin: 0;
-            font-size: 1rem;
-            color: var(--text-color);
+        .games-list {
+            flex: 1;
+            overflow-y: auto;
         }
 
         .game-row {
-            padding: 1rem 1.5rem;
+            padding: 0.8rem 1rem;
             border-bottom: 1px solid rgba(255, 255, 255, 0.05);
             cursor: pointer;
             transition: all 0.2s;
-            display: grid;
-            grid-template-columns: 80px 1fr auto;
-            gap: 1rem;
-            align-items: center;
         }
 
-        .game-row:hover {
-            background: rgba(212, 175, 55, 0.05);
+        .game-row:hover,
+        .game-row.active {
+            background: rgba(212, 175, 55, 0.1);
         }
 
-        .game-date {
-            font-size: 0.85rem;
+        .game-row.active {
+            border-left: 3px solid var(--primary-color);
+        }
+
+        .game-meta {
+            font-size: 0.75rem;
             color: var(--text-muted);
+            margin-bottom: 0.25rem;
         }
 
-        .game-players {
-            display: flex;
-            flex-direction: column;
-            gap: 0.25rem;
-        }
-
-        .game-player {
+        .game-players-line {
             display: flex;
             align-items: center;
             gap: 0.5rem;
-        }
-
-        .game-player .elo {
-            font-size: 0.8rem;
-            color: var(--text-muted);
-        }
-
-        .game-player.white::before {
-            content: '';
-            width: 12px;
-            height: 12px;
-            background: #fff;
-            border-radius: 2px;
-            border: 1px solid #666;
-        }
-
-        .game-player.black::before {
-            content: '';
-            width: 12px;
-            height: 12px;
-            background: #333;
-            border-radius: 2px;
-            border: 1px solid #666;
-        }
-
-        .game-result {
-            font-weight: 600;
-            padding: 0.25rem 0.75rem;
-            border-radius: 4px;
             font-size: 0.9rem;
         }
 
-        .game-result.white-win {
+        .player-color {
+            width: 10px;
+            height: 10px;
+            border-radius: 2px;
+            border: 1px solid #666;
+        }
+
+        .player-color.white {
+            background: #fff;
+        }
+
+        .player-color.black {
+            background: #333;
+        }
+
+        .game-result-badge {
+            margin-left: auto;
+            font-size: 0.8rem;
+            padding: 0.15rem 0.4rem;
+            border-radius: 3px;
+        }
+
+        .game-result-badge.white-win {
             background: rgba(34, 197, 94, 0.2);
             color: #4ade80;
         }
 
-        .game-result.black-win {
+        .game-result-badge.black-win {
             background: rgba(239, 68, 68, 0.2);
             color: #f87171;
         }
 
-        .game-result.draw {
+        .game-result-badge.draw {
             background: rgba(156, 163, 175, 0.2);
             color: #9ca3af;
         }
 
-        .game-eco {
-            font-family: monospace;
-            font-size: 0.85rem;
-            color: var(--primary-color);
-            padding: 0.25rem 0.5rem;
-            background: rgba(212, 175, 55, 0.1);
-            border-radius: 4px;
-        }
-
-        /* Sidebar (Player Stats) */
-        .player-stats {
+        /* Detail Panel */
+        .detail-panel {
             background: var(--surface-color);
             border-radius: 12px;
             border: 1px solid rgba(255, 255, 255, 0.05);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .detail-tabs {
+            display: flex;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .detail-tab {
+            padding: 1rem 1.5rem;
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            transition: all 0.2s;
+        }
+
+        .detail-tab:hover {
+            color: var(--text-color);
+        }
+
+        .detail-tab.active {
+            color: var(--primary-color);
+            border-bottom-color: var(--primary-color);
+        }
+
+        .tab-content {
+            display: none;
+            flex: 1;
+            overflow: auto;
             padding: 1.5rem;
         }
 
-        .player-stats h3 {
-            margin: 0 0 1.5rem;
-            color: var(--primary-color);
+        .tab-content.active {
+            display: block;
         }
 
-        .stat-grid {
+        /* Game Viewer Tab */
+        .game-viewer-layout {
             display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 1rem;
-            margin-bottom: 1.5rem;
+            grid-template-columns: min(400px, 45%) 1fr;
+            gap: 1.5rem;
+            height: 100%;
         }
 
-        .stat-box {
-            background: rgba(0, 0, 0, 0.2);
-            padding: 1rem;
-            border-radius: 8px;
-            text-align: center;
+        @media (max-width: 900px) {
+            .game-viewer-layout {
+                grid-template-columns: 1fr;
+            }
         }
 
-        .stat-value {
-            font-size: 1.5rem;
-            font-weight: 700;
-            color: var(--primary-color);
+        .board-container {
+            aspect-ratio: 1;
+            max-height: 400px;
         }
 
-        .stat-label {
-            font-size: 0.8rem;
-            color: var(--text-muted);
-            margin-top: 0.25rem;
+        #chessBoard {
+            width: 100% !important;
         }
 
-        /* Pagination */
-        .pagination {
+        .board-controls {
             display: flex;
             justify-content: center;
-            align-items: center;
             gap: 0.5rem;
-            padding: 1rem;
+            margin-top: 1rem;
         }
 
-        .pagination button {
+        .board-controls button {
             padding: 0.5rem 1rem;
             background: rgba(255, 255, 255, 0.05);
             border: 1px solid rgba(255, 255, 255, 0.1);
@@ -302,22 +320,119 @@
             cursor: pointer;
         }
 
-        .pagination button:hover:not(:disabled) {
+        .board-controls button:hover {
             background: rgba(212, 175, 55, 0.15);
         }
 
-        .pagination button:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
+        .moves-panel {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 8px;
+            padding: 1rem;
+            max-height: 400px;
+            overflow-y: auto;
         }
 
-        .pagination .page-info {
+        .move-pair {
+            display: grid;
+            grid-template-columns: 30px 1fr 1fr;
+            gap: 0.5rem;
+            padding: 0.25rem 0;
+        }
+
+        .move-number {
             color: var(--text-muted);
-            font-size: 0.9rem;
+            font-size: 0.85rem;
         }
 
-        /* Loading State */
-        .loading {
+        .move {
+            padding: 0.2rem 0.5rem;
+            border-radius: 3px;
+            cursor: pointer;
+            font-family: monospace;
+        }
+
+        .move:hover {
+            background: rgba(212, 175, 55, 0.15);
+        }
+
+        .move.active {
+            background: var(--primary-color);
+            color: var(--secondary-color);
+        }
+
+        /* Opening Tree Tab */
+        .tree-container {
+            height: 100%;
+        }
+
+        .tree-header {
+            margin-bottom: 1rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .tree-moves {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .tree-node {
+            display: grid;
+            grid-template-columns: 80px 1fr 60px 100px;
+            align-items: center;
+            padding: 0.75rem 1rem;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .tree-node:hover {
+            background: rgba(212, 175, 55, 0.1);
+        }
+
+        .tree-move {
+            font-family: monospace;
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
+        .tree-bar {
+            height: 8px;
+            background: linear-gradient(to right, #4ade80 var(--win-pct), #9ca3af var(--win-pct), #9ca3af var(--draw-end), #f87171 var(--draw-end));
+            border-radius: 4px;
+        }
+
+        .tree-games {
+            text-align: right;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .tree-pct {
+            text-align: right;
+            color: var(--primary-color);
+            font-weight: 600;
+        }
+
+        /* PGN Tab */
+        .pgn-content textarea {
+            width: 100%;
+            min-height: 300px;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 1rem;
+            font-family: monospace;
+            font-size: 0.9rem;
+            color: var(--text-color);
+            resize: vertical;
+        }
+
+        /* States */
+        .loading,
+        .empty-state {
             text-align: center;
             padding: 3rem;
             color: var(--text-muted);
@@ -325,34 +440,15 @@
 
         .loading i {
             font-size: 2rem;
-            margin-bottom: 1rem;
             animation: spin 1s linear infinite;
         }
 
         @keyframes spin {
-            from {
-                transform: rotate(0deg);
-            }
-
             to {
                 transform: rotate(360deg);
             }
         }
 
-        /* Empty State */
-        .empty-state {
-            text-align: center;
-            padding: 3rem;
-            color: var(--text-muted);
-        }
-
-        .empty-state i {
-            font-size: 3rem;
-            margin-bottom: 1rem;
-            opacity: 0.5;
-        }
-
-        /* Access Denied */
         .access-denied {
             text-align: center;
             padding: 4rem 2rem;
@@ -366,13 +462,31 @@
             margin-bottom: 1.5rem;
         }
 
-        .access-denied h2 {
-            margin-bottom: 1rem;
+        .hidden {
+            display: none !important;
         }
 
-        .access-denied p {
-            color: var(--text-muted);
-            margin-bottom: 2rem;
+        .pagination {
+            display: flex;
+            justify-content: center;
+            gap: 0.5rem;
+            padding: 0.75rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .pagination button {
+            padding: 0.4rem 0.8rem;
+            font-size: 0.85rem;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            color: var(--text-color);
+            cursor: pointer;
+        }
+
+        .pagination button:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
         }
     </style>
 </head>
@@ -398,7 +512,7 @@
 
     <main style="margin-top: 80px;">
         <div class="chess-db-container">
-            <!-- Access Check - shown if not MEMBER -->
+            <!-- Access Denied -->
             <div id="accessDenied" class="access-denied hidden">
                 <i class="fa-solid fa-lock"></i>
                 <h2>Přístup pouze pro členy</h2>
@@ -406,20 +520,9 @@
                 <a href="members.html" class="btn">Přihlásit se</a>
             </div>
 
-            <!-- Main Content - shown if MEMBER+ -->
-            <div id="mainContent" class="hidden">
-                <!-- Header -->
-                <div style="margin-bottom: 2rem;">
-                    <h1 style="margin-bottom: 0.5rem;">
-                        <i class="fa-solid fa-database"></i>
-                        Šachová databáze
-                    </h1>
-                    <p style="color: var(--text-muted);">
-                        <span id="totalGamesCount">0</span> partií z českých soutěží (2003-2025)
-                    </p>
-                </div>
-
-                <!-- Search Section -->
+            <!-- Main Content -->
+            <div id="mainContent" class="hidden" style="display: flex; flex-direction: column; height: 100%;">
+                <!-- Search -->
                 <div class="search-section">
                     <div class="search-box">
                         <div class="search-input-wrapper">
@@ -430,66 +533,87 @@
                         </div>
                         <div class="filter-group">
                             <button class="filter-btn active" data-color="both">Všechny</button>
-                            <button class="filter-btn" data-color="white">
-                                <i class="fa-regular fa-chess-king"></i> Bílý
-                            </button>
-                            <button class="filter-btn" data-color="black">
-                                <i class="fa-solid fa-chess-king"></i> Černý
-                            </button>
+                            <button class="filter-btn" data-color="white"><i class="fa-regular fa-chess-king"></i>
+                                Bílý</button>
+                            <button class="filter-btn" data-color="black"><i class="fa-solid fa-chess-king"></i>
+                                Černý</button>
                         </div>
+                        <span id="dbStats" style="color: var(--text-muted); font-size: 0.85rem;"></span>
                     </div>
                 </div>
 
-                <!-- Results -->
-                <div id="resultsSection" class="results-section">
-                    <!-- Games List -->
-                    <div class="games-list">
+                <!-- Split Layout -->
+                <div class="split-layout" id="splitLayout">
+                    <!-- Games Panel (Left) -->
+                    <div class="games-panel">
                         <div class="games-header">
-                            <h3><i class="fa-solid fa-chess-board"></i> Partie</h3>
-                            <span id="resultsInfo" style="color: var(--text-muted); font-size: 0.85rem;"></span>
+                            <h3 style="margin: 0; font-size: 0.95rem;"><i class="fa-solid fa-chess-board"></i> Partie
+                            </h3>
+                            <span id="gamesCount" style="color: var(--text-muted); font-size: 0.85rem;"></span>
                         </div>
-                        <div id="gamesList">
+                        <div class="games-list" id="gamesList">
                             <div class="empty-state">
-                                <i class="fa-solid fa-magnifying-glass"></i>
-                                <p>Zadejte jméno hráče pro vyhledání partií</p>
+                                <i class="fa-solid fa-magnifying-glass"
+                                    style="font-size: 2rem; margin-bottom: 1rem;"></i>
+                                <p>Zadejte jméno hráče</p>
                             </div>
                         </div>
-                        <div id="pagination" class="pagination hidden">
-                            <button id="prevPage"><i class="fa-solid fa-chevron-left"></i> Předchozí</button>
-                            <span class="page-info" id="pageInfo"></span>
-                            <button id="nextPage">Další <i class="fa-solid fa-chevron-right"></i></button>
+                        <div class="pagination hidden" id="pagination">
+                            <button id="prevPage"><i class="fa-solid fa-chevron-left"></i></button>
+                            <span id="pageInfo" style="color: var(--text-muted); font-size: 0.85rem;"></span>
+                            <button id="nextPage"><i class="fa-solid fa-chevron-right"></i></button>
                         </div>
                     </div>
 
-                    <!-- Player Stats Sidebar -->
-                    <div id="playerStats" class="player-stats hidden">
-                        <h3 id="playerStatsName">Statistiky hráče</h3>
-                        <div id="playerStatsContent"></div>
+                    <!-- Detail Panel (Right) -->
+                    <div class="detail-panel" id="detailPanel">
+                        <div class="detail-tabs">
+                            <button class="detail-tab active" data-tab="game"><i class="fa-solid fa-chess"></i>
+                                Partie</button>
+                            <button class="detail-tab" data-tab="tree"><i class="fa-solid fa-sitemap"></i>
+                                Strom</button>
+                            <button class="detail-tab" data-tab="pgn"><i class="fa-solid fa-code"></i> PGN</button>
+                        </div>
+
+                        <!-- Game Tab -->
+                        <div class="tab-content active" id="tabGame">
+                            <div id="gameViewerContent">
+                                <div class="empty-state">
+                                    <i class="fa-solid fa-hand-pointer"
+                                        style="font-size: 2rem; margin-bottom: 1rem;"></i>
+                                    <p>Vyberte partii ze seznamu</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Tree Tab -->
+                        <div class="tab-content" id="tabTree">
+                            <div id="treeContent">
+                                <div class="empty-state">
+                                    <i class="fa-solid fa-sitemap" style="font-size: 2rem; margin-bottom: 1rem;"></i>
+                                    <p>Vyberte hráče pro zobrazení stromu</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- PGN Tab -->
+                        <div class="tab-content" id="tabPgn">
+                            <div class="pgn-content" id="pgnContent">
+                                <div class="empty-state">
+                                    <i class="fa-solid fa-code" style="font-size: 2rem; margin-bottom: 1rem;"></i>
+                                    <p>Vyberte partii pro zobrazení PGN</p>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </main>
 
-    <!-- Game Viewer Modal (reuse existing structure) -->
-    <div id="gameModal" class="modal hidden"
-        style="position: fixed; inset: 0; z-index: 10000; background: rgba(0,0,0,0.9); display: none;">
-        <div class="modal-content"
-            style="max-width: 900px; margin: 2rem auto; background: var(--surface-color); border-radius: 12px; max-height: 90vh; overflow: auto;">
-            <div
-                style="padding: 1rem 1.5rem; border-bottom: 1px solid rgba(255,255,255,0.1); display: flex; justify-content: space-between; align-items: center;">
-                <h3 id="modalTitle" style="margin: 0;">Partie</h3>
-                <button onclick="closeGameModal()"
-                    style="background: none; border: none; color: var(--text-color); font-size: 1.5rem; cursor: pointer;">
-                    <i class="fa-solid fa-times"></i>
-                </button>
-            </div>
-            <div id="modalBody" style="padding: 1.5rem;">
-                <!-- Game viewer will be injected here -->
-            </div>
-        </div>
-    </div>
-
+    <!-- Scripts -->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.js"></script>
     <script src="js/main.js"></script>
     <script src="js/auth.js"></script>
     <script src="js/chess-database.js"></script>
