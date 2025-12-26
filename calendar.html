@@ -388,7 +388,54 @@
         let showingPast = true; // Show past matches by default
         let selectedCategory = 'all'; // 'all', 'teams', 'youth'
 
-        document.addEventListener('DOMContentLoaded', loadCalendar);
+        // Parse URL parameters for pre-filtering
+        function applyUrlParams() {
+            const urlParams = new URLSearchParams(window.location.search);
+
+            // Category filter (?category=teams or ?category=youth)
+            const categoryParam = urlParams.get('category');
+            if (categoryParam === 'teams' || categoryParam === 'youth') {
+                selectedCategory = categoryParam;
+            }
+
+            // History toggle (?history=false to hide past matches)
+            const historyParam = urlParams.get('history');
+            if (historyParam === 'false' || historyParam === '0') {
+                showingPast = false;
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            applyUrlParams();
+
+            // Update UI to match URL params
+            if (selectedCategory !== 'all') {
+                const activeBtn = document.getElementById(selectedCategory === 'teams' ? 'catTeams' : 'catYouth');
+                document.querySelectorAll('.cat-pill').forEach(btn => {
+                    btn.style.background = 'transparent';
+                    btn.style.color = 'var(--text-muted)';
+                });
+                if (activeBtn) {
+                    activeBtn.style.background = 'var(--primary-color)';
+                    activeBtn.style.color = '#000';
+                }
+            }
+
+            // Update history toggle UI
+            if (!showingPast) {
+                const checkbox = document.getElementById('togglePastSwitch');
+                const track = document.getElementById('toggleTrack');
+                const thumb = document.getElementById('toggleThumb');
+                const icon = document.getElementById('toggleIcon');
+
+                if (checkbox) checkbox.checked = false;
+                if (track) track.style.background = 'rgba(255,255,255,0.2)';
+                if (thumb) thumb.style.left = '2px';
+                if (icon) { icon.className = 'fa-solid fa-eye-slash'; icon.style.color = 'var(--text-muted)'; }
+            }
+
+            loadCalendar();
+        });
 
         async function loadCalendar() {
             const container = document.getElementById('calendar-container');
