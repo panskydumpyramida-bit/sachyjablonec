@@ -222,22 +222,29 @@ const syncGalleryImages = async (galleryJson, category, newsId) => {
 
         try {
             // Upsert image to global table
-            await prisma.image.upsert({
-                where: { url: url },
-                update: {
-                    altText: altText || undefined, // Only update if we have a value
-                    category: category || undefined,
-                    newsId: newsId || undefined // Link to article
-                },
-                create: {
-                    url: url,
-                    filename: filename,
-                    altText: altText,
-                    category: category || 'news',
-                    newsId: newsId, // Link to article
-                    isPublic: true
-                }
-            });
+            // Upsert image to global table (Manual override for non-unique URL)
+            const existing = await prisma.image.findFirst({ where: { url: url } });
+            if (existing) {
+                await prisma.image.update({
+                    where: { id: existing.id },
+                    data: {
+                        altText: altText || undefined,
+                        category: category || undefined,
+                        newsId: newsId || undefined
+                    }
+                });
+            } else {
+                await prisma.image.create({
+                    data: {
+                        url: url,
+                        filename: filename,
+                        altText: altText,
+                        category: category || 'news',
+                        newsId: newsId,
+                        isPublic: true
+                    }
+                });
+            }
         } catch (e) {
             console.error(`Failed to sync image ${url}:`, e);
         }
