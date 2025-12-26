@@ -440,6 +440,9 @@ const ChessDB = {
         // Get recent games from current position node
         const recentGames = currentNode.recentGames || [];
 
+        // Find next move in current game (for highlighting)
+        const nextMoveInGame = this.currentGame ? this.moves[this.currentMoveIndex] : null;
+
         content.innerHTML = `
             <div class="tree-position">
                 <strong>${this.currentPlayer}</strong> (${colorLabel})<br>
@@ -451,9 +454,11 @@ const ChessDB = {
             const drawPct = node.games > 0 ? (node.draws / node.games * 100) : 0;
             const drawEnd = winPct + drawPct;
             const score = node.games > 0 ? ((node.wins + node.draws * 0.5) / node.games * 100).toFixed(0) : 0;
+            const isActive = node.move === nextMoveInGame;
+            const recentGameId = node.recentGames && node.recentGames.length > 0 ? node.recentGames[0].id : null;
 
             return `
-                        <div class="tree-node" onclick="ChessDB.playTreeMove('${node.move}')">
+                        <div class="tree-node ${isActive ? 'active' : ''}" onclick="ChessDB.playTreeMove('${node.move}', ${recentGameId})">
                             <span class="tree-move">${node.move}</span>
                             <div class="tree-bar" style="--win-pct: ${winPct}%; --draw-end: ${drawEnd}%;"></div>
                             <span class="tree-games">${node.games}</span>
@@ -484,14 +489,15 @@ const ChessDB = {
         `;
     },
 
-    playTreeMove(move) {
-        // Find the move in current game's moves and go to it
-        const nextIndex = this.currentMoveIndex;
-        if (this.moves[nextIndex] === move) {
-            this.nextMove();
+    playTreeMove(move, gameId) {
+        // If we have a game ID, open that game
+        if (gameId) {
+            this.openGame(gameId);
         } else {
-            // Just show it in tree - can't navigate in current game
-            console.log('Tree move not matching game:', move);
+            // Fallback: if current game's next move matches, just advance
+            if (this.currentGame && this.moves[this.currentMoveIndex] === move) {
+                this.nextMove();
+            }
         }
     }
 };
