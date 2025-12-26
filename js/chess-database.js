@@ -530,14 +530,15 @@ const ChessDB = {
     },
 
     playTreeMove(move, gameId) {
-        // If we have a game ID, open that game
+        // If this move matches the next move in current game, just advance
+        if (this.currentGame && this.moves[this.currentMoveIndex] === move) {
+            this.nextMove();
+            return;
+        }
+
+        // Otherwise, open the game with this move
         if (gameId) {
             this.openGame(gameId);
-        } else {
-            // Fallback: if current game's next move matches, just advance
-            if (this.currentGame && this.moves[this.currentMoveIndex] === move) {
-                this.nextMove();
-            }
         }
     }
 };
