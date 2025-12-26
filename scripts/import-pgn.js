@@ -50,6 +50,7 @@ function extractMoves(game) {
 
 /**
  * Split large PGN file into individual game strings
+ * Handles UTF-8 BOM and CRLF line endings
  */
 async function* readGamesFromFile(filePath) {
     const fileStream = fs.createReadStream(filePath, { encoding: 'utf8' });
@@ -60,8 +61,18 @@ async function* readGamesFromFile(filePath) {
 
     let currentGame = '';
     let inMoves = false;
+    let isFirstLine = true;
 
-    for await (const line of rl) {
+    for await (let line of rl) {
+        // Strip BOM from first line
+        if (isFirstLine) {
+            line = line.replace(/^\uFEFF/, '');
+            isFirstLine = false;
+        }
+
+        // Strip any remaining \r characters
+        line = line.replace(/\r/g, '');
+
         if (line.startsWith('[Event ') && currentGame.trim()) {
             // New game starting, yield the previous one
             yield currentGame.trim();
