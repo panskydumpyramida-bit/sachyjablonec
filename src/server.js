@@ -23,6 +23,7 @@ import apiGamesRoutes from './routes/api-games.js';
 import scrapingRoutes from './routes/scraping.js';
 import commentsRoutes from './routes/comments.js';
 import eventsRoutes from './routes/events.js';
+import chessRoutes from './routes/chessRoutes.js';
 import oauthRoutes from './routes/oauth.js';
 import passport from './config/passport.js';
 import { PrismaClient } from '@prisma/client';
@@ -213,6 +214,9 @@ app.get('/partie.html', servePage('partie.html'));
 app.get('/games', servePage('games.html'));
 app.get('/games.html', servePage('games.html'));
 
+app.get('/chess-database', servePage('chess-database.html'));
+app.get('/chess-database.html', servePage('chess-database.html'));
+
 app.get('/article', servePage('article.html')); // Dynamic article page often uses query params
 app.get('/article.html', servePage('article.html'));
 
@@ -237,6 +241,7 @@ app.use('/api/viewer-games', apiGamesRoutes);
 app.use('/api/scraping', scrapingRoutes);
 app.use('/api/comments', commentsRoutes);
 app.use('/api/events', eventsRoutes);
+app.use('/api/chess', chessRoutes);
 
 // Import helpers from utils
 import { clean, isElo, simplify, isMatch, fetchWithHeaders } from './utils/helpers.js';
@@ -652,7 +657,7 @@ const allowedHtmlFiles = [
     'index.html', 'about.html', 'teams.html', 'club-tournaments.html',
     'youth.html', 'gallery.html', 'admin.html', 'article.html',
     'members.html', 'calendar.html', 'blicak.html', 'partie.html', 'games.html',
-    'tournaments.html'
+    'tournaments.html', 'chess-database.html'
 ];
 
 // --- Blicak Registration Endpoints ---
