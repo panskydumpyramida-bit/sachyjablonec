@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="cs">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Šachová databáze | Šachy Jablonec</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@400;700&display=swap"
+        rel="stylesheet">
+    <style>
+        /* Chess Database Specific Styles */
+        .chess-db-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .search-section {
+            background: var(--surface-color);
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .search-box {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .search-input-wrapper {
+            flex: 1;
+            min-width: 250px;
+            position: relative;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 1rem 1rem 1rem 3rem;
+            font-size: 1.1rem;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            color: var(--text-color);
+            transition: all 0.3s;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.1);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+        }
+
+        .filter-group {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+        }
+
+        .filter-btn {
+            padding: 0.75rem 1.25rem;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 6px;
+            color: var(--text-color);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .filter-btn:hover,
+        .filter-btn.active {
+            background: rgba(212, 175, 55, 0.15);
+            border-color: var(--primary-color);
+            color: var(--primary-color);
+        }
+
+        /* Autocomplete */
+        .autocomplete-results {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: var(--surface-color);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 0 0 8px 8px;
+            max-height: 300px;
+            overflow-y: auto;
+            z-index: 100;
+            display: none;
+        }
+
+        .autocomplete-item {
+            padding: 0.75rem 1rem;
+            cursor: pointer;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .autocomplete-item:hover {
+            background: rgba(212, 175, 55, 0.1);
+        }
+
+        .autocomplete-item .player-name {
+            font-weight: 500;
+        }
+
+        .autocomplete-item .game-count {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        /* Results Section */
+        .results-section {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 2rem;
+        }
+
+        @media (min-width: 1024px) {
+            .results-section.with-sidebar {
+                grid-template-columns: 1fr 350px;
+            }
+        }
+
+        /* Games List */
+        .games-list {
+            background: var(--surface-color);
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            overflow: hidden;
+        }
+
+        .games-header {
+            padding: 1rem 1.5rem;
+            background: rgba(0, 0, 0, 0.2);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .games-header h3 {
+            margin: 0;
+            font-size: 1rem;
+            color: var(--text-color);
+        }
+
+        .game-row {
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            cursor: pointer;
+            transition: all 0.2s;
+            display: grid;
+            grid-template-columns: 80px 1fr auto;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .game-row:hover {
+            background: rgba(212, 175, 55, 0.05);
+        }
+
+        .game-date {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .game-players {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .game-player {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .game-player .elo {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        .game-player.white::before {
+            content: '';
+            width: 12px;
+            height: 12px;
+            background: #fff;
+            border-radius: 2px;
+            border: 1px solid #666;
+        }
+
+        .game-player.black::before {
+            content: '';
+            width: 12px;
+            height: 12px;
+            background: #333;
+            border-radius: 2px;
+            border: 1px solid #666;
+        }
+
+        .game-result {
+            font-weight: 600;
+            padding: 0.25rem 0.75rem;
+            border-radius: 4px;
+            font-size: 0.9rem;
+        }
+
+        .game-result.white-win {
+            background: rgba(34, 197, 94, 0.2);
+            color: #4ade80;
+        }
+
+        .game-result.black-win {
+            background: rgba(239, 68, 68, 0.2);
+            color: #f87171;
+        }
+
+        .game-result.draw {
+            background: rgba(156, 163, 175, 0.2);
+            color: #9ca3af;
+        }
+
+        .game-eco {
+            font-family: monospace;
+            font-size: 0.85rem;
+            color: var(--primary-color);
+            padding: 0.25rem 0.5rem;
+            background: rgba(212, 175, 55, 0.1);
+            border-radius: 4px;
+        }
+
+        /* Sidebar (Player Stats) */
+        .player-stats {
+            background: var(--surface-color);
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            padding: 1.5rem;
+        }
+
+        .player-stats h3 {
+            margin: 0 0 1.5rem;
+            color: var(--primary-color);
+        }
+
+        .stat-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .stat-box {
+            background: rgba(0, 0, 0, 0.2);
+            padding: 1rem;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary-color);
+        }
+
+        .stat-label {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-top: 0.25rem;
+        }
+
+        /* Pagination */
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 1rem;
+        }
+
+        .pagination button {
+            padding: 0.5rem 1rem;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            color: var(--text-color);
+            cursor: pointer;
+        }
+
+        .pagination button:hover:not(:disabled) {
+            background: rgba(212, 175, 55, 0.15);
+        }
+
+        .pagination button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .pagination .page-info {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        /* Loading State */
+        .loading {
+            text-align: center;
+            padding: 3rem;
+            color: var(--text-muted);
+        }
+
+        .loading i {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            from {
+                transform: rotate(0deg);
+            }
+
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 3rem;
+            color: var(--text-muted);
+        }
+
+        .empty-state i {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+
+        /* Access Denied */
+        .access-denied {
+            text-align: center;
+            padding: 4rem 2rem;
+            background: var(--surface-color);
+            border-radius: 12px;
+        }
+
+        .access-denied i {
+            font-size: 4rem;
+            color: var(--primary-color);
+            margin-bottom: 1.5rem;
+        }
+
+        .access-denied h2 {
+            margin-bottom: 1rem;
+        }
+
+        .access-denied p {
+            color: var(--text-muted);
+            margin-bottom: 2rem;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Header -->
+    <header>
+        <nav class="container">
+            <a href="index.html" class="logo">
+                <i class="fa-solid fa-chess-knight"></i>
+                Šachy Jablonec
+            </a>
+            <ul class="nav-links">
+                <li><a href="index.html">Domů</a></li>
+                <li><a href="members.html">Členská sekce</a></li>
+                <li><a href="chess-database.html" class="active">Databáze</a></li>
+            </ul>
+            <button class="menu-toggle" aria-label="Menu">
+                <i class="fa-solid fa-bars"></i>
+            </button>
+        </nav>
+    </header>
+
+    <main style="margin-top: 80px;">
+        <div class="chess-db-container">
+            <!-- Access Check - shown if not MEMBER -->
+            <div id="accessDenied" class="access-denied hidden">
+                <i class="fa-solid fa-lock"></i>
+                <h2>Přístup pouze pro členy</h2>
+                <p>Šachová databáze je dostupná pouze pro přihlášené členy klubu.</p>
+                <a href="members.html" class="btn">Přihlásit se</a>
+            </div>
+
+            <!-- Main Content - shown if MEMBER+ -->
+            <div id="mainContent" class="hidden">
+                <!-- Header -->
+                <div style="margin-bottom: 2rem;">
+                    <h1 style="margin-bottom: 0.5rem;">
+                        <i class="fa-solid fa-database"></i>
+                        Šachová databáze
+                    </h1>
+                    <p style="color: var(--text-muted);">
+                        <span id="totalGamesCount">0</span> partií z českých soutěží (2003-2025)
+                    </p>
+                </div>
+
+                <!-- Search Section -->
+                <div class="search-section">
+                    <div class="search-box">
+                        <div class="search-input-wrapper">
+                            <i class="fa-solid fa-search search-icon"></i>
+                            <input type="text" id="playerSearch" class="search-input" placeholder="Hledat hráče..."
+                                autocomplete="off">
+                            <div id="autocompleteResults" class="autocomplete-results"></div>
+                        </div>
+                        <div class="filter-group">
+                            <button class="filter-btn active" data-color="both">Všechny</button>
+                            <button class="filter-btn" data-color="white">
+                                <i class="fa-regular fa-chess-king"></i> Bílý
+                            </button>
+                            <button class="filter-btn" data-color="black">
+                                <i class="fa-solid fa-chess-king"></i> Černý
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Results -->
+                <div id="resultsSection" class="results-section">
+                    <!-- Games List -->
+                    <div class="games-list">
+                        <div class="games-header">
+                            <h3><i class="fa-solid fa-chess-board"></i> Partie</h3>
+                            <span id="resultsInfo" style="color: var(--text-muted); font-size: 0.85rem;"></span>
+                        </div>
+                        <div id="gamesList">
+                            <div class="empty-state">
+                                <i class="fa-solid fa-magnifying-glass"></i>
+                                <p>Zadejte jméno hráče pro vyhledání partií</p>
+                            </div>
+                        </div>
+                        <div id="pagination" class="pagination hidden">
+                            <button id="prevPage"><i class="fa-solid fa-chevron-left"></i> Předchozí</button>
+                            <span class="page-info" id="pageInfo"></span>
+                            <button id="nextPage">Další <i class="fa-solid fa-chevron-right"></i></button>
+                        </div>
+                    </div>
+
+                    <!-- Player Stats Sidebar -->
+                    <div id="playerStats" class="player-stats hidden">
+                        <h3 id="playerStatsName">Statistiky hráče</h3>
+                        <div id="playerStatsContent"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Game Viewer Modal (reuse existing structure) -->
+    <div id="gameModal" class="modal hidden"
+        style="position: fixed; inset: 0; z-index: 10000; background: rgba(0,0,0,0.9); display: none;">
+        <div class="modal-content"
+            style="max-width: 900px; margin: 2rem auto; background: var(--surface-color); border-radius: 12px; max-height: 90vh; overflow: auto;">
+            <div
+                style="padding: 1rem 1.5rem; border-bottom: 1px solid rgba(255,255,255,0.1); display: flex; justify-content: space-between; align-items: center;">
+                <h3 id="modalTitle" style="margin: 0;">Partie</h3>
+                <button onclick="closeGameModal()"
+                    style="background: none; border: none; color: var(--text-color); font-size: 1.5rem; cursor: pointer;">
+                    <i class="fa-solid fa-times"></i>
+                </button>
+            </div>
+            <div id="modalBody" style="padding: 1.5rem;">
+                <!-- Game viewer will be injected here -->
+            </div>
+        </div>
+    </div>
+
+    <script src="js/main.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/chess-database.js"></script>
+</body>
+
+</html>

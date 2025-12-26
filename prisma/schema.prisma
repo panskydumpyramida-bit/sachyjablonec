@@ -296,3 +296,39 @@ model Event {
   @@map("events")
 }
 
+// ==========================================
+// Chess Database (SSCR 2003-2025)
+// ==========================================
+
+model ChessGame {
+  id          Int       @id @default(autoincrement())
+  event       String?
+  site        String?
+  date        DateTime?
+  round       String?
+  whitePlayer String    @map("white_player")
+  blackPlayer String    @map("black_player")
+  result      String    // "1-0", "0-1", "1/2-1/2", "*"
+  eco         String?
+  whiteElo    Int?      @map("white_elo")
+  blackElo    Int?      @map("black_elo")
+  plyCount    Int?      @map("ply_count")
+  moves       String    @db.Text // SAN moves as string
+  
+  @@index([whitePlayer])
+  @@index([blackPlayer])
+  @@index([eco])
+  @@index([date])
+  @@map("chess_games")
+}
+
+model ChessMove {
+  id       Int    @id @default(autoincrement())
+  gameId   Int    @map("game_id")
+  plyNum   Int    @map("ply_num")  // 1 = first white move, 2 = first black, etc.
+  san      String // "e4", "Nf3", etc.
+  
+  @@index([san, plyNum])
+  @@index([gameId])
+  @@map("chess_moves")
+}
