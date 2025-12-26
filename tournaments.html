@@ -218,6 +218,29 @@
             gap: 0.3rem;
         }
 
+        .detail-item {
+            color: var(--text-muted);
+            margin-bottom: 0.25rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.85rem;
+        }
+
+        .detail-item.alert-deadline {
+            color: #f87171;
+        }
+
+        .detail-item.gold-text {
+            color: #fbbf24;
+        }
+
+        .detail-item i {
+            width: 1.2em;
+            /* align icons */
+            text-align: center;
+        }
+
         .event-detail-row i.fa-clock {
             color: #f87171;
         }
@@ -1033,9 +1056,10 @@
 
                                 <div class="event-footer-details">
                                      ${event.url ? `
-                                        <div class="detail-item">
-                                            <i class="fa-solid fa-link"></i> 
-                                            <a href="${event.url}" target="_blank" class="event-action-btn" style="padding: 0; font-size: 0.75rem;">Web / Propozice</a>
+                                        <div class="detail-item" style="margin-bottom: 0.5rem;">
+                                            <a href="${event.url}" target="_blank" class="btn-secondary" style="padding: 0.3rem 1rem; font-size: 0.8rem; height: auto; min-height: unset; border-radius: 4px;">
+                                                <i class="fa-solid fa-earth-europe"></i> Web / Propozice
+                                            </a>
                                         </div>` : ''}
 
                                      ${event.registrationDeadline ? `
