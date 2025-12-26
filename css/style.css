@@ -560,9 +560,7 @@ footer {
         margin-right: 0;
     }
 
-    #auth-container {
-        /* Ensure auth stays on the right */
-    }
+
 
     .menu-toggle i {
         transition: transform 0.3s ease;
@@ -834,6 +832,30 @@ footer {
     color: var(--text-color);
     font-size: 0.95rem;
     font-weight: 500;
+}
+
+.sj-lightbox-autoplay {
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    font-size: 1.1rem;
+    cursor: pointer;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: all 0.2s;
+}
+
+.sj-lightbox-autoplay:hover {
+    color: var(--primary-color);
+    background: rgba(212, 175, 55, 0.1);
+}
+
+.sj-lightbox-autoplay.active {
+    color: var(--primary-color);
 }
 
 .sj-lightbox-counter {
