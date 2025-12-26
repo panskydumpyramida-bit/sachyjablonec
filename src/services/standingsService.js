@@ -1,6 +1,22 @@
+/**
+ * Standings Service - Competition standings scraping and database updates
+ * Extracted from server.js to reduce monolithic file size
+ */
 
-// Helper to update standings (shared by API and Startup)
-async function updateStandings(competitions = null) {
+import { PrismaClient } from '@prisma/client';
+import { clean, isMatch, fetchWithHeaders } from '../utils/helpers.js';
+import { scrapeCompetitionMatches } from './scrapingService.js';
+
+const prisma = new PrismaClient();
+
+/**
+ * Update standings for all active competitions
+ * Fetches latest data from chess-results.com and saves to database
+ * 
+ * @param {Array|null} competitions - Optional array of competitions to update (defaults to all active)
+ * @returns {Promise<Array>} Array of update results per competition
+ */
+export async function updateStandings(competitions = null) {
     if (!competitions) {
         competitions = await prisma.competition.findMany({
             where: { active: true }
@@ -11,11 +27,14 @@ async function updateStandings(competitions = null) {
 
     for (const comp of competitions) {
         try {
-            console.log(`Processing ${comp.name}...`);
+            console.log(`[StandingsService] Processing ${comp.name}...`);
             let standings = [];
-            let competitionMatches = []; // Store full schedule
+            let competitionMatches = [];
 
-            if (comp.type === 'chess-results') {
+            // Auto-detect type from URL
+            const isChessResults = comp.url && comp.url.includes('chess-results.com');
+
+            if (isChessResults) {
                 // 1. Fetch Schedule first (art=2)
                 competitionMatches = await scrapeCompetitionMatches(comp.url);
 
@@ -30,17 +49,6 @@ async function updateStandings(competitions = null) {
                         const cells = row.split('</td>');
 
                         if (cells.length > 7) {
-                            const clean = (str) => {
-                                let txt = str.replace(/<[^>]*>/g, '').trim();
-                                txt = txt.replace(/&nbsp;/g, ' ')
-                                    .replace(/&amp;/g, '&')
-                                    .replace(/&lt;/g, '<')
-                                    .replace(/&gt;/g, '>')
-                                    .replace(/&quot;/g, '"')
-                                    .replace(/&#(\d+);/g, (match, dec) => String.fromCharCode(dec));
-                                return txt;
-                            };
-
                             let rankStr = clean(cells[0]);
                             let teamStr = clean(cells[2]);
                             const urlMatch = teamStr.match(/href="([^"]+)"/);
@@ -91,8 +99,7 @@ async function updateStandings(competitions = null) {
                 for (const team of standings) {
                     if (team.isBizuterie) {
                         team.schedule = competitionMatches.filter(m =>
-                            m.home === team.team || m.away === team.team ||
-                            m.home.includes(team.team) || m.away.includes(team.team)
+                            isMatch(team.team, m.home) || isMatch(team.team, m.away)
                         ).map(m => {
                             const isHome = m.home === team.team || m.home.includes(team.team);
                             return {
@@ -107,7 +114,8 @@ async function updateStandings(competitions = null) {
                 }
 
             } else {
-                // chess.cz logic
+                // LEGACY: chess.cz parser (deprecated)
+                console.warn(`[StandingsService] ⚠️ LEGACY: Using chess.cz parser for ${comp.name} - this is deprecated!`);
                 const response = await fetch(`https://www.chess.cz/soutez/${comp.id}/`);
                 const html = await response.text();
                 const lines = html.split('\n');
@@ -120,12 +128,12 @@ async function updateStandings(competitions = null) {
                         if (rankMatch && teamMatch && standings.length < 12) {
                             const rank = parseInt(rankMatch[1]);
                             const teamName = teamMatch[1].trim();
-                            const points = pointsMatch ? parseInt(pointsMatch[1]) : null;
+                            const pts = pointsMatch ? parseInt(pointsMatch[1]) : null;
 
                             standings.push({
                                 rank,
                                 team: teamName,
-                                points,
+                                points: pts,
                                 isBizuterie: teamName.toLowerCase().includes('bižuterie')
                             });
                         }
@@ -146,7 +154,7 @@ async function updateStandings(competitions = null) {
             });
 
         } catch (err) {
-            console.error(`Error fetching ${comp.name}:`, err.message);
+            console.error(`[StandingsService] Error fetching ${comp.name}:`, err.message);
             results.push({
                 competitionId: comp.id,
                 name: comp.name,
@@ -160,7 +168,7 @@ async function updateStandings(competitions = null) {
     for (const competitionResult of results) {
         // Critical Fix: Prevent deletion if scrape failed
         if (competitionResult.error || !competitionResult.standings || competitionResult.standings.length === 0) {
-            console.warn(`⚠️ Skipping DB update for ${competitionResult.name} - scraping failed or empty.`);
+            console.warn(`[StandingsService] ⚠️ Skipping DB update for ${competitionResult.name} - scraping failed or empty.`);
             continue;
         }
 
@@ -187,14 +195,16 @@ async function updateStandings(competitions = null) {
                     });
                 }
             }, {
-                timeout: 20000 // Extended timeout
+                timeout: 20000
             });
-            console.log(`✅ Standings data saved for ${competitionResult.name}`);
+            console.log(`[StandingsService] ✅ Standings data saved for ${competitionResult.name}`);
         } catch (dbErr) {
-            console.error(`Error saving standings for ${competitionResult.name}:`, dbErr);
+            console.error(`[StandingsService] Error saving standings for ${competitionResult.name}:`, dbErr);
             competitionResult.error = `DB Save Error: ${dbErr.message}`;
         }
     }
 
     return results;
 }
+
+export default { updateStandings };

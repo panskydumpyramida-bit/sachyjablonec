@@ -1,7 +1,11 @@
 /**
- * Game Viewer Logic
+ * @deprecated This file is no longer used. Use game-viewer2.js instead.
+ * This legacy viewer is kept for reference only and will be deleted in a future cleanup.
+ * 
+ * Game Viewer Logic (LEGACY - DO NOT USE)
  * Handles PGN rendering, navigation, swipe gestures, and UI updates.
  */
+
 
 class GameViewer {
     constructor() {

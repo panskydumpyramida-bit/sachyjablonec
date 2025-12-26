@@ -157,3 +157,57 @@ main()
     .finally(async () => {
         await prisma.$disconnect();
     });
+
+// --- Exported functions for use from server.js ---
+
+/**
+ * Initial competitions configuration
+ */
+const initialCompetitions = [
+    { id: "3255", name: "1. liga mládeže A", type: "chess-results", url: "https://s3.chess-results.com/tnr1243811.aspx?lan=5&art=46&SNode=S0", category: "youth" },
+    { id: "3363", name: "Krajský přebor mládeže", type: "chess-results", url: "https://s2.chess-results.com/tnr1303510.aspx?lan=5&art=46&SNode=S0", category: "youth", active: true },
+    { id: "ks-st-zaku", name: "Krajská soutěž st. žáků", type: "chess-results", url: "https://s1.chess-results.com/tnr1310849.aspx?lan=5&art=0&SNode=S0", category: "youth", active: true },
+    { id: "ks-vychod", name: "Krajská soutěž východ", type: "chess-results", url: "https://s2.chess-results.com/tnr1278502.aspx?lan=5&art=46&SNode=S0", category: "teams", active: true },
+    { id: "kp-liberec", name: "Krajský přebor", type: "chess-results", url: "https://chess-results.com/tnr1276470.aspx?lan=5&art=46", category: "teams", active: true }
+];
+
+/**
+ * Seed competitions - exported for server.js startup
+ */
+export async function seedCompetitions(prismaClient) {
+    const db = prismaClient || prisma;
+    try {
+        console.log('[Seed] Seeding/Updating competitions...');
+        for (const comp of initialCompetitions) {
+            await db.competition.upsert({
+                where: { id: comp.id },
+                update: { name: comp.name, category: comp.category },
+                create: { ...comp, active: comp.active !== undefined ? comp.active : true }
+            });
+        }
+        console.log('[Seed] Competitions seeded/verified.');
+    } catch (e) {
+        console.error('[Seed] Error seeding competitions:', e);
+    }
+}
+
+/**
+ * Seed database - exported for server.js API endpoint
+ */
+export async function seedDatabase(prismaClient) {
+    const db = prismaClient || prisma;
+    try {
+        const hashedPassword = await bcrypt.hash('admin123', 10);
+        await db.user.upsert({
+            where: { username: 'admin' },
+            update: {},
+            create: { username: 'admin', email: 'admin@sachyjablonec.cz', passwordHash: hashedPassword, role: 'superadmin' }
+        });
+        console.log('[Seed] Database seeded successfully');
+        return { success: true };
+    } catch (error) {
+        console.error('[Seed] Error:', error);
+        return { error: error.message };
+    }
+}
+
