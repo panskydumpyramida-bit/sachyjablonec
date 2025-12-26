@@ -28,7 +28,8 @@ export const register = async (req, res) => {
                 username,
                 email,
                 passwordHash,
-                role: 'USER' // SECURITY FIX: Default to 'USER', not 'ADMIN'
+                // Temporary: Grant MEMBER access for testing until End of Jan 2026
+                role: (new Date() < new Date('2026-02-01')) ? 'MEMBER' : 'USER'
             }
         });
 
