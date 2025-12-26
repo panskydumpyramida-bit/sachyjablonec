@@ -270,6 +270,8 @@ const CalendarEvents = {
                     font-size: 1rem;
                     padding: 0.5rem;
                     transition: color 0.2s;
+                    align-self: flex-start;
+                    margin-top: 0.25rem;
                 " onmouseover="this.style.color='#22d3ee'" onmouseout="this.style.color='var(--text-muted)'">
                     <i class="fa-solid fa-calendar-plus"></i>
                 </a>

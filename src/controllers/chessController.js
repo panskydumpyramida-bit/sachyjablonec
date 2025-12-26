@@ -82,7 +82,7 @@ export const searchPlayers = async (req, res) => {
  */
 export const getGames = async (req, res) => {
     try {
-        const { player, color = 'both', eco, year, limit = 50, offset = 0 } = req.query;
+        const { player, color = 'both', eco, year, sort = 'date_desc', limit = 50, offset = 0 } = req.query;
 
         const where = {};
 
@@ -112,10 +112,15 @@ export const getGames = async (req, res) => {
             where.date = { gte: yearStart, lt: yearEnd };
         }
 
+        // Dynamic sort
+        let orderBy = { date: 'desc' };
+        if (sort === 'date_asc') orderBy = { date: 'asc' };
+        else if (sort === 'eco_asc') orderBy = [{ eco: 'asc' }, { date: 'desc' }];
+
         const [games, totalCount] = await Promise.all([
             prisma.chessGame.findMany({
                 where,
-                orderBy: { date: 'desc' },
+                orderBy,
                 take: parseInt(limit),
                 skip: parseInt(offset),
                 select: {

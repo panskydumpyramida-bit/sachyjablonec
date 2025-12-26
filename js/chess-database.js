@@ -6,6 +6,7 @@ const ChessDB = {
     API_URL: '/api/chess',
     currentPlayer: null,
     currentColor: 'both',
+    currentSort: 'date_desc', // date_desc, date_asc, eco_asc
     currentPage: 0,
     pageSize: 30,
     totalGames: 0,
@@ -104,6 +105,15 @@ const ChessDB = {
             });
         });
 
+        // Sort
+        document.getElementById('gameSort').addEventListener('change', (e) => {
+            this.currentSort = e.target.value;
+            if (this.currentPlayer) {
+                this.currentPage = 0;
+                this.loadGames();
+            }
+        });
+
         // Pagination
         document.getElementById('prevPage').addEventListener('click', () => {
             if (this.currentPage > 0) { this.currentPage--; this.loadGames(); }
@@ -165,6 +175,7 @@ const ChessDB = {
         const params = new URLSearchParams({
             player: this.currentPlayer,
             color: this.currentColor,
+            sort: this.currentSort,
             limit: this.pageSize,
             offset: this.currentPage * this.pageSize
         });

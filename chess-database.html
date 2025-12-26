@@ -570,6 +570,12 @@
                         <button class="filter-btn active" data-color="both">Vše</button>
                         <button class="filter-btn" data-color="white">⬜ Bílý</button>
                         <button class="filter-btn" data-color="black">⬛ Černý</button>
+                        <select id="gameSort"
+                            style="background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); color: var(--text-muted); padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.85rem; margin-left: auto;">
+                            <option value="date_desc">📅 Od nejnovějších</option>
+                            <option value="date_asc">📅 Od nejstarších</option>
+                            <option value="eco_asc">🏷️ Podle ECO</option>
+                        </select>
                     </div>
                     <span id="dbStats" style="color: var(--text-muted); font-size: 0.8rem;"></span>
                 </div>

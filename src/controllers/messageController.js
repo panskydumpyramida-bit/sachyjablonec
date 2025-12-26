@@ -32,7 +32,9 @@ export const checkClubPassword = (req, res, next) => {
 
 export const getMessages = async (req, res) => {
     try {
+        const { type = 'chat' } = req.query;
         const messages = await prisma.message.findMany({
+            where: { type },
             orderBy: { createdAt: 'desc' },
             take: 50
         });
@@ -44,13 +46,13 @@ export const getMessages = async (req, res) => {
 
 export const createMessage = async (req, res) => {
     try {
-        const { author, content } = req.body;
+        const { author, content, type = 'chat' } = req.body;
         if (!author || !content) {
             return res.status(400).json({ error: 'Author and content are required' });
         }
 
         const message = await prisma.message.create({
-            data: { author, content }
+            data: { author, content, type }
         });
         res.status(201).json(message);
     } catch (error) {

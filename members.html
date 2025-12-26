@@ -145,6 +145,18 @@
             color: #fef08a;
         }
 
+        .tile-wishlist {
+            background: linear-gradient(135deg, rgba(236, 72, 153, 0.1), rgba(219, 39, 119, 0.2));
+            border: 1px solid rgba(236, 72, 153, 0.2);
+            color: #f472b6;
+        }
+
+        .tile-wishlist:hover {
+            border-color: #f472b6;
+            background: linear-gradient(135deg, rgba(236, 72, 153, 0.2), rgba(219, 39, 119, 0.3));
+            transform: translateY(-5px);
+        }
+
         /* Section Views */
         .section-view {
             max-width: 800px;
@@ -367,6 +379,10 @@
                             <i class="fa-solid fa-database"></i>
                             <span>Příprava</span>
                         </a>
+                        <div class="hub-tile tile-wishlist" onclick="showSection('wishlist')">
+                            <i class="fa-solid fa-wand-magic-sparkles"></i>
+                            <span>Kniha Přání</span>
+                        </div>
                     </div>
                 </div>
 
@@ -459,6 +475,38 @@
                                 class="fa-solid fa-spinner fa-spin"></i> Načítám...</p>
                     </div>
                 </div>
+
+                <!-- Wishlist Section -->
+                <div id="wishlistSection" class="section-view hidden">
+                    <div class="section-header">
+                        <button class="back-btn" onclick="showHub()">
+                            <i class="fa-solid fa-arrow-left"></i>
+                        </button>
+                        <h2 class="section-title" style="color: #f472b6;">
+                            <i class="fa-solid fa-wand-magic-sparkles"></i> Kniha Přání
+                        </h2>
+                    </div>
+                    <div class="message-form" style="border-color: rgba(244, 114, 182, 0.2);">
+                        <h3 style="color: #f472b6; margin-bottom: 1rem;">
+                            <i class="fa-solid fa-pen-fancy"></i> Napsat přání
+                        </h3>
+                        <div class="form-grid">
+                            <input type="text" id="wishAuthor" placeholder="Vaše jméno">
+                            <textarea id="wishContent" rows="4"
+                                placeholder="Co byste si přáli vylepšit v klubu nebo na webu?"></textarea>
+                            <button class="btn-primary" onclick="postWish()"
+                                style="justify-self: start; background: linear-gradient(135deg, #ec4899, #db2777);">
+                                <i class="fa-solid fa-paper-plane"></i> Odeslat přání
+                            </button>
+                        </div>
+                    </div>
+                    <h3 style="color: var(--text-muted); margin-bottom: 1rem;">
+                        <i class="fa-solid fa-star"></i> Ostatní přání
+                    </h3>
+                    <div id="wishList" class="message-list">
+                        <p style="color: var(--text-muted);"><i class="fa-solid fa-spinner fa-spin"></i> Načítám...</p>
+                    </div>
+                </div>
             </div>
         </section>
     </main>
@@ -542,7 +590,9 @@
             document.getElementById('hubView').classList.add('hidden');
             document.getElementById('gamesSection').classList.add('hidden');
             document.getElementById('messagesSection').classList.add('hidden');
+            document.getElementById('messagesSection').classList.add('hidden');
             document.getElementById('gallerySection').classList.add('hidden');
+            document.getElementById('wishlistSection').classList.add('hidden');
 
             if (section === 'games') {
                 document.getElementById('gamesSection').classList.remove('hidden');
@@ -553,13 +603,18 @@
             } else if (section === 'gallery') {
                 document.getElementById('gallerySection').classList.remove('hidden');
                 loadGallery();
+            } else if (section === 'wishlist') {
+                document.getElementById('wishlistSection').classList.remove('hidden');
+                loadWishes();
             }
         }
 
         function showHub() {
             document.getElementById('gamesSection').classList.add('hidden');
             document.getElementById('messagesSection').classList.add('hidden');
+            document.getElementById('messagesSection').classList.add('hidden');
             document.getElementById('gallerySection').classList.add('hidden');
+            document.getElementById('wishlistSection').classList.add('hidden');
             document.getElementById('hubView').classList.remove('hidden');
         }
 
@@ -617,6 +672,70 @@
                 loadMessages();
             } catch (e) {
                 console.error(e);
+                alert('Chyba při odesílání.');
+            }
+        }
+
+        // Wishlist Functions
+        async function loadWishes() {
+            const token = getAuthToken();
+            const container = document.getElementById('wishList');
+            container.innerHTML = '<p style="color: var(--text-muted);"><i class="fa-solid fa-spinner fa-spin"></i> Načítám...</p>';
+
+            try {
+                const res = await fetch(`${API_URL}/messages?type=wish`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                if (res.ok) {
+                    const wishes = await res.json();
+                    if (wishes.length === 0) {
+                        container.innerHTML = '<p style="color: var(--text-muted); text-align: center;">Zatím žádná přání.</p>';
+                        return;
+                    }
+
+                    container.innerHTML = wishes.map(w => `
+                        <div class="message-card" style="border-left: 3px solid #f472b6;">
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                                <span style="color: #f472b6; font-weight: 700;"><i class="fa-solid fa-wand-magic-sparkles"></i> ${escapeHtml(w.author)}</span>
+                                <span style="color: var(--text-muted); font-size: 0.85rem;">${new Date(w.createdAt).toLocaleString('cs-CZ')}</span>
+                            </div>
+                            <div style="color: var(--text-main);">${escapeHtml(w.content)}</div>
+                        </div>
+                    `).join('');
+                }
+            } catch (e) {
+                console.error(e);
+                container.innerHTML = '<p style="color: #fca5a5;">Chyba načítání přání.</p>';
+            }
+        }
+
+        async function postWish() {
+            const author = document.getElementById('wishAuthor').value;
+            const content = document.getElementById('wishContent').value;
+            const token = getAuthToken();
+
+            if (!author || !content) {
+                alert('Prosím vyplňte jméno a přání.');
+                return;
+            }
+
+            try {
+                const res = await fetch(`${API_URL}/messages`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ author, content, type: 'wish' })
+                });
+
+                if (res.ok) {
+                    document.getElementById('wishContent').value = '';
+                    loadWishes();
+                }
+            } catch (e) {
+                console.error('Failed to post wish:', e);
                 alert('Chyba při odesílání.');
             }
         }
