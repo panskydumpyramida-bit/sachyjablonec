@@ -3,5 +3,6 @@
 - **Admin Panel Refactoring**: Reduced `admin-news.js` size by ~43%, moved WYSIWYG, Image, and Thumbnail logic to separate modules.
 - **Blicák Gallery**: Added gallery for "Vánoční blicák" (ID 54) with 61 new photos (WEBP optimized) from David Šafařík.
 - **Pagination**: Implemented pagination for article galleries to improve load times and UX.
-- **Bug Fixes**: Resolved Admin Login overlay issue and Prisma image sync error.
+- **Bug Fixes**: Resolved Admin Login overlay issue, Prisma image sync error, and Tournaments page links.
+
 
