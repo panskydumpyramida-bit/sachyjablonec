@@ -539,10 +539,11 @@ footer {
     */
 
     .menu-toggle {
-        margin-left: auto;
-        /* Push to the right */
-        margin-right: 0.5rem;
-        /* Gap between toggle and auth */
+        margin-left: 0.5rem;
+        /* Gap between Auth and Toggle */
+        order: 2;
+        /* Ensure it comes AFTER auth */
+        margin-right: 0;
     }
 
     #auth-container {
