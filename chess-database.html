@@ -121,7 +121,7 @@
 
         @media (max-width: 1200px) {
             .three-col-layout {
-                grid-template-columns: 250px 1fr;
+                grid-template-columns: 280px 1fr;
             }
 
             .tree-panel {
@@ -129,17 +129,78 @@
             }
         }
 
-        @media (max-width: 768px) {
+        @media (max-width: 900px) {
+            .chess-db-container {
+                padding: 0.5rem;
+            }
+
+            .search-section {
+                padding: 0.75rem;
+            }
+
             .three-col-layout {
                 grid-template-columns: 1fr;
+                gap: 0.5rem;
             }
 
             .games-panel {
-                display: none;
+                max-height: 250px;
             }
 
-            .three-col-layout.game-active .games-panel {
-                display: none;
+            .board-area {
+                flex-direction: column;
+            }
+
+            .board-wrapper {
+                width: 100%;
+                max-width: 350px;
+                margin: 0 auto;
+            }
+
+            .moves-wrapper {
+                max-height: 150px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .search-section {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+
+            .search-input-wrapper {
+                width: 100%;
+            }
+
+            .filter-group {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .filter-btn {
+                flex: 1;
+                text-align: center;
+            }
+
+            .games-panel {
+                max-height: 200px;
+            }
+
+            .board-wrapper {
+                max-width: 280px;
+            }
+
+            .panel-header {
+                padding: 0.5rem 0.75rem;
+                font-size: 0.8rem;
+            }
+
+            .game-row {
+                padding: 0.5rem 0.6rem;
+            }
+
+            .game-players-line {
+                font-size: 0.75rem;
             }
         }
 
