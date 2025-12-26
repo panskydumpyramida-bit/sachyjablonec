@@ -182,9 +182,9 @@ class GameViewer2 {
                         position: 'start',
                         draggable: false,
                         pieceTheme: 'https://chessboardjs.com/img/chesspieces/wikipedia/{piece}.png',
-                        moveSpeed: 200,
-                        appearSpeed: 150,
-                        snapSpeed: 75
+                        moveSpeed: 500,
+                        appearSpeed: 300,
+                        snapSpeed: 100
                     });
                     console.log('[GV2 Init] Chessboard instance created:', this.board);
                 } catch (e) {
@@ -822,36 +822,66 @@ class GameViewer2 {
             const varData = this.allVariations[this.currentVariation];
             const currentFen = this.game.fen();
 
-            // Find current move index based on FEN (game instance should be tracking current state)
-            // But this.game tracks current board state. We need to find NEXT move in variation.
-            // Problem: FEN might not be unique. But usually ok for sequential play.
-
-            // Better: track variation index? We don't have it explicitly.
-            // Let's rely on finding current FEN in moves list.
+            // Use variation index logic if possible, or fallback toFEN match
+            // Since we don't track variation ply index globally perfectly, finding by FEN is robust enough for small variations
             const idx = varData.moves.findIndex(m => m.fen === currentFen);
 
             if (idx < varData.moves.length - 1) {
                 // Next move exists
                 const nextMove = varData.moves[idx + 1];
-                this.jumpToVariation(this.currentVariation, nextMove.fen);
+                // Try to use board.move if possible for smoother animation
+                // We need the SAN or from-to. nextMove has .move object
+                if (nextMove.move && nextMove.move.from && nextMove.move.to) {
+                    const moveStr = nextMove.move.from + '-' + nextMove.move.to;
+                    this.board.move(moveStr);
+                    // Manually sync internal state after animation trigger
+                    // But we need to ensure jumpToVariation sets the state correctly
+                    // jumpToVariation does board.position.
+                    // Let's rely on jumpToVariation for state consistency, but maybe optimization is needed?
+                    // board.move() updates the board.
+                    this.jumpToVariation(this.currentVariation, nextMove.fen);
+                } else {
+                    this.jumpToVariation(this.currentVariation, nextMove.fen);
+                }
             } else {
                 // End of variation
                 this.toggleAutoplay(false);
             }
         } else {
-            // Main line - check for variations at this position
+            // Main line
             if (this.currentPly < this.mainLinePlies.length - 1) {
                 const variations = this.getVariationsAtCurrentPosition();
 
                 if (variations.length > 0) {
-                    // Show modal to choose
                     const nextMainMove = this.mainLinePlies[this.currentPly + 1]?.move?.san || '?';
                     this.showVariationChoiceModal(nextMainMove, variations);
                 } else {
-                    this.jumpTo(this.currentPly + 1);
+                    // Use board.move() for single step to guarantee animation
+                    const nextData = this.mainLinePlies[this.currentPly + 1];
+
+                    if (nextData && nextData.move && nextData.move.from && nextData.move.to) {
+                        const moveStr = nextData.move.from + '-' + nextData.move.to;
+
+                        // Check if board supports move
+                        if (this.board && typeof this.board.move === 'function') {
+                            this.board.move(moveStr); // Triggers animation
+
+                            // Update internal state AFTER animation completes (500ms moveSpeed + buffer)
+                            const nextPly = this.currentPly + 1;
+                            setTimeout(() => {
+                                this.currentPly = nextPly;
+                                this.game.load(this.mainLinePlies[nextPly].fen);
+                                this.updateActiveMove();
+                            }, 550);
+                        } else {
+                            this.jumpTo(this.currentPly + 1);
+                        }
+                    } else {
+                        this.jumpTo(this.currentPly + 1);
+                    }
                 }
             } else {
-                this.toggleAutoplay(false); // Stop if end
+                this.toggleAutoplay(false);
             }
         }
     }
@@ -1408,7 +1438,7 @@ GameViewer2.create = function (containerSelector, games, options = {}) {
 
     // Create the complete split-view structure
     targetContainer.innerHTML = `
-        <div class="gv-split-view" style="max-height: ${maxHeight}px;">
+        <div class="gv-split-view" style="--gv-max-height: ${maxHeight}px;">
             <!-- Games List Panel (Left) -->
             <div class="gv-games-panel">
                 <div style="padding: 1rem 1.25rem; background: rgba(0,0,0,0.4); border-bottom: 1px solid rgba(255,255,255,0.1);">
