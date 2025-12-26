@@ -12,6 +12,14 @@
     overflow-x: hidden;
 }
 
+#loginPage {
+    position: fixed;
+    inset: 0;
+    background: #0f172a;
+    z-index: 20000;
+    overflow-y: auto;
+}
+
 .login-container {
     max-width: 400px;
     margin: 150px auto;
