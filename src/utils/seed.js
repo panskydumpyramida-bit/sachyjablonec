@@ -201,7 +201,7 @@ export async function seedDatabase(prismaClient) {
         await db.user.upsert({
             where: { username: 'admin' },
             update: {},
-            create: { username: 'admin', email: 'admin@sachyjablonec.cz', passwordHash: hashedPassword, role: 'superadmin' }
+            create: { username: 'admin', email: 'admin@sachyjablonec.cz', passwordHash: hashedPassword, role: 'SUPERADMIN' }
         });
         console.log('[Seed] Database seeded successfully');
         return { success: true };
