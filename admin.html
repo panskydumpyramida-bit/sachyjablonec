@@ -1138,6 +1138,50 @@
     </div>
     <!-- Changelog View -->
     <div id="changelogView" class="hidden">
+        <!-- Roadmap Section -->
+        <div class="card" style="margin-bottom: 2rem; border-left: 4px solid #10b981;">
+            <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem;">
+                <i class="fa-solid fa-map" style="font-size: 1.5rem; color: #10b981;"></i>
+                <h2 style="margin: 0; color: #10b981;">Roadmap</h2>
+            </div>
+            <p style="color: var(--text-muted); margin-bottom: 1rem; font-size: 0.9rem;">Plánované funkce a prioritní
+                úkoly</p>
+
+            <div style="display: grid; gap: 0.75rem;">
+                <div
+                    style="display: flex; gap: 1rem; padding: 0.75rem 1rem; background: rgba(16,185,129,0.1); border-radius: 8px;">
+                    <span
+                        style="background: #10b981; color: #000; padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.7rem; font-weight: 600; height: fit-content;">P1</span>
+                    <div>
+                        <strong style="font-size: 0.9rem;">Admin panel redesign</strong>
+                        <p style="margin: 0.2rem 0 0; font-size: 0.8rem; color: var(--text-muted);">Dashboard, sidebar
+                            navigace, modularizace admin-news.js</p>
+                    </div>
+                </div>
+                <div
+                    style="display: flex; gap: 1rem; padding: 0.75rem 1rem; background: rgba(59,130,246,0.1); border-radius: 8px;">
+                    <span
+                        style="background: #3b82f6; color: #fff; padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.7rem; font-weight: 600; height: fit-content;">P2</span>
+                    <div>
+                        <strong style="font-size: 0.9rem;">Rozšíření členské sekce</strong>
+                        <p style="margin: 0.2rem 0 0; font-size: 0.8rem; color: var(--text-muted);">Interní oznámení,
+                            dokumenty, diskuzní fórum</p>
+                    </div>
+                </div>
+                <div
+                    style="display: flex; gap: 1rem; padding: 0.75rem 1rem; background: rgba(251,191,36,0.1); border-radius: 8px;">
+                    <span
+                        style="background: #fbbf24; color: #000; padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.7rem; font-weight: 600; height: fit-content;">P3</span>
+                    <div>
+                        <strong style="font-size: 0.9rem;">Email služba</strong>
+                        <p style="margin: 0.2rem 0 0; font-size: 0.8rem; color: var(--text-muted);">Reset hesla,
+                            notifikace o komentářích</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Changelog Card -->
         <div class="card" style="margin-bottom: 2rem;">
             <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem;">
                 <i class="fa-solid fa-code-branch" style="font-size: 2rem; color: var(--primary-color);"></i>
@@ -1152,7 +1196,7 @@
                 <!-- 2025-12-26 -->
                 <div class="changelog-entry">
                     <div class="changelog-date">26. 12. 2025</div>
-                    <div class="changelog-version">v11</div>
+                    <div class="changelog-version">v12</div>
                     <div class="changelog-content">
                         <h4>🔧 Opravy</h4>
                         <ul>
@@ -1164,6 +1208,8 @@
                             <li><strong>Login tlačítko:</strong> Opraveno zobrazení na stránce "O nás" - chyběly auth
                                 skripty</li>
                             <li><strong>Uživatelé:</strong> Opravena chyba při načítání (403 error handling)</li>
+                            <li><strong>Role middleware:</strong> Case-insensitive kontrola (SUPERADMIN == superadmin)
+                            </li>
                         </ul>
                         <h4>🆕 Nové funkce</h4>
                         <ul>
