@@ -10,6 +10,9 @@ const SJLightbox = (function () {
     let touchStartX = 0;
     let touchEndX = 0;
 
+    let autoplayInterval = null;
+    let isAutoplayActive = false;
+
     // Vytvoří HTML strukturu lightboxu
     function createLightbox() {
         // Check if lightbox already exists
@@ -19,10 +22,10 @@ const SJLightbox = (function () {
             lightboxEl = existingLightbox;
             // Verify all child elements exist
             const imgEl = document.getElementById('sj-lightbox-img');
-            if (imgEl) {
+            if (imgEl && document.getElementById('sj-lightbox-autoplay')) {
                 return; // Everything is fine, return early
             }
-            // Child elements missing, remove and recreate
+            // Child elements missing or outdated, remove and recreate
             existingLightbox.remove();
         }
 
@@ -40,6 +43,9 @@ const SJLightbox = (function () {
             <div class="sj-lightbox-content">
                 <img id="sj-lightbox-img" src="" alt="">
                 <div class="sj-lightbox-info">
+                    <button id="sj-lightbox-autoplay" class="sj-lightbox-autoplay" onclick="SJLightbox.toggleAutoplay()" aria-label="Přehrát">
+                        <i class="fa-solid fa-play"></i>
+                    </button>
                     <span id="sj-lightbox-caption" class="sj-lightbox-caption"></span>
                     <span id="sj-lightbox-counter" class="sj-lightbox-counter"></span>
                 </div>
@@ -70,6 +76,7 @@ const SJLightbox = (function () {
         const threshold = 50;
 
         if (Math.abs(diff) > threshold) {
+            stopAutoplay(); // Stop on interaction
             if (diff > 0) {
                 next(); // Swipe left = next
             } else {
@@ -107,21 +114,25 @@ const SJLightbox = (function () {
         // Skrýt/zobrazit navigační tlačítka pokud je jen jeden obrázek
         const prevBtn = lightboxEl.querySelector('.sj-lightbox-prev');
         const nextBtn = lightboxEl.querySelector('.sj-lightbox-next');
+        const autoplayBtn = document.getElementById('sj-lightbox-autoplay');
 
         if (images.length <= 1) {
             prevBtn.style.display = 'none';
             nextBtn.style.display = 'none';
             counterEl.style.display = 'none';
+            if (autoplayBtn) autoplayBtn.style.display = 'none';
         } else {
             prevBtn.style.display = 'flex';
             nextBtn.style.display = 'flex';
             counterEl.style.display = 'inline';
+            if (autoplayBtn) autoplayBtn.style.display = 'flex';
         }
     }
 
     function open(imageArray, startIndex = 0) {
         console.log('[Lightbox] open called with startIndex:', startIndex, 'array length:', imageArray?.length);
         createLightbox();
+        stopAutoplay(); // Reset autoplay state
 
         images = imageArray || [];
         currentIndex = Math.max(0, Math.min(startIndex, images.length - 1));
@@ -136,6 +147,7 @@ const SJLightbox = (function () {
     }
 
     function close() {
+        stopAutoplay();
         if (lightboxEl) {
             lightboxEl.classList.remove('active');
             document.body.style.overflow = '';
@@ -149,9 +161,52 @@ const SJLightbox = (function () {
     }
 
     function prev() {
+        stopAutoplay(); // Stop on manual nav
         if (images.length === 0) return;
         currentIndex = (currentIndex - 1 + images.length) % images.length;
         updateLightbox();
+    }
+
+    // Autoplay functions
+    function toggleAutoplay() {
+        if (isAutoplayActive) {
+            stopAutoplay();
+        } else {
+            startAutoplay();
+        }
+    }
+
+    function startAutoplay() {
+        if (isAutoplayActive) return;
+        isAutoplayActive = true;
+        updateAutoplayButton();
+
+        // Immediate next slide? No, wait for interval.
+        autoplayInterval = setInterval(() => {
+            next();
+        }, 3000); // 3 seconds
+    }
+
+    function stopAutoplay() {
+        isAutoplayActive = false;
+        if (autoplayInterval) {
+            clearInterval(autoplayInterval);
+            autoplayInterval = null;
+        }
+        updateAutoplayButton();
+    }
+
+    function updateAutoplayButton() {
+        const btn = document.getElementById('sj-lightbox-autoplay');
+        if (!btn) return;
+
+        if (isAutoplayActive) {
+            btn.innerHTML = '<i class="fa-solid fa-pause"></i>';
+            btn.classList.add('active');
+        } else {
+            btn.innerHTML = '<i class="fa-solid fa-play"></i>';
+            btn.classList.remove('active');
+        }
     }
 
     // Klávesové zkratky
@@ -166,7 +221,12 @@ const SJLightbox = (function () {
                 prev();
                 break;
             case 'ArrowRight':
+                stopAutoplay(); // Stop on manual nav
                 next();
+                break;
+            case ' ': // Spacebar
+                e.preventDefault();
+                toggleAutoplay();
                 break;
         }
     });
@@ -176,7 +236,8 @@ const SJLightbox = (function () {
         open,
         close,
         next,
-        prev
+        prev,
+        toggleAutoplay
     };
 })();
 
