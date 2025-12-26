@@ -539,6 +539,20 @@ footer {
     */
 
     .menu-toggle {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        /* Center icon */
+        width: 44px;
+        /* Exact match */
+        height: 44px;
+        /* Exact match */
+        padding: 0;
+        font-size: 1.35rem;
+        /* Slightly larger to visual balance fa-bars */
+        border-radius: 6px;
+        flex-shrink: 0;
+
         margin-left: 0.5rem;
         /* Gap between Auth and Toggle */
         order: 2;
