@@ -93,9 +93,7 @@ const ChessDB = {
 
         // Resize board on window resize
         window.addEventListener('resize', () => {
-            if (this.board) {
-                this.board.resize();
-            }
+            this.fixMobileBoardHeight();
         });
 
         // Color filters
@@ -319,9 +317,25 @@ const ChessDB = {
         this.updateBoardPosition();
 
         // Force resize after short delay to ensure correct rendering on mobile
-        setTimeout(() => {
-            if (this.board) this.board.resize();
-        }, 100);
+        // Fix for "small initial container" issue
+        setTimeout(() => this.fixMobileBoardHeight(), 50);
+        setTimeout(() => this.fixMobileBoardHeight(), 300);
+    },
+
+    fixMobileBoardHeight() {
+        const boardEl = document.getElementById('chessBoard');
+        if (!boardEl) return;
+
+        // On mobile, force square aspect ratio based on calculated width
+        if (window.innerWidth <= 900) {
+            const width = boardEl.offsetWidth;
+            if (width > 0) {
+                boardEl.style.height = `${width}px`;
+                if (this.board) this.board.resize();
+            }
+        } else {
+            boardEl.style.height = ''; // Reset on desktop
+        }
     },
 
     renderMovesList() {
