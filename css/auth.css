@@ -463,16 +463,19 @@
 
     #auth-container .auth-btn,
     .auth-btn {
-        padding: 0.4rem !important;
-        font-size: 0.9rem;
-        min-width: 32px !important;
-        max-width: 38px !important;
-        min-height: 32px;
-        width: auto !important;
+        padding: 0 !important;
+        /* Center icon */
+        font-size: 1.25rem !important;
+        /* Larger icon to match burger */
+        min-width: 44px !important;
+        width: 44px !important;
+        height: 44px !important;
         justify-content: center;
+        align-items: center;
         border-radius: 6px;
         gap: 0 !important;
         overflow: hidden !important;
+        flex-shrink: 0;
     }
 
     /* Hide text, show only icon on mobile */
@@ -497,20 +500,23 @@
     }
 
     .user-menu-toggle {
-        padding: 0.5rem 0.75rem;
-        font-size: 0.85rem;
+        padding: 0;
+        width: 44px;
+        height: 44px;
+        justify-content: center;
+        font-size: 1.25rem;
+        /* Match icon size */
     }
 
-    .user-menu-toggle span {
-        display: none;
+    .user-menu-toggle span,
+    .user-menu-toggle .fa-chevron-down {
+        display: none !important;
     }
 
     .user-menu-toggle i:first-child {
-        font-size: 1.1rem;
-    }
-
-    .user-menu-toggle .fa-chevron-down {
-        display: none;
+        font-size: 1.25rem;
+        /* Consistent icon size */
+        margin: 0;
     }
 
     /* Auth modal improvements for mobile */

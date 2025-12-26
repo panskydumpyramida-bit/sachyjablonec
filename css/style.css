@@ -1000,8 +1000,8 @@ footer {
     }
 
     .logo {
-        font-size: 1.1rem;
-        /* Smaller logo text */
+        /* font-size: 1.25rem; */
+        /* Default is fine */
         gap: 0.35rem;
         /* Tighter icon gap */
     }
