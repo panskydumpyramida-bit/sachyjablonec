@@ -437,6 +437,9 @@ const ChessDB = {
         // Sort by games
         const sorted = [...nextMoves].sort((a, b) => b.games - a.games);
 
+        // Get recent games from current position node
+        const recentGames = currentNode.recentGames || [];
+
         content.innerHTML = `
             <div class="tree-position">
                 <strong>${this.currentPlayer}</strong> (${colorLabel})<br>
@@ -459,6 +462,25 @@ const ChessDB = {
                     `;
         }).join('')}
             </div>
+            ${recentGames.length > 0 ? `
+                <div class="tree-recent" style="margin-top: 1rem; padding-top: 0.75rem; border-top: 1px solid rgba(255,255,255,0.1);">
+                    <div style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 0.5rem;">
+                        <i class="fa-solid fa-clock"></i> Nedávné partie v této pozici
+                    </div>
+                    ${recentGames.map(g => {
+            const date = g.date ? new Date(g.date).toLocaleDateString('cs-CZ', { day: 'numeric', month: 'numeric', year: '2-digit' }) : '';
+            return `
+                            <div class="recent-game" onclick="ChessDB.openGame(${g.id})" style="padding: 0.4rem 0.5rem; background: rgba(0,0,0,0.2); border-radius: 4px; margin-bottom: 0.3rem; cursor: pointer; font-size: 0.75rem;">
+                                <div style="display: flex; justify-content: space-between; align-items: center;">
+                                    <span>${g.white} - ${g.black}</span>
+                                    <span style="color: var(--primary-color);">${g.result}</span>
+                                </div>
+                                <div style="color: var(--text-muted); font-size: 0.65rem;">${date}</div>
+                            </div>
+                        `;
+        }).join('')}
+                </div>
+            ` : ''}
         `;
     },
 
