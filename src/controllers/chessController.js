@@ -304,7 +304,8 @@ export const getOpeningTree = async (req, res) => {
 
         const games = await prisma.chessGame.findMany({
             where,
-            select: { id: true, moves: true, result: true }
+            select: { id: true, moves: true, result: true, date: true, whitePlayer: true, blackPlayer: true },
+            orderBy: { date: 'desc' }
         });
 
         // Build tree from moves
@@ -321,7 +322,7 @@ export const getOpeningTree = async (req, res) => {
  * Build opening tree from games
  */
 function buildOpeningTree(games, color, maxDepth = 10) {
-    const root = { move: 'start', children: {}, games: 0, wins: 0, draws: 0, losses: 0 };
+    const root = { move: 'start', children: {}, games: 0, wins: 0, draws: 0, losses: 0, recentGames: [] };
     const isWhite = color === 'white';
 
     games.forEach(game => {
@@ -341,12 +342,25 @@ function buildOpeningTree(games, color, maxDepth = 10) {
                     wins: 0,
                     draws: 0,
                     losses: 0,
-                    isMyMove
+                    isMyMove,
+                    recentGames: []
                 };
             }
 
             node = node.children[move];
             node.games++;
+
+            // Track recent games (keep only 2 newest)
+            const gameRef = {
+                id: game.id,
+                date: game.date,
+                white: game.whitePlayer,
+                black: game.blackPlayer,
+                result: game.result
+            };
+            if (node.recentGames.length < 2) {
+                node.recentGames.push(gameRef);
+            }
 
             // Count results
             if (game.result === '1-0') {
