@@ -1,5 +1,5 @@
 // Global Version Control for Assets
-const APP_VERSION = '10';
+const APP_VERSION = '11';
 
 // Helper to inject CSS with version
 function loadVersionedCSS(path) {

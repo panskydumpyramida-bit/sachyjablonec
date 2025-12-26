@@ -17,7 +17,7 @@ async function loadComponent(id, file) {
                 if (!document.querySelector('link[href*="auth.css"]')) {
                     const authCss = document.createElement('link');
                     authCss.rel = 'stylesheet';
-                    authCss.href = '/css/auth.css?v=7';
+                    authCss.href = `/css/auth.css?v=${version}`;
                     document.head.appendChild(authCss);
                 }
 
@@ -103,24 +103,26 @@ function initMobileMenu() {
 
 
 document.addEventListener('DOMContentLoaded', () => {
+    const version = window.APP_VERSION || Date.now();
+
     loadComponent('global-header', 'header.html');
     loadComponent('global-footer', 'footer.html');
 
     // Dynamically load auth scripts if not already loaded
     if (typeof API_URL === 'undefined') {
         const configScript = document.createElement('script');
-        configScript.src = '/js/config.js?v=4';
+        configScript.src = `/js/config.js?v=${version}`;
         configScript.onload = () => {
             if (typeof auth === 'undefined') {
                 const authScript = document.createElement('script');
-                authScript.src = '/js/auth.js?v=6';
+                authScript.src = `/js/auth.js?v=${version}`;
                 document.head.appendChild(authScript);
             }
         };
         document.head.appendChild(configScript);
     } else if (typeof auth === 'undefined') {
         const authScript = document.createElement('script');
-        authScript.src = '/js/auth.js?v=6';
+        authScript.src = `/js/auth.js?v=${version}`;
         document.head.appendChild(authScript);
     }
 
