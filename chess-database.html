@@ -540,22 +540,7 @@
 </head>
 
 <body>
-    <header>
-        <nav class="container">
-            <a href="index.html" class="logo">
-                <i class="fa-solid fa-chess-knight"></i>
-                Šachy Jablonec
-            </a>
-            <ul class="nav-links">
-                <li><a href="index.html">Domů</a></li>
-                <li><a href="members.html">Členská sekce</a></li>
-                <li><a href="chess-database.html" class="active">Databáze</a></li>
-            </ul>
-            <button class="menu-toggle" aria-label="Menu">
-                <i class="fa-solid fa-bars"></i>
-            </button>
-        </nav>
-    </header>
+    <div id="global-header"></div>
 
     <main style="margin-top: 80px;">
         <div class="chess-db-container">
@@ -645,10 +630,13 @@
         </div>
     </main>
 
+    <div id="global-footer"></div>
+
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <script src="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
     <script src="js/config.js"></script>
+    <script src="js/layout-loader.js"></script>
     <script src="js/main.js"></script>
     <script src="js/auth.js"></script>
     <script src="js/chess-database.js"></script>
