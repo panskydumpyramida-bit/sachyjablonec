@@ -306,6 +306,8 @@
 /* Enable chessboard.js piece animations - the UNPKG CSS is missing this rule */
 .piece-417db {
     position: absolute !important;
+    transition-property: none !important;
+    /* Prevent CSS transitions from conflicting with jQuery animate */
 }
 
 /* Coach Bubble - Overlay on container, semi-transparent */
@@ -950,26 +952,62 @@
 }
 
 /* Responsive: Mobile-first for split view */
+
+/* Responsive Split View for GameViewer2.create() */
+.gv-split-view {
+    display: flex;
+    flex-direction: row;
+    height: 100%;
+    max-height: var(--gv-max-height, 600px);
+    /* Use Variable with fallback */
+    background: rgba(0, 0, 0, 0.4);
+    border-radius: 12px;
+    overflow: hidden;
+    /* Keep generic overflow hidden for rounded corners, but handle children */
+}
+
+/* Panels */
+.gv-games-panel {
+    width: 280px;
+    border-right: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    flex-direction: column;
+    background: rgba(0, 0, 0, 0.2);
+}
+
+.gv-viewer-panel {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    /* Prevent flex overflow */
+    overflow-y: auto;
+    /* Allow scrolling if viewer is tall */
+}
+
+/* Mobile Split View */
 @media (max-width: 900px) {
     .gv-split-view {
-        grid-template-columns: 1fr;
-        max-height: none;
+        flex-direction: column-reverse;
+        /* List at bottom */
+        max-height: none !important;
+        /* Allow growing on mobile! */
+        height: auto;
+        overflow: visible;
+        /* Ensure nothing is clipped */
     }
 
     .gv-games-panel {
-        order: 2;
-        max-height: 180px;
+        width: 100%;
         border-right: none;
         border-top: 1px solid rgba(255, 255, 255, 0.1);
+        max-height: 300px;
+        /* Specific limit for the list part only */
     }
 
     .gv-viewer-panel {
-        order: 1;
-    }
-}
-
-@media (max-width: 600px) {
-    .gv-games-panel {
-        max-height: 140px;
+        width: 100%;
+        overflow: visible;
+        /* Ensure viewer expands */
     }
 }

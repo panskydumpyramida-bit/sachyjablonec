@@ -1,24 +1,49 @@
 /**
  * Admin Core Module
- * Contains: Auth, Navigation, Toast, Utilities
+ * Contains: Auth, Navigation, Toast, URL Hash Navigation
+ * 
+ * @requires js/utils.js (escapeHtml, formatDate)
  */
 
 // Global State
-let authToken = localStorage.getItem('authToken');
+let authToken = localStorage.getItem('authToken') || localStorage.getItem('auth_token');
 let currentUser = null;
 
-// API URL from config
-const API_URL = window.API_URL || '/api';
-
-// ================================
-// UTILITIES
-// ================================
-
-function escapeHtml(text) {
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
+// API URL from config.js (already declared globally, just ensure fallback)
+if (!window.API_URL) {
+    window.API_URL = '/api';
 }
+
+// ================================
+// URL HASH NAVIGATION
+// ================================
+
+/**
+ * Get active tab from URL hash
+ * @returns {string} Tab name or 'dashboard' as default
+ */
+function getTabFromHash() {
+    const hash = window.location.hash;
+    const match = hash.match(/#tab=(\w+)/);
+    return match ? match[1] : 'dashboard';
+}
+
+/**
+ * Update URL hash with current tab
+ * @param {string} tab - Tab name to save
+ */
+function setTabHash(tab) {
+    if (tab && tab !== 'dashboard') {
+        history.replaceState(null, '', `#tab=${tab}`);
+    } else {
+        // Clean URL for dashboard (default)
+        history.replaceState(null, '', window.location.pathname);
+    }
+}
+
+// ================================
+// UTILITIES (using global escapeHtml from utils.js)
+// ================================
 
 function showToast(message, type = 'success') {
     const toast = document.createElement('div');
@@ -176,6 +201,9 @@ function switchTab(tab) {
     const view = document.getElementById(tab + 'View');
     if (view) view.classList.remove('hidden');
 
+    // Save current tab to URL hash for persistence
+    setTabHash(tab);
+
     // Load data for view
     if (tab === 'dashboard') loadDashboard();
     else if (tab === 'members') loadMembers();
@@ -246,27 +274,118 @@ async function deleteNews(id) {
 }
 
 // ================================
+// MAINTENANCE MODE
+// ================================
+
+async function toggleMaintenance() {
+    const toggle = document.getElementById('maintenanceToggle');
+    const value = toggle.checked;
+
+    try {
+        const res = await fetch(`${API_URL}/settings`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${authToken}`
+            },
+            body: JSON.stringify({ key: 'maintenance_mode', value: value })
+        });
+
+        if (res.ok) {
+            showAlert(value ? 'Režim údržby ZAPNUT' : 'Režim údržby VYPNUT', 'success');
+        } else {
+            toggle.checked = !value;
+            showAlert('Chyba při změně nastavení', 'error');
+        }
+    } catch (e) {
+        toggle.checked = !value;
+        showAlert('Chyba spojení', 'error');
+    }
+}
+
+// ================================
+// SIDEBAR SECTIONS
+// ================================
+
+function toggleSidebarSection(section) {
+    const content = document.getElementById(section + 'Content');
+    const icon = document.getElementById(section + 'Icon');
+
+    if (content.style.display === 'none') {
+        content.style.display = 'block';
+        icon.style.transform = 'rotate(0deg)';
+    } else {
+        content.style.display = 'none';
+        icon.style.transform = 'rotate(-90deg)';
+    }
+}
+
+// ================================
 // INIT
 // ================================
 
+// Track saved tab for restoration after login
+let savedTabFromHash = null;
+
 document.addEventListener('DOMContentLoaded', () => {
+    // Save tab from URL before auth check (in case we need to restore after login)
+    savedTabFromHash = getTabFromHash();
+
     if (authToken) {
         verifyToken();
+    } else {
+        showLogin();
     }
 
     // Enter key for login
     document.getElementById('password')?.addEventListener('keypress', (e) => {
         if (e.key === 'Enter') login();
     });
+
+    // Password visibility toggle
+    const togglePassword = document.getElementById('togglePassword');
+    const passwordInput = document.getElementById('password');
+    if (togglePassword && passwordInput) {
+        togglePassword.addEventListener('click', () => {
+            const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+            passwordInput.setAttribute('type', type);
+            togglePassword.classList.toggle('fa-eye');
+            togglePassword.classList.toggle('fa-eye-slash');
+        });
+    }
 });
 
-// Export for global access
+// Export for global access FIRST (before any wrappers)
 window.login = login;
 window.logout = logout;
+window.showLogin = showLogin;
+window.showAdmin = showAdmin;
+window.verifyToken = verifyToken;
 window.switchTab = switchTab;
-window.editNews = editNews;
+window.loadDashboard = loadDashboard;
 window.togglePublish = togglePublish;
 window.deleteNews = deleteNews;
 window.showToast = showToast;
 window.showAlert = showAlert;
-window.escapeHtml = escapeHtml;
+window.toggleMaintenance = toggleMaintenance;
+window.toggleSidebarSection = toggleSidebarSection;
+
+// Restore tab after showAdmin is called
+// Wrap AFTER exports so window.showAdmin exists
+const _originalShowAdminCore = window.showAdmin;
+window.showAdmin = function () {
+    _originalShowAdminCore();
+    // Restore tab from URL hash after login/auth
+    if (savedTabFromHash && savedTabFromHash !== 'dashboard') {
+        setTimeout(() => switchTab(savedTabFromHash), 100);
+    }
+};
+
+// Handle browser back/forward
+window.addEventListener('hashchange', () => {
+    const tab = getTabFromHash();
+    if (currentUser) {
+        switchTab(tab);
+    }
+});
+

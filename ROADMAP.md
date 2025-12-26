@@ -74,6 +74,7 @@ Plán budoucího vývoje webu [sachyjablonec.cz](https://www.sachyjablonec.cz).
 - [x] Základní CSS úpravy pro menší přetékání
 - [ ] Plně responsivní šachovnice v článcích
 - [ ] Vlastní PGN parser jako alternativa k Chess.com iframe
+- [ ] **🐛 BUG (střední priorita):** Animace figurek nefungují v `article.html`, přestože v `teams.html` fungují správně. Možné příčiny: rozdílné pořadí načítání skriptů, `defer` atribut, nebo timing inicializace `GameViewer2.create()`. Vyžaduje hlubší debugging.
 
 ---
 

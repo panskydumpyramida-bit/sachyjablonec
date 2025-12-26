@@ -1,18 +1,13 @@
 /**
  * Admin Competitions Module
  * Handles competition sources and standings updates
+ * 
+ * @requires js/utils.js (escapeHtml)
  */
 
-// Get API_URL and authToken from global scope (defined in admin.html)
+// Get API_URL and authToken from global scope (defined in admin-core.js)
 const getApiUrl = () => window.API_URL || '';
 const getAuthToken = () => window.authToken || localStorage.getItem('authToken') || '';
-
-// Helper for escaping HTML (from parent)
-function escapeHtml(text) {
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
-}
 
 /**
  * Update standings from chess.cz

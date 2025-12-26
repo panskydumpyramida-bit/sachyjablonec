@@ -1,6 +1,8 @@
 /**
  * Admin Games Module
  * Manages recorded games in admin panel
+ * 
+ * @requires js/utils.js (escapeHtml)
  */
 
 // Load all recorded games
@@ -137,17 +139,10 @@ function copyToClipboard(text) {
     });
 }
 
-// Escape HTML helper
-function escapeHtml(text) {
-    if (!text) return '';
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
-}
-
 // Export for global access
 window.loadRecordedGames = loadRecordedGames;
 window.deleteRecordedGame = deleteRecordedGame;
 window.previewGamePgn = previewGamePgn;
 window.closePgnPreview = closePgnPreview;
 window.copyToClipboard = copyToClipboard;
+
