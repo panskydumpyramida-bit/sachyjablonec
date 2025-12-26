@@ -61,6 +61,7 @@ model Message {
   id        Int      @id @default(autoincrement())
   author    String
   content   String
+  type      String   @default("chat") // 'chat', 'wish'
   createdAt DateTime @default(now())
 }
 
