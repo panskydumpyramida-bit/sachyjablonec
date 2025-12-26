@@ -1026,19 +1026,23 @@
 
                                 <div class="event-location-row">
                                     <i class="fa-solid fa-location-dot"></i>
-                                    ${event.url ? `<a href="https://mapy.cz/zakladni?q=${encodeURIComponent(event.location)}" target="_blank" class="location-link">${event.location}</a>` : `<span class="location-text">${event.location || 'Místo neuvedeno'}</span>`}
+                                    ${event.location ? `<a href="https://mapy.cz/zakladni?q=${encodeURIComponent(event.location)}" target="_blank" class="location-link">${event.location}</a>` : `<span class="location-text">Místo neuvedeno</span>`}
                                 </div>
 
                                 ${event.description ? `<div class="event-description">${event.description.replace(/\n/g, '<br>')}</div>` : ''}
 
                                 <div class="event-footer-details">
+                                     ${event.url ? `
+                                        <div class="detail-item">
+                                            <i class="fa-solid fa-link"></i> 
+                                            <a href="${event.url}" target="_blank" class="event-action-btn" style="padding: 0; font-size: 0.75rem;">Web / Propozice</a>
+                                        </div>` : ''}
+
                                      ${event.registrationDeadline ? `
                                         <div class="detail-item alert-deadline">
                                             <i class="fa-regular fa-clock"></i> 
                                             <span>Přihlášky do: <strong style="color: #f87171;">${new Date(event.registrationDeadline).toLocaleDateString('cs-CZ')} ${new Date(event.registrationDeadline).toLocaleTimeString('cs-CZ', { hour: '2-digit', minute: '2-digit' })}</strong></span>
                                         </div>` : ''}
-                                     
-
                                      
                                      ${event.entryFee ? `
                                         <div class="detail-item gold-text">
