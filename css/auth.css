@@ -25,6 +25,12 @@
         flex-shrink: 0;
         visibility: hidden;
         /* Ensure default hidden matches desktop but responsive */
+
+        /* Layout Positioning */
+        margin-left: auto;
+        /* Push group to right */
+        order: 1;
+        /* Visually before burger */
     }
 
     #auth-container.auth-visible {
