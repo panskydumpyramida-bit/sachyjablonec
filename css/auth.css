@@ -5,6 +5,31 @@
     display: flex;
     align-items: center;
     gap: 0.75rem;
+    opacity: 0;
+    visibility: hidden;
+    /* Hidden by default to prevent flicker */
+    transition: opacity 0.3s ease-in-out, visibility 0.3s;
+}
+
+#auth-container.auth-visible {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+    #auth-container {
+        display: flex !important;
+        gap: 0.25rem;
+        /* Tighter gap */
+        flex-shrink: 0;
+        visibility: hidden;
+        /* Ensure default hidden matches desktop but responsive */
+    }
+
+    #auth-container.auth-visible {
+        visibility: visible;
+    }
 }
 
 .auth-btn {

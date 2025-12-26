@@ -568,15 +568,15 @@ footer {
     }
 
     .nav-links>li>a {
-        font-size: 0.95rem;
-        /* Slightly smaller for compactness */
+        font-size: 0.9rem;
+        /* Smaller font */
         font-weight: 500;
         margin: 0;
         display: block;
         color: var(--text-color);
         width: 100%;
-        padding: 0.6rem 1rem;
-        /* Reduced padding */
+        padding: 0.5rem 0.75rem;
+        /* Even more compact */
         transition: background 0.2s;
     }
 
@@ -593,7 +593,7 @@ footer {
     }
 
     .nav-links.active .dropdown>a {
-        font-size: 0.95rem;
+        font-size: 0.9rem;
         font-weight: 600;
         color: var(--primary-color);
         margin: 0;
@@ -601,7 +601,7 @@ footer {
         text-transform: none;
         letter-spacing: normal;
         border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-        padding: 0.6rem 1rem;
+        padding: 0.5rem 0.75rem;
         background: rgba(212, 175, 55, 0.05);
     }
 
@@ -996,6 +996,13 @@ footer {
     /* Extra small screens */
     .section-title {
         font-size: 1.5rem;
+    }
+
+    .logo {
+        font-size: 1.1rem;
+        /* Smaller logo text */
+        gap: 0.35rem;
+        /* Tighter icon gap */
     }
 
     .hero-content h1 {
