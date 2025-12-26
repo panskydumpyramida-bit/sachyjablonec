@@ -257,6 +257,31 @@ const ChessDB = {
             this.moves = game.moves ? game.moves.split(' ').filter(m => m) : [];
             this.currentMoveIndex = 0;
 
+            // Auto-switch tree color to match the game perspective
+            if (this.currentPlayer) {
+                const searchName = this.currentPlayer.toLowerCase();
+                const whiteName = (game.whitePlayer || '').toLowerCase();
+                const blackName = (game.blackPlayer || '').toLowerCase();
+
+                let detectedColor = null;
+                // Check exact matches or inclusion
+                if (whiteName.includes(searchName)) detectedColor = 'white';
+                else if (blackName.includes(searchName)) detectedColor = 'black';
+
+                // If we found a color and it differs from current (except if current is 'both' maybe? No, be specific)
+                if (detectedColor && detectedColor !== this.currentColor) {
+                    this.currentColor = detectedColor;
+
+                    // Update UI buttons
+                    document.querySelectorAll('.filter-btn').forEach(btn => {
+                        btn.classList.toggle('active', btn.dataset.color === detectedColor);
+                    });
+
+                    // Reload tree
+                    await this.loadOpeningTree();
+                }
+            }
+
             // Initialize chess.js
             this.chessGame = new Chess();
 
@@ -357,13 +382,38 @@ const ChessDB = {
     },
 
     updateBoardPosition() {
-        // Reset chess.js and replay moves up to currentMoveIndex
-        this.chessGame = new Chess();
-        for (let i = 0; i < this.currentMoveIndex && i < this.moves.length; i++) {
-            try {
-                this.chessGame.move(this.moves[i]);
-            } catch (e) {
-                console.warn('Invalid move:', this.moves[i]);
+        const targetIdx = this.currentMoveIndex;
+
+        // Ensure chessGame exists
+        if (!this.chessGame) this.chessGame = new Chess();
+
+        const currentIdx = this.chessGame.history().length;
+
+        // Optimization: Use incremental updates instead of full replay
+        try {
+            if (currentIdx < targetIdx) {
+                // Forward: Apply missing moves
+                for (let i = currentIdx; i < targetIdx; i++) {
+                    this.chessGame.move(this.moves[i]);
+                }
+            } else if (currentIdx > targetIdx) {
+                // Backward: Undo moves or reset if too far
+                if (currentIdx - targetIdx > 20) {
+                    // If backtracking a lot, faster to reset
+                    this.chessGame = new Chess();
+                    for (let i = 0; i < targetIdx; i++) this.chessGame.move(this.moves[i]);
+                } else {
+                    while (this.chessGame.history().length > targetIdx) {
+                        this.chessGame.undo();
+                    }
+                }
+            }
+        } catch (e) {
+            console.warn('Move error, resetting board:', e);
+            // Fallback to full reset on error
+            this.chessGame = new Chess();
+            for (let i = 0; i < targetIdx && i < this.moves.length; i++) {
+                try { this.chessGame.move(this.moves[i]); } catch (_) { }
             }
         }
 
@@ -375,6 +425,11 @@ const ChessDB = {
         const movesPanel = document.getElementById('movesPanel');
         if (movesPanel) {
             movesPanel.innerHTML = this.renderMovesList();
+            // Scroll to active move
+            const activeMove = movesPanel.querySelector('.move.active');
+            if (activeMove) {
+                activeMove.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
         }
 
         // Sync tree to current position
