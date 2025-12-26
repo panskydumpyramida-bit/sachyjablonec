@@ -91,6 +91,13 @@ const ChessDB = {
             }
         });
 
+        // Resize board on window resize
+        window.addEventListener('resize', () => {
+            if (this.board) {
+                this.board.resize();
+            }
+        });
+
         // Color filters
         document.querySelectorAll('.filter-btn[data-color]').forEach(btn => {
             btn.addEventListener('click', () => {
@@ -310,6 +317,11 @@ const ChessDB = {
         this.currentMoveIndex = 0;
         this.chessGame = new Chess();
         this.updateBoardPosition();
+
+        // Force resize after short delay to ensure correct rendering on mobile
+        setTimeout(() => {
+            if (this.board) this.board.resize();
+        }, 100);
     },
 
     renderMovesList() {
