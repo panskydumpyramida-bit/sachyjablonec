@@ -1,0 +1,236 @@
+/**
+ * Blicak Tournament Page Styles
+ * Extracted from inline styles in blicak.html
+ * Created: December 2024
+ */
+
+/* ============================================
+   REGISTRATION FORM
+   ============================================ */
+
+.registration-form {
+    background-color: var(--card-bg);
+    padding: 2rem;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    max-width: 600px;
+    margin: 2rem auto;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    color: var(--text-color);
+    font-weight: 500;
+}
+
+.form-group input {
+    width: 100%;
+    padding: 0.8rem;
+    border-radius: 6px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    background-color: rgba(0, 0, 0, 0.2);
+    color: var(--text-color);
+    transition: all 0.3s ease;
+}
+
+.form-group input:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 2px rgba(212, 175, 55, 0.2);
+}
+
+.submit-btn {
+    width: 100%;
+    padding: 1rem;
+    background-color: var(--primary-color);
+    color: #1a1a1a;
+    border: none;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.submit-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(212, 175, 55, 0.3);
+}
+
+/* ============================================
+   PROPOSITION CARDS
+   ============================================ */
+
+.proposition-details {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2rem;
+    margin: 2rem 0;
+}
+
+.prop-card {
+    background-color: rgba(255, 255, 255, 0.03);
+    padding: 1.5rem;
+    border-radius: 8px;
+    border-left: 3px solid var(--primary-color);
+}
+
+.prop-card h3 {
+    color: var(--primary-color);
+    margin-bottom: 0.5rem;
+    font-size: 1.1rem;
+}
+
+/* ============================================
+   PODIUM CARDS
+   ============================================ */
+
+.podium-card {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    position: relative;
+    overflow: hidden;
+    cursor: pointer;
+}
+
+/* Shine effect */
+.podium-card::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 50%;
+    height: 100%;
+    background: linear-gradient(to right, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 0.4) 50%, rgba(255, 255, 255, 0) 100%);
+    transform: skewX(-25deg);
+    z-index: 2;
+    pointer-events: none;
+    transition: none;
+}
+
+.podium-card:hover::after {
+    left: 200%;
+    transition: left 0.7s ease-in-out;
+}
+
+/* Scale/Lift adjustments */
+.podium-card:not(.first-place):hover {
+    transform: translateY(-8px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5);
+    z-index: 10;
+}
+
+.podium-card.first-place:hover {
+    transform: translateY(-1.5rem) scale(1.02);
+    box-shadow: 0 15px 40px rgba(212, 175, 55, 0.4) !important;
+    z-index: 10;
+}
+
+/* ============================================
+   HERO SECTION OVERRIDE
+   ============================================ */
+
+@media (min-width: 769px) {
+    .hero.small-hero {
+        background-position: center 15% !important;
+    }
+}
+
+/* ============================================
+   PARTICIPANTS LIST
+   ============================================ */
+
+details[open] summary i.fa-chevron-down {
+    transform: rotate(180deg);
+}
+
+.participant-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    font-size: 0.95rem;
+}
+
+.participant-item:last-child {
+    border-bottom: none;
+}
+
+.participant-item.gold-highlight {
+    color: #d4af37;
+    font-weight: bold;
+    background: linear-gradient(90deg, transparent, rgba(212, 175, 55, 0.1), transparent);
+}
+
+.p-year {
+    color: var(--text-muted);
+    font-size: 0.85em;
+}
+
+.gold-highlight .p-year {
+    color: rgba(212, 175, 55, 0.7);
+}
+
+/* ============================================
+   PODIUM MOBILE STYLES
+   ============================================ */
+
+@media (max-width: 768px) {
+    .podium-card {
+        min-width: 0 !important;
+        padding: 0.5rem !important;
+        border-radius: 8px !important;
+        min-height: 180px !important;
+    }
+
+    .podium-card.first-place {
+        min-height: 210px !important;
+    }
+
+    .podium-club {
+        display: none !important;
+    }
+
+    .podium-name {
+        font-size: 0.9rem !important;
+        line-height: 1.1;
+        margin-bottom: 0.2rem !important;
+    }
+
+    .podium-points {
+        font-size: 1.2rem !important;
+        margin-top: 0.5rem !important;
+    }
+
+    .podium-rank {
+        font-size: 1.5rem !important;
+    }
+}
+
+/* ============================================
+   STANDINGS TABLE
+   ============================================ */
+
+details[open] summary i.fa-chevron-right {
+    transform: rotate(90deg);
+}
+
+details summary::-webkit-details-marker {
+    display: none;
+}
+
+@media (max-width: 600px) {
+
+    .standings-club,
+    .standings-elo {
+        display: none !important;
+    }
+
+    .standings-table {
+        font-size: 0.85rem !important;
+    }
+}
