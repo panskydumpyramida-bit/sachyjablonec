@@ -237,7 +237,7 @@ const ChessDB = {
     },
 
     // ==================== GAME VIEWER ====================
-    async openGame(id) {
+    async openGame(id, targetMoveIndex = 0) {
         // Mark active
         document.querySelectorAll('.game-row').forEach(r => r.classList.remove('active'));
         document.querySelector(`.game-row[data-id="${id}"]`)?.classList.add('active');
@@ -255,7 +255,7 @@ const ChessDB = {
 
             this.currentGame = game;
             this.moves = game.moves ? game.moves.split(' ').filter(m => m) : [];
-            this.currentMoveIndex = 0;
+            this.currentMoveIndex = targetMoveIndex;
 
             // Auto-switch tree color to match the game perspective
             if (this.currentPlayer) {
@@ -285,7 +285,7 @@ const ChessDB = {
             // Initialize chess.js
             this.chessGame = new Chess();
 
-            this.renderGameViewer(game);
+            this.renderGameViewer(game, targetMoveIndex);
             document.getElementById('gameTitle').textContent = `${game.whitePlayer} - ${game.blackPlayer}`;
 
             // Update tree to starting position
@@ -296,7 +296,7 @@ const ChessDB = {
         }
     },
 
-    renderGameViewer(game) {
+    renderGameViewer(game, targetMoveIndex = 0) {
         const content = document.getElementById('gameContent');
         const date = game.date ? new Date(game.date).toLocaleDateString('cs-CZ') : '—';
 
@@ -324,10 +324,10 @@ const ChessDB = {
             </div>
         `;
 
-        this.initBoard();
+        this.initBoard(targetMoveIndex);
     },
 
-    initBoard() {
+    initBoard(targetMoveIndex = 0) {
         if (this.board) {
             this.board.destroy();
         }
@@ -337,7 +337,7 @@ const ChessDB = {
             pieceTheme: 'https://chessboardjs.com/img/chesspieces/wikipedia/{piece}.png'
         });
 
-        this.currentMoveIndex = 0;
+        this.currentMoveIndex = targetMoveIndex;
         this.chessGame = new Chess();
         this.updateBoardPosition();
 
@@ -628,12 +628,13 @@ const ChessDB = {
             return;
         }
 
-        // Otherwise, open the game with this move
+        // Otherwise, open the game with this move (target index = current + 1)
         if (gameId) {
-            this.openGame(gameId);
+            this.openGame(gameId, this.currentMoveIndex + 1);
         }
     }
 };
 
 // Initialize
 document.addEventListener('DOMContentLoaded', () => ChessDB.init());
+
