@@ -94,7 +94,8 @@ if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
                     email: email,
                     googleId: googleId,
                     username: tempUsername,
-                    role: 'USER'
+                    // Temporary: Grant MEMBER access for testing until End of Jan 2026
+                    role: (new Date() < new Date('2026-02-01')) ? 'MEMBER' : 'USER'
                     // passwordHash is null for OAuth users
                 }
             });
