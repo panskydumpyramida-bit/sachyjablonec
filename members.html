@@ -311,6 +311,10 @@
         }
 
         @media (max-width: 480px) {
+            .hub-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
             .hub-tile i {
                 font-size: 2.5rem;
             }
@@ -377,7 +381,7 @@
                         </div>
                         <a href="/chess-database" class="hub-tile tile-database">
                             <i class="fa-solid fa-database"></i>
-                            <span>Příprava</span>
+                            <span>Databáze</span>
                         </a>
                         <div class="hub-tile tile-wishlist" onclick="showSection('wishlist')">
                             <i class="fa-solid fa-wand-magic-sparkles"></i>
