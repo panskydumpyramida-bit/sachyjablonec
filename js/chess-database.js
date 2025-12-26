@@ -21,6 +21,9 @@ const ChessDB = {
     // Opening tree state
     treeData: null,
 
+    // Autoplay state
+    autoplayInterval: null,
+
     getToken() {
         return localStorage.getItem('auth_token') || sessionStorage.getItem('auth_token');
     },
@@ -269,6 +272,7 @@ const ChessDB = {
                     <div class="board-controls">
                         <button onclick="ChessDB.goToStart()" title="Na začátek"><i class="fa-solid fa-backward-fast"></i></button>
                         <button onclick="ChessDB.prevMove()" title="Předchozí"><i class="fa-solid fa-chevron-left"></i></button>
+                        <button id="autoplayBtn" onclick="ChessDB.toggleAutoplay()" title="Autoplay"><i class="fa-solid fa-play"></i></button>
                         <button onclick="ChessDB.nextMove()" title="Další"><i class="fa-solid fa-chevron-right"></i></button>
                         <button onclick="ChessDB.goToEnd()" title="Na konec"><i class="fa-solid fa-forward-fast"></i></button>
                     </div>
@@ -367,6 +371,42 @@ const ChessDB = {
     goToEnd() {
         this.currentMoveIndex = this.moves.length;
         this.updateBoardPosition();
+        this.stopAutoplay();
+    },
+
+    toggleAutoplay() {
+        if (this.autoplayInterval) {
+            this.stopAutoplay();
+        } else {
+            this.startAutoplay();
+        }
+    },
+
+    startAutoplay() {
+        if (this.currentMoveIndex >= this.moves.length) {
+            this.goToStart();
+        }
+
+        const btn = document.getElementById('autoplayBtn');
+        if (btn) btn.innerHTML = '<i class="fa-solid fa-pause"></i>';
+
+        this.autoplayInterval = setInterval(() => {
+            if (this.currentMoveIndex < this.moves.length) {
+                this.currentMoveIndex++;
+                this.updateBoardPosition();
+            } else {
+                this.stopAutoplay();
+            }
+        }, 1000);
+    },
+
+    stopAutoplay() {
+        if (this.autoplayInterval) {
+            clearInterval(this.autoplayInterval);
+            this.autoplayInterval = null;
+        }
+        const btn = document.getElementById('autoplayBtn');
+        if (btn) btn.innerHTML = '<i class="fa-solid fa-play"></i>';
     },
 
     // ==================== OPENING TREE ====================
