@@ -572,7 +572,9 @@
                     });
                     if (res.ok) {
                         const user = await res.json();
-                        if (user.role === 'MEMBER' || user.role === 'ADMIN' || user.role === 'SUPERADMIN') {
+                        // Temporary: Allow all users (including USER role) until Feb 2026
+                        const isTempAccess = new Date() < new Date('2026-02-01');
+                        if (isTempAccess || user.role === 'MEMBER' || user.role === 'ADMIN' || user.role === 'SUPERADMIN') {
                             document.getElementById('loginView').classList.add('hidden');
                             document.getElementById('hubView').classList.remove('hidden');
                             return;
