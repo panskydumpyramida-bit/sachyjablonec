@@ -1,4 +1,4 @@
-# Roadmap – Šachy Jablonec
+¨# Roadmap – Šachy Jablonec
 
 > **Poslední aktualizace:** 25. 12. 2025
 
@@ -86,19 +86,21 @@ Plán budoucího vývoje webu [sachyjablonec.cz](https://www.sachyjablonec.cz).
 
 | Problém | Soubor | Detail |
 |---------|--------|--------|
-| Monolitický server | `src/server.js` | 1500 řádků, inline scraping |
-| Obří admin modul | `js/admin/admin-news.js` | 78 KB |
-| Inline CSS/JS | `admin.html` | 2800 řádků |
+| ~~Monolitický server~~ | `src/server.js` | ✅ Sníženo z 1546 → 667 řádků (-57%) |
+| Obří admin modul | `js/admin/admin-news.js` | 43 KB (1163 řádků) - částečně refaktorováno |
+| ~~Inline CSS/JS~~ | `admin.html` | ✅ Sníženo z 1720 → 1455 řádků, CSS extrahováno |
 | Žádné testy | – | Riziko regrese |
 
 ### Plánované řešení
 
-- [ ] Rozdělit `server.js` do modulů:
-  - `src/services/scrapingService.js`
-  - `src/services/standingsService.js`
+- [x] Rozdělit `server.js` do modulů:
+  - ✅ `src/services/scrapingService.js` (~300 řádků)
+  - ✅ `src/services/standingsService.js` (~200 řádků)
 - [ ] Centralizovat helper funkce
-- [ ] Přesunout seeding do `src/utils/seed.js`
-- [ ] Sjednotit `game-viewer.js` a `game-viewer2.js`
+- [x] ~~Přesunout seeding do `src/utils/seed.js`~~ → Přidány exporty do existujícího souboru
+- [x] ~~Sjednotit `game-viewer.js` a `game-viewer2.js`~~ → `game-viewer.js` označen jako deprecated (nepoužívaný)
+
+
 
 ---
 

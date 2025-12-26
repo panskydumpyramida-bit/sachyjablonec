@@ -1,13 +1,8 @@
 import express from 'express';
 import fetch from 'node-fetch';
+import { clean } from '../utils/helpers.js';
 
 const router = express.Router();
-
-// Helper to clean HTML text
-const clean = (s) => {
-    if (!s) return '';
-    return s.replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ').trim();
-};
 
 router.get('/chess-results', async (req, res) => {
     const { url } = req.query;
@@ -39,11 +34,7 @@ router.get('/chess-results', async (req, res) => {
         // 1. Find the main table (often has class 'CRs1' or 'CRs2' or just big table)
         // We will iterate all rows and look for data-like patterns.
 
-        // Clean helper
-        const clean = (s) => {
-            if (!s) return '';
-            return s.replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ').trim();
-        };
+        // Using imported clean helper from utils/helpers.js
 
         const rowRegex = /<tr[^>]*>([\s\S]*?)<\/tr>/gi;
         let match;
