@@ -100,10 +100,31 @@
 
                 </div>
 
-                <!-- Latest Comment Widget Container - Reserved Space to prevent shift -->
+                <!-- Latest Comment Widget Container - Reserved Space with skeleton to prevent shift -->
                 <div id="latest-comment-widget" class="container"
-                    style="margin-bottom: 1.5rem; min-height: 64px; display: flex; align-items: center; justify-content: center;">
+                    style="margin-bottom: 1.5rem; min-height: 52px; display: flex; align-items: center; justify-content: center;">
+                    <!-- Skeleton placeholder - replaced when comment loads -->
+                    <div class="latest-comment-skeleton"
+                        style="display: flex; gap: 1rem; align-items: center; width: 100%; padding: 0.5rem 1rem; background: rgba(36, 36, 68, 0.5); border: 1px solid rgba(255,255,255,0.05); border-radius: 12px; opacity: 0.5;">
+                        <div
+                            style="width: 100px; height: 16px; background: linear-gradient(90deg, rgba(255,255,255,0.05) 25%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0.05) 75%); border-radius: 4px; animation: shimmer 1.5s infinite;">
+                        </div>
+                        <div
+                            style="flex: 1; height: 16px; background: linear-gradient(90deg, rgba(255,255,255,0.05) 25%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0.05) 75%); border-radius: 4px; animation: shimmer 1.5s infinite;">
+                        </div>
+                    </div>
                 </div>
+                <style>
+                    @keyframes shimmer {
+                        0% {
+                            background-position: -200px 0;
+                        }
+
+                        100% {
+                            background-position: 200px 0;
+                        }
+                    }
+                </style>
 
                 <style>
                     .rotator-inner.rotated {
