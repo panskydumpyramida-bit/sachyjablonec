@@ -15,10 +15,10 @@ DROP INDEX "comments_news_id_idx";
 ALTER TABLE "Message" ADD COLUMN     "type" TEXT NOT NULL DEFAULT 'chat';
 
 -- AlterTable
-ALTER TABLE "news" ADD COLUMN     "author_name" TEXT,
-ADD COLUMN     "co_author_id" INTEGER,
-ADD COLUMN     "co_author_name" TEXT,
-ADD COLUMN     "view_count" INTEGER NOT NULL DEFAULT 0;
+ALTER TABLE "news" ADD COLUMN IF NOT EXISTS "author_name" TEXT,
+ADD COLUMN IF NOT EXISTS "co_author_id" INTEGER,
+ADD COLUMN IF NOT EXISTS "co_author_name" TEXT,
+ADD COLUMN IF NOT EXISTS "view_count" INTEGER NOT NULL DEFAULT 0;
 
 -- CreateTable
 CREATE TABLE "chess_games" (
