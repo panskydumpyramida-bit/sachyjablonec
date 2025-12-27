@@ -151,41 +151,41 @@ Plán budoucího vývoje webu [sachyjablonec.cz](https://www.sachyjablonec.cz).
 <details open>
 <summary><strong>Prosinec 2025</strong></summary>
 
-#### 27. 12. 2025 – Homepage Redesign
-- ✅ **3D Rotující dlaždice**: Implementace otáčecí karty "Rozpis zápasů" (zobrazuje nejbližší zápasy A-D)
-- ✅ **Homepage Layout**: Obnovení 2x2 navigační mřížky, nový 3D rotující widget pro zápasy
-- ✅ **Tech Stack**: Refactoring `calendar.html` JS do externího modulu `js/calendar.js` (oprava Unexpected EOF)
-- ✅ **Interaktivita**: Oprava deep linkingu (auto-expand detailu zápasu), fixní layout widgetu (žádné poskakování)
-- ✅ **Visual Polish**: Tmavší dlaždice (dřevěný styl), zalomení nadpisu v hlavičce
+#### 27. 12. 2025 – Homepage & Kalendář
+**Homepage**
+- ✅ 3D rotující dlaždice pro rozpis zápasů (A/B/C/D)
+- ✅ Obnovení 2x2 navigační mřížky (šachovnicový vzor)
+- ✅ Zalomení nadpisu "TJ Bižuterie Jablonec" na dva řádky
+- ✅ Tmavší dlaždice (dřevěný styl)
+- ✅ Fixní widget prostor (bez poskakování)
 
-#### 26. 12. 2025 – Admin Refactoring & Blicák
-- ✅ **Admin Panel**: Refactoring `admin-news.js` (modularizace) - probíhá
-- ✅ **Blicák**: Nasazení fotogalerie s paginací a externími fotkami (WEBP)
+**Kalendář zápasů**
+- ✅ Refactoring JS do `js/calendar.js` (oprava Unexpected EOF)
+- ✅ Deep linking – auto-scroll a zvýraznění zápasu
+- ✅ Auto-expand detailu zápasu při deep linku
+- ✅ Oprava escapování uvozovek v názvech týmů ("B", "C")
+- ✅ "Volno" zápasy nejsou klikatelné
+- ✅ Zmenšení tlačítka "Turnaje" pro mobilní zobrazení
 
-#### 23. 12. 2025 – Opravy a vylepšení
-- ✅ Google Account Linking – propojení účtu bez zadávání jména
-- ✅ Graceful Shutdown – čisté ukončení serveru při deployi
-- ✅ Cache Busting – vynucení načtení nových verzí JS/CSS (`?v=4`)
-- ✅ UI/UX – odstranění A/B testu, lepší náhledy článků
-- ✅ Game Viewer – sjednocení vzhledu v sekci Soutěže družstev
+**Soupisky**
+- ✅ Přidána mapování pro mládežnické týmy (1. liga mládeže A, KPM)
+- ✅ Oprava escapování pro správné zobrazení soupisek
 
-#### 22. 12. 2025 – Google OAuth & Komentáře
-- ✅ Passport.js konfigurace s Google OAuth 2.0
-- ✅ Backend OAuth routes (`/api/auth/google`, callback, set-username)
-- ✅ Frontend tlačítko "Přihlásit přes Google"
-- ✅ Komentáře pod články (CRUD, vnořené odpovědi, moderace)
+#### 26. 12. 2025 – Admin & Blicák
+- ✅ Admin panel – modularizace `admin-news.js`
+- ✅ Blicák fotogalerie s paginací (WEBP)
 
-#### 22. 12. 2025 – Uživatelský systém
-- ✅ Role MEMBER (hierarchie: USER < MEMBER < ADMIN < SUPERADMIN)
-- ✅ Stránka nastavení účtu (`/account.html`)
-- ✅ Editace profilu (jméno, oddíl, přepínač zobrazení)
-- ✅ Role badges v user menu
+#### 23. 12. 2025 – Opravy
+- ✅ Google Account Linking
+- ✅ Graceful shutdown serveru
+- ✅ Cache busting (`?v=4`)
+- ✅ Game Viewer sjednocení
 
-#### Bezpečnost
-- ✅ Endpoint `/api/auth/fix-admins` zabezpečen
-- ✅ Default role změněna na USER
-- ✅ RBAC middleware implementován
-- ✅ Rate limiting na auth endpointy
+#### 22. 12. 2025 – Auth & Komentáře
+- ✅ Google OAuth 2.0 (Passport.js)
+- ✅ Komentáře pod články (CRUD, odpovědi, moderace)
+- ✅ Role MEMBER a účet nastavení
+- ✅ RBAC middleware, rate limiting
 
 </details>
 
