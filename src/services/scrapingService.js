@@ -146,89 +146,169 @@ export async function scrapeMatchDetails(compUrl, round, homeTeam, awayTeam) {
  * @param {number} teamSnr - Team serial number
  * @returns {Promise<Array>} Array of player objects
  */
+/**
+ * Scrape team roster with individual player results
+ * Fetches both art=8 (complete roster) and art=1 (results)
+ * 
+ * @param {string} compUrl - Competition URL
+ * @param {number} teamSnr - Team serial number
+ * @returns {Promise<Array>} Array of player objects
+ */
 export async function scrapeTeamRoster(compUrl, teamSnr) {
-    let rosterUrl = compUrl
+    const baseUrl = compUrl
         .replace(/&snr=\d+/, '')
-        .replace(/&SNode=[^&]+/, '');
+        .replace(/&SNode=[^&]+/, '')
+        .replace(/art=\d+/, '');
 
-    if (rosterUrl.includes('art=')) {
-        rosterUrl = rosterUrl.replace(/art=\d+/, 'art=1');
-    } else {
-        rosterUrl += '&art=1';
-    }
-    rosterUrl += `&snr=${teamSnr}`;
+    const url8 = `${baseUrl}&art=8&snr=${teamSnr}`; // Complete roster
+    const url1 = `${baseUrl}&art=1&snr=${teamSnr}`; // Results
 
-    console.log(`[ScrapingService] Scraping roster: ${rosterUrl}`);
+    console.log(`[ScrapingService] Scraping roster merge: ${url8} + ${url1}`);
 
     try {
-        const response = await fetchWithHeaders(rosterUrl);
-        const html = await response.text();
+        const [res8, res1] = await Promise.all([
+            fetchWithHeaders(url8).then(r => r.text()).catch(e => { console.error('Error fetching art=8', e); return ''; }),
+            fetchWithHeaders(url1).then(r => r.text()).catch(e => { console.error('Error fetching art=1', e); return ''; })
+        ]);
 
-        const players = [];
-        const rows = html.split('<tr');
+        const allPlayers = parseArt8(res8);
+        const playerResults = parseArt1(res1);
 
-        for (const row of rows) {
-            if (!row.match(/class="CRg[12]/)) continue;
+        // Merge: Base is allPlayers (art=8)
+        const roster = allPlayers.map(p => {
+            const stats = playerResults.find(r => r.rank === p.rank || r.name === p.name) || {
+                played: 0,
+                points: 0,
+                perf: null,
+                score: '-'
+            };
+            return {
+                ...p,
+                ...stats,
+                score: stats.played > 0 ? stats.score : '-'
+            };
+        });
 
-            const cells = row.split('</td>');
-            if (cells.length < 6) continue;
-
-            // Extract rank
-            const rankMatch = cells[0]?.match(/<td class="CRc">(\d+)/);
-            const rank = rankMatch ? parseInt(rankMatch[1]) : null;
-
-            // Extract name
-            const nameMatch = row.match(/<a[^>]*class="CRdb"[^>]*>([^<]+)</i);
-            const name = nameMatch ? clean(nameMatch[1]) : null;
-
-            // Extract ELO
-            const eloMatch = row.match(/<td class="CRr">(\d+)/);
-            const elo = eloMatch ? parseInt(eloMatch[1]) : null;
-
-            // Extract Performance
-            const allCrrMatches = row.match(/<td class="CRr">(\d+)/g) || [];
-            let perf = null;
-            if (allCrrMatches.length >= 2) {
-                const lastCrr = allCrrMatches[allCrrMatches.length - 1];
-                const perfMatch = lastCrr.match(/(\d+)/);
-                perf = perfMatch ? parseInt(perfMatch[1]) : null;
-            }
-
-            // Count results
-            let played = 0;
-            let points = 0;
-            const fideIndex = row.indexOf('ratings.fide.com');
-            if (fideIndex > -1) {
-                const afterFide = row.substring(fideIndex);
-                const resultCells = afterFide.match(/<td class="CRc">([^<]*)/g) || [];
-                const roundResultCells = resultCells.slice(0, -2);
-
-                for (const cell of roundResultCells) {
-                    const val = cell.replace(/<td class="CRc">/, '').trim();
-                    if (val === '1') { played++; points += 1; }
-                    else if (val === '0') { played++; }
-                    else if (val === '½' || val === '&frac12;') { played++; points += 0.5; }
-                }
-            }
-
-            if (name && rank) {
-                players.push({
-                    rank,
-                    name,
-                    elo: elo || null,
-                    perf: perf || null,
-                    played,
-                    points,
-                    score: played > 0 ? `${points}/${played}` : '-'
-                });
-            }
+        // Fallback: If art=8 failed but art=1 worked, use art=1
+        if (roster.length === 0 && playerResults.length > 0) {
+            return playerResults;
         }
 
-        return players;
+        console.log(`[ScrapingService] Merged ${roster.length} players (All: ${allPlayers.length}, Active: ${playerResults.length})`);
+        return roster;
     } catch (e) {
         console.error('[ScrapingService] Error scraping roster:', e.message);
         return [];
     }
+}
+
+function parseArt8(html) {
+    const players = [];
+    if (!html) return players;
+
+    const rows = html.split('<tr');
+    for (const row of rows) {
+        if (!row.match(/class="CRg[12](?!b)[\s"]/)) continue;
+        const cells = row.split('</td>');
+        if (cells.length < 3) continue;
+
+        // Rank
+        const rankMatch = cells[0]?.match(/<td[^>]*>(\d+)/);
+        const rank = rankMatch ? parseInt(rankMatch[1]) : null;
+
+        // Name
+        let name = null;
+        const nameMatch = row.match(/<a[^>]*class="CRdb"[^>]*>([^<]+)</i);
+        if (nameMatch) {
+            name = clean(nameMatch[1]);
+        } else {
+            const altNameMatch = row.match(/<a[^>]*>([^<]+)<\/a>/);
+            if (altNameMatch) name = clean(altNameMatch[1]);
+        }
+
+        // Elo
+        // Usually in later columns for art=8. Search for CRr class or just look relative
+        // art=8 cols: Rank, Name, Title, Fed, Elo, EloNat, B-day...
+        // Let's regex for ELODigits
+        const eloMatches = row.match(/<td[^>]*>(\d{3,4})<\/td>/g);
+        let elo = null;
+        if (eloMatches && eloMatches.length > 0) {
+            // Take last or specific index? Usually Elo is first 4-digit number after name
+            // Simple hack: extract all numbers from cells, pick first > 1000 and < 3000
+            const nums = row.match(/>(\d{3,4})</g)?.map(s => parseInt(s.replace(/[><]/g, ''))) || [];
+            elo = nums.find(n => n > 1000 && n < 3000) || null;
+        }
+
+        if (name && rank) {
+            players.push({ rank, name, elo });
+        }
+    }
+    return players;
+}
+
+function parseArt1(html) {
+    const players = [];
+    if (!html) return players;
+
+    const rows = html.split('<tr');
+    for (const row of rows) {
+        if (!row.match(/class="CRg[12](?!b)[\s"]/)) continue;
+        const cells = row.split('</td>');
+        if (cells.length < 4) continue;
+
+        const rankMatch = cells[0]?.match(/<td class="CRc">(\d+)/);
+        const rank = rankMatch ? parseInt(rankMatch[1]) : null;
+
+        let name = null;
+        const nameMatch = row.match(/<a[^>]*class="CRdb"[^>]*>([^<]+)</i);
+        if (nameMatch) name = clean(nameMatch[1]);
+        else {
+            const altNameMatch = row.match(/<a[^>]*>([^<]+)<\/a>/);
+            if (altNameMatch) name = clean(altNameMatch[1]);
+        }
+
+        // Extract ELO, Perf (same as original logic)
+        const allCrrMatches = row.match(/<td class="CRr">(\d+)/g) || [];
+        // Elo is usually first CRr, Perf is last CRr
+        let elo = null;
+        let perf = null;
+        if (allCrrMatches.length > 0) {
+            const m = allCrrMatches[0].match(/(\d+)/);
+            if (m) elo = parseInt(m[1]);
+        }
+        if (allCrrMatches.length >= 2) {
+            const m = allCrrMatches[allCrrMatches.length - 1].match(/(\d+)/);
+            if (m) perf = parseInt(m[1]);
+        }
+
+        // Count results
+        let played = 0;
+        let points = 0;
+
+        // Count games like before
+        const allCrcCells = row.match(/<td class="CRc">([^<]*)<\/td>/g) || [];
+        // Skip first cell (rank) and analyze the rest
+        for (let i = 1; i < allCrcCells.length - 2; i++) {
+            const val = allCrcCells[i].replace(/<td class="CRc">/, '').replace(/<\/td>/, '').trim();
+            if (val === '1') { played++; points += 1; }
+            else if (val === '0') { played++; }
+            else if (val === '½' || val === '&frac12;' || val === '0.5' || val === '0,5') { played++; points += 0.5; }
+            // Some results like 1K, 0K, - - ignored
+        }
+
+        if (name && rank) {
+            players.push({
+                rank,
+                name,
+                elo,
+                perf,
+                played,
+                points,
+                score: `${points}/${played}`
+            });
+        }
+    }
+    return players;
 }
 
 /**

@@ -21,13 +21,6 @@
     <header id="global-header"></header>
 
     <main>
-        <style>
-            @media (min-width: 769px) {
-                .hero.small-hero {
-                    background-position: center 15% !important;
-                }
-            }
-        </style>
         <section class="hero small-hero"
             style="background: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), url('images/turnaj_bg.jpg'); background-size: cover; background-position: center;">
             <div class="container hero-content"
@@ -257,39 +250,6 @@
                     </div>
                 </details>
             </div>
-
-            <style>
-                details[open] summary i.fa-chevron-down {
-                    transform: rotate(180deg);
-                }
-
-                .participant-item {
-                    display: flex;
-                    justify-content: space-between;
-                    padding: 0.5rem 0;
-                    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-                    font-size: 0.95rem;
-                }
-
-                .participant-item:last-child {
-                    border-bottom: none;
-                }
-
-                .participant-item.gold-highlight {
-                    color: #d4af37;
-                    font-weight: bold;
-                    background: linear-gradient(90deg, transparent, rgba(212, 175, 55, 0.1), transparent);
-                }
-
-                .p-year {
-                    color: var(--text-muted);
-                    font-size: 0.85em;
-                }
-
-                .gold-highlight .p-year {
-                    color: rgba(212, 175, 55, 0.7);
-                }
-            </style>
 
             <div style="max-width: 600px; margin: 2rem auto;">
                 <details id="crDetails" open
@@ -624,49 +584,6 @@
                     </div>
                 </div>
             </div>
-
-            <style>
-                @media (max-width: 768px) {
-                    /* On mobile, allow podium items to shrink below min-width to fit 3 in a row */
-                    .podium-card {
-                        min-width: 0 !important;
-                        padding: 0.5rem !important;
-                        border-radius: 8px !important;
-                        min-height: 180px !important; /* Smaller height for mobile */
-                    }
-                    
-                    /* Adjust heights for hierarchy on mobile */
-                    .podium-card.first-place {
-                        min-height: 210px !important;
-                    }
-                    
-                    /* Hide non-essential info on mobile to save space */
-                    .podium-card .club-info, 
-                    .podium-card .points-info {
-                         /* User said: "nemusi tam byt team a elo" -> Hide club */
-                         /* But maybe keep points? User said "team a elo". Points is crucial for result. */
-                         /* Let's hide Club. Elo is not there anyway in podium view (was never there). */
-                    }
-                    .podium-club {
-                        display: none !important;
-                    }
-                    
-                    .podium-name {
-                         font-size: 0.9rem !important;
-                         line-height: 1.1;
-                         margin-bottom: 0.2rem !important;
-                    }
-                    
-                    .podium-points {
-                        font-size: 1.2rem !important;
-                        margin-top: 0.5rem !important;
-                    }
-
-                    .podium-rank {
-                        font-size: 1.5rem !important;
-                    }
-                }
-            </style>
                     </div>
 
                 </div>
@@ -713,23 +630,6 @@
                         </table>
                             </div>
                         </details>
-                        <style>
-                            details[open] summary i.fa-chevron-right {
-                                transform: rotate(90deg);
-                            }
-                            details summary::-webkit-details-marker {
-                                display: none;
-                            }
-                            @media (max-width: 600px) {
-                                .standings-club,
-                                .standings-elo {
-                                    display: none !important;
-                                }
-                                .standings-table {
-                                    font-size: 0.85rem !important;
-                                }
-                            }
-                        </style>
                     </div>
 
                     <div style="margin-top: 2rem; text-align: center;">
