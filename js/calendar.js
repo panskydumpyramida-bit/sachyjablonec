@@ -637,7 +637,8 @@ async function toggleMatchDetails(competition, round, team1, team2, element, exp
 
         const matchData = allMatchesData.find(m =>
             m.competition === competition &&
-            m.round === round &&
+            // Loose equality for round (json is number, attr is string)
+            m.round == round &&
             ((fuzzyMatch(m.myTeam, team1) && fuzzyMatch(m.opponent, team2)) ||
                 (fuzzyMatch(m.myTeam, team2) && fuzzyMatch(m.opponent, team1)))
         );
