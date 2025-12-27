@@ -1,9 +1,7 @@
 /**
  * Calendar Logic
- * Moved from inline script in calendar.html
  */
-
-console.log("Calendar JS v16 loaded");
+console.log("Calendar JS loaded");
 
 let allMatchesData = [];
 let showingPast = true; // Show past matches by default
