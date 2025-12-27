@@ -184,7 +184,49 @@
             document.getElementById('articleTitle').textContent = article.title;
             document.getElementById('articleDate').innerHTML = `<i class="fa-regular fa-calendar"></i> ${new Date(article.publishedDate).toLocaleDateString('cs-CZ')}`;
             document.getElementById('articleCategory').innerHTML = `<i class="fa-solid fa-tag"></i> ${article.category}`;
+
+            // Add Author and View Count
+            const authorMeta = document.createElement('span');
+            authorMeta.style.display = 'flex';
+            authorMeta.style.alignItems = 'center';
+            authorMeta.style.gap = '0.5rem';
+
+            let authorName = article.authorName; // Custom name first
+            if (!authorName && article.author) {
+                authorName = (article.author.useRealName && article.author.realName) ? article.author.realName : (article.author.username || 'Admin');
+            }
+
+            if (article.coAuthorName || article.coAuthor) {
+                let coAuthorName = article.coAuthorName;
+                if (!coAuthorName && article.coAuthor) {
+                    coAuthorName = (article.coAuthor.useRealName && article.coAuthor.realName) ? article.coAuthor.realName : (article.coAuthor.username);
+                }
+                if (coAuthorName) authorName += ` a ${coAuthorName}`;
+            }
+
+            if (authorName) {
+                authorMeta.innerHTML = `<i class="fa-solid fa-user-pen"></i> ${authorName}`;
+                // Insert after category
+                document.getElementById('articleCategory').parentNode.appendChild(authorMeta);
+            }
+
+            // View Count
+            if (article.viewCount !== undefined) {
+                const viewMeta = document.createElement('span');
+                viewMeta.style.display = 'flex';
+                viewMeta.style.alignItems = 'center';
+                viewMeta.style.gap = '0.5rem';
+                viewMeta.title = 'Počet zobrazení';
+                viewMeta.innerHTML = `<i class="fa-regular fa-eye"></i> ${article.viewCount}`;
+                document.getElementById('articleCategory').parentNode.appendChild(viewMeta);
+            }
+
             document.getElementById('articleBody').innerHTML = article.content || '';
+
+            // Increment view count
+            try {
+                fetch(`${API_URL}/news/${article.id}/view`, { method: 'POST' }).catch(e => console.error('Failed to increment view', e));
+            } catch (e) { }
 
             // Set newsId for comments section
             document.getElementById('comments-section').dataset.newsId = article.id;

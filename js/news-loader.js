@@ -188,9 +188,32 @@ async function loadNews(options = {}) {
                 })()}
                     </div>
                     <div class="card-content">
-                        <span class="card-category">${escapeHtml(item.category)}${getGamesIndicator(item)}</span>
-                        <span class="card-date">${formatDate(item.publishedDate)}</span>
-                        <h3 class="card-title">${escapeHtml(item.title)}</h3>
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.25rem;">
+                            <span class="card-category" style="margin-bottom: 0;">${escapeHtml(item.category)}${getGamesIndicator(item)}</span>
+                            <span class="card-date" style="margin-bottom: 0; font-size: 0.8rem;">${formatDate(item.publishedDate)}</span>
+                        </div>
+                        
+                        <h3 class="card-title" style="margin-bottom: 0.25rem; line-height: 1.3;">${escapeHtml(item.title)}</h3>
+                        
+                        <!-- Author & Stats -->
+                        <div style="display: flex; gap: 1rem; color: var(--text-muted); font-size: 0.8rem; margin: 0 0 0.75rem 0; align-items: center; opacity: 0.8;">
+                            ${(() => {
+                    let author = item.authorName;
+                    if (!author && item.author) {
+                        author = (item.author.useRealName && item.author.realName) ? item.author.realName : (item.author.username || 'Admin');
+                    }
+                    if (item.coAuthorName || item.coAuthor) {
+                        let co = item.coAuthorName;
+                        if (!co && item.coAuthor) {
+                            co = (item.coAuthor.useRealName && item.coAuthor.realName) ? item.coAuthor.realName : item.coAuthor.username;
+                        }
+                        if (co) author += ` a ${co}`;
+                    }
+                    return author ? `<span><i class="fa-solid fa-user-pen" style="font-size: 0.8em;"></i> ${escapeHtml(author)}</span>` : '';
+                })()}
+                            ${item.viewCount !== undefined ? `<span title="Počet zobrazení"><i class="fa-regular fa-eye" style="font-size: 0.8em;"></i> ${item.viewCount}</span>` : ''}
+                        </div>
+
                         <p class="card-excerpt">${item.excerpt}</p>
                         ${getCommentsIndicator(item)}
                         <a href="${getArticleUrl(item)}" class="read-more" onclick="event.stopPropagation()">
