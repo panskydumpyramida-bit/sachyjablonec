@@ -1,5 +1,9 @@
--- AlterEnum
-ALTER TYPE "Role" ADD VALUE 'MEMBER';
+DO $$
+BEGIN
+    ALTER TYPE "Role" ADD VALUE 'MEMBER';
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
 
 -- DropIndex
 DROP INDEX "comments_author_id_idx";
