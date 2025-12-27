@@ -498,9 +498,15 @@ function generateMatchesHtml(matches, today) {
             !/^\d{2}:\d{2}$/.test(match.result); // Must NOT be just time (HH:MM)
 
         // Escape quotes for onclick handler
-        const safeTeam1 = team1.replace(/"/g, '&quot;');
-        const safeTeam2 = team2.replace(/"/g, '&quot;');
-        const safeComp = match.competition.replace(/"/g, '&quot;');
+        // We use &quot; for double quotes in HTML attributes
+        // But for JS strings inside onclick, we need to be careful.
+        // Best approach: Pass pre-calculated detailsId and raw values (escaped for HTML attribute)
+        const safeTeam1 = team1.replace(/"/g, '&quot;').replace(/'/g, "\\'");
+        const safeTeam2 = team2.replace(/"/g, '&quot;').replace(/'/g, "\\'");
+        const safeComp = match.competition.replace(/"/g, '&quot;').replace(/'/g, "\\'");
+
+        // Inline Details Container ID
+        const detailsId = `details-${match.competition.replace(/\s+/g, '-')}-${match.round}-${team1.replace(/\s+/g, '-')}`.replace(/[^a-zA-Z0-9-]/g, '');
 
         // Only show result if it's a valid score (not empty, not just colon)
         const isValidDisplayResult = match.result &&
@@ -510,13 +516,10 @@ function generateMatchesHtml(matches, today) {
             !/^\s*:\s*$/.test(match.result.trim());
 
         const resultHtml = hasResult
-            ? `<span class="match-result clickable" onclick="toggleMatchDetails('${safeComp}', '${match.round}', '${safeTeam1}', '${safeTeam2}', this)" 
+            ? `<span class="match-result clickable" onclick="toggleMatchDetails('${safeComp}', '${match.round}', '${safeTeam1}', '${safeTeam2}', this, '${detailsId}')" 
                    style="cursor: pointer; text-decoration: underline; text-decoration-style: dotted; text-underline-offset: 4px;" 
                    title="Zobrazit detailní výsledky">${match.result}</span>`
             : (isValidDisplayResult ? `<span class="match-result">${match.result}</span>` : '');
-
-        // Inline Details Container ID
-        const detailsId = `details-${match.competition.replace(/\s+/g, '-')}-${match.round}-${team1.replace(/\s+/g, '-')}`.replace(/[^a-zA-Z0-9-]/g, '');
 
         // Youth vs Adult styling
         const isYouth = match.category === 'youth';
@@ -588,7 +591,9 @@ function generateMatchesHtml(matches, today) {
 }
 
 // Inline Toggle Function
-async function toggleMatchDetails(competition, round, team1, team2, element) {
+async function toggleMatchDetails(competition, round, team1, team2, element, explicitDetailsId) {
+    console.log('toggleMatchDetails called', { competition, round, team1, team2, explicitDetailsId });
+
     // Auto-close roster details if open (Mutual Exclusion)
     if (element) {
         const matchCard = element.closest('.match-card') || element.closest('.card') || element.parentElement;
@@ -599,7 +604,9 @@ async function toggleMatchDetails(competition, round, team1, team2, element) {
             }
         }
     }
-    const detailsId = `details-${competition.replace(/\s+/g, '-')}-${round}-${team1.replace(/\s+/g, '-')}`.replace(/[^a-zA-Z0-9-]/g, '');
+
+    // Use explicit ID if provided, otherwise reconstruct (legacy fallback)
+    const detailsId = explicitDetailsId || `details-${competition.replace(/\s+/g, '-')}-${round}-${team1.replace(/\s+/g, '-')}`.replace(/[^a-zA-Z0-9-]/g, '');
     const container = document.getElementById(detailsId);
 
     if (!container) {
@@ -830,9 +837,19 @@ function checkDeepLink() {
                 setTimeout(() => {
                     el.classList.remove('highlight-match');
                 }, 6000);
+
+                // Auto-expand details if actionable
+                const clickableSpan = el.querySelector('.match-result.clickable');
+                if (clickableSpan) {
+                    clickableSpan.click();
+                }
             }
         }, 500);
     }
 }
 
 console.log("Calendar JS v16 (END) loaded");
+
+// Expose functions globally to ensure they can be called from onclick
+window.toggleMatchDetails = toggleMatchDetails;
+window.openScheduleModalFromMatch = openScheduleModalFromMatch;

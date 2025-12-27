@@ -110,7 +110,7 @@ app.use(async (req, res, next) => {
 // Static Files Serving
 // Static Files Serving with Cache Policy
 const staticOptions = {
-    maxAge: 3600000, // 1 hour (reduced from 1 year to fix cache issues)
+    maxAge: 0, // Disable cache for development/debugging
     etag: true
 };
 
