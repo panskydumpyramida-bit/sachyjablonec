@@ -542,8 +542,10 @@ function generateMatchesHtml(matches, today) {
         const borderColor = isPast ? 'var(--text-muted)' : compColor;
 
         // Status badge or ROZPIS button for upcoming matches
+        // Escape myTeam for onclick handler (uses single quotes)
+        const safeMyTeam = match.myTeam.replace(/"/g, '&quot;').replace(/'/g, "\\'");
         const statusBadge = isUpcoming
-            ? `<button onclick="openScheduleModalFromMatch('${safeComp}', '${match.myTeam.replace(/"/g, '&quot;')}')" 
+            ? `<button onclick="openScheduleModalFromMatch('${safeComp}', '${safeMyTeam}')" 
                  class="rozpis-btn" 
                  style="display: flex; align-items: center; gap: 0.3rem; padding: 0.3rem 0.6rem; background: rgba(212,175,55,0.15); border: 1px solid rgba(212,175,55,0.3); border-radius: 6px; color: var(--primary-color); font-size: 0.7rem; font-weight: 600; cursor: pointer; transition: all 0.2s;"
                  onmouseover="this.style.background='rgba(212,175,55,0.25)'; this.style.borderColor='var(--primary-color)'"
