@@ -257,8 +257,14 @@ window.RosterLoader = (function () {
      * @param {string} side - 'left' or 'right'
      */
     function makeClickable(teamName, matchId, competitionId, side = 'left') {
+        // Don't make "volno" (bye) clickable
+        if (!teamName || teamName.toLowerCase() === 'volno' || teamName.toLowerCase() === 'bye') {
+            return teamName || '-';
+        }
+
         const rosterId = `roster-${matchId}-${teamName.replace(/[^a-zA-Z0-9]/g, '')}`.substring(0, 50);
-        const escapedTeam = teamName.replace(/'/g, "\\'").replace(/"/g, '\\"');
+        // Use &quot; for double quotes (HTML entity) and \\' for single quotes (JS escape)
+        const escapedTeam = teamName.replace(/"/g, '&quot;').replace(/'/g, "\\'");
         const escapedComp = competitionId.replace(/'/g, "\\'");
 
         return `<span onclick="event.stopPropagation(); RosterLoader.toggle('${rosterId}', '${escapedTeam}', '${escapedComp}', this, '${side}')" 
