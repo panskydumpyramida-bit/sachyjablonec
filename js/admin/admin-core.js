@@ -225,6 +225,12 @@ function switchTab(tab) {
 // ================================
 
 async function loadDashboard() {
+    // Initialize new dashboard module (stats, activity feed)
+    if (typeof initDashboard === 'function') {
+        initDashboard();
+    }
+
+    // Load news table
     try {
         const res = await fetch(`${API_URL}/news`, {
             headers: { 'Authorization': `Bearer ${authToken}` }

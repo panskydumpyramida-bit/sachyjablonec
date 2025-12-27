@@ -29,10 +29,11 @@ model User {
   role         Role     @default(USER)
   createdAt    DateTime @default(now()) @map("created_at")
   
-  news         News[]
-  puzzleResults PuzzleRaceResult[]
-  recordedGames GameRecorded[]
-  comments      Comment[]
+  authoredNews    News[]   @relation("NewsAuthor")
+  coAuthoredNews  News[]   @relation("NewsCoAuthor")
+  puzzleResults   PuzzleRaceResult[]
+  recordedGames   GameRecorded[]
+  comments        Comment[]
   
   @@map("users")
 }
@@ -82,12 +83,23 @@ model News {
   createdAt     DateTime  @default(now()) @map("created_at")
   updatedAt     DateTime  @updatedAt @map("updated_at")
   isPublished   Boolean   @default(false) @map("is_published")
-  authorId      Int?      @map("author_id")
   
-  author        User?     @relation(fields: [authorId], references: [id])
+  // Author - defaults to creator, can be overridden
+  authorId      Int?      @map("author_id")
+  authorName    String?   @map("author_name")  // Custom name if not from user
+  
+  // Co-author (optional)
+  coAuthorId    Int?      @map("co_author_id")
+  coAuthorName  String?   @map("co_author_name")  // Custom name if not from user
+  
+  author        User?     @relation("NewsAuthor", fields: [authorId], references: [id])
+  coAuthor      User?     @relation("NewsCoAuthor", fields: [coAuthorId], references: [id])
   matchReport   MatchReport?
   games         Game[]
   comments      Comment[]
+  
+  // Stats
+  viewCount     Int       @default(0) @map("view_count")
   
   images        Image[]
   

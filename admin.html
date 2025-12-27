@@ -40,10 +40,6 @@
                 <nav><a href="/" class="logo"><i class="fa-solid fa-chess-knight"></i>TJ Bižuterie -
                         Admin</a>
                     <ul class="nav-links">
-                        <li style="display: flex; align-items: center; margin-right: 1rem;"><label class="switch"
-                                style="margin-bottom: 0;"><input type="checkbox" id="maintenanceToggle"
-                                    onchange="toggleMaintenance()"><span class="slider round"></span></label><span
-                                style="font-size: 0.8rem; margin-left: 0.5rem; color: #aaa;">Údržba</span></li>
                         <li><a href="/" target="_blank"><i class="fa-solid fa-home"></i>Web</a></li>
                         <li><a href="#" onclick="logout()" style="color: #fca5a5;"><i
                                     class="fa-solid fa-sign-out-alt"></i>Odhlásit</a></li>
@@ -66,8 +62,7 @@
             <div class="admin-nav">
                 <div class="nav-tab active" onclick="switchTab('dashboard')"><i class="fa-solid fa-list"></i>Přehled
                 </div>
-                <div class="nav-tab" onclick="switchTab('editor'); resetEditor();"><i class="fa-solid fa-plus"></i>Nová
-                    novinka</div>
+
                 <div class="nav-tab" onclick="switchTab('members')" style="display: none;"><i
                         class="fa-solid fa-address-book"></i>Členové </div>
                 <div class="nav-tab" onclick="switchTab('users')" id="usersTab" style="display: none;"><i
@@ -78,30 +73,97 @@
                         class="fa-solid fa-trophy"></i>Soutěže</div>
                 <div class="nav-tab" onclick="switchTab('gallery')" id="galleryTab" style="display: none;"><i
                         class="fa-regular fa-images"></i>Galerie</div>
-                <div class="nav-tab" onclick="switchTab('games')" id="gamesTab"><i
-                        class="fa-solid fa-chess-board"></i>Partie</div>
-                <div class="nav-tab" onclick="switchTab('blicak')" id="blicakTab"><i class="fa-solid fa-bolt"></i>Blicák
-                </div>
                 <div class="nav-tab" onclick="switchTab('events')" id="eventsTab"><i
                         class="fa-regular fa-calendar-days"></i>Události
                 </div>
-                <div class="nav-tab" id="puzzleRacerTab" onclick="switchTab('puzzleRacer')"><i
+                <div class="nav-divider"></div>
+                <div class="nav-tab secondary" onclick="switchTab('games')" id="gamesTab"><i
+                        class="fa-solid fa-chess-board"></i>Partie</div>
+                <div class="nav-tab secondary" onclick="switchTab('blicak')" id="blicakTab"><i
+                        class="fa-solid fa-bolt"></i>Blicák
+                </div>
+                <div class="nav-tab secondary" id="puzzleRacerTab" onclick="switchTab('puzzleRacer')"><i
                         class="fa-solid fa-puzzle-piece"></i>Puzzle Racer <i class="fa-solid fa-lock"
                         style="font-size: 0.7em; margin-left: 0.4rem; color: #fbbf24; opacity: 0.8;"
                         title="Superadmin only"></i></div>
-                <div class="nav-tab" onclick="switchTab('chessdb')" id="chessdbTab"><i
+                <div class="nav-tab secondary" onclick="switchTab('chessdb')" id="chessdbTab"><i
                         class="fa-solid fa-database"></i>Databáze</div>
-                <div class="nav-tab" onclick="switchTab('changelog')" id="changelogTab"><i
+                <div class="nav-tab secondary" onclick="switchTab('changelog')" id="changelogTab"><i
                         class="fa-solid fa-code-branch"></i>Changelog</div>
             </div>
             <div id="alertContainer"></div>
             <!-- DASHBOARD -->
             <div id="dashboardView">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-                    <h2 style="margin: 0;">Seznam novinek</h2><button class="btn-primary"
-                        onclick="switchTab('editor'); resetEditor();"><i class="fa-solid fa-plus"></i>Nová
-                        novinka</button>
+                <!-- Dashboard Grid -->
+                <div class="dashboard-grid">
+                    <!-- Stats Cards -->
+                    <div id="dashboardStats" class="dashboard-stats">
+                        <!-- Skeleton loaders -->
+                        <div class="stat-card" style="--accent-color: #d4af37">
+                            <div class="stat-card-icon"><i class="fa-solid fa-spinner fa-spin"></i></div>
+                            <div class="stat-card-content">
+                                <div class="stat-card-value">—</div>
+                                <div class="stat-card-label">Načítám...</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Two Column: Quick Actions + Activity -->
+                    <div class="dashboard-columns">
+                        <!-- Quick Actions Panel -->
+                        <div class="quick-actions">
+                            <div class="quick-actions-title">
+                                <i class="fa-solid fa-bolt"></i> Rychlé akce
+                            </div>
+                            <div class="quick-actions-grid">
+                                <button class="quick-action-btn" onclick="dashboardQuickAction('new-article')">
+                                    <i class="fa-solid fa-plus"></i>
+                                    <span>Nový článek</span>
+                                </button>
+                                <button class="quick-action-btn" onclick="dashboardQuickAction('new-game')">
+                                    <i class="fa-solid fa-chess"></i>
+                                    <span>Přidat partii</span>
+                                </button>
+                                <button class="quick-action-btn" onclick="dashboardQuickAction('new-event')">
+                                    <i class="fa-regular fa-calendar-plus"></i>
+                                    <span>Nová událost</span>
+                                </button>
+                                <button class="quick-action-btn" onclick="dashboardQuickAction('gallery')">
+                                    <i class="fa-regular fa-images"></i>
+                                    <span>Galerie</span>
+                                </button>
+                                <button class="quick-action-btn" onclick="dashboardQuickAction('refresh-standings')">
+                                    <i class="fa-solid fa-sync"></i>
+                                    <span>Aktualizovat tabulky</span>
+                                </button>
+                                <button class="quick-action-btn" onclick="window.open('/', '_blank')">
+                                    <i class="fa-solid fa-eye"></i>
+                                    <span>Zobrazit web</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Activity Feed Panel -->
+                        <div class="activity-panel">
+                            <div class="activity-title">
+                                <i class="fa-solid fa-clock-rotate-left"></i> Nedávná aktivita
+                            </div>
+                            <div id="dashboardActivity">
+                                <div class="activity-empty">
+                                    <i class="fa-solid fa-spinner fa-spin"></i>
+                                    <span>Načítám aktivitu...</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
+
+                <!-- News List Section -->
+                <div class="dashboard-divider">
+                    <span>Články</span>
+                </div>
+
+                <h2 style="margin: 0 0 1rem 0;">Seznam novinek</h2>
                 <table class="data-table" id="newsTable">
                     <thead>
                         <tr>
@@ -164,7 +226,7 @@
                                     onclick="insertHighlight('score')" title="Zvýraznit skóre"
                                     style="color: #4ade80;"><i class="fa-solid fa-trophy"></i>Skóre</button>
                                 <div class="divider"></div><button type="button" onclick="insertIntroBlock()"
-                                    title="Puzzle blok" style="color: #fbbf24;"><i
+                                    title="Infobox" style="color: #fbbf24;"><i
                                         class="fa-solid fa-lightbulb"></i></button><button type="button"
                                     onclick="insertImage()" title="Obrázek" style="color: #f472b6;"><i
                                         class="fa-solid fa-image"></i></button><button type="button"
@@ -289,6 +351,27 @@
                                         <option value="O nás">O nás</option>
                                     </select>
                                 </div>
+                                <!-- Author Selection -->
+                                <div class="form-group" style="margin-bottom: 0.75rem;">
+                                    <label style="font-size: 0.8rem;">Autor</label>
+                                    <select id="newsAuthorId" style="font-size: 0.85rem; margin-bottom: 0.3rem;"
+                                        onchange="handleAuthorChange()">
+                                        <option value="">Vlastní jméno</option>
+                                        <!-- Populated via JS -->
+                                    </select>
+                                    <input type="text" id="newsAuthorName" placeholder="Jméno autora"
+                                        oninput="updatePreview()" style="font-size: 0.85rem;">
+                                </div>
+                                <div class="form-group" style="margin-bottom: 0.75rem;">
+                                    <label style="font-size: 0.8rem;">Spoluautor</label>
+                                    <select id="newsCoAuthorId" style="font-size: 0.85rem; margin-bottom: 0.3rem;"
+                                        onchange="handleCoAuthorChange()">
+                                        <option value="">Žádný / Vlastní</option>
+                                        <!-- Populated via JS -->
+                                    </select>
+                                    <input type="text" id="newsCoAuthorName" placeholder="Jméno spoluautora"
+                                        oninput="updatePreview()" style="font-size: 0.85rem; display: none;">
+                                </div>
                                 <div class="form-group" style="margin-bottom: 0.75rem;">
                                     <label style="font-size: 0.8rem;">Datum</label><input type="date" id="newsDate"
                                         oninput="updatePreview()" style="font-size: 0.85rem;">
@@ -383,6 +466,23 @@
                                         <p class="card-excerpt" id="previewExcerpt"
                                             style="font-size: 0.7rem; color: var(--text-muted);">
                                             Popis...</p>
+
+                                        <!-- Author & Stats -->
+                                        <div
+                                            style="display: flex; justify-content: space-between; align-items: center; margin-top: 0.5rem; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 0.4rem;">
+                                            <div
+                                                style="font-size: 0.55rem; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 60%;">
+                                                <i class="fa-solid fa-user-pen" style="margin-right: 2px;"></i> <span
+                                                    id="previewAuthor">Autor</span>
+                                            </div>
+                                            <div style="font-size: 0.55rem; color: var(--text-muted);">
+                                                <i class="fa-solid fa-eye" style="margin-right: 2px;"></i> <span
+                                                    id="previewViews">0</span>
+                                                <span style="margin-left: 5px;" title="Počet slov"><i
+                                                        class="fa-solid fa-paragraph" style="margin-right: 2px;"></i>
+                                                    <span id="previewWords">0</span></span>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -1206,6 +1306,21 @@
                     </div>
                 </div>
 
+                <!-- 2025-12-27 -->
+                <div class="changelog-entry">
+                    <div class="changelog-date">27. 12. 2025</div>
+                    <div class="changelog-version">v9</div>
+                    <div class="changelog-content">
+                        <h4>🆕 Nové funkce</h4>
+                        <ul>
+                            <li><strong>Autoři:</strong> Podpora pro autory a spoluautory článků</li>
+                            <li><strong>Admin editor:</strong> Výběr autora z registrovaných uživatelů</li>
+                            <li><strong>Statistiky:</strong> Počítadlo zobrazení pro články</li>
+                            <li><strong>Nastavení:</strong> Možnost volby zobrazovaného jména (Profil / Přezdívka)</li>
+                        </ul>
+                    </div>
+                </div>
+
                 <!-- 2025-12-12 -->
                 <div class="changelog-entry">
                     <div class="changelog-date">12. 12. 2025</div>
@@ -1292,6 +1407,7 @@
     <script src="js/admin/admin-content-images.js"></script>
     <script src="js/admin/admin-thumbnail.js"></script>
     <script src="js/admin/admin-news.js"></script>
+    <script src="js/admin/admin-news-modals.js"></script>
     <script src="js/admin/admin-members.js"></script>
     <script src="js/admin/admin-messages.js"></script>
     <script src="js/admin/admin-competitions.js"></script>
@@ -1301,6 +1417,7 @@
     <script src="js/admin/admin-blicak.js"></script>
     <script src="js/admin/admin-puzzle-racer.js"></script>
     <script src="js/admin/admin-chessdb.js"></script>
+    <script src="js/admin/admin-dashboard.js"></script>
     <script>
         /**
          * Admin Panel - Minimal Inline Script

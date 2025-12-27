@@ -367,6 +367,55 @@ app.get('/api/health', (req, res) => {
     res.json({ status: 'ok', message: 'Server is running' });
 });
 
+// --- Dashboard Stats API ---
+app.get('/api/dashboard/stats', authMiddleware, async (req, res) => {
+    try {
+        const [newsCount, commentsCount, usersCount, gamesCount, eventsCount, recentComments, recentNews] = await Promise.all([
+            prisma.news.count(),
+            prisma.comment.count(),
+            prisma.user.count(),
+            prisma.game.count(),
+            prisma.event.count(),
+            prisma.comment.findMany({
+                take: 5,
+                orderBy: { createdAt: 'desc' },
+                include: {
+                    author: { select: { username: true, realName: true } },
+                    news: { select: { title: true, id: true } }
+                }
+            }),
+            prisma.news.findMany({
+                take: 3,
+                orderBy: { publishedDate: 'desc' },
+                select: { id: true, title: true, publishedDate: true, category: true }
+            })
+        ]);
+
+        res.json({
+            stats: {
+                news: newsCount,
+                comments: commentsCount,
+                users: usersCount,
+                games: gamesCount,
+                events: eventsCount
+            },
+            recentActivity: recentComments.map(c => ({
+                type: 'comment',
+                id: c.id,
+                text: c.content.substring(0, 100) + (c.content.length > 100 ? '...' : ''),
+                author: c.author?.realName || c.author?.username || 'Anonym',
+                newsTitle: c.news?.title || 'Smazaný článek',
+                newsId: c.news?.id,
+                createdAt: c.createdAt
+            })),
+            recentNews: recentNews
+        });
+    } catch (error) {
+        console.error('Dashboard stats error:', error);
+        res.status(500).json({ error: 'Failed to load dashboard stats' });
+    }
+});
+
 // --- System Settings API ---
 app.get('/api/settings', authMiddleware, async (req, res) => {
     try {

@@ -340,17 +340,33 @@ function insertCollapsibleBlock() {
     const html = `
         <div class="collapsible-wrapper" contenteditable="false" style="user-select: none;">
             <div class="collapsible-header" onclick="toggleSection('${id}', '${iconId}')" style="cursor: pointer;">
-                <h3 contenteditable="true" style="cursor: text; user-select: text;">Nadpis sekce</h3>
+                <h3 contenteditable="true" style="cursor: text; user-select: text;"></h3>
                 <i id="${iconId}" class="fa-solid fa-chevron-down"></i>
             </div>
             <div id="${id}" class="collapsible-content hidden" contenteditable="true" style="cursor: text; user-select: text;">
-                <p>Zde napište obsah...</p>
+                <p></p>
             </div>
         </div>
         <p><br></p>
     `;
 
     document.execCommand('insertHTML', false, html);
+
+    // Focus on the header so user can start typing immediately
+    setTimeout(() => {
+        const headers = document.querySelectorAll('.collapsible-wrapper h3[contenteditable="true"]');
+        const lastHeader = headers[headers.length - 1];
+        if (lastHeader) {
+            lastHeader.focus();
+            // Place cursor inside
+            const range = document.createRange();
+            range.selectNodeContents(lastHeader);
+            range.collapse(true);
+            const sel = window.getSelection();
+            sel.removeAllRanges();
+            sel.addRange(range);
+        }
+    }, 10);
 }
 
 // Preview toggle logic for editor
@@ -377,6 +393,7 @@ function insertIntroBlock() {
     const content = document.getElementById('articleContent');
     const selection = window.getSelection();
 
+    // If cursor is inside a puzzle-section, move cursor after it
     if (selection.rangeCount > 0) {
         let node = selection.getRangeAt(0).commonAncestorContainer;
         while (node && node !== content) {
@@ -400,14 +417,27 @@ function insertIntroBlock() {
         }
     }
 
+    // Insert a clean infobox without placeholder text
     const introHtml = `<div class="puzzle-section">
-<p style="font-size: 1.1rem; margin-bottom: 1rem;">
-🧩 <strong>Pozice z partie...</strong><br>
-Popis pozice nebo úkolu.<br>
-Najdete vítězný tah? ♟️
-</p>
-</div>`;
+<p style="font-size: 1.1rem; margin-bottom: 0;"></p>
+</div><p><br></p>`;
     document.execCommand('insertHTML', false, introHtml);
+
+    // Focus inside the infobox
+    setTimeout(() => {
+        const boxes = document.querySelectorAll('.puzzle-section p');
+        const lastBox = boxes[boxes.length - 1];
+        if (lastBox) {
+            lastBox.focus();
+            const range = document.createRange();
+            range.selectNodeContents(lastBox);
+            range.collapse(true);
+            const sel = window.getSelection();
+            sel.removeAllRanges();
+            sel.addRange(range);
+        }
+    }, 10);
+
     content.focus();
     updatePreview();
 }
