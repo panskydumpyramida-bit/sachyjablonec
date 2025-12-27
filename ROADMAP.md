@@ -151,6 +151,11 @@ Plán budoucího vývoje webu [sachyjablonec.cz](https://www.sachyjablonec.cz).
 <details open>
 <summary><strong>Prosinec 2025</strong></summary>
 
+#### 27. 12. 2025 – Homepage Redesign
+- ✅ **3D Rotující dlaždice**: Implementace otáčecí karty "Rozpis zápasů" (zobrazuje nejbližší zápasy A-D)
+- ✅ **Homepage Layout**: Obnovení 2x2 navigační mřížky (Checkerboard pattern)
+- ✅ **Interaktivita**: Oprava klikatelných oblastí a obnovení widgetu s posledním komentářem
+
 #### 26. 12. 2025 – Admin Refactoring & Blicák
 - ✅ **Admin Panel**: Refactoring `admin-news.js` (modularizace) - probíhá
 - ✅ **Blicák**: Nasazení fotogalerie s paginací a externími fotkami (WEBP)

@@ -516,6 +516,52 @@ app.get('/api/standings/team-roster', async (req, res) => {
     }
 });
 
+// Look up team SNR by team name within a competition
+// Used for fetching opponent rosters dynamically
+app.get('/api/standings/team-snr', async (req, res) => {
+    const { competitionId, teamName } = req.query;
+    if (!competitionId || !teamName) {
+        return res.status(400).json({ error: 'Missing parameters: competitionId and teamName required' });
+    }
+
+    try {
+        // Get competition with standings
+        const competition = await prisma.competition.findUnique({
+            where: { id: competitionId },
+            include: { standings: true }
+        });
+
+        if (!competition) {
+            return res.status(404).json({ error: 'Competition not found' });
+        }
+
+        // Find team by name (fuzzy match)
+        const normalizedSearch = teamName.toLowerCase().replace(/\s+/g, '').replace(/["']/g, '');
+        const team = competition.standings.find(s => {
+            const normalizedTeam = s.team.toLowerCase().replace(/\s+/g, '').replace(/["']/g, '');
+            return normalizedTeam.includes(normalizedSearch) || normalizedSearch.includes(normalizedTeam);
+        });
+
+        if (!team) {
+            // Fallback: try exact substring match
+            const exactTeam = competition.standings.find(s =>
+                s.team.toLowerCase().includes(teamName.toLowerCase()) ||
+                teamName.toLowerCase().includes(s.team.toLowerCase())
+            );
+            if (!exactTeam) {
+                return res.status(404).json({ error: 'Team not found in standings' });
+            }
+            return res.json({ snr: exactTeam.rank, url: competition.url, team: exactTeam.team });
+        }
+
+        // SNR is typically the rank/position in standings for chess-results
+        res.json({ snr: team.rank, url: competition.url, team: team.team });
+    } catch (e) {
+        console.error('Team SNR lookup error:', e);
+        res.status(500).json({ error: 'Failed to look up team' });
+    }
+});
+
 
 // --- Backup Endpoint ---
 app.get('/api/admin/backup', authMiddleware, requireSuperadmin, async (req, res) => {

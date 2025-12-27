@@ -138,14 +138,19 @@ async function main() {
     ];
 
     for (const item of newsItems) {
-        await prisma.news.upsert({
-            where: { slug: item.slug },
-            update: item,
-            create: item
-        });
+        try {
+            await prisma.news.upsert({
+                where: { slug: item.slug },
+                update: {},  // Don't update existing items
+                create: item
+            });
+        } catch (e) {
+            // Skip if news already exists (P2002 unique constraint)
+            if (e.code !== 'P2002') throw e;
+        }
     }
 
-    console.log('✅ Seeded', newsItems.length, 'news items with games');
+    console.log('✅ Seeded news items (skipped existing)');
     console.log('🎉 Seeding completed!');
 }
 

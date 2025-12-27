@@ -291,6 +291,20 @@
 
 <body>
 
+    <!-- Schedule Modal -->
+    <div id="scheduleModal" class="modal"
+        style="display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0, 0, 0, 0.8); backdrop-filter: blur(5px);">
+        <div class="modal-content"
+            style="background-color: var(--surface-color); margin: 10% auto; padding: 20px; border: 1px solid var(--primary-color); width: 90%; max-width: 600px; border-radius: 12px; position: relative; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);">
+            <span class="close-modal" onclick="closeScheduleModal()"
+                style="color: var(--text-muted); float: right; font-size: 28px; font-weight: bold; cursor: pointer; line-height: 1;">&times;</span>
+            <h3 id="modalTeamName"
+                style="border-bottom: 1px solid var(--primary-color); padding-bottom: 0.5rem; margin-top: 0;">Rozpis
+                Zápasů</h3>
+            <div id="modalBody"></div>
+        </div>
+    </div>
+
     <header id="global-header"></header>
 
     <main>
@@ -383,10 +397,70 @@
     <script src="js/config.js?v=4" defer></script>
     <script src="js/layout-loader.js?v=5" defer></script>
     <script src="js/main.js?v=20251226" defer></script>
+    <script src="js/roster-loader.js?v=1" defer></script>
     <script>
         let allMatchesData = [];
         let showingPast = true; // Show past matches by default
         let selectedCategory = 'all'; // 'all', 'teams', 'youth'
+
+        // Competition color palette for visual differentiation
+        const competitionColors = {
+            'Krajský přebor': '#D4AF37',           // Gold - hlavní soutěž
+            'Krajský přebor Liberec': '#D4AF37',   // Gold
+            'Krajská soutěž I. - východ': '#60A5FA', // Blue
+            'Krajská soutěž východ': '#60A5FA',    // Blue  
+            'Krajský přebor mládeže': '#4ADE80',   // Green
+            'Krajský přebor mládeže - Liberec': '#4ADE80', // Green
+            'KPM': '#4ADE80',                       // Green
+            'default': '#A78BFA'                   // Purple for unknown
+        };
+
+        function getCompetitionColor(compName) {
+            // Try exact match first
+            if (competitionColors[compName]) return competitionColors[compName];
+            // Try partial match
+            for (const [key, color] of Object.entries(competitionColors)) {
+                if (compName.toLowerCase().includes(key.toLowerCase())) return color;
+            }
+            return competitionColors['default'];
+        }
+
+        // Competition to ID mapping for roster lookups
+        // IDs must match actual database competition IDs from /api/competitions
+        const competitionIdMap = {
+            // Adult teams
+            'Krajský přebor': 'kp-liberec',
+            'Krajský přebor Liberec': 'kp-liberec',
+            'Krajská soutěž I. - východ': 'ks-vychod',
+            'Krajská soutěž východ': 'ks-vychod',
+            // Youth teams - NOTE: IDs are numbers from chess.cz
+            '1. liga mládeže A': '3255',
+            '1. liga mládeže': '3255',
+            'Krajský přebor mládeže': '3363',
+            'Krajský přebor mládeže - Liberec': '3363',
+            'KPM': '3363',
+            'Krajská soutěž st. žáků': 'ks-st-zaku'
+        };
+
+        function getCompetitionId(compName) {
+            if (competitionIdMap[compName]) return competitionIdMap[compName];
+            // Fuzzy match
+            for (const [key, id] of Object.entries(competitionIdMap)) {
+                if (compName.toLowerCase().includes(key.toLowerCase())) return id;
+            }
+            return compName.replace(/\s+/g, '-').toLowerCase();
+        }
+
+        // Make any team name clickable (both our teams and opponents)
+        function makeTeamClickable(teamName, matchId, compName, side) {
+            const competitionId = getCompetitionId(compName);
+            // Use global RosterLoader module
+            if (typeof RosterLoader !== 'undefined') {
+                return RosterLoader.makeClickable(teamName, matchId, competitionId, side);
+            }
+            // Fallback if module not loaded
+            return teamName;
+        }
 
         // Parse URL parameters for pre-filtering
         function applyUrlParams() {
@@ -697,6 +771,9 @@
 
             // Populate month jump dropdown
             populateMonthJump();
+
+            // highlight deep linked match
+            checkDeepLink();
         }
 
         function populateMonthJump() {
@@ -766,31 +843,45 @@
 
                 let statusClass = 'status-upcoming';
                 let statusText = 'Nadcházející';
+                let isUpcoming = true; // Track if match is upcoming for ROZPIS button
 
                 // If match has result, it's finished - regardless of date
                 if (matchHasResult) {
                     statusClass = 'status-finished';
                     statusText = 'Odehráno';
+                    isUpcoming = false;
                 } else if (isToday) {
                     statusClass = 'status-today';
                     statusText = 'Dnes';
                 } else if (isPast) {
                     statusClass = 'status-finished';
                     statusText = 'Odehráno';
+                    isUpcoming = false;
                 }
 
                 // Format day
                 const day = match.date.getDate();
                 const dayName = match.date.toLocaleString('cs-CZ', { weekday: 'short' });
 
+                // Generate unique matchId for roster containers
+                const matchId = `${match.competition.replace(/\s+/g, '')}-${match.round}-${day}`.replace(/[^a-zA-Z0-9-]/g, '');
+
                 // Determine display order based on Home/Away
                 let team1 = match.isHome !== false ? match.myTeam : match.opponent;
                 let team2 = match.isHome !== false ? match.opponent : match.myTeam;
 
-                // Highlight my team
+                // Make ALL teams clickable with roster (using RosterLoader module)
+                const team1Display = makeTeamClickable(team1, matchId, match.competition, 'left');
+                const team2Display = makeTeamClickable(team2, matchId, match.competition, 'right');
+
+                // Check if teams are Bižuterie for styling
+                const isBizu1 = /bižuterie|bizuterie/i.test(team1);
+                const isBizu2 = /bižuterie|bizuterie/i.test(team2);
+
+                // Highlight my team (only if not already made clickable with styling)
                 const highlightStyle = 'color: var(--primary-color); font-weight: 700;';
-                const t1Style = (team1 === match.myTeam) ? highlightStyle : '';
-                const t2Style = (team2 === match.myTeam) ? highlightStyle : '';
+                const t1Style = (team1 === match.myTeam && !isBizu1) ? highlightStyle : '';
+                const t2Style = (team2 === match.myTeam && !isBizu2) ? highlightStyle : '';
 
                 const hasResult = match.result &&
                     match.result !== '-' &&
@@ -839,8 +930,24 @@
                     ? `<a href="${generateMatchCalendarUrl()}" target="_blank" title="Přidat do kalendáře" style="color: var(--text-muted); padding: 0.25rem; transition: color 0.2s;" onmouseover="this.style.color='#22d3ee'" onmouseout="this.style.color='var(--text-muted)'"><i class="fa-solid fa-calendar-plus"></i></a>`
                     : '';
 
+                // Get competition-specific color
+                const compColor = getCompetitionColor(match.competition);
+                const borderColor = isPast ? 'var(--text-muted)' : compColor;
+
+                // Status badge or ROZPIS button for upcoming matches
+                const statusBadge = isUpcoming
+                    ? `<button onclick="openScheduleModalFromMatch('${safeComp}', '${match.myTeam.replace(/"/g, '&quot;')}')" 
+                         class="rozpis-btn" 
+                         style="display: flex; align-items: center; gap: 0.3rem; padding: 0.3rem 0.6rem; background: rgba(212,175,55,0.15); border: 1px solid rgba(212,175,55,0.3); border-radius: 6px; color: var(--primary-color); font-size: 0.7rem; font-weight: 600; cursor: pointer; transition: all 0.2s;"
+                         onmouseover="this.style.background='rgba(212,175,55,0.25)'; this.style.borderColor='var(--primary-color)'"
+                         onmouseout="this.style.background='rgba(212,175,55,0.15)'; this.style.borderColor='rgba(212,175,55,0.3)'"
+                         title="Zobrazit rozpis zápasů">
+                        <i class="fa-regular fa-calendar-days"></i> ROZPIS
+                       </button>`
+                    : `<span class="status-badge ${statusClass}">${statusText}</span>`;
+
                 html += `
-                    <div class="match-card ${isPast ? 'past-match' : ''}" style="border-left: 2px solid ${isYouth ? '#4ade80' : (isPast ? 'var(--text-muted)' : 'var(--primary-color)')};">
+                    <div id="${matchId}" class="match-card ${isPast ? 'past-match' : ''}" style="border-left: 3px solid ${borderColor}; scroll-margin-top: 150px;">
                         <div class="match-header" style="display: flex; gap: 1rem; width: 100%;">
                             <div class="match-date-row" style="display: contents;">
                                 <div class="match-date">
@@ -848,19 +955,19 @@
                                     <div class="match-month">${dayName}</div>
                                 </div>
                                 <div class="match-status-mobile" style="display: none; margin-left: auto;">
-                                    <span class="status-badge ${statusClass}">${statusText}</span>
+                                    ${statusBadge}
                                 </div>
                             </div>
                             <div class="match-details">
                                 <div class="match-competition">${categoryIcon}${match.competition} • ${match.round}. kolo</div>
                                 <div class="match-teams">
-                                    <span style="${t1Style}">${team1}</span> - <span style="${t2Style}">${team2}</span>
+                                    <span style="${t1Style}">${team1Display}</span> - <span style="${t2Style}">${team2Display}</span>
                                     ${resultHtml}
                                 </div>
                             </div>
                             <div class="match-actions match-status-desktop" style="display: flex; align-items: center; gap: 0.5rem;">
                                 ${calendarBtn}
-                                <span class="status-badge ${statusClass}">${statusText}</span>
+                                ${statusBadge}
                             </div>
                         </div>
                         <div id="${detailsId}" class="inline-details" style="display: none; width: 100%; border-top: 1px solid rgba(255,255,255,0.05); margin-top: 1rem; padding-top: 1rem;">
@@ -876,6 +983,16 @@
 
         // Inline Toggle Function
         async function toggleMatchDetails(competition, round, team1, team2, element) {
+            // Auto-close roster details if open (Mutual Exclusion)
+            if (element) {
+                const matchCard = element.closest('.match-card') || element.closest('.card') || element.parentElement;
+                if (matchCard) {
+                    const rosterWrapper = matchCard.querySelector('.roster-wrapper');
+                    if (rosterWrapper && rosterWrapper.style.display !== 'none') {
+                        rosterWrapper.style.display = 'none';
+                    }
+                }
+            }
             const detailsId = `details-${competition.replace(/\s+/g, '-')}-${round}-${team1.replace(/\s+/g, '-')}`.replace(/[^a-zA-Z0-9-]/g, '');
             const container = document.getElementById(detailsId);
 
@@ -937,7 +1054,7 @@
 
         function renderBoardsInline(boards, container, team1, team2) {
             container.innerHTML = `
-                <table class="boards-table" style="font-size: 0.85rem;">
+            <table class="boards-table" style="font-size: 0.85rem;">
                      <thead>
                         <tr>
                             <th style="padding: 0.5rem;">Šach.</th>
@@ -1020,6 +1137,132 @@
             `;
         }
 
+        // Schedule Modal Functions
+        function openScheduleModalFromMatch(competition, myTeamName) {
+            const modal = document.getElementById('scheduleModal');
+            const modalTeamName = document.getElementById('modalTeamName');
+            const modalBody = document.getElementById('modalBody');
+
+            if (!modal || !modalBody) return;
+
+            // Find all matches for this team in this competition
+            const teamMatches = allMatchesData.filter(m =>
+                m.competition === competition &&
+                (m.myTeam === myTeamName || m.opponent === myTeamName)
+            );
+
+            // Extract team letter for title
+            const teamLetter = myTeamName.match(/"([ABCD])"/)?.[1] || '';
+            modalTeamName.textContent = teamLetter ? `Rozpis - ${teamLetter} Tým` : `Rozpis - ${myTeamName}`;
+
+            if (teamMatches.length === 0) {
+                modalBody.innerHTML = '<p style="color: var(--text-muted); text-align: center;">Žádné zápasy nenalezeny.</p>';
+            } else {
+                let html = `
+                    <table style="width: 100%; border-collapse: collapse; margin-top: 1rem; font-size: 0.9rem;">
+                        <thead>
+                            <tr style="border-bottom: 1px solid rgba(255,255,255,0.2);">
+                                <th style="padding: 0.5rem; text-align: left; color: var(--primary-color);">Kolo</th>
+                                <th style="padding: 0.5rem; text-align: left; color: var(--primary-color);">Datum</th>
+                                <th style="padding: 0.5rem; text-align: left; color: var(--primary-color);">Soupeř</th>
+                                <th style="padding: 0.5rem; text-align: center; color: var(--primary-color);">Výsledek</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                `;
+
+                teamMatches.forEach(m => {
+                    const hasResult = m.result && /[\d½]/.test(m.result) && m.result.trim() !== ':';
+                    const resultColor = hasResult ? 'var(--text-color)' : 'var(--text-muted)';
+                    const resultText = hasResult ? m.result : '-';
+                    const homeAway = m.isHome !== false ? '(D)' : '(V)';
+
+                    html += `
+                        <tr style="border-bottom: 1px solid rgba(255,255,255,0.1);">
+                            <td style="padding: 0.5rem;">${m.round}.</td>
+                            <td style="padding: 0.5rem;">${m.originalDate}</td>
+                            <td style="padding: 0.5rem;">${m.opponent} <span style="color: var(--text-muted); font-size: 0.8em;">${homeAway}</span></td>
+                            <td style="padding: 0.5rem; text-align: center; font-weight: 600; color: ${resultColor};">${resultText}</td>
+                        </tr>
+                    `;
+                });
+
+                html += '</tbody></table>';
+                modalBody.innerHTML = html;
+            }
+
+            modal.style.display = 'block';
+
+            // Close on click outside
+            modal.onclick = (e) => {
+                if (e.target === modal) closeScheduleModal();
+            };
+
+            // Close on Escape key
+            document.addEventListener('keydown', handleScheduleModalEscape);
+        }
+
+        function handleScheduleModalEscape(e) {
+            if (e.key === 'Escape') closeScheduleModal();
+        }
+
+        function closeScheduleModal() {
+            const modal = document.getElementById('scheduleModal');
+            if (modal) modal.style.display = 'none';
+            document.removeEventListener('keydown', handleScheduleModalEscape);
+        }
+    </script>
+
+    <style>
+        @keyframes highlightPulse {
+            0% {
+                background-color: rgba(212, 175, 55, 0.4);
+                box-shadow: 0 0 15px rgba(212, 175, 55, 0.4);
+            }
+
+            50% {
+                background-color: rgba(212, 175, 55, 0.1);
+                box-shadow: 0 0 5px rgba(212, 175, 55, 0.1);
+            }
+
+            100% {
+                background-color: transparent;
+                box-shadow: none;
+            }
+        }
+
+        .highlight-match {
+            animation: highlightPulse 2s ease-out 3;
+            /* Pulse 3 times */
+            border-color: var(--primary-color) !important;
+        }
+    </style>
+
+    <script>
+        // Check for matchId in URL and highlight
+        function checkDeepLink() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const matchId = urlParams.get('matchId');
+            if (matchId) {
+                // Wait for render
+                setTimeout(() => {
+                    // Try to find by ID (we need to ensure ID generation matches)
+                    // In render loop, we generated matchId but didn't assign it to the card element ID.
+                    // We need to update render loop to set ID on card.
+
+                    // Actually, let's find the element by ID if we set it. 
+                    // If not set yet, we must update generateMatchesHtml.
+                    const el = document.getElementById(matchId);
+                    if (el) {
+                        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        el.classList.add('highlight-match');
+                    }
+                }, 500);
+            }
+        }
+
+        // Call checkDeepLink after loadCalendar (inside renderCalendar or after)
+        // We'll hook into renderCalendar finish.
     </script>
 </body>
 
