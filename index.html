@@ -34,7 +34,7 @@
 
             <div class="container hero-content">
 
-                <h1><a href="/about" style="text-decoration: none; color: inherit;">Šachový oddíl TJ Bižuterie
+                <h1><a href="/about" style="text-decoration: none; color: inherit;">Šachový oddíl<br>TJ Bižuterie
                         Jablonec</a></h1>
                 <p>Tradice, vášeň, strategie. Vítejte na našem novém webu.</p>
 
@@ -44,7 +44,7 @@
 
                     <!-- Aktuality - Light square (top-left) -->
                     <a href="#news" style="text-decoration: none;">
-                        <div style="background: linear-gradient(135deg, rgba(240,217,181,0.9) 0%, rgba(210,180,140,0.85) 100%); backdrop-filter: blur(4px); padding: 1.2rem 0.8rem; text-align: center; transition: all 0.3s; aspect-ratio: 1; display: flex; flex-direction: column; justify-content: center; align-items: center;"
+                        <div style="background: linear-gradient(135deg, rgba(230, 200, 150, 0.95) 0%, rgba(200, 160, 110, 0.95) 100%); backdrop-filter: blur(4px); padding: 1.2rem 0.8rem; text-align: center; transition: all 0.3s; aspect-ratio: 1; display: flex; flex-direction: column; justify-content: center; align-items: center;"
                             onmouseover="this.style.transform='scale(1.05)';this.style.boxShadow='0 0 20px rgba(212,175,55,0.5)'"
                             onmouseout="this.style.transform='scale(1)';this.style.boxShadow='none'">
                             <i class="fa-solid fa-newspaper"
@@ -88,7 +88,7 @@
 
                     <!-- Blicák - Light square (bottom-right) -->
                     <a href="/blicak" style="text-decoration: none;">
-                        <div style="background: linear-gradient(135deg, rgba(240,217,181,0.9) 0%, rgba(210,180,140,0.85) 100%); backdrop-filter: blur(4px); padding: 1.2rem 0.8rem; text-align: center; transition: all 0.3s; aspect-ratio: 1; display: flex; flex-direction: column; justify-content: center; align-items: center;"
+                        <div style="background: linear-gradient(135deg, rgba(230, 200, 150, 0.95) 0%, rgba(200, 160, 110, 0.95) 100%); backdrop-filter: blur(4px); padding: 1.2rem 0.8rem; text-align: center; transition: all 0.3s; aspect-ratio: 1; display: flex; flex-direction: column; justify-content: center; align-items: center;"
                             onmouseover="this.style.transform='scale(1.05)';this.style.boxShadow='0 0 20px rgba(251,146,60,0.5)'"
                             onmouseout="this.style.transform='scale(1)';this.style.boxShadow='none'">
                             <i class="fa-solid fa-bolt"
@@ -100,8 +100,10 @@
 
                 </div>
 
-                <!-- Latest Comment Widget Container -->
-                <div id="latest-comment-widget" class="container hidden" style="margin-bottom: 1.5rem;"></div>
+                <!-- Latest Comment Widget Container - Reserved Space to prevent shift -->
+                <div id="latest-comment-widget" class="container"
+                    style="margin-bottom: 1.5rem; min-height: 64px; display: flex; align-items: center; justify-content: center;">
+                </div>
 
                 <style>
                     .rotator-inner.rotated {
