@@ -49,7 +49,6 @@ Plán budoucího vývoje webu [sachyjablonec.cz](https://www.sachyjablonec.cz).
 - [ ] **Interní oznámení** – důležité zprávy pro členy
 - [ ] **Dokumenty** – zápisy ze schůzí, stanovy, formuláře
 - [ ] **Diskuzní fórum** – místo pro interní diskuze
-- [ ] **Audit log** – historie změn pro adminy
 - [ ] Sekce "Turnaje a Akce" (neveřejné propozice, termíny)
 
 ### Priorita 3: Admin panel – redesign 🆕

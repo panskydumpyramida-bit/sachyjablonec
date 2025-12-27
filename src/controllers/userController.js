@@ -11,7 +11,9 @@ export const getAllUsers = async (req, res) => {
                 username: true,
                 email: true,
                 role: true,
-                createdAt: true
+                createdAt: true,
+                realName: true,
+                useRealName: true
             }
         });
         res.json(users);

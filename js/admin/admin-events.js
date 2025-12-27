@@ -144,7 +144,7 @@ const AdminEvents = {
      */
     async loadEvents() {
         try {
-            const token = localStorage.getItem('authToken') || localStorage.getItem('token') || (window.authToken);
+            const token = localStorage.getItem('authToken') || localStorage.getItem('auth_token') || localStorage.getItem('token') || (window.authToken);
 
             if (!token) {
                 console.warn('No authToken found, cannot load events');
@@ -323,7 +323,7 @@ const AdminEvents = {
             isPublic: formData.get('isPublic') !== 'off'
         };
 
-        const token = localStorage.getItem('authToken') || localStorage.getItem('token');
+        const token = localStorage.getItem('authToken') || localStorage.getItem('auth_token') || localStorage.getItem('token');
 
         try {
             let response;
@@ -422,7 +422,7 @@ const AdminEvents = {
 
         if (!confirmed) return;
 
-        const token = localStorage.getItem('authToken') || localStorage.getItem('token');
+        const token = localStorage.getItem('authToken') || localStorage.getItem('auth_token') || localStorage.getItem('token');
 
         try {
             const response = await fetch(`${API_URL}/events/${id}`, {

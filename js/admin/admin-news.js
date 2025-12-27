@@ -19,6 +19,8 @@ let imageCropPosition = '50%';
 let games = []; // List of games attached to the article
 let galleryImages = []; // List of images attached to the article
 let teamSelection = []; // Legacy/Unused but kept for structure
+let availableUsers = []; // List of users for author selection
+let currentViewCount = 0; // Track view count for current article
 
 // Thumbnail state - used by admin-thumbnail.js
 let pendingThumbnailBlob = null;
@@ -89,7 +91,111 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Check for saved draft on load
     checkDraft();
+    loadUsers(); // Load users for dropdown
 });
+
+async function loadUsers() {
+    console.log('[admin-news] loadUsers()');
+    try {
+        const token = window.authToken || localStorage.getItem('auth_token');
+        if (!token) {
+            console.error('[admin-news] No auth token found for loadUsers');
+            return;
+        }
+
+        const res = await fetch(`${API_URL}/users`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        if (res.ok) {
+            availableUsers = await res.json();
+            console.log(`[admin-news] Loaded ${availableUsers.length} users`);
+
+            // Populate dropdowns
+            const authorSelect = document.getElementById('newsAuthorId');
+            const coAuthorSelect = document.getElementById('newsCoAuthorId');
+
+            if (!authorSelect || !coAuthorSelect) {
+                console.warn('[admin-news] Author select elements not found');
+                return;
+            }
+
+            // Clear existing options except first
+            while (authorSelect.options.length > 1) authorSelect.remove(1);
+            while (coAuthorSelect.options.length > 1) coAuthorSelect.remove(1);
+
+            availableUsers.forEach(user => {
+                const name = user.realName ? `${user.realName} (${user.username})` : user.username;
+
+                const opt1 = new Option(name, user.id);
+                authorSelect.add(opt1);
+
+                const opt2 = new Option(name, user.id);
+                coAuthorSelect.add(opt2);
+            });
+
+            // If editing an item, we might need to select the values again if they were set before users loaded
+            // But editNews runs usually after switchTab, and loadUsers runs on load.
+            // If editNews ran BEFORE loadUsers finished, the values might be unset.
+            // We should check if we need to restore values.
+            const editId = document.getElementById('editNewsId').value;
+            if (editId) {
+                // We are in edit mode, restore selected values if they exist
+                const currentAuthorId = document.getElementById('newsAuthorId').getAttribute('data-pending-value');
+                if (currentAuthorId) document.getElementById('newsAuthorId').value = currentAuthorId;
+
+                const currentCoAuthorId = document.getElementById('newsCoAuthorId').getAttribute('data-pending-value');
+                if (currentCoAuthorId) document.getElementById('newsCoAuthorId').value = currentCoAuthorId;
+            }
+
+        } else {
+            console.error('[admin-news] Failed to load users:', res.status);
+        }
+    } catch (e) {
+        console.error('[admin-news] Failed to load users:', e);
+    }
+}
+
+window.handleAuthorChange = () => {
+    const select = document.getElementById('newsAuthorId');
+    const input = document.getElementById('newsAuthorName');
+
+    if (select.value) {
+        // User selected - pre-fill input if needed or hide it? 
+        // Logic: If user selected, we use their name unless specific override is needed.
+        // Let's keep input visible for consistency but maybe placeholder changes
+        const user = availableUsers.find(u => u.id == select.value);
+        if (user) {
+            input.value = user.realName || user.username;
+        }
+    } else {
+        input.value = '';
+        input.placeholder = 'Jméno autora';
+    }
+    updatePreview();
+};
+
+window.handleCoAuthorChange = () => {
+    const select = document.getElementById('newsCoAuthorId');
+    const input = document.getElementById('newsCoAuthorName');
+
+    if (select.value) {
+        input.style.display = 'block';
+        const user = availableUsers.find(u => u.id == select.value);
+        if (user) {
+            input.value = user.realName || user.username;
+        }
+    } else {
+        // If "None/Custom" selected
+        input.style.display = 'none';
+        // Wait, "None/Custom" is valid for custom co-author too?
+        // Let's make the option value="" be "Custom / None".
+        // If they type in input logic handles it. 
+        input.style.display = 'block';
+        input.value = '';
+    }
+    updatePreview();
+};
 
 // Check for draft when switching to editor
 function checkDraft() {
@@ -140,7 +246,16 @@ function resetEditor() {
     document.getElementById('newsDate').value = localIso;
 
     document.getElementById('publishCheck').checked = false;
+    document.getElementById('publishCheck').checked = false;
     document.getElementById('imageUrl').value = '';
+
+    document.getElementById('newsAuthorId').value = '';
+    document.getElementById('newsAuthorName').value = '';
+    document.getElementById('newsCoAuthorId').value = '';
+    document.getElementById('newsCoAuthorName').value = '';
+    document.getElementById('newsCoAuthorName').style.display = 'block';
+
+    currentViewCount = 0;
 
     uploadedImageData = null;
     window.uploadedImageData = null;
@@ -175,7 +290,16 @@ async function editNews(id) {
         document.getElementById('newsDate').value = item.publishedDate.split('T')[0];
         document.getElementById('articleContent').innerHTML = item.content || '';
         document.getElementById('newsExcerpt').value = item.excerpt;
+        document.getElementById('newsExcerpt').value = item.excerpt;
         document.getElementById('publishCheck').checked = item.isPublished;
+
+        // Set authors
+        document.getElementById('newsAuthorId').value = item.authorId || '';
+        document.getElementById('newsAuthorName').value = item.authorName || '';
+        document.getElementById('newsCoAuthorId').value = item.coAuthorId || '';
+        document.getElementById('newsCoAuthorName').value = item.coAuthorName || '';
+
+        currentViewCount = item.viewCount || 0;
 
         if (item.thumbnailUrl) {
             // Extract crop if present
@@ -279,6 +403,10 @@ async function saveNews() {
         excerpt: document.getElementById('newsExcerpt').value,
         thumbnailUrl: uploadedImageData ? (uploadedImageData + '#crop=' + imageCropPosition) : null,
         isPublished: document.getElementById('publishCheck').checked,
+        authorId: document.getElementById('newsAuthorId').value || null,
+        authorName: document.getElementById('newsAuthorName').value || null,
+        coAuthorId: document.getElementById('newsCoAuthorId').value || null,
+        coAuthorName: document.getElementById('newsCoAuthorName').value || null,
         gamesJson: JSON.stringify(games.map(g => ({ ...g, isCommented: g.commented }))),
         galleryJson: JSON.stringify(galleryImages)
     };
@@ -355,6 +483,22 @@ function updatePreview() {
     document.getElementById('previewExcerpt').textContent = document.getElementById('newsExcerpt').value || 'Krátký popis...';
     const date = document.getElementById('newsDate').value;
     document.getElementById('previewDate').textContent = date ? new Date(date).toLocaleDateString('cs-CZ') : 'Datum';
+
+    // Author
+    const authorName = document.getElementById('newsAuthorName').value;
+    const coAuthorName = document.getElementById('newsCoAuthorName').value;
+    let authorDisplay = authorName || 'Autor';
+    if (coAuthorName && coAuthorName.trim()) {
+        authorDisplay += ' & ' + coAuthorName;
+    }
+    document.getElementById('previewAuthor').textContent = authorDisplay;
+
+    // Stats
+    const content = document.getElementById('articleContent').innerText || ''; // innerText gets text without HTML
+    const wordCount = content.replace(/\s+/g, ' ').trim().split(' ').filter(w => w.length > 0).length;
+    document.getElementById('previewWords').textContent = wordCount;
+    document.getElementById('previewViews').textContent = currentViewCount;
+
 
     // Update card preview image
     const previewImg = document.getElementById('previewImage');
@@ -848,265 +992,12 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // ================================
-// RECORDED GAMES MODAL
+// MODALS (Recorded Games, PGN, Header)
 // ================================
-
-async function showRecordedGamesModal() {
-    console.log('[admin-news] showRecordedGamesModal()');
-    const modal = document.getElementById('recordedGamesModal');
-    const list = document.getElementById('recordedGamesList');
-
-    modal.style.display = 'flex';
-    list.innerHTML = '<p style="color: var(--text-muted); text-align: center;"><i class="fa-solid fa-spinner fa-spin"></i> Načítám...</p>';
-
-    try {
-        const res = await fetch(`${API_URL}/games`, {
-            headers: { 'Authorization': `Bearer ${authToken}` }
-        });
-        const gamesData = await res.json();
-
-        if (!gamesData.length) {
-            list.innerHTML = '<p style="color: var(--text-muted); text-align: center;">Žádné nahrané partie</p>';
-            return;
-        }
-
-        list.innerHTML = gamesData.map(g => `
-            <div class="db-game-item" data-game-id="${g.id}" style="display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem 1rem; margin-bottom: 0.5rem; background: rgba(255,255,255,0.03); border-radius: 8px; cursor: pointer; border-left: 3px solid #3b82f6; transition: all 0.2s;"
-                 onmouseover="this.style.background='rgba(59,130,246,0.15)'"
-                 onmouseout="this.style.background='rgba(255,255,255,0.03)'">
-                <span style="font-size: 0.65rem; padding: 0.15rem 0.35rem; border-radius: 3px; font-weight: 700; background: #3b82f6; color: white;">PGN</span>
-                <div style="flex: 1; min-width: 0;">
-                    <div style="font-weight: 600; color: var(--text-main); font-size: 0.9rem;">${escapeHtml(g.white)} - ${escapeHtml(g.black)}</div>
-                    <div style="display: flex; gap: 0.75rem; font-size: 0.75rem; color: var(--text-muted);">
-                        <span style="color: #4ade80; font-weight: 700;">${g.result || '*'}</span>
-                        <span>${g.date ? new Date(g.date).toLocaleDateString('cs-CZ') : ''}</span>
-                        ${g.event ? `<span>${escapeHtml(g.event)}</span>` : ''}
-                    </div>
-                </div>
-                <i class="fa-solid fa-plus" style="color: #60a5fa;"></i>
-            </div>
-        `).join('');
-
-        list.querySelectorAll('.db-game-item').forEach(item => {
-            item.addEventListener('click', () => {
-                const gameId = parseInt(item.dataset.gameId);
-                addGameFromDB(gameId);
-            });
-        });
-    } catch (e) {
-        console.error('Error loading recorded games:', e);
-        list.innerHTML = '<p style="color: #fca5a5; text-align: center;">Chyba načítání</p>';
-    }
-}
-
-function closeRecordedGamesModal() {
-    document.getElementById('recordedGamesModal').style.display = 'none';
-}
-
-async function addGameFromDB(gameId) {
-    console.log('[admin-news] addGameFromDB()', gameId);
-    try {
-        const res = await fetch(`${API_URL}/games/${gameId}`, {
-            headers: { 'Authorization': `Bearer ${authToken}` }
-        });
-        const gameData = await res.json();
-
-        const title = `${gameData.white || '?'} - ${gameData.black || '?'}`;
-
-        games.push({
-            title: title,
-            gameId: null,
-            pgn: gameData.pgn,
-            dbGameId: gameId,
-            team: 'A tým',
-            isCommented: false,
-            commented: false
-        });
-
-        renderGames();
-        closeRecordedGamesModal();
-    } catch (e) {
-        console.error('Error fetching game:', e);
-        alert('Nepodařilo se načíst partii');
-    }
-}
-
-// Close modal on outside click
-document.getElementById('recordedGamesModal')?.addEventListener('click', (e) => {
-    if (e.target.id === 'recordedGamesModal') closeRecordedGamesModal();
-});
-
-// ================================
-// PGN PASTE MODAL FOR NEWS
-// ================================
-
-function showNewsGamePgnModal() {
-    const modal = document.getElementById('newsGamePgnModal');
-    if (modal) {
-        modal.style.display = 'flex';
-        document.getElementById('newsGamePgnTitle').value = '';
-        document.getElementById('newsGamePgnText').value = '';
-    }
-}
-
-function closeNewsGamePgnModal() {
-    const modal = document.getElementById('newsGamePgnModal');
-    if (modal) modal.style.display = 'none';
-}
-
-function addGameFromPgn() {
-    const pgnInput = document.getElementById('newsGamePgnText');
-    const pgnText = pgnInput.value.trim();
-
-    if (!pgnText) {
-        alert('Vložte PGN notaci');
-        return;
-    }
-
-    // Split multiple games - each game starts with [Event
-    const gameChunks = pgnText.split(/(?=\[Event\s)/);
-    const validGames = gameChunks.filter(chunk => chunk.trim().length > 0);
-
-    if (validGames.length === 0) {
-        validGames.push(pgnText);
-    }
-
-    let addedCount = 0;
-    for (const pgn of validGames) {
-        const trimmedPgn = pgn.trim();
-        if (!trimmedPgn) continue;
-
-        const whiteMatch = trimmedPgn.match(/\[White\s+"([^"]+)"\]/);
-        const blackMatch = trimmedPgn.match(/\[Black\s+"([^"]+)"\]/);
-        const title = (whiteMatch && blackMatch)
-            ? `${whiteMatch[1]} - ${blackMatch[1]}`
-            : 'Partie';
-
-        games.push({
-            title: title,
-            gameId: null,
-            pgn: trimmedPgn,
-            dbGameId: null,
-            team: 'A tým',
-            isCommented: false,
-            commented: false
-        });
-        addedCount++;
-    }
-
-    renderGames();
-    closeNewsGamePgnModal();
-
-    if (addedCount > 1) {
-        alert(`Přidáno ${addedCount} partií`);
-    }
-}
-
-function handlePgnFileUpload(event) {
-    const file = event.target.files[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = (e) => {
-        document.getElementById('newsGamePgnText').value = e.target.result;
-    };
-    reader.readAsText(file);
-    event.target.value = '';
-}
-
-function setupPgnDropZone() {
-    const dropZone = document.getElementById('pgnDropZone');
-    const overlay = document.getElementById('pgnDropOverlay');
-    const textarea = document.getElementById('newsGamePgnText');
-
-    if (!dropZone || !overlay) return;
-
-    dropZone.addEventListener('dragenter', (e) => {
-        e.preventDefault();
-        overlay.style.display = 'flex';
-    });
-
-    dropZone.addEventListener('dragover', (e) => {
-        e.preventDefault();
-        overlay.style.display = 'flex';
-    });
-
-    dropZone.addEventListener('dragleave', (e) => {
-        if (!dropZone.contains(e.relatedTarget)) {
-            overlay.style.display = 'none';
-        }
-    });
-
-    dropZone.addEventListener('drop', (e) => {
-        e.preventDefault();
-        overlay.style.display = 'none';
-
-        const file = e.dataTransfer.files[0];
-        if (file && (file.name.endsWith('.pgn') || file.name.endsWith('.txt') || file.type === 'text/plain')) {
-            const reader = new FileReader();
-            reader.onload = (ev) => {
-                textarea.value = ev.target.result;
-            };
-            reader.readAsText(file);
-        }
-    });
-}
-
-// Initialize drop zone when modal opens
-const origShowNewsGamePgnModal = showNewsGamePgnModal;
-showNewsGamePgnModal = function () {
-    origShowNewsGamePgnModal();
-    setTimeout(setupPgnDropZone, 100);
-};
-
-// Close PGN modal on outside click
-document.getElementById('newsGamePgnModal')?.addEventListener('click', (e) => {
-    if (e.target.id === 'newsGamePgnModal') closeNewsGamePgnModal();
-});
-
-// ================================
-// HEADER/SEPARATOR MODAL
-// ================================
-
-function showHeaderModal() {
-    const modal = document.getElementById('headerModal');
-    if (modal) {
-        modal.style.display = 'flex';
-        const input = document.getElementById('headerTitleModal');
-        if (input) {
-            input.value = '';
-            input.focus();
-        }
-    }
-}
-
-function closeHeaderModal() {
-    const modal = document.getElementById('headerModal');
-    if (modal) modal.style.display = 'none';
-}
-
-function addHeaderFromModal() {
-    const input = document.getElementById('headerTitleModal');
-    const title = input?.value.trim();
-
-    if (!title) {
-        alert('Zadejte název oddělovače');
-        return;
-    }
-
-    games.push({
-        type: 'header',
-        title: title
-    });
-
-    renderGames();
-    closeHeaderModal();
-}
-
-// Close header modal on outside click
-document.getElementById('headerModal')?.addEventListener('click', (e) => {
-    if (e.target.id === 'headerModal') closeHeaderModal();
-});
+// NOTE: Modal functions moved to js/admin/admin-news-modals.js
+// Includes: showRecordedGamesModal, closeRecordedGamesModal, addGameFromDB,
+// showNewsGamePgnModal, closeNewsGamePgnModal, addGameFromPgn, handlePgnFileUpload,
+// showHeaderModal, closeHeaderModal, addHeaderFromModal
 
 // ================================
 // EXPORTS - Core functions from this module
@@ -1144,20 +1035,7 @@ window.selectGalleryForThumbnail = selectGalleryForThumbnail;
 window.selectGalleryForArticleGallery = selectGalleryForArticleGallery;
 window.setupGalleryDropzone = setupGalleryDropzone;
 
-// Recorded Games exports
-window.showRecordedGamesModal = showRecordedGamesModal;
-window.closeRecordedGamesModal = closeRecordedGamesModal;
-window.addGameFromDB = addGameFromDB;
-
-// PGN Modal exports
-window.showNewsGamePgnModal = showNewsGamePgnModal;
-window.closeNewsGamePgnModal = closeNewsGamePgnModal;
-window.addGameFromPgn = addGameFromPgn;
-window.handlePgnFileUpload = handlePgnFileUpload;
-
-// Header Modal exports
-window.showHeaderModal = showHeaderModal;
-window.closeHeaderModal = closeHeaderModal;
-window.addHeaderFromModal = addHeaderFromModal;
+// Modal exports moved to js/admin/admin-news-modals.js
+// (showRecordedGamesModal, showNewsGamePgnModal, showHeaderModal, etc.)
 
 console.log('[admin-news] Module loaded successfully');

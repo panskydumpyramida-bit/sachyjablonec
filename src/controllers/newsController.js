@@ -28,7 +28,15 @@ export const getAllNews = async (req, res) => {
                 author: {
                     select: {
                         id: true,
-                        username: true
+                        username: true,
+                        realName: true
+                    }
+                },
+                coAuthor: {
+                    select: {
+                        id: true,
+                        username: true,
+                        realName: true
                     }
                 },
                 _count: {
@@ -84,7 +92,15 @@ export const getNewsById = async (req, res) => {
                 author: {
                     select: {
                         id: true,
-                        username: true
+                        username: true,
+                        realName: true
+                    }
+                },
+                coAuthor: {
+                    select: {
+                        id: true,
+                        username: true,
+                        realName: true
                     }
                 },
                 matchReport: {
@@ -254,7 +270,7 @@ const syncGalleryImages = async (galleryJson, category, newsId) => {
 
 export const createNews = async (req, res) => {
     try {
-        const { title, category, excerpt, content, thumbnailUrl, linkUrl, publishedDate, isPublished, gamesJson, teamsJson, galleryJson, introJson } = req.body;
+        const { title, category, excerpt, content, thumbnailUrl, linkUrl, publishedDate, isPublished, gamesJson, teamsJson, galleryJson, introJson, authorName, coAuthorId, coAuthorName } = req.body;
 
         if (!title || !category || !excerpt || !publishedDate) {
             return res.status(400).json({ error: 'Required fields missing' });
@@ -285,7 +301,10 @@ export const createNews = async (req, res) => {
                 introJson,
                 publishedDate: publishedDate ? new Date(publishedDate) : new Date(),
                 isPublished: isPublished || false,
-                authorId: req.user ? req.user.id : null
+                authorId: req.user ? req.user.id : null,
+                authorName: authorName || null,
+                coAuthorId: coAuthorId ? parseInt(coAuthorId) : null,
+                coAuthorName: coAuthorName || null
             }
         });
 
@@ -309,7 +328,7 @@ export const createNews = async (req, res) => {
 export const updateNews = async (req, res) => {
     try {
         const { id } = req.params;
-        const { title, category, excerpt, content, thumbnailUrl, linkUrl, publishedDate, isPublished, gamesJson, teamsJson, galleryJson, introJson } = req.body;
+        const { title, category, excerpt, content, thumbnailUrl, linkUrl, publishedDate, isPublished, gamesJson, teamsJson, galleryJson, introJson, authorId, authorName, coAuthorId, coAuthorName } = req.body;
 
         const updateData = {};
         if (title) {
@@ -336,6 +355,10 @@ export const updateNews = async (req, res) => {
         if (teamsJson !== undefined) updateData.teamsJson = teamsJson;
         if (galleryJson !== undefined) updateData.galleryJson = galleryJson;
         if (introJson !== undefined) updateData.introJson = introJson;
+        if (authorId !== undefined) updateData.authorId = authorId ? parseInt(authorId) : null;
+        if (authorName !== undefined) updateData.authorName = authorName || null;
+        if (coAuthorId !== undefined) updateData.coAuthorId = coAuthorId ? parseInt(coAuthorId) : null;
+        if (coAuthorName !== undefined) updateData.coAuthorName = coAuthorName || null;
 
         const news = await prisma.news.update({
             where: { id: parseInt(id) },
@@ -408,3 +431,22 @@ export const togglePublish = async (req, res) => {
     }
 };
 
+// Increment view count for an article
+export const incrementViewCount = async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        const news = await prisma.news.update({
+            where: { id: parseInt(id) },
+            data: {
+                viewCount: { increment: 1 }
+            },
+            select: { viewCount: true }
+        });
+
+        res.json({ viewCount: news.viewCount });
+    } catch (error) {
+        console.error('Increment view error:', error);
+        res.status(500).json({ error: 'Failed to increment view count' });
+    }
+};
