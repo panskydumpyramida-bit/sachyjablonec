@@ -6,11 +6,28 @@ window.RosterLoader = (function () {
     'use strict';
 
     // Static mappings for our teams (known SNRs)
+    // Adult teams
     const ourTeamMappings = {
         'A': { url: 'https://chess-results.com/tnr1276470.aspx?lan=5', snr: 1, competitionId: 'kp-liberec' },
         'B': { url: 'https://chess-results.com/tnr1276470.aspx?lan=5', snr: 10, competitionId: 'kp-liberec' },
         'C': { url: 'https://chess-results.com/tnr1278502.aspx?lan=5', snr: 4, competitionId: 'ks-vychod' },
         'D': { url: 'https://chess-results.com/tnr1278502.aspx?lan=5', snr: 5, competitionId: 'ks-vychod' }
+    };
+
+    // Youth team mappings (by competition ID)
+    const youthTeamMappings = {
+        '3255': { // 1. liga mládeže A
+            url: 'https://s3.chess-results.com/tnr1243811.aspx?lan=5',
+            snr: 4
+        },
+        '3363': { // Krajský přebor mládeže
+            url: 'https://s2.chess-results.com/tnr1303510.aspx?lan=5',
+            snr: 1 // TODO: Verify correct SNR
+        },
+        'ks-st-zaku': { // Krajská soutěž st. žáků
+            url: 'https://s1.chess-results.com/tnr1310849.aspx?lan=5',
+            snr: 1 // TODO: Verify correct SNR
+        }
     };
 
     // Cache for fetched rosters
@@ -203,8 +220,14 @@ window.RosterLoader = (function () {
             if (isBizuterieTeam(teamName)) {
                 const letter = getTeamLetter(teamName);
                 if (letter && ourTeamMappings[letter]) {
+                    // Adult team with letter (A/B/C/D)
                     url = ourTeamMappings[letter].url;
                     snr = ourTeamMappings[letter].snr;
+                } else if (youthTeamMappings[competitionId]) {
+                    // Youth team - use competition-based mapping
+                    url = youthTeamMappings[competitionId].url;
+                    snr = youthTeamMappings[competitionId].snr;
+                    console.log(`[RosterLoader] Using youth mapping for ${competitionId}: snr=${snr}`);
                 }
             }
             if (!url || !snr) {
