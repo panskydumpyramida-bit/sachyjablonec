@@ -6,13 +6,13 @@ EXCEPTION
 END $$;
 
 -- DropIndex
-DROP INDEX "comments_author_id_idx";
+DROP INDEX IF EXISTS "comments_author_id_idx";
 
 -- DropIndex
-DROP INDEX "comments_news_id_idx";
+DROP INDEX IF EXISTS "comments_news_id_idx";
 
 -- AlterTable
-ALTER TABLE "Message" ADD COLUMN     "type" TEXT NOT NULL DEFAULT 'chat';
+ALTER TABLE "Message" ADD COLUMN IF NOT EXISTS "type" TEXT NOT NULL DEFAULT 'chat';
 
 -- AlterTable
 ALTER TABLE "news" ADD COLUMN IF NOT EXISTS "author_name" TEXT,
@@ -21,7 +21,7 @@ ADD COLUMN IF NOT EXISTS "co_author_name" TEXT,
 ADD COLUMN IF NOT EXISTS "view_count" INTEGER NOT NULL DEFAULT 0;
 
 -- CreateTable
-CREATE TABLE "chess_games" (
+CREATE TABLE IF NOT EXISTS "chess_games" (
     "id" SERIAL NOT NULL,
     "event" TEXT,
     "site" TEXT,
@@ -40,7 +40,7 @@ CREATE TABLE "chess_games" (
 );
 
 -- CreateTable
-CREATE TABLE "chess_moves" (
+CREATE TABLE IF NOT EXISTS "chess_moves" (
     "id" SERIAL NOT NULL,
     "game_id" INTEGER NOT NULL,
     "ply_num" INTEGER NOT NULL,
@@ -50,22 +50,29 @@ CREATE TABLE "chess_moves" (
 );
 
 -- CreateIndex
-CREATE INDEX "chess_games_white_player_idx" ON "chess_games"("white_player");
+CREATE INDEX IF NOT EXISTS "chess_games_white_player_idx" ON "chess_games"("white_player");
 
 -- CreateIndex
-CREATE INDEX "chess_games_black_player_idx" ON "chess_games"("black_player");
+CREATE INDEX IF NOT EXISTS "chess_games_black_player_idx" ON "chess_games"("black_player");
 
 -- CreateIndex
-CREATE INDEX "chess_games_eco_idx" ON "chess_games"("eco");
+CREATE INDEX IF NOT EXISTS "chess_games_eco_idx" ON "chess_games"("eco");
 
 -- CreateIndex
-CREATE INDEX "chess_games_date_idx" ON "chess_games"("date");
+CREATE INDEX IF NOT EXISTS "chess_games_date_idx" ON "chess_games"("date");
 
 -- CreateIndex
-CREATE INDEX "chess_moves_san_ply_num_idx" ON "chess_moves"("san", "ply_num");
+CREATE INDEX IF NOT EXISTS "chess_moves_san_ply_num_idx" ON "chess_moves"("san", "ply_num");
 
 -- CreateIndex
-CREATE INDEX "chess_moves_game_id_idx" ON "chess_moves"("game_id");
+CREATE INDEX IF NOT EXISTS "chess_moves_game_id_idx" ON "chess_moves"("game_id");
 
 -- AddForeignKey
-ALTER TABLE "news" ADD CONSTRAINT "news_co_author_id_fkey" FOREIGN KEY ("co_author_id") REFERENCES "users"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint WHERE conname = 'news_co_author_id_fkey'
+    ) THEN
+        ALTER TABLE "news" ADD CONSTRAINT "news_co_author_id_fkey" FOREIGN KEY ("co_author_id") REFERENCES "users"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+    END IF;
+END $$;
