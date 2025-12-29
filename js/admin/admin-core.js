@@ -236,20 +236,42 @@ async function loadDashboard() {
             headers: { 'Authorization': `Bearer ${authToken}` }
         });
         const news = await res.json();
-        document.getElementById('newsTableBody').innerHTML = news.map(item => `
+        document.getElementById('newsTableBody').innerHTML = news.map(item => {
+            // Determine status: published, scheduled (future date), or draft
+            const now = new Date();
+            const pubDate = new Date(item.publishedDate);
+            const isScheduled = item.isPublished && pubDate > now;
+            const isPublished = item.isPublished && pubDate <= now;
+
+            let statusClass, statusIcon, statusText;
+            if (isScheduled) {
+                statusClass = 'status-scheduled';
+                statusIcon = '⏰';
+                statusText = ' Naplán';
+            } else if (isPublished) {
+                statusClass = 'status-published';
+                statusIcon = '✓';
+                statusText = ' Pub';
+            } else {
+                statusClass = 'status-draft';
+                statusIcon = '○';
+                statusText = ' Konc';
+            }
+
+            return `
             <tr>
                 <td>${new Date(item.publishedDate).toLocaleDateString('cs-CZ')}</td>
                 <td>${item.title}</td>
                 <td class="hide-mobile">${item.category}</td>
                 <td class="hide-mobile"><span class="highlight-name" style="font-size: 0.85rem;">${item.author?.username || '-'}</span></td>
-                <td class="hide-mobile"><span class="status-badge ${item.isPublished ? 'status-published' : 'status-draft'}">${item.isPublished ? '✓' : '○'}<span class="status-text">${item.isPublished ? ' Pub' : ' Konc'}</span></span></td>
+                <td class="hide-mobile"><span class="status-badge ${statusClass}">${statusIcon}<span class="status-text">${statusText}</span></span></td>
                 <td>
                     <button class="action-btn btn-edit" onclick="editNews(${item.id})"><i class="fa-solid fa-pen"></i></button>
                     <button class="action-btn btn-publish" onclick="togglePublish(${item.id})" title="${item.isPublished ? 'Skrýt' : 'Publikovat'}"><i class="fa-solid fa-${item.isPublished ? 'eye-slash' : 'eye'}"></i></button>
                     ${['ADMIN', 'SUPERADMIN'].includes((currentUser?.role || '').toUpperCase()) ? `<button class="action-btn btn-delete" onclick="deleteNews(${item.id})"><i class="fa-solid fa-trash"></i></button>` : ''}
                 </td>
             </tr>
-        `).join('');
+        `}).join('');
     } catch (e) {
         console.error('Dashboard load error:', e);
     }

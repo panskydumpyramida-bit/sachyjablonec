@@ -17,6 +17,12 @@ export const getAllNews = async (req, res) => {
         const where = {};
         if (published !== undefined) {
             where.isPublished = published === 'true';
+            // If requesting published articles, also filter out future-dated (scheduled) articles
+            if (published === 'true') {
+                where.publishedDate = {
+                    lte: new Date()
+                };
+            }
         }
         if (category) {
             where.category = category;
