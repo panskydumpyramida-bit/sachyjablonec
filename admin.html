@@ -374,7 +374,7 @@
                                 </div>
                                 <div class="form-group" style="margin-bottom: 0.75rem;">
                                     <label style="font-size: 0.8rem;">Datum</label><input type="date" id="newsDate"
-                                        oninput="updatePreview()" style="font-size: 0.85rem;">
+                                        oninput="updatePreview(); updatePublishLabel();" style="font-size: 0.85rem;">
                                 </div>
                                 <div class="form-group" style="margin-bottom: 0.75rem;">
                                     <label style="font-size: 0.8rem;">Krátký
@@ -383,11 +383,13 @@
                                         style="font-size: 0.85rem;"></textarea>
                                 </div><label
                                     style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; font-size: 0.85rem;"><input
-                                        type="checkbox" id="publishCheck" style="width: auto;"><span>Publikovat
-                                        ihned</span></label><button type="button" class="btn-primary"
+                                        type="checkbox" id="publishCheck" style="width: auto;"
+                                        onchange="updatePublishLabel()"><span id="publishCheckLabel">Publikovat
+                                        ihned</span></label><button type="button" class="btn-primary" id="saveNewsBtn"
                                     onclick="saveNews()"
                                     style="width: 100%; margin-top: 1rem; justify-content: center;"><i
-                                        class="fa-solid fa-save"></i>Uložit </button>
+                                        class="fa-solid fa-save" id="saveNewsBtnIcon"></i><span
+                                        id="saveNewsBtnText">Uložit</span></button>
                             </div>
                             <!-- end publikaceContent -->
                         </div>

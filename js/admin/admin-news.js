@@ -232,6 +232,52 @@ function checkDraft() {
 // CORE EDITOR FUNCTIONS
 // ================================
 
+/**
+ * Updates the publish checkbox label and save button text based on:
+ * - Whether the date is in the future (scheduled) or not (immediate)
+ * - Whether the publish checkbox is checked
+ * This makes the UI self-explanatory for the user.
+ */
+function updatePublishLabel() {
+    const dateInput = document.getElementById('newsDate');
+    const checkbox = document.getElementById('publishCheck');
+    const checkboxLabel = document.getElementById('publishCheckLabel');
+    const btnText = document.getElementById('saveNewsBtnText');
+    const btnIcon = document.getElementById('saveNewsBtnIcon');
+    const btn = document.getElementById('saveNewsBtn');
+
+    if (!dateInput || !checkbox || !checkboxLabel || !btnText || !btnIcon) return;
+
+    const selectedDate = new Date(dateInput.value + 'T23:59:59');
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const isFutureDate = selectedDate > today;
+    const isChecked = checkbox.checked;
+
+    if (!isChecked) {
+        // Draft mode
+        checkboxLabel.textContent = 'Publikovat ihned';
+        btnText.textContent = ' Uložit koncept';
+        btnIcon.className = 'fa-solid fa-file-pen';
+        btn.style.background = ''; // Default primary
+    } else if (isFutureDate) {
+        // Scheduled for future
+        checkboxLabel.innerHTML = 'Naplánovat publikaci <span style="color: #fdba74;">📅</span>';
+        btnText.textContent = ' Naplánovat';
+        btnIcon.className = 'fa-regular fa-clock';
+        btn.style.background = 'linear-gradient(135deg, #f97316, #ea580c)'; // Orange gradient
+    } else {
+        // Publish immediately
+        checkboxLabel.textContent = 'Publikovat ihned';
+        btnText.textContent = ' Publikovat';
+        btnIcon.className = 'fa-solid fa-paper-plane';
+        btn.style.background = 'linear-gradient(135deg, #22c55e, #16a34a)'; // Green gradient
+    }
+}
+
+// Export for global access
+window.updatePublishLabel = updatePublishLabel;
+
 function resetEditor() {
     console.log('[admin-news] resetEditor()');
     document.getElementById('editorTitle').textContent = 'Nová novinka';
@@ -245,7 +291,6 @@ function resetEditor() {
     const localIso = new Date(today.getTime() - (today.getTimezoneOffset() * 60000)).toISOString().split('T')[0];
     document.getElementById('newsDate').value = localIso;
 
-    document.getElementById('publishCheck').checked = false;
     document.getElementById('publishCheck').checked = false;
     document.getElementById('imageUrl').value = '';
 
@@ -269,6 +314,7 @@ function resetEditor() {
     renderGames();
     document.getElementById('galleryPreview').innerHTML = '';
     updatePreview();
+    updatePublishLabel(); // Update button/checkbox labels
 
     // Clear auto-saved draft
     localStorage.removeItem('newsDraft');
@@ -349,6 +395,7 @@ async function editNews(id) {
         renderGames();
         renderGallery();
         updatePreview();
+        updatePublishLabel(); // Update button/checkbox labels based on date
     } catch (e) {
         console.error(e);
         // Fallback rendering in case of partial failure
