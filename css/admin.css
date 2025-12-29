@@ -132,9 +132,14 @@
     color: #86efac;
 }
 
+.status-scheduled {
+    background: rgba(251, 146, 60, 0.2);
+    color: #fdba74;
+}
+
 .status-draft {
-    background: rgba(234, 179, 8, 0.2);
-    color: #fde047;
+    background: rgba(148, 163, 184, 0.2);
+    color: #94a3b8;
 }
 
 .action-btn {
