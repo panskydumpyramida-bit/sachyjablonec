@@ -1,0 +1,110 @@
+/* Mobile Table Optimizations */
+
+/* Sticky Columns for Results Table - ONLY for Crosstables inside details */
+@media (max-width: 767px) {
+
+    .crosstable-details .results-table td:first-child,
+    .crosstable-details .results-table th:first-child {
+        position: sticky;
+        left: 0;
+        z-index: 10;
+        background: #1e293b;
+        /* Fallback row color */
+    }
+
+    /* Fix header sticky background to match header gradient */
+    .crosstable-details .results-table th:first-child {
+        background: #0f172a;
+        /* Approximate dark header color or inherit if transparent */
+        z-index: 11;
+        /* Header above body */
+    }
+
+    /* Sticky Name Column (2nd column) */
+    .crosstable-details .results-table td:nth-child(2),
+    .crosstable-details .results-table th:nth-child(2) {
+        position: sticky;
+        left: 3rem;
+        /* Approx offset */
+        z-index: 10;
+        border-right: 2px solid rgba(212, 175, 55, 0.4);
+        background: #1e293b;
+    }
+
+    .crosstable-details .results-table th:nth-child(2) {
+        background: #0f172a;
+        z-index: 11;
+    }
+}
+
+/* Ensure background covers scrolling content */
+.results-table tr {
+    background: #1e293b;
+}
+
+/* Fix z-index context */
+.table-wrapper {
+    position: relative;
+    z-index: 1;
+}
+
+/* Mobile Collapsible Details */
+@media (min-width: 768px) {
+
+    /* Hide the summary button on desktop, force content visible */
+    details.crosstable-details>summary {
+        display: none;
+    }
+
+    details.crosstable-details {
+        display: block !important;
+    }
+
+    details.crosstable-details>.table-wrapper {
+        display: block !important;
+    }
+}
+
+@media (max-width: 767px) {
+
+    /* Style the summary button */
+    details.crosstable-details>summary {
+        list-style: none;
+        /* remove default triangle */
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(212, 175, 55, 0.3);
+        color: var(--primary-color);
+        padding: 0.8rem 1.2rem;
+        border-radius: 8px;
+        text-align: center;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s;
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+    }
+
+    details.crosstable-details>summary:hover {
+        background: rgba(212, 175, 55, 0.1);
+    }
+
+    details.crosstable-details>summary::after {
+        content: '\f078';
+        /* fa-chevron-down */
+        font-family: 'Font Awesome 6 Free';
+        font-weight: 900;
+        transition: transform 0.3s;
+    }
+
+    details.crosstable-details[open]>summary::after {
+        transform: rotate(180deg);
+    }
+
+    /* Box shadow for sticky columns to show depth */
+    .crosstable-details .results-table td:nth-child(2) {
+        box-shadow: 4px 0 8px rgba(0, 0, 0, 0.3);
+    }
+}

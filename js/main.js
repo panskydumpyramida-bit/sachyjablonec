@@ -6,6 +6,13 @@ document.addEventListener('DOMContentLoaded', () => {
         menuToggle.addEventListener('click', () => {
             navLinks.classList.toggle('active');
             menuToggle.classList.toggle('active'); // Add animation class
+
+            // Close user dropdown when opening main menu (mutual exclusion)
+            const userDropdown = document.getElementById('user-dropdown');
+            if (userDropdown && navLinks.classList.contains('active')) {
+                userDropdown.classList.remove('active');
+            }
+
             const icon = menuToggle.querySelector('i');
             if (icon) {
                 if (navLinks.classList.contains('active')) {

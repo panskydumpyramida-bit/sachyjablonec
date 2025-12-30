@@ -638,7 +638,7 @@ async function showGalleryPicker(callback) {
                 </div>
             </div>
         `;
-        modal.style.cssText = 'position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 3000; display: flex; align-items: center; justify-content: center;';
+        modal.style.cssText = 'position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 10005; display: flex; align-items: center; justify-content: center;';
         document.body.appendChild(modal);
 
         if (!document.getElementById('galleryPickerStyles')) {

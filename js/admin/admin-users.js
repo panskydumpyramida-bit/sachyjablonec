@@ -43,7 +43,7 @@ async function loadUsers() {
                 </td>
                 <td>${new Date(u.createdAt).toLocaleDateString('cs-CZ')}</td>
                 <td>
-                    ${u.id !== currentUser.id ? `<button class="action-btn btn-delete" onclick="deleteUser(${u.id})"><i class="fa-solid fa-trash"></i></button>` : ''}
+                    ${(currentUser && u.id !== currentUser.id) ? `<button class="action-btn btn-delete" onclick="deleteUser(${u.id})"><i class="fa-solid fa-trash"></i></button>` : ''}
                 </td>
             </tr>
         `).join('');

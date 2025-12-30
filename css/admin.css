@@ -1491,10 +1491,69 @@ input:checked+.slider:before {
     padding-left: 1.25rem;
 }
 
+
 .changelog-content li {
     margin-bottom: 0.4rem;
     font-size: 0.9rem;
     color: rgba(255, 255, 255, 0.8);
+}
+
+/* Floating Toolbar */
+.floating-toolbar {
+    position: fixed;
+    /* Fixed is safer relative to viewport */
+    background: #1e293b;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    padding: 4px;
+    display: flex;
+    gap: 2px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+    z-index: 9999;
+    transition: opacity 0.2s, transform 0.2s, visibility 0.2s;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transform: translateY(10px);
+}
+
+.floating-toolbar.visible {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    transform: translateY(0);
+}
+
+.floating-btn {
+    background: transparent;
+    border: none;
+    color: #cbd5e1;
+    padding: 6px 8px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-size: 0.9rem;
+    min-width: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.floating-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: #fff;
+    transform: translateY(-1px);
+}
+
+.floating-btn.active {
+    background: rgba(96, 165, 250, 0.2);
+    color: #60a5fa;
+}
+
+.floating-divider {
+    width: 1px;
+    background: rgba(255, 255, 255, 0.1);
+    margin: 4px 2px;
 }
 
 .changelog-content code {
@@ -1781,4 +1840,274 @@ input:checked+.slider:before {
     color: var(--text-muted);
     text-transform: uppercase;
     letter-spacing: 0.05em;
+}
+
+/* Link Modal (Dynamic) */
+#linkModal {
+    position: relative;
+    z-index: 10000;
+}
+
+#linkModal .modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.85);
+    z-index: 9998;
+}
+
+#linkModal .modal-content {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 9999;
+    background: #1a1a2e;
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
+    width: 90%;
+    max-width: 400px;
+    /* Limit width */
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Auto-resize Textareas */
+textarea.auto-resize {
+    resize: none !important;
+    overflow-y: hidden !important;
+    min-height: 2.5rem;
+    transition: height 0.1s ease-out;
+    line-height: 1.5;
+    padding: 0.5rem;
+    box-sizing: border-box;
+}
+
+/* =========================================
+   MOBILE OPTIMIZATIONS
+   ========================================= */
+
+@media (max-width: 768px) {
+
+    /* Navigation - Horizontal Scroll */
+    .admin-nav {
+        display: flex !important;
+        flex-wrap: nowrap !important;
+        /* Prevent wrapping */
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch;
+        padding-bottom: 0.5rem;
+        margin-bottom: 1.5rem;
+        scrollbar-width: none;
+        /* Firefox */
+    }
+
+    .admin-nav::-webkit-scrollbar {
+        display: none;
+        /* Chrome/Safari/Webkit */
+    }
+
+    .nav-tab {
+        flex: 0 0 auto !important;
+        /* Don't shrink */
+        white-space: nowrap;
+        padding: 0.75rem 1.25rem !important;
+    }
+
+    /* Editor Layout - Column Stack */
+    .editor-layout {
+        flex-direction: column !important;
+        gap: 2rem;
+    }
+
+    .editor-main,
+    .editor-sidebar {
+        width: 100% !important;
+        min-width: 100% !important;
+    }
+
+    .editor-sidebar {
+        border-top: 1px solid var(--editor-border);
+        padding-top: 2rem;
+    }
+
+    /* Data Tables - Card View */
+    .data-table {
+        display: block;
+    }
+
+    .data-table thead {
+        display: none;
+        /* Hide header */
+    }
+
+    .data-table tbody {
+        display: block;
+    }
+
+    .data-table tr {
+        display: block;
+        background: rgba(255, 255, 255, 0.02);
+        border: 1px solid var(--editor-border);
+        border-radius: 12px;
+        margin-bottom: 1rem;
+        padding: 1rem;
+        position: relative;
+    }
+
+    .data-table td {
+        display: block;
+        text-align: left;
+        padding: 0.25rem 0;
+        border: none;
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    /* Specific Column Styling for Card View */
+    /* Title */
+    .data-table td:nth-child(2) {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: var(--text-color);
+        margin-bottom: 0.5rem;
+        padding-right: 3rem;
+        /* Space for actions if absolute */
+    }
+
+    /* Date */
+    .data-table td:nth-child(1) {
+        font-size: 0.8rem;
+        color: var(--text-muted);
+        order: -1;
+        /* Move date to top */
+        margin-bottom: 0.25rem;
+    }
+
+    /* Category & Author */
+    .data-table td:nth-child(3),
+    .data-table td:nth-child(4) {
+        display: inline-block;
+        font-size: 0.8rem;
+        color: var(--text-muted);
+        margin-right: 1rem;
+    }
+
+    /* Actions */
+    .data-table td:last-child {
+        margin-top: 1rem;
+        padding-top: 0.75rem;
+        border-top: 1px solid rgba(255, 255, 255, 0.05);
+        display: flex;
+        justify-content: flex-end;
+        gap: 0.5rem;
+    }
+
+    /* Hide empty mobile columns if needed */
+    .hide-mobile {
+        display: inline-block !important;
+        /* Override hide-mobile class logic for card view context if we want to show them */
+    }
+}
+/* =========================================
+   AI GENERATED TABLE STYLES (Premium Gold)
+   ========================================= */
+.results-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    margin: 1.5rem 0;
+    background: linear-gradient(145deg, #1e293b, #0f172a);
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -2px rgba(0, 0, 0, 0.1);
+    border: 1px solid rgba(255, 215, 0, 0.1); /* Subtle gold border */
+}
+
+.results-table thead th {
+    background: linear-gradient(to bottom, rgba(212, 175, 55, 0.15), rgba(212, 175, 55, 0.05));
+    color: #ffd700; /* Gold text */
+    font-weight: 700;
+    text-transform: uppercase;
+    font-size: 0.8rem;
+    letter-spacing: 0.1em;
+    padding: 1rem;
+    text-align: left;
+    border-bottom: 1px solid rgba(212, 175, 55, 0.2);
+}
+
+.results-table tbody tr {
+    transition: all 0.2s ease;
+}
+
+.results-table tbody tr:hover {
+    background: rgba(255, 215, 0, 0.03) !important;
+    transform: translateX(4px);
+}
+
+.results-table td {
+    padding: 0.9rem 1rem;
+    color: #cbd5e1;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+    font-variant-numeric: tabular-nums;
+    font-size: 0.95rem;
+}
+
+.results-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+/* Rank column highlighting if present (often first column) */
+.results-table td:first-child {
+    font-weight: 600;
+    color: #f1f5f9;
+}
+
+/* Score column highlighting (often last column or contains numbers) */
+.results-table td:last-child {
+    font-weight: 700;
+    color: #4ade80; /* Green for score/points/result */
+}
+
+/* =========================================
+   Table Tools Widget
+   ========================================= */
+#tableToolsWidget {
+    position: absolute;
+    background: #1e293b;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    padding: 0.5rem;
+    display: none; /* Hidden by default */
+    gap: 0.5rem;
+    z-index: 100;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2);
+}
+
+#tableToolsWidget button {
+    background: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #94a3b8;
+    width: 32px;
+    height: 32px;
+    border-radius: 4px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+}
+
+#tableToolsWidget button:hover {
+    background: rgba(255, 255, 255, 0.05);
+    color: #fff;
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
+#tableToolsWidget .divider {
+    width: 1px;
+    background: rgba(255, 255, 255, 0.1);
+    margin: 0 0.2rem;
 }

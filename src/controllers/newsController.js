@@ -278,9 +278,15 @@ export const createNews = async (req, res) => {
     try {
         const { title, category, excerpt, content, thumbnailUrl, linkUrl, publishedDate, isPublished, gamesJson, teamsJson, galleryJson, introJson, authorName, coAuthorId, coAuthorName } = req.body;
 
-        if (!title || !category || !excerpt || !publishedDate) {
-            return res.status(400).json({ error: 'Required fields missing' });
+        // Only title is required
+        if (!title) {
+            return res.status(400).json({ error: 'Nadpis je povinný' });
         }
+
+        // Smart defaults for optional fields
+        const finalCategory = category || 'Novinky';
+        const finalExcerpt = excerpt || '';
+        const finalPublishedDate = publishedDate ? new Date(publishedDate) : new Date();
 
         let slug = createSlug(title); // Using existing createSlug
 
@@ -296,8 +302,8 @@ export const createNews = async (req, res) => {
             data: {
                 title,
                 slug: uniqueSlug,
-                category,
-                excerpt,
+                category: finalCategory,
+                excerpt: finalExcerpt,
                 content,
                 thumbnailUrl,
                 linkUrl,
@@ -305,7 +311,7 @@ export const createNews = async (req, res) => {
                 teamsJson,
                 galleryJson,
                 introJson,
-                publishedDate: publishedDate ? new Date(publishedDate) : new Date(),
+                publishedDate: finalPublishedDate,
                 isPublished: isPublished || false,
                 authorId: req.user ? req.user.id : null,
                 authorName: authorName || null,

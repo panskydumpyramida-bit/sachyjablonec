@@ -166,12 +166,15 @@ async function verifyToken() {
         });
         if (res.ok) {
             currentUser = await res.json();
+            window.currentUser = currentUser; // Make globally accessible
             document.getElementById('userInfo').textContent = `${currentUser.username} (${currentUser.role})`;
             showAdmin();
+            window.dispatchEvent(new Event('authChecked'));
         } else {
             logout();
         }
     } catch (e) {
+        console.error('[admin-core] verifyToken error:', e);
         logout();
     }
 }
@@ -182,6 +185,17 @@ async function verifyToken() {
 
 function switchTab(tab) {
     if (!currentUser) return; // Guard against unauthenticated access
+
+    // Check for unsaved changes in Editor
+    // 'editor' is the ID of the news editor view.
+    // If we are currently ON the editor tab (which is active), and isNewsDirty is true.
+    const currentActive = document.querySelector('.nav-tab.active');
+    // Simple check: if editor view is not hidden and dirty...
+    const editorView = document.getElementById('editorView');
+    if (editorView && !editorView.classList.contains('hidden') && window.isNewsDirty) {
+        showUnsavedChangesModal(tab);
+        return;
+    }
 
     // Cleanup any open modals from previous section
     const imageModal = document.getElementById('imageModal');
@@ -219,6 +233,64 @@ function switchTab(tab) {
     else if (tab === 'puzzleRacer' && window.loadPuzzleRacerSettings) loadPuzzleRacerSettings();
     else if (tab === 'chessdb' && window.loadChessDBStats) loadChessDBStats();
 }
+
+/**
+ * Show Unsaved Changes Modal
+ */
+function showUnsavedChangesModal(destinationTab) {
+    let modal = document.getElementById('unsavedChangesModal');
+    if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'unsavedChangesModal';
+        modal.innerHTML = `
+            <div class="modal-overlay" style="position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.85);z-index:10010;" onclick="closeUnsavedChangesModal()"></div>
+            <div class="modal-content" style="position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:10011;background:#1e293b;border:1px solid rgba(255,255,255,0.1);border-radius:12px;padding:2rem;width:90%;max-width:400px;text-align:center;box-shadow:0 25px 50px -12px rgba(0,0,0,0.5);">
+                <div style="margin-bottom:1.5rem;color:#fbbf24;font-size:3rem;"><i class="fa-solid fa-triangle-exclamation"></i></div>
+                <h3 style="margin-bottom:1rem;color:#f1f5f9;font-size:1.25rem;">Máte neuložené změny</h3>
+                <p style="color:#94a3b8;margin-bottom:2rem;line-height:1.5;">Chcete změny před odchodem uložit? Pokud odejdete bez uložení, změny budou ztraceny.</p>
+                <div style="display:flex;flex-direction:column;gap:0.75rem;">
+                    <button id="unsavedSaveBtn" class="btn-primary" style="width:100%;justify-content:center;padding:0.75rem;">Uložit a odejít</button>
+                    <button id="unsavedDiscardBtn" class="btn-secondary" style="width:100%;justify-content:center;padding:0.75rem;color:#f87171;border-color:rgba(248,113,113,0.3);">Zahodit změny</button>
+                    <button onclick="closeUnsavedChangesModal()" class="btn-secondary" style="width:100%;justify-content:center;padding:0.75rem;">Zrušit</button>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(modal);
+    }
+
+    // Setup handlers (re-attach to capture current destinationTab)
+    const saveBtn = modal.querySelector('#unsavedSaveBtn');
+    const discardBtn = modal.querySelector('#unsavedDiscardBtn');
+
+    saveBtn.onclick = () => {
+        closeUnsavedChangesModal();
+        if (window.saveNews) {
+            // saveNews redirects to dashboard on success. 
+            // We could modify saveNews, or accept this behavior. 
+            // User just wants to save. "Uložit a odejít" implies leaving editor.
+            // If saveNews succeeds, it goes to Dashboard. If fail, stays.
+            window.saveNews();
+        }
+    };
+
+    discardBtn.onclick = () => {
+        closeUnsavedChangesModal();
+        window.isNewsDirty = false; // Force clear
+        switchTab(destinationTab);
+    };
+
+    modal.style.display = 'block';
+}
+
+function closeUnsavedChangesModal() {
+    const modal = document.getElementById('unsavedChangesModal');
+    if (modal) modal.style.display = 'none';
+}
+
+// Export global
+window.switchTab = switchTab;
+window.showUnsavedChangesModal = showUnsavedChangesModal;
+window.closeUnsavedChangesModal = closeUnsavedChangesModal;
 
 // ================================
 // DASHBOARD

@@ -14,6 +14,7 @@
         rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/mobile-tables.css?v=1">
     <link rel="icon" type="image/png" href="images/favicon.png">
 </head>
 
@@ -24,21 +25,16 @@
         <section class="container" style="margin-top: 80px;">
             <h1 class="section-title">Oddílový přebor</h1>
 
-            <!-- Mobile Orientation Notice -->
-            <div
-                style="background-color: rgba(212, 175, 55, 0.1); border-left: 4px solid var(--primary-color); padding: 1rem 1.5rem; margin-bottom: 2rem; border-radius: 8px;">
-                <p style="margin: 0; display: flex; align-items: center; gap: 0.5rem;">
-                    <i class="fa-solid fa-mobile-screen" style="font-size: 1.2rem; color: var(--primary-color);"></i>
-                    <span><strong>Tip pro mobilní zařízení:</strong> Pro lepší zobrazení tabulek otočte telefon na šířku
-                        (landscape režim).</span>
-                </p>
-            </div>
+            <!-- Mobile Tip Removed -->
 
             <!-- Dynamic News -->
-            <h2 style="margin-bottom: 1.5rem; color: var(--primary-color);"><i class="fa-solid fa-newspaper"></i>
-                Aktuality z přeboru</h2>
-            <div id="clubNewsGrid" class="card-grid" data-news-category="Oddílový přebor" data-news-display="cards"
-                style="margin-bottom: 3rem;"></div>
+            <!-- Wrapped News Section for auto-hiding -->
+            <div id="clubNewsWrapper">
+                <h2 style="margin-bottom: 1.5rem; color: var(--primary-color);"><i class="fa-solid fa-newspaper"></i>
+                    Aktuality z přeboru</h2>
+                <div id="clubNewsGrid" class="card-grid" data-news-category="Oddílový přebor" data-news-display="cards"
+                    data-news-hide-if-empty="clubNewsWrapper" style="margin-bottom: 3rem;"></div>
+            </div>
 
             <div class="card-grid">
                 <!-- Current Season 2024/2025 -->
@@ -51,26 +47,872 @@
                         <div style="display: flex; flex-direction: column; gap: 2rem;">
                             <div>
                                 <h3 style="color: var(--primary-color); margin-bottom: 1rem;">Skupina A</h3>
-                                <div class="iframe-wrapper">
-                                    <iframe
-                                        src="https://docs.google.com/spreadsheets/d/e/2PACX-1vRxUUEGSr-vCGBaw1tqU8R67TkA7Pef3Ka0kp4H3itjhLe5GE1YX07Z51VIsTcSe7wcUiIrH0qk3tRo/pubhtml?widget=true&amp;headers=false"></iframe>
+                                <div style="margin-bottom: 2rem;">
+                                    <h4 style="color: var(--primary-color); margin-bottom: 0.5rem; margin-top: 0;">
+                                        Konečné pořadí</h4>
+                                    <div class="table-wrapper" style="overflow-x: auto;">
+                                        <table class="results-table">
+                                            <thead>
+                                                <tr>
+                                                    <th>Pořadí</th>
+                                                    <th>Příjmení</th>
+                                                    <th>Jméno</th>
+                                                    <th>Body</th>
+                                                    <th>SB</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr>
+                                                    <td>1</td>
+                                                    <td>Podrazký</td>
+                                                    <td>Radim</td>
+                                                    <td>5,5</td>
+                                                    <td>19,50</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>2</td>
+                                                    <td>Vacek</td>
+                                                    <td>Radomír</td>
+                                                    <td>5,5</td>
+                                                    <td>19,00</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>3</td>
+                                                    <td>Žídek</td>
+                                                    <td>Miroslav</td>
+                                                    <td>5,5</td>
+                                                    <td>18,25</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>4</td>
+                                                    <td>Tsantsala</td>
+                                                    <td>Kostiantyn</td>
+                                                    <td>5,5</td>
+                                                    <td>17,75</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>5</td>
+                                                    <td>Sivák</td>
+                                                    <td>Lukáš</td>
+                                                    <td>5</td>
+                                                    <td>16,50</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>6</td>
+                                                    <td>Titěra</td>
+                                                    <td>Libor</td>
+                                                    <td>3,5</td>
+                                                    <td>9,75</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>7</td>
+                                                    <td>Zadražil</td>
+                                                    <td>Filip</td>
+                                                    <td>3,5</td>
+                                                    <td>8,25</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>8</td>
+                                                    <td>Cyhelský</td>
+                                                    <td>Luděk</td>
+                                                    <td>1,5</td>
+                                                    <td>3,25</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>9</td>
+                                                    <td>Němec</td>
+                                                    <td>Zdeněk</td>
+                                                    <td>0,5</td>
+                                                    <td>2,75</td>
+                                                </tr>
+
+                                            </tbody>
+                                        </table>
+                                    </div>
                                 </div>
+
+                                <details class="crosstable-details">
+                                    <summary>Zobrazit křížovou tabulku</summary>
+                                    <div class="table-wrapper" style="overflow-x: auto;">
+                                        <table class="results-table">
+                                            <thead>
+                                                <tr>
+                                                    <th>Los</th>
+                                                    <th>Příjmení</th>
+                                                    <th>Jméno</th>
+                                                    <th>1</th>
+                                                    <th>2</th>
+                                                    <th>3</th>
+                                                    <th>4</th>
+                                                    <th>5</th>
+                                                    <th>6</th>
+                                                    <th>7</th>
+                                                    <th>8</th>
+                                                    <th>9</th>
+                                                    <th>10</th>
+                                                    <th>Body</th>
+                                                    <th>SB</th>
+                                                    <th>Pořadí</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr>
+                                                    <td>1</td>
+                                                    <td>Žídek</td>
+                                                    <td>Miroslav</td>
+
+                                                    <td></td>
+                                                    <td>1</td>
+                                                    <td>0,5</td>
+                                                    <td>0,5</td>
+                                                    <td></td>
+                                                    <td>0</td>
+                                                    <td>1</td>
+                                                    <td>0,5</td>
+                                                    <td>1</td>
+                                                    <td>1</td>
+                                                    <td>5,5</td>
+                                                    <td>18,25</td>
+                                                    <td>3</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>2</td>
+                                                    <td>Zadražil</td>
+                                                    <td>Filip</td>
+
+                                                    <td>0</td>
+                                                    <td></td>
+                                                    <td>0</td>
+                                                    <td>1</td>
+                                                    <td></td>
+                                                    <td>0</td>
+                                                    <td>1</td>
+                                                    <td>0,5</td>
+                                                    <td>1</td>
+                                                    <td>0</td>
+                                                    <td>3,5</td>
+                                                    <td>8,25</td>
+                                                    <td>7</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>3</td>
+                                                    <td>Vacek</td>
+                                                    <td>Radomír</td>
+
+                                                    <td>0,5</td>
+                                                    <td>1</td>
+                                                    <td></td>
+                                                    <td>1</td>
+                                                    <td></td>
+                                                    <td>0,5</td>
+                                                    <td>0,5</td>
+                                                    <td>0,5</td>
+                                                    <td>1</td>
+                                                    <td>0,5</td>
+                                                    <td>5,5</td>
+                                                    <td>19,00</td>
+                                                    <td>2</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>4</td>
+                                                    <td>Titěra</td>
+                                                    <td>Libor</td>
+
+                                                    <td>0,5</td>
+                                                    <td>0</td>
+                                                    <td>0</td>
+                                                    <td></td>
+                                                    <td></td>
+                                                    <td>1</td>
+                                                    <td>1</td>
+                                                    <td>0</td>
+                                                    <td>1</td>
+                                                    <td>0</td>
+                                                    <td>3,5</td>
+                                                    <td>9,75</td>
+                                                    <td>6</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>6</td>
+                                                    <td>Sivák</td>
+                                                    <td>Lukáš</td>
+
+                                                    <td>1</td>
+                                                    <td>1</td>
+                                                    <td>0,5</td>
+                                                    <td>0</td>
+                                                    <td></td>
+                                                    <td></td>
+                                                    <td>1</td>
+                                                    <td>0</td>
+                                                    <td>1</td>
+                                                    <td>0,5</td>
+                                                    <td>5</td>
+                                                    <td>16,50</td>
+                                                    <td>5</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>7</td>
+                                                    <td>Cyhelský</td>
+                                                    <td>Luděk</td>
+
+                                                    <td>0</td>
+                                                    <td>0</td>
+                                                    <td>0,5</td>
+                                                    <td>0</td>
+                                                    <td></td>
+                                                    <td>0</td>
+                                                    <td></td>
+                                                    <td>0</td>
+                                                    <td>1</td>
+                                                    <td>0</td>
+                                                    <td>1,5</td>
+                                                    <td>3,25</td>
+                                                    <td>8</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>8</td>
+                                                    <td>Tsantsala</td>
+                                                    <td>Kostiantyn</td>
+
+                                                    <td>0,5</td>
+                                                    <td>0,5</td>
+                                                    <td>0,5</td>
+                                                    <td>1</td>
+                                                    <td></td>
+                                                    <td>1</td>
+                                                    <td>1</td>
+                                                    <td></td>
+                                                    <td>1</td>
+                                                    <td>0</td>
+                                                    <td>5,5</td>
+                                                    <td>17,75</td>
+                                                    <td>4</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>9</td>
+                                                    <td>Němec</td>
+                                                    <td>Zdeněk</td>
+
+                                                    <td>0</td>
+                                                    <td>0</td>
+                                                    <td>0</td>
+                                                    <td>0</td>
+                                                    <td></td>
+                                                    <td>0</td>
+                                                    <td>0</td>
+                                                    <td>0</td>
+                                                    <td></td>
+                                                    <td>0,5</td>
+                                                    <td>0,5</td>
+                                                    <td>2,75</td>
+                                                    <td>9</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>10</td>
+                                                    <td>Podrazký</td>
+                                                    <td>Radim</td>
+
+                                                    <td>0</td>
+                                                    <td>1</td>
+                                                    <td>0,5</td>
+                                                    <td>1</td>
+                                                    <td></td>
+                                                    <td>0,5</td>
+                                                    <td>1</td>
+                                                    <td>1</td>
+                                                    <td>0,5</td>
+                                                    <td></td>
+                                                    <td>5,5</td>
+                                                    <td>19,50</td>
+                                                    <td>1</td>
+                                                </tr>
+
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </details>
+
                             </div>
 
                             <div>
                                 <h3 style="color: var(--primary-color); margin-bottom: 1rem;">Skupina B</h3>
-                                <div class="iframe-wrapper">
-                                    <iframe
-                                        src="https://docs.google.com/spreadsheets/d/e/2PACX-1vT-Z9ChvcRkphaCGRkEGBxX6pO_qKqVikSmTbC3Jvz0FUJ5wChQFMnl6fmsjbyMi0n6P5yCngWC-QES/pubhtml?widget=true&amp;headers=false"></iframe>
+                                <div style="margin-bottom: 2rem;">
+                                    <h4 style="color: var(--primary-color); margin-bottom: 0.5rem; margin-top: 0;">
+                                        Konečné pořadí</h4>
+                                    <div class="table-wrapper" style="overflow-x: auto;">
+                                        <table class="results-table">
+                                            <thead>
+                                                <tr>
+                                                    <th>Pořadí</th>
+                                                    <th>Příjmení</th>
+                                                    <th>Jméno</th>
+                                                    <th>Body</th>
+                                                    <th>SB</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr>
+                                                    <td>1</td>
+                                                    <td>Mlot</td>
+                                                    <td>František</td>
+                                                    <td>7</td>
+                                                    <td>22,00</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>2</td>
+                                                    <td>Šalanda</td>
+                                                    <td>Radovan</td>
+                                                    <td>7</td>
+                                                    <td>20,00</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>3</td>
+                                                    <td>Lelek</td>
+                                                    <td>Jaroslav</td>
+                                                    <td>5</td>
+                                                    <td>11,50</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>4</td>
+                                                    <td>Červeň</td>
+                                                    <td>Aleš</td>
+                                                    <td>5</td>
+                                                    <td>10,00</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>5</td>
+                                                    <td>Duda</td>
+                                                    <td>Rudolf</td>
+                                                    <td>3,5</td>
+                                                    <td>9,75</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>6</td>
+                                                    <td>Koten</td>
+                                                    <td>Mikoláš</td>
+                                                    <td>3,5</td>
+                                                    <td>4,75</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>7</td>
+                                                    <td>Sengr</td>
+                                                    <td>Ivan</td>
+                                                    <td>2</td>
+                                                    <td>1,00</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>8</td>
+                                                    <td>Švec</td>
+                                                    <td>Karel</td>
+                                                    <td>1</td>
+                                                    <td>0,00</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>9</td>
+                                                    <td>Tvrdíková</td>
+                                                    <td>Veronika</td>
+                                                    <td>0</td>
+                                                    <td>0,00</td>
+                                                </tr>
+
+                                            </tbody>
+                                        </table>
+                                    </div>
                                 </div>
+
+                                <details class="crosstable-details">
+                                    <summary>Zobrazit křížovou tabulku</summary>
+                                    <div class="table-wrapper" style="overflow-x: auto;">
+                                        <table class="results-table">
+                                            <thead>
+                                                <tr>
+                                                    <th>Los</th>
+                                                    <th>Příjmení</th>
+                                                    <th>Jméno</th>
+                                                    <th>1</th>
+                                                    <th>2</th>
+                                                    <th>3</th>
+                                                    <th>4</th>
+                                                    <th>5</th>
+                                                    <th>6</th>
+                                                    <th>7</th>
+                                                    <th>8</th>
+                                                    <th>9</th>
+                                                    <th>10</th>
+                                                    <th>Body</th>
+                                                    <th>SB</th>
+                                                    <th>Pořadí</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr>
+                                                    <td>1</td>
+                                                    <td>Tvrdíková</td>
+                                                    <td>Veronika</td>
+
+                                                    <td></td>
+                                                    <td>0</td>
+                                                    <td>0</td>
+                                                    <td>0</td>
+                                                    <td>0</td>
+                                                    <td>0</td>
+                                                    <td>0</td>
+                                                    <td>0</td>
+                                                    <td>0</td>
+                                                    <td></td>
+                                                    <td>0</td>
+                                                    <td>0,00</td>
+                                                    <td>9</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>2</td>
+                                                    <td>Švec</td>
+                                                    <td>Karel</td>
+
+                                                    <td>1</td>
+                                                    <td></td>
+                                                    <td>0</td>
+                                                    <td>0</td>
+                                                    <td>0</td>
+                                                    <td>0</td>
+                                                    <td>0</td>
+                                                    <td>0</td>
+                                                    <td>0</td>
+                                                    <td></td>
+                                                    <td>1</td>
+                                                    <td>0,00</td>
+                                                    <td>8</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>3</td>
+                                                    <td>Mlot</td>
+                                                    <td>František</td>
+
+                                                    <td>1</td>
+                                                    <td>1</td>
+                                                    <td></td>
+                                                    <td>1</td>
+                                                    <td>1</td>
+                                                    <td>1</td>
+                                                    <td></td>
+                                                    <td>1</td>
+                                                    <td>1</td>
+                                                    <td></td>
+                                                    <td>7</td>
+                                                    <td>22,00</td>
+                                                    <td>1</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>4</td>
+                                                    <td>Sengr</td>
+                                                    <td>Ivan</td>
+
+                                                    <td>1</td>
+                                                    <td>1</td>
+                                                    <td>0</td>
+                                                    <td></td>
+                                                    <td>0</td>
+                                                    <td>0</td>
+                                                    <td>0</td>
+                                                    <td>0</td>
+                                                    <td>0</td>
+                                                    <td></td>
+                                                    <td>2</td>
+                                                    <td>1,00</td>
+                                                    <td>7</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>5</td>
+                                                    <td>Koten</td>
+                                                    <td>Mikoláš</td>
+
+                                                    <td>1</td>
+                                                    <td>1</td>
+                                                    <td>0</td>
+                                                    <td>1</td>
+                                                    <td></td>
+                                                    <td>0</td>
+                                                    <td>0</td>
+                                                    <td>0,5</td>
+                                                    <td>0</td>
+                                                    <td></td>
+                                                    <td>3,5</td>
+                                                    <td>4,75</td>
+                                                    <td>6</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>6</td>
+                                                    <td>Šalanda</td>
+                                                    <td>Radovan</td>
+
+                                                    <td>1</td>
+                                                    <td>1</td>
+                                                    <td>0</td>
+                                                    <td>1</td>
+                                                    <td>1</td>
+                                                    <td></td>
+                                                    <td>1</td>
+                                                    <td>1</td>
+                                                    <td>1</td>
+                                                    <td></td>
+                                                    <td>7</td>
+                                                    <td>20,00</td>
+                                                    <td>2</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>7</td>
+                                                    <td>Červeň</td>
+                                                    <td>Aleš</td>
+
+                                                    <td>1</td>
+                                                    <td>1</td>
+                                                    <td></td>
+                                                    <td>1</td>
+                                                    <td>1</td>
+                                                    <td>0</td>
+                                                    <td></td>
+                                                    <td>1</td>
+                                                    <td>0</td>
+                                                    <td></td>
+                                                    <td>5</td>
+                                                    <td>10,00</td>
+                                                    <td>4</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>8</td>
+                                                    <td>Duda</td>
+                                                    <td>Rudolf</td>
+
+                                                    <td></td>
+                                                    <td>1</td>
+                                                    <td>0</td>
+                                                    <td>1</td>
+                                                    <td>0,5</td>
+                                                    <td>0</td>
+                                                    <td>0</td>
+                                                    <td></td>
+                                                    <td>1</td>
+                                                    <td></td>
+                                                    <td>3,5</td>
+                                                    <td>9,75</td>
+                                                    <td>5</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>9</td>
+                                                    <td>Lelek</td>
+                                                    <td>Jaroslav</td>
+
+                                                    <td>1</td>
+                                                    <td>1</td>
+                                                    <td>0</td>
+                                                    <td>1</td>
+                                                    <td>1</td>
+                                                    <td>0</td>
+                                                    <td>1</td>
+                                                    <td>0</td>
+                                                    <td></td>
+                                                    <td></td>
+                                                    <td>5</td>
+                                                    <td>11,50</td>
+                                                    <td>3</td>
+                                                </tr>
+
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </details>
+
                             </div>
 
                             <div>
                                 <h3 style="color: var(--primary-color); margin-bottom: 1rem;">Skupina C</h3>
-                                <div class="iframe-wrapper">
-                                    <iframe
-                                        src="https://docs.google.com/spreadsheets/d/e/2PACX-1vT27F8ObjbdaqOEDJ1UecBEcof8CpwiyGxlUqVWsqvKcrcZwDyD7n4jQydjWdoF2DgzFd9Qh_G8H997/pubhtml?widget=true&amp;headers=false"></iframe>
+                                <div style="margin-bottom: 2rem;">
+                                    <h4 style="color: var(--primary-color); margin-bottom: 0.5rem; margin-top: 0;">
+                                        Konečné pořadí</h4>
+                                    <div class="table-wrapper" style="overflow-x: auto;">
+                                        <table class="results-table">
+                                            <thead>
+                                                <tr>
+                                                    <th>Pořadí</th>
+                                                    <th>Příjmení</th>
+                                                    <th>Jméno</th>
+                                                    <th>Body</th>
+                                                    <th>SB</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr>
+                                                    <td>1</td>
+                                                    <td>Koten</td>
+                                                    <td>Kristián</td>
+                                                    <td>6,5</td>
+                                                    <td>18,25</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>2</td>
+                                                    <td>Hurt</td>
+                                                    <td>Marek</td>
+                                                    <td>6</td>
+                                                    <td>15,00</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>3</td>
+                                                    <td>Hásek</td>
+                                                    <td>Petr</td>
+                                                    <td>5,5</td>
+                                                    <td>12,00</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>4</td>
+                                                    <td>Chvátal</td>
+                                                    <td>Jonáš</td>
+                                                    <td>3</td>
+                                                    <td>11,50</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>5</td>
+                                                    <td>Turczyniak</td>
+                                                    <td>Petr</td>
+                                                    <td>3</td>
+                                                    <td>5,00</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>6</td>
+                                                    <td>Brehmová</td>
+                                                    <td>Ema</td>
+                                                    <td>2,5</td>
+                                                    <td>6,25</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>7</td>
+                                                    <td>Nekvinda</td>
+                                                    <td>Jan</td>
+                                                    <td>2</td>
+                                                    <td>4,00</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>8</td>
+                                                    <td>Mrlina</td>
+                                                    <td>Tomáš</td>
+                                                    <td>1,5</td>
+                                                    <td>1,00</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>9</td>
+                                                    <td>Ricka</td>
+                                                    <td>Mikuláš</td>
+                                                    <td>0</td>
+                                                    <td>0,00</td>
+                                                </tr>
+
+                                            </tbody>
+                                        </table>
+                                    </div>
                                 </div>
+
+                                <details class="crosstable-details">
+                                    <summary>Zobrazit křížovou tabulku</summary>
+                                    <div class="table-wrapper" style="overflow-x: auto;">
+                                        <table class="results-table">
+                                            <thead>
+                                                <tr>
+                                                    <th>Los</th>
+                                                    <th>Příjmení</th>
+                                                    <th>Jméno</th>
+                                                    <th>1</th>
+                                                    <th>2</th>
+                                                    <th>3</th>
+                                                    <th>4</th>
+                                                    <th>5</th>
+                                                    <th>6</th>
+                                                    <th>7</th>
+                                                    <th>8</th>
+                                                    <th>9</th>
+                                                    <th>10</th>
+                                                    <th>Body</th>
+                                                    <th>SB</th>
+                                                    <th>Pořadí</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr>
+                                                    <td>1</td>
+                                                    <td>Hásek</td>
+                                                    <td>Petr</td>
+
+                                                    <td></td>
+                                                    <td>1</td>
+                                                    <td>0,5</td>
+                                                    <td>1</td>
+                                                    <td>1</td>
+                                                    <td>1</td>
+                                                    <td>0</td>
+                                                    <td>1</td>
+                                                    <td>0</td>
+                                                    <td></td>
+                                                    <td>5,5</td>
+                                                    <td>12,00</td>
+                                                    <td>3</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>2</td>
+                                                    <td>Mrlina</td>
+                                                    <td>Tomáš</td>
+
+                                                    <td>0</td>
+                                                    <td></td>
+                                                    <td>0</td>
+                                                    <td></td>
+                                                    <td>0</td>
+                                                    <td>0,5</td>
+                                                    <td>1</td>
+                                                    <td></td>
+                                                    <td></td>
+                                                    <td>0</td>
+                                                    <td>1,5</td>
+                                                    <td>1,00</td>
+                                                    <td>8</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>3</td>
+                                                    <td>Hurt</td>
+                                                    <td>Marek</td>
+
+                                                    <td>0,5</td>
+                                                    <td>1</td>
+                                                    <td></td>
+                                                    <td>1</td>
+                                                    <td>1</td>
+                                                    <td>1</td>
+                                                    <td>0</td>
+                                                    <td>1</td>
+                                                    <td>0,5</td>
+                                                    <td></td>
+                                                    <td>6</td>
+                                                    <td>15,00</td>
+                                                    <td>2</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>4</td>
+                                                    <td>Turczyniak</td>
+                                                    <td>Petr</td>
+
+                                                    <td>0</td>
+                                                    <td></td>
+                                                    <td>0</td>
+                                                    <td></td>
+                                                    <td>1</td>
+                                                    <td>1</td>
+                                                    <td>1</td>
+                                                    <td></td>
+                                                    <td>0</td>
+                                                    <td></td>
+                                                    <td>3</td>
+                                                    <td>5,00</td>
+                                                    <td>5</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>5</td>
+                                                    <td>Nekvinda</td>
+                                                    <td>Jan</td>
+
+                                                    <td>0</td>
+                                                    <td>0,5</td>
+                                                    <td>0</td>
+                                                    <td>0</td>
+                                                    <td></td>
+                                                    <td>1</td>
+                                                    <td></td>
+                                                    <td></td>
+                                                    <td>0,5</td>
+                                                    <td></td>
+                                                    <td>2</td>
+                                                    <td>4,00</td>
+                                                    <td>7</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>6</td>
+                                                    <td>Ricka</td>
+                                                    <td>Mikuláš</td>
+
+                                                    <td>0</td>
+                                                    <td>0</td>
+                                                    <td>0</td>
+                                                    <td>0</td>
+                                                    <td>0</td>
+                                                    <td></td>
+                                                    <td>0</td>
+                                                    <td>0</td>
+                                                    <td>0</td>
+                                                    <td></td>
+                                                    <td>0</td>
+                                                    <td>0,00</td>
+                                                    <td>9</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>7</td>
+                                                    <td>Chvátal</td>
+                                                    <td>Jonáš</td>
+
+                                                    <td>1</td>
+                                                    <td></td>
+                                                    <td>1</td>
+                                                    <td>0</td>
+                                                    <td></td>
+                                                    <td>1</td>
+                                                    <td></td>
+                                                    <td>0</td>
+                                                    <td>0</td>
+                                                    <td></td>
+                                                    <td>3</td>
+                                                    <td>11,50</td>
+                                                    <td>4</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>8</td>
+                                                    <td>Brehmová</td>
+                                                    <td>Ema</td>
+
+                                                    <td>0</td>
+                                                    <td></td>
+                                                    <td>0</td>
+                                                    <td></td>
+                                                    <td></td>
+                                                    <td>1</td>
+                                                    <td>1</td>
+                                                    <td></td>
+                                                    <td>0,5</td>
+                                                    <td></td>
+                                                    <td>2,5</td>
+                                                    <td>6,25</td>
+                                                    <td>6</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>9</td>
+                                                    <td>Koten</td>
+                                                    <td>Kristián</td>
+
+                                                    <td>1</td>
+                                                    <td>1</td>
+                                                    <td>0,5</td>
+                                                    <td>1</td>
+                                                    <td>0,5</td>
+                                                    <td>1</td>
+                                                    <td>1</td>
+                                                    <td>0,5</td>
+                                                    <td></td>
+                                                    <td></td>
+                                                    <td>6,5</td>
+                                                    <td>18,25</td>
+                                                    <td>1</td>
+                                                </tr>
+
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </details>
+
                             </div>
                         </div>
                     </div>

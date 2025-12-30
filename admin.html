@@ -9,9 +9,9 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <link rel="stylesheet" href="css/style.css">
-    <link rel="stylesheet" href="css/admin.css">
-    <script src="js/version.js"></script>
+    <link rel="stylesheet" href="css/style.css?v=ux12">
+    <link rel="stylesheet" href="css/admin.css?v=ux12">
+    <script src="js/version.js?v=ux12"></script>
 </head>
 
 <body>
@@ -185,19 +185,28 @@
                     <div class="editor-main">
                         <h2 style="margin-top: 0;" id="editorTitle">Nová novinka</h2><input type="hidden"
                             id="editNewsId">
-                        <div class="form-group"><label>Nadpis článku *</label><input type="text" id="newsTitle"
-                                placeholder="Zadejte nadpis..." oninput="updatePreview()">
+                        <div class="form-group"><label>Nadpis článku *</label>
+                            <textarea id="newsTitle" rows="1" class="auto-resize" placeholder="Zadejte nadpis..."
+                                oninput="updatePreview();"></textarea>
                         </div>
                         <!-- WYSIWYG Editor -->
                         <div class="form-group"><label>Obsah článku *</label>
                             <div class="wysiwyg-toolbar" style="flex-wrap: wrap;">
+                                <!-- History -->
+                                <button type="button" onmousedown="event.preventDefault()" onclick="formatText('undo')"
+                                    title="Zpět (Ctrl+Z)"><i class="fa-solid fa-rotate-left"></i></button>
+                                <button type="button" onmousedown="event.preventDefault()" onclick="formatText('redo')"
+                                    title="Vpřed (Ctrl+Y)"><i class="fa-solid fa-rotate-right"></i></button>
+                                <div class="divider"></div>
                                 <!-- Row 1: Formatting --><button type="button" id="btnBold"
                                     onclick="formatText('bold')" title="Tučně (Ctrl+B)"><i
                                         class="fa-solid fa-bold"></i></button><button type="button" id="btnItalic"
                                     onclick="formatText('italic')" title="Kurzíva (Ctrl+I)"><i
                                         class="fa-solid fa-italic"></i></button><button type="button" id="btnUnderline"
                                     onclick="formatText('underline')" title="Podtržení (Ctrl+U)"><i
-                                        class="fa-solid fa-underline"></i></button>
+                                        class="fa-solid fa-underline"></i></button><button type="button"
+                                    onclick="removeFormatting()" title="Odstranit formátování"
+                                    style="color: #94a3b8;"><i class="fa-solid fa-eraser"></i></button>
                                 <div class="divider"></div>
                                 <!-- Heading buttons -->
                                 <div
@@ -224,7 +233,10 @@
                                         class="fa-solid fa-user"></i>Jméno</button><button type="button"
                                     id="btnHighlightScore" onmousedown="event.preventDefault()"
                                     onclick="insertHighlight('score')" title="Zvýraznit skóre"
-                                    style="color: #4ade80;"><i class="fa-solid fa-trophy"></i>Skóre</button>
+                                    style="color: #4ade80;"><i class="fa-solid fa-trophy"></i>Skóre</button><button
+                                    type="button" onclick="autoFormatEntireContent()"
+                                    title="Auto-formátování celého textu (najde výsledky a jména)"
+                                    style="color: #a78bfa;"><i class="fa-solid fa-wand-magic-sparkles"></i>Auto</button>
                                 <div class="divider"></div><button type="button" onclick="insertIntroBlock()"
                                     title="Infobox" style="color: #fbbf24;"><i
                                         class="fa-solid fa-lightbulb"></i></button><button type="button"
@@ -232,6 +244,16 @@
                                         class="fa-solid fa-image"></i></button><button type="button"
                                     onclick="insertCollapsibleBlock()" title="Rozbalovací sekce"
                                     style="color: #8b5cf6;"><i class="fa-solid fa-layer-group"></i></button>
+                                <!-- AI Tools -->
+                                <div class="divider"></div>
+                                <button type="button" onclick="aiSpellCheck()"
+                                    title="AI Oprava pravopisu (Ctrl+Shift+S)" style="color: #10b981;"><i
+                                        class="fa-solid fa-spell-check"></i>AI</button>
+                                <!-- Table Tools -->
+                                <div class="divider"></div>
+                                <button type="button" onclick="aiTextToTable()"
+                                    title="AI Převod na tabulku (vyberte text)" style="color: #06b6d4;"><i
+                                        class="fa-solid fa-table"></i></button>
                             </div>
                             <div class="wysiwyg-content" id="articleContent" contenteditable="true"
                                 oninput="updatePreview()"></div><textarea id="articleSource"
@@ -353,7 +375,15 @@
                                 </div>
                                 <!-- Author Selection -->
                                 <div class="form-group" style="margin-bottom: 0.75rem;">
-                                    <label style="font-size: 0.8rem;">Autor</label>
+                                    <div
+                                        style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.3rem;">
+                                        <label style="font-size: 0.8rem; margin: 0;">Autor</label>
+                                        <button type="button" id="toggleCoAuthorBtn" onclick="toggleCoAuthorSection()"
+                                            title="Přidat spoluautora"
+                                            style="width: 22px; height: 22px; padding: 0; font-size: 0.75rem; border-radius: 4px; background: rgba(212,175,55,0.2); border: 1px solid rgba(212,175,55,0.3); color: #d4af37; cursor: pointer; display: flex; align-items: center; justify-content: center;">
+                                            <i class="fa-solid fa-plus" id="toggleCoAuthorIcon"></i>
+                                        </button>
+                                    </div>
                                     <select id="newsAuthorId" style="font-size: 0.85rem; margin-bottom: 0.3rem;"
                                         onchange="handleAuthorChange()">
                                         <option value="">Vlastní jméno</option>
@@ -362,7 +392,9 @@
                                     <input type="text" id="newsAuthorName" placeholder="Jméno autora"
                                         oninput="updatePreview()" style="font-size: 0.85rem;">
                                 </div>
-                                <div class="form-group" style="margin-bottom: 0.75rem;">
+                                <!-- Co-Author Section (hidden by default) -->
+                                <div class="form-group" id="coAuthorSection"
+                                    style="margin-bottom: 0.75rem; display: none;">
                                     <label style="font-size: 0.8rem;">Spoluautor</label>
                                     <select id="newsCoAuthorId" style="font-size: 0.85rem; margin-bottom: 0.3rem;"
                                         onchange="handleCoAuthorChange()">
@@ -378,7 +410,7 @@
                                 </div>
                                 <div class="form-group" style="margin-bottom: 0.75rem;">
                                     <label style="font-size: 0.8rem;">Krátký
-                                        popis</label><textarea id="newsExcerpt" rows="2"
+                                        popis</label><textarea id="newsExcerpt" rows="2" class="auto-resize"
                                         placeholder="Zobrazí se na kartě..." oninput="updatePreview()"
                                         style="font-size: 0.85rem;"></textarea>
                                 </div><label
@@ -1154,6 +1186,24 @@
             </div>
 
             <div class="changelog-timeline">
+                <!-- 2025-12-30 v16 -->
+                <div class="changelog-entry">
+                    <div class="changelog-date">30. 12. 2025</div>
+                    <div class="changelog-version">v16</div>
+                    <div class="changelog-content">
+                        <h4>📱 Mobilní zobrazení</h4>
+                        <ul>
+                            <li><strong>Tabulky:</strong> Prioritizace "Konečného pořadí" na mobilu (přesun nahoru).
+                            </li>
+                            <li><strong>Křížová tabulka:</strong> Na mobilu ve výchozím stavu sbalená (Collapsible),
+                                fixní první sloupec při scrollování.</li>
+                        </ul>
+                        <h4>✏️ Admin Editor</h4>
+                        <ul>
+                            <li><strong>Undo/Redo:</strong> Přidána tlačítka Zpět/Vpřed do panelu nástrojů editoru.</li>
+                        </ul>
+                    </div>
+                </div>
                 <!-- 2025-12-27 v15 -->
                 <div class="changelog-entry">
                     <div class="changelog-date">27. 12. 2025</div>
@@ -1403,23 +1453,23 @@
     </div>
     <script src="js/config.js"></script>
     <script src="js/utils.js"></script>
-    <script src="js/admin/admin-core.js"></script>
-    <script src="js/admin/admin-gallery.js"></script>
-    <script src="js/admin/admin-wysiwyg.js"></script>
-    <script src="js/admin/admin-content-images.js"></script>
-    <script src="js/admin/admin-thumbnail.js"></script>
-    <script src="js/admin/admin-news.js"></script>
-    <script src="js/admin/admin-news-modals.js"></script>
-    <script src="js/admin/admin-members.js"></script>
-    <script src="js/admin/admin-messages.js"></script>
-    <script src="js/admin/admin-competitions.js"></script>
-    <script src="js/admin/admin-games.js"></script>
-    <script src="js/admin/admin-events.js"></script>
-    <script src="js/admin/admin-users.js"></script>
-    <script src="js/admin/admin-blicak.js"></script>
-    <script src="js/admin/admin-puzzle-racer.js"></script>
-    <script src="js/admin/admin-chessdb.js"></script>
-    <script src="js/admin/admin-dashboard.js"></script>
+    <script src="js/admin/admin-core.js?v=ux12"></script>
+    <script src="js/admin/admin-gallery.js?v=ux12"></script>
+    <script src="js/admin/admin-wysiwyg.js?v=ux12"></script>
+    <script src="js/admin/admin-content-images.js?v=ux12"></script>
+    <script src="js/admin/admin-thumbnail.js?v=ux12"></script>
+    <script src="js/admin/admin-news.js?v=ux12"></script>
+    <script src="js/admin/admin-news-modals.js?v=ux12"></script>
+    <script src="js/admin/admin-members.js?v=ux12"></script>
+    <script src="js/admin/admin-messages.js?v=ux12"></script>
+    <script src="js/admin/admin-competitions.js?v=ux12"></script>
+    <script src="js/admin/admin-games.js?v=ux12"></script>
+    <script src="js/admin/admin-events.js?v=ux12"></script>
+    <script src="js/admin/admin-users.js?v=ux12"></script>
+    <script src="js/admin/admin-blicak.js?v=ux12"></script>
+    <script src="js/admin/admin-puzzle-racer.js?v=ux12"></script>
+    <script src="js/admin/admin-chessdb.js?v=ux12"></script>
+    <script src="js/admin/admin-dashboard.js?v=ux12"></script>
     <script>
         /**
          * Admin Panel - Minimal Inline Script

@@ -257,6 +257,21 @@ class AuthManager {
         const dropdown = document.getElementById('user-dropdown');
         if (dropdown) {
             dropdown.classList.toggle('active');
+
+            // Close main nav menu when opening user dropdown (mutual exclusion)
+            if (dropdown.classList.contains('active')) {
+                const navLinks = document.querySelector('.nav-links');
+                const menuToggle = document.querySelector('.menu-toggle');
+                if (navLinks && navLinks.classList.contains('active')) {
+                    navLinks.classList.remove('active');
+                    menuToggle?.classList.remove('active');
+                    const icon = menuToggle?.querySelector('i');
+                    if (icon) {
+                        icon.classList.remove('fa-times');
+                        icon.classList.add('fa-bars');
+                    }
+                }
+            }
         }
     }
 

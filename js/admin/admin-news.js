@@ -25,10 +25,20 @@ let currentViewCount = 0; // Track view count for current article
 // Thumbnail state - used by admin-thumbnail.js
 let pendingThumbnailBlob = null;
 
+// Dirty State for Navigation Guard
+window.isNewsDirty = false;
+
 // Make state variables globally accessible for other modules
 window.uploadedImageData = null;
 window.imageCropPosition = '50%';
 window.pendingThumbnailBlob = null;
+
+// Helper for Auto-resize
+window.autoResize = function (el) {
+    if (!el) return;
+    el.style.height = 'auto';
+    el.style.height = el.scrollHeight + 'px';
+};
 
 // Sync functions
 window.getNewsState = () => ({ uploadedImageData, imageCropPosition, games, galleryImages, pendingThumbnailBlob });
@@ -59,6 +69,15 @@ document.addEventListener('DOMContentLoaded', () => {
         content.addEventListener('click', checkToolbarState);
     }
 
+    // Image Edit Listener
+    content.addEventListener('click', (e) => {
+        if (e.target.tagName === 'IMG') {
+            if (window.showImageModal) {
+                window.showImageModal(e.target);
+            }
+        }
+    });
+
     // Auto-save setup
     let saveTimeout;
     const autoSave = () => {
@@ -74,6 +93,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 content: contentEl?.innerHTML || '',
                 excerpt: excerptEl?.value || '',
                 editId: editIdEl?.value || '',
+                authorId: document.getElementById('newsAuthorId')?.value || '',
+                authorName: document.getElementById('newsAuthorName')?.value || '',
+                coAuthorId: document.getElementById('newsCoAuthorId')?.value || '',
+                coAuthorName: document.getElementById('newsCoAuthorName')?.value || '',
                 savedAt: new Date().toISOString()
             };
 
@@ -85,21 +108,66 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 2000); // Save 2s after last change
     };
 
-    content.addEventListener('input', autoSave);
-    document.getElementById('newsTitle')?.addEventListener('input', autoSave);
-    document.getElementById('newsExcerpt')?.addEventListener('input', autoSave);
+    content.addEventListener('input', () => { autoSave(); window.isNewsDirty = true; });
+    document.getElementById('newsTitle')?.addEventListener('input', () => { autoSave(); window.isNewsDirty = true; });
+    document.getElementById('newsExcerpt')?.addEventListener('input', () => { autoSave(); window.isNewsDirty = true; });
+
+    // Authors listeners
+    document.getElementById('newsAuthorId')?.addEventListener('change', () => { autoSave(); window.isNewsDirty = true; });
+    document.getElementById('newsAuthorName')?.addEventListener('input', () => { autoSave(); window.isNewsDirty = true; });
+    document.getElementById('newsCoAuthorId')?.addEventListener('change', () => { autoSave(); window.isNewsDirty = true; });
+    document.getElementById('newsCoAuthorName')?.addEventListener('input', () => { autoSave(); window.isNewsDirty = true; });
+
+    // Other inputs dirty tracking
+    ['newsDate', 'newsCategory', 'publishCheck', 'newsAuthorId'].forEach(id => {
+        document.getElementById(id)?.addEventListener('input', () => window.isNewsDirty = true);
+        document.getElementById(id)?.addEventListener('change', () => window.isNewsDirty = true);
+    });
 
     // Check for saved draft on load
     checkDraft();
-    loadUsers(); // Load users for dropdown
+    loadAuthors(); // Load users for dropdown (renamed to avoid conflict)
+
+    // Initialize Auto-resize textareas
+    document.querySelectorAll('.auto-resize').forEach(el => {
+        el.addEventListener('input', () => window.autoResize(el));
+        // Initial resize
+        setTimeout(() => window.autoResize(el), 100);
+
+        // Prevent Enter for Title (keep it single line behavior visually)
+        if (el.id === 'newsTitle') {
+            el.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') e.preventDefault();
+            });
+        }
+    });
 });
 
-async function loadUsers() {
-    console.log('[admin-news] loadUsers()');
+// Helper to safely select author when data is ready
+function tryAutoSelectAuthor() {
+    const select = document.getElementById('newsAuthorId');
+    const editId = document.getElementById('editNewsId')?.value;
+
+    // Proceed only if: new article (no ID), user loaded, users loaded, select exists
+    if (!editId && window.currentUser && window.availableUsers && select) {
+        // Find option matching current user
+        const userOption = Array.from(select.options).find(opt => opt.value == window.currentUser.id);
+        if (userOption) {
+            select.value = window.currentUser.id;
+            if (window.handleAuthorChange) window.handleAuthorChange();
+        }
+    }
+}
+
+// Listen for Auth Ready from admin-core.js
+window.addEventListener('authChecked', tryAutoSelectAuthor);
+
+async function loadAuthors() {
+    console.log('[admin-news] loadAuthors()');
     try {
         const token = window.authToken || localStorage.getItem('auth_token');
         if (!token) {
-            console.error('[admin-news] No auth token found for loadUsers');
+            console.error('[admin-news] No auth token found for loadAuthors');
             return;
         }
 
@@ -134,6 +202,9 @@ async function loadUsers() {
                 coAuthorSelect.add(opt2);
             });
 
+            // Attempt auto-select (if current user is already ready)
+            tryAutoSelectAuthor();
+
             // If editing an item, we might need to select the values again if they were set before users loaded
             // But editNews runs usually after switchTab, and loadUsers runs on load.
             // If editNews ran BEFORE loadUsers finished, the values might be unset.
@@ -161,14 +232,15 @@ window.handleAuthorChange = () => {
     const input = document.getElementById('newsAuthorName');
 
     if (select.value) {
-        // User selected - pre-fill input if needed or hide it? 
-        // Logic: If user selected, we use their name unless specific override is needed.
-        // Let's keep input visible for consistency but maybe placeholder changes
+        // User selected - hide manual input as it's redundant for known users
+        input.style.display = 'none';
         const user = availableUsers.find(u => u.id == select.value);
         if (user) {
             input.value = user.realName || user.username;
         }
     } else {
+        // Custom author
+        input.style.display = 'block';
         input.value = '';
         input.placeholder = 'Jméno autora';
     }
@@ -197,6 +269,34 @@ window.handleCoAuthorChange = () => {
     updatePreview();
 };
 
+/**
+ * Toggle co-author section visibility
+ */
+window.toggleCoAuthorSection = () => {
+    const section = document.getElementById('coAuthorSection');
+    const icon = document.getElementById('toggleCoAuthorIcon');
+    const btn = document.getElementById('toggleCoAuthorBtn');
+
+    if (!section) return;
+
+    const isHidden = section.style.display === 'none';
+
+    if (isHidden) {
+        section.style.display = 'block';
+        icon.classList.remove('fa-plus');
+        icon.classList.add('fa-minus');
+        btn.title = 'Skrýt spoluautora';
+    } else {
+        section.style.display = 'none';
+        icon.classList.remove('fa-minus');
+        icon.classList.add('fa-plus');
+        btn.title = 'Přidat spoluautora';
+        // Clear co-author when hiding
+        document.getElementById('newsCoAuthorId').value = '';
+        document.getElementById('newsCoAuthorName').value = '';
+    }
+};
+
 // Check for draft when switching to editor
 function checkDraft() {
     setTimeout(() => {
@@ -213,6 +313,25 @@ function checkDraft() {
                         document.getElementById('newsTitle').value = draft.title || '';
                         document.getElementById('articleContent').innerHTML = draft.content || '';
                         document.getElementById('newsExcerpt').value = draft.excerpt || '';
+
+                        // Restore authors
+                        if (draft.authorId) document.getElementById('newsAuthorId').value = draft.authorId;
+                        if (draft.authorName) document.getElementById('newsAuthorName').value = draft.authorName;
+
+                        // Restore Co-Author
+                        if (draft.coAuthorId || draft.coAuthorName) {
+                            const coAuthSection = document.getElementById('coAuthorSection');
+                            if (coAuthSection && coAuthSection.classList.contains('hidden') && window.toggleCoAuthorSection) {
+                                window.toggleCoAuthorSection();
+                            }
+                            if (draft.coAuthorId) document.getElementById('newsCoAuthorId').value = draft.coAuthorId;
+                            if (draft.coAuthorName) document.getElementById('newsCoAuthorName').value = draft.coAuthorName;
+                        }
+
+                        // Update UI states
+                        if (window.handleAuthorChange) window.handleAuthorChange();
+                        if (window.handleCoAuthorChange) window.handleCoAuthorChange();
+
                         updatePreview();
                         switchTab('editor'); // Switch to editor tab
                         console.log('✅ Draft restored');
@@ -248,10 +367,12 @@ function updatePublishLabel() {
 
     if (!dateInput || !checkbox || !checkboxLabel || !btnText || !btnIcon) return;
 
-    const selectedDate = new Date(dateInput.value + 'T23:59:59');
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const isFutureDate = selectedDate > today;
+    // Compare dates only (without time)
+    const selectedDateStr = dateInput.value; // "2025-12-29"
+    const todayStr = new Date().toISOString().split('T')[0]; // "2025-12-29"
+
+    // Is the selected date STRICTLY in the future? (not today)
+    const isFutureDate = selectedDateStr > todayStr;
     const isChecked = checkbox.checked;
 
     if (!isChecked) {
@@ -261,13 +382,13 @@ function updatePublishLabel() {
         btnIcon.className = 'fa-solid fa-file-pen';
         btn.style.background = ''; // Default primary
     } else if (isFutureDate) {
-        // Scheduled for future
+        // Scheduled for future (tomorrow or later)
         checkboxLabel.innerHTML = 'Naplánovat publikaci <span style="color: #fdba74;">📅</span>';
         btnText.textContent = ' Naplánovat';
         btnIcon.className = 'fa-regular fa-clock';
         btn.style.background = 'linear-gradient(135deg, #f97316, #ea580c)'; // Orange gradient
     } else {
-        // Publish immediately
+        // Publish immediately (today or past)
         checkboxLabel.textContent = 'Publikovat ihned';
         btnText.textContent = ' Publikovat';
         btnIcon.className = 'fa-solid fa-paper-plane';
@@ -315,6 +436,19 @@ function resetEditor() {
     document.getElementById('galleryPreview').innerHTML = '';
     updatePreview();
     updatePublishLabel(); // Update button/checkbox labels
+
+    // Initialize/Ensure floating toolbar exists
+    if (window.initFloatingToolbar) window.initFloatingToolbar();
+
+    // Auto-select current user as author
+    if (window.currentUser && document.getElementById('newsAuthorId')) {
+        const select = document.getElementById('newsAuthorId');
+        // Simple assignment works if user is loaded in options
+        // But resetEditor might run before users are loaded if opened directly?
+        // Usually dashboard loads first. If not in options, value won't stick.
+        select.value = window.currentUser.id;
+        if (select.value && window.handleAuthorChange) window.handleAuthorChange();
+    }
 
     // Clear auto-saved draft
     localStorage.removeItem('newsDraft');
@@ -458,19 +592,12 @@ async function saveNews() {
         galleryJson: JSON.stringify(galleryImages)
     };
 
-    // Validate required fields
+    // Validate required fields (ONLY Title is mandatory now)
     if (!data.title) {
         showAlert('Vyplňte nadpis', 'error');
         return;
     }
-    if (!data.publishedDate) {
-        showAlert('Vyplňte datum publikace', 'error');
-        return;
-    }
-    if (!data.excerpt) {
-        showAlert('Vyplňte krátký popis', 'error');
-        return;
-    }
+    // Relaxed validation: Date and Excerpt are optional for saving
 
     try {
         const res = await fetch(url, {
@@ -481,6 +608,7 @@ async function saveNews() {
 
         if (res.ok) {
             showAlert('Uloženo!', 'success');
+            window.isNewsDirty = false; // Reset dirty flag
             switchTab('dashboard');
             loadDashboard();
         } else {
