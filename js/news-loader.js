@@ -104,6 +104,9 @@ async function loadNews(options = {}) {
         let news = await response.json();
 
         // Save full list for stats before applying limit
+        // Filter out empty news (no title)
+        news = news.filter(item => item.title && item.title.trim() !== '');
+
         const fullNewsList = [...news];
 
         // Apply limit logic
@@ -114,6 +117,13 @@ async function loadNews(options = {}) {
         }
 
         if (news.length === 0) {
+            // Check if we should hide the parent wrapper
+            if (options.hideIfEmptyId) {
+                const wrapper = document.getElementById(options.hideIfEmptyId);
+                if (wrapper) wrapper.style.display = 'none';
+                return; // Stop rendering
+            }
+
             if (displayMode === 'cards') {
                 container.innerHTML = `
                     <div style="grid-column: 1 / -1; text-align: center; padding: 4rem;">
@@ -379,7 +389,8 @@ function initNewsLoader() {
         const category = el.dataset.newsCategory;
         const displayMode = el.dataset.newsDisplay || 'list';
         const limit = el.dataset.newsLimit ? parseInt(el.dataset.newsLimit) : null;
-        loadNews({ containerId: el.id, category, displayMode, limit });
+        const hideIfEmptyId = el.dataset.newsHideIfEmpty || null;
+        loadNews({ containerId: el.id, category, displayMode, limit, hideIfEmptyId });
     });
 }
 

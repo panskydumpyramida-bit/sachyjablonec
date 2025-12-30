@@ -1,8 +1,41 @@
+# Sun Dec 29 2025
+
+### Admin Panel UX Improvements
+- **Auth Race Condition Fix**: Fixed timing issue where `currentUser` was null on page refresh, breaking author selection and user-dependent features.
+- **Relaxed Validation**: Backend now only requires article title; category defaults to "Novinky", date defaults to today.
+- **Safe Navigation**: Added unsaved changes modal when leaving editor with dirty state.
+- **Auto-resize Textareas**: Title and excerpt fields now auto-expand as you type.
+- **Image Editing**: Click images in content to edit (size, alt text, link).
+- **Image Resizing Options**: 100%, 75%, 50%, 33%, 25% size presets in image modal.
+
+### Smart Formatting ✨ (NEW)
+- **Auto-Suggest Results**: When typing `1-0`, `0-1`, or `1/2`, a tooltip appears offering to format as highlighted score. Press Tab/Enter to accept.
+- **Auto Button**: New "Auto" toolbar button that intelligently detects and formats selected text (names → blue, scores → green).
+- **Result Template**: Insert pre-formatted result template "Bílý – Černý 1-0" via slash commands (coming soon).
+
+### AI Integrace 🤖 (NEW)
+- **AI Oprava pravopisu**: Nové tlačítko v editoru automaticky opraví překlepy a gramatiku v článku (využívá GPT-4o-mini).
+- **AI Tabulky**: Tlačítko pro převod označeného textu na HTML tabulku.
+- **Table Tools Widget**: Plovoucí panel nástrojů, který se objeví při kliknutí do tabulky. Umožňuje přidávat/mazat řádky a sloupce (`+R`, `-R`, `+C`, `-C`) a aplikovat prémiový styl (🎨).
+- **Backend**: Implementovány endpointy `/api/ai/*` a integrace OpenAI API.
+
+### Mobile Responsiveness
+- **Scrollable Navigation**: Admin nav tabs now scroll horizontally instead of wrapping.
+- **Card-based Tables**: News list converts to cards on mobile for better readability.
+- **Editor Layout**: Sidebar stacks below content on mobile.
+- **Mutual Menu Exclusion**: Fixed bug where both burger menus could be open simultaneously.
+
+### Code Quality
+- **Function Naming**: Renamed conflicting `loadUsers` functions to avoid global scope collision.
+- **Global State**: Added `window.currentUser` for cross-module access.
+- **Event System**: Added `authChecked` event for proper initialization timing.
+- **Prepared Slash Commands**: Module ready for future activation (`admin-slash-commands.js`).
+
+---
+
 # Tue Dec 26 2025
 
 - **Admin Panel Refactoring**: Reduced `admin-news.js` size by ~43%, moved WYSIWYG, Image, and Thumbnail logic to separate modules.
 - **Blicák Gallery**: Added gallery for "Vánoční blicák" (ID 54) with 61 new photos (WEBP optimized) from David Šafařík.
 - **Pagination**: Implemented pagination for article galleries to improve load times and UX.
 - **Bug Fixes**: Resolved Admin Login overlay issue, Prisma image sync error, and Tournaments page links.
-
-

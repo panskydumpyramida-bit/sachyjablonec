@@ -65,14 +65,26 @@ function showImageModal(existingImg = null) {
                         <i class="fa-solid fa-rotate-right"></i> Otočit o 90°
                     </button>
                 </div>
-                <div style="margin-bottom: 1rem;">
-                    <label style="display:block;margin-bottom:0.5rem;">Zarovnání</label>
-                    <select id="imgAlignInput" style="width: 100%;">
-                        <option value="center">Na střed (výchozí)</option>
-                        <option value="left">Vlevo (obtékaný)</option>
-                        <option value="right">Vpravo (obtékaný)</option>
-                        <option value="full">Plná šířka</option>
-                    </select>
+                <div style="margin-bottom: 1rem; display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <div>
+                        <label style="display:block;margin-bottom:0.5rem; font-size: 0.8rem; color: var(--text-muted);">Zarovnání</label>
+                        <select id="imgAlignInput" style="width: 100%; font-size: 0.9rem;">
+                            <option value="center">Na střed</option>
+                            <option value="left">Vlevo (obtékaný)</option>
+                            <option value="right">Vpravo (obtékaný)</option>
+                            <option value="full">Roztažený (Full)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label style="display:block;margin-bottom:0.5rem; font-size: 0.8rem; color: var(--text-muted);">Velikost</label>
+                        <select id="imgSizeInput" style="width: 100%; font-size: 0.9rem;">
+                            <option value="100%">100% (Výchozí)</option>
+                            <option value="75%">75% (Velká)</option>
+                            <option value="50%">50% (Střední)</option>
+                            <option value="33%">33% (Malá)</option>
+                            <option value="25%">25% (Mini)</option>
+                        </select>
+                    </div>
                 </div>
                 <div style="display: flex; justify-content: space-between;">
                     <button type="button" class="btn-custom btn-delete" onclick="deleteImage()" ${existingImg ? '' : 'style="display:none;"'}>Odstranit</button>
@@ -93,7 +105,7 @@ function showImageModal(existingImg = null) {
     // Reset/fill input values
     const imgUrlInput = document.getElementById('imgUrlInput');
     const imgPreviewArea = document.getElementById('imgPreviewArea');
-    const imgAlignInput = document.getElementById('imgAlignInput');
+    const imgSizeInput = document.getElementById('imgSizeInput');
     contentPendingImageBlob = null; // Reset any pending rotated image
 
     if (existingImg) {
@@ -103,12 +115,28 @@ function showImageModal(existingImg = null) {
 
         if (existingImg.style.float === 'left') imgAlignInput.value = 'left';
         else if (existingImg.style.float === 'right') imgAlignInput.value = 'right';
-        else if (existingImg.style.width === '100%') imgAlignInput.value = 'full';
+        else if (existingImg.style.width === '100%' && existingImg.style.display === 'block') imgAlignInput.value = 'full';
         else imgAlignInput.value = 'center';
+
+        // Detect size
+        // If width is set, try to match option, otherwise default 100%
+        if (existingImg.style.width) {
+            // Check if matches one of our options
+            const w = existingImg.style.width;
+            if (['100%', '75%', '50%', '33%', '25%'].includes(w)) {
+                imgSizeInput.value = w;
+            } else {
+                imgSizeInput.value = '100%'; // Custom or unset
+            }
+        } else {
+            imgSizeInput.value = '100%';
+        }
+
     } else {
         imgUrlInput.value = '';
         imgPreviewArea.innerHTML = '<p style="color: var(--text-muted);">Náhled obrázku</p>';
         imgAlignInput.value = 'center';
+        imgSizeInput.value = '100%';
     }
 
     imgUrlInput.onchange = () => {
@@ -154,6 +182,7 @@ async function handleImageFile(event) {
 async function saveImageInsertion() {
     let url = document.getElementById('imgUrlInput').value;
     const align = document.getElementById('imgAlignInput').value;
+    const size = document.getElementById('imgSizeInput').value || '100%';
 
     // If we have a pending rotated image, upload it now
     if (contentPendingImageBlob) {
@@ -188,11 +217,15 @@ async function saveImageInsertion() {
         return;
     }
 
-    let style = 'max-width: 100%; height: auto; border-radius: 8px;';
+    // Base style
+    let style = `width: ${size}; max-width: 100%; height: auto; border-radius: 8px;`;
+
+    // Logic for alignment + size
     if (align === 'center') {
         style += ' display: block; margin: 1rem auto;';
     } else if (align === 'full') {
-        style += ' width: 100%; margin: 1rem 0;';
+        // Full width overrides size selection usually, or acts as 100%
+        style = 'width: 100%; height: auto; border-radius: 8px; display: block; margin: 1rem 0;';
     } else if (align === 'left') {
         style += ' float: left; margin: 0 1rem 1rem 0;';
     } else if (align === 'right') {

@@ -24,6 +24,7 @@ import scrapingRoutes from './routes/scraping.js';
 import commentsRoutes from './routes/comments.js';
 import eventsRoutes from './routes/events.js';
 import chessRoutes from './routes/chessRoutes.js';
+import aiRoutes from './routes/ai.js';
 import oauthRoutes from './routes/oauth.js';
 import passport from './config/passport.js';
 import { PrismaClient } from '@prisma/client';
@@ -242,6 +243,7 @@ app.use('/api/scraping', scrapingRoutes);
 app.use('/api/comments', commentsRoutes);
 app.use('/api/events', eventsRoutes);
 app.use('/api/chess', chessRoutes);
+app.use('/api/ai', aiRoutes);
 
 // Import helpers from utils
 import { clean, isElo, simplify, isMatch, fetchWithHeaders } from './utils/helpers.js';
