@@ -1023,6 +1023,17 @@
     <script src="js/layout-loader.js?v=5" defer></script>
     <script src="js/main.js" defer></script>
     <script src="js/news-loader.js" defer></script>
+    <!-- Auto-open crosstables on desktop -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const isDesktop = window.innerWidth >= 768;
+            if (isDesktop) {
+                document.querySelectorAll('details.crosstable-details').forEach(el => {
+                    el.setAttribute('open', '');
+                });
+            }
+        });
+    </script>
 </body>
 
 </html>
