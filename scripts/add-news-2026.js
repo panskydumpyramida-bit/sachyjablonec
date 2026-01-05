@@ -101,6 +101,12 @@ async function main() {
     Napište nám tip dolů 👇 <strong>do diskuze</strong>, nebo pošlete odkaz na <a href="mailto:info@sachyjablonec.cz" style="color: #60a5fa; text-decoration: underline;">info@sachyjablonec.cz</a>.</p>
 </div>
 
+<div style="text-align: center; margin-top: 2.5rem;">
+    <a href="/tournaments.html" style="display: inline-flex; align-items: center; gap: 0.75rem; background: linear-gradient(135deg, #d4af37, #b8962f); color: #1a1a1a; padding: 1rem 2rem; border-radius: 50px; font-weight: 700; font-size: 1.1rem; text-decoration: none; box-shadow: 0 4px 15px rgba(212, 175, 55, 0.3); transition: all 0.3s;">
+        <i class="fa-solid fa-calendar-alt"></i> Prohlédnout všechny turnaje
+    </a>
+</div>
+
 <p style="margin-top: 2rem; font-style: italic; color: #94a3b8;">Přejeme hodně štěstí a správných tahů v roce 2026!</p>
     `.trim();
 
