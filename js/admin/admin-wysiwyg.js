@@ -1428,6 +1428,40 @@ function updateTableToolsPosition() {
 // Auto-init table tools
 document.addEventListener('DOMContentLoaded', () => {
     setTimeout(initTableTools, 500);
+
+    // Initialize WYSIWYG Enter key handler for highlight spans
+    const editor = document.getElementById('articleContent');
+    if (editor) {
+        // Ensure paragraphs are used for new lines
+        document.execCommand('defaultParagraphSeparator', false, 'p');
+
+        editor.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                const sel = window.getSelection();
+                if (!sel.rangeCount) return;
+
+                let node = sel.anchorNode;
+                if (node.nodeType === 3) node = node.parentNode;
+
+                if (node.classList && (node.classList.contains('highlight-name') || node.classList.contains('highlight-score'))) {
+                    e.preventDefault();
+                    document.execCommand('insertParagraph');
+
+                    const newSel = window.getSelection();
+                    let newNode = newSel.anchorNode;
+                    if (newNode.nodeType === 3) newNode = newNode.parentNode;
+
+                    if (newNode.classList && (newNode.classList.contains('highlight-name') || newNode.classList.contains('highlight-score'))) {
+                        newNode.className = '';
+                        if (newNode.innerHTML.includes('\u200B')) {
+                            newNode.innerHTML = newNode.innerHTML.replace(/\u200B/g, '');
+                        }
+                    }
+                    if (typeof checkToolbarState === 'function') checkToolbarState();
+                }
+            }
+        });
+    }
 });
 
 // ================================

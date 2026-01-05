@@ -142,7 +142,58 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
+// ================================
+// UI STATE TOGGLES
+// ================================
+
+/**
+ * Toggle visibility of the "Generate new set" button
+ * based on randomize checkbox state
+ */
+function togglePrRandomizeUI() {
+    const isRandom = document.getElementById('prRandomizePuzzles')?.checked;
+    const btn = document.getElementById('prRefreshSetBtn');
+    if (btn) btn.style.display = isRandom ? 'none' : 'block';
+}
+
+/**
+ * Refresh the fixed puzzle set (when randomization is off)
+ */
+async function refreshPrFixedSet() {
+    if (!confirm('Opravdu chcete vygenerovat novou sadu úloh? Stará sada bude zahozena.')) return;
+
+    const btn = document.getElementById('prRefreshSetBtn');
+    const originalText = btn?.innerHTML || '';
+    if (btn) {
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Generuji...';
+        btn.disabled = true;
+    }
+
+    try {
+        const res = await fetch(`${API_URL}/racer/settings/refresh-set`, {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${authToken}` }
+        });
+        if (res.ok) {
+            alert('Nová sada byla vygenerována (cache smazána). Při příští hře se načtou nové úlohy.');
+        } else {
+            alert('Chyba při generování.');
+        }
+    } catch (e) {
+        console.error(e);
+        alert('Chyba spojení.');
+    } finally {
+        if (btn) {
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+        }
+    }
+}
+
 // Export for global access
 window.loadPuzzleRacerSettings = loadPuzzleRacerSettings;
 window.savePuzzleRacerSettings = savePuzzleRacerSettings;
 window.regeneratePuzzles = regeneratePuzzles;
+window.togglePrRandomizeUI = togglePrRandomizeUI;
+window.refreshPrFixedSet = refreshPrFixedSet;
+
