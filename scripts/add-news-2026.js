@@ -59,8 +59,8 @@ async function main() {
 </div>
 
 <div style="background: linear-gradient(145deg, rgba(212, 175, 55, 0.1), rgba(0,0,0,0)); padding: 2rem; border-radius: 12px; border: 1px solid rgba(212, 175, 55, 0.2);">
-    <h4 style="margin-top: 0; color: #ffd700;"><i class="fa-solid fa-map-location-dot"></i> Konečně vše přehledně na jednom místě</h4>
-    <p style="margin-bottom: 1.5rem;">Už nemusíte složitě hledat propozice po mailech. Sjednotili jsme pro vás všechny důležité informace do jednoho přehledu:</p>
+    <h4 style="margin-top: 0; color: #ffd700;"><i class="fa-solid fa-chess-board"></i> Chcete si zahrát, ale nevíte kde?</h4>
+    <p style="margin-bottom: 1.5rem;">Máte chuť zasednout za skutečnou šachovnici, ale ztrácíte se v tom, co se kde hraje? Přesně pro vás jsme to dali dohromady. Už žádné složité hledání po mailech – všechno máte tady:</p>
     
     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
         <div style="display: flex; gap: 1rem; align-items: start;">
