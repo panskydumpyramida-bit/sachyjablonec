@@ -406,6 +406,22 @@ async function toggleMaintenance() {
     }
 }
 
+/**
+ * Check maintenance mode status on load
+ */
+async function checkMaintenance() {
+    try {
+        const res = await fetch(`${API_URL}/settings`, {
+            headers: { 'Authorization': `Bearer ${authToken}` }
+        });
+        const settings = await res.json();
+        const toggle = document.getElementById('maintenanceToggle');
+        if (toggle) toggle.checked = settings.maintenance_mode === 'true';
+    } catch (e) {
+        console.error('Failed to check maintenance status:', e);
+    }
+}
+
 // ================================
 // SIDEBAR SECTIONS
 // ================================
@@ -471,6 +487,7 @@ window.deleteNews = deleteNews;
 window.showToast = showToast;
 window.showAlert = showAlert;
 window.toggleMaintenance = toggleMaintenance;
+window.checkMaintenance = checkMaintenance;
 window.toggleSidebarSection = toggleSidebarSection;
 
 // Restore tab after showAdmin is called
@@ -478,6 +495,10 @@ window.toggleSidebarSection = toggleSidebarSection;
 const _originalShowAdminCore = window.showAdmin;
 window.showAdmin = function () {
     _originalShowAdminCore();
+    // Check maintenance status on admin load
+    if (typeof checkMaintenance === 'function') {
+        checkMaintenance();
+    }
     // Restore tab from URL hash after login/auth
     if (savedTabFromHash && savedTabFromHash !== 'dashboard') {
         setTimeout(() => switchTab(savedTabFromHash), 100);
