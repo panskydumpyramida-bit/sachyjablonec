@@ -112,7 +112,8 @@ async function main() {
             where: { id: existing.id },
             data: {
                 content: content,
-                excerpt: excerpt
+                excerpt: excerpt,
+                thumbnailUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/95/TataSteelChess2018-1.jpg/2560px-TataSteelChess2018-1.jpg'
             }
         });
         console.log(`Article updated: ${title}`);
@@ -127,7 +128,7 @@ async function main() {
                 publishedDate: new Date(),
                 isPublished: true,
                 authorName: 'Admin Tým',
-                thumbnailUrl: '/images/pf2026.jpg'
+                thumbnailUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/95/TataSteelChess2018-1.jpg/2560px-TataSteelChess2018-1.jpg'
             }
         });
         console.log(`Article created: ${article.title} (ID: ${article.id})`);
