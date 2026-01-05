@@ -27,16 +27,17 @@ async function main() {
     <li><strong>PORG Open (Leden–Květen):</strong> Kompletní série mládežnických turnajů v Praze.</li>
 </ul>
 
-<h4>🗺️ Novinky na webu</h4>
-<p>Pro lepší orientaci jsme vylepšili zobrazení turnajů:</p>
+<h4>🚀 Váš osobní šachový navigátor</h4>
+<p>Náš web dostal do nového roku pořádný upgrade! Už nemusíte složitě googlit, kde leží ta či ona sokolovna:</p>
 <ul>
-    <li><strong>Interaktivní mapa:</strong> U každého turnaje nyní vidíte přesnou polohu.</li>
-    <li><strong>Vzdálenost:</strong> Web automaticky počítá vzdušnou vzdálenost od Jablonce, abyste věděli, jak daleko to máte.</li>
-    <li><strong>Google Kalendář:</strong> Jedním kliknutím si můžete akci přidat do svého kalendáře.</li>
+    <li><strong>📌 Kde to sakra je?</strong> Mrkněte na interaktivní mapu přímo v detailu turnaje.</li>
+    <li><strong>🚗 Jak je to daleko?</strong> Spočítali jsme to za vás. Vzdušnou čarou z Jablonce – ať víte, jestli stačí kolo, nebo startovat auto.</li>
+    <li><strong>🔔 Nezmeškejte start:</strong> Jedním kliknutím si turnaj pošlete do svého Google kalendáře. Organizace času nikdy nebyla snazší.</li>
 </ul>
 
-<h4>✍️ Chybí nám nějaký turnaj?</h4>
-<p>Pokud víte o zajímavém turnaji, který by v našem kalendáři neměl chybět, dejte nám vědět! Napište nám propozice nebo odkaz na email <a href="mailto:info@sachyjablonec.cz">info@sachyjablonec.cz</a>, případně <strong>napište do diskuze pod tímto článkem</strong>, a my ho rádi přidáme.</p>
+<h4>🕵️‍♂️ Staňte se naším skautem!</h4>
+<p>Kalendář tvoříme pro vás, ale bez vás to nejde. Víte o kvalitním turnaji, který nám proklouzl pod radarem? <strong>Nenechávejte si to pro sebe!</strong></p>
+<p>Napište nám tip dolů 👇 <strong>do diskuze</strong>, nebo pošlete odkaz na <a href="mailto:info@sachyjablonec.cz">info@sachyjablonec.cz</a>. Rádi ho přidáme, ať o něm ví i ostatní.</p>
 
 <p>Přejeme hodně štěstí a správných tahů v roce 2026!</p>
     `.trim();
