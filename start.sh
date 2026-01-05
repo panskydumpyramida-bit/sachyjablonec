@@ -25,6 +25,10 @@ echo "👾 Syncing games from Articles..."
 # npm run sync-games || echo "⚠️ Game sync failed, but continuing..."
 echo "⚠️ Game sync skipped for speed (data should be in DB)."
 
-# 4. Start the application
+# 4. Sync event data (2026 tournaments)
+echo "📅 Syncing events..."
+node scripts/sync-production-events.js || echo "⚠️ Event sync failed, but continuing..."
+
+# 5. Start the application
 echo "🟢 Starting application..."
 exec npm start
