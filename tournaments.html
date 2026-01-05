@@ -1044,9 +1044,7 @@
                             <div class="event-date-box">
                                 <span class="day">${day}</span>
                                 <span class="month">${date.toLocaleString('cs-CZ', { month: 'short' }).toUpperCase()}</span>
-                                <div style="display: flex; align-items: center; gap: 0.35rem; flex-wrap: nowrap;">
-                                    <span class="time">${time}</span>${presenceTime ? `<span style="display: inline-flex; align-items: center; gap: 0.15rem; padding: 0.1rem 0.3rem; font-size: 0.55rem; background: rgba(16, 185, 129, 0.15); color: #10b981; border-radius: 3px; white-space: nowrap;"><i class="fa-solid fa-user-check"></i>${presenceTime}</span>` : ''}
-                                </div>
+                                <span class="time">${time}${presenceTime ? ` <span style="display: inline; padding: 0.1rem 0.25rem; font-size: 0.6rem; background: rgba(16, 185, 129, 0.15); color: #10b981; border-radius: 3px; margin-left: 0.25rem;"><i class="fa-solid fa-user-check" style="font-size: 0.5rem;"></i> ${presenceTime}</span>` : ''}</span>
                             </div>
                             
                             <div class="event-main-info">
