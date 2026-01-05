@@ -19,12 +19,18 @@ async function main() {
 <p>Připravili jsme pro vás aktualizovaný kalendář s řadou zajímavých turnajů pro mládež i dospělé na první polovinu roku. Všechny akce nyní najdete přehledně seřazené v sekci <strong>Turnaje</strong> a v <strong>Kalendáři</strong>.</p>
 
 <h4>📅 Jaké turnaje jsme přidali?</h4>
+
+<p><strong>🏠 Regionální akce (Liberecký kraj)</strong></p>
 <ul>
     <li><strong>Josefův Důl (9. 1.):</strong> Okresní přebor družstev ml. žáků.</li>
-    <li><strong>OPEN PRAHA (od 9. 1.):</strong> Prestižní série turnajů v Hotelu Olympik (klasický, rapid i blesk).</li>
     <li><strong>Varnsdorf (30. 1.):</strong> Pololetní turnaj mládeže.</li>
-    <li><strong>Bakov (31. 1.):</strong> Oblíbený turnaj dvojic.</li>
-    <li><strong>PORG Open (Leden–Květen):</strong> Kompletní série mládežnických turnajů v Praze.</li>
+    <li><strong>Bakov (31. 1.):</strong> Oblíbený turnaj dvojic (kousek za hranicemi kraje).</li>
+</ul>
+
+<p><strong>🚄 Pražské výpravy</strong></p>
+<ul>
+    <li><strong>OPEN PRAHA (od 9. 1.):</strong> Prestižní série mistrovských turnajů v Hotelu Olympik.</li>
+    <li><strong>PORG Open (Leden–Květen):</strong> Série mládežnických turnajů v Praze, ideální pro sbírání zkušeností.</li>
 </ul>
 
 <h4>🚀 Váš osobní šachový navigátor</h4>
