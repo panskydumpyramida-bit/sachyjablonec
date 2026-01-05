@@ -994,11 +994,10 @@
                 timeControlHtml = `<span class="badge badge-control" style="${tcStyle}"><i class="fa-solid ${icon}"></i> ${label}</span>`;
             }
 
-            // 4. Presence (Text + Icon) - MOVED TO TOP
-            let presenceHtml = '';
+            // 4. Presence (Text + Icon) - MOVED TO DATE-BOX
+            let presenceTime = '';
             if (event.presentationEnd) {
-                const pTime = new Date(event.presentationEnd).toLocaleTimeString('cs-CZ', { hour: '2-digit', minute: '2-digit' });
-                presenceHtml = `<span class="badge badge-control" style="background: rgba(16, 185, 129, 0.1); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.2);"><i class="fa-solid fa-user-check"></i> ${pTime}</span>`;
+                presenceTime = new Date(event.presentationEnd).toLocaleTimeString('cs-CZ', { hour: '2-digit', minute: '2-digit' });
             }
 
             // 5. Distance Badge
@@ -1046,6 +1045,7 @@
                                 <span class="day">${day}</span>
                                 <span class="month">${date.toLocaleString('cs-CZ', { month: 'short' }).toUpperCase()}</span>
                                 <span class="time">${time}</span>
+                                ${presenceTime ? `<span class="presence-badge" style="display: inline-flex; align-items: center; gap: 0.2rem; margin-top: 0.25rem; padding: 0.1rem 0.35rem; font-size: 0.6rem; background: rgba(16, 185, 129, 0.15); color: #10b981; border-radius: 4px;"><i class="fa-solid fa-user-check"></i>${presenceTime}</span>` : ''}
                             </div>
                             
                             <div class="event-main-info">
@@ -1062,7 +1062,6 @@
                                         ${ageIconHtml}
                                         ${typeIconHtml}
                                         ${timeControlHtml}
-                                        ${presenceHtml}
                                         ${distanceHtml}
                                    </div>
                                 </div>
