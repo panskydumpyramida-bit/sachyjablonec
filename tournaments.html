@@ -700,7 +700,7 @@
 
             let filtered = allEvents.filter(event => {
                 // Age filter
-                if (currentAge !== 'all' && event.ageGroup !== currentAge) return false;
+                if (currentAge !== 'all' && event.ageGroup !== 'all' && event.ageGroup !== currentAge) return false;
 
                 // Tempo filter
                 if (currentTempo !== 'all' && event.timeControl !== currentTempo) return false;
@@ -787,7 +787,11 @@
             'frýdek-místek': { lat: 49.68, lon: 18.35 },
             'vsetín': { lat: 49.34, lon: 17.99 },
             'kroměříž': { lat: 49.30, lon: 17.39 },
-            'teplice': { lat: 50.64, lon: 13.82 }
+            'teplice': { lat: 50.64, lon: 13.82 },
+            'varnsdorf': { lat: 50.91, lon: 14.62, region: 'LI' },
+            'josefův důl': { lat: 50.78, lon: 15.23, region: 'LI' },
+            'bakov': { lat: 50.48, lon: 14.94, region: 'LI' },
+            'nový porg': { lat: 50.02, lon: 14.45 }
         };
 
         // Initialize map
@@ -882,7 +886,7 @@
 
             if (isLiberecRegion) {
                 // Add label for Jablonec in detailed view
-                markersHtml += `<text x="${home.x}" y="${home.y + 120}" font-family="Arial" font-size="50" fill="#334155" text-anchor="middle" font-weight="900" style="text-shadow: 0 2px 4px rgba(255,255,255,0.8);">Jablonec</text>`;
+                markersHtml += `<text x="${home.x}" y="${home.y + 85}" font-family="Arial" font-size="60" fill="#ffffff" text-anchor="middle" font-weight="900" style="text-shadow: 0 2px 4px #000, 0 0 10px rgba(0,0,0,0.8); letter-spacing: 1px;">Jablonec</text>`;
             }
 
             // Event Marker
@@ -996,6 +1000,20 @@
                 presenceHtml = `<span class="badge badge-control" style="background: rgba(16, 185, 129, 0.1); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.2);"><i class="fa-solid fa-user-check"></i> ${pTime}</span>`;
             }
 
+            // 5. Distance Badge
+            let distanceHtml = '';
+            if (event.location) {
+                const coords = getCoordsFromLocation(event.location);
+                if (coords) {
+                    const home = cityToCoords['jablonec'];
+                    // Calculate only if not effectively the same place (simple epsilon check)
+                    if (home && (Math.abs(coords.lat - home.lat) > 0.001 || Math.abs(coords.lon - home.lon) > 0.001)) {
+                        const dist = calculateHaversineDistance(home.lat, home.lon, coords.lat, coords.lon);
+                        distanceHtml = `<span class="badge badge-control" style="background: rgba(255, 255, 255, 0.1); color: #94a3b8; border: 1px dashed rgba(148, 163, 184, 0.3);" title="Vzdušná vzdálenost od Jablonce"><i class="fa-solid fa-route"></i> ${dist} km</span>`;
+                    }
+                }
+            }
+
             // Generate details HTML parts
             const mainInfoParts = [];
 
@@ -1044,15 +1062,16 @@
                                         ${typeIconHtml}
                                         ${timeControlHtml}
                                         ${presenceHtml}
+                                        ${distanceHtml}
                                    </div>
                                 </div>
 
                                 <div class="event-location-row">
                                     <i class="fa-solid fa-location-dot"></i>
-                                    ${event.location ? `<a href="https://mapy.cz/zakladni?q=${encodeURIComponent(event.location)}" target="_blank" class="location-link">${event.location}</a>` : `<span class="location-text">Místo neuvedeno</span>`}
+                                    ${event.location ? `<a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(event.location)}" target="_blank" class="location-link">${event.location} <i class="fa-solid fa-arrow-up-right-from-square" style="font-size: 0.7em; opacity: 0.7; margin-left: 0.2rem;"></i></a>` : `<span class="location-text">Místo neuvedeno</span>`}
                                 </div>
 
-                                ${event.description ? `<div class="event-description">${event.description.replace(/\n/g, '<br>')}</div>` : ''}
+                                ${event.description ? `<div class="event-description">${event.description.replace(/<p>/g, '<p style="margin: 0 0 0.25rem 0;">')}</div>` : ''}
 
                                 <div class="event-footer-details">
                                      ${event.url ? `
@@ -1124,6 +1143,23 @@
             });
 
             return `https://calendar.google.com/calendar/render?${params.toString()}`;
+        }
+
+        function calculateHaversineDistance(lat1, lon1, lat2, lon2) {
+            const R = 6371; // Radius of the earth in km
+            const dLat = deg2rad(lat2 - lat1);
+            const dLon = deg2rad(lon2 - lon1);
+            const a =
+                Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) *
+                Math.sin(dLon / 2) * Math.sin(dLon / 2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+            const d = R * c; // Distance in km
+            return Math.round(d);
+        }
+
+        function deg2rad(deg) {
+            return deg * (Math.PI / 180);
         }
 
         function showError() {

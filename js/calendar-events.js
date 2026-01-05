@@ -261,8 +261,8 @@ const CalendarEvents = {
                     </div>
                     <div style="font-weight: 600; color: var(--text-color); margin-bottom: 0.25rem;">${event.title}</div>
                     ${tagsHtml}
-                    ${event.location ? `<div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.35rem;"><i class="fa-solid fa-location-dot" style="margin-right: 0.25rem;"></i>${event.location}</div>` : ''}
-                    ${event.description ? `<div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.5rem;">${event.description}</div>` : ''}
+                    ${event.location ? `<div style="font-size: 0.8rem; margin-top: 0.35rem;"><a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(event.location)}" target="_blank" style="color: var(--text-muted); text-decoration: none; transition: color 0.2s;" onmouseover="this.style.color='#22d3ee'" onmouseout="this.style.color='var(--text-muted)'"><i class="fa-solid fa-location-dot" style="margin-right: 0.25rem;"></i>${event.location} <i class="fa-solid fa-arrow-up-right-from-square" style="font-size: 0.7em; opacity: 0.7; margin-left: 0.2rem;"></i></a></div>` : ''}
+                    ${event.description ? `<div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.5rem; line-height: 1.4;">${event.description.replace(/<p>/g, '<p style="margin: 0 0 0.25rem 0;">')}</div>` : ''}
                     ${tournamentDetailsHtml}
                 </div>
                 <a href="${googleCalUrl}" target="_blank" title="Přidat do Google Calendar" style="
