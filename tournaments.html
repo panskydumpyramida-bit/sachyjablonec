@@ -1044,8 +1044,10 @@
                             <div class="event-date-box">
                                 <span class="day">${day}</span>
                                 <span class="month">${date.toLocaleString('cs-CZ', { month: 'short' }).toUpperCase()}</span>
-                                <span class="time">${time}</span>
-                                ${presenceTime ? `<span class="presence-badge" style="display: inline-flex; align-items: center; gap: 0.2rem; margin-top: 0.25rem; padding: 0.1rem 0.35rem; font-size: 0.6rem; background: rgba(16, 185, 129, 0.15); color: #10b981; border-radius: 4px;"><i class="fa-solid fa-user-check"></i>${presenceTime}</span>` : ''}
+                                <div style="display: flex; align-items: center; gap: 0.35rem;">
+                                    <span class="time">${time}</span>
+                                    ${presenceTime ? `<span style="display: inline-flex; align-items: center; gap: 0.15rem; padding: 0.1rem 0.3rem; font-size: 0.55rem; background: rgba(16, 185, 129, 0.15); color: #10b981; border-radius: 3px;"><i class="fa-solid fa-user-check"></i>${presenceTime}</span>` : ''}
+                                </div>
                             </div>
                             
                             <div class="event-main-info">
