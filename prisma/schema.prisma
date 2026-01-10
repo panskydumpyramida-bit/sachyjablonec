@@ -18,22 +18,27 @@ enum Role {
 }
 
 model User {
-  id           Int      @id @default(autoincrement())
-  username     String   @unique
-  email        String   @unique
-  passwordHash String?  @map("password_hash")  // Optional for OAuth users
-  googleId     String?  @unique @map("google_id")  // Google OAuth ID
-  realName     String?  @map("real_name")  // Actual name (editable)
-  club         String?  // Club affiliation (editable)
-  useRealName  Boolean  @default(false) @map("use_real_name") // Show real name in comments?
-  role         Role     @default(USER)
-  createdAt    DateTime @default(now()) @map("created_at")
+  id               Int       @id @default(autoincrement())
+  username         String    @unique
+  email            String    @unique
+  passwordHash     String?   @map("password_hash")  // Optional for OAuth users
+  googleId         String?   @unique @map("google_id")  // Google OAuth ID
+  realName         String?   @map("real_name")  // Actual name (editable)
+  club             String?   // Club affiliation (editable)
+  useRealName      Boolean   @default(false) @map("use_real_name") // Show real name in comments?
+  role             Role      @default(USER)
+  resetToken       String?   @map("reset_token")  // Password reset token
+  resetTokenExpiry DateTime? @map("reset_token_expiry")  // Token expiration
+  createdAt        DateTime  @default(now()) @map("created_at")
   
   authoredNews    News[]   @relation("NewsAuthor")
   coAuthoredNews  News[]   @relation("NewsCoAuthor")
   puzzleResults   PuzzleRaceResult[]
   recordedGames   GameRecorded[]
   comments        Comment[]
+  announcements   Announcement[]
+  documents       Document[]
+  travelReports   TravelReport[]
   
   @@map("users")
 }
@@ -344,4 +349,48 @@ model ChessMove {
   @@index([san, plyNum])
   @@index([gameId])
   @@map("chess_moves")
+}
+
+model Announcement {
+  id        Int      @id @default(autoincrement())
+  title     String
+  content   String
+  authorId  Int      @map("author_id")
+  isPinned  Boolean  @default(false) @map("is_pinned")
+  createdAt DateTime @default(now()) @map("created_at")
+  
+  author    User     @relation(fields: [authorId], references: [id])
+  
+  @@map("announcements")
+}
+
+model Document {
+  id           Int      @id @default(autoincrement())
+  title        String
+  filename     String
+  url          String
+  category     String   @default("other") // stanovy, zapisy, formulare, other
+  uploadedById Int      @map("uploaded_by_id")
+  createdAt    DateTime @default(now()) @map("created_at")
+  
+  uploadedBy   User     @relation(fields: [uploadedById], references: [id])
+  
+  @@map("documents")
+}
+
+model TravelReport {
+  id        Int      @id @default(autoincrement())
+  userId    Int      @map("user_id")
+  date      DateTime
+  from      String
+  to        String
+  purpose   String
+  distance  Int
+  vehicle   String   // car, bus, other
+  status    String   @default("pending") // pending, approved, rejected
+  createdAt DateTime @default(now()) @map("created_at")
+  
+  user      User     @relation(fields: [userId], references: [id])
+  
+  @@map("travel_reports")
 }

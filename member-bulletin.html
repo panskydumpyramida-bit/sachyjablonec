@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="cs">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nástěnka - Členská sekce</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Open+Sans:wght@400;600&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/member.css">
+    <link rel="icon" type="image/png" href="images/favicon.png">
+</head>
+
+<body>
+    <header id="global-header"></header>
+
+    <main class="page-content" style="padding-top: 100px; min-height: 80vh;">
+        <div class="section-view">
+            <div class="section-header">
+                <a href="members.html" class="back-btn">
+                    <i class="fa-solid fa-arrow-left"></i>
+                </a>
+                <h2 class="section-title" style="color: #fcd34d;">
+                    <i class="fa-solid fa-clipboard-list"></i> Nástěnka
+                </h2>
+                <div id="adminAnnouncementActions" class="hidden" style="display: flex; align-items: center;">
+                    <button class="btn-primary" onclick="showAnnouncementModal()"
+                        style="font-size: 0.9rem; padding: 0.5rem 1rem;">
+                        <i class="fa-solid fa-plus"></i> Přidat
+                    </button>
+                    <button id="adminDocumentActions" class="btn-secondary hidden" onclick="showDocumentUploadModal()"
+                        style="font-size: 0.9rem; margin-left: 0.5rem; padding: 0.5rem 1rem;">
+                        <i class="fa-solid fa-upload"></i> Nahrát
+                    </button>
+                </div>
+            </div>
+
+            <!-- Tabs -->
+            <div class="bulletin-tabs">
+                <button class="tab-btn active" onclick="switchBulletinTab('announcements')">
+                    <i class="fa-solid fa-bullhorn"></i> Oznámení
+                </button>
+                <button class="tab-btn" onclick="switchBulletinTab('documents')">
+                    <i class="fa-solid fa-file-alt"></i> Dokumenty
+                </button>
+                <button class="tab-btn" onclick="switchBulletinTab('trip')">
+                    <i class="fa-solid fa-car"></i> Cestovní příkaz
+                </button>
+                <button class="tab-btn" onclick="switchBulletinTab('messages')">
+                    <i class="fa-solid fa-comments"></i> Vzkazy
+                </button>
+            </div>
+
+            <!-- Tab Contents -->
+            <div id="tab-announcements" class="bulletin-tab-content">
+                <div id="announcementsList"></div>
+            </div>
+
+            <div id="tab-documents" class="bulletin-tab-content hidden">
+                <div id="documentsList" class="document-list"></div>
+            </div>
+
+            <div id="tab-trip" class="bulletin-tab-content hidden">
+                <div class="trip-form">
+                    <h3 style="color: #67e8f9; margin-bottom: 1rem;"><i class="fa-solid fa-route"></i> Nový cestovní
+                        příkaz</h3>
+                    <div class="form-grid" style="grid-template-columns: 1fr 1fr;">
+                        <input type="date" id="tripDate" style="color-scheme: dark;">
+                        <input type="text" id="tripPurpose" placeholder="Účel cesty (např. Turnaj Liberec)">
+                        <input type="text" id="tripFrom" placeholder="Odkud">
+                        <input type="text" id="tripTo" placeholder="Kam">
+                        <input type="number" id="tripDistance" placeholder="Vzdálenost (km)">
+                        <select id="tripVehicle">
+                            <option value="car">Vlastní auto</option>
+                            <option value="bus">Autobus/Vlak</option>
+                            <option value="other">Jiné</option>
+                        </select>
+                        <button class="btn-primary" onclick="submitTripReport()"
+                            style="grid-column: 1 / -1; background: #0891b2; color:white;">
+                            Odeslat ke schválení
+                        </button>
+                    </div>
+                </div>
+                <h3 style="color: var(--text-muted); margin: 1.5rem 0 1rem;">Moje poslední cesty</h3>
+                <div id="tripList" class="message-list"></div>
+            </div>
+
+            <div id="tab-messages" class="bulletin-tab-content hidden">
+                <div class="message-form">
+                    <div class="form-grid">
+                        <input type="text" id="msgAuthor" placeholder="Vaše jméno">
+                        <textarea id="msgContent" rows="3" placeholder="Napište vzkaz..."></textarea>
+                        <button class="btn-primary" onclick="submitMemberMessage()">Odeslat</button>
+                    </div>
+                </div>
+                <div id="messageList" class="message-list"></div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Modals (Announcement & Document) -->
+    <div id="announcementModal" class="modal-overlay hidden">
+        <div class="modal">
+            <div class="modal-header">
+                <h2>Přidat oznámení</h2>
+                <button class="close-btn" onclick="closeAnnouncementModal()"><i class="fa-solid fa-times"></i></button>
+            </div>
+            <div class="modal-body">
+                <input type="text" id="annTitle" placeholder="Titulek"
+                    style="width: 100%; margin-bottom: 1rem; padding: 0.8rem; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); color: white; border-radius: 0.5rem;">
+                <textarea id="annContent" rows="5" placeholder="Text oznámení..."
+                    style="width: 100%; margin-bottom: 1rem; padding: 0.8rem; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); color: white; border-radius: 0.5rem;"></textarea>
+                <label
+                    style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1rem; color: var(--text-muted); cursor: pointer;">
+                    <input type="checkbox" id="annPinned"> Připnout nahoru
+                </label>
+                <button id="annSubmitBtn" class="btn-primary" onclick="postAnnouncement()"
+                    style="width: 100%;">Publikovat</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="documentModal" class="modal-overlay hidden">
+        <div class="modal">
+            <div class="modal-header">
+                <h2>Nahrát dokument</h2>
+                <button class="close-btn" onclick="closeDocumentUploadModal()"><i
+                        class="fa-solid fa-times"></i></button>
+            </div>
+            <div class="modal-body">
+                <div class="gallery-upload-area" onclick="document.getElementById('docFile').click()"
+                    style="padding: 1.5rem; margin-bottom: 1rem;">
+                    <i class="fa-solid fa-cloud-upload-alt"
+                        style="font-size: 2rem; color: #a855f7; margin-bottom: 0.5rem;"></i>
+                    <p id="docFileName" style="color: var(--text-muted); margin: 0;">Klikněte pro výběr souboru</p>
+                    <input type="file" id="docFile" style="display: none;"
+                        onchange="document.getElementById('docFileName').textContent = this.files[0] ? this.files[0].name : 'Klikněte pro výběr souboru'">
+                </div>
+                <input type="text" id="docTitle" placeholder="Název dokumentu (volitelné)"
+                    style="width: 100%; margin-bottom: 1rem; padding: 0.8rem; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); color: white; border-radius: 0.5rem;">
+                <select id="docCategory"
+                    style="width: 100%; margin-bottom: 1.5rem; padding: 0.8rem; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); color: white; border-radius: 0.5rem;">
+                    <option value="zapisy">Zápisy ze schůzí</option>
+                    <option value="stanovy">Stanovy a řády</option>
+                    <option value="formulare">Formuláře</option>
+                    <option value="other">Ostatní</option>
+                </select>
+                <button id="docSubmitBtn" class="btn-primary" onclick="uploadDocument()"
+                    style="width: 100%;">Nahrát</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/config.js"></script>
+    <script src="js/layout-loader.js"></script>
+    <script src="js/member-auth.js"></script>
+    <script src="js/member-bulletin.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            const user = await checkAuth(true); // Redirect if not auth
+            if (user) {
+                if (user.role === 'ADMIN' || user.role === 'SUPERADMIN') {
+                    const actions = document.getElementById('adminAnnouncementActions');
+                    if (actions) actions.classList.remove('hidden');
+
+                    // Documents actions are handled inside loadDocuments but we can force it here just in case logic differs
+                }
+                switchBulletinTab('announcements');
+            }
+        });
+    </script>
+</body>
+
+</html>

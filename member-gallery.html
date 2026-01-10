@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="cs">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Galerie - Členská sekce</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Open+Sans:wght@400;600&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/member.css">
+    <link rel="icon" type="image/png" href="images/favicon.png">
+</head>
+
+<body>
+    <header id="global-header"></header>
+
+    <main class="page-content" style="padding-top: 100px; min-height: 80vh;">
+        <div class="section-view">
+            <div class="section-header">
+                <a href="members.html" class="back-btn"><i class="fa-solid fa-arrow-left"></i></a>
+                <h2 class="section-title" style="color: #c4b5fd;">
+                    <i class="fa-solid fa-images"></i> Galerie
+                </h2>
+            </div>
+
+            <div class="gallery-upload-area" onclick="document.getElementById('galleryInput').click()">
+                <i class="fa-solid fa-cloud-upload-alt"
+                    style="font-size: 2.5rem; color: #a855f7; margin-bottom: 0.5rem;"></i>
+                <p style="color: var(--text-muted); margin: 0;">Klikněte pro nahrání fotek</p>
+                <input type="file" id="galleryInput" multiple accept="image/*" style="display: none;"
+                    onchange="handleMemberGalleryUpload(this)">
+            </div>
+            <div id="galleryGrid" class="gallery-grid"></div>
+        </div>
+    </main>
+
+    <script src="js/config.js"></script>
+    <script src="js/layout-loader.js"></script>
+    <script src="js/member-auth.js"></script>
+    <script src="js/member-gallery.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            const user = await checkAuth(true);
+            if (user) loadMemberGallery();
+        });
+    </script>
+</body>
+
+</html>
