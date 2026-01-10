@@ -12,7 +12,10 @@ const transporter = nodemailer.createTransport({
     },
     tls: {
         rejectUnauthorized: false
-    }
+    },
+    connectionTimeout: 10000, // 10 seconds to connect
+    greetingTimeout: 10000,   // 10 seconds for greeting
+    socketTimeout: 30000      // 30 seconds for socket operations
 });
 
 export const sendEmail = async (to, subject, html) => {
