@@ -26,6 +26,9 @@ import eventsRoutes from './routes/events.js';
 import chessRoutes from './routes/chessRoutes.js';
 import aiRoutes from './routes/ai.js';
 import oauthRoutes from './routes/oauth.js';
+import announcementRoutes from './routes/api-announcements.js';
+import documentRoutes from './routes/api-documents.js';
+import travelReportRoutes from './routes/api-travel-reports.js';
 import passport from './config/passport.js';
 import { PrismaClient } from '@prisma/client';
 
@@ -212,8 +215,8 @@ app.get('/club-tournaments.html', servePage('club-tournaments.html'));
 app.get('/partie', servePage('partie.html'));
 app.get('/partie.html', servePage('partie.html'));
 
-app.get('/games', servePage('games.html'));
-app.get('/games.html', servePage('games.html'));
+app.get('/games', (req, res) => res.redirect(301, '/partie'));
+app.get('/games.html', (req, res) => res.redirect(301, '/partie'));
 
 app.get('/chess-database', servePage('chess-database.html'));
 app.get('/chess-database.html', servePage('chess-database.html'));
@@ -244,6 +247,9 @@ app.use('/api/comments', commentsRoutes);
 app.use('/api/events', eventsRoutes);
 app.use('/api/chess', chessRoutes);
 app.use('/api/ai', aiRoutes);
+app.use('/api/announcements', announcementRoutes);
+app.use('/api/documents', documentRoutes);
+app.use('/api/travel-reports', travelReportRoutes);
 
 // Import helpers from utils
 import { clean, isElo, simplify, isMatch, fetchWithHeaders } from './utils/helpers.js';

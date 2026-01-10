@@ -14,235 +14,168 @@
     <link rel="stylesheet" href="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.css">
     <link rel="icon" type="image/png" href="images/favicon.png">
     <style>
-        :root {
-            --glass-bg: rgba(15, 15, 20, 0.9);
-            --glass-border: rgba(212, 175, 55, 0.2);
-            --accent-blue: #3b82f6;
-            --accent-green: #10b981;
-            --accent-gold: #d4af37;
-        }
-
-        body {
-            background: linear-gradient(145deg, #0a0a12 0%, #12121a 50%, #0a0a10 100%);
-            min-height: 100vh;
-        }
-
-        .page-container {
-            max-width: 1400px;
+        .games-container {
+            max-width: 1200px;
             margin: 0 auto;
             padding: 2rem;
-            padding-top: 120px;
         }
 
-        /* Hero Header */
-        .hero-header {
+        .games-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
             margin-bottom: 2rem;
-            padding: 1.5rem;
-            background: var(--glass-bg);
-            border-radius: 16px;
-            border: 1px solid var(--glass-border);
-            backdrop-filter: blur(10px);
-        }
-
-        .hero-title {
-            display: flex;
-            align-items: center;
+            flex-wrap: wrap;
             gap: 1rem;
         }
 
-        .hero-title i {
-            font-size: 2.5rem;
-            background: linear-gradient(135deg, var(--accent-gold), #f5e6a3);
-            -webkit-background-clip: text;
-            background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        .hero-title h1 {
+        .games-header h1 {
             margin: 0;
-            font-size: 1.8rem;
-            color: var(--accent-gold);
+            color: var(--primary-color);
         }
 
-        .hero-actions {
+        .header-actions {
             display: flex;
-            gap: 0.75rem;
+            gap: 0.5rem;
+            flex-wrap: wrap;
         }
 
-        .btn-hero {
-            padding: 0.75rem 1.5rem;
-            border-radius: 10px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s;
-            text-decoration: none;
+        /* Button styles for this page */
+        .btn-primary {
             display: inline-flex;
             align-items: center;
             gap: 0.5rem;
-            font-size: 0.9rem;
-        }
-
-        .btn-gold {
-            background: linear-gradient(135deg, var(--accent-gold), #c4a030);
+            padding: 0.6rem 1rem;
+            background: var(--primary-color, #d4af37);
             color: #000;
             border: none;
-            box-shadow: 0 4px 20px rgba(212, 175, 55, 0.3);
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.2s;
         }
 
-        .btn-gold:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 30px rgba(212, 175, 55, 0.5);
+        .btn-primary:hover {
+            background: #b8972e;
+            transform: translateY(-1px);
         }
 
-        .btn-green {
-            background: rgba(16, 185, 129, 0.15);
-            color: var(--accent-green);
-            border: 1px solid rgba(16, 185, 129, 0.3);
+        .btn-secondary {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.6rem 1rem;
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text-color, #e0e0e0);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 6px;
+            font-weight: 500;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.2s;
         }
 
-        .btn-green:hover {
-            background: rgba(16, 185, 129, 0.25);
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.1);
         }
 
-        /* Split Layout */
-        .split-view {
+        /* Split layout */
+        .split-layout {
             display: grid;
-            grid-template-columns: 380px 1fr;
+            grid-template-columns: 320px 1fr;
             gap: 1.5rem;
             align-items: start;
         }
 
-        @media (max-width: 1100px) {
-            .split-view {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        /* Games Panel */
         .games-panel {
-            background: var(--glass-bg);
-            border-radius: 16px;
-            border: 1px solid var(--glass-border);
-            overflow: hidden;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 12px;
+            padding: 1rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
         }
 
-        .panel-tabs {
+        .tabs {
             display: flex;
-            background: rgba(0, 0, 0, 0.4);
+            gap: 0;
+            margin-bottom: 1rem;
+            border-bottom: none;
+            padding-bottom: 0;
         }
 
         .tab-btn {
-            flex: 1;
-            padding: 1rem;
-            background: transparent;
-            border: none;
-            border-bottom: 2px solid transparent;
+            padding: 0.6rem 1.2rem;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 6px;
             color: var(--text-muted);
-            font-size: 0.85rem;
             cursor: pointer;
             transition: all 0.2s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 0.5rem;
         }
 
         .tab-btn:hover {
-            color: var(--text-main);
+            background: rgba(255, 255, 255, 0.1);
         }
 
         .tab-btn.active {
-            color: var(--accent-gold);
-            border-bottom-color: var(--accent-gold);
-            background: rgba(212, 175, 55, 0.08);
+            background: var(--primary-color);
+            color: #000;
+            border-color: var(--primary-color);
         }
 
-        .games-scroll {
-            max-height: 480px;
-            overflow-y: auto;
-            padding: 0.75rem;
-        }
-
-        .games-scroll::-webkit-scrollbar {
-            width: 5px;
-        }
-
-        .games-scroll::-webkit-scrollbar-track {
-            background: transparent;
-        }
-
-        .games-scroll::-webkit-scrollbar-thumb {
-            background: var(--glass-border);
-            border-radius: 3px;
-        }
-
-        .game-card {
+        .games-list {
             display: flex;
-            align-items: center;
-            gap: 0.75rem;
-            padding: 0.8rem 1rem;
-            margin-bottom: 0.5rem;
-            border-radius: 10px;
+            flex-direction: column;
+            gap: 0.5rem;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+
+        .game-row {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            padding: 0.6rem 0.75rem;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 6px;
+            border-left: 3px solid #3b82f6;
             cursor: pointer;
             transition: all 0.2s;
-            border-left: 3px solid transparent;
-            background: rgba(255, 255, 255, 0.02);
+            gap: 0.5rem;
         }
 
-        .game-card:hover {
-            background: rgba(255, 255, 255, 0.06);
-            border-left-color: var(--accent-blue);
+        .game-row:hover {
+            background: rgba(255, 255, 255, 0.08);
         }
 
-        .game-card.active {
-            background: linear-gradient(90deg, rgba(212, 175, 55, 0.12), transparent);
-            border-left-color: var(--accent-gold);
+        .game-row.selected {
+            border-left-color: var(--primary-color);
+            background: rgba(212, 175, 55, 0.1);
         }
 
-        .game-badge {
-            font-size: 0.55rem;
-            padding: 0.15rem 0.35rem;
-            border-radius: 3px;
-            font-weight: 700;
-            letter-spacing: 0.5px;
-        }
-
-        .badge-rec {
-            background: var(--accent-blue);
-            color: white;
-        }
-
-        .badge-cc {
-            background: var(--accent-green);
-            color: white;
-        }
-
-        .game-info {
+        .game-main {
             flex: 1;
             min-width: 0;
         }
 
         .game-players {
             font-weight: 600;
-            font-size: 0.9rem;
             color: var(--text-main);
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
+            font-size: 0.9rem;
+            margin-bottom: 0.25rem;
         }
 
         .game-meta {
             display: flex;
-            gap: 0.75rem;
-            margin-top: 0.2rem;
+            gap: 0.5rem;
+            align-items: center;
             font-size: 0.75rem;
+            white-space: nowrap;
+            overflow: hidden;
         }
 
         .game-result {
-            color: var(--accent-green);
+            color: #4ade80;
             font-weight: 700;
         }
 
@@ -250,225 +183,179 @@
             color: var(--text-muted);
         }
 
-        .game-btns {
+        .game-article {
+            color: #60a5fa;
+            font-size: 0.7rem;
+            background: rgba(59, 130, 246, 0.15);
+            padding: 0.15rem 0.4rem;
+            border-radius: 3px;
+            max-width: 150px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .game-actions {
             display: flex;
-            gap: 0.2rem;
-            opacity: 0;
-            transition: opacity 0.2s;
+            gap: 0.25rem;
         }
 
-        .game-card:hover .game-btns {
-            opacity: 1;
-        }
-
-        .icon-btn {
-            width: 26px;
-            height: 26px;
+        .action-btn-mini {
+            padding: 0.3rem 0.5rem;
+            font-size: 0.7rem;
+            background: transparent;
+            color: var(--text-muted);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            cursor: pointer;
+            text-decoration: none;
             display: flex;
             align-items: center;
-            justify-content: center;
-            background: rgba(255, 255, 255, 0.08);
-            border: none;
-            border-radius: 6px;
-            color: var(--text-muted);
-            cursor: pointer;
-            font-size: 0.7rem;
-            text-decoration: none;
         }
 
-        .icon-btn:hover {
-            background: var(--accent-gold);
-            color: #000;
+        .action-btn-mini:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--text-main);
         }
 
-        .empty-msg {
-            padding: 3rem;
-            text-align: center;
-            color: var(--text-muted);
+        .viewer-section {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 12px;
+            padding: 1.5rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
         }
 
-        .empty-msg i {
-            font-size: 2.5rem;
-            opacity: 0.3;
-            margin-bottom: 1rem;
-            display: block;
-        }
-
-        /* Viewer Panel */
-        .viewer-panel {
-            background: var(--glass-bg);
-            border-radius: 16px;
-            border: 1px solid var(--glass-border);
-            overflow: hidden;
-        }
-
-        .viewer-top {
+        .viewer-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 1rem 1.25rem;
-            background: rgba(0, 0, 0, 0.4);
-            border-bottom: 1px solid var(--glass-border);
+            margin-bottom: 1rem;
         }
 
-        .viewer-label {
-            color: var(--accent-gold);
-            font-weight: 600;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
+        .viewer-header h3 {
+            margin: 0;
+            color: var(--primary-color);
         }
 
-        .mode-toggle {
-            display: flex;
-            background: rgba(0, 0, 0, 0.4);
-            border-radius: 8px;
-            padding: 0.2rem;
+        #viewerContainer {
+            min-height: 400px;
         }
 
-        .mode-btn {
-            padding: 0.4rem 0.9rem;
-            background: transparent;
-            border: none;
-            border-radius: 6px;
-            color: var(--text-muted);
-            font-size: 0.8rem;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .mode-btn.active {
-            background: var(--accent-gold);
-            color: #000;
-        }
-
-        .viewer-area {
-            padding: 1rem;
-            min-height: 420px;
-        }
-
-        .viewer-empty {
+        .empty-viewer {
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            min-height: 380px;
+            min-height: 300px;
             color: var(--text-muted);
+            text-align: center;
         }
 
-        .viewer-empty i {
-            font-size: 4rem;
-            opacity: 0.15;
+        .empty-viewer i {
+            font-size: 3rem;
             margin-bottom: 1rem;
-        }
-
-        .viewer-empty p {
-            opacity: 0.6;
+            opacity: 0.5;
         }
 
         /* Modal */
-        .modal-bg {
+        .modal-overlay {
             position: fixed;
-            inset: 0;
-            background: rgba(0, 0, 0, 0.92);
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.85);
             z-index: 10000;
             display: none;
             align-items: center;
             justify-content: center;
-            backdrop-filter: blur(8px);
-        }
-
-        .modal-box {
-            background: var(--glass-bg);
-            max-width: 560px;
-            width: 92%;
-            border-radius: 16px;
-            border: 1px solid var(--glass-border);
-            overflow: hidden;
-        }
-
-        .modal-head {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 1.25rem;
-            background: rgba(0, 0, 0, 0.4);
-        }
-
-        .modal-head h3 {
-            margin: 0;
-            color: var(--accent-green);
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .close-btn {
-            background: none;
-            border: none;
-            color: var(--text-muted);
-            font-size: 1.4rem;
-            cursor: pointer;
+            backdrop-filter: blur(5px);
         }
 
         .modal-content {
-            padding: 1.5rem;
-        }
-
-        .pgn-input {
-            width: 100%;
-            padding: 1rem;
-            background: rgba(0, 0, 0, 0.4);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 8px;
-            color: #e0e0e0;
-            font-family: monospace;
-            font-size: 0.85rem;
-            min-height: 180px;
-            resize: vertical;
-        }
-
-        .pgn-input:focus {
-            outline: none;
-            border-color: var(--accent-green);
-        }
-
-        .status-msg {
-            margin-top: 1rem;
-            padding: 0.75rem;
-            border-radius: 8px;
-            display: none;
-        }
-
-        .modal-foot {
-            display: flex;
-            gap: 0.75rem;
-            justify-content: flex-end;
-            padding: 1rem 1.25rem;
-            background: rgba(0, 0, 0, 0.3);
-        }
-
-        .btn-cancel {
-            padding: 0.6rem 1.2rem;
-            background: rgba(255, 255, 255, 0.08);
-            border: 1px solid rgba(255, 255, 255, 0.15);
-            border-radius: 8px;
-            color: var(--text-muted);
-            cursor: pointer;
-        }
-
-        .btn-save {
-            padding: 0.6rem 1.5rem;
-            background: var(--accent-green);
-            border: none;
-            border-radius: 8px;
-            color: #000;
-            font-weight: 600;
-            cursor: pointer;
+            background: var(--surface-color, #1e1e1e);
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            padding: 2rem;
+            border-radius: 12px;
+            border: 1px solid rgba(74, 222, 128, 0.3);
         }
 
         .hidden {
             display: none !important;
+        }
+
+        /* Mobile responsive */
+        @media (max-width: 600px) {
+            .games-container {
+                padding: 1rem;
+            }
+
+            .games-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 0.75rem;
+            }
+
+            .games-header h1 {
+                font-size: 1.3rem;
+                margin: 0;
+            }
+
+            .header-actions {
+                width: 100%;
+                display: flex;
+                gap: 0.5rem;
+            }
+
+            .header-actions a,
+            .header-actions button {
+                padding: 0.5rem 0.75rem !important;
+                font-size: 0.8rem !important;
+                flex: 1;
+                justify-content: center;
+            }
+
+            .tabs {
+                gap: 0.25rem;
+                width: 100%;
+            }
+
+            .tab-btn {
+                padding: 0.5rem 0.8rem;
+                font-size: 0.85rem;
+                flex: 1;
+                justify-content: center;
+            }
+
+            .game-row {
+                padding: 0.5rem 0.75rem;
+            }
+
+            .game-info {
+                gap: 0.5rem;
+                flex-wrap: wrap;
+            }
+
+            .game-players {
+                font-size: 0.9rem;
+            }
+
+            .viewer-section {
+                padding: 1rem;
+            }
+        }
+
+        @media (max-width: 900px) {
+            .split-layout {
+                grid-template-columns: 1fr;
+            }
+
+            .games-list {
+                max-height: 300px;
+            }
         }
     </style>
 </head>
@@ -476,91 +363,75 @@
 <body>
     <header id="global-header"></header>
 
-    <main class="page-container">
-        <!-- Header -->
-        <div class="hero-header">
-            <div class="hero-title">
-                <i class="fa-solid fa-chess-board"></i>
-                <h1>Partie</h1>
-            </div>
-            <div class="hero-actions">
-                <a href="/game-recorder" class="btn-hero btn-gold">
-                    <i class="fa-solid fa-plus"></i> Nahrát
-                </a>
-                <button onclick="showModal()" class="btn-hero btn-green">
-                    <i class="fa-solid fa-file-import"></i> Vložit PGN
-                </button>
-            </div>
-        </div>
-
-        <!-- Split Layout -->
-        <div class="split-view">
-            <!-- Games List Panel -->
-            <div class="games-panel">
-                <div class="panel-tabs">
-                    <button class="tab-btn active" id="tabRec" onclick="switchTab('recorded')">
-                        <i class="fa-solid fa-microphone"></i> Nahrané
+    <main style="margin-top: 100px;">
+        <div class="games-container">
+            <div class="games-header">
+                <h1><i class="fa-solid fa-chess-board"></i> Partie</h1>
+                <div class="header-actions">
+                    <a href="/game-recorder" class="btn-primary" style="text-decoration: none;">
+                        <i class="fa-solid fa-plus"></i> Nahrát partii
+                    </a>
+                    <button onclick="showPgnModal()" class="btn-secondary"
+                        style="background: rgba(74, 222, 128, 0.1); border-color: rgba(74, 222, 128, 0.3); color: #4ade80;">
+                        <i class="fa-solid fa-file-import"></i> Vložit PGN
                     </button>
-                    <button class="tab-btn" id="tabArt" onclick="switchTab('articles')">
-                        <i class="fa-solid fa-newspaper"></i> Z článků
-                    </button>
-                </div>
-                <div class="games-scroll" id="gamesList">
-                    <div class="empty-msg">
-                        <i class="fa-solid fa-spinner fa-spin"></i>
-                        <p>Načítám...</p>
-                    </div>
                 </div>
             </div>
 
-            <!-- Viewer Panel -->
-            <div class="viewer-panel">
-                <div class="viewer-top">
-                    <div class="viewer-label">
-                        <i class="fa-solid fa-play-circle"></i> Přehrávač
+            <div class="split-layout">
+                <!-- Left: Games panel -->
+                <div class="games-panel">
+                    <div class="tabs">
+                        <button class="tab-btn active" onclick="switchTab('recorded')">
+                            <i class="fa-solid fa-microphone"></i> Nahrané
+                        </button>
+                        <button class="tab-btn" onclick="switchTab('articles')">
+                            <i class="fa-solid fa-newspaper"></i> Z článků
+                        </button>
                     </div>
-                    <div id="viewerType" style="font-size: 0.8rem; color: var(--text-muted);">
-                        <!-- Auto-filled based on game type -->
+
+                    <div class="games-list" id="gamesList">
+                        <p style="color: var(--text-muted); text-align: center;"><i
+                                class="fa-solid fa-spinner fa-spin"></i>
+                            Načítám...</p>
                     </div>
                 </div>
-                <div class="viewer-area" id="viewerArea">
-                    <!-- GameViewer2 Wrapper - Required Structure -->
-                    <div id="game-viewer-wrapper" class="game-viewer">
-                        <!-- Iframe for Chess.com fallback -->
-                        <div class="iframe-container" style="display:none;">
-                            <iframe id="chess-frame" src="" frameborder="0" allowtransparency="true"
-                                style="width:100%;height:480px;border:none;border-radius:8px;"></iframe>
+
+                <!-- Right: Viewer -->
+                <div class="viewer-section">
+                    <div class="viewer-header">
+                        <h3><i class="fa-solid fa-play-circle"></i> Přehrávač</h3>
+                    </div>
+                    <div id="viewerContainer">
+                        <div class="empty-viewer">
+                            <i class="fa-solid fa-chess-board"></i>
+                            <p>Vyberte partii ze seznamu</p>
                         </div>
-                        <!-- Native container will be dynamically created by GameViewer2.setupCombinedDOM() -->
-                    </div>
-                    <!-- Empty state shown initially -->
-                    <div id="viewerEmpty" class="viewer-empty">
-                        <i class="fa-solid fa-chess-king"></i>
-                        <p>Vyberte partii ze seznamu</p>
                     </div>
                 </div>
             </div>
         </div>
     </main>
 
-    <!-- PGN Modal -->
-    <div id="pgnModal" class="modal-bg">
-        <div class="modal-box">
-            <div class="modal-head">
-                <h3><i class="fa-solid fa-file-import"></i> Vložit PGN</h3>
-                <button class="close-btn" onclick="hideModal()">&times;</button>
+    <!-- PGN Import Modal -->
+    <div id="pgnModal" class="modal-overlay">
+        <div class="modal-content">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                <h3 style="margin: 0; color: #4ade80;"><i class="fa-solid fa-file-import"></i> Vložit PGN</h3>
+                <button onclick="closePgnModal()"
+                    style="background: none; border: none; color: #aaa; font-size: 24px; cursor: pointer;">&times;</button>
             </div>
-            <div class="modal-content">
-                <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1rem;">
-                    Vložte PGN. Více partií bude uloženo samostatně.
-                </p>
-                <textarea id="pgnText" class="pgn-input"
-                    placeholder="[Event &quot;...&quot;]&#10;[White &quot;...&quot;]&#10;[Black &quot;...&quot;]&#10;&#10;1. e4 e5 2. Nf3..."></textarea>
-                <div id="statusMsg" class="status-msg"></div>
-            </div>
-            <div class="modal-foot">
-                <button class="btn-cancel" onclick="hideModal()">Zrušit</button>
-                <button class="btn-save" id="saveBtn" onclick="importPgn()">
+            <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1rem;">
+                Vložte PGN notaci. Pokud obsahuje více partií, všechny budou uloženy.
+            </p>
+            <textarea id="pgnText" rows="12"
+                placeholder="[Event &quot;Turnaj&quot;]&#10;[White &quot;Bílý&quot;]&#10;[Black &quot;Černý&quot;]&#10;[Result &quot;1-0&quot;]&#10;&#10;1. e4 e5 2. Nf3 Nc6..."
+                style="width: 100%; padding: 1rem; background: #0a0a0a; border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; color: #e0e0e0; font-family: monospace; font-size: 0.9rem; resize: vertical;"></textarea>
+            <div id="pgnStatus" style="display: none; margin-top: 1rem; padding: 0.75rem; border-radius: 6px;"></div>
+            <div style="display: flex; gap: 0.5rem; margin-top: 1.5rem; justify-content: flex-end;">
+                <button onclick="closePgnModal()" class="btn-secondary">Zrušit</button>
+                <button onclick="importPgn()" id="pgnImportBtn" class="btn-primary"
+                    style="background: #4ade80; color: #000;">
                     <i class="fa-solid fa-save"></i> Uložit
                 </button>
             </div>
@@ -576,236 +447,276 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
     <script src="js/game-viewer2.js?v=12"></script>
     <script>
-        let games = [];
-        let tab = 'recorded';
-        let viewer = null;
-        let selected = -1;
+        let allGames = [];
+        let currentTab = 'recorded';
+        let currentViewer = null;
+        let selectedGameIndex = -1;
 
-        document.addEventListener('DOMContentLoaded', loadRecorded);
+        document.addEventListener('DOMContentLoaded', () => {
+            loadRecordedGames();
+        });
 
-        function switchTab(t) {
-            tab = t;
-            document.getElementById('tabRec').classList.toggle('active', t === 'recorded');
-            document.getElementById('tabArt').classList.toggle('active', t === 'articles');
-            t === 'recorded' ? loadRecorded() : loadArticles();
+        function switchTab(tab) {
+            currentTab = tab;
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.querySelector(`.tab-btn[onclick="switchTab('${tab}')"]`).classList.add('active');
+
+            if (tab === 'recorded') {
+                loadRecordedGames();
+            } else {
+                loadArticleGames();
+            }
         }
 
-        async function loadRecorded() {
-            showLoading();
+        async function loadRecordedGames() {
+            const container = document.getElementById('gamesList');
+            container.innerHTML = '<p style="color: var(--text-muted); text-align: center;"><i class="fa-solid fa-spinner fa-spin"></i> Načítám...</p>';
+
             try {
-                const r = await fetch(`${API_URL}/games`);
-                games = (await r.json()).map(g => ({ ...g, src: 'rec' }));
-                render();
-            } catch (e) { showError(); }
+                const res = await fetch(`${API_URL}/games`);
+                const games = await res.json();
+                allGames = games.map(g => ({ ...g, source: 'recorded' }));
+                renderGamesList();
+            } catch (e) {
+                console.error(e);
+                container.innerHTML = '<p style="color: #fca5a5; text-align: center;">Chyba načítání</p>';
+            }
         }
 
-        async function loadArticles() {
-            showLoading();
+        async function loadArticleGames() {
+            const container = document.getElementById('gamesList');
+            container.innerHTML = '<p style="color: var(--text-muted); text-align: center;"><i class="fa-solid fa-spinner fa-spin"></i> Načítám...</p>';
+
             try {
-                let all = [];
-                for (const cat of ['extraliga', 'liga', 'youth', 'other']) {
+                // Fetch games from all categories - use actual Czech category names from database
+                const categories = ['Soutěže družstev', 'Oddílový přebor', 'Mládež', 'O nás'];
+                let allArticleGames = [];
+
+                for (const cat of categories) {
                     try {
-                        const r = await fetch(`${API_URL}/viewer-games?category=${cat}`);
-                        if (r.ok) {
-                            const g = await r.json();
-                            all = all.concat(g.map(x => ({
-                                ...x, src: 'cc',
-                                white: x.white || x.whitePlayer || '?',
-                                black: x.black || x.blackPlayer || '?',
-                                result: x.result || '*'
+                        const res = await fetch(`${API_URL}/viewer-games?category=${encodeURIComponent(cat)}`);
+                        if (res.ok) {
+                            const games = await res.json();
+                            allArticleGames = allArticleGames.concat(games.map(g => ({
+                                ...g,
+                                source: 'chesscom',
+                                white: g.white || g.whitePlayer || 'White',
+                                black: g.black || g.blackPlayer || 'Black',
+                                result: g.result || '*',
+                                date: g.date || new Date().toISOString()
                             })));
                         }
-                    } catch (e) { }
+                    } catch (e) { /* ignore category errors */ }
                 }
-                games = all;
-                render();
-            } catch (e) { showError(); }
+
+                allGames = allArticleGames;
+                renderGamesList();
+            } catch (e) {
+                console.error(e);
+                container.innerHTML = '<p style="color: #fca5a5; text-align: center;">Chyba načítání</p>';
+            }
         }
 
-        function showLoading() {
-            document.getElementById('gamesList').innerHTML = '<div class="empty-msg"><i class="fa-solid fa-spinner fa-spin"></i><p>Načítám...</p></div>';
-        }
+        function renderGamesList() {
+            const container = document.getElementById('gamesList');
 
-        function showError() {
-            document.getElementById('gamesList').innerHTML = '<div class="empty-msg"><i class="fa-solid fa-exclamation-circle"></i><p>Chyba načítání</p></div>';
-        }
-
-        function render() {
-            const el = document.getElementById('gamesList');
-            if (!games.length) {
-                el.innerHTML = '<div class="empty-msg"><i class="fa-solid fa-chess"></i><p>Žádné partie</p></div>';
+            if (allGames.length === 0) {
+                container.innerHTML = '<p style="color: var(--text-muted); text-align: center;">Žádné partie</p>';
                 return;
             }
-            el.innerHTML = games.map((g, i) => `
-                <div class="game-card ${selected === i ? 'active' : ''}" onclick="select(${i})">
-                    <span class="game-badge ${g.src === 'rec' ? 'badge-rec' : 'badge-cc'}">${g.src === 'rec' ? 'REC' : 'CC'}</span>
-                    <div class="game-info">
-                        <div class="game-players">${esc(g.white)} - ${esc(g.black)}</div>
+
+            container.innerHTML = allGames.map((game, i) => `
+                <div class="game-row ${selectedGameIndex === i ? 'selected' : ''}" onclick="selectGame(${i})">
+                    <div class="game-main">
+                        <div class="game-players">${escapeHtml(game.white || '?')} – ${escapeHtml(game.black || '?')}</div>
                         <div class="game-meta">
-                            <span class="game-result">${g.result}</span>
-                            <span class="game-date">${g.date ? new Date(g.date).toLocaleDateString('cs-CZ') : ''}</span>
+                            ${game.newsTitle ? `<span class="game-article">${escapeHtml(game.newsTitle)}</span>` : ''}
+                            <span class="game-date">${game.date ? new Date(game.date).toLocaleDateString('cs-CZ') : ''}</span>
                         </div>
                     </div>
-                    <div class="game-btns" onclick="event.stopPropagation()">
-                        ${g.src === 'rec' ? `
-                            <a href="${API_URL}/games/${g.id}/pgn" download class="icon-btn" title="PGN"><i class="fa-solid fa-download"></i></a>
-                            <a href="/game-recorder?id=${g.id}" class="icon-btn" title="Upravit"><i class="fa-solid fa-edit"></i></a>
-                        ` : `
-                            <a href="https://chess.com/game/live/${g.chessComId}" target="_blank" class="icon-btn" title="Chess.com"><i class="fa-solid fa-external-link"></i></a>
-                        `}
-                    </div>
+                    ${game.source === 'recorded' ? `
+                        <div class="game-actions" onclick="event.stopPropagation()">
+                            <button class="action-btn-mini" onclick="downloadPgn(${game.id})" title="Stáhnout PGN">
+                                <i class="fa-solid fa-download"></i>
+                            </button>
+                        </div>
+                    ` : ''}
                 </div>
             `).join('');
         }
 
-        function select(i) {
-            selected = i;
-            render();
-            loadViewer(games[i]);
+        function selectGame(index) {
+            selectedGameIndex = index;
+            renderGamesList();
+            loadGameInViewer(allGames[index]);
         }
 
-        function loadViewer(g) {
-            const typeLabel = document.getElementById('viewerType');
-            const emptyState = document.getElementById('viewerEmpty');
-            const wrapper = document.getElementById('game-viewer-wrapper');
+        function loadGameInViewer(game) {
+            const container = document.getElementById('viewerContainer');
 
-            // Hide empty state
-            if (emptyState) emptyState.style.display = 'none';
-            if (wrapper) wrapper.style.display = 'block';
-
-            if (g.pgn) {
-                // Native game with PGN - use GameViewer2
-                typeLabel.innerHTML = '<span style="color: var(--accent-blue);"><i class="fa-solid fa-chess"></i> Nativní</span>';
-
-                // Initialize GameViewer2 if not already done
-                if (!window.gameViewer2) {
-                    window.gameViewer2 = new GameViewer2();
-                }
-
-                // Create game data array with current game and load it
-                const gameData = {
-                    type: 'pgn',
-                    title: g.white && g.black ? `${g.white} - ${g.black}` : (g.event || 'Partie'),
-                    white: g.white || '',
-                    black: g.black || '',
-                    result: g.result || '*',
-                    date: g.date || '',
-                    pgn: g.pgn
-                };
-
-                window.gameViewer2.init([gameData]);
-
-            } else if (g.chessComId) {
-                // Chess.com game - use iframe
-                typeLabel.innerHTML = '<span style="color: var(--accent-green);"><i class="fa-solid fa-globe"></i> Chess.com</span>';
-
-                const iframeContainer = document.querySelector('.iframe-container');
-                const gv2Container = document.getElementById('gv2-main-container');
-
-                if (gv2Container) gv2Container.style.display = 'none';
-                if (iframeContainer) {
-                    iframeContainer.style.display = 'block';
-                    const iframe = document.getElementById('chess-frame');
-                    if (iframe) iframe.src = `https://www.chess.com/emboard?id=${g.chessComId}`;
-                }
+            // Auto-detect: prefer PGN (native viewer), fallback to Chess.com iframe
+            if (game.pgn) {
+                loadNativeViewer(game, container);
+            } else if (game.chessComId || game.gameId) {
+                loadIframeViewer(game, container);
             } else {
-                // No data available
-                typeLabel.innerHTML = '';
-                if (emptyState) {
-                    emptyState.innerHTML = '<i class="fa-solid fa-exclamation-triangle"></i><p>Žádná data k zobrazení</p>';
-                    emptyState.style.display = 'flex';
-                }
-                if (wrapper) wrapper.style.display = 'none';
+                container.innerHTML = '<p style="color: #fca5a5; text-align: center;">Partie nemá žádná data</p>';
             }
         }
 
-        // Modal
-        function showModal() {
-            document.getElementById('pgnModal').style.display = 'flex';
-            document.getElementById('pgnText').value = '';
-            document.getElementById('statusMsg').style.display = 'none';
+        function loadNativeViewer(game, container) {
+            container.innerHTML = '<div id="nativeViewer"></div>';
+            const viewerEl = document.getElementById('nativeViewer');
+
+            if (typeof GameViewer2 !== 'undefined') {
+                currentViewer = new GameViewer2(viewerEl, {
+                    pgn: game.pgn,
+                    showHeader: true,
+                    showControls: true,
+                    showNotation: true
+                });
+            } else {
+                container.innerHTML = '<p style="color: #fca5a5; text-align: center;">GameViewer2 není dostupný</p>';
+            }
         }
 
-        function hideModal() {
+        function loadIframeViewer(game, container) {
+            const gameId = game.chessComId || game.gameId;
+            container.innerHTML = `
+                <iframe src="https://www.chess.com/emboard?id=${gameId}" 
+                    style="width: 100%; height: 500px; border: none; border-radius: 8px;"
+                    allowtransparency="true" frameborder="0"></iframe>
+            `;
+        }
+
+        async function downloadPgn(id) {
+            try {
+                const res = await fetch(`${API_URL}/games/${id}/pgn`);
+                const blob = await res.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `game_${id}.pgn`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+            } catch (e) {
+                console.error(e);
+                alert('Stahování selhalo');
+            }
+        }
+
+        // PGN Modal
+        function showPgnModal() {
+            document.getElementById('pgnModal').style.display = 'flex';
+            document.getElementById('pgnText').value = '';
+            document.getElementById('pgnStatus').style.display = 'none';
+        }
+
+        function closePgnModal() {
             document.getElementById('pgnModal').style.display = 'none';
         }
 
-        function parsePgn(text) {
-            const list = [];
-            for (const raw of text.split(/\n\n(?=\[Event\s)/)) {
-                if (!raw.trim()) continue;
-                const w = raw.match(/\[White\s+"([^"]+)"\]/);
-                const b = raw.match(/\[Black\s+"([^"]+)"\]/);
-                const r = raw.match(/\[Result\s+"([^"]+)"\]/);
-                const e = raw.match(/\[Event\s+"([^"]+)"\]/);
-                const d = raw.match(/\[Date\s+"([^"]+)"\]/);
-                list.push({
-                    white: w ? w[1] : '?',
-                    black: b ? b[1] : '?',
-                    result: r ? r[1] : '*',
-                    event: e ? e[1] : '',
-                    date: d ? d[1].replace(/\./g, '-') : new Date().toISOString().split('T')[0],
-                    pgn: raw.trim()
+        function parsePgnIntoGames(pgnText) {
+            const games = [];
+            const rawGames = pgnText.split(/\n\n(?=\[Event\s)/);
+
+            for (const gamePgn of rawGames) {
+                if (!gamePgn.trim()) continue;
+
+                const whiteMatch = gamePgn.match(/\[White\s+"([^"]+)"\]/);
+                const blackMatch = gamePgn.match(/\[Black\s+"([^"]+)"\]/);
+                const resultMatch = gamePgn.match(/\[Result\s+"([^"]+)"\]/);
+                const eventMatch = gamePgn.match(/\[Event\s+"([^"]+)"\]/);
+                const dateMatch = gamePgn.match(/\[Date\s+"([^"]+)"\]/);
+
+                games.push({
+                    white: whiteMatch ? whiteMatch[1] : 'N/A',
+                    black: blackMatch ? blackMatch[1] : 'N/A',
+                    result: resultMatch ? resultMatch[1] : '*',
+                    event: eventMatch ? eventMatch[1] : '',
+                    date: dateMatch ? dateMatch[1].replace(/\./g, '-') : new Date().toISOString().split('T')[0],
+                    pgn: gamePgn.trim()
                 });
             }
-            return list;
+
+            return games;
         }
 
         async function importPgn() {
-            const text = document.getElementById('pgnText').value.trim();
-            const msg = document.getElementById('statusMsg');
-            const btn = document.getElementById('saveBtn');
+            const pgnText = document.getElementById('pgnText').value.trim();
+            const statusDiv = document.getElementById('pgnStatus');
+            const btn = document.getElementById('pgnImportBtn');
 
-            if (!text) { status(msg, 'err', 'Vložte PGN'); return; }
+            if (!pgnText) {
+                showStatus(statusDiv, 'error', 'Vložte PGN notaci.');
+                return;
+            }
 
-            const list = parsePgn(text);
-            if (!list.length) { status(msg, 'err', 'Nerozpoznáno'); return; }
+            const games = parsePgnIntoGames(pgnText);
+
+            if (games.length === 0) {
+                showStatus(statusDiv, 'error', 'Nepodařilo se rozpoznat žádné partie.');
+                return;
+            }
 
             btn.disabled = true;
-            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
-            status(msg, 'info', `Ukládám ${list.length}...`);
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Ukládám...';
+            showStatus(statusDiv, 'info', `Ukládám ${games.length} partií...`);
 
-            let ok = 0;
-            for (const g of list) {
+            let savedCount = 0;
+
+            for (const game of games) {
                 try {
-                    const r = await fetch(`${API_URL}/games`, {
+                    const res = await fetch(`${API_URL}/games`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(g)
+                        body: JSON.stringify(game)
                     });
-                    if (r.ok) ok++;
-                } catch (e) { }
+                    if (res.ok) savedCount++;
+                } catch (e) {
+                    console.error('Error saving game:', e);
+                }
             }
 
             btn.disabled = false;
             btn.innerHTML = '<i class="fa-solid fa-save"></i> Uložit';
 
-            if (ok) {
-                status(msg, 'ok', `Uloženo ${ok}/${list.length}`);
-                loadRecorded();
-                setTimeout(hideModal, 1200);
+            if (savedCount > 0) {
+                showStatus(statusDiv, 'success', `Uloženo ${savedCount} z ${games.length} partií.`);
+                loadRecordedGames();
+                setTimeout(closePgnModal, 1500);
             } else {
-                status(msg, 'err', 'Nepodařilo se uložit');
+                showStatus(statusDiv, 'error', 'Nepodařilo se uložit žádnou partii.');
             }
         }
 
-        function status(el, type, txt) {
+        function showStatus(el, type, msg) {
             el.style.display = 'block';
-            const c = { err: ['rgba(252,165,165,0.2)', '#fca5a5'], ok: ['rgba(74,222,128,0.2)', '#4ade80'], info: ['rgba(96,165,250,0.2)', '#60a5fa'] };
-            el.style.background = c[type][0];
-            el.style.color = c[type][1];
-            el.innerHTML = txt;
+            const colors = {
+                error: { bg: 'rgba(252, 165, 165, 0.2)', fg: '#fca5a5' },
+                success: { bg: 'rgba(74, 222, 128, 0.2)', fg: '#4ade80' },
+                info: { bg: 'rgba(96, 165, 250, 0.2)', fg: '#60a5fa' }
+            };
+            el.style.background = colors[type].bg;
+            el.style.color = colors[type].fg;
+            el.innerHTML = `<i class="fa-solid fa-${type === 'error' ? 'exclamation-circle' : type === 'success' ? 'check-circle' : 'spinner fa-spin'}"></i> ${msg}`;
         }
 
-        function esc(s) {
-            if (!s) return '';
-            const d = document.createElement('div');
-            d.textContent = s;
-            return d.innerHTML;
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
         }
 
-        document.getElementById('pgnModal')?.addEventListener('click', e => { if (e.target.id === 'pgnModal') hideModal(); });
-        document.addEventListener('keydown', e => { if (e.key === 'Escape') hideModal(); });
+        // Close modal on escape or outside click
+        document.getElementById('pgnModal')?.addEventListener('click', (e) => {
+            if (e.target.id === 'pgnModal') closePgnModal();
+        });
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') closePgnModal();
+        });
     </script>
 </body>
 

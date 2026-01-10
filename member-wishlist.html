@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="cs">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kniha přání - Členská sekce</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Open+Sans:wght@400;600&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/member.css">
+    <link rel="icon" type="image/png" href="images/favicon.png">
+</head>
+
+<body>
+    <header id="global-header"></header>
+
+    <main class="page-content" style="padding-top: 100px; min-height: 80vh;">
+        <div class="section-view">
+            <div class="section-header">
+                <a href="members.html" class="back-btn"><i class="fa-solid fa-arrow-left"></i></a>
+                <h2 class="section-title" style="color: #f472b6;">
+                    <i class="fa-solid fa-wand-magic-sparkles"></i> Kniha Přání
+                </h2>
+            </div>
+
+            <div class="message-form" style="border-color: rgba(244, 114, 182, 0.2);">
+                <h3 style="color: #f472b6; margin-bottom: 1rem;">
+                    <i class="fa-solid fa-pen-fancy"></i> Napsat přání
+                </h3>
+                <div class="form-grid">
+                    <input type="text" id="wishAuthor" placeholder="Vaše jméno">
+                    <textarea id="wishContent" rows="4"
+                        placeholder="Co byste si přáli vylepšit v klubu nebo na webu?"></textarea>
+                    <button class="btn-primary" onclick="postWish()"
+                        style="justify-self: start; background: linear-gradient(135deg, #ec4899, #db2777);">
+                        <i class="fa-solid fa-paper-plane"></i> Odeslat přání
+                    </button>
+                </div>
+            </div>
+            <h3 style="color: var(--text-muted); margin-bottom: 1rem;">
+                <i class="fa-solid fa-star"></i> Ostatní přání
+            </h3>
+            <div id="wishList" class="message-list"></div>
+        </div>
+    </main>
+
+    <script src="js/config.js"></script>
+    <script src="js/layout-loader.js"></script>
+    <script src="js/member-auth.js"></script>
+    <script src="js/member-wishlist.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            const user = await checkAuth(true);
+            if (user) loadWishes();
+        });
+    </script>
+</body>
+
+</html>

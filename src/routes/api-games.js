@@ -5,6 +5,7 @@ const router = express.Router();
 const prisma = new PrismaClient();
 
 // Get games filtered by news category
+// This endpoint reads from News.gamesJson field (legacy storage)
 router.get('/', async (req, res) => {
     try {
         const { category } = req.query;
@@ -15,64 +16,80 @@ router.get('/', async (req, res) => {
             return res.status(400).json({ error: 'Category parameter is required' });
         }
 
-        // Find all news in this category that have games
-        const limit = 50; // Safety limit
-
-        // We need to fetch games that belong to news in this category
-        // The relation is Game -> News
-        const games = await prisma.game.findMany({
+        // Fetch news articles with gamesJson in this category
+        const newsWithGames = await prisma.news.findMany({
             where: {
-                news: {
-                    category: category,
-                    isPublished: true // Only published news
+                category: category,
+                isPublished: true,
+                gamesJson: {
+                    not: null
                 }
             },
-            include: {
-                news: {
-                    select: {
-                        id: true,
-                        title: true,
-                        publishedDate: true
-                    }
-                }
+            select: {
+                id: true,
+                title: true,
+                publishedDate: true,
+                gamesJson: true
             },
-            orderBy: [
-                {
-                    news: {
-                        publishedDate: 'desc'
-                    }
-                },
-                {
-                    positionOrder: 'asc'
-                }
-            ],
-            take: 200 // Reasonable limit for all games in a section
+            orderBy: {
+                publishedDate: 'desc'
+            },
+            take: 50
         });
 
-        // Also fetch legacy games stored in JSON if needed? 
-        // No, we migrated them. But existing logic suggests we migrated "gamesJson" to "Game" table.
-        // If migration is complete, we rely solely on Game table.
+        // Extract and flatten games from gamesJson
+        const allGames = [];
 
-        // Map to viewer format
-        const formattedGames = games.map(g => ({
-            title: g.gameTitle,
-            white: g.whitePlayer,
-            black: g.blackPlayer,
-            // Use chessComId or PGN if we had it, currently utilizing chessComId
-            chessComId: g.chessComId,
-            gameId: g.chessComId, // Backwards compat
-            result: '*', // We don't store result in Game model yet, maybe parse from title? 
-            // Title is usually "1. Duda - Vacek" or "0-1 Duda - Vacek"
-            date: g.news?.publishedDate,
-            newsId: g.newsId,
-            newsTitle: g.news?.title,
-            // Add team if we have it stored or derived? Schema has 'team' column
-            team: g.team,
-            pgn: g.pgn, // Expose PGN for new viewer
-            commented: g.isCommented
-        }));
+        for (const news of newsWithGames) {
+            if (!news.gamesJson) continue;
 
-        res.json(formattedGames);
+            try {
+                let gamesData = news.gamesJson;
+
+                // Handle double-encoded JSON
+                if (typeof gamesData === 'string') {
+                    gamesData = JSON.parse(gamesData);
+                }
+
+                // Skip if empty or not array
+                if (!Array.isArray(gamesData) || gamesData.length === 0) continue;
+
+                // Map each game with news context
+                for (const game of gamesData) {
+                    // Parse player names from title like "1. Sýkora - Fraňa"
+                    let white = 'Bílý';
+                    let black = 'Černý';
+
+                    if (game.title) {
+                        const titleMatch = game.title.match(/^\d*\.?\s*(.+?)\s*[-–]\s*(.+)$/);
+                        if (titleMatch) {
+                            white = titleMatch[1].trim();
+                            black = titleMatch[2].trim();
+                        }
+                    }
+
+                    allGames.push({
+                        title: game.title || `${white} - ${black}`,
+                        white: game.white || white,
+                        black: game.black || black,
+                        chessComId: game.gameId || game.chessComId,
+                        gameId: game.gameId || game.chessComId,
+                        result: game.result || '*',
+                        date: news.publishedDate,
+                        newsId: news.id,
+                        newsTitle: news.title,
+                        team: game.team,
+                        pgn: game.pgn,
+                        src: game.src // Chess.com embed URL
+                    });
+                }
+            } catch (parseError) {
+                console.error(`Error parsing gamesJson for news ${news.id}:`, parseError);
+            }
+        }
+
+        console.log(`Found ${allGames.length} games in ${newsWithGames.length} news articles`);
+        res.json(allGames);
     } catch (error) {
         console.error('Error fetching viewer games:', error);
         res.status(500).json({ error: 'Failed to fetch games' });

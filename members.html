@@ -10,1023 +10,204 @@
         rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="css/style.css">
-    <link rel="stylesheet" href="css/game-viewer2.css?v=4">
-    <link rel="stylesheet" href="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.css">
-    <style>
-        .auth-container {
-            max-width: 450px;
-            margin: 1rem auto;
-            background: linear-gradient(145deg, var(--card-bg), rgba(26, 26, 26, 0.9));
-            padding: 3rem;
-            border-radius: 1rem;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
-            text-align: center;
-            border: 1px solid rgba(212, 175, 55, 0.2);
-        }
-
-        .auth-container .lock-icon {
-            width: 80px;
-            height: 80px;
-            background: linear-gradient(135deg, var(--primary-color), #b8941f);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin: 0 auto 1.5rem;
-            box-shadow: 0 10px 30px rgba(212, 175, 55, 0.3);
-        }
-
-        .auth-container .lock-icon i {
-            font-size: 2rem;
-            color: var(--secondary-color);
-        }
-
-        .auth-container h2 {
-            color: var(--primary-color);
-            margin-bottom: 0.5rem;
-            font-size: 1.75rem;
-        }
-
-        .auth-container .subtitle {
-            color: var(--text-muted);
-            margin-bottom: 2rem;
-            font-size: 0.95rem;
-        }
-
-        .auth-container input {
-            width: 100%;
-            padding: 1rem 1.5rem;
-            border-radius: 0.5rem;
-            border: 2px solid rgba(255, 255, 255, 0.1);
-            background: rgba(0, 0, 0, 0.3);
-            color: var(--text-main);
-            font-size: 1rem;
-            transition: all 0.3s;
-            text-align: center;
-        }
-
-        .auth-container input:focus {
-            outline: none;
-            border-color: var(--primary-color);
-            box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.2);
-        }
-
-        /* Member Hub Grid */
-        .member-hub {
-            max-width: 600px;
-            margin: 0 auto;
-        }
-
-        .hub-header {
-            display: flex;
-            justify-content: flex-end;
-            margin-bottom: 2rem;
-        }
-
-        .hub-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 1rem;
-        }
-
-        .hub-tile {
-            aspect-ratio: 1;
-            border-radius: 1rem;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            text-decoration: none;
-            cursor: pointer;
-            transition: all 0.3s;
-            border: none;
-        }
-
-        .hub-tile:hover {
-            transform: scale(1.02);
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
-        }
-
-        .hub-tile i {
-            font-size: 3rem;
-            margin-bottom: 1rem;
-        }
-
-        .hub-tile span {
-            font-size: 1.1rem;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.1em;
-        }
-
-        /* Tile colors */
-        .tile-puzzle {
-            background: linear-gradient(145deg, #166534, #15803d);
-            color: #4ade80;
-        }
-
-        .tile-games {
-            background: linear-gradient(145deg, #1e3a8a, #2563eb);
-            color: #60a5fa;
-        }
-
-        .tile-messages {
-            background: linear-gradient(145deg, #78350f, #b45309);
-            color: #fcd34d;
-        }
-
-        .tile-gallery {
-            background: linear-gradient(145deg, #581c87, #7c3aed);
-            color: #c4b5fd;
-        }
-
-        .tile-database {
-            background: linear-gradient(145deg, #854d0e, #ca8a04);
-            color: #fef08a;
-        }
-
-        .tile-wishlist {
-            background: linear-gradient(135deg, rgba(236, 72, 153, 0.1), rgba(219, 39, 119, 0.2));
-            border: 1px solid rgba(236, 72, 153, 0.2);
-            color: #f472b6;
-        }
-
-        .tile-wishlist:hover {
-            border-color: #f472b6;
-            background: linear-gradient(135deg, rgba(236, 72, 153, 0.2), rgba(219, 39, 119, 0.3));
-            transform: translateY(-5px);
-        }
-
-        /* Section Views */
-        .section-view {
-            max-width: 800px;
-            margin: 0 auto;
-        }
-
-        .section-header {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-            margin-bottom: 2rem;
-            padding-bottom: 1rem;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .back-btn {
-            background: rgba(255, 255, 255, 0.1);
-            border: none;
-            color: var(--text-muted);
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.3s;
-        }
-
-        .back-btn:hover {
-            background: rgba(255, 255, 255, 0.2);
-            color: white;
-        }
-
-        .section-title {
-            flex: 1;
-            margin: 0;
-            font-size: 1.5rem;
-        }
-
-        .logout-btn {
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            color: var(--text-muted);
-            padding: 0.5rem 1rem;
-            border-radius: 0.5rem;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            transition: all 0.3s;
-        }
-
-        .logout-btn:hover {
-            background: rgba(255, 255, 255, 0.1);
-            color: var(--text-main);
-        }
-
-        /* Messages styles */
-        .message-form {
-            background: linear-gradient(145deg, rgba(30, 30, 30, 0.8), rgba(20, 20, 20, 0.9));
-            padding: 2rem;
-            border-radius: 1rem;
-            margin-bottom: 2rem;
-            border: 1px solid rgba(212, 175, 55, 0.2);
-        }
-
-        .form-grid {
-            display: grid;
-            gap: 1rem;
-        }
-
-        .form-grid input,
-        .form-grid textarea {
-            width: 100%;
-            padding: 1rem;
-            border-radius: 0.5rem;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            background: rgba(0, 0, 0, 0.3);
-            color: var(--text-main);
-            font-family: inherit;
-            font-size: 1rem;
-        }
-
-        .message-list {
-            display: flex;
-            flex-direction: column;
-            gap: 1rem;
-        }
-
-        .message-card {
-            background: rgba(255, 255, 255, 0.03);
-            padding: 1.25rem 1.5rem;
-            border-radius: 0.75rem;
-            border-left: 4px solid var(--primary-color);
-        }
-
-        /* Gallery grid */
-        .gallery-upload-area {
-            background: linear-gradient(145deg, rgba(88, 28, 135, 0.2), rgba(88, 28, 135, 0.1));
-            border: 2px dashed rgba(168, 85, 247, 0.4);
-            border-radius: 1rem;
-            padding: 2rem;
-            text-align: center;
-            margin-bottom: 2rem;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-
-        .gallery-upload-area:hover {
-            border-color: #a855f7;
-            background: rgba(88, 28, 135, 0.3);
-        }
-
-        .gallery-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-            gap: 1rem;
-        }
-
-        .gallery-item {
-            aspect-ratio: 1;
-            border-radius: 0.5rem;
-            overflow: hidden;
-        }
-
-        .gallery-item img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            transition: transform 0.3s;
-        }
-
-        .gallery-item:hover img {
-            transform: scale(1.1);
-        }
-
-        /* Games list */
-        .game-card {
-            background: rgba(255, 255, 255, 0.03);
-            padding: 1rem 1.5rem;
-            border-radius: 0.75rem;
-            border-left: 4px solid #3b82f6;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 1rem;
-        }
-
-        .hidden {
-            display: none !important;
-        }
-
-        @media (max-width: 480px) {
-            .hub-grid {
-                grid-template-columns: repeat(2, 1fr);
-            }
-
-            .hub-tile i {
-                font-size: 2.5rem;
-            }
-
-            .hub-tile span {
-                font-size: 0.9rem;
-            }
-        }
-    </style>
+    <link rel="stylesheet" href="css/member.css">
     <link rel="icon" type="image/png" href="images/favicon.png">
 </head>
 
 <body>
     <header id="global-header"></header>
 
-    <main>
-        <section class="hero-small" style="text-align: center; padding: 2rem 0; margin-top: 100px;">
+    <main class="page-content" style="padding: 90px 0 40px; min-height: 80vh;">
+        <section class="member-section">
             <div class="container">
-                <h1 style="font-size: 2rem; margin: 0;"><i class="fa-solid fa-users"></i> Členská sekce</h1>
-            </div>
-        </section>
+                <div style="text-align: center; margin-bottom: 2rem;">
+                    <h1 class="gradient-text">Členská sekce</h1>
+                </div>
 
-        <section style="padding-top: 1rem;">
-            <div class="container">
                 <!-- Login View -->
                 <div id="loginView" class="auth-container">
-                    <div class="lock-icon">
-                        <i class="fa-solid fa-user-lock"></i>
-                    </div>
+                    <div class="lock-icon"><i class="fa-solid fa-lock"></i></div>
                     <h2>Vstup pro členy</h2>
                     <p class="subtitle">Přihlaste se svým účtem</p>
-                    <button class="btn-primary" onclick="window.location.href='/login.html?redirect=/members.html'"
-                        style="width: 100%; padding: 1rem;">
-                        <i class="fa-brands fa-google"></i> Přihlásit se přes Google
+                    <button class="btn-primary" onclick="initGoogleLogin()"
+                        style="width: 100%; margin-top: 1rem; background: #fff; color: #333; border: none; display: flex; align-items: center; justify-content: center; gap: 0.5rem;">
+                        <i class="fa-brands fa-google" style="color: #4285F4;"></i> Přihlásit se přes Google
                     </button>
-                    <p style="color: var(--text-muted); margin-top: 1rem; font-size: 0.85rem;">
-                        Přístup pouze pro členy klubu s propojený účtem.
-                    </p>
+                    <p style="color: var(--text-muted); font-size: 0.8rem; margin-top: 1.5rem;">Přístup pouze pro členy
+                        klubu.</p>
                 </div>
 
-                <!-- Hub View (Main Menu) -->
+                <!-- Hub View -->
                 <div id="hubView" class="member-hub hidden">
-                    <div class="hub-header" style="justify-content: center;">
+                    <div class="dashboard-layout" style="display: flex; flex-direction: column; gap: 2rem;">
+                        <!-- Infobox / Welcome -->
+                        <div class="dashboard-info-card"
+                            style="background: rgba(255,255,255,0.03); padding: 1.5rem; border-radius: 1rem; border: 1px solid rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem;">
+                            <div>
+                                <h2 id="welcomeMsg" style="margin: 0; font-size: 1.8rem; color: var(--text-main);">
+                                    Vítejte</h2>
+                                <p id="roleInfo"
+                                    style="color: var(--text-muted); margin: 0.5rem 0 0 0; font-size: 0.95rem;">
+                                    <i class="fa-solid fa-user-tag"></i> Role: <span
+                                        id="userRoleBadge">Načítám...</span>
+                                </p>
+                            </div>
+                            <div style="text-align: right;">
+                                <div style="font-size: 0.9rem; color: var(--text-muted);">Dnes je</div>
+                                <div id="currentDate" style="font-size: 1.2rem; font-weight: 600;"></div>
+                            </div>
+                        </div>
+
+                        <!-- Quick Links Grid (moved above info box for above-fold visibility) -->
+                        <div class="hub-grid">
+                            <a href="member-bulletin.html" class="hub-tile tile-puzzle">
+                                <i class="fa-solid fa-clipboard-list"></i>
+                                <span>Nástěnka</span>
+                            </a>
+                            <a href="/partie" class="hub-tile tile-games">
+                                <i class="fa-solid fa-chess"></i>
+                                <span>Partie</span>
+                            </a>
+                            <a href="puzzle-racer.html" class="hub-tile tile-racer">
+                                <i class="fa-solid fa-flag-checkered"></i>
+                                <span>Puzzle Racer</span>
+                            </a>
+                            <a href="member-gallery.html" class="hub-tile tile-gallery">
+                                <i class="fa-solid fa-images"></i>
+                                <span>Galerie</span>
+                            </a>
+                            <a href="chess-database.html" class="hub-tile tile-database">
+                                <i class="fa-solid fa-database"></i>
+                                <span>Databáze</span>
+                            </a>
+                            <a href="member-wishlist.html" class="hub-tile tile-wishlist">
+                                <i class="fa-solid fa-wand-magic-sparkles"></i>
+                                <span>Kniha Přání</span>
+                            </a>
+                        </div>
+
+                        <!-- January Access Info (moved below grid) -->
                         <div
-                            style="background: rgba(234, 179, 8, 0.15); border: 1px solid rgba(234, 179, 8, 0.3); color: #fef08a; padding: 0.75rem 1rem; border-radius: 0.5rem; display: flex; align-items: center; gap: 0.75rem; max-width: 100%;">
-                            <i class="fa-solid fa-info-circle" style="font-size: 1.2rem;"></i>
-                            <span style="font-size: 0.95rem;"><strong>Testovací provoz:</strong> Dočasný přístup pro
-                                nové členy zdarma do konce ledna. Pak jen pro potvrzené oddílové hráče.</span>
+                            style="background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.3); padding: 1rem; border-radius: 0.5rem; display: flex; align-items: start; gap: 1rem;">
+                            <i class="fa-solid fa-info-circle"
+                                style="color: #60a5fa; font-size: 1.2rem; margin-top: 0.2rem;"></i>
+                            <div>
+                                <strong style="color: #60a5fa; display: block; margin-bottom: 0.3rem;">Testovací
+                                    provoz</strong>
+                                <span style="color: #e5e7eb;">V průběhu ledna 2026 je členská sekce přístupná všem
+                                    uživatelům pro účely testování.</span>
+                            </div>
                         </div>
-                    </div>
-                    <div class="hub-grid">
-                        <a href="/puzzle-racer" class="hub-tile tile-puzzle">
-                            <i class="fa-solid fa-puzzle-piece"></i>
-                            <span>Puzzle Racer</span>
-                        </a>
-                        <a href="/partie" class="hub-tile tile-games">
-                            <i class="fa-solid fa-chess-board"></i>
-                            <span>Editor Partií</span>
-                        </a>
-                        <div class="hub-tile tile-messages" onclick="showSection('messages')">
-                            <i class="fa-solid fa-comments"></i>
-                            <span>Vzkazovník</span>
-                        </div>
-                        <div class="hub-tile tile-gallery" onclick="showSection('gallery')">
-                            <i class="fa-solid fa-images"></i>
-                            <span>Galerie</span>
-                        </div>
-                        <a href="/chess-database" class="hub-tile tile-database">
-                            <i class="fa-solid fa-database"></i>
-                            <span>Databáze</span>
-                        </a>
-                        <div class="hub-tile tile-wishlist" onclick="showSection('wishlist')">
-                            <i class="fa-solid fa-wand-magic-sparkles"></i>
-                            <span>Kniha Přání</span>
-                        </div>
-                    </div>
-                </div>
 
-                <!-- Games Section -->
-                <div id="gamesSection" class="section-view hidden">
-                    <div class="section-header">
-                        <button class="back-btn" onclick="showHub()">
-                            <i class="fa-solid fa-arrow-left"></i>
-                        </button>
-                        <h2 class="section-title" style="color: #60a5fa;">
-                            <i class="fa-solid fa-chess-board"></i> Editor Partií
-                        </h2>
-                    </div>
-                    <div style="display: flex; gap: 1rem; flex-wrap: wrap; margin-bottom: 2rem;">
-                        <a href="/game-recorder" class="btn-primary"
-                            style="display: inline-flex; align-items: center; gap: 0.5rem;">
-                            <i class="fa-solid fa-plus"></i> Nahrát novou partii
-                        </a>
-                        <button onclick="showPgnImportModal()" class="btn-secondary"
-                            style="display: inline-flex; align-items: center; gap: 0.5rem; background: rgba(74, 222, 128, 0.1); border-color: rgba(74, 222, 128, 0.3); color: #4ade80; cursor: pointer;">
-                            <i class="fa-solid fa-file-import"></i> Vložit PGN
-                        </button>
-                    </div>
-                    <h3 style="color: var(--text-muted); margin-bottom: 1rem;">
-                        <i class="fa-solid fa-list"></i> Poslední nahrané partie
-                    </h3>
-                    <div id="gamesList">
-                        <p style="color: var(--text-muted);"><i class="fa-solid fa-spinner fa-spin"></i> Načítám...</p>
-                    </div>
-
-                    <!-- Game Viewer Container -->
-                    <div id="memberGameViewer" style="display: none; margin-top: 2rem;">
-                        <h3 style="color: var(--primary-color); margin-bottom: 1rem;">
-                            <i class="fa-solid fa-play-circle"></i> Přehrávač partie
-                        </h3>
-                        <div id="memberViewerContainer" class="game-viewer-2-container"></div>
-                    </div>
-                </div>
-
-                <!-- Messages Section -->
-                <div id="messagesSection" class="section-view hidden">
-                    <div class="section-header">
-                        <button class="back-btn" onclick="showHub()">
-                            <i class="fa-solid fa-arrow-left"></i>
-                        </button>
-                        <h2 class="section-title" style="color: #fcd34d;">
-                            <i class="fa-solid fa-comments"></i> Vzkazovník
-                        </h2>
-                    </div>
-                    <div class="message-form">
-                        <h3 style="color: var(--primary-color); margin-bottom: 1rem;">
-                            <i class="fa-solid fa-pen"></i> Napsat vzkaz
-                        </h3>
-                        <div class="form-grid">
-                            <input type="text" id="msgAuthor" placeholder="Vaše jméno">
-                            <textarea id="msgContent" rows="4"
-                                placeholder="Napište vzkaz ostatním členům..."></textarea>
-                            <button class="btn-primary" onclick="postMessage()" style="justify-self: start;">
-                                <i class="fa-solid fa-paper-plane"></i> Odeslat
-                            </button>
+                        <!-- What's New (Announcements Preview) -->
+                        <div class="dashboard-news-section">
+                            <h3
+                                style="color: var(--text-main); border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 0.5rem; margin-bottom: 1rem;">
+                                <i class="fa-solid fa-bullhorn" style="color: #fcd34d;"></i> Co je nového
+                            </h3>
+                            <div id="dashboardNewsList" style="display: grid; gap: 1rem;">
+                                <p style="color: var(--text-muted);"><i class="fa-solid fa-spinner fa-spin"></i>
+                                    Načítám novinky...</p>
+                            </div>
+                            <div style="text-align: center; margin-top: 1rem;">
+                                <a href="member-bulletin.html" class="btn-secondary"
+                                    style="text-decoration: none; font-size: 0.9rem;">Zobrazit všechna oznámení</a>
+                            </div>
                         </div>
-                    </div>
-                    <h3 style="color: var(--text-muted); margin-bottom: 1rem;">
-                        <i class="fa-solid fa-clock-rotate-left"></i> Poslední vzkazy
-                    </h3>
-                    <div id="messageList" class="message-list">
-                        <p style="color: var(--text-muted);"><i class="fa-solid fa-spinner fa-spin"></i> Načítám...</p>
-                    </div>
-                </div>
-
-                <!-- Gallery Section -->
-                <div id="gallerySection" class="section-view hidden">
-                    <div class="section-header">
-                        <button class="back-btn" onclick="showHub()">
-                            <i class="fa-solid fa-arrow-left"></i>
-                        </button>
-                        <h2 class="section-title" style="color: #c4b5fd;">
-                            <i class="fa-solid fa-images"></i> Galerie
-                        </h2>
-                    </div>
-                    <div class="gallery-upload-area" onclick="document.getElementById('galleryInput').click()">
-                        <i class="fa-solid fa-cloud-upload-alt"
-                            style="font-size: 2.5rem; color: #a855f7; margin-bottom: 0.5rem;"></i>
-                        <p style="color: var(--text-muted); margin: 0;">Klikněte pro nahrání fotek</p>
-                        <input type="file" id="galleryInput" multiple accept="image/*" style="display: none;"
-                            onchange="handleMemberGalleryUpload(this)">
-                    </div>
-                    <div id="galleryGrid" class="gallery-grid">
-                        <p style="color: var(--text-muted); grid-column: 1 / -1;"><i
-                                class="fa-solid fa-spinner fa-spin"></i> Načítám...</p>
-                    </div>
-                </div>
-
-                <!-- Wishlist Section -->
-                <div id="wishlistSection" class="section-view hidden">
-                    <div class="section-header">
-                        <button class="back-btn" onclick="showHub()">
-                            <i class="fa-solid fa-arrow-left"></i>
-                        </button>
-                        <h2 class="section-title" style="color: #f472b6;">
-                            <i class="fa-solid fa-wand-magic-sparkles"></i> Kniha Přání
-                        </h2>
-                    </div>
-                    <div class="message-form" style="border-color: rgba(244, 114, 182, 0.2);">
-                        <h3 style="color: #f472b6; margin-bottom: 1rem;">
-                            <i class="fa-solid fa-pen-fancy"></i> Napsat přání
-                        </h3>
-                        <div class="form-grid">
-                            <input type="text" id="wishAuthor" placeholder="Vaše jméno">
-                            <textarea id="wishContent" rows="4"
-                                placeholder="Co byste si přáli vylepšit v klubu nebo na webu?"></textarea>
-                            <button class="btn-primary" onclick="postWish()"
-                                style="justify-self: start; background: linear-gradient(135deg, #ec4899, #db2777);">
-                                <i class="fa-solid fa-paper-plane"></i> Odeslat přání
-                            </button>
-                        </div>
-                    </div>
-                    <h3 style="color: var(--text-muted); margin-bottom: 1rem;">
-                        <i class="fa-solid fa-star"></i> Ostatní přání
-                    </h3>
-                    <div id="wishList" class="message-list">
-                        <p style="color: var(--text-muted);"><i class="fa-solid fa-spinner fa-spin"></i> Načítám...</p>
                     </div>
                 </div>
             </div>
         </section>
     </main>
 
-    <!-- PGN Import Modal -->
-    <div id="pgnImportModal"
-        style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.85); z-index: 10000; display: none; align-items: center; justify-content: center; backdrop-filter: blur(5px);">
-        <div
-            style="background: var(--surface-color, #1e1e1e); max-width: 600px; width: 90%; max-height: 80vh; overflow-y: auto; padding: 2rem; border-radius: 12px; border: 1px solid rgba(74, 222, 128, 0.3); box-shadow: 0 20px 60px rgba(0,0,0,0.6);">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
-                <h3 style="margin: 0; color: #4ade80;"><i class="fa-solid fa-file-import"></i> Vložit PGN</h3>
-                <button onclick="closePgnImportModal()"
-                    style="background: none; border: none; color: #aaa; font-size: 24px; cursor: pointer;">&times;</button>
-            </div>
-            <p style="color: var(--text-muted, #888); font-size: 0.9rem; margin-bottom: 1rem;">
-                Vložte PGN notaci. Pokud PGN obsahuje více partií, všechny budou uloženy.
-            </p>
-            <textarea id="pgnImportText" rows="12"
-                placeholder="[Event &quot;Turnaj&quot;]&#10;[White &quot;Bílý&quot;]&#10;[Black &quot;Černý&quot;]&#10;[Result &quot;1-0&quot;]&#10;&#10;1. e4 e5 2. Nf3 Nc6..."
-                style="width: 100%; padding: 1rem; background: #0a0a0a; border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; color: #e0e0e0; font-family: monospace; font-size: 0.9rem; resize: vertical;"></textarea>
-            <div id="pgnImportStatus" style="display: none; margin-top: 1rem; padding: 0.75rem; border-radius: 6px;">
-            </div>
-            <div style="display: flex; gap: 0.5rem; margin-top: 1.5rem; justify-content: flex-end;">
-                <button onclick="closePgnImportModal()" class="btn-secondary"
-                    style="padding: 0.75rem 1rem;">Zrušit</button>
-                <button onclick="importPgnGames()" class="btn-primary" id="pgnImportBtn"
-                    style="padding: 0.75rem 1.5rem; background: #4ade80; color: #000;">
-                    <i class="fa-solid fa-save"></i> Uložit partie
-                </button>
-            </div>
-        </div>
-    </div>
-
     <footer id="global-footer"></footer>
 
-    <script src="js/config.js?v=4" defer></script>
-    <script src="js/layout-loader.js?v=5" defer></script>
-    <script src="js/main.js" defer></script>
-    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
-    <script src="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
-    <script src="js/game-viewer2.js?v=12"></script>
+    <script src="js/config.js"></script>
+    <script src="js/layout-loader.js"></script>
+    <script src="js/member-auth.js"></script>
     <script>
-        // Use OAuth token instead of club password
-        function getAuthToken() {
-            return localStorage.getItem('auth_token') || sessionStorage.getItem('auth_token');
+        function initGoogleLogin() {
+            window.location.href = `${API_URL}/auth/google`;
+        }
+
+        function handleOAuthCallback() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const token = urlParams.get('token');
+            if (token) {
+                localStorage.setItem('auth_token', token);
+                window.history.replaceState({}, document.title, window.location.pathname);
+                window.location.reload();
+            }
+        }
+
+        async function loadDashboardNews() {
+            const container = document.getElementById('dashboardNewsList');
+            try {
+                const token = localStorage.getItem('auth_token');
+                // Use API_URL from config (or global if available)
+                const res = await fetch(`${API_URL}/announcements`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data.length === 0) {
+                        container.innerHTML = '<p style="color: var(--text-muted);">Zatím žádné novinky.</p>';
+                        return;
+                    }
+                    container.innerHTML = data.slice(0, 3).map(ann => `
+                                <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); padding: 1rem; border-radius: 0.5rem;">
+                                    <div style="display: flex; justify-content: space-between; margin-bottom: 0.3rem;">
+                                        <strong style="color: #fcd34d;">${ann.isPinned ? '<i class="fa-solid fa-thumbtack"></i> ' : ''}${escapeHtml(ann.title)}</strong>
+                                        <span style="font-size: 0.8rem; color: var(--text-muted);">${new Date(ann.createdAt).toLocaleDateString('cs-CZ')}</span>
+                                    </div>
+                                    <div style="font-size: 0.9rem; color: #ddd; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
+                                        ${ann.content.substring(0, 150)}${ann.content.length > 150 ? '...' : ''}
+                                    </div>
+                                </div>
+                            `).join('');
+                }
+            } catch (e) {
+                console.error(e);
+                container.innerHTML = '<p style="color: #ef4444;">Nepodařilo se načíst novinky.</p>';
+            }
+        }
+
+        // Simple escape helper if not available
+        function escapeHtml(text) {
+            if (!text) return '';
+            return text
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
         }
 
         document.addEventListener('DOMContentLoaded', async () => {
-            const token = getAuthToken();
-            if (token) {
-                // Verify token is valid
-                try {
-                    const res = await fetch(`${API_URL}/auth/me`, {
-                        headers: { 'Authorization': `Bearer ${token}` }
-                    });
-                    if (res.ok) {
-                        const user = await res.json();
-                        // Temporary: Allow all users (including USER role) until Feb 2026
-                        const isTempAccess = new Date() < new Date('2026-02-01');
-                        if (isTempAccess || user.role === 'MEMBER' || user.role === 'ADMIN' || user.role === 'SUPERADMIN') {
-                            document.getElementById('loginView').classList.add('hidden');
-                            document.getElementById('hubView').classList.remove('hidden');
-                            return;
-                        }
-                    }
-                } catch (e) {
-                    console.error('Auth check failed:', e);
-                }
-            }
-            // Show login view
-            document.getElementById('loginView').classList.remove('hidden');
-        });
+            handleOAuthCallback();
 
-        function logout() {
-            localStorage.removeItem('auth_token');
-            sessionStorage.removeItem('auth_token');
-            window.location.href = '/';
-        }
+            // Set Date
+            const dateEl = document.getElementById('currentDate');
+            if (dateEl) dateEl.textContent = new Date().toLocaleDateString('cs-CZ', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
 
-        // Section Navigation
-        function showSection(section) {
-            document.getElementById('hubView').classList.add('hidden');
-            document.getElementById('gamesSection').classList.add('hidden');
-            document.getElementById('messagesSection').classList.add('hidden');
-            document.getElementById('messagesSection').classList.add('hidden');
-            document.getElementById('gallerySection').classList.add('hidden');
-            document.getElementById('wishlistSection').classList.add('hidden');
+            const user = await checkAuth(false);
 
-            if (section === 'games') {
-                document.getElementById('gamesSection').classList.remove('hidden');
-                loadGames();
-            } else if (section === 'messages') {
-                document.getElementById('messagesSection').classList.remove('hidden');
-                loadMessages();
-            } else if (section === 'gallery') {
-                document.getElementById('gallerySection').classList.remove('hidden');
-                loadGallery();
-            } else if (section === 'wishlist') {
-                document.getElementById('wishlistSection').classList.remove('hidden');
-                loadWishes();
-            }
-        }
+            if (user) {
+                document.getElementById('loginView').classList.add('hidden');
+                document.getElementById('hubView').classList.remove('hidden');
 
-        function showHub() {
-            document.getElementById('gamesSection').classList.add('hidden');
-            document.getElementById('messagesSection').classList.add('hidden');
-            document.getElementById('messagesSection').classList.add('hidden');
-            document.getElementById('gallerySection').classList.add('hidden');
-            document.getElementById('wishlistSection').classList.add('hidden');
-            document.getElementById('hubView').classList.remove('hidden');
-        }
-
-        // Messages
-        async function loadMessages() {
-            const token = getAuthToken();
-            const container = document.getElementById('messageList');
-
-            try {
-                const res = await fetch(`${API_URL}/messages`, {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
-                const messages = await res.json();
-
-                if (messages.length === 0) {
-                    container.innerHTML = '<p style="color: var(--text-muted); text-align: center;">Zatím žádné vzkazy.</p>';
-                    return;
+                // Populate Dashboard Info
+                document.getElementById('welcomeMsg').textContent = `Vítejte, ${user.realName || user.username}`;
+                document.getElementById('userRoleBadge').textContent = user.role;
+                if (user.role === 'ADMIN' || user.role === 'SUPERADMIN') {
+                    document.getElementById('userRoleBadge').style.color = '#fcd34d';
                 }
 
-                container.innerHTML = messages.map(msg => `
-                    <div class="message-card">
-                        <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
-                            <span style="color: var(--primary-color); font-weight: 700;"><i class="fa-solid fa-user"></i> ${escapeHtml(msg.author)}</span>
-                            <span style="color: var(--text-muted); font-size: 0.85rem;">${new Date(msg.createdAt).toLocaleString('cs-CZ')}</span>
-                        </div>
-                        <div style="color: var(--text-main);">${escapeHtml(msg.content)}</div>
-                    </div>
-                `).join('');
-            } catch (e) {
-                console.error(e);
-                container.innerHTML = '<p style="color: #fca5a5;">Chyba načítání.</p>';
-            }
-        }
-
-        async function postMessage() {
-            const author = document.getElementById('msgAuthor').value;
-            const content = document.getElementById('msgContent').value;
-            const token = getAuthToken();
-
-            if (!author || !content) {
-                alert('Vyplňte prosím jméno a vzkaz.');
-                return;
-            }
-
-            try {
-                await fetch(`${API_URL}/messages`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${token}`
-                    },
-                    body: JSON.stringify({ author, content })
-                });
-                document.getElementById('msgContent').value = '';
-                loadMessages();
-            } catch (e) {
-                console.error(e);
-                alert('Chyba při odesílání.');
-            }
-        }
-
-        // Wishlist Functions
-        async function loadWishes() {
-            const token = getAuthToken();
-            const container = document.getElementById('wishList');
-            container.innerHTML = '<p style="color: var(--text-muted);"><i class="fa-solid fa-spinner fa-spin"></i> Načítám...</p>';
-
-            try {
-                const res = await fetch(`${API_URL}/messages?type=wish`, {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
-
-                if (res.ok) {
-                    const wishes = await res.json();
-                    if (wishes.length === 0) {
-                        container.innerHTML = '<p style="color: var(--text-muted); text-align: center;">Zatím žádná přání.</p>';
-                        return;
-                    }
-
-                    container.innerHTML = wishes.map(w => `
-                        <div class="message-card" style="border-left: 3px solid #f472b6;">
-                            <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
-                                <span style="color: #f472b6; font-weight: 700;"><i class="fa-solid fa-wand-magic-sparkles"></i> ${escapeHtml(w.author)}</span>
-                                <span style="color: var(--text-muted); font-size: 0.85rem;">${new Date(w.createdAt).toLocaleString('cs-CZ')}</span>
-                            </div>
-                            <div style="color: var(--text-main);">${escapeHtml(w.content)}</div>
-                        </div>
-                    `).join('');
-                }
-            } catch (e) {
-                console.error(e);
-                container.innerHTML = '<p style="color: #fca5a5;">Chyba načítání přání.</p>';
-            }
-        }
-
-        async function postWish() {
-            const author = document.getElementById('wishAuthor').value;
-            const content = document.getElementById('wishContent').value;
-            const token = getAuthToken();
-
-            if (!author || !content) {
-                alert('Prosím vyplňte jméno a přání.');
-                return;
-            }
-
-            try {
-                const res = await fetch(`${API_URL}/messages`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${token}`
-                    },
-                    body: JSON.stringify({ author, content, type: 'wish' })
-                });
-
-                if (res.ok) {
-                    document.getElementById('wishContent').value = '';
-                    loadWishes();
-                }
-            } catch (e) {
-                console.error('Failed to post wish:', e);
-                alert('Chyba při odesílání.');
-            }
-        }
-
-        // Games
-        let memberGamesData = []; // Store for viewer
-        let memberViewer = null;
-
-        async function loadGames() {
-            const token = getAuthToken();
-            const container = document.getElementById('gamesList');
-
-            try {
-                const res = await fetch(`${API_URL}/games`, {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
-                const games = await res.json();
-                memberGamesData = games; // Store for viewer
-
-                if (games.length === 0) {
-                    container.innerHTML = '<p style="color: var(--text-muted); text-align: center;">Zatím žádné nahrané partie.</p>';
-                    return;
-                }
-
-                container.innerHTML = games.map((game, index) => `
-                    <div class="game-card" style="cursor: pointer; padding: 0.6rem 1rem; margin-bottom: 0.5rem;" onclick="playGameInViewer(${index})">
-                        <div style="display: flex; align-items: center; gap: 0.75rem; flex: 1; min-width: 0;">
-                            <span style="font-weight: 600; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${escapeHtml(game.white)} - ${escapeHtml(game.black)}</span>
-                            <span style="color: #4ade80; font-weight: 700; font-size: 0.9rem;">${game.result}</span>
-                            <span style="color: var(--text-muted); font-size: 0.75rem;">${new Date(game.date).toLocaleDateString('cs-CZ')}</span>
-                        </div>
-                        <div style="display: flex; gap: 0.25rem;" onclick="event.stopPropagation()">
-                            <button onclick="playGameInViewer(${index})" style="padding: 0.3rem 0.5rem; font-size: 0.7rem; background: #3b82f6; color: white; border: none; border-radius: 4px; cursor: pointer;" title="Přehrát">
-                                <i class="fa-solid fa-play"></i>
-                            </button>
-                            <button onclick="downloadGamePgn(${game.id})" style="padding: 0.3rem 0.5rem; font-size: 0.7rem; background: transparent; color: var(--text-muted); border: 1px solid rgba(255,255,255,0.1); border-radius: 4px; cursor: pointer;" title="PGN">
-                                <i class="fa-solid fa-download"></i>
-                            </button>
-                            <a href="game-recorder.html?id=${game.id}" style="padding: 0.3rem 0.5rem; font-size: 0.7rem; background: transparent; color: var(--text-muted); border: 1px solid rgba(255,255,255,0.1); border-radius: 4px; text-decoration: none; display: flex; align-items: center;" title="Upravit">
-                                <i class="fa-solid fa-edit"></i>
-                            </a>
-                        </div>
-                    </div>
-                `).join('');
-            } catch (e) {
-                console.error(e);
-                container.innerHTML = '<p style="color: #fca5a5;">Chyba načítání.</p>';
-            }
-        }
-
-        function playGameInViewer(index) {
-            const game = memberGamesData[index];
-            if (!game || !game.pgn) {
-                alert('Tato partie nemá PGN data.');
-                return;
-            }
-
-            // Show viewer container
-            const viewerContainer = document.getElementById('memberGameViewer');
-            viewerContainer.style.display = 'block';
-
-            // Scroll to viewer
-            viewerContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
-
-            // Initialize or update viewer
-            const container = document.getElementById('memberViewerContainer');
-            container.innerHTML = ''; // Clear previous
-
-            // Create viewer with this game's PGN
-            if (typeof GameViewer2 !== 'undefined') {
-                memberViewer = new GameViewer2(container, {
-                    pgn: game.pgn,
-                    showHeader: true,
-                    showControls: true,
-                    showNotation: true
-                });
+                loadDashboardNews();
             } else {
-                container.innerHTML = '<p style="color: #fca5a5;">GameViewer2 není dostupný.</p>';
+                document.getElementById('loginView').classList.remove('hidden');
+                document.getElementById('hubView').classList.add('hidden');
             }
-        }
-
-        async function downloadGamePgn(id) {
-            try {
-                const password = localStorage.getItem(PASSWORD_KEY);
-                const res = await fetch(`${API_URL}/games/${id}/pgn`, {
-                    headers: { 'X-Club-Password': password }
-                });
-                const blob = await res.blob();
-                const url = window.URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = `game_${id}.pgn`;
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-            } catch (e) {
-                console.error(e);
-                alert('Stahování selhalo.');
-            }
-        }
-
-        // Gallery
-        async function loadGallery() {
-            const password = localStorage.getItem(PASSWORD_KEY);
-            const container = document.getElementById('galleryGrid');
-
-            try {
-                const res = await fetch(`${API_URL}/images`, {
-                    headers: { 'X-Club-Password': password }
-                });
-                const images = await res.json();
-
-                if (images.length === 0) {
-                    container.innerHTML = '<p style="color: var(--text-muted); grid-column: 1 / -1; text-align: center;">Zatím žádné fotky.</p>';
-                    return;
-                }
-
-                container.innerHTML = images.slice(0, 30).map(img => `
-                    <a href="${img.url}" target="_blank" class="gallery-item" style="position: relative;">
-                        <img src="${img.url}" alt="${img.altText || 'Gallery image'}">
-                        ${img.altText ? `<div style="position: absolute; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.7); color: white; font-size: 0.7rem; padding: 0.3rem; text-align: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${escapeHtml(img.altText)}</div>` : ''}
-                    </a>
-                `).join('');
-            } catch (e) {
-                console.error(e);
-                container.innerHTML = '<p style="color: #fca5a5; grid-column: 1 / -1;">Chyba načítání.</p>';
-            }
-        }
-
-        async function handleMemberGalleryUpload(input) {
-            if (!input.files || input.files.length === 0) return;
-
-            const password = localStorage.getItem(PASSWORD_KEY);
-            const files = Array.from(input.files);
-            let successCount = 0;
-
-            const container = document.getElementById('galleryGrid');
-            container.innerHTML = `<p style="color: #a855f7; grid-column: 1 / -1; text-align: center;"><i class="fa-solid fa-spinner fa-spin"></i> Nahrávám ${files.length} fotek...</p>`;
-
-            for (const file of files) {
-                const formData = new FormData();
-                formData.append('image', file);
-                formData.append('category', 'members');
-
-                try {
-                    const res = await fetch(`${API_URL}/images/upload`, {
-                        method: 'POST',
-                        headers: { 'X-Club-Password': password },
-                        body: formData
-                    });
-                    if (res.ok) successCount++;
-                } catch (e) {
-                    console.error('Upload failed:', e);
-                }
-            }
-
-            if (successCount > 0) {
-                loadGallery();
-            } else {
-                container.innerHTML = '<p style="color: #fca5a5; grid-column: 1 / -1;">Nahrávání selhalo.</p>';
-            }
-            input.value = '';
-        }
-
-        function escapeHtml(text) {
-            const div = document.createElement('div');
-            div.textContent = text;
-            return div.innerHTML;
-        }
-
-        // PGN Import Modal Functions
-        function showPgnImportModal() {
-            const modal = document.getElementById('pgnImportModal');
-            modal.style.display = 'flex';
-            document.getElementById('pgnImportText').value = '';
-            document.getElementById('pgnImportStatus').style.display = 'none';
-        }
-
-        function closePgnImportModal() {
-            document.getElementById('pgnImportModal').style.display = 'none';
-        }
-
-        // Parse PGN text that may contain multiple games
-        function parsePgnIntoGames(pgnText) {
-            const games = [];
-            // Split by empty line followed by [Event - handles multi-game PGN
-            const rawGames = pgnText.split(/\n\n(?=\[Event\s)/);
-
-            for (const gamePgn of rawGames) {
-                if (!gamePgn.trim()) continue;
-
-                // Extract headers
-                const whiteMatch = gamePgn.match(/\[White\s+"([^"]+)"\]/);
-                const blackMatch = gamePgn.match(/\[Black\s+"([^"]+)"\]/);
-                const resultMatch = gamePgn.match(/\[Result\s+"([^"]+)"\]/);
-                const eventMatch = gamePgn.match(/\[Event\s+"([^"]+)"\]/);
-                const dateMatch = gamePgn.match(/\[Date\s+"([^"]+)"\]/);
-
-                games.push({
-                    white: whiteMatch ? whiteMatch[1] : 'N/A',
-                    black: blackMatch ? blackMatch[1] : 'N/A',
-                    result: resultMatch ? resultMatch[1] : '*',
-                    event: eventMatch ? eventMatch[1] : '',
-                    date: dateMatch ? dateMatch[1].replace(/\./g, '-') : new Date().toISOString().split('T')[0],
-                    pgn: gamePgn.trim()
-                });
-            }
-
-            return games;
-        }
-
-        async function importPgnGames() {
-            const pgnText = document.getElementById('pgnImportText').value.trim();
-            const statusDiv = document.getElementById('pgnImportStatus');
-            const btn = document.getElementById('pgnImportBtn');
-
-            if (!pgnText) {
-                statusDiv.style.display = 'block';
-                statusDiv.style.background = 'rgba(252, 165, 165, 0.2)';
-                statusDiv.style.color = '#fca5a5';
-                statusDiv.innerHTML = '<i class="fa-solid fa-exclamation-circle"></i> Vložte PGN notaci.';
-                return;
-            }
-
-            const games = parsePgnIntoGames(pgnText);
-
-            if (games.length === 0) {
-                statusDiv.style.display = 'block';
-                statusDiv.style.background = 'rgba(252, 165, 165, 0.2)';
-                statusDiv.style.color = '#fca5a5';
-                statusDiv.innerHTML = '<i class="fa-solid fa-exclamation-circle"></i> Nepodařilo se rozpoznat žádné partie.';
-                return;
-            }
-
-            btn.disabled = true;
-            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Ukládám...';
-            statusDiv.style.display = 'block';
-            statusDiv.style.background = 'rgba(96, 165, 250, 0.2)';
-            statusDiv.style.color = '#60a5fa';
-            statusDiv.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Ukládám ${games.length} partii...`;
-
-            const password = localStorage.getItem(PASSWORD_KEY);
-            let savedCount = 0;
-
-            for (const game of games) {
-                try {
-                    const res = await fetch(`${API_URL}/games`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-Club-Password': password
-                        },
-                        body: JSON.stringify(game)
-                    });
-                    if (res.ok) savedCount++;
-                } catch (e) {
-                    console.error('Error saving game:', e);
-                }
-            }
-
-            btn.disabled = false;
-            btn.innerHTML = '<i class="fa-solid fa-save"></i> Uložit partie';
-
-            if (savedCount > 0) {
-                statusDiv.style.background = 'rgba(74, 222, 128, 0.2)';
-                statusDiv.style.color = '#4ade80';
-                statusDiv.innerHTML = `<i class="fa-solid fa-check-circle"></i> Uloženo ${savedCount} z ${games.length} partií.`;
-                loadGames(); // Refresh list
-                setTimeout(closePgnImportModal, 1500);
-            } else {
-                statusDiv.style.background = 'rgba(252, 165, 165, 0.2)';
-                statusDiv.style.color = '#fca5a5';
-                statusDiv.innerHTML = '<i class="fa-solid fa-exclamation-circle"></i> Nepodařilo se uložit žádnou partii.';
-            }
-        }
-
-        // Close modal on escape or outside click
-        document.getElementById('pgnImportModal')?.addEventListener('click', (e) => {
-            if (e.target.id === 'pgnImportModal') closePgnImportModal();
-        });
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape') closePgnImportModal();
         });
     </script>
 </body>

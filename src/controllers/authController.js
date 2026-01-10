@@ -264,3 +264,112 @@ export const fixAdmins = async (req, res) => {
         res.status(500).json({ error: error.message });
     }
 };
+
+// Password Reset - Request
+export const forgotPassword = async (req, res) => {
+    try {
+        const { email } = req.body;
+
+        if (!email) {
+            return res.status(400).json({ error: 'Email is required' });
+        }
+
+        const user = await prisma.user.findUnique({ where: { email } });
+
+        // Always return success to prevent email enumeration
+        if (!user) {
+            return res.json({ message: 'If the account exists, a password reset email has been sent.' });
+        }
+
+        // Check if user has a password (not OAuth-only)
+        if (!user.passwordHash && user.googleId) {
+            return res.json({ message: 'If the account exists, a password reset email has been sent.' });
+        }
+
+        // Generate reset token
+        const crypto = await import('crypto');
+        const resetToken = crypto.randomBytes(32).toString('hex');
+        const resetTokenExpiry = new Date(Date.now() + 3600000); // 1 hour
+
+        await prisma.user.update({
+            where: { id: user.id },
+            data: { resetToken, resetTokenExpiry }
+        });
+
+        // Send email
+        const { sendEmail } = await import('../utils/mailer.js');
+        const resetUrl = `${process.env.FRONTEND_URL || 'https://sachyjablonec.cz'}/reset-password.html?token=${resetToken}`;
+
+        await sendEmail(
+            email,
+            'Obnovení hesla - Šachový oddíl Bižuterie',
+            `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+                <h2 style="color: #d4af37;">Obnovení hesla</h2>
+                <p>Obdrželi jsme žádost o obnovení hesla pro váš účet.</p>
+                <p>Klikněte na tlačítko níže pro nastavení nového hesla:</p>
+                <p style="text-align: center; margin: 2rem 0;">
+                    <a href="${resetUrl}" 
+                       style="background: #d4af37; color: #000; padding: 12px 24px; text-decoration: none; border-radius: 5px; font-weight: bold;">
+                        Nastavit nové heslo
+                    </a>
+                </p>
+                <p style="color: #666; font-size: 0.9rem;">
+                    Tento odkaz je platný 1 hodinu. Pokud jste o obnovení hesla nežádali, tento email ignorujte.
+                </p>
+                <hr style="border: none; border-top: 1px solid #ddd; margin: 2rem 0;">
+                <p style="color: #999; font-size: 0.8rem;">
+                    Šachový oddíl TJ Bižuterie Jablonec nad Nisou
+                </p>
+            </div>
+            `
+        );
+
+        res.json({ message: 'If the account exists, a password reset email has been sent.' });
+    } catch (error) {
+        console.error('Forgot password error:', error);
+        res.status(500).json({ error: 'Failed to process password reset request' });
+    }
+};
+
+// Password Reset - Set new password
+export const resetPassword = async (req, res) => {
+    try {
+        const { token, password } = req.body;
+
+        if (!token || !password) {
+            return res.status(400).json({ error: 'Token and new password are required' });
+        }
+
+        if (password.length < 6) {
+            return res.status(400).json({ error: 'Password must be at least 6 characters' });
+        }
+
+        const user = await prisma.user.findFirst({
+            where: {
+                resetToken: token,
+                resetTokenExpiry: { gt: new Date() }
+            }
+        });
+
+        if (!user) {
+            return res.status(400).json({ error: 'Invalid or expired reset token' });
+        }
+
+        const passwordHash = await bcrypt.hash(password, 10);
+
+        await prisma.user.update({
+            where: { id: user.id },
+            data: {
+                passwordHash,
+                resetToken: null,
+                resetTokenExpiry: null
+            }
+        });
+
+        res.json({ message: 'Password has been reset successfully' });
+    } catch (error) {
+        console.error('Reset password error:', error);
+        res.status(500).json({ error: 'Failed to reset password' });
+    }
+};
