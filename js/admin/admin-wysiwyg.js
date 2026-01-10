@@ -800,10 +800,6 @@ function autoFormatEntireContent() {
     const fractionScorePattern = /(?<!<span[^>]*>)\b(\d+[,.]?\d*)\/(\d+[,.]?\d*)\b(?![^<]*<\/span>)/g;
 
     html = html.replace(fractionScorePattern, (match, score1, score2) => {
-        // Skip if it's part of the already handled 1/2-1/2 result
-        if (match === '1/2') {
-            return match;
-        }
         scoreChanges++;
         // Add zero-width space after for cursor positioning
         return `<span class="highlight-score">${score1}/${score2}</span>\u200B`;
