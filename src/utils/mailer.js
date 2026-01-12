@@ -29,7 +29,7 @@ export const sendEmail = async (to, subject, html) => {
         }
 
         const { data, error } = await client.emails.send({
-            from: 'Šachový oddíl Bižuterie <noreply@sachyjablonec.cz>',
+            from: 'Šachový oddíl Bižuterie <notifikace@sachyjablonec.cz>',
             to: [to],
             subject,
             html
