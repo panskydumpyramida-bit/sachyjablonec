@@ -1,36 +1,36 @@
-import nodemailer from 'nodemailer';
+import { Resend } from 'resend';
 import dotenv from 'dotenv';
 dotenv.config();
 
-const transporter = nodemailer.createTransport({
-    host: process.env.SMTP_HOST,
-    port: parseInt(process.env.SMTP_PORT || '587'),
-    secure: process.env.SMTP_PORT === '465', // true for 465, false for other ports
-    auth: {
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS
-    },
-    tls: {
-        rejectUnauthorized: false
-    },
-    connectionTimeout: 10000, // 10 seconds to connect
-    greetingTimeout: 10000,   // 10 seconds for greeting
-    socketTimeout: 30000      // 30 seconds for socket operations
-});
+// Use Resend API (works on Railway Hobby plan unlike SMTP)
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 export const sendEmail = async (to, subject, html) => {
+    // Skip if no API key configured
+    if (!process.env.RESEND_API_KEY) {
+        console.warn('Resend API key not configured, skipping email');
+        return null;
+    }
+
     try {
-        console.log(`Sending email to ${to} subject: ${subject}`);
-        const info = await transporter.sendMail({
-            from: `"Šachový oddíl Bižuterie" <${process.env.SMTP_USER}>`,
-            to,
+        console.log(`[Resend] Sending email to ${to} subject: ${subject}`);
+
+        const { data, error } = await resend.emails.send({
+            from: 'Šachový oddíl Bižuterie <noreply@sachyjablonec.cz>',
+            to: [to],
             subject,
             html
         });
-        console.log('Message sent: %s', info.messageId);
-        return info;
+
+        if (error) {
+            console.error('[Resend] Error:', error);
+            return null;
+        }
+
+        console.log('[Resend] Message sent:', data.id);
+        return data;
     } catch (error) {
-        console.error('Error sending email:', error);
+        console.error('[Resend] Error sending email:', error);
         return null; // Don't throw to avoid crashing the request
     }
 };
