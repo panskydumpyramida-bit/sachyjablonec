@@ -9,6 +9,10 @@ async function main() {
     // Create admin user
     const hashedPassword = await bcrypt.hash(process.env.ADMIN_PASSWORD || 'admin123', 10);
 
+    const existingAdmin = await prisma.user.findUnique({
+        where: { username: process.env.ADMIN_USERNAME || 'admin' }
+    });
+
     const admin = await prisma.user.upsert({
         where: { username: process.env.ADMIN_USERNAME || 'admin' },
         update: {},
@@ -20,11 +24,16 @@ async function main() {
         }
     });
 
-    console.log('✅ Admin user created (Role: superadmin):', admin.username);
+    if (existingAdmin) {
+        console.log('👤 Admin user exists:', admin.username);
+    } else {
+        console.log('✅ Admin user created (Role: superadmin):', admin.username);
+    }
 
-    // Create other admins
+    // Create other admins if they don't exist
     const commonPasswordHash = await bcrypt.hash('sachy2025', 10);
 
+    const existingFilip = await prisma.user.findUnique({ where: { username: 'filip' } });
     const filip = await prisma.user.upsert({
         where: { username: 'filip' },
         update: {},
@@ -35,8 +44,9 @@ async function main() {
             role: 'ADMIN'
         }
     });
-    console.log('✅ Admin user created:', filip.username);
+    if (!existingFilip) console.log('✅ Admin user created:', filip.username);
 
+    const existingLukas = await prisma.user.findUnique({ where: { username: 'lukas' } });
     const lukas = await prisma.user.upsert({
         where: { username: 'lukas' },
         update: {},
@@ -47,7 +57,7 @@ async function main() {
             role: 'ADMIN'
         }
     });
-    console.log('✅ Admin user created:', lukas.username);
+    if (!existingLukas) console.log('✅ Admin user created:', lukas.username);
 
     // Games for 1. kolo - Derby Bižuterie (8 games, 1 team)
     const games1kolo = [
