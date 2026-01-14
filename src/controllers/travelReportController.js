@@ -22,7 +22,7 @@ export const getMyReports = async (req, res) => {
 export const createReport = async (req, res) => {
     try {
         const userId = req.user.id;
-        const { date, purpose, from, to, distance, vehicle } = req.body;
+        const { date, purpose, from, to, distance, vehicle, licensePlate, passengers } = req.body;
 
         if (!date || !purpose || !from || !to || distance === undefined) {
             return res.status(400).json({ error: 'Missing required fields' });
@@ -37,6 +37,8 @@ export const createReport = async (req, res) => {
                 to,
                 distance: parseInt(distance),
                 vehicle: vehicle || 'car',
+                licensePlate: licensePlate || null,
+                passengers: passengers || null,
                 status: 'pending'
             }
         });

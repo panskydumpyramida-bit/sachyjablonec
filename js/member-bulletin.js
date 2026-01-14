@@ -276,8 +276,10 @@ async function submitTripReport() {
     const to = document.getElementById('tripTo').value;
     const distance = document.getElementById('tripDistance').value;
     const vehicle = document.getElementById('tripVehicle').value;
+    const licensePlate = document.getElementById('tripLicensePlate')?.value || '';
+    const passengers = document.getElementById('tripPassengers')?.value || '';
 
-    if (!date || !purpose || !from || !to || !distance) return alert('Vyplňte všechna pole.');
+    if (!date || !purpose || !from || !to || !distance) return alert('Vyplňte všechna povinná pole.');
 
     try {
         const token = getAuthToken();
@@ -287,12 +289,27 @@ async function submitTripReport() {
                 'Authorization': `Bearer ${token}`,
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ date, purpose, from, to, distance: parseInt(distance), vehicle })
+            body: JSON.stringify({
+                date,
+                purpose,
+                from,
+                to,
+                distance: parseInt(distance),
+                vehicle,
+                licensePlate: licensePlate || null,
+                passengers: passengers || null
+            })
         });
 
         if (res.ok) {
-            alert('Cestovní příkaz odeslán ke schválení.');
+            if (typeof showToast === 'function') {
+                showToast('Žádost o proplacení odeslána ke schválení.', 'success');
+            } else {
+                alert('Žádost o proplacení odeslána ke schválení.');
+            }
             document.getElementById('tripPurpose').value = '';
+            document.getElementById('tripLicensePlate').value = '';
+            document.getElementById('tripPassengers').value = '';
             loadMyTrips();
         } else {
             alert('Chyba při odesílání.');

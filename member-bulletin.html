@@ -47,7 +47,7 @@
                     <i class="fa-solid fa-file-alt"></i> Dokumenty
                 </button>
                 <button class="tab-btn" onclick="switchBulletinTab('trip')">
-                    <i class="fa-solid fa-car"></i> Cestovní příkaz
+                    <i class="fa-solid fa-car"></i> Proplacení cest
                 </button>
                 <button class="tab-btn" onclick="switchBulletinTab('messages')">
                     <i class="fa-solid fa-comments"></i> Vzkazy
@@ -65,8 +65,8 @@
 
             <div id="tab-trip" class="bulletin-tab-content hidden">
                 <div class="trip-form">
-                    <h3 style="color: #67e8f9; margin-bottom: 1rem;"><i class="fa-solid fa-route"></i> Nový cestovní
-                        příkaz</h3>
+                    <h3 style="color: #67e8f9; margin-bottom: 1rem;"><i class="fa-solid fa-receipt"></i> Proplacení
+                        cesty</h3>
                     <div class="form-grid" style="grid-template-columns: 1fr 1fr;">
                         <input type="date" id="tripDate" style="color-scheme: dark;">
                         <input type="text" id="tripPurpose" placeholder="Účel cesty (např. Turnaj Liberec)">
@@ -78,13 +78,15 @@
                             <option value="bus">Autobus/Vlak</option>
                             <option value="other">Jiné</option>
                         </select>
+                        <input type="text" id="tripLicensePlate" placeholder="SPZ vozidla (např. 1LB 1234)">
+                        <input type="text" id="tripPassengers" placeholder="Spolucestující (jména oddělená čárkou)">
                         <button class="btn-primary" onclick="submitTripReport()"
                             style="grid-column: 1 / -1; background: #0891b2; color:white;">
-                            Odeslat ke schválení
+                            <i class="fa-solid fa-paper-plane"></i> Odeslat ke schválení
                         </button>
                     </div>
                 </div>
-                <h3 style="color: var(--text-muted); margin: 1.5rem 0 1rem;">Moje poslední cesty</h3>
+                <h3 style="color: var(--text-muted); margin: 1.5rem 0 1rem;">Moje žádosti o proplacení</h3>
                 <div id="tripList" class="message-list"></div>
             </div>
 
