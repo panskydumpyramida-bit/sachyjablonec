@@ -382,19 +382,21 @@ model Document {
 }
 
 model TravelReport {
-  id        Int      @id @default(autoincrement())
-  userId    Int      @map("user_id")
-  date      DateTime
-  from      String
-  to        String
-  purpose   String
-  distance  Int
-  vehicle   String   // car, bus, other
-  status    String   @default("pending") // pending, approved, rejected
-  note      String?  // Admin note for approval/rejection
-  createdAt DateTime @default(now()) @map("created_at")
+  id           Int      @id @default(autoincrement())
+  userId       Int      @map("user_id")
+  date         DateTime
+  from         String
+  to           String
+  purpose      String
+  distance     Int
+  vehicle      String   // car, bus, other
+  licensePlate String?  @map("license_plate") // SPZ vozidla
+  passengers   String?  // Spolucestující (čárkou oddělená jména)
+  status       String   @default("pending") // pending, approved, rejected
+  note         String?  // Admin note for approval/rejection
+  createdAt    DateTime @default(now()) @map("created_at")
   
-  user      User     @relation(fields: [userId], references: [id])
+  user         User     @relation(fields: [userId], references: [id])
   
   @@map("travel_reports")
 }
