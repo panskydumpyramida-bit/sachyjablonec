@@ -106,6 +106,11 @@ class AuthManager {
             throw new Error(data.error || 'Registrace selhala');
         }
 
+        // Show success toast
+        if (typeof showToast === 'function') {
+            showToast('Registrace proběhla úspěšně! Nyní se můžeš přihlásit.', 'success');
+        }
+
         return data;
     }
 
@@ -137,16 +142,27 @@ class AuthManager {
 
         this.notify();
 
+        // Show success toast
+        if (typeof showToast === 'function') {
+            showToast(`Vítej, ${this.user.username}!`, 'success');
+        }
+
         return data;
     }
 
     // Logout
     logout() {
+        const wasLoggedIn = !!this.user;
         this.token = null;
         this.user = null;
         localStorage.removeItem('auth_token');
         sessionStorage.removeItem('auth_token');
         this.notify();
+
+        // Show logout toast
+        if (wasLoggedIn && typeof showToast === 'function') {
+            showToast('Byl jsi odhlášen', 'info');
+        }
     }
 
     // Get auth headers for API requests

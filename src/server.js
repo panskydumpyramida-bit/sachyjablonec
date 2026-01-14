@@ -29,6 +29,7 @@ import oauthRoutes from './routes/oauth.js';
 import announcementRoutes from './routes/api-announcements.js';
 import documentRoutes from './routes/api-documents.js';
 import travelReportRoutes from './routes/api-travel-reports.js';
+import forumRoutes from './routes/api-forum.js';
 import passport from './config/passport.js';
 import { PrismaClient } from '@prisma/client';
 
@@ -250,6 +251,7 @@ app.use('/api/ai', aiRoutes);
 app.use('/api/announcements', announcementRoutes);
 app.use('/api/documents', documentRoutes);
 app.use('/api/travel-reports', travelReportRoutes);
+app.use('/api/forum', forumRoutes);
 
 // Import helpers from utils
 import { clean, isElo, simplify, isMatch, fetchWithHeaders } from './utils/helpers.js';
