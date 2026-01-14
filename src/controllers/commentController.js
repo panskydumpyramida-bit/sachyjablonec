@@ -1,4 +1,5 @@
 import { PrismaClient } from '@prisma/client';
+import { sendEmail } from '../utils/mailer.js';
 
 const prisma = new PrismaClient();
 
@@ -79,8 +80,15 @@ export const createComment = async (req, res) => {
             return res.status(400).json({ error: 'News ID and content are required' });
         }
 
-        // Verify news exists
-        const news = await prisma.news.findUnique({ where: { id: parseInt(newsId) } });
+        // Verify news exists and get author info
+        const news = await prisma.news.findUnique({
+            where: { id: parseInt(newsId) },
+            include: {
+                author: {
+                    select: { id: true, email: true, username: true }
+                }
+            }
+        });
         if (!news) {
             return res.status(404).json({ error: 'Article not found' });
         }
@@ -106,6 +114,31 @@ export const createComment = async (req, res) => {
                 }
             }
         });
+
+        // Send email notification to article author (if not commenting on own article)
+        if (news.author && news.author.id !== req.user.id && news.author.email) {
+            const commenterName = comment.author.useRealName && comment.author.realName
+                ? comment.author.realName
+                : comment.author.username;
+            const articleUrl = `https://sachyjablonec.cz/novinky/${news.slug || news.id}`;
+
+            sendEmail(
+                news.author.email,
+                `Nový komentář k článku "${news.title}"`,
+                `
+                <div style="font-family: system-ui, sans-serif; max-width: 600px; margin: 0 auto;">
+                    <h2 style="color: #c9a227;">Nový komentář</h2>
+                    <p>Uživatel <strong>${commenterName}</strong> přidal komentář k vašemu článku:</p>
+                    <div style="background: #f5f5f5; padding: 1rem; border-radius: 8px; margin: 1rem 0; border-left: 4px solid #c9a227;">
+                        <p style="margin: 0; white-space: pre-wrap;">${content.trim().substring(0, 500)}${content.length > 500 ? '...' : ''}</p>
+                    </div>
+                    <p><a href="${articleUrl}" style="color: #c9a227;">Zobrazit článek →</a></p>
+                    <hr style="border: none; border-top: 1px solid #ddd; margin: 2rem 0;">
+                    <p style="color: #888; font-size: 0.85rem;">Tato notifikace byla odeslána automaticky z webu Šachový oddíl TJ Bižuterie Jablonec.</p>
+                </div>
+                `
+            ).catch(err => console.error('Failed to send comment notification:', err));
+        }
 
         res.status(201).json(comment);
     } catch (error) {

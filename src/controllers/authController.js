@@ -1,6 +1,7 @@
 import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
+import { sendEmail } from '../utils/mailer.js';
 
 const prisma = new PrismaClient();
 
@@ -30,6 +31,33 @@ export const register = async (req, res) => {
                 passwordHash,
                 // Temporary: Grant MEMBER access for testing until End of Jan 2026
                 role: (new Date() < new Date('2026-02-01')) ? 'MEMBER' : 'USER'
+            }
+        });
+
+        // Notify admins about new registration
+        const admins = await prisma.user.findMany({
+            where: { role: { in: ['ADMIN', 'SUPERADMIN'] } },
+            select: { email: true }
+        });
+
+        admins.forEach(admin => {
+            if (admin.email) {
+                sendEmail(
+                    admin.email,
+                    'Nová registrace uživatele',
+                    `
+                    <div style="font-family: system-ui, sans-serif; max-width: 600px; margin: 0 auto;">
+                        <h2 style="color: #c9a227;">Nový uživatel</h2>
+                        <p>Na webu se zaregistroval nový uživatel:</p>
+                        <ul style="background: #f5f5f5; padding: 1rem 1.5rem; border-radius: 8px;">
+                            <li><strong>Přezdívka:</strong> ${user.username}</li>
+                            <li><strong>Email:</strong> ${user.email}</li>
+                            <li><strong>Role:</strong> ${user.role}</li>
+                        </ul>
+                        <p><a href="https://sachyjablonec.cz/admin.html#users" style="color: #c9a227;">Spravovat uživatele →</a></p>
+                    </div>
+                    `
+                ).catch(err => console.error('Failed to send registration notification:', err));
             }
         });
 
@@ -67,6 +95,12 @@ export const login = async (req, res) => {
             return res.status(401).json({ error: 'Invalid credentials' });
         }
 
+        // Update lastLogin timestamp
+        await prisma.user.update({
+            where: { id: user.id },
+            data: { lastLogin: new Date() }
+        });
+
         const token = jwt.sign(
             { id: user.id, username: user.username, role: user.role },
             process.env.JWT_SECRET,
@@ -84,7 +118,8 @@ export const login = async (req, res) => {
                 club: user.club,
                 useRealName: user.useRealName,
                 googleId: user.googleId,
-                createdAt: user.createdAt
+                createdAt: user.createdAt,
+                lastLogin: new Date()
             }
         });
     } catch (error) {
@@ -106,7 +141,8 @@ export const me = async (req, res) => {
                 club: true,
                 useRealName: true,
                 googleId: true,
-                createdAt: true
+                createdAt: true,
+                lastLogin: true
             }
         });
 

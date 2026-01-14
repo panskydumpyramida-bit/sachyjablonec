@@ -29,6 +29,7 @@ model User {
   role             Role      @default(USER)
   resetToken       String?   @map("reset_token")  // Password reset token
   resetTokenExpiry DateTime? @map("reset_token_expiry")  // Token expiration
+  lastLogin        DateTime? @map("last_login")  // Last login timestamp
   createdAt        DateTime  @default(now()) @map("created_at")
   
   authoredNews    News[]   @relation("NewsAuthor")
@@ -39,6 +40,8 @@ model User {
   announcements   Announcement[]
   documents       Document[]
   travelReports   TravelReport[]
+  forumTopics     ForumTopic[]
+  forumPosts      ForumPost[]
   
   @@map("users")
 }
@@ -388,9 +391,42 @@ model TravelReport {
   distance  Int
   vehicle   String   // car, bus, other
   status    String   @default("pending") // pending, approved, rejected
+  note      String?  // Admin note for approval/rejection
   createdAt DateTime @default(now()) @map("created_at")
   
   user      User     @relation(fields: [userId], references: [id])
   
   @@map("travel_reports")
+}
+
+// Discussion Forum
+model ForumTopic {
+  id          Int      @id @default(autoincrement())
+  title       String
+  content     String
+  authorId    Int      @map("author_id")
+  isPinned    Boolean  @default(false) @map("is_pinned")
+  isLocked    Boolean  @default(false) @map("is_locked")
+  viewCount   Int      @default(0) @map("view_count")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  
+  author      User        @relation(fields: [authorId], references: [id])
+  posts       ForumPost[]
+  
+  @@map("forum_topics")
+}
+
+model ForumPost {
+  id        Int      @id @default(autoincrement())
+  content   String
+  topicId   Int      @map("topic_id")
+  authorId  Int      @map("author_id")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  
+  topic     ForumTopic @relation(fields: [topicId], references: [id], onDelete: Cascade)
+  author    User       @relation(fields: [authorId], references: [id])
+  
+  @@map("forum_posts")
 }
