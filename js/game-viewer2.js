@@ -1945,8 +1945,7 @@ class GameViewer2 {
         if (comment && !this.bubbleManuallyHidden) {
             content.innerHTML = this.escapeHtml(comment);
 
-            // Hide title when bubble is shown (bubble takes its place in header)
-            if (titleEl) titleEl.style.display = 'none';
+            // Title and nav controls stay visible to prevent jumping
             if (showBtn) showBtn.classList.remove('visible');
 
             // Avatar Selection - Manager comments both players
@@ -1980,25 +1979,16 @@ class GameViewer2 {
             void overlay.offsetWidth;
             overlay.classList.add('pop-in');
 
-            // Hide nav controls when bubble is shown
-            const navControls = document.querySelector('.gv2-global-controls');
-            if (navControls) navControls.style.display = 'none';
+            // Display overlay
+
         } else {
             overlay.style.display = 'none';
-
-            // Show nav controls when bubble is hidden
-            const navControls = document.querySelector('.gv2-global-controls');
-            if (navControls) navControls.style.display = '';
 
             // Show "show bubble" button only if there's a comment but it's manually hidden
             if (comment && this.bubbleManuallyHidden) {
                 if (showBtn) showBtn.classList.add('visible');
-                // Keep title hidden when there's a comment but it's collapsed
-                if (titleEl) titleEl.style.display = 'none';
             } else {
                 if (showBtn) showBtn.classList.remove('visible');
-                // Show title only when there's no comment at all
-                if (titleEl) titleEl.style.display = '';
             }
         }
     }
@@ -2010,9 +2000,10 @@ class GameViewer2 {
         const navControls = document.querySelector('.gv2-global-controls');
 
         if (overlay) overlay.style.display = 'none';
-        // Keep title hidden - only show nav controls
-        if (titleEl) titleEl.style.display = 'none';
-        if (navControls) navControls.style.display = '';
+        if (overlay) overlay.style.display = 'none';
+
+        // Don't toggle title or nav controls display
+
 
         // Mark as manually hidden so it doesn't reappear until ply changes
         this.bubbleManuallyHidden = true;
