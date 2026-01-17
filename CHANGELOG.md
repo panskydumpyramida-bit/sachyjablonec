@@ -1,3 +1,19 @@
+# Sat Jan 17 2026
+
+### Game Viewer Enhancements & Stockfish Integration ♟️🤖
+- **Oprava analýzy:** Opraveno formátování PV linie (česká notace, čísla tahů) a zobrazení analýzy i po tahu bílého.
+- **Stockfish Integrace:** Přidána podpora pro Stockfish 17 analýzu v prohlížeči partií.
+- **UI:** Redesign panelu analýzy (styl Lichess).
+- **Stockfish Integration**: Added Stockfish 17 (NNUE) analysis to the game viewer via Chess-API.com REST API.
+  - **Eval Bar**: Visual advantage indicator on the left side of the board.
+  - **Analysis Panel**: Lichess-style 2-row layout showing:
+    - Row 1: Evaluation (e.g., `+1.5`, `M3`), engine name, and analysis depth.
+    - Row 2: Principal Variation (PV) showing the best continuation line (up to 6 moves).
+  - **Toggle**: New microchip icon button to enable/disable analysis on demand.
+- **Improved PGN Parser**: Switched from `pgn-parser` to `chess.js` for more robust PGN handling and multi-game support.
+- **Autoplay Handling**: Improved autoplay logic for variations – now pauses with a 3-second countdown modal before auto-selecting the main line.
+- **Animation Fixes**: Resolved chess piece "teleporting" issues and z-index conflicts (NAG markers now correctly overlay pieces).
+
 # Sun Dec 29 2025
 
 ### Admin Panel UX Improvements

@@ -2,6 +2,8 @@
 <html lang="cs">
 
 <head>
+    <script>window.APP_VERSION = '1768669263177';</script>
+
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Partie - Šachový oddíl TJ Bižuterie Jablonec</title>
@@ -9,8 +11,8 @@
         href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Open+Sans:wght@400;600&display=swap"
         rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <link rel="stylesheet" href="css/style.css">
-    <link rel="stylesheet" href="css/game-viewer2.css?v=4">
+    <link rel="stylesheet" href="css/style.css?v=1768669263177">
+    <link rel="stylesheet" href="css/game-viewer2.css?v=final34">
     <link rel="stylesheet" href="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.css">
     <link rel="icon" type="image/png" href="images/favicon.png">
     <style>
@@ -440,12 +442,12 @@
 
     <footer id="global-footer"></footer>
 
-    <script src="js/config.js?v=4"></script>
-    <script src="js/layout-loader.js?v=5"></script>
+    <script src="js/config.js?v=1768669263177"></script>
+    <script src="js/layout-loader.js?v=1768669263177"></script>
     <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
     <script src="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
-    <script src="js/game-viewer2.js?v=12"></script>
+    <script src="js/game-viewer2.js?v=final34"></script>
     <script>
         let allGames = [];
         let currentTab = 'recorded';
@@ -565,16 +567,24 @@
         }
 
         function loadNativeViewer(game, container) {
-            container.innerHTML = '<div id="nativeViewer"></div>';
-            const viewerEl = document.getElementById('nativeViewer');
+            // GameViewer2 expects a wrapper with id 'game-viewer-wrapper' or class 'game-viewer'
+            container.innerHTML = '<div id="game-viewer-wrapper" class="game-viewer"></div>';
 
             if (typeof GameViewer2 !== 'undefined') {
-                currentViewer = new GameViewer2(viewerEl, {
-                    pgn: game.pgn,
-                    showHeader: true,
-                    showControls: true,
-                    showNotation: true
-                });
+                // GameViewer2 expects init() with array of game objects
+                const gameData = {
+                    title: `${game.white || '?'} – ${game.black || '?'}`,
+                    white: game.white || '?',
+                    black: game.black || '?',
+                    result: game.result || '*',
+                    date: game.date,
+                    pgn: game.pgn
+                };
+
+                currentViewer = new GameViewer2();
+                // Also set global gameViewer2 so the control buttons work (they call gameViewer2.*)
+                window.gameViewer2 = currentViewer;
+                currentViewer.init([gameData]);
             } else {
                 container.innerHTML = '<p style="color: #fca5a5; text-align: center;">GameViewer2 není dostupný</p>';
             }
@@ -666,11 +676,22 @@
 
             let savedCount = 0;
 
+            const token = localStorage.getItem('club_auth_token');
+            if (!token) {
+                showStatus(statusDiv, 'error', 'Pro uložení se musíte přihlásit v členské sekci.');
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fa-solid fa-save"></i> Uložit';
+                return;
+            }
+
             for (const game of games) {
                 try {
                     const res = await fetch(`${API_URL}/games`, {
                         method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-Club-Password': token
+                        },
                         body: JSON.stringify(game)
                     });
                     if (res.ok) savedCount++;
