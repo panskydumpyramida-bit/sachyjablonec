@@ -329,16 +329,16 @@ const ChessDB = {
                 </div>
             </div>
             <div class="board-area">
-                <div class="board-wrapper" style="display: flex; flex-direction: column; gap: 0.5rem;">
-                    <!-- Board + Eval Bar Row -->
-                    <div style="display: flex; gap: 0.5rem; align-items: stretch;">
-                        <!-- Eval Bar (vertical thermometer) -->
-                        <div id="dbEvalBar" class="gv2-eval-bar" style="width: 24px; min-width: 24px; height: auto; min-height: 200px;">
-                            <div class="gv2-eval-fill" id="dbEvalFill" style="height: 50%;"></div>
-                            <span class="gv2-eval-text" id="dbEvalText">0.0</span>
+                    <div class="board-wrapper gv2-board-wrapper" style="display: flex; flex-direction: column; gap: 0.5rem;">
+                        <!-- Board + Eval Bar Row -->
+                        <div style="display: flex; gap: 0; align-items: stretch;" class="gv2-board-area-inner">
+                            <!-- Eval Bar (vertical thermometer) -->
+                            <div id="dbEvalBar" class="gv2-eval-bar">
+                                <div class="gv2-eval-fill" id="dbEvalFill" style="height: 50%;"></div>
+                                <span class="gv2-eval-text" id="dbEvalText">0.0</span>
+                            </div>
+                            <div id="chessBoard" style="flex: 1; width: 100%;"></div>
                         </div>
-                        <div id="chessBoard" style="flex: 1;"></div>
-                    </div>
                     <!-- Analysis Info -->
                     <div id="dbAnalysisInfo" class="gv2-analysis-info">
                         <span class="gv2-best-move" id="dbBestMove">—</span>
@@ -350,6 +350,7 @@ const ChessDB = {
                         <button id="autoplayBtn" onclick="ChessDB.toggleAutoplay()" title="Autoplay"><i class="fa-solid fa-play"></i></button>
                         <button onclick="ChessDB.nextMove()" title="Další"><i class="fa-solid fa-chevron-right"></i></button>
                         <button onclick="ChessDB.goToEnd()" title="Na konec"><i class="fa-solid fa-forward-fast"></i></button>
+                        <button id="engineBtnBottom" onclick="ChessDB.toggleEngine()" title="Engine" style="color: var(--text-muted);"><i class="fa-solid fa-microchip"></i></button>
                     </div>
                 </div>
                 <div class="moves-wrapper" id="movesPanel">
@@ -386,16 +387,8 @@ const ChessDB = {
         const boardEl = document.getElementById('chessBoard');
         if (!boardEl) return;
 
-        // On mobile, force square aspect ratio based on calculated width
-        if (window.innerWidth <= 900) {
-            const width = boardEl.offsetWidth;
-            if (width > 0) {
-                boardEl.style.height = `${width}px`;
-                if (this.board) this.board.resize();
-            }
-        } else {
-            boardEl.style.height = ''; // Reset on desktop
-        }
+        // Simply trigger resize, trust CSS for dimensions
+        if (this.board) this.board.resize();
     },
 
     renderMovesList() {
@@ -720,6 +713,12 @@ const ChessDB = {
             btn.style.background = this.analysisEnabled ? 'rgba(74, 222, 128, 0.2)' : 'rgba(255,255,255,0.05)';
             btn.style.borderColor = this.analysisEnabled ? '#4ade80' : 'rgba(255,255,255,0.1)';
             btn.style.color = this.analysisEnabled ? '#4ade80' : 'var(--text-muted)';
+        }
+
+        const btnBottom = document.getElementById('engineBtnBottom');
+        if (btnBottom) {
+            btnBottom.style.color = this.analysisEnabled ? '#4ade80' : 'var(--text-muted)';
+            // Optional: add background/border if supported by board-controls styles
         }
 
         // Show/hide eval bar and analysis info
