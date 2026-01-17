@@ -134,7 +134,7 @@ class ChessAnalyzer {
                     winChance: evalScore !== null ? this._evalToWinChance(evalScore) : 50,
                     continuation: continuation,
                     uciMove: bestMoveUci,
-                    text: `Lichess Cloud (${data.knodes ? Math.round(data.knodes / 1000) + 'M nodes' : ''})`
+                    text: `Lichess Cloud`
                 });
             }
 
