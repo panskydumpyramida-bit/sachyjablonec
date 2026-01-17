@@ -163,8 +163,13 @@
     }
 
     .gv2-board-wrapper {
+        width: 100%;
         max-width: 95vw;
-        max-height: 50vh;
+        /* Fallback */
+        max-width: min(95vw, 60vh);
+        /* Ensure square board fits in height */
+        margin: 0 auto;
+        /* max-height removed to let width drive height naturally via aspect ratio */
     }
 
     .gv2-controls {
