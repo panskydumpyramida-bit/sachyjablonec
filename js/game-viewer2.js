@@ -23,6 +23,24 @@ class ChessAnalyzer {
         this.currentRequestId = null;
         this.debounceTimer = null;
         this.apiUrl = 'https://lichess.org/api/cloud-eval';
+        this.fallbackDepth = 16; // Default, will be loaded from server
+        this._loadDepthFromServer();
+    }
+
+    // Load depth setting from database (async, non-blocking)
+    async _loadDepthFromServer() {
+        try {
+            const response = await fetch('/api/settings/public/chessApiDepth');
+            if (response.ok) {
+                const data = await response.json();
+                if (data.value) {
+                    this.fallbackDepth = parseInt(data.value, 10);
+                    console.log('[ChessAnalyzer] Depth loaded from server:', this.fallbackDepth);
+                }
+            }
+        } catch (e) {
+            console.warn('[ChessAnalyzer] Failed to load depth from server, using default', e);
+        }
     }
 
     connect() {
@@ -152,7 +170,7 @@ class ChessAnalyzer {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     fen: fen,
-                    depth: parseInt(localStorage.getItem('chessApiDepth') || '16', 10)
+                    depth: this.fallbackDepth
                 })
             });
 
@@ -189,7 +207,7 @@ class ChessAnalyzer {
                     winChance: data.winChance || (data.eval !== null ? this._evalToWinChance(data.eval) : 50),
                     continuation: data.continuationArr || [],
                     uciMove: data.move,
-                    text: `Stockfish (hloubka ${data.depth || localStorage.getItem('chessApiDepth') || 16})`
+                    text: `Stockfish (hloubka ${data.depth || this.fallbackDepth})`
                 });
             }
         } catch (error) {
