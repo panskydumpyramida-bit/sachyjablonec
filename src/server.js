@@ -454,6 +454,23 @@ app.post('/api/settings', authMiddleware, async (req, res) => {
     }
 });
 
+// Public setting endpoint (no auth) for chess-api depth
+app.get('/api/settings/public/:key', async (req, res) => {
+    const { key } = req.params;
+    // Only allow specific public keys
+    const publicKeys = ['chessApiDepth'];
+    if (!publicKeys.includes(key)) {
+        return res.status(403).json({ error: 'This setting is not public' });
+    }
+
+    try {
+        const setting = await prisma.systemSetting.findUnique({ where: { key } });
+        res.json({ value: setting ? setting.value : null });
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
 
 
 

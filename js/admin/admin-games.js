@@ -146,23 +146,54 @@ window.previewGamePgn = previewGamePgn;
 window.closePgnPreview = closePgnPreview;
 window.copyToClipboard = copyToClipboard;
 
-// Chess API Depth Setting
-function initChessApiDepthSlider() {
+// Chess API Depth Setting - now uses database via API
+async function initChessApiDepthSlider() {
     const slider = document.getElementById('chessApiDepthSlider');
     const valueDisplay = document.getElementById('chessApiDepthValue');
     if (!slider || !valueDisplay) return;
 
-    // Load saved value
-    const savedDepth = localStorage.getItem('chessApiDepth') || '16';
-    slider.value = savedDepth;
-    valueDisplay.textContent = savedDepth;
+    // Load saved value from API
+    try {
+        const response = await fetch('/api/settings', {
+            headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+        });
+        if (response.ok) {
+            const settings = await response.json();
+            const savedDepth = settings.chessApiDepth || '16';
+            slider.value = savedDepth;
+            valueDisplay.textContent = savedDepth;
+        }
+    } catch (e) {
+        console.warn('Failed to load chess-api depth from server, using default');
+        slider.value = '16';
+        valueDisplay.textContent = '16';
+    }
 }
 
-function updateChessApiDepth(value) {
+async function updateChessApiDepth(value) {
     const valueDisplay = document.getElementById('chessApiDepthValue');
     if (valueDisplay) valueDisplay.textContent = value;
-    localStorage.setItem('chessApiDepth', value);
-    console.log('[Admin] Chess-API depth set to:', value);
+
+    // Save to database via API
+    try {
+        const response = await fetch('/api/settings', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            },
+            body: JSON.stringify({ key: 'chessApiDepth', value: String(value) })
+        });
+        if (response.ok) {
+            console.log('[Admin] Chess-API depth saved to database:', value);
+            showAlert(`Hloubka analýzy nastavena na ${value}`, 'success');
+        } else {
+            throw new Error('Failed to save');
+        }
+    } catch (e) {
+        console.error('[Admin] Failed to save chess-api depth:', e);
+        showAlert('Nepodařilo se uložit nastavení', 'error');
+    }
 }
 
 // Initialize on load
