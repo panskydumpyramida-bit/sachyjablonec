@@ -286,6 +286,16 @@
     .gv2-board-area {
         gap: 0;
     }
+
+    /* Narrower eval bar on mobile, no text */
+    .gv2-eval-bar {
+        width: 8px !important;
+        min-width: 8px !important;
+    }
+
+    .gv2-eval-text {
+        display: none !important;
+    }
 }
 
 /* Board Area with Eval Bar */
