@@ -2045,6 +2045,18 @@ class GameViewer2 {
         return variations;
     }
 
+    // Hide the variation choice modal
+    hideVariationChoiceModal() {
+        const existing = document.getElementById('gv2-var-modal');
+        if (existing) {
+            existing.remove();
+        }
+        if (this.variationAutoplayTimeout) {
+            clearTimeout(this.variationAutoplayTimeout);
+            this.variationAutoplayTimeout = null;
+        }
+    }
+
     // Show modal to choose between main line and variations
     // withAutoplayTimeout: if true, auto-select main line after 2s and resume autoplay
     showVariationChoiceModal(mainMove, variations, withAutoplayTimeout = false) {

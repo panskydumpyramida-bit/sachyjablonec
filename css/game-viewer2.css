@@ -282,6 +282,10 @@
         max-height: 240px;
         /* Double height (prev 120px) */
     }
+
+    .gv2-board-area {
+        gap: 0;
+    }
 }
 
 /* Board Area with Eval Bar */
