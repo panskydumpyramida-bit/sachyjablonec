@@ -166,8 +166,8 @@
         width: 100%;
         max-width: 95vw;
         /* Fallback */
-        max-width: min(95vw, 60vh);
-        /* Ensure square board fits in height */
+        max-width: min(95vw, 50vh);
+        /* Ensure square board fits in height (reduced from 60vh) */
         margin: 0 auto;
         /* max-height removed to let width drive height naturally via aspect ratio */
     }
