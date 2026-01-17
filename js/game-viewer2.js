@@ -1435,7 +1435,9 @@ class GameViewer2 {
     }
 
     stepForward() {
-        console.log('[DEBUG stepForward] Called. inVariation:', this.inVariation, 'currentPly:', this.currentPly);
+        // Close variation modal if open (user manually chose to move forward in main line)
+        this.hideVariationChoiceModal();
+        console.log('[DEBUG stepForward] Called. inVariation:', this.currentVariation, 'currentPly:', this.currentPly);
 
         if (this.inVariation && this.currentVariation) {
             console.log('[DEBUG stepForward] In variation mode');
@@ -1542,6 +1544,7 @@ class GameViewer2 {
     }
 
     stepBack() {
+        this.hideVariationChoiceModal();
         if (this.inVariation && this.currentVariation) {
             const varData = this.allVariations[this.currentVariation];
             const currentFen = this.game.fen();
