@@ -410,39 +410,52 @@ export const importGames = async (req, res) => {
             return res.status(400).json({ error: 'PGN text required' });
         }
 
-        // Dynamic import of pgn-parser
-        const { parse } = await import('pgn-parser');
+        // Use chess.js for more robust parsing
+        const { Chess } = await import('chess.js');
 
-        // Parse PGN
-        let games;
-        try {
-            games = parse(pgn);
-        } catch (e) {
-            return res.status(400).json({ error: 'Invalid PGN format', details: e.message });
-        }
+        // Split PGN into individual games
+        // This regex looks for [Event "..."] which typically starts a PGN game
+        // We add a newline to ensure we catch the first one if it doesn't have a newline before it
+        const rawGames = ('\n' + pgn).split(/\n(?=\[Event\s+)/g).filter(g => g.trim().length > 0);
 
-        if (!games || games.length === 0) {
-            return res.status(400).json({ error: 'No games found in PGN' });
+        if (rawGames.length === 0) {
+            // Try fallback - maybe it doesn't have Event tags?
+            // If it's just one game without headers or just moves, try parsing it as one
+            rawGames.push(pgn);
         }
 
         let imported = 0;
         let duplicates = 0;
         let failed = 0;
 
-        for (const game of games) {
-            const getHeader = (name) => {
-                const h = game.headers?.find(h => h.name === name);
-                return h ? h.value : null;
-            };
+        for (const rawGame of rawGames) {
+            const chess = new Chess();
 
-            const whitePlayer = getHeader('White');
-            const blackPlayer = getHeader('Black');
-            const result = getHeader('Result') || '*';
-            const event = getHeader('Event');
-            const dateStr = getHeader('Date');
+            try {
+                // Load PGN - heuristics to clean up potentially messy input
+                // chess.js 1.0+ uses camelCase methods and throws on error
+                if (!rawGame.trim()) continue;
 
-            // Skip if missing required fields
-            if (!whitePlayer || !blackPlayer) {
+                // Attempt to load - chess.js 1.0+ throws on invalid PGN
+                chess.loadPgn(rawGame);
+
+            } catch (e) {
+                // chess.js 1.0+ throws exceptions for invalid PGN
+                console.log('[ChessDB Import] Parse failed for game:', e.message);
+                failed++;
+                continue;
+            }
+
+            const header = chess.header();
+            const whitePlayer = header['White'] || '?';
+            const blackPlayer = header['Black'] || '?';
+            const result = header['Result'] || '*';
+            const event = header['Event'] || '?';
+            const dateStr = header['Date'];
+
+            // Skip if crucial info matches emptiness (game skeleton)
+            if (whitePlayer === '?' && blackPlayer === '?' && result === '*') {
+                // Likely empty or failed parse resulting in default object
                 failed++;
                 continue;
             }
@@ -452,7 +465,9 @@ export const importGames = async (req, res) => {
             if (dateStr && !dateStr.includes('?')) {
                 try {
                     const [y, m, d] = dateStr.split('.');
-                    date = new Date(parseInt(y), parseInt(m) - 1, parseInt(d));
+                    if (y && m && d) {
+                        date = new Date(parseInt(y), parseInt(m) - 1, parseInt(d));
+                    }
                 } catch (e) { }
             }
 
@@ -460,10 +475,18 @@ export const importGames = async (req, res) => {
             const existingWhere = {
                 whitePlayer: { equals: whitePlayer, mode: 'insensitive' },
                 blackPlayer: { equals: blackPlayer, mode: 'insensitive' },
-                result
+                result: result
             };
-            if (event) existingWhere.event = event;
+
+            // Add date to duplicate check only if we have a valid date
+            // otherwise we might have many games without dates
             if (date) existingWhere.date = date;
+
+            // Optional: check event if present
+            if (event && event !== '?') existingWhere.event = event;
+
+            // Optional: check exact moves count or string if we want strict deduplication
+            // For now, metadata is usually enough
 
             const existing = await prisma.chessGame.findFirst({ where: existingWhere });
 
@@ -472,23 +495,32 @@ export const importGames = async (req, res) => {
                 continue;
             }
 
-            // Extract moves
-            const moves = game.moves?.map(m => m.move).filter(Boolean).join(' ') || '';
+            // Extract moves: chess.pgn() reconstructs it, but we can also use history
+            // history() gives array of moves. pgn() gives full string with headers.
+            // We want just the movetext usually, or headers cleaned.
+            // Let's use chess.history() to rebuild a clean move string
+            const history = chess.history();
+            const moves = history.join(' ');
+
+            // Or better, use cleaned PGN from chess.js if we want to store full PGN including comments?
+            // chess.js load_pgn parses comments too.
+            // But our DB schema stores `moves` as string.
+            // Let's stick to simple move string for now to match previous logic
 
             // Insert new game
             await prisma.chessGame.create({
                 data: {
-                    event,
-                    site: getHeader('Site'),
+                    event: event !== '?' ? event : null,
+                    site: header['Site'] && header['Site'] !== '?' ? header['Site'] : null,
                     date,
-                    round: getHeader('Round'),
+                    round: header['Round'] && header['Round'] !== '?' ? header['Round'] : null,
                     whitePlayer,
                     blackPlayer,
                     result,
-                    eco: getHeader('ECO'),
-                    whiteElo: parseInt(getHeader('WhiteElo')) || null,
-                    blackElo: parseInt(getHeader('BlackElo')) || null,
-                    plyCount: parseInt(getHeader('PlyCount')) || null,
+                    eco: header['ECO'],
+                    whiteElo: parseInt(header['WhiteElo']) || null,
+                    blackElo: parseInt(header['BlackElo']) || null,
+                    plyCount: history.length,
                     moves
                 }
             });
@@ -497,7 +529,7 @@ export const importGames = async (req, res) => {
 
         res.json({
             success: true,
-            total: games.length,
+            total: rawGames.length,
             imported,
             duplicates,
             failed

@@ -11,6 +11,523 @@ const CLUB_MEMBERS = [
     { id: 'radim', keywords: ['radim', 'podrazky'], img: 'images/management_radim.png' }
 ];
 
+/**
+ * Chess Analyzer - Lichess Cloud Evaluation API
+ * Uses cached Stockfish evaluations from Lichess (~7 million positions)
+ * Falls back gracefully if position not in database
+ */
+class ChessAnalyzer {
+    constructor(onUpdate) {
+        this.onUpdate = onUpdate; // Callback for UI updates
+        this.isAnalyzing = false;
+        this.currentRequestId = null;
+        this.debounceTimer = null;
+        this.apiUrl = 'https://lichess.org/api/cloud-eval';
+    }
+
+    connect() {
+        // REST API doesn't need connection
+        return Promise.resolve();
+    }
+
+    disconnect() {
+        this.stopAnalysis();
+    }
+
+    analyze(fen) {
+        // Debounce rapid requests (e.g., when clicking through moves quickly)
+        if (this.debounceTimer) {
+            clearTimeout(this.debounceTimer);
+        }
+
+        this.debounceTimer = setTimeout(() => {
+            this._doAnalysis(fen);
+        }, 200); // 200ms debounce
+    }
+
+    async _doAnalysis(fen) {
+        const requestId = Math.random().toString(36).substring(7);
+        this.currentRequestId = requestId;
+        this.isAnalyzing = true;
+
+        try {
+            // Lichess cloud-eval uses GET with FEN as query param
+            // multiPv=3 to get up to 3 variations
+            const url = `${this.apiUrl}?fen=${encodeURIComponent(fen)}&multiPv=3`;
+
+            const response = await fetch(url, {
+                method: 'GET',
+                headers: {
+                    'Accept': 'application/json'
+                }
+            });
+
+            // Check if this request is still current
+            if (this.currentRequestId !== requestId) {
+                return;
+            }
+
+            if (response.status === 404) {
+                // Position not in Lichess cloud database - fallback to chess-api.com
+                console.log('[ChessAnalyzer] Position not in Lichess cloud, trying chess-api.com fallback');
+                await this._fallbackToChessApi(fen, requestId);
+                return;
+            }
+
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}`);
+            }
+
+            const data = await response.json();
+
+            // Lichess response format:
+            // { fen, knodes, depth, pvs: [{ moves: "e2e4 e7e5 ...", cp: 35 }, ...] }
+
+            if (this.onUpdate && this.currentRequestId === requestId) {
+                const mainPv = data.pvs && data.pvs[0];
+
+                // Extract evaluation (cp = centipawns, mate = mate in N)
+                let evalScore = null;
+                let mateScore = null;
+
+                if (mainPv) {
+                    if (mainPv.mate !== undefined) {
+                        mateScore = mainPv.mate;
+                    } else if (mainPv.cp !== undefined) {
+                        evalScore = mainPv.cp / 100; // Convert centipawns to pawns
+                    }
+                }
+
+                // Parse continuation moves (UCI format: "e2e4 e7e5 g1f3")
+                let continuation = [];
+                if (mainPv && mainPv.moves) {
+                    continuation = mainPv.moves.split(' ').slice(1); // Skip first move (best move)
+                }
+
+                // First move is the best move
+                const bestMoveUci = mainPv && mainPv.moves ? mainPv.moves.split(' ')[0] : null;
+
+                this.onUpdate({
+                    type: 'bestmove',
+                    eval: evalScore,
+                    mate: mateScore,
+                    depth: data.depth || 0,
+                    fen: fen, // Return original FEN for sync check
+                    winChance: evalScore !== null ? this._evalToWinChance(evalScore) : 50,
+                    continuation: continuation,
+                    uciMove: bestMoveUci,
+                    text: `Lichess Cloud (${data.knodes ? Math.round(data.knodes / 1000) + 'M nodes' : ''})`
+                });
+            }
+
+        } catch (error) {
+            console.error('[ChessAnalyzer] Lichess API Error:', error);
+            // Show error state
+            if (this.onUpdate && this.currentRequestId === requestId) {
+                this.onUpdate({
+                    type: 'error',
+                    eval: null,
+                    mate: null,
+                    depth: 0,
+                    fen: fen,
+                    text: 'Chyba při načítání'
+                });
+            }
+        } finally {
+            this.isAnalyzing = false;
+        }
+    }
+
+    // Convert evaluation to win chance percentage
+    _evalToWinChance(eval_) {
+        // Sigmoid function: 50 + 50 * tanh(eval / 4)
+        return 50 + 50 * Math.tanh(eval_ / 4);
+    }
+
+    // Fallback to chess-api.com for positions not in Lichess cloud
+    async _fallbackToChessApi(fen, requestId) {
+        try {
+            const response = await fetch('https://chess-api.com/v1', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    fen: fen,
+                    depth: parseInt(localStorage.getItem('chessApiDepth') || '16', 10)
+                })
+            });
+
+            if (this.currentRequestId !== requestId) return;
+
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}`);
+            }
+
+            const data = await response.json();
+
+            // Check for rate limit error
+            if (data.error === 'HIGH_USAGE') {
+                if (this.onUpdate) {
+                    this.onUpdate({
+                        type: 'info',
+                        eval: null,
+                        mate: null,
+                        depth: 0,
+                        fen: fen,
+                        text: 'API limit (zkuste později)'
+                    });
+                }
+                return;
+            }
+
+            if (this.onUpdate && this.currentRequestId === requestId) {
+                this.onUpdate({
+                    type: 'bestmove',
+                    eval: data.eval,
+                    mate: data.mate,
+                    depth: data.depth,
+                    fen: fen,
+                    winChance: data.winChance || (data.eval !== null ? this._evalToWinChance(data.eval) : 50),
+                    continuation: data.continuationArr || [],
+                    uciMove: data.move,
+                    text: `Stockfish (hloubka ${data.depth || localStorage.getItem('chessApiDepth') || 16})`
+                });
+            }
+        } catch (error) {
+            console.error('[ChessAnalyzer] chess-api.com fallback error:', error);
+            if (this.onUpdate && this.currentRequestId === requestId) {
+                this.onUpdate({
+                    type: 'info',
+                    eval: null,
+                    mate: null,
+                    depth: 0,
+                    fen: fen,
+                    text: 'Pozice není k dispozici'
+                });
+            }
+        }
+    }
+
+    stopAnalysis() {
+        this.currentRequestId = null;
+        this.isAnalyzing = false;
+        if (this.debounceTimer) {
+            clearTimeout(this.debounceTimer);
+            this.debounceTimer = null;
+        }
+    }
+}
+
+/**
+ * ChessEvalDisplay - Global utility for eval bar rendering
+ * Reusable across different pages (partie.html, chess-database.html, etc.)
+ */
+const ChessEvalDisplay = {
+    /**
+     * Generate HTML for eval bar container
+     * @param {string} prefix - ID prefix for elements (e.g., 'gv2', 'db')
+     * @returns {string} HTML string
+     */
+    createHTML(prefix = 'gv2') {
+        return `
+            <div id="${prefix}EvalBar" class="gv2-eval-bar">
+                <div class="gv2-eval-fill" id="${prefix}EvalFill" style="height: 50%;"></div>
+                <span class="gv2-eval-text" id="${prefix}EvalText">0.0</span>
+            </div>
+        `;
+    },
+
+    /**
+     * Generate HTML for analysis info (best move + PV line)
+     * @param {string} prefix - ID prefix for elements
+     * @returns {string} HTML string
+     */
+    createAnalysisInfoHTML(prefix = 'gv2') {
+        return `
+            <div id="${prefix}AnalysisInfo" class="gv2-analysis-info">
+                <span class="gv2-best-move" id="${prefix}BestMove">—</span>
+                <div class="gv2-pv-line" id="${prefix}PvLine"></div>
+            </div>
+        `;
+    },
+
+    /**
+     * Update eval bar display based on analysis data
+     * @param {string} prefix - ID prefix for elements
+     * @param {object} data - Analysis data from ChessAnalyzer
+     */
+    update(prefix, data) {
+        const evalFill = document.getElementById(`${prefix}EvalFill`);
+        const evalText = document.getElementById(`${prefix}EvalText`);
+        const bestMove = document.getElementById(`${prefix}BestMove`);
+        const pvLine = document.getElementById(`${prefix}PvLine`);
+
+        if (!evalFill || !evalText) return;
+
+        // Handle info messages (no eval)
+        if (data.type === 'info' || (data.eval === null && data.mate === null && data.mate === undefined)) {
+            evalText.textContent = data.text || '—';
+            if (bestMove) bestMove.textContent = data.text || '—';
+            if (pvLine) pvLine.textContent = '';
+            return;
+        }
+
+        // Calculate eval bar percentage
+        let percentage;
+        let displayText;
+
+        if (data.mate !== null && data.mate !== undefined) {
+            percentage = data.mate > 0 ? 100 : 0;
+            displayText = `M${Math.abs(data.mate)}`;
+        } else {
+            const eval_ = data.eval || 0;
+            percentage = data.winChance || (50 + 50 * Math.tanh(eval_ / 4));
+            displayText = (eval_ >= 0 ? '+' : '') + eval_.toFixed(1);
+        }
+
+        // White fill grows from bottom - higher percentage = more white (white winning)
+        evalFill.style.height = `${percentage}%`;
+        evalText.textContent = displayText;
+
+        // First line: evaluation info with depth (like partie.html)
+        if (bestMove) {
+            const depthText = data.depth ? `Hloubka ${data.depth}` : '';
+            const sourceText = data.text || '';
+            if (depthText || sourceText) {
+                bestMove.innerHTML = `<strong>${displayText}</strong> <span style="color: var(--text-muted); font-size: 0.85em;">${sourceText}</span> <span style="background: rgba(255,255,255,0.1); padding: 0.15rem 0.4rem; border-radius: 3px; font-size: 0.75em; color: var(--text-muted);">${depthText}</span>`;
+            } else {
+                bestMove.innerHTML = `<strong>${displayText}</strong>`;
+            }
+        }
+
+        // Second line: best move + continuation with move numbers
+        if (pvLine && data.fen) {
+            // Include best move in the PV line
+            const allMoves = data.uciMove ? [data.uciMove, ...(data.continuation || []).slice(0, 5)] : (data.continuation || []).slice(0, 6);
+            if (allMoves.length > 0) {
+                const sanMoves = this.uciLineToPvSanFromStart(allMoves, data.fen);
+                pvLine.innerHTML = sanMoves;
+            } else {
+                pvLine.textContent = '';
+            }
+        } else if (pvLine && data.continuation && data.continuation.length > 0) {
+            pvLine.textContent = data.continuation.slice(0, 6).join(' ');
+        } else if (pvLine) {
+            pvLine.textContent = '';
+        }
+    },
+
+    /**
+     * Convert UCI move to SAN using chess.js
+     * @param {string} uci - UCI move (e.g., "e2e4", "g8f6")
+     * @param {string} fen - Current FEN position
+     * @returns {string} SAN move (e.g., "e4", "Nf6")
+     */
+    uciToSan(uci, fen) {
+        if (!uci || !fen || typeof Chess === 'undefined') return uci;
+
+        try {
+            const chess = new Chess(fen);
+            const from = uci.slice(0, 2);
+            const to = uci.slice(2, 4);
+            const promotion = uci.length > 4 ? uci[4] : undefined;
+
+            const move = chess.move({ from, to, promotion });
+            return move ? move.san : uci;
+        } catch (e) {
+            return uci;
+        }
+    },
+
+    /**
+     * Convert a line of UCI moves to SAN with figurine notation and move numbers
+     * Starting from the given FEN (no first move pre-applied)
+     * @param {string[]} uciMoves - Array of UCI moves (including best move as first)
+     * @param {string} startFen - Starting FEN
+     * @returns {string} HTML string with formatted moves
+     */
+    uciLineToPvSanFromStart(uciMoves, startFen) {
+        if (!startFen || typeof Chess === 'undefined' || !uciMoves || uciMoves.length === 0) {
+            return uciMoves ? uciMoves.join(' ') : '';
+        }
+
+        try {
+            const chess = new Chess(startFen);
+
+            // Get starting move number and turn from FEN
+            const fenParts = startFen.split(' ');
+            let fullmoveNumber = parseInt(fenParts[5]) || 1;
+            let isBlackToMove = fenParts[1] === 'b';
+
+            // Convert all moves with move numbers
+            const formattedMoves = [];
+            let needMoveNumber = true;
+
+            for (const uci of uciMoves) {
+                const from = uci.slice(0, 2);
+                const to = uci.slice(2, 4);
+                const promotion = uci.length > 4 ? uci[4] : undefined;
+
+                const move = chess.move({ from, to, promotion });
+                if (move) {
+                    let moveStr = '';
+
+                    if (!isBlackToMove) {
+                        // White's move: "1. e4"
+                        moveStr = `${fullmoveNumber}. ${this.formatSan(move.san)}`;
+                        needMoveNumber = false;
+                    } else {
+                        // Black's move
+                        if (needMoveNumber) {
+                            // First move in line is black: "1... e5"
+                            moveStr = `${fullmoveNumber}... ${this.formatSan(move.san)}`;
+                        } else {
+                            // Normal black move (after white): just the move
+                            moveStr = this.formatSan(move.san);
+                        }
+                        fullmoveNumber++;
+                        needMoveNumber = true;
+                    }
+
+                    formattedMoves.push(moveStr);
+                    isBlackToMove = !isBlackToMove;
+                } else {
+                    break;
+                }
+            }
+
+            return formattedMoves.join(' ');
+        } catch (e) {
+            return uciMoves.join(' ');
+        }
+    },
+
+    /**
+     * Convert a line of UCI moves to SAN with figurine notation and move numbers
+     * @param {string[]} uciMoves - Array of UCI moves
+     * @param {string} startFen - Starting FEN
+     * @param {string} firstMove - First move (best move) already played
+     * @returns {string} HTML string with formatted moves
+     */
+    uciLineToPvSan(uciMoves, startFen, firstMove) {
+        if (!startFen || typeof Chess === 'undefined') {
+            return uciMoves.join(' ');
+        }
+
+        try {
+            const chess = new Chess(startFen);
+
+            // Get starting move number and turn from FEN
+            const fenParts = startFen.split(' ');
+            let fullmoveNumber = parseInt(fenParts[5]) || 1;
+            let isBlackToMove = fenParts[1] === 'b';
+
+            // Apply first move if provided
+            if (firstMove) {
+                const from = firstMove.slice(0, 2);
+                const to = firstMove.slice(2, 4);
+                const promotion = firstMove.length > 4 ? firstMove[4] : undefined;
+                const move = chess.move({ from, to, promotion });
+                if (move) {
+                    if (!isBlackToMove) {
+                        fullmoveNumber++;
+                    }
+                    isBlackToMove = !isBlackToMove;
+                }
+            }
+
+            // Convert continuation moves with move numbers
+            const formattedMoves = [];
+            let needMoveNumber = true;
+
+            for (const uci of uciMoves) {
+                const from = uci.slice(0, 2);
+                const to = uci.slice(2, 4);
+                const promotion = uci.length > 4 ? uci[4] : undefined;
+
+                const move = chess.move({ from, to, promotion });
+                if (move) {
+                    let moveStr = '';
+
+                    if (!isBlackToMove) {
+                        // White's move: "1. e4"
+                        moveStr = `${fullmoveNumber}. ${this.formatSan(move.san)}`;
+                        needMoveNumber = false;
+                    } else {
+                        // Black's move
+                        if (needMoveNumber) {
+                            // First move in line is black: "1... e5"
+                            moveStr = `${fullmoveNumber}... ${this.formatSan(move.san)}`;
+                        } else {
+                            // Normal black move (after white): just the move
+                            moveStr = this.formatSan(move.san);
+                        }
+                        fullmoveNumber++;
+                        needMoveNumber = true;
+                    }
+
+                    formattedMoves.push(moveStr);
+                    isBlackToMove = !isBlackToMove;
+                } else {
+                    break;
+                }
+            }
+
+            return formattedMoves.join(' ');
+        } catch (e) {
+            return uciMoves.join(' ');
+        }
+    },
+
+    /**
+     * Format SAN move with figurine notation (Font Awesome icons)
+     * @param {string} san - SAN move (e.g., "Nf6", "Bxe5")
+     * @returns {string} HTML with piece icons
+     */
+    formatSan(san) {
+        if (!san) return san;
+
+        const pieceMap = {
+            'K': '<i class="fa-solid fa-chess-king"></i>',
+            'Q': '<i class="fa-solid fa-chess-queen"></i>',
+            'R': '<i class="fa-solid fa-chess-rook"></i>',
+            'B': '<i class="fa-solid fa-chess-bishop"></i>',
+            'N': '<i class="fa-solid fa-chess-knight"></i>'
+        };
+
+        // Replace piece letter at start of move
+        const firstChar = san[0];
+        if (pieceMap[firstChar]) {
+            return pieceMap[firstChar] + san.slice(1);
+        }
+
+        // Handle castling
+        if (san === 'O-O' || san === 'O-O-O') {
+            return san;
+        }
+
+        return san;
+    },
+
+    /**
+     * Clear/reset the eval display
+     * @param {string} prefix - ID prefix for elements
+     */
+    clear(prefix) {
+        const evalFill = document.getElementById(`${prefix}EvalFill`);
+        const evalText = document.getElementById(`${prefix}EvalText`);
+        const bestMove = document.getElementById(`${prefix}BestMove`);
+        const pvLine = document.getElementById(`${prefix}PvLine`);
+
+        if (evalFill) evalFill.style.height = '50%';
+        if (evalText) evalText.textContent = '—';
+        if (bestMove) bestMove.textContent = '—';
+        if (pvLine) pvLine.textContent = '';
+    }
+};
+
+// Make ChessEvalDisplay globally available
+window.ChessEvalDisplay = ChessEvalDisplay;
+
 class GameViewer2 {
     constructor() {
         this.gamesData = [];
@@ -28,6 +545,14 @@ class GameViewer2 {
         this.inVariation = false;
         this.currentVariation = null;
         this.variationPly = 0;
+
+        // Stockfish analysis
+        this.analyzer = new ChessAnalyzer((data) => this.handleAnalysisUpdate(data));
+        this.analysisEnabled = false;
+        this.lastEval = null;
+
+        // Modal cooldown to prevent re-showing after selection
+        this.modalCooldown = false;
 
         this.bindEvents();
     }
@@ -69,6 +594,24 @@ class GameViewer2 {
             if (nName.includes(lastName)) return m.img;
         }
         return null;
+    }
+
+    formatSan(san) {
+        if (!san) return '';
+
+        // Use Font Awesome icons instead of Unicode for better visibility
+        // Defined inline helper
+        const icon = (cls) => `<i class="fa-solid ${cls}"></i>`;
+
+        return san.replace(/^N/, icon('fa-chess-knight'))
+            .replace(/^B/, icon('fa-chess-bishop'))
+            .replace(/^R/, icon('fa-chess-rook'))
+            .replace(/^Q/, icon('fa-chess-queen'))
+            .replace(/^K/, icon('fa-chess-king'))
+            .replace('=N', '=' + icon('fa-chess-knight'))
+            .replace('=B', '=' + icon('fa-chess-bishop'))
+            .replace('=R', '=' + icon('fa-chess-rook'))
+            .replace('=Q', '=' + icon('fa-chess-queen'));
     }
 
     // ... (rest of methods)
@@ -142,8 +685,21 @@ class GameViewer2 {
                 </div>
                 <div class="gv2-content">
                     <div class="gv2-board-section">
-                        <div class="gv2-board-wrapper">
-                            <div id="gv2-board"></div>
+                        <div class="gv2-board-area">
+                            <div class="gv2-eval-bar" id="gv2-eval-bar" style="display: none;">
+                                <div class="gv2-eval-fill" id="gv2-eval-fill"></div>
+                                <div class="gv2-eval-text" id="gv2-eval-text">0.0</div>
+                            </div>
+                            <div class="gv2-board-wrapper">
+                                <div id="gv2-board"></div>
+                            </div>
+                        </div>
+                        <div class="gv2-analysis-info" id="gv2-analysis-info" style="display: none;">
+                            <div class="gv2-analysis-row">
+                                <span class="gv2-best-move" id="gv2-best-move"></span>
+                                <span class="gv2-depth" id="gv2-depth"></span>
+                            </div>
+                            <div class="gv2-pv-line" id="gv2-pv-line"></div>
                         </div>
                         <div class="gv2-controls">
                             <button class="gv2-btn" onclick="gameViewer2.goToStart()" title="Start"><i class="fa-solid fa-backward-fast"></i></button>
@@ -152,6 +708,9 @@ class GameViewer2 {
                             <button class="gv2-btn" onclick="gameViewer2.stepForward()" title="Vpřed"><i class="fa-solid fa-forward-step"></i></button>
                             <button class="gv2-btn" onclick="gameViewer2.goToEnd()" title="Konec"><i class="fa-solid fa-forward-fast"></i></button>
                             <button class="gv2-btn" onclick="gameViewer2.flipBoard()" title="Otočit"><i class="fa-solid fa-retweet"></i></button>
+                            <button class="gv2-btn gv2-btn-analysis" id="gv2-analysis-btn" onclick="gameViewer2.toggleAnalysis()" title="Analýza Stockfish">
+                                <i class="fa-solid fa-microchip" id="gv2-analysis-icon"></i>
+                            </button>
                         </div>
                     </div>
                     <div class="gv2-info-panel">
@@ -174,6 +733,7 @@ class GameViewer2 {
         // Initialize Chessboard
         if (!this.board) {
             const boardEl = document.getElementById('gv2-board');
+            this.boardEl = boardEl; // Store reference for highlights
             console.log('[GV2 Init] Initializing board. Element found:', boardEl);
 
             if (typeof Chessboard === 'function') {
@@ -182,9 +742,9 @@ class GameViewer2 {
                         position: 'start',
                         draggable: false,
                         pieceTheme: 'https://chessboardjs.com/img/chesspieces/wikipedia/{piece}.png',
-                        moveSpeed: 500,
-                        appearSpeed: 300,
-                        snapSpeed: 100
+                        moveSpeed: 200,
+                        appearSpeed: 150,
+                        snapSpeed: 50
                     });
                     console.log('[GV2 Init] Chessboard instance created:', this.board);
                 } catch (e) {
@@ -367,19 +927,13 @@ class GameViewer2 {
         // We need to parse valid PGN tokens and try to match them to our main line history
         this.renderMoveText(pgnText, history);
 
-        // Update Board to Start
-        if (this.board) {
-            this.board.position('start');
-        } else {
-            console.error('[GV2 Runtime] Board not initialized in parseAndLoadPGN! Attempting to recover...');
-            this.setupCombinedDOM(); // Try to init again?
-            if (this.board) {
-                this.board.position('start');
-            }
+        // Ensure board is ready
+        if (!this.board) {
+            this.setupCombinedDOM();
         }
 
-        // Trigger generic update to ensure UI is in sync
-        this.updateActiveMove();
+        // Reset to start (updates board, internal state, and UI)
+        setTimeout(() => this.jumpTo(0), 10);
     }
 
     stripVariations(pgn) {
@@ -669,7 +1223,7 @@ class GameViewer2 {
                     if (move) {
                         const fen = tempGame.fen();
                         const moveIdx = this.allVariations[varId]?.moves?.findIndex(m => m.san === move.san && m.fen === fen) ?? -1;
-                        html += `<span class="gv2-var-move" data-var="${varId}" data-fen="${fen}">${move.san}</span>`;
+                        html += `<span class="gv2-var-move" data-var="${varId}" data-fen="${fen}">${this.formatSan(move.san)}</span>`;
                         continue;
                     }
                 } catch (e) {
@@ -690,11 +1244,44 @@ class GameViewer2 {
         this.inVariation = true;
         this.currentVariation = varId;
         this.board.position(fen, true); // true = animate
-        this.game.load(fen); // Sync internal game state for stepForward/stepBack
+
+        // Sync internal game state. Robust load.
+        this.safeLoad(fen);
 
         // Update UI to show we're in a variation
         this.updateVariationIndicator(varId);
         this.updateActiveVariationMove(varId, fen);
+    }
+
+    // Safely load FEN into this.game, creating new instance if needed
+    // logic: try load() -> try normalized EP -> new Chess()
+    safeLoad(fen) {
+        if (this.game.load(fen)) return true;
+
+        console.warn('[safeLoad] Strict load failed for:', fen);
+
+        // Try stripping En Passant target if no capture possibilities?
+        // Simple normalization: if part[3] != '-', try '-'
+        const parts = fen.split(' ');
+        if (parts.length >= 4 && parts[3] !== '-') {
+            const safeParts = [...parts];
+            safeParts[3] = '-';
+            const safeFen = safeParts.join(' ');
+            if (this.game.load(safeFen)) {
+                console.log('[safeLoad] Loaded with normalized EP:', safeFen);
+                return true;
+            }
+        }
+
+        // Fallback: new instance (resets history, but keeps position)
+        try {
+            this.game = new Chess(fen);
+            console.log('[safeLoad] Forced new Chess instance');
+            return true;
+        } catch (e) {
+            console.error('[safeLoad] Critical failure:', e);
+            return false;
+        }
     }
 
     // Exit variation and return to main line
@@ -763,7 +1350,7 @@ class GameViewer2 {
 
             if (nextMove && (cleanPart === nextMove.san || cleanPart === nextMove.lan)) {
                 const ply = this.nextMainLinePlyToMatch + 1;
-                html += `<span class="gv2-move" data-ply="${ply}" onclick="gameViewer2.jumpTo(${ply})">${part}</span>`;
+                html += `<span class="gv2-move" data-ply="${ply}" onclick="gameViewer2.jumpTo(${ply})">${this.formatSan(part)}</span>`;
 
                 this.lastMatchedPly = ply; // Track this ply for subsequent annotations
                 this.nextMainLinePlyToMatch++;
@@ -799,7 +1386,11 @@ class GameViewer2 {
 
     // --- Controls ---
     jumpTo(ply) {
-        if (ply < 0 || ply >= this.mainLinePlies.length) return;
+        console.log('[DEBUG jumpTo] Called with ply:', ply, 'mainLinePlies.length:', this.mainLinePlies.length);
+        if (ply < 0 || ply >= this.mainLinePlies.length) {
+            console.log('[DEBUG jumpTo] Out of bounds, returning');
+            return;
+        }
 
         // Reset manual bubble hide when changing position
         this.bubbleManuallyHidden = false;
@@ -812,13 +1403,24 @@ class GameViewer2 {
         }
 
         this.currentPly = ply;
-        this.board.position(this.mainLinePlies[ply].fen, true); // true = animate
-        this.game.load(this.mainLinePlies[ply].fen); // Sync internal game state
+        const targetFen = this.mainLinePlies[ply].fen;
+        console.log('[DEBUG jumpTo] Setting position to FEN:', targetFen);
+        console.log('[DEBUG jumpTo] Board object:', this.board);
+        console.log('[DEBUG jumpTo] Calling board.position(fen, true)');
+
+        this.board.position(targetFen, true); // true = animate
+        console.log('[DEBUG jumpTo] board.position() returned');
+
+        this.safeLoad(targetFen);
         this.updateActiveMove();
+        console.log('[DEBUG jumpTo] Complete');
     }
 
     stepForward() {
+        console.log('[DEBUG stepForward] Called. inVariation:', this.inVariation, 'currentPly:', this.currentPly);
+
         if (this.inVariation && this.currentVariation) {
+            console.log('[DEBUG stepForward] In variation mode');
             const varData = this.allVariations[this.currentVariation];
             const currentFen = this.game.fen();
 
@@ -833,54 +1435,89 @@ class GameViewer2 {
                 // We need the SAN or from-to. nextMove has .move object
                 if (nextMove.move && nextMove.move.from && nextMove.move.to) {
                     const moveStr = nextMove.move.from + '-' + nextMove.move.to;
-                    this.board.move(moveStr);
-                    // Manually sync internal state after animation trigger
-                    // But we need to ensure jumpToVariation sets the state correctly
-                    // jumpToVariation does board.position.
-                    // Let's rely on jumpToVariation for state consistency, but maybe optimization is needed?
-                    // board.move() updates the board.
-                    this.jumpToVariation(this.currentVariation, nextMove.fen);
+                    console.log('[DEBUG stepForward] Variation: calling board.move with:', moveStr);
+                    this.board.move(moveStr); // Triggers animation
+
+                    // Wait for animation to complete before updating internal state (200ms moveSpeed + buffer)
+                    const varId = this.currentVariation;
+                    const targetFen = nextMove.fen;
+                    setTimeout(() => {
+                        // Update internal state AFTER animation completes
+                        this.inVariation = true;
+                        this.currentVariation = varId;
+                        this.safeLoad(targetFen);
+                        this.updateVariationIndicator(varId);
+                        this.updateActiveVariationMove(varId, targetFen);
+                    }, 250);
                 } else {
+                    console.log('[DEBUG stepForward] Variation: no from/to, using jumpToVariation');
                     this.jumpToVariation(this.currentVariation, nextMove.fen);
                 }
             } else {
                 // End of variation
+                console.log('[DEBUG stepForward] End of variation reached');
                 this.toggleAutoplay(false);
             }
         } else {
             // Main line
+            console.log('[DEBUG stepForward] Main line. currentPly:', this.currentPly, 'total:', this.mainLinePlies.length);
+
             if (this.currentPly < this.mainLinePlies.length - 1) {
                 const variations = this.getVariationsAtCurrentPosition();
+                console.log('[DEBUG stepForward] Variations at position:', variations.length);
 
-                if (variations.length > 0) {
+                if (variations.length > 0 && !this.modalCooldown) {
                     const nextMainMove = this.mainLinePlies[this.currentPly + 1]?.move?.san || '?';
-                    this.showVariationChoiceModal(nextMainMove, variations);
+                    console.log('[DEBUG stepForward] Variations at position, nextMainMove:', nextMainMove);
+
+                    // If autoplay is running, show modal but with auto-timeout
+                    if (this.autoplayInterval) {
+                        console.log('[DEBUG stepForward] Autoplay active, showing modal with 2s timeout');
+                        // Pause autoplay temporarily
+                        clearInterval(this.autoplayInterval);
+                        this.autoplayInterval = null;
+
+                        // Show modal with autoplay timeout
+                        this.showVariationChoiceModal(nextMainMove, variations, true);
+                    } else {
+                        // Manual step - show modal without timeout
+                        console.log('[DEBUG stepForward] Showing variation modal for:', nextMainMove);
+                        this.showVariationChoiceModal(nextMainMove, variations, false);
+                    }
                 } else {
                     // Use board.move() for single step to guarantee animation
                     const nextData = this.mainLinePlies[this.currentPly + 1];
+                    console.log('[DEBUG stepForward] nextData:', nextData);
+                    console.log('[DEBUG stepForward] nextData.move:', nextData?.move);
+                    console.log('[DEBUG stepForward] nextData.fen:', nextData?.fen);
 
                     if (nextData && nextData.move && nextData.move.from && nextData.move.to) {
                         const moveStr = nextData.move.from + '-' + nextData.move.to;
+                        console.log('[DEBUG stepForward] Main line: calling board.move with:', moveStr);
 
-                        // Check if board supports move
-                        if (this.board && typeof this.board.move === 'function') {
-                            this.board.move(moveStr); // Triggers animation
+                        // Use board.move() for single piece animation - this SLIDES the piece
+                        // board.position() replaces DOM elements which causes "teleporting"
+                        this.board.move(moveStr);
+                        console.log('[DEBUG stepForward] board.move() called successfully');
 
-                            // Update internal state AFTER animation completes (500ms moveSpeed + buffer)
-                            const nextPly = this.currentPly + 1;
-                            setTimeout(() => {
-                                this.currentPly = nextPly;
-                                this.game.load(this.mainLinePlies[nextPly].fen);
-                                this.updateActiveMove();
-                            }, 550);
-                        } else {
-                            this.jumpTo(this.currentPly + 1);
-                        }
+                        // Update internal state AFTER animation completes (200ms moveSpeed + buffer)
+                        const nextPly = this.currentPly + 1;
+                        const targetFen = nextData.fen;
+                        setTimeout(() => {
+                            console.log('[DEBUG stepForward] Timeout fired, updating state to ply:', nextPly);
+                            this.currentPly = nextPly;
+                            this.safeLoad(targetFen);
+                            // Sync board position silently (no animation) in case of any drift
+                            this.board.position(targetFen, false);
+                            this.updateActiveMove();
+                        }, 250);
                     } else {
+                        console.log('[DEBUG stepForward] No from/to in move data, using jumpTo');
                         this.jumpTo(this.currentPly + 1);
                     }
                 }
             } else {
+                console.log('[DEBUG stepForward] End of main line reached');
                 this.toggleAutoplay(false);
             }
         }
@@ -922,6 +1559,203 @@ class GameViewer2 {
         this.board.flip();
     }
 
+    // --- Stockfish Analysis ---
+    toggleAnalysis() {
+        this.analysisEnabled = !this.analysisEnabled;
+        const btn = document.getElementById('gv2-analysis-btn');
+        const evalBar = document.getElementById('gv2-eval-bar');
+        const analysisInfo = document.getElementById('gv2-analysis-info');
+
+        if (this.analysisEnabled) {
+            btn.classList.add('active');
+            evalBar.style.display = 'flex';
+            analysisInfo.style.display = 'flex';
+
+            // Connect and start analysis
+            this.analyzer.connect().then(() => {
+                this.triggerAnalysis();
+            }).catch(err => {
+                console.error('[Analysis] Failed to connect:', err);
+                this.analysisEnabled = false;
+                btn.classList.remove('active');
+                evalBar.style.display = 'none';
+                analysisInfo.style.display = 'none';
+            });
+        } else {
+            btn.classList.remove('active');
+            evalBar.style.display = 'none';
+            analysisInfo.style.display = 'none';
+            this.analyzer.stopAnalysis();
+        }
+    }
+
+    triggerAnalysis() {
+        if (!this.analysisEnabled) return;
+
+        let currentFen = this.game.fen();
+
+        // Fix: API rejects FEN with EP square if no capture is possible (strict validation)
+        // We replace specific EP squares with '-' to be safe, as chess.js generates them aggressively
+        const parts = currentFen.split(' ');
+        if (parts[3] !== '-') {
+            // Simply remove EP target to ensure analysis works (eval difference is negligible for viewing)
+            parts[3] = '-';
+            currentFen = parts.join(' ');
+        }
+
+        this.analyzer.analyze(currentFen);
+    }
+
+    handleAnalysisUpdate(data) {
+        if (!this.analysisEnabled) return;
+
+        // Prevent race condition: ensure analysis belongs to current position
+        // Compare Board + Turn + Castling + En Passant (first 4 fields)
+        if (data.fen) {
+            const normalizeFen = (fen) => {
+                const parts = fen.split(' ');
+                // Safe check: analysis request strips EP if useless, so we must be lenient
+                // If index 3 is not '-', treat it as '-' for comparison purpose
+                // ACTUALLY: Just stripping it blindly like triggerAnalysis does is safest
+                if (parts[3] !== '-') parts[3] = '-';
+                return parts.slice(0, 4).join(' ');
+            };
+
+            const currentBase = normalizeFen(this.game.fen());
+            const dataBase = normalizeFen(data.fen);
+
+            if (currentBase !== dataBase) {
+                // console.log('Discarding analysis for old/diff position');
+                return;
+            }
+        }
+
+        // Update eval bar
+        this.updateEvalBar(data.eval, data.mate, data.winChance);
+
+        // Update best move display
+        const bestMoveEl = document.getElementById('gv2-best-move');
+        const depthEl = document.getElementById('gv2-depth');
+
+        if (bestMoveEl) {
+            let evalHtml = '';
+            if (data.mate !== null && data.mate !== undefined) {
+                const mVal = data.mate > 0 ? `M${data.mate}` : `M${Math.abs(data.mate)}`;
+                evalHtml = `<span class="gv2-eval-tag">${mVal}</span>`;
+            } else if (data.eval !== null && data.eval !== undefined) {
+                const val = data.eval > 0 ? `+${data.eval.toFixed(1)}` : data.eval.toFixed(1);
+                evalHtml = `<span class="gv2-eval-tag">${val}</span>`;
+            }
+
+            bestMoveEl.innerHTML = `${evalHtml} Stockfish 17`;
+        }
+
+        if (depthEl && data.depth) {
+            depthEl.textContent = `Hloubka ${data.depth}`;
+        }
+
+        // Display principal variation (PV) with Czech notation and move numbers
+        const pvLineEl = document.getElementById('gv2-pv-line');
+        if (pvLineEl) {
+            // Combine best move + continuation for full PV
+            let fullPv = [];
+            if (data.uciMove) fullPv.push(data.uciMove);
+            if (data.continuation && Array.isArray(data.continuation)) {
+                fullPv = fullPv.concat(data.continuation);
+            }
+
+            if (fullPv.length > 0) {
+                try {
+                    const tempGame = new Chess(this.game.fen());
+                    const pvMovesFormatted = [];
+                    let limit = 8; // Show more moves
+
+                    for (const uciMove of fullPv) {
+                        if (limit-- <= 0) break;
+
+                        // Fix: Parse UCI move for chess.js (needs object {from, to, promotion})
+                        const from = uciMove.substring(0, 2);
+                        const to = uciMove.substring(2, 4);
+                        const promotion = uciMove.length > 4 ? uciMove.substring(4, 5) : undefined;
+
+                        const move = tempGame.move({ from, to, promotion }, { sloppy: true });
+                        if (!move) break;
+
+                        let san = move.san;
+
+                        // Use figurine notation
+                        san = this.formatSan(san);
+
+
+                        // Move Number Logic
+                        // Fix: move_number() might not exist in this chess.js version, use FEN parsing
+                        const moveNum = parseInt(tempGame.fen().split(' ').pop());
+                        let moveStr = '';
+
+                        if (tempGame.turn() === 'b') { // White just moved
+                            moveStr = `${moveNum}. ${san}`;
+                        } else { // Black just moved
+                            // If Black just moved, the move number in FEN has already incremented.
+                            // We want the previous number for the notation (e.g. if now 2, Black played 1... e5)
+                            moveStr = pvMovesFormatted.length === 0 ? `${moveNum - 1}... ${san}` : san;
+                        }
+
+                        pvMovesFormatted.push(`<span class="gv2-pv-move">${moveStr}</span>`);
+                    }
+
+                    pvLineEl.innerHTML = pvMovesFormatted.join(' ');
+
+                } catch (e) {
+                    console.error('PV Formatting Error:', e);
+                    // Fallback
+                    pvLineEl.textContent = data.continuation.slice(0, 6).join(' ');
+                }
+            } else {
+                pvLineEl.innerHTML = '';
+            }
+        }
+
+        // Store for potential use
+        this.lastEval = data;
+    }
+
+    updateEvalBar(evaluation, mate, winChance) {
+        const evalFill = document.getElementById('gv2-eval-fill');
+        const evalText = document.getElementById('gv2-eval-text');
+
+        if (!evalFill || !evalText) return;
+
+        let percentage, displayText;
+
+        if (mate !== null && mate !== undefined) {
+            // Mate detected
+            displayText = mate > 0 ? `M${mate}` : `M${Math.abs(mate)}`;
+            percentage = mate > 0 ? 100 : 0;
+            evalFill.classList.add('mate');
+        } else if (evaluation !== null && evaluation !== undefined) {
+            // Normal evaluation
+            displayText = evaluation > 0 ? `+${evaluation.toFixed(1)}` : evaluation.toFixed(1);
+            // Use winChance if available, otherwise calculate from eval
+            if (winChance !== null && winChance !== undefined) {
+                percentage = winChance;
+            } else {
+                // Sigmoid-like mapping: eval to percentage
+                percentage = 50 + 50 * (2 / (1 + Math.exp(-0.4 * evaluation)) - 1);
+            }
+            evalFill.classList.remove('mate');
+        } else {
+            displayText = '0.0';
+            percentage = 50;
+        }
+
+        // Clamp percentage
+        percentage = Math.max(0, Math.min(100, percentage));
+
+        evalFill.style.height = `${percentage}%`;
+        evalText.textContent = displayText; // Update text
+        // Used CSS mix-blend-mode: difference for auto-contrast
+    }
+
     toggleAutoplay(forceState) {
         if (forceState === false || (this.autoplayInterval && forceState !== true)) {
             clearInterval(this.autoplayInterval);
@@ -933,7 +1767,34 @@ class GameViewer2 {
         }
     }
 
+    updateBoardHighlights(move) {
+        if (!this.boardEl) return;
+        // Use jQuery if available for Chessboard.js compatibility
+        const $board = window.$ ? window.$(this.boardEl) : null;
+        if (!$board) return;
+
+        $board.find('.gv2-last-move').removeClass('gv2-last-move');
+
+        if (move) {
+            // Try data-square attribute (standard in newer chessboard.js)
+            let $from = $board.find(`[data-square="${move.from}"]`);
+            let $to = $board.find(`[data-square="${move.to}"]`);
+
+            // Fallback for older versions (class based)
+            if ($from.length === 0) $from = $board.find(`.square-${move.from}`);
+            if ($to.length === 0) $to = $board.find(`.square-${move.to}`);
+
+            $from.addClass('gv2-last-move');
+            $to.addClass('gv2-last-move');
+        }
+    }
+
     updateActiveMove() {
+        // Highlight last move
+        const plyData = this.mainLinePlies && this.mainLinePlies[this.currentPly];
+        const lastMove = (plyData && this.currentPly > 0) ? plyData.move : null;
+        this.updateBoardHighlights(lastMove);
+
         const movesContainer = document.getElementById('gv2-moves');
         document.querySelectorAll('.gv2-move').forEach(el => {
             el.classList.remove('active');
@@ -959,6 +1820,9 @@ class GameViewer2 {
 
         this.updateCommentBubble();
         this.updateNagMarker();
+
+        // Trigger analysis if enabled
+        this.triggerAnalysis();
     }
 
     // List rendering (sidebar)
@@ -1170,22 +2034,36 @@ class GameViewer2 {
     }
 
     // Show modal to choose between main line and variations
-    showVariationChoiceModal(mainMove, variations) {
+    // withAutoplayTimeout: if true, auto-select main line after 2s and resume autoplay
+    showVariationChoiceModal(mainMove, variations, withAutoplayTimeout = false) {
         // Remove existing modal if any
         const existing = document.getElementById('gv2-var-modal');
         if (existing) existing.remove();
 
+        // Clear any existing autoplay timeout
+        if (this.variationAutoplayTimeout) {
+            clearTimeout(this.variationAutoplayTimeout);
+            this.variationAutoplayTimeout = null;
+        }
+
         const modal = document.createElement('div');
         modal.id = 'gv2-var-modal';
         modal.className = 'gv2-var-modal';
+
+        // Add countdown indicator if autoplay mode
+        const countdownHtml = withAutoplayTimeout
+            ? `<div class="gv2-var-countdown" id="gv2-var-countdown">3</div>`
+            : '';
+
         modal.innerHTML = `
             <div class="gv2-var-modal-content">
+                ${countdownHtml}
                 <button class="gv2-var-choice gv2-var-main" data-action="main">
-                    ${mainMove}
+                    ${this.formatSan(mainMove)}
                 </button>
                 ${variations.map((v, i) => `
                     <button class="gv2-var-choice" data-action="var" data-var="${v.varId}" data-fen="${v.firstMove.fen}">
-                        ${v.firstMove.san}
+                        ${this.formatSan(v.firstMove.san)}
                     </button>
                 `).join('')}
             </div>
@@ -1193,43 +2071,103 @@ class GameViewer2 {
 
         document.body.appendChild(modal);
 
+        // Cleanup function to remove modal and listeners
+        const cleanup = () => {
+            modal.remove();
+            document.removeEventListener('keydown', keyHandler);
+            if (this.variationAutoplayTimeout) {
+                clearTimeout(this.variationAutoplayTimeout);
+                this.variationAutoplayTimeout = null;
+            }
+        };
+
         // Handle clicks
         modal.addEventListener('click', (e) => {
             const btn = e.target.closest('.gv2-var-choice');
             if (!btn) return;
 
             const action = btn.dataset.action;
+
+            // Set cooldown to prevent modal from being re-shown immediately
+            this.modalCooldown = true;
+            setTimeout(() => { this.modalCooldown = false; }, 500);
+
+            cleanup();
+
             if (action === 'main') {
                 this.jumpTo(this.currentPly + 1);
             } else if (action === 'var') {
                 this.jumpToVariation(btn.dataset.var, btn.dataset.fen);
             }
-            modal.remove();
-            document.removeEventListener('keydown', keyHandler);
+
+            // If was in autoplay mode, resume autoplay after user selection
+            if (withAutoplayTimeout) {
+                setTimeout(() => this.toggleAutoplay(true), 300);
+            }
         });
 
         // Close on outside click
         modal.addEventListener('click', (e) => {
             if (e.target === modal) {
-                modal.remove();
-                document.removeEventListener('keydown', keyHandler);
+                cleanup();
             }
         });
 
         // Keyboard handler - only right arrow for main line
         const keyHandler = (e) => {
             if (e.key === 'Escape') {
-                modal.remove();
-                document.removeEventListener('keydown', keyHandler);
+                cleanup();
             } else if (e.key === 'ArrowRight') {
                 // Right arrow = main move
                 e.preventDefault();
+                cleanup();
                 this.jumpTo(this.currentPly + 1);
-                modal.remove();
-                document.removeEventListener('keydown', keyHandler);
+                if (withAutoplayTimeout) {
+                    setTimeout(() => this.toggleAutoplay(true), 300);
+                }
             }
         };
         document.addEventListener('keydown', keyHandler);
+
+        // If autoplay mode, set 2s timeout to auto-select main line
+        if (withAutoplayTimeout) {
+            let countdown = 3;
+            const countdownEl = document.getElementById('gv2-var-countdown');
+
+            // Update countdown every second
+            const countdownInterval = setInterval(() => {
+                countdown--;
+                if (countdownEl) countdownEl.textContent = countdown;
+                if (countdown <= 0) {
+                    clearInterval(countdownInterval);
+                }
+            }, 1000);
+
+            this.variationAutoplayTimeout = setTimeout(() => {
+                clearInterval(countdownInterval);
+                cleanup();
+
+                // Auto-select main line with animation
+                const nextData = this.mainLinePlies[this.currentPly + 1];
+                if (nextData && nextData.move && nextData.move.from && nextData.move.to) {
+                    const moveStr = nextData.move.from + '-' + nextData.move.to;
+                    this.board.move(moveStr);
+                    const nextPly = this.currentPly + 1;
+                    const targetFen = nextData.fen;
+                    setTimeout(() => {
+                        this.currentPly = nextPly;
+                        this.safeLoad(targetFen);
+                        this.board.position(targetFen, false);
+                        this.updateActiveMove();
+                        // Resume autoplay
+                        this.toggleAutoplay(true);
+                    }, 250);
+                } else if (nextData) {
+                    this.jumpTo(this.currentPly + 1);
+                    this.toggleAutoplay(true);
+                }
+            }, 3000);
+        }
     }
 
     updateNagMarker() {
@@ -1365,8 +2303,12 @@ class GameViewer2 {
     }
 }
 
-const gameViewer2 = new GameViewer2();
-window.gameViewer2 = gameViewer2;
+// Only create the global instance if one doesn't already exist
+// This allows partie.html and other pages to create their own instance first
+if (!window.gameViewer2) {
+    const gameViewer2 = new GameViewer2();
+    window.gameViewer2 = gameViewer2;
+}
 
 // GLobal exports for legacy buttons support
 window.prevGame = () => window.gameViewer2.prevGame();

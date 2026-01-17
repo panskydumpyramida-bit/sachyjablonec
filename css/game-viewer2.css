@@ -274,7 +274,161 @@
     }
 }
 
-/* Board Area */
+/* Board Area with Eval Bar */
+.gv2-board-area {
+    display: flex;
+    justify-content: center;
+    align-items: stretch;
+    gap: 0.5rem;
+    width: 100%;
+    min-width: 0;
+    /* Prevent flex overflow */
+}
+
+/* Eval Bar - Stockfish Analysis */
+.gv2-eval-bar {
+    width: 24px;
+    min-width: 24px;
+    background: #333;
+    border-radius: 4px;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    /* Ensure it shows up */
+    z-index: 5;
+    flex-shrink: 0;
+}
+
+.gv2-eval-fill {
+    background: linear-gradient(to top, #fff 0%, #f0f0f0 100%);
+    width: 100%;
+    height: 50%;
+    transition: height 0.3s ease;
+    position: absolute;
+    bottom: 0;
+}
+
+.gv2-eval-fill.mate {
+    background: linear-gradient(to top, #4ade80 0%, #22c55e 100%);
+}
+
+.gv2-eval-text {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 0.65rem;
+    font-weight: 700;
+    z-index: 10;
+    white-space: nowrap;
+    /* High contrast using mix-blend-mode */
+    color: #fff;
+    mix-blend-mode: difference;
+    pointer-events: none;
+
+    text-shadow: 0 0 3px rgba(0, 0, 0, 0.5);
+    white-space: nowrap;
+}
+
+/* Analysis Info Bar (Lichess-style) */
+.gv2-analysis-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    padding: 0.5rem;
+    background: #252528;
+    border-bottom: 3px solid #303030;
+    margin-bottom: 0;
+    font-size: 0.9rem;
+    width: 100%;
+    /* Fix layout breakage on long lines */
+    min-width: 0;
+    overflow: hidden;
+}
+
+.gv2-analysis-row {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.gv2-best-move {
+    color: #999;
+    font-weight: 500;
+}
+
+.gv2-eval-tag {
+    font-weight: 700;
+    color: #fff;
+    font-size: 1.2rem;
+    margin-right: 0.25rem;
+}
+
+.gv2-depth {
+    color: #666;
+    font-size: 0.8rem;
+    background: #333;
+    padding: 0.1rem 0.4rem;
+    border-radius: 4px;
+}
+
+.gv2-pv-line {
+    font-family: 'Roboto Mono', monospace;
+    font-size: 0.85rem;
+    color: #ccc;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    padding-top: 0.25rem;
+}
+
+.gv2-pv-move {
+    color: #d1d1d1;
+    margin-right: 0.4rem;
+}
+
+.gv2-pv-move.active-color {
+    color: #d4a34b;
+    /* Goldish for active player moves if we want */
+}
+
+/* Ensure controls are below it properly */
+.gv2-controls {
+    border-top: 1px solid #333;
+    padding-top: 0.5rem;
+}
+
+/* Analysis Button */
+.gv2-btn-analysis {
+    position: relative;
+}
+
+.gv2-btn-analysis.active {
+    background: rgba(74, 222, 128, 0.2) !important;
+    border-color: rgba(74, 222, 128, 0.5) !important;
+    color: #4ade80 !important;
+}
+
+.gv2-btn-analysis.active i {
+    animation: pulse-analysis 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse-analysis {
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.5;
+    }
+}
+
+/* Board Wrapper */
 .gv2-board-wrapper {
     width: 100%;
     /* Increase height constraint by ~12% (50vh -> 56vh) */
@@ -303,11 +457,22 @@
     height: 100%;
 }
 
-/* Enable chessboard.js piece animations - the UNPKG CSS is missing this rule */
+/* Chessboard.js piece styling - allow jQuery animations to work */
 .piece-417db {
     position: absolute !important;
-    transition-property: none !important;
-    /* Prevent CSS transitions from conflicting with jQuery animate */
+    /* CRITICAL: Disable CSS transitions - they conflict with jQuery.animate() */
+    /* Without this, pieces "teleport" instead of sliding smoothly */
+    transition: none !important;
+    /* CRITICAL: High z-index ensures animation ghost piece renders ABOVE the board */
+    /* chessboard.js appends the ghost to <body> during animation - needs high z-index */
+    z-index: 9999 !important;
+}
+
+/* Also target any img inside the board container */
+#gv2-board img,
+.board-b72b1 img {
+    transition: none !important;
+    z-index: 9999 !important;
 }
 
 /* Coach Bubble - Overlay on container, semi-transparent */
@@ -498,7 +663,8 @@
     font-weight: 800;
     font-size: 1.2rem;
     color: #fff;
-    z-index: 100;
+    z-index: 2147483647 !important;
+    /* Force max Z-Index to overlay pieces */
     pointer-events: none;
     animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
@@ -844,11 +1010,10 @@
     left: 0;
     right: 0;
     bottom: 0;
-    background: rgba(0, 0, 0, 0.3);
+    background: rgba(0, 0, 0, 0.5);
     display: flex;
-    align-items: flex-start;
-    justify-content: flex-start;
-    padding: 100px 0 0 20px;
+    align-items: center;
+    justify-content: center;
     z-index: 99999;
 }
 
@@ -888,6 +1053,41 @@
 
 .gv2-var-choice.gv2-var-main:hover {
     background: #e6c35a;
+}
+
+/* Countdown indicator for autoplay mode */
+.gv2-var-countdown {
+    position: absolute;
+    top: -12px;
+    right: -12px;
+    width: 28px;
+    height: 28px;
+    background: #ef4444;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.85rem;
+    font-weight: bold;
+    color: #fff;
+    animation: countdown-pulse 1s ease-in-out infinite;
+    box-shadow: 0 2px 8px rgba(239, 68, 68, 0.5);
+}
+
+@keyframes countdown-pulse {
+
+    0%,
+    100% {
+        transform: scale(1);
+    }
+
+    50% {
+        transform: scale(1.15);
+    }
+}
+
+.gv2-var-modal-content {
+    position: relative;
 }
 
 /* ==========================================================================
@@ -1006,8 +1206,37 @@
     }
 
     .gv-viewer-panel {
-        width: 100%;
         overflow: visible;
         /* Ensure viewer expands */
     }
+
+    /* On mobile, ensure eval bar is visible next to board */
+    .gv2-board-area {
+        /* Typically row, but if space is tight? */
+        /* Keep it row to show eval bar side-by-side with board */
+        flex-direction: row;
+    }
+
+    .gv2-eval-bar {
+        /* ensure height matches board roughly or fixed */
+        /* It's usually stretch, so it should be fine */
+        height: auto;
+        min-height: 250px;
+        /* Fallback */
+    }
+}
+
+/* Better spacing and sizing for Font Awesome chess icons */
+.gv2-move i,
+.gv2-pv-move i,
+.gv2-var-move i {
+    margin-right: 2px;
+    font-size: 0.95em;
+    vertical-align: 0;
+}
+
+/* Highlight Class Fix */
+.gv2-last-move {
+    box-shadow: inset 0 0 0 4px #d46b4b !important;
+    /* Gold border 4px, keep original square color */
 }

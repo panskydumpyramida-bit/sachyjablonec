@@ -146,3 +146,29 @@ window.previewGamePgn = previewGamePgn;
 window.closePgnPreview = closePgnPreview;
 window.copyToClipboard = copyToClipboard;
 
+// Chess API Depth Setting
+function initChessApiDepthSlider() {
+    const slider = document.getElementById('chessApiDepthSlider');
+    const valueDisplay = document.getElementById('chessApiDepthValue');
+    if (!slider || !valueDisplay) return;
+
+    // Load saved value
+    const savedDepth = localStorage.getItem('chessApiDepth') || '16';
+    slider.value = savedDepth;
+    valueDisplay.textContent = savedDepth;
+}
+
+function updateChessApiDepth(value) {
+    const valueDisplay = document.getElementById('chessApiDepthValue');
+    if (valueDisplay) valueDisplay.textContent = value;
+    localStorage.setItem('chessApiDepth', value);
+    console.log('[Admin] Chess-API depth set to:', value);
+}
+
+// Initialize on load
+document.addEventListener('DOMContentLoaded', () => {
+    initChessApiDepthSlider();
+});
+
+window.updateChessApiDepth = updateChessApiDepth;
+window.initChessApiDepthSlider = initChessApiDepthSlider;

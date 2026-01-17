@@ -25,6 +25,11 @@ const ChessDB = {
     // Autoplay state
     autoplayInterval: null,
 
+    // Engine analysis
+    analyzer: null,
+    analysisEnabled: true,
+    lastAnalysis: null,
+
     getToken() {
         return localStorage.getItem('auth_token') || sessionStorage.getItem('auth_token');
     },
@@ -75,6 +80,13 @@ const ChessDB = {
         const hasAccess = await this.checkAccess();
         if (!hasAccess) return;
         this.bindEvents();
+
+        // Restore player from URL if present
+        const urlParams = new URLSearchParams(window.location.search);
+        const playerFromUrl = urlParams.get('player');
+        if (playerFromUrl) {
+            this.selectPlayer(playerFromUrl);
+        }
     },
 
     bindEvents() {
@@ -167,6 +179,11 @@ const ChessDB = {
         this.currentPage = 0;
         document.getElementById('playerSearch').value = name;
         document.getElementById('autocompleteResults').style.display = 'none';
+
+        // Update URL with player name for persistence
+        const url = new URL(window.location);
+        url.searchParams.set('player', name);
+        window.history.replaceState({}, '', url);
 
         await Promise.all([this.loadGames(), this.loadOpeningTree()]);
     },
@@ -305,11 +322,28 @@ const ChessDB = {
                 <h3>${game.whitePlayer} vs ${game.blackPlayer}</h3>
                 <div class="game-info-meta">
                     ${game.event || ''} • ${date} • ${game.eco || ''} • <strong>${game.result}</strong>
+                    <button id="engineToggle" onclick="ChessDB.toggleEngine()" 
+                        style="margin-left: 1rem; padding: 0.25rem 0.5rem; font-size: 0.75rem; background: ${this.analysisEnabled ? 'rgba(74, 222, 128, 0.2)' : 'rgba(255,255,255,0.05)'}; border: 1px solid ${this.analysisEnabled ? '#4ade80' : 'rgba(255,255,255,0.1)'}; border-radius: 4px; color: ${this.analysisEnabled ? '#4ade80' : 'var(--text-muted)'}; cursor: pointer;">
+                        <i class="fa-solid fa-microchip"></i> Engine
+                    </button>
                 </div>
             </div>
             <div class="board-area">
-                <div class="board-wrapper">
-                    <div id="chessBoard"></div>
+                <div class="board-wrapper" style="display: flex; flex-direction: column; gap: 0.5rem;">
+                    <!-- Board + Eval Bar Row -->
+                    <div style="display: flex; gap: 0.5rem; align-items: stretch;">
+                        <!-- Eval Bar (vertical thermometer) -->
+                        <div id="dbEvalBar" class="gv2-eval-bar" style="width: 24px; min-width: 24px; height: auto; min-height: 200px;">
+                            <div class="gv2-eval-fill" id="dbEvalFill" style="height: 50%;"></div>
+                            <span class="gv2-eval-text" id="dbEvalText">0.0</span>
+                        </div>
+                        <div id="chessBoard" style="flex: 1;"></div>
+                    </div>
+                    <!-- Analysis Info -->
+                    <div id="dbAnalysisInfo" class="gv2-analysis-info">
+                        <span class="gv2-best-move" id="dbBestMove">—</span>
+                        <div class="gv2-pv-line" id="dbPvLine"></div>
+                    </div>
                     <div class="board-controls">
                         <button onclick="ChessDB.goToStart()" title="Na začátek"><i class="fa-solid fa-backward-fast"></i></button>
                         <button onclick="ChessDB.prevMove()" title="Předchozí"><i class="fa-solid fa-chevron-left"></i></button>
@@ -325,6 +359,7 @@ const ChessDB = {
         `;
 
         this.initBoard(targetMoveIndex);
+        this.initAnalyzer();
     },
 
     initBoard(targetMoveIndex = 0) {
@@ -425,15 +460,21 @@ const ChessDB = {
         const movesPanel = document.getElementById('movesPanel');
         if (movesPanel) {
             movesPanel.innerHTML = this.renderMovesList();
-            // Scroll to active move
+            // Scroll to active move - only within the container, not the page
             const activeMove = movesPanel.querySelector('.move.active');
             if (activeMove) {
-                activeMove.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                const containerRect = movesPanel.getBoundingClientRect();
+                const moveRect = activeMove.getBoundingClientRect();
+                const scrollOffset = moveRect.top - containerRect.top - (containerRect.height / 2);
+                movesPanel.scrollTop += scrollOffset;
             }
         }
 
         // Sync tree to current position
         this.updateTreeForPosition();
+
+        // Trigger engine analysis for new position
+        this.triggerAnalysis();
     },
 
     goToMove(idx) {
@@ -632,6 +673,74 @@ const ChessDB = {
         if (gameId) {
             this.openGame(gameId, this.currentMoveIndex + 1);
         }
+    },
+
+    // ==================== ENGINE ANALYSIS ====================
+    initAnalyzer() {
+        if (this.analyzer) return; // Already initialized
+
+        if (typeof ChessAnalyzer !== 'undefined') {
+            this.analyzer = new ChessAnalyzer((data) => this.handleAnalysisUpdate(data));
+            console.log('[ChessDB] Engine analyzer initialized');
+
+            // Trigger initial analysis
+            if (this.analysisEnabled && this.chessGame) {
+                this.triggerAnalysis();
+            }
+        } else {
+            console.warn('[ChessDB] ChessAnalyzer not available');
+        }
+    },
+
+    handleAnalysisUpdate(data) {
+        if (!data || !this.chessGame) return;
+
+        // Verify FEN matches current position
+        const currentFen = this.chessGame.fen().split(' ').slice(0, 4).join(' ');
+        const dataFen = (data.fen || '').split(' ').slice(0, 4).join(' ');
+
+        if (currentFen !== dataFen) return;
+
+        this.lastAnalysis = data;
+
+        // Use global utility
+        if (typeof ChessEvalDisplay !== 'undefined') {
+            ChessEvalDisplay.update('db', data);
+        }
+    },
+
+    toggleEngine() {
+        this.analysisEnabled = !this.analysisEnabled;
+
+        const btn = document.getElementById('engineToggle');
+        const evalBar = document.getElementById('dbEvalBar');
+        const analysisInfo = document.getElementById('dbAnalysisInfo');
+
+        if (btn) {
+            btn.style.background = this.analysisEnabled ? 'rgba(74, 222, 128, 0.2)' : 'rgba(255,255,255,0.05)';
+            btn.style.borderColor = this.analysisEnabled ? '#4ade80' : 'rgba(255,255,255,0.1)';
+            btn.style.color = this.analysisEnabled ? '#4ade80' : 'var(--text-muted)';
+        }
+
+        // Show/hide eval bar and analysis info
+        if (evalBar) evalBar.style.display = this.analysisEnabled ? '' : 'none';
+        if (analysisInfo) analysisInfo.style.display = this.analysisEnabled ? '' : 'none';
+
+        if (this.analysisEnabled) {
+            this.triggerAnalysis();
+        } else {
+            // Use global utility to clear
+            if (typeof ChessEvalDisplay !== 'undefined') {
+                ChessEvalDisplay.clear('db');
+            }
+        }
+    },
+
+    triggerAnalysis() {
+        if (!this.analysisEnabled || !this.chessGame || !this.analyzer) return;
+
+        const fen = this.chessGame.fen();
+        this.analyzer.analyze(fen);
     }
 };
 
