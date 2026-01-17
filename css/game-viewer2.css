@@ -254,14 +254,14 @@
 /* Very small screens */
 @media (max-width: 480px) {
     .gv2-controls {
-        gap: 0.2rem;
+        gap: 4px;
         padding: 0.25rem 0.5rem;
         flex-wrap: nowrap;
         /* Force single row */
         overflow-x: auto;
         /* Allow scroll if really too small */
-        justify-content: space-between;
-        /* Distribute evenly */
+        justify-content: center;
+        /* Keep buttons together, don't spread to edges */
     }
 
     .gv2-btn {
