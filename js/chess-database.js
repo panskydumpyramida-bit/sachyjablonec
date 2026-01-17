@@ -322,14 +322,10 @@ const ChessDB = {
                 <h3>${game.whitePlayer} vs ${game.blackPlayer}</h3>
                 <div class="game-info-meta">
                     ${game.event || ''} • ${date} • ${game.eco || ''} • <strong>${game.result}</strong>
-                    <button id="engineToggle" onclick="ChessDB.toggleEngine()" 
-                        style="margin-left: 1rem; padding: 0.25rem 0.5rem; font-size: 0.75rem; background: ${this.analysisEnabled ? 'rgba(74, 222, 128, 0.2)' : 'rgba(255,255,255,0.05)'}; border: 1px solid ${this.analysisEnabled ? '#4ade80' : 'rgba(255,255,255,0.1)'}; border-radius: 4px; color: ${this.analysisEnabled ? '#4ade80' : 'var(--text-muted)'}; cursor: pointer;">
-                        <i class="fa-solid fa-microchip"></i> Engine
-                    </button>
                 </div>
             </div>
             <div class="board-area">
-                    <div class="board-wrapper gv2-board-wrapper" style="display: flex; flex-direction: column; gap: 0.5rem;">
+                <div class="board-wrapper" style="display: flex; flex-direction: column; gap: 0.5rem;">
                         <!-- Board + Eval Bar Row -->
                         <div style="display: flex; gap: 0; align-items: stretch;" class="gv2-board-area-inner">
                             <!-- Eval Bar (vertical thermometer) -->
