@@ -328,15 +328,15 @@ const ChessDB = {
                 <div class="board-wrapper" style="display: flex; flex-direction: column; gap: 0.5rem;">
                         <!-- Board + Eval Bar Row -->
                         <div style="display: flex; gap: 0; align-items: stretch;" class="gv2-board-area-inner">
-                            <!-- Eval Bar (vertical thermometer) -->
-                            <div id="dbEvalBar" class="gv2-eval-bar">
+                            <!-- Eval Bar (vertical thermometer) - Initially hidden -->
+                            <div id="dbEvalBar" class="gv2-eval-bar" style="display: none;">
                                 <div class="gv2-eval-fill" id="dbEvalFill" style="height: 50%;"></div>
                                 <span class="gv2-eval-text" id="dbEvalText">0.0</span>
                             </div>
                             <div id="chessBoard" style="flex: 1; width: 100%;"></div>
                         </div>
-                    <!-- Analysis Info -->
-                    <div id="dbAnalysisInfo" class="gv2-analysis-info">
+                    <!-- Analysis Info - Initially hidden -->
+                    <div id="dbAnalysisInfo" class="gv2-analysis-info" style="display: none;">
                         <span class="gv2-best-move" id="dbBestMove">—</span>
                         <div class="gv2-pv-line" id="dbPvLine"></div>
                     </div>
