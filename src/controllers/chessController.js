@@ -540,6 +540,17 @@ export const importGames = async (req, res) => {
     }
 };
 
+// Helper to normalize player name for comparison
+const normalizeName = (name) => {
+    if (!name) return '';
+    return name
+        .toLowerCase()
+        .normalize("NFD").replace(/[\u0300-\u036f]/g, "") // Remove diacritics
+        .replace(/,/g, ' ') // Replace commas with space
+        .replace(/\s+/g, ' ') // Collapse multiple spaces
+        .trim();
+};
+
 /**
  * Check for duplicate games (same players, same date)
  * GET /api/chess/duplicates
@@ -557,7 +568,9 @@ export const checkDuplicates = async (req, res) => {
                 blackPlayer: true,
                 date: true,
                 result: true,
-                event: true
+                event: true,
+                whiteElo: true,
+                blackElo: true
             }
         });
 
@@ -613,7 +626,9 @@ export const cleanDuplicates = async (req, res) => {
         const groups = {};
         for (const game of games) {
             const dateStr = game.date.toISOString().split('T')[0];
-            const key = `${game.whitePlayer.trim().toLowerCase()}|${game.blackPlayer.trim().toLowerCase()}|${dateStr}`;
+            const w = normalizeName(game.whitePlayer);
+            const b = normalizeName(game.blackPlayer);
+            const key = `${w}|${b}|${dateStr}`;
             if (!groups[key]) groups[key] = [];
             groups[key].push(game.id);
         }
@@ -623,8 +638,9 @@ export const cleanDuplicates = async (req, res) => {
 
         for (const group of Object.values(groups)) {
             if (group.length > 1) {
-                // Keep the first one (lowest ID usually), delete rest
-                const [keep, ...remove] = group.sort((a, b) => a - b);
+                // Keep the one with highest ID (newest import), delete others
+                const sorted = group.sort((a, b) => b - a);
+                const [keep, ...remove] = sorted;
                 idsToDelete.push(...remove);
             }
         }
