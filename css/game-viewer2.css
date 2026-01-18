@@ -66,10 +66,11 @@
 .gv2-content {
     display: flex;
     flex-direction: row;
+    flex-wrap: wrap;
     width: 100%;
     align-items: stretch;
-    /* Use auto overflow for scrolling if needed */
-    overflow: auto;
+    justify-content: center;
+    overflow: hidden;
 }
 
 .gv2-sidebar-left {
@@ -101,18 +102,21 @@
     min-height: 420px;
     /* Increased to fit board + controls */
     /* Allow scrolling within section if needed */
-    overflow: auto;
+    overflow: hidden;
 }
 
 .gv2-info-panel {
-    width: 220px;
+    flex: 1 1 220px;
+    width: auto;
+    min-width: 220px;
+    max-width: 100%;
     flex-shrink: 0;
     border-left: 1px solid var(--gv-border-color);
     display: flex;
     flex-direction: column;
     background: var(--gv-bg-color);
     min-height: 350px;
-    max-height: 500px;
+    max-height: 100%;
     overflow: hidden;
 }
 
@@ -471,7 +475,8 @@
     width: 100%;
     /* Increase height constraint by ~12% (50vh -> 56vh) */
     max-width: min(400px, calc(100% - 1rem));
-    /* Slightly wider constraint */
+    /* Dynamic height constraint to ensure controls/eval bar fit vertically */
+    max-height: calc(100% - 140px);
     margin: 0 auto;
     aspect-ratio: 1;
     position: relative;
