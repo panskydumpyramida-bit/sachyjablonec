@@ -324,10 +324,10 @@ const ChessDB = {
                     ${game.event || ''} • ${date} • ${game.eco || ''} • <strong>${game.result}</strong>
                 </div>
             </div>
-            <div class="board-area">
-                <div class="board-wrapper" style="display: flex; flex-direction: column; gap: 0.5rem;">
+            <div class="board-area" style="width: 100%;">
+                <div class="board-wrapper" style="display: flex; flex-direction: column; gap: 0.5rem; width: 100%;">
                         <!-- Board + Eval Bar Row -->
-                        <div style="display: flex; gap: 0; align-items: stretch;" class="gv2-board-area-inner">
+                        <div style="display: flex; gap: 0; align-items: stretch; width: 100%;" class="gv2-board-area-inner">
                             <!-- Eval Bar (vertical thermometer) - Initially hidden -->
                             <div id="dbEvalBar" class="gv2-eval-bar" style="display: none;">
                                 <div class="gv2-eval-fill" id="dbEvalFill" style="height: 50%;"></div>
@@ -349,7 +349,7 @@ const ChessDB = {
                         <button id="engineBtnBottom" onclick="ChessDB.toggleEngine()" title="Engine" style="color: var(--text-muted);"><i class="fa-solid fa-microchip"></i></button>
                     </div>
                 </div>
-                <div class="moves-wrapper" id="movesPanel" style="max-height: 150px; overflow-y: auto;">
+                <div class="moves-wrapper" id="movesPanel" style="max-height: 120px; overflow-y: auto;">
                     ${this.renderMovesList()}
                 </div>
             </div>
