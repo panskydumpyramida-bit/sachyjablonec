@@ -333,7 +333,7 @@ const ChessDB = {
                                 <div class="gv2-eval-fill" id="dbEvalFill" style="height: 50%;"></div>
                                 <span class="gv2-eval-text" id="dbEvalText">0.0</span>
                             </div>
-                            <div id="chessBoard" style="flex: 1; width: 100%;"></div>
+                            <div id="chessBoard" style="flex: 1; width: 100%; aspect-ratio: 1/1;"></div>
                         </div>
                     <!-- Analysis Info - Initially hidden -->
                     <div id="dbAnalysisInfo" class="gv2-analysis-info" style="display: none;">
@@ -349,7 +349,7 @@ const ChessDB = {
                         <button id="engineBtnBottom" onclick="ChessDB.toggleEngine()" title="Engine" style="color: var(--text-muted);"><i class="fa-solid fa-microchip"></i></button>
                     </div>
                 </div>
-                <div class="moves-wrapper" id="movesPanel">
+                <div class="moves-wrapper" id="movesPanel" style="max-height: 250px; overflow-y: auto;">
                     ${this.renderMovesList()}
                 </div>
             </div>
