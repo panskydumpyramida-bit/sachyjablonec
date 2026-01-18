@@ -347,6 +347,7 @@ const ChessDB = {
                         <button onclick="ChessDB.nextMove()" title="Další"><i class="fa-solid fa-chevron-right"></i></button>
                         <button onclick="ChessDB.goToEnd()" title="Na konec"><i class="fa-solid fa-forward-fast"></i></button>
                         <button id="engineBtnBottom" onclick="ChessDB.toggleEngine()" title="Engine" style="color: var(--text-muted);"><i class="fa-solid fa-microchip"></i></button>
+                        <button id="movesToggleBtn" onclick="ChessDB.toggleMovesVisibility()" title="Zobrazit/Skrýt tahy"><i class="fa-regular fa-eye"></i></button>
                     </div>
                 </div>
                 <div class="moves-wrapper" id="movesPanel" style="max-height: 120px; overflow-y: auto;">
@@ -354,6 +355,12 @@ const ChessDB = {
                 </div>
             </div>
         `;
+
+        // Restore Moves Toggle State
+        const hideMoves = localStorage.getItem('chessDB_hideMoves') === 'true';
+        if (hideMoves) {
+            this.setMovesVisibility(false);
+        }
 
         this.initBoard(targetMoveIndex);
         this.initAnalyzer();
@@ -496,6 +503,27 @@ const ChessDB = {
         this.stopAutoplay();
     },
 
+    toggleMovesVisibility() {
+        const panel = document.getElementById('movesPanel');
+        if (!panel) return;
+
+        const isHidden = panel.style.display === 'none';
+        this.setMovesVisibility(isHidden); // Toggle to opposite
+    },
+
+    setMovesVisibility(show) {
+        const panel = document.getElementById('movesPanel');
+        const btn = document.getElementById('movesToggleBtn');
+        if (panel) {
+            panel.style.display = show ? 'block' : 'none';
+        }
+        if (btn) {
+            btn.innerHTML = show ? '<i class="fa-regular fa-eye"></i>' : '<i class="fa-regular fa-eye-slash"></i>';
+            btn.style.color = show ? 'var(--text-color)' : 'var(--text-muted)';
+        }
+        localStorage.setItem('chessDB_hideMoves', !show);
+    },
+
     toggleAutoplay() {
         if (this.autoplayInterval) {
             this.stopAutoplay();
@@ -606,16 +634,9 @@ const ChessDB = {
         const nextMoveInGame = this.currentGame ? this.moves[this.currentMoveIndex] : null;
 
         content.innerHTML = `
-            <div class="tree-position">
-                <div style="display: flex; justify-content: space-between; align-items: start;">
-                    <strong>${this.currentPlayer}</strong> 
-                    <button onclick="document.getElementById('treePosText').classList.toggle('hidden')" style="background:none; border:none; color:var(--text-muted); cursor:pointer;">
-                        <i class="fa-solid fa-eye-slash"></i>
-                    </button>
-                </div>
-                <div style="color: var(--text-muted); font-size: 0.85em;">(${colorLabel})</div>
-                <div id="treePosText" class="tree-pos-text" style="font-size: 0.85em; color: var(--text-muted); margin-top: 4px;">
-                    ${movesPlayed.length > 0 ? movesPlayed.map(m => this.formatSan(m)).join(' ') : 'Startovní pozice'}
+            <div class="tree-position" style="display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <strong>${this.currentPlayer}</strong> <span style="color: var(--text-muted); font-size: 0.85em;">(${colorLabel})</span>
                 </div>
             </div>
             <div class="tree-moves">
