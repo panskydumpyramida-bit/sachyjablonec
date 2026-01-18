@@ -325,7 +325,7 @@ const ChessDB = {
                 </div>
             </div>
             <div class="board-area" style="width: 100%;">
-                <div class="board-wrapper" style="display: flex; flex-direction: column; gap: 0.5rem; width: 100%;">
+                <div class="board-wrapper" style="display: flex; flex-direction: column; gap: 0.5rem;">
                         <!-- Board + Eval Bar Row -->
                         <div style="display: flex; gap: 0; align-items: stretch; width: 100%;" class="gv2-board-area-inner">
                             <!-- Eval Bar (vertical thermometer) - Initially hidden -->
