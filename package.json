@@ -6,7 +6,8 @@
   "type": "module",
   "scripts": {
     "dev": "nodemon src/server.js",
-    "start": "npx prisma migrate deploy && node scripts/sync-production-events.js && node scripts/generate_thumbnails.js && node src/server.js",
+    "start": "npx prisma migrate deploy && node src/server.js",
+    "maintenance": "node scripts/sync-production-events.js && node scripts/generate_thumbnails.js",
     "postinstall": "prisma generate",
     "db:migrate": "prisma migrate dev",
     "db:push": "prisma db push",
