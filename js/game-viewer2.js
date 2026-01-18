@@ -712,23 +712,25 @@ class GameViewer2 {
                                 <div id="gv2-board"></div>
                             </div>
                         </div>
-                        <div class="gv2-analysis-info" id="gv2-analysis-info" style="display: none;">
-                            <div class="gv2-analysis-row">
-                                <span class="gv2-best-move" id="gv2-best-move"></span>
-                                <span class="gv2-depth" id="gv2-depth"></span>
+                        <div class="gv2-bottom-bar">
+                            <div class="gv2-controls">
+                                <button class="gv2-btn" onclick="gameViewer2.goToStart()" title="Start"><i class="fa-solid fa-backward-fast"></i></button>
+                                <button class="gv2-btn" onclick="gameViewer2.stepBack()" title="Zpět"><i class="fa-solid fa-backward-step"></i></button>
+                                <button class="gv2-btn" onclick="gameViewer2.toggleAutoplay()" title="Přehrát"><i class="fa-solid fa-play" id="gv2-play-icon"></i></button>
+                                <button class="gv2-btn" onclick="gameViewer2.stepForward()" title="Vpřed"><i class="fa-solid fa-forward-step"></i></button>
+                                <button class="gv2-btn" onclick="gameViewer2.goToEnd()" title="Konec"><i class="fa-solid fa-forward-fast"></i></button>
+                                <button class="gv2-btn" onclick="gameViewer2.flipBoard()" title="Otočit"><i class="fa-solid fa-retweet"></i></button>
+                                <button class="gv2-btn gv2-btn-analysis" id="gv2-analysis-btn" onclick="gameViewer2.toggleAnalysis()" title="Analýza Stockfish">
+                                    <i class="fa-solid fa-microchip" id="gv2-analysis-icon"></i>
+                                </button>
                             </div>
-                            <div class="gv2-pv-line" id="gv2-pv-line"></div>
-                        </div>
-                        <div class="gv2-controls">
-                            <button class="gv2-btn" onclick="gameViewer2.goToStart()" title="Start"><i class="fa-solid fa-backward-fast"></i></button>
-                            <button class="gv2-btn" onclick="gameViewer2.stepBack()" title="Zpět"><i class="fa-solid fa-backward-step"></i></button>
-                            <button class="gv2-btn" onclick="gameViewer2.toggleAutoplay()" title="Přehrát"><i class="fa-solid fa-play" id="gv2-play-icon"></i></button>
-                            <button class="gv2-btn" onclick="gameViewer2.stepForward()" title="Vpřed"><i class="fa-solid fa-forward-step"></i></button>
-                            <button class="gv2-btn" onclick="gameViewer2.goToEnd()" title="Konec"><i class="fa-solid fa-forward-fast"></i></button>
-                            <button class="gv2-btn" onclick="gameViewer2.flipBoard()" title="Otočit"><i class="fa-solid fa-retweet"></i></button>
-                            <button class="gv2-btn gv2-btn-analysis" id="gv2-analysis-btn" onclick="gameViewer2.toggleAnalysis()" title="Analýza Stockfish">
-                                <i class="fa-solid fa-microchip" id="gv2-analysis-icon"></i>
-                            </button>
+                            <div class="gv2-analysis-info" id="gv2-analysis-info" style="display: none;">
+                                <div class="gv2-analysis-row">
+                                    <span class="gv2-best-move" id="gv2-best-move"></span>
+                                    <span class="gv2-depth" id="gv2-depth"></span>
+                                </div>
+                                <div class="gv2-pv-line" id="gv2-pv-line"></div>
+                            </div>
                         </div>
                     </div>
                     <div class="gv2-info-panel">
