@@ -296,6 +296,8 @@
     .gv2-eval-bar {
         width: 8px !important;
         min-width: 8px !important;
+        min-height: auto !important;
+        height: auto !important;
     }
 
     .gv2-eval-text {
