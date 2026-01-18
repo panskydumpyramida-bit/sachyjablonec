@@ -11,7 +11,9 @@ import {
     getGameById,
     getPlayerStats,
     getOpeningTree,
-    importGames
+    getOpeningTree,
+    importGames,
+    checkDuplicates
 } from '../controllers/chessController.js';
 
 const router = express.Router();
@@ -36,5 +38,8 @@ router.get('/tree', getOpeningTree);
 
 // Import games (ADMIN only - bypasses MEMBER check internally)
 router.post('/import', importGames);
+
+// Check duplicates (Admin tool)
+router.get('/duplicates', checkDuplicates);
 
 export default router;
