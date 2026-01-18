@@ -350,7 +350,7 @@ const ChessDB = {
                         <button id="movesToggleBtn" onclick="ChessDB.toggleMovesVisibility()" title="Zobrazit/Skrýt tahy"><i class="fa-regular fa-eye"></i></button>
                     </div>
                 </div>
-                <div class="moves-wrapper" id="movesPanel" style="max-height: 120px; overflow-y: auto;">
+                <div class="moves-wrapper" id="movesPanel">
                     ${this.renderMovesList()}
                 </div>
             </div>
