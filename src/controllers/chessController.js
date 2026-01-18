@@ -539,3 +539,62 @@ export const importGames = async (req, res) => {
         res.status(500).json({ error: 'Import failed', details: error.message });
     }
 };
+
+/**
+ * Check for duplicate games (same players, same date)
+ * GET /api/chess/duplicates
+ */
+export const checkDuplicates = async (req, res) => {
+    try {
+        // Get all games with date
+        const games = await prisma.chessGame.findMany({
+            where: {
+                date: { not: null }
+            },
+            select: {
+                id: true,
+                whitePlayer: true,
+                blackPlayer: true,
+                date: true,
+                result: true,
+                event: true
+            }
+        });
+
+        const groups = {};
+
+        // Group games
+        for (const game of games) {
+            const dateStr = game.date.toISOString().split('T')[0];
+            const key = `${game.whitePlayer.trim().toLowerCase()}|${game.blackPlayer.trim().toLowerCase()}|${dateStr}`;
+
+            if (!groups[key]) {
+                groups[key] = [];
+            }
+            groups[key].push(game);
+        }
+
+        // Filter duplicates
+        const duplicates = [];
+        for (const [key, group] of Object.entries(groups)) {
+            if (group.length > 1) {
+                const [white, black, date] = key.split('|');
+                duplicates.push({
+                    signature: { white, black, date },
+                    count: group.length,
+                    ids: group.map(g => g.id),
+                    games: group
+                });
+            }
+        }
+
+        res.json({
+            count: duplicates.length,
+            duplicates
+        });
+
+    } catch (error) {
+        console.error('Error checking duplicates:', error);
+        res.status(500).json({ error: 'Check failed' });
+    }
+};
