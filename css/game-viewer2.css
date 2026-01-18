@@ -303,6 +303,13 @@
     .gv2-eval-text {
         display: none !important;
     }
+
+    /* Make analysis info thicker/wider on mobile */
+    .gv2-analysis-info {
+        padding: 0.8rem 0.5rem !important;
+        font-size: 0.95rem !important;
+        min-height: 3rem;
+    }
 }
 
 /* Board Area with Eval Bar */
