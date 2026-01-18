@@ -1154,6 +1154,19 @@
                 <input type="file" id="pgnFileInput" accept=".pgn" style="display: none;" onchange="loadPgnFile(this)">
             </div>
         </div>
+
+        <div class="card" style="margin-top: 1.5rem;">
+            <h3 style="margin-bottom: 1rem; color: #f59e0b; margin-top: 0;"><i
+                    class="fa-solid fa-triangle-exclamation"></i> Kontrola duplicit</h3>
+            <p style="color: var(--text-muted); margin-bottom: 1rem; font-size: 0.9rem;">
+                Hledá partie se stejným bílým, černým a datem. Vhodné pro kontrolu integrity databáze.
+            </p>
+            <button onclick="checkDuplicateGames()" class="btn-secondary">
+                <i class="fa-solid fa-search"></i> Zkontrolovat duplicity
+            </button>
+            <div id="duplicateCheckResult" style="display: none; margin-top: 1rem; padding: 1rem; border-radius: 6px;">
+            </div>
+        </div>
     </div>
     <!-- Changelog View -->
     <div id="changelogView" class="hidden">
