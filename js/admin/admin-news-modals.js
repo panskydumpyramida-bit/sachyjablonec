@@ -104,7 +104,6 @@ function showNewsGamePgnModal() {
     const modal = document.getElementById('newsGamePgnModal');
     if (modal) {
         modal.style.display = 'flex';
-        document.getElementById('newsGamePgnTitle').value = '';
         document.getElementById('newsGamePgnText').value = '';
         setTimeout(setupPgnDropZone, 100);
     }
