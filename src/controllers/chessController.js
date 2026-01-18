@@ -598,3 +598,54 @@ export const checkDuplicates = async (req, res) => {
         res.status(500).json({ error: 'Check failed' });
     }
 };
+
+/**
+ * Clean duplicate games (keep one, delete others)
+ * DELETE /api/chess/duplicates
+ */
+export const cleanDuplicates = async (req, res) => {
+    try {
+        const games = await prisma.chessGame.findMany({
+            where: { date: { not: null } },
+            select: { id: true, whitePlayer: true, blackPlayer: true, date: true }
+        });
+
+        const groups = {};
+        for (const game of games) {
+            const dateStr = game.date.toISOString().split('T')[0];
+            const key = `${game.whitePlayer.trim().toLowerCase()}|${game.blackPlayer.trim().toLowerCase()}|${dateStr}`;
+            if (!groups[key]) groups[key] = [];
+            groups[key].push(game.id);
+        }
+
+        let deletedCount = 0;
+        const idsToDelete = [];
+
+        for (const group of Object.values(groups)) {
+            if (group.length > 1) {
+                // Keep the first one (lowest ID usually), delete rest
+                const [keep, ...remove] = group.sort((a, b) => a - b);
+                idsToDelete.push(...remove);
+            }
+        }
+
+        if (idsToDelete.length > 0) {
+            const result = await prisma.chessGame.deleteMany({
+                where: {
+                    id: { in: idsToDelete }
+                }
+            });
+            deletedCount = result.count;
+        }
+
+        res.json({
+            success: true,
+            deleted: deletedCount,
+            message: `Deleted ${deletedCount} duplicate games.`
+        });
+
+    } catch (error) {
+        console.error('Error cleaning duplicates:', error);
+        res.status(500).json({ error: 'Cleanup failed' });
+    }
+};

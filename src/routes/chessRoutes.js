@@ -12,7 +12,8 @@ import {
     getPlayerStats,
     getOpeningTree,
     importGames,
-    checkDuplicates
+    checkDuplicates,
+    cleanDuplicates
 } from '../controllers/chessController.js';
 
 const router = express.Router();
@@ -40,5 +41,6 @@ router.post('/import', importGames);
 
 // Check duplicates (Admin tool)
 router.get('/duplicates', checkDuplicates);
+router.delete('/duplicates', cleanDuplicates);
 
 export default router;
