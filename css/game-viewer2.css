@@ -16,20 +16,90 @@
     --gv-variation-color: #a0a0a0;
 }
 
+/* Game Viewer Container */
 .game-viewer-2-container {
-    display: flex;
-    flex-direction: column;
     width: 100%;
     background: var(--gv-bg-color);
     border: 1px solid var(--gv-border-color);
     border-radius: 8px;
     padding: 0;
-    /* Remove padding for app-like feel */
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
     color: var(--gv-text-color);
     overflow: visible;
-    /* Allow bubble to extend beyond container */
     position: relative;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Main Content Area - Grid Layout with right column spanning both rows */
+.gv2-content {
+    display: grid;
+    grid-template-areas:
+        "board right"
+        "controls right";
+    grid-template-columns: 1fr 200px;
+    grid-template-rows: 1fr auto;
+    width: 100%;
+    gap: 0;
+}
+
+.gv2-board-section {
+    grid-area: board;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+}
+
+/* Right column containing both info and analysis */
+.gv2-info-panel {
+    grid-area: right;
+    width: 200px !important;
+    max-width: 200px !important;
+    max-height: 450px;
+    display: flex;
+    flex-direction: column;
+    border-left: 1px solid var(--gv-border-color);
+    overflow: hidden;
+}
+
+/* Scrollable content area (metadata + moves) */
+.gv2-info-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: auto;
+}
+
+.gv2-controls {
+    grid-area: controls;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+/* Analysis info is now a CHILD of info-panel, not grid cell */
+.gv2-analysis-info {
+    flex-shrink: 0;
+    min-height: 70px;
+    overflow: hidden;
+    background: #252528;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 0.4rem 0.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+    font-size: 0.8rem;
+}
+
+/* If sidebar exists - left panel */
+.gv2-sidebar-left {
+    width: 260px;
+    flex-shrink: 0;
+    border-right: 1px solid var(--gv-border-color);
+    display: flex;
+    flex-direction: column;
+    background: rgba(0, 0, 0, 0.2);
+    overflow: hidden;
 }
 
 /* Header */
@@ -63,23 +133,21 @@
 }
 
 /* Main Content Area */
-.gv2-content {
-    display: flex;
-    flex-direction: row;
-    flex-wrap: wrap;
-    width: 100%;
-    align-items: stretch;
-    justify-content: center;
-    overflow: hidden;
-}
+/* Deprecated old flex definition - replaced by grid above */
+/* .gv2-content { ... } */
 
-.gv2-sidebar-left {
-    width: 260px;
-    flex-shrink: 0;
-    border-right: 1px solid var(--gv-border-color);
+/* Board Section - takes remaining space */
+.gv2-board-section {
+    flex: 1;
     display: flex;
     flex-direction: column;
-    background: rgba(0, 0, 0, 0.2);
+    justify-content: flex-start;
+    align-items: center;
+    position: relative;
+    background: radial-gradient(circle at center, #2a2a2a 0%, #1a1a1a 100%);
+    padding: 0.75rem;
+    min-height: 420px;
+    overflow: hidden;
 }
 
 .gv2-main-area {
@@ -91,7 +159,7 @@
 }
 
 .gv2-board-section {
-    flex: 1;
+    grid-area: board;
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -100,29 +168,33 @@
     background: radial-gradient(circle at center, #2a2a2a 0%, #1a1a1a 100%);
     padding: 0.75rem;
     min-height: 420px;
-    /* Increased to fit board + controls */
-    /* Allow scrolling within section if needed */
     overflow: hidden;
 }
 
+/* Info Panel - fixed width */
 .gv2-info-panel {
-    flex: 1 1 220px;
-    width: auto;
-    min-width: 220px;
-    max-width: 100%;
+    width: 220px;
     flex-shrink: 0;
+    align-self: stretch;
     border-left: 1px solid var(--gv-border-color);
     display: flex;
     flex-direction: column;
     background: var(--gv-bg-color);
-    min-height: 350px;
-    max-height: 100%;
+    overflow: hidden;
+}
+
+/* Info Content - scrollable area for metadata + moves */
+.gv2-info-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
     overflow: hidden;
 }
 
 /* Responsive adjustments - Tablet */
-@media (max-width: 1100px) {
+@media (max-width: 900px) {
     .gv2-content {
+        display: flex;
         flex-direction: column;
         height: auto;
     }
@@ -141,38 +213,64 @@
     .gv2-sidebar-left {
         max-height: 180px;
         order: 3;
-        /* Move game list BELOW the board */
     }
 
     .gv2-board-section {
         order: 1;
-        /* Board first */
     }
 
     .gv2-info-panel {
         order: 2;
-        /* Notation second, but compact */
-        max-height: 200px;
+        width: 100%;
+        max-width: 100%;
+        max-height: 250px;
+    }
+
+    .game-viewer-2-container {
+        display: flex !important;
+        flex-direction: column;
     }
 }
 
 /* Mobile - Playback focused */
 @media (max-width: 768px) {
     .gv2-content {
+        display: flex;
+        flex-direction: column;
         height: auto;
     }
 
     .gv2-board-section {
         padding: 0.5rem;
+        order: 1;
     }
 
-    /* Stack controls layout on mobile */
-    .gv2-bottom-bar {
+    .game-viewer-2-container,
+    .game-viewer-2-container:has(.gv2-sidebar-left) {
+        display: flex !important;
+        flex-direction: column;
+        max-height: none !important;
+        height: auto !important;
+    }
+
+    .gv2-footer {
+        order: 2;
         flex-direction: column-reverse;
-        /* Analysis on top, Controls bottom? Or standard column */
-        align-items: center;
-        width: 100%;
+        padding: 0.5rem;
         gap: 0.75rem;
+        border-top: none;
+    }
+
+    .gv2-info-panel {
+        order: 3;
+        width: 100% !important;
+        max-width: 100% !important;
+        flex: 1 1 auto;
+        max-height: 200px;
+        min-height: auto;
+        border-left: none;
+        border-top: 1px solid var(--gv-border-color);
+        overflow-y: auto;
     }
 
     .gv2-analysis-info {
@@ -181,12 +279,8 @@
 
     .gv2-board-wrapper {
         width: 100%;
-        max-width: 95vw;
-        /* Fallback */
         max-width: min(95vw, 50vh);
-        /* Ensure square board fits in height (reduced from 60vh) */
         margin: 0 auto;
-        /* max-height removed to let width drive height naturally via aspect ratio */
     }
 
     .gv2-controls {
@@ -200,17 +294,6 @@
         width: 38px;
         height: 38px;
         padding: 0.4rem;
-    }
-
-    .gv2-info-panel {
-        width: 100% !important;
-        max-width: 100% !important;
-        flex-shrink: 0;
-        max-height: 200px;
-        min-height: auto;
-        border-left: none;
-        border-top: 1px solid var(--gv-border-color);
-        overflow-y: auto;
     }
 
     .gv2-moves {
@@ -234,22 +317,18 @@
 
     .gv2-sidebar-left {
         max-height: 300px;
-        /* Duble height (prev 150px) */
     }
 
-    /* Hide game list title on very small screens */
     .gv2-sidebar-left .team-header-static {
         padding: 10px;
         font-size: 0.8em;
     }
 
-    /* Compact game items */
     .game-item {
         padding: 8px 12px;
         font-size: 0.85em;
     }
 
-    /* Board overlay more compact */
     .gv2-board-overlay {
         padding: 8px 12px;
         gap: 8px;
@@ -274,11 +353,8 @@
         gap: 4px;
         padding: 0.25rem 0.5rem;
         flex-wrap: nowrap;
-        /* Force single row */
         overflow-x: auto;
-        /* Allow scroll if really too small */
         justify-content: center;
-        /* Keep buttons together, don't spread to edges */
     }
 
     .gv2-btn {
@@ -302,14 +378,12 @@
 
     .gv2-sidebar-left {
         max-height: 240px;
-        /* Double height (prev 120px) */
     }
 
     .gv2-board-area {
         gap: 0;
     }
 
-    /* Narrower eval bar on mobile, no text */
     .gv2-eval-bar {
         width: 10px !important;
         min-width: 10px !important;
@@ -321,7 +395,6 @@
         display: none !important;
     }
 
-    /* Make analysis info thicker/wider on mobile */
     .gv2-analysis-info {
         padding: 0.8rem 0.5rem !important;
         font-size: 0.95rem !important;
@@ -332,18 +405,17 @@
 /* Board Area with Eval Bar */
 .gv2-board-area {
     display: flex;
-    justify-content: center;
+    justify-content: flex-start;
     align-items: stretch;
-    gap: 0.5rem;
-    width: 100%;
-    min-width: 0;
-    /* Prevent flex overflow */
+    gap: 0;
+    width: fit-content;
+    margin: 0 auto;
 }
 
 /* Eval Bar - Stockfish Analysis */
 .gv2-eval-bar {
-    width: 24px;
-    min-width: 24px;
+    width: 18px;
+    min-width: 18px;
     background: #333;
     border-radius: 4px;
     position: relative;
@@ -352,9 +424,15 @@
     flex-direction: column;
     justify-content: flex-end;
     border: 1px solid rgba(255, 255, 255, 0.1);
-    /* Ensure it shows up */
     z-index: 5;
     flex-shrink: 0;
+    /* Use opacity for toggle to prevent layout shift */
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}
+
+.gv2-eval-bar.active {
+    opacity: 1;
 }
 
 .gv2-eval-fill {
@@ -419,12 +497,13 @@
 
 .gv2-pv-line {
     font-family: 'Roboto Mono', monospace;
-    font-size: 0.85rem;
+    font-size: 0.8rem;
     color: #ccc;
-    white-space: nowrap;
+    white-space: normal;
+    word-wrap: break-word;
     overflow: hidden;
-    text-overflow: ellipsis;
-    padding-top: 0.25rem;
+    padding-top: 0.2rem;
+    line-height: 1.3;
 }
 
 .gv2-pv-move {
@@ -472,13 +551,10 @@
 
 /* Board Wrapper */
 .gv2-board-wrapper {
-    width: 100%;
-    /* Increase height constraint now that controls are side-by-side */
-    max-width: min(550px, calc(100% - 1rem));
-    /* Dynamic height constraint to ensure controls/eval bar fit vertically */
-    /* Reduced reserved space from 140px to 80px (controls + margins) */
-    max-height: calc(100% - 80px);
-    margin: 0 auto;
+    width: 400px;
+    height: 400px;
+    max-width: calc(100% - 30px);
+    max-height: calc(100% - 30px);
     aspect-ratio: 1;
     position: relative;
     display: block;
@@ -658,15 +734,21 @@
     }
 }
 
-/* Bottom Bar Wrapper (Controls + Analysis) */
-.gv2-bottom-bar {
+/* Bottom Bar Wrapper (Controls ONLY now) */
+/* Global Footer (Grid Footer) */
+.gv2-footer {
+    grid-area: footer;
     display: flex;
     flex-direction: row;
     align-items: center;
+    justify-content: center;
     gap: 1rem;
     width: 100%;
-    margin-top: 1rem;
-    min-height: 50px;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+    background: rgba(0, 0, 0, 0.2);
+    padding: 0.5rem;
+    min-height: 60px;
+    z-index: 10;
 }
 
 /* Controls (In Bottom Bar) */
@@ -684,24 +766,6 @@
     flex-shrink: 0;
 }
 
-/* Analysis Info (In Bottom Bar) */
-.gv2-analysis-info {
-    display: flex;
-    flex-direction: column;
-    gap: 0.25rem;
-    padding: 0.5rem;
-    background: #252528;
-    border: 1px solid #303030;
-    border-radius: 6px;
-    font-size: 0.85rem;
-    flex: 1;
-    /* Take remaining width */
-    min-width: 0;
-    overflow: hidden;
-    height: auto;
-    min-height: 48px;
-    justify-content: center;
-}
 
 .gv2-btn {
     background: none;
@@ -753,19 +817,12 @@
     }
 }
 
-/* Moves / Info Area */
+/* Moves / Info Area - additional styling */
 .gv2-info-panel {
-    width: 260px;
     display: flex;
     flex-direction: column;
-    height: 100%;
-    min-height: 250px;
-    max-height: 400px;
-    /* Shortened further */
     overflow: hidden;
     background: rgba(0, 0, 0, 0.3);
-    border: 1px solid var(--gv-border-color);
-    border-radius: 8px;
 }
 
 /* Metadata (Players, Elo, etc) */
@@ -792,6 +849,16 @@
     justify-content: space-between;
     margin-bottom: 0.5rem;
     align-items: center;
+    flex-wrap: wrap;
+    /* Allow wrapping if needed */
+    gap: 4px;
+}
+
+.gv2-metadata-row span {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
 }
 
 .gv2-metadata-row span strong {
@@ -827,7 +894,19 @@
     border-radius: 4px;
 }
 
-/* Move Styling */
+/* Analysis Info (Below Info Content) */
+.gv2-analysis-info {
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    padding: 0.5rem;
+    background: #252528;
+    border-top: 1px solid #303030;
+    font-size: 0.85rem;
+    min-height: 55px;
+}
+
 .gv2-move {
     cursor: pointer;
     padding: 2px 6px;
