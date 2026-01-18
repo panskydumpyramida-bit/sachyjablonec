@@ -116,7 +116,60 @@ function loadPgnFile(input) {
     input.value = '';
 }
 
+// Check duplicates
+async function checkDuplicateGames() {
+    const authToken = localStorage.getItem('auth_token') || sessionStorage.getItem('auth_token');
+    const resultDiv = document.getElementById('duplicateCheckResult');
+    const btn = document.querySelector('button[onclick="checkDuplicateGames()"]');
+
+    if (!resultDiv) return;
+
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Kontroluji...';
+    resultDiv.style.display = 'none';
+
+    try {
+        const res = await fetch(`${API_URL}/chess/duplicates`, {
+            headers: { 'Authorization': `Bearer ${authToken}` }
+        });
+        const data = await res.json();
+
+        resultDiv.style.display = 'block';
+
+        if (data.count === 0) {
+            resultDiv.style.border = '1px solid #4ade80';
+            resultDiv.style.background = 'rgba(74, 222, 128, 0.1)';
+            resultDiv.innerHTML = '<i class="fa-solid fa-check-circle" style="color: #4ade80;"></i> Žádné duplicity nenalezeny.';
+        } else {
+            resultDiv.style.border = '1px solid #ef4444';
+            resultDiv.style.background = 'rgba(239, 68, 68, 0.1)';
+
+            let html = `<div style="color: #ef4444; margin-bottom: 0.5rem;"><i class="fa-solid fa-exclamation-triangle"></i> Nalezeno ${data.count} skupin duplicit:</div>`;
+            html += '<ul style="margin: 0; padding-left: 1.5rem; font-size: 0.9rem; color: var(--text-muted);">';
+
+            data.duplicates.forEach(d => {
+                html += `<li>
+                    <strong>${d.signature.date}</strong>: ${d.signature.white} vs ${d.signature.black} (${d.count}x)
+                    <br><span style="font-size: 0.8rem; opacity: 0.7">IDs: ${d.ids.join(', ')}</span>
+                </li>`;
+            });
+            html += '</ul>';
+            resultDiv.innerHTML = html;
+        }
+
+    } catch (error) {
+        console.error('Check failed:', error);
+        resultDiv.style.display = 'block';
+        resultDiv.style.border = '1px solid #ef4444';
+        resultDiv.innerHTML = 'Chyba při kontrole duplicit.';
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fa-solid fa-search"></i> Zkontrolovat duplicity';
+    }
+}
+
 // Export to window for access from HTML
 window.loadChessDBStats = loadChessDBStats;
 window.importChessGames = importChessGames;
 window.loadPgnFile = loadPgnFile;
+window.checkDuplicateGames = checkDuplicateGames;
