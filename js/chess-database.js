@@ -239,7 +239,7 @@ const ChessDB = {
 
         return `
             <div class="game-row" data-id="${g.id}" onclick="ChessDB.openGame(${g.id})">
-                <div class="game-meta">${date} ${g.eco || ''}</div>
+                <div class="game-meta">${date} ${g.eco || ''} ${g.plyCount ? '• ' + Math.ceil(g.plyCount / 2) + ' tahů' : ''}</div>
                 <div class="game-players-line">
                     <span class="player-color white"></span>
                     <span>${g.whitePlayer}</span>
@@ -607,8 +607,16 @@ const ChessDB = {
 
         content.innerHTML = `
             <div class="tree-position">
-                <strong>${this.currentPlayer}</strong> (${colorLabel})<br>
-                Pozice: ${movesPlayed.length > 0 ? movesPlayed.join(' ') : 'Startovní'}
+                <div style="display: flex; justify-content: space-between; align-items: start;">
+                    <strong>${this.currentPlayer}</strong> 
+                    <button onclick="document.getElementById('treePosText').classList.toggle('hidden')" style="background:none; border:none; color:var(--text-muted); cursor:pointer;">
+                        <i class="fa-solid fa-eye-slash"></i>
+                    </button>
+                </div>
+                <div style="color: var(--text-muted); font-size: 0.85em;">(${colorLabel})</div>
+                <div id="treePosText" class="tree-pos-text" style="font-size: 0.85em; color: var(--text-muted); margin-top: 4px;">
+                    ${movesPlayed.length > 0 ? movesPlayed.map(m => this.formatSan(m)).join(' ') : 'Startovní pozice'}
+                </div>
             </div>
             <div class="tree-moves">
                 ${sorted.slice(0, 10).map(node => {
@@ -619,9 +627,16 @@ const ChessDB = {
             const isActive = node.move === nextMoveInGame;
             const recentGameId = node.recentGames && node.recentGames.length > 0 ? node.recentGames[0].id : null;
 
+            const moveNumber = Math.floor(movesPlayed.length / 2) + 1;
+            const isWhite = movesPlayed.length % 2 === 0;
+            const moveLabel = isWhite ? `${moveNumber}.` : `${moveNumber}...`;
+
             return `
                         <div class="tree-node ${isActive ? 'active' : ''}" onclick="ChessDB.playTreeMove('${node.move}', ${recentGameId})">
-                            <span class="tree-move">${node.move}</span>
+                            <span class="tree-move" style="font-family: 'Inter', sans-serif;">
+                                <span style="opacity: 0.6; font-size: 0.9em; margin-right: 4px;">${moveLabel}</span>
+                                ${this.formatSan(node.move)}
+                            </span>
                             <div class="tree-bar" style="--win-pct: ${winPct}%; --draw-end: ${drawEnd}%;"></div>
                             <span class="tree-games">${node.games}</span>
                             <span class="tree-pct">${score}%</span>
@@ -736,6 +751,20 @@ const ChessDB = {
 
         const fen = this.chessGame.fen();
         this.analyzer.analyze(fen);
+    },
+
+    formatSan(san) {
+        if (!san) return '';
+        const icon = (cls) => `<i class="fa-solid ${cls}"></i>`;
+        return san.replace(/^N/, icon('fa-chess-knight'))
+            .replace(/^B/, icon('fa-chess-bishop'))
+            .replace(/^R/, icon('fa-chess-rook'))
+            .replace(/^Q/, icon('fa-chess-queen'))
+            .replace(/^K/, icon('fa-chess-king'))
+            .replace('=N', '=' + icon('fa-chess-knight'))
+            .replace('=B', '=' + icon('fa-chess-bishop'))
+            .replace('=R', '=' + icon('fa-chess-rook'))
+            .replace('=Q', '=' + icon('fa-chess-queen'));
     }
 };
 
