@@ -405,8 +405,8 @@ const ChessDB = {
         let html = '';
         for (let i = 0; i < this.moves.length; i += 2) {
             const moveNum = Math.floor(i / 2) + 1;
-            const whiteMove = this.moves[i] || '';
-            const blackMove = this.moves[i + 1] || '';
+            const whiteMove = this.formatSan(this.moves[i] || '');
+            const blackMove = this.formatSan(this.moves[i + 1] || '');
 
             html += `<div class="move-pair">
                 <span class="move-number">${moveNum}.</span>
