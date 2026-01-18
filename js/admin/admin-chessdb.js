@@ -154,6 +154,14 @@ async function checkDuplicateGames() {
                 </li>`;
             });
             html += '</ul>';
+
+            // Add Clean Button
+            html += `<div style="margin-top: 1rem; border-top: 1px solid rgba(239, 68, 68, 0.2); padding-top: 1rem;">
+                <button onclick="cleanDuplicateGames()" class="btn-delete" style="width: 100%;">
+                    <i class="fa-solid fa-trash"></i> Smazat duplicity (ponechat vždy jednu)
+                </button>
+            </div>`;
+
             resultDiv.innerHTML = html;
         }
 
@@ -168,8 +176,47 @@ async function checkDuplicateGames() {
     }
 }
 
+// Clean duplicates
+async function cleanDuplicateGames() {
+    if (!confirm('Opravdu chcete smazat všechny nalezené duplicity? Ze každé skupiny zůstane zachována jen jedna (nejstarší) verze. Tato akce je nevratná.')) {
+        return;
+    }
+
+    const authToken = localStorage.getItem('auth_token') || sessionStorage.getItem('auth_token');
+    const resultDiv = document.getElementById('duplicateCheckResult');
+
+    // Disable clean button inside resultDiv
+    const cleanBtn = resultDiv.querySelector('button');
+    if (cleanBtn) {
+        cleanBtn.disabled = true;
+        cleanBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Mažu...';
+    }
+
+    try {
+        const res = await fetch(`${API_URL}/chess/duplicates`, {
+            method: 'DELETE',
+            headers: { 'Authorization': `Bearer ${authToken}` }
+        });
+        const data = await res.json();
+
+        if (data.success) {
+            alert(`Hotovo! Smazáno ${data.deleted} duplicitních partií.`);
+            // Re-run check to verify
+            checkDuplicateGames();
+            // Reload stats
+            loadChessDBStats();
+        } else {
+            alert('Chyba při mazání: ' + (data.error || 'Neznámá chyba'));
+        }
+    } catch (error) {
+        console.error('Delete failed:', error);
+        alert('Chyba spojení.');
+    }
+}
+
 // Export to window for access from HTML
 window.loadChessDBStats = loadChessDBStats;
 window.importChessGames = importChessGames;
 window.loadPgnFile = loadPgnFile;
 window.checkDuplicateGames = checkDuplicateGames;
+window.cleanDuplicateGames = cleanDuplicateGames;
