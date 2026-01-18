@@ -11,7 +11,6 @@ import {
     getGameById,
     getPlayerStats,
     getOpeningTree,
-    getOpeningTree,
     importGames,
     checkDuplicates
 } from '../controllers/chessController.js';
