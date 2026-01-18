@@ -579,7 +579,9 @@ export const checkDuplicates = async (req, res) => {
         // Group games
         for (const game of games) {
             const dateStr = game.date.toISOString().split('T')[0];
-            const key = `${game.whitePlayer.trim().toLowerCase()}|${game.blackPlayer.trim().toLowerCase()}|${dateStr}`;
+            const w = normalizeName(game.whitePlayer);
+            const b = normalizeName(game.blackPlayer);
+            const key = `${w}|${b}|${dateStr}`;
 
             if (!groups[key]) {
                 groups[key] = [];
