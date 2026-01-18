@@ -349,7 +349,7 @@ const ChessDB = {
                         <button id="engineBtnBottom" onclick="ChessDB.toggleEngine()" title="Engine" style="color: var(--text-muted);"><i class="fa-solid fa-microchip"></i></button>
                     </div>
                 </div>
-                <div class="moves-wrapper" id="movesPanel" style="max-height: 250px; overflow-y: auto;">
+                <div class="moves-wrapper" id="movesPanel" style="max-height: 150px; overflow-y: auto;">
                     ${this.renderMovesList()}
                 </div>
             </div>
