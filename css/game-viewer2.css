@@ -294,8 +294,8 @@
 
     /* Narrower eval bar on mobile, no text */
     .gv2-eval-bar {
-        width: 8px !important;
-        min-width: 8px !important;
+        width: 16px !important;
+        min-width: 16px !important;
         min-height: auto !important;
         height: auto !important;
     }
