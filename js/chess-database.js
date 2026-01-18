@@ -232,22 +232,27 @@ const ChessDB = {
     },
 
     renderGameRow(g) {
-        const date = g.date ? new Date(g.date).toLocaleDateString('cs-CZ', { day: 'numeric', month: 'numeric', year: '2-digit' }) : '';
-        let resultClass = 'draw';
-        if (g.result === '1-0') resultClass = 'white-win';
-        else if (g.result === '0-1') resultClass = 'black-win';
+        const date = g.date ? new Date(g.date).toLocaleDateString('cs-CZ', { day: 'numeric', month: 'numeric', year: 'numeric' }) : '';
+        const resultClass = g.result === '1-0' ? 'white-win' : g.result === '0-1' ? 'black-win' : 'draw';
+
+        // ELO handling
+        const whiteElo = g.whiteElo ? ` <span style="color:var(--text-muted); font-size:0.85em;">(${g.whiteElo})</span>` : '';
+        const blackElo = g.blackElo ? ` <span style="color:var(--text-muted); font-size:0.85em;">(${g.blackElo})</span>` : '';
 
         return `
             <div class="game-row" data-id="${g.id}" onclick="ChessDB.openGame(${g.id})">
-                <div class="game-meta">${date} ${g.eco || ''} ${g.plyCount ? '• ' + Math.ceil(g.plyCount / 2) + ' tahů' : ''}</div>
+                <div class="game-meta">
+                    ${date} ${g.eco || ''}
+                    ${g.plyCount ? `<span style="margin-left:8px; color:var(--text-muted);">• ${Math.ceil(g.plyCount / 2)} tahů</span>` : ''}
+                </div>
                 <div class="game-players-line">
                     <span class="player-color white"></span>
-                    <span>${g.whitePlayer}</span>
+                    <span>${g.whitePlayer}${whiteElo}</span>
                     <span class="game-result-badge ${resultClass}">${g.result}</span>
                 </div>
                 <div class="game-players-line">
                     <span class="player-color black"></span>
-                    <span>${g.blackPlayer}</span>
+                    <span>${g.blackPlayer}${blackElo}</span>
                 </div>
             </div>
         `;
