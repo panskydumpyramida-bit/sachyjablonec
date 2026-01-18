@@ -47,7 +47,8 @@
     grid-area: board;
     display: flex;
     flex-direction: column;
-    justify-content: center;
+    justify-content: flex-end;
+    /* Push to bottom near controls */
     align-items: center;
     overflow: hidden;
 }
@@ -429,6 +430,8 @@
     /* Use opacity for toggle to prevent layout shift */
     opacity: 0;
     transition: opacity 0.2s ease;
+    box-sizing: border-box;
+    margin: 0;
 }
 
 .gv2-eval-bar.active {
@@ -550,6 +553,7 @@
 }
 
 /* Board Wrapper */
+/* Board Wrapper */
 .gv2-board-wrapper {
     width: 400px;
     height: 400px;
@@ -560,6 +564,8 @@
     display: block;
     box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
     z-index: 1;
+    margin: 0;
+    /* Align tight to eval bar */
 }
 
 /* Mobile specific board wrapper override for better targeting if needed */
@@ -762,7 +768,7 @@
     border: 1px solid rgba(255, 255, 255, 0.1);
     flex-wrap: nowrap;
     width: fit-content;
-    margin: 0;
+    margin: 0 auto;
     flex-shrink: 0;
 }
 
@@ -879,6 +885,7 @@
     text-align: left;
     scrollbar-width: thin;
     scrollbar-color: var(--gv-border-color) transparent;
+    position: relative;
 }
 
 .gv2-moves::-webkit-scrollbar {

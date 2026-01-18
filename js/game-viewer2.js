@@ -774,6 +774,29 @@ class GameViewer2 {
                 console.error('[GV2 Init] Chessboard library is not a function:', typeof Chessboard);
             }
         }
+
+        // Initial sync of eval bar height
+        this.syncEvalBarHeight();
+
+        // Add resize listener
+        window.addEventListener('resize', () => {
+            this.board && this.board.resize();
+            this.syncEvalBarHeight();
+        });
+    }
+
+    syncEvalBarHeight() {
+        requestAnimationFrame(() => {
+            const boardEl = document.getElementById('gv2-board');
+            const evalBar = document.getElementById('gv2-eval-bar');
+            if (boardEl && evalBar) {
+                // FORCE height to match board
+                const height = boardEl.offsetHeight;
+                if (height > 0) {
+                    evalBar.style.height = height + 'px';
+                }
+            }
+        });
     }
 
     // --- Loading Games ---
@@ -844,6 +867,7 @@ class GameViewer2 {
             const triggerResize = () => {
                 if (this.board && typeof this.board.resize === 'function') {
                     this.board.resize();
+                    this.syncEvalBarHeight();
                 }
             };
 
@@ -895,7 +919,6 @@ class GameViewer2 {
         metaEl.innerHTML = `
             <div class="gv2-metadata-row">
                 <span><strong>White:</strong> ${gameData.white || '?'}</span>
-                <span>${dateStr}</span>
             </div>
             <div class="gv2-metadata-row">
                 <span><strong>Black:</strong> ${gameData.black || '?'}</span>
@@ -2049,6 +2072,12 @@ class GameViewer2 {
 
     // Hide the variation choice modal
     hideVariationChoiceModal() {
+        if (this.activeModalCleanup) {
+            this.activeModalCleanup();
+            return;
+        }
+
+        // Fallback manual cleanup
         const existing = document.getElementById('gv2-var-modal');
         if (existing) {
             existing.remove();
@@ -2062,7 +2091,12 @@ class GameViewer2 {
     // Show modal to choose between main line and variations
     // withAutoplayTimeout: if true, auto-select main line after 2s and resume autoplay
     showVariationChoiceModal(mainMove, variations, withAutoplayTimeout = false) {
-        // Remove existing modal if any
+        // remove existing modal/listeners if any
+        if (this.activeModalCleanup) {
+            this.activeModalCleanup();
+        }
+
+        // Remove existing modal DOM if still present (safety)
         const existing = document.getElementById('gv2-var-modal');
         if (existing) existing.remove();
 
@@ -2105,7 +2139,10 @@ class GameViewer2 {
                 clearTimeout(this.variationAutoplayTimeout);
                 this.variationAutoplayTimeout = null;
             }
+            this.activeModalCleanup = null;
         };
+
+        this.activeModalCleanup = cleanup;
 
         // Handle clicks
         modal.addEventListener('click', (e) => {
