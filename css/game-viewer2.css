@@ -1449,6 +1449,7 @@
     .gv2-moves {
         display: block;
         /* Ensure block layout for floats */
+        padding-left: 0;
     }
 
     .gv2-move-num {
@@ -1456,9 +1457,11 @@
         float: left;
         clear: left;
         /* Force new line */
-        width: 35px;
+        width: 40px;
         /* Fixed width for alignment */
         margin-right: 5px;
+        text-align: right;
+        /* Right-align numbers so 1. and 10. align properly */
     }
 
     .gv2-move {
@@ -1476,10 +1479,10 @@
 
     .gv2-comment {
         display: block;
-        float: left;
         clear: both;
-        width: 100%;
-        margin: 4px 0 8px 40px;
+        width: calc(100% - 45px);
+        margin: 4px 0 8px 45px;
+        /* Align with moves (move-num width + margin) */
         color: #aaa;
         font-style: italic;
     }
@@ -1487,7 +1490,9 @@
     .gv2-variation {
         display: block;
         clear: both;
-        padding-left: 40px;
+        margin-left: 45px;
+        /* Align with moves */
+        padding-left: 0;
         color: #888;
         font-size: 0.9em;
         margin-bottom: 8px;
