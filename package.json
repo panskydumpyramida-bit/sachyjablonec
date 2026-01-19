@@ -6,7 +6,7 @@
   "type": "module",
   "scripts": {
     "dev": "nodemon src/server.js",
-    "start": "npx prisma migrate deploy && node src/server.js",
+    "start": "npx prisma migrate resolve --rolled-back 20260110222611_bulletin_board_features || echo 'Resolve skipped' && npx prisma migrate deploy && node src/server.js",
     "maintenance": "node scripts/sync-production-events.js && node scripts/generate_thumbnails.js",
     "postinstall": "prisma generate",
     "db:migrate": "prisma migrate dev",
