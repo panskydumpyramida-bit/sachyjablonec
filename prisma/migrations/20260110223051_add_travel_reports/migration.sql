@@ -1,5 +1,5 @@
 -- CreateTable
-CREATE TABLE "travel_reports" (
+CREATE TABLE IF NOT EXISTS "travel_reports" (
     "id" SERIAL NOT NULL,
     "user_id" INTEGER NOT NULL,
     "date" TIMESTAMP(3) NOT NULL,
@@ -15,4 +15,9 @@ CREATE TABLE "travel_reports" (
 );
 
 -- AddForeignKey
-ALTER TABLE "travel_reports" ADD CONSTRAINT "travel_reports_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'travel_reports_user_id_fkey') THEN
+        ALTER TABLE "travel_reports" ADD CONSTRAINT "travel_reports_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+    END IF;
+END $$;
