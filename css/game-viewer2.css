@@ -1504,6 +1504,16 @@
         display: table;
         clear: both;
     }
+
+    /* Game result positioning */
+    .gv2-result {
+        display: block;
+        clear: both;
+        margin-left: 45px;
+        margin-top: 8px;
+        font-weight: bold;
+        color: var(--gv-active-color, #d4af37);
+    }
 }
 
 /* Inner content wrapper created via JS - responsive padding */
