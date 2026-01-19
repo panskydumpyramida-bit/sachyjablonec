@@ -517,6 +517,13 @@ function insertIntroBlock() {
 // ================================
 
 async function insertDiagram() {
+    // Save text selection before opening modal (because modal focus will clear it)
+    const selection = window.getSelection();
+    let savedRange = null;
+    if (selection.rangeCount > 0) {
+        savedRange = selection.getRangeAt(0).cloneRange();
+    }
+
     // Fetch available diagrams from API
     let diagrams = [];
     try {
@@ -553,10 +560,10 @@ async function insertDiagram() {
     }
 
     // Show Selector Modal
-    showDiagramSelectorModal(diagrams);
+    showDiagramSelectorModal(diagrams, savedRange);
 }
 
-function showDiagramSelectorModal(diagrams) {
+function showDiagramSelectorModal(diagrams, savedRange) {
     if (document.getElementById('diagramSelectorModal')) return;
 
     // Inject Styles
@@ -762,7 +769,7 @@ function showDiagramSelectorModal(diagrams) {
                     renderList(searchInput.value); // Re-render to update visual
                 } else {
                     // Single click insert
-                    insertDiagramToEditor(d);
+                    insertDiagramToEditor(d, savedRange);
                     modalEl.remove();
                 }
             };
@@ -784,7 +791,7 @@ function showDiagramSelectorModal(diagrams) {
     insertBookBtn.onclick = () => {
         if (selectedDiagrams.size >= 2) {
             const diagramsArray = Array.from(selectedDiagrams.values());
-            insertDiagramBookToEditor(diagramsArray);
+            insertDiagramBookToEditor(diagramsArray, savedRange);
             modalEl.remove();
         }
     };
@@ -800,7 +807,15 @@ function showDiagramSelectorModal(diagrams) {
     });
 }
 
-function insertDiagramBookToEditor(diagrams) {
+function insertDiagramBookToEditor(diagrams, savedRange) {
+    if (savedRange) {
+        const sel = window.getSelection();
+        sel.removeAllRanges();
+        sel.addRange(savedRange);
+    } else {
+        document.getElementById('articleContent')?.focus();
+    }
+
     if (!diagrams || diagrams.length < 2) return;
 
     const bookId = 'book_' + Date.now();
@@ -921,7 +936,15 @@ window.bookNav = function (bookId, direction) {
     });
 };
 
-function insertDiagramToEditor(diagram) {
+function insertDiagramToEditor(diagram, savedRange) {
+    if (savedRange) {
+        const sel = window.getSelection();
+        sel.removeAllRanges();
+        sel.addRange(savedRange);
+    } else {
+        document.getElementById('articleContent')?.focus();
+    }
+
     const boardHtml = generateMiniBoard(diagram.fen);
 
     const html = `
