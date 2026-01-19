@@ -573,8 +573,8 @@
     .gv2-board-wrapper {
         max-height: 56vh;
         /* +12% from 50vh */
-        max-width: calc(100vw - 40px);
-        /* 30px eval bar + 10px buffer/padding */
+        max-width: 88vw;
+        /* Reduced width by ~12% to ensure fit */
         /* Allow it to be wider to support the height */
     }
 }
