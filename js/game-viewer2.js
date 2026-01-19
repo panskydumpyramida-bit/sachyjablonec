@@ -1502,9 +1502,12 @@ class GameViewer2 {
                     // Still apply figurine notation even if we can't link to ply
                     html += `<span class="gv2-move">${this.formatSan(part)}</span>`;
                 }
+            } else if (cleanPart.match(/^(1-0|0-1|1\/2-1\/2|\*)$/)) {
+                // Game result - wrap in special class for styling
+                html += `<span class="gv2-result">${cleanPart}</span>`;
             } else {
                 // Log unmatched tokens for debugging
-                if (cleanPart && !cleanPart.match(/^(1-0|0-1|1\/2-1\/2|\*)$/)) {
+                if (cleanPart) {
                     console.log('[processBuffer] Unmatched token:', cleanPart, '| raw:', part);
                 }
                 html += part;
