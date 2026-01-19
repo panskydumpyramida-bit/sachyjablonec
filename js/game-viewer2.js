@@ -2642,7 +2642,13 @@ GameViewer2.prototype.renderListToElement = function (listElement) {
                 titleHtml += `<span class="game-result">${result}</span>`;
             }
             if (game.pgn) {
-                titleHtml += '<i class="fa-solid fa-chess-board" style="opacity:0.5; font-size:0.8em; margin-left:auto;"></i>';
+                // Check if PGN has comments (text in {} brackets)
+                const hasComments = game.pgn.includes('{');
+                if (hasComments) {
+                    titleHtml += '<i class="fa-solid fa-comment" style="color: #60a5fa; font-size:0.8em; margin-left:auto;" title="Komentovaná partie"></i>';
+                } else {
+                    titleHtml += '<i class="fa-solid fa-chess-board" style="opacity:0.5; font-size:0.8em; margin-left:auto;"></i>';
+                }
             }
 
             item.innerHTML = titleHtml;
