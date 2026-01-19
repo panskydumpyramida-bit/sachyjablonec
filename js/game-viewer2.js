@@ -889,7 +889,10 @@ class GameViewer2 {
                 setTimeout(() => {
                     // Focus container for immediate keyboard control
                     // Use preventScroll to stop the page from jumping
-                    if (gv2Container) gv2Container.focus({ preventScroll: true });
+                    // Skip focus on mobile to prevent virtual keyboard or unexpected scrolls
+                    if (gv2Container && window.innerWidth > 768) {
+                        gv2Container.focus({ preventScroll: true });
+                    }
                 }, 200);
             });
 
