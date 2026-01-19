@@ -1159,8 +1159,16 @@ class GameViewer2 {
         const tokens = varContent.split(/\s+/).filter(t => t.trim());
 
         for (const token of tokens) {
-            // Skip move numbers, NAGs, and comments
-            if (token.match(/^[0-9]+\.+$/) || token.match(/^\$[0-9]+$/) || token.startsWith('{')) {
+            // Check for NAG (Numeric Annotation Glyph)
+            if (token.match(/^\$[0-9]+$/)) {
+                if (moves.length > 0) {
+                    moves[moves.length - 1].nag = token;
+                }
+                continue;
+            }
+
+            // Skip move numbers and comments start
+            if (token.match(/^[0-9]+\.+$/) || token.startsWith('{')) {
                 continue;
             }
             // Skip nested variations (handled recursively)
@@ -2146,17 +2154,34 @@ class GameViewer2 {
             ? `<div class="gv2-var-countdown" id="gv2-var-countdown">3</div>`
             : '';
 
+        // Helper to get NAG HTML
+        const getNagHtml = (nag) => {
+            if (!nag) return '';
+            const map = { '$1': '!', '$2': '?', '$3': '!!', '$4': '??', '$5': '!?', '$6': '?!' };
+            const colorMap = {
+                '$1': '#4ade80', '$2': '#ef4444', '$3': '#22c55e', '$4': '#dc2626', '$5': '#60a5fa', '$6': '#fbbf24'
+            };
+            const symbol = map[nag] || '';
+            const color = colorMap[nag] || '#aaa';
+            return symbol ? `<span style="color: ${color}; margin-left: 2px;">${symbol}</span>` : '';
+        };
+
+        const mainNagCode = this.mainLinePlies[this.currentPly + 1]?.nag;
+        const mainNagHtml = getNagHtml(mainNagCode);
+
         modal.innerHTML = `
             <div class="gv2-var-modal-content">
                 ${countdownHtml}
                 <button class="gv2-var-choice gv2-var-main" data-action="main">
-                    ${this.formatSan(mainMove)}
+                    ${this.formatSan(mainMove)}${mainNagHtml}
                 </button>
-                ${variations.map((v, i) => `
+                ${variations.map((v, i) => {
+            const varNagHtml = getNagHtml(v.firstMove.nag);
+            return `
                     <button class="gv2-var-choice" data-action="var" data-var="${v.varId}" data-fen="${v.firstMove.fen}">
-                        ${this.formatSan(v.firstMove.san)}
+                        ${this.formatSan(v.firstMove.san)}${varNagHtml}
                     </button>
-                `).join('')}
+                `}).join('')}
             </div>
         `;
 
