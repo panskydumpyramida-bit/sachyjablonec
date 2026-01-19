@@ -1459,6 +1459,26 @@ class GameViewer2 {
             } else if (part.match(/^[0-9]+\.+$/)) {
                 html += `<span class="gv2-move-num">${part}</span>`;
                 lastWasMoveNum = true;
+            } else if (cleanPart.match(/^[KQRBN]?[a-h]?[1-8]?x?[a-h][1-8](=[QRBN])?[\+#]?$/) ||
+                cleanPart.match(/^O-O(-O)?[\+#]?$/)) {
+                // Fallback: This looks like a valid chess move but didn't match expected sequence
+                // Still wrap it with gv2-move class and apply figurine notation
+                // Try to find this move in history to get correct ply
+                let foundPly = -1;
+                for (let i = 0; i < history.length; i++) {
+                    if (history[i] && (history[i].san === cleanPart || history[i].lan === cleanPart)) {
+                        foundPly = i + 1;
+                        break;
+                    }
+                }
+
+                if (foundPly > 0) {
+                    html += `<span class="gv2-move" data-ply="${foundPly}" onclick="gameViewer2.jumpTo(${foundPly})">${this.formatSan(part)}</span>`;
+                    this.lastMatchedPly = foundPly;
+                } else {
+                    // Still apply figurine notation even if we can't link to ply
+                    html += `<span class="gv2-move">${this.formatSan(part)}</span>`;
+                }
             } else {
                 html += part;
             }
