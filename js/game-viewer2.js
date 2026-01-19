@@ -856,7 +856,14 @@ class GameViewer2 {
             }
 
             // Set Title & Metadata
-            document.getElementById('gv2-title').textContent = gameData.title;
+            const titleEl = document.getElementById('gv2-title');
+            if (gameData.white && gameData.black) {
+                // Use HTML to allow mobile styling (stacking)
+                titleEl.innerHTML = `<span class="gv2-player-white">${gameData.white}</span><span class="gv2-vs-sep"> - </span><span class="gv2-player-black">${gameData.black}</span>`;
+            } else {
+                titleEl.textContent = gameData.title;
+            }
+
             this.renderMetadata(gameData);
 
             // Parse PGN
@@ -871,14 +878,18 @@ class GameViewer2 {
                 }
             };
 
+            // Immediate resize
+            triggerResize();
+
+            // Delayed resize helps with some layout trashing or transition situations
+            setTimeout(triggerResize, 50);
+
+            // Double check scrolling into view logic - preventing jump on game switch
             requestAnimationFrame(() => {
-                triggerResize();
-                // Double check after a small delay for DOM reflows
-                setTimeout(triggerResize, 50);
                 setTimeout(() => {
-                    triggerResize();
                     // Focus container for immediate keyboard control
-                    if (gv2Container) gv2Container.focus();
+                    // Use preventScroll to stop the page from jumping
+                    if (gv2Container) gv2Container.focus({ preventScroll: true });
                 }, 200);
             });
 
