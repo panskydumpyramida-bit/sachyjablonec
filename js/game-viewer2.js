@@ -2487,7 +2487,7 @@ GameViewer2.create = function (containerSelector, games, options = {}) {
 
             <!-- Viewer Panel (Right) -->
             <div class="gv-viewer-panel">
-                <div style="flex: 1; padding: 1rem;">
+                <div class="gv-viewer-content" style="flex: 1;">
                     <!-- GameViewer2 Wrapper - the class will inject here -->
                     <div id="game-viewer-wrapper" class="game-viewer">
                         <!-- Iframe for Chess.com fallback -->
