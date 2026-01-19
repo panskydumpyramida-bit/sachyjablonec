@@ -1418,8 +1418,9 @@ class GameViewer2 {
             }
         });
 
-        // Update comment bubble for this position
+        // Update comment bubble and NAG marker for this position
         this.updateCommentBubble();
+        this.updateNagMarker();
     }
 
     processBuffer(text, history, parentVarId = null) {
@@ -1545,8 +1546,14 @@ class GameViewer2 {
     }
 
     stepForward() {
-        // Close variation modal if open (user manually chose to move forward in main line)
-        this.hideVariationChoiceModal();
+        // If variation modal is open, user pressing right means "continue in main line"
+        // Set cooldown and hide modal - the cooldown prevents re-showing
+        const modalOpen = document.getElementById('gv2-var-modal');
+        if (modalOpen) {
+            this.modalCooldown = true;
+            setTimeout(() => { this.modalCooldown = false; }, 500);
+            this.hideVariationChoiceModal();
+        }
         console.log('[DEBUG stepForward] Called. inVariation:', this.currentVariation, 'currentPly:', this.currentPly);
 
         if (this.inVariation && this.currentVariation) {
