@@ -1,5 +1,5 @@
 -- CreateTable
-CREATE TABLE "announcements" (
+CREATE TABLE IF NOT EXISTS "announcements" (
     "id" SERIAL NOT NULL,
     "title" TEXT NOT NULL,
     "content" TEXT NOT NULL,
@@ -11,7 +11,7 @@ CREATE TABLE "announcements" (
 );
 
 -- CreateTable
-CREATE TABLE "documents" (
+CREATE TABLE IF NOT EXISTS "documents" (
     "id" SERIAL NOT NULL,
     "title" TEXT NOT NULL,
     "filename" TEXT NOT NULL,
@@ -24,7 +24,17 @@ CREATE TABLE "documents" (
 );
 
 -- AddForeignKey
-ALTER TABLE "announcements" ADD CONSTRAINT "announcements_author_id_fkey" FOREIGN KEY ("author_id") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'announcements_author_id_fkey') THEN
+        ALTER TABLE "announcements" ADD CONSTRAINT "announcements_author_id_fkey" FOREIGN KEY ("author_id") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+    END IF;
+END $$;
 
 -- AddForeignKey
-ALTER TABLE "documents" ADD CONSTRAINT "documents_uploaded_by_id_fkey" FOREIGN KEY ("uploaded_by_id") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'documents_uploaded_by_id_fkey') THEN
+        ALTER TABLE "documents" ADD CONSTRAINT "documents_uploaded_by_id_fkey" FOREIGN KEY ("uploaded_by_id") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+    END IF;
+END $$;
