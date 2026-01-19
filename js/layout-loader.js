@@ -126,6 +126,13 @@ document.addEventListener('DOMContentLoaded', () => {
         document.head.appendChild(authScript);
     }
 
+    // Load global modal manager
+    if (typeof modal === 'undefined') {
+        const modalScript = document.createElement('script');
+        modalScript.src = `/js/modal-manager.js?v=${version}`;
+        document.head.appendChild(modalScript);
+    }
+
     // Google Analytics
     const gaId = 'G-GMHL4VL852';
     const script = document.createElement('script');

@@ -377,6 +377,72 @@ app.get('/api/health', (req, res) => {
     res.json({ status: 'ok', message: 'Server is running' });
 });
 
+// --- Diagram API ---
+app.get('/api/diagrams', authMiddleware, async (req, res) => {
+    try {
+        const diagrams = await prisma.diagram.findMany({
+            orderBy: { createdAt: 'desc' },
+            take: 50,
+            include: { user: { select: { username: true } } }
+        });
+        res.json(diagrams);
+    } catch (error) {
+        console.error('Error fetching diagrams:', error);
+        res.status(500).json({ error: 'Failed to fetch diagrams' });
+    }
+});
+
+app.get('/api/diagrams/:id', authMiddleware, async (req, res) => {
+    try {
+        const diagram = await prisma.diagram.findUnique({
+            where: { id: parseInt(req.params.id) },
+            include: { user: { select: { username: true } } }
+        });
+        if (!diagram) return res.status(404).json({ error: 'Diagram not found' });
+        res.json(diagram);
+    } catch (error) {
+        console.error('Error fetching diagram:', error);
+        res.status(500).json({ error: 'Failed to fetch diagram' });
+    }
+});
+
+app.post('/api/diagrams', authMiddleware, async (req, res) => {
+    try {
+        const { fen, annotations, solution, name, description } = req.body;
+
+        if (!fen) return res.status(400).json({ error: 'FEN string is required' });
+
+        const diagram = await prisma.diagram.create({
+            data: {
+                fen,
+                annotations: annotations || {},
+                solution: solution || {}, // Interactive solver data
+                name: name || `Diagram ${new Date().toLocaleString('cs-CZ')}`,
+                description,
+                userId: req.user.id
+            }
+        });
+        res.json(diagram);
+    } catch (error) {
+        console.error('Error creating diagram:', error);
+        res.status(500).json({ error: 'Failed to create diagram' });
+    }
+});
+
+app.delete('/api/diagrams/:id', authMiddleware, async (req, res) => {
+    try {
+        // Optional: Check ownership?
+        await prisma.diagram.delete({
+            where: { id: parseInt(req.params.id) }
+        });
+        res.json({ success: true });
+    } catch (error) {
+        console.error('Error deleting diagram:', error);
+        res.status(500).json({ error: 'Failed to delete diagram' });
+    }
+});
+
+// --- Forum API ---
 // --- Dashboard Stats API ---
 app.get('/api/dashboard/stats', authMiddleware, async (req, res) => {
     try {

@@ -1,223 +1,225 @@
 /**
  * Auth Manager - Handles user authentication and session management
  */
-class AuthManager {
-    constructor() {
-        this.user = null;
-        this.token = null;
-        this.listeners = [];
-        this.initialized = false;
-    }
+if (typeof AuthManager === 'undefined') {
+    window.AuthManager = class AuthManager {
+        constructor() {
+            this.user = null;
+            this.token = null;
+            this.listeners = [];
+            this.initialized = false;
+        }
 
-    // Initialize auth manager - call this after DOM and config are ready
-    async init() {
-        console.log('[Auth] init() called, initialized:', this.initialized);
-        if (this.initialized) return;
-        this.initialized = true;
 
-        // Check both storages - localStorage (remember me) or sessionStorage (session only)
-        const lsToken = localStorage.getItem('auth_token');
-        const ssToken = sessionStorage.getItem('auth_token');
-        console.log('[Auth] localStorage token:', lsToken ? lsToken.substring(0, 20) + '...' : 'null');
-        console.log('[Auth] sessionStorage token:', ssToken ? ssToken.substring(0, 20) + '...' : 'null');
+        // Initialize auth manager - call this after DOM and config are ready
+        async init() {
+            console.log('[Auth] init() called, initialized:', this.initialized);
+            if (this.initialized) return;
+            this.initialized = true;
 
-        this.token = lsToken || ssToken;
-        if (this.token) {
-            console.log('[Auth] Token found, calling loadUser()');
-            await this.loadUser();
-        } else {
-            console.log('[Auth] No token found, showing login buttons');
-            // For guests, still update UI to show login/register buttons
+            // Check both storages - localStorage (remember me) or sessionStorage (session only)
+            const lsToken = localStorage.getItem('auth_token');
+            const ssToken = sessionStorage.getItem('auth_token');
+            console.log('[Auth] localStorage token:', lsToken ? lsToken.substring(0, 20) + '...' : 'null');
+            console.log('[Auth] sessionStorage token:', ssToken ? ssToken.substring(0, 20) + '...' : 'null');
+
+            this.token = lsToken || ssToken;
+            if (this.token) {
+                console.log('[Auth] Token found, calling loadUser()');
+                await this.loadUser();
+            } else {
+                console.log('[Auth] No token found, showing login buttons');
+                // For guests, still update UI to show login/register buttons
+                this.updateUI();
+            }
+        }
+
+        // Subscribe to auth state changes
+        onChange(callback) {
+            this.listeners.push(callback);
+            return () => {
+                this.listeners = this.listeners.filter(l => l !== callback);
+            };
+        }
+
+        // Notify all listeners
+        notify() {
+            this.listeners.forEach(cb => cb(this.user));
             this.updateUI();
         }
-    }
 
-    // Subscribe to auth state changes
-    onChange(callback) {
-        this.listeners.push(callback);
-        return () => {
-            this.listeners = this.listeners.filter(l => l !== callback);
-        };
-    }
+        // Load user from token
+        async loadUser() {
+            console.log('[Auth] loadUser() called, token:', this.token ? this.token.substring(0, 20) + '...' : 'null');
+            if (!this.token) return null;
 
-    // Notify all listeners
-    notify() {
-        this.listeners.forEach(cb => cb(this.user));
-        this.updateUI();
-    }
+            try {
+                console.log('[Auth] Fetching', API_URL + '/auth/me');
+                const response = await fetch(`${API_URL}/auth/me`, {
+                    headers: { 'Authorization': `Bearer ${this.token}` }
+                });
 
-    // Load user from token
-    async loadUser() {
-        console.log('[Auth] loadUser() called, token:', this.token ? this.token.substring(0, 20) + '...' : 'null');
-        if (!this.token) return null;
+                console.log('[Auth] Response status:', response.status);
+                if (response.ok) {
+                    this.user = await response.json();
+                    console.log('[Auth] User loaded:', this.user.username);
+                    this.notify();
+                } else {
+                    // If unauthorized, token is bad.
+                    if (response.status === 401 || response.status === 403) {
+                        console.warn('[Auth] Token invalid or expired, logging out.');
+                        this.logout(); // This clears token and calls notify -> updateUI (Guest)
+                    } else {
+                        console.error(`[Auth] Failed to load user (Status ${response.status}), keeping session locally.`);
+                        // On server error, we probably shouldn't show Guest buttons if we have a token.
+                        // But maybe we should just show the user as "Offline"? 
+                        // For now, if we fail but keep token, 'this.user' is null.
+                        // My flicker logic hides UI if token && !user.
+                        // So if backend is down, UI hides forever?
+                        // Let's force logout or show guest if we can't verify functionality?
+                        // Better: Trigger updateUI anyway. if token && !user, maybe show a "Retry" or fallback?
+                        // Or set user to partial obj?
+                        // Safest for flicker prevention: If 500 error, assume logged in UI but maybe broken?
+                        // No, let's just let it be hidden or show guest.
+                        // Let's rely on 'this.logout()' clearing the token, creating a valid !token state.
+                    }
+                }
+            } catch (e) {
+                console.error('[Auth] Failed to load user:', e);
+                // Network error. Token exists. User null. UI Hidden?
+                // Yes, hidden is better than "Login" buttons if we are actually logged in.
+                // But user might want to see something.
+            }
 
-        try {
-            console.log('[Auth] Fetching', API_URL + '/auth/me');
-            const response = await fetch(`${API_URL}/auth/me`, {
-                headers: { 'Authorization': `Bearer ${this.token}` }
+            return this.user;
+        }
+
+        // Register new user
+        async register(username, email, password) {
+            const response = await fetch(`${API_URL}/auth/register`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, email, password })
             });
 
-            console.log('[Auth] Response status:', response.status);
-            if (response.ok) {
-                this.user = await response.json();
-                console.log('[Auth] User loaded:', this.user.username);
-                this.notify();
-            } else {
-                // If unauthorized, token is bad.
-                if (response.status === 401 || response.status === 403) {
-                    console.warn('[Auth] Token invalid or expired, logging out.');
-                    this.logout(); // This clears token and calls notify -> updateUI (Guest)
-                } else {
-                    console.error(`[Auth] Failed to load user (Status ${response.status}), keeping session locally.`);
-                    // On server error, we probably shouldn't show Guest buttons if we have a token.
-                    // But maybe we should just show the user as "Offline"? 
-                    // For now, if we fail but keep token, 'this.user' is null.
-                    // My flicker logic hides UI if token && !user.
-                    // So if backend is down, UI hides forever?
-                    // Let's force logout or show guest if we can't verify functionality?
-                    // Better: Trigger updateUI anyway. if token && !user, maybe show a "Retry" or fallback?
-                    // Or set user to partial obj?
-                    // Safest for flicker prevention: If 500 error, assume logged in UI but maybe broken?
-                    // No, let's just let it be hidden or show guest.
-                    // Let's rely on 'this.logout()' clearing the token, creating a valid !token state.
-                }
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.error || 'Registrace selhala');
             }
-        } catch (e) {
-            console.error('[Auth] Failed to load user:', e);
-            // Network error. Token exists. User null. UI Hidden?
-            // Yes, hidden is better than "Login" buttons if we are actually logged in.
-            // But user might want to see something.
+
+            // Show success toast
+            if (typeof showToast === 'function') {
+                showToast('Registrace proběhla úspěšně! Nyní se můžeš přihlásit.', 'success');
+            }
+
+            return data;
         }
 
-        return this.user;
-    }
+        // Login
+        async login(username, password, rememberMe = true) {
+            const response = await fetch(`${API_URL}/auth/login`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, password })
+            });
 
-    // Register new user
-    async register(username, email, password) {
-        const response = await fetch(`${API_URL}/auth/register`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ username, email, password })
-        });
+            const data = await response.json();
 
-        const data = await response.json();
+            if (!response.ok) {
+                throw new Error(data.error || 'Přihlášení selhalo');
+            }
 
-        if (!response.ok) {
-            throw new Error(data.error || 'Registrace selhala');
+            this.token = data.token;
+            this.user = data.user;
+
+            // Store token based on remember me preference
+            if (rememberMe) {
+                localStorage.setItem('auth_token', this.token);
+                sessionStorage.removeItem('auth_token');
+            } else {
+                sessionStorage.setItem('auth_token', this.token);
+                localStorage.removeItem('auth_token');
+            }
+
+            this.notify();
+
+            // Show success toast
+            if (typeof showToast === 'function') {
+                showToast(`Vítej, ${this.user.username}!`, 'success');
+            }
+
+            return data;
         }
 
-        // Show success toast
-        if (typeof showToast === 'function') {
-            showToast('Registrace proběhla úspěšně! Nyní se můžeš přihlásit.', 'success');
-        }
-
-        return data;
-    }
-
-    // Login
-    async login(username, password, rememberMe = true) {
-        const response = await fetch(`${API_URL}/auth/login`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ username, password })
-        });
-
-        const data = await response.json();
-
-        if (!response.ok) {
-            throw new Error(data.error || 'Přihlášení selhalo');
-        }
-
-        this.token = data.token;
-        this.user = data.user;
-
-        // Store token based on remember me preference
-        if (rememberMe) {
-            localStorage.setItem('auth_token', this.token);
-            sessionStorage.removeItem('auth_token');
-        } else {
-            sessionStorage.setItem('auth_token', this.token);
+        // Logout
+        logout() {
+            const wasLoggedIn = !!this.user;
+            this.token = null;
+            this.user = null;
             localStorage.removeItem('auth_token');
-        }
+            sessionStorage.removeItem('auth_token');
+            this.notify();
 
-        this.notify();
-
-        // Show success toast
-        if (typeof showToast === 'function') {
-            showToast(`Vítej, ${this.user.username}!`, 'success');
-        }
-
-        return data;
-    }
-
-    // Logout
-    logout() {
-        const wasLoggedIn = !!this.user;
-        this.token = null;
-        this.user = null;
-        localStorage.removeItem('auth_token');
-        sessionStorage.removeItem('auth_token');
-        this.notify();
-
-        // Show logout toast
-        if (wasLoggedIn && typeof showToast === 'function') {
-            showToast('Byl jsi odhlášen', 'info');
-        }
-    }
-
-    // Get auth headers for API requests
-    getHeaders() {
-        if (!this.token) return {};
-        return { 'Authorization': `Bearer ${this.token}` };
-    }
-
-    // Check if user is logged in
-    isLoggedIn() {
-        return !!this.user;
-    }
-
-    // Check if user is admin
-    isAdmin() {
-        return this.user && ['ADMIN', 'SUPERADMIN'].includes(this.user.role);
-    }
-
-    // Check if user is member or higher
-    isMember() {
-        // Temporary: Allow all users access until Feb 2026
-        if (this.user && new Date() < new Date('2026-02-01')) return true;
-        return this.user && ['MEMBER', 'ADMIN', 'SUPERADMIN'].includes(this.user.role);
-    }
-
-    // Update header UI
-    updateUI(retryCount = 0) {
-        const authContainer = document.getElementById('auth-container');
-        if (!authContainer) {
-            // Header may not be loaded yet, retry a few times (max 10 seconds)
-            if (retryCount < 50) {
-                setTimeout(() => this.updateUI(retryCount + 1), 200);
-            } else {
-                console.error('Auth: Failed to find #auth-container after 10s');
+            // Show logout toast
+            if (wasLoggedIn && typeof showToast === 'function') {
+                showToast('Byl jsi odhlášen', 'info');
             }
-            return;
         }
 
-        // Prevent flicker: If token exists but user is not loaded yet, show nothing (or spinner)
-        if (this.token && !this.user) {
-            return;
+        // Get auth headers for API requests
+        getHeaders() {
+            if (!this.token) return {};
+            return { 'Authorization': `Bearer ${this.token}` };
         }
 
-        // Show/hide members link based on login status
-        const membersNav = document.getElementById('nav-members');
-        if (membersNav) {
-            membersNav.style.display = this.user ? '' : 'none';
+        // Check if user is logged in
+        isLoggedIn() {
+            return !!this.user;
         }
 
-        if (this.user) {
-            const roleBadge = this.user.role === 'SUPERADMIN' ? '<span class="badge-admin">Superadmin</span>'
-                : this.user.role === 'ADMIN' ? '<span class="badge-admin">Admin</span>'
-                    : this.user.role === 'MEMBER' ? '<span class="badge-member">Člen</span>' : '';
+        // Check if user is admin
+        isAdmin() {
+            return this.user && ['ADMIN', 'SUPERADMIN'].includes(this.user.role);
+        }
 
-            authContainer.innerHTML = `
+        // Check if user is member or higher
+        isMember() {
+            // Temporary: Allow all users access until Feb 2026
+            if (this.user && new Date() < new Date('2026-02-01')) return true;
+            return this.user && ['MEMBER', 'ADMIN', 'SUPERADMIN'].includes(this.user.role);
+        }
+
+        // Update header UI
+        updateUI(retryCount = 0) {
+            const authContainer = document.getElementById('auth-container');
+            if (!authContainer) {
+                // Header may not be loaded yet, retry a few times (max 10 seconds)
+                if (retryCount < 50) {
+                    setTimeout(() => this.updateUI(retryCount + 1), 200);
+                } else {
+                    console.error('Auth: Failed to find #auth-container after 10s');
+                }
+                return;
+            }
+
+            // Prevent flicker: If token exists but user is not loaded yet, show nothing (or spinner)
+            if (this.token && !this.user) {
+                return;
+            }
+
+            // Show/hide members link based on login status
+            const membersNav = document.getElementById('nav-members');
+            if (membersNav) {
+                membersNav.style.display = this.user ? '' : 'none';
+            }
+
+            if (this.user) {
+                const roleBadge = this.user.role === 'SUPERADMIN' ? '<span class="badge-admin">Superadmin</span>'
+                    : this.user.role === 'ADMIN' ? '<span class="badge-admin">Admin</span>'
+                        : this.user.role === 'MEMBER' ? '<span class="badge-member">Člen</span>' : '';
+
+                authContainer.innerHTML = `
                 <div class="user-menu">
                     <button class="user-menu-toggle" onclick="auth.toggleUserMenu()">
                         <i class="fa-solid fa-user-circle"></i>
@@ -251,8 +253,8 @@ class AuthManager {
                     </div>
                 </div>
             `;
-        } else {
-            authContainer.innerHTML = `
+            } else {
+                authContainer.innerHTML = `
                 <button class="auth-btn" onclick="auth.showLoginModal()">
                     <i class="fa-solid fa-sign-in-alt"></i><span class="mobile-text">Přihlásit</span>
                 </button>
@@ -260,58 +262,58 @@ class AuthManager {
                     <i class="fa-solid fa-user-plus"></i><span class="mobile-text">Registrace</span>
                 </button>
             `;
+            }
+
+            // Make container visible only now that content is definitive
+            // Delay slightly to ensure DOM render before fade-in
+            requestAnimationFrame(() => {
+                authContainer.classList.add('auth-visible');
+            });
         }
 
-        // Make container visible only now that content is definitive
-        // Delay slightly to ensure DOM render before fade-in
-        requestAnimationFrame(() => {
-            authContainer.classList.add('auth-visible');
-        });
-    }
+        toggleUserMenu() {
+            const dropdown = document.getElementById('user-dropdown');
+            if (dropdown) {
+                dropdown.classList.toggle('active');
 
-    toggleUserMenu() {
-        const dropdown = document.getElementById('user-dropdown');
-        if (dropdown) {
-            dropdown.classList.toggle('active');
-
-            // Close main nav menu when opening user dropdown (mutual exclusion)
-            if (dropdown.classList.contains('active')) {
-                const navLinks = document.querySelector('.nav-links');
-                const menuToggle = document.querySelector('.menu-toggle');
-                if (navLinks && navLinks.classList.contains('active')) {
-                    navLinks.classList.remove('active');
-                    menuToggle?.classList.remove('active');
-                    const icon = menuToggle?.querySelector('i');
-                    if (icon) {
-                        icon.classList.remove('fa-times');
-                        icon.classList.add('fa-bars');
+                // Close main nav menu when opening user dropdown (mutual exclusion)
+                if (dropdown.classList.contains('active')) {
+                    const navLinks = document.querySelector('.nav-links');
+                    const menuToggle = document.querySelector('.menu-toggle');
+                    if (navLinks && navLinks.classList.contains('active')) {
+                        navLinks.classList.remove('active');
+                        menuToggle?.classList.remove('active');
+                        const icon = menuToggle?.querySelector('i');
+                        if (icon) {
+                            icon.classList.remove('fa-times');
+                            icon.classList.add('fa-bars');
+                        }
                     }
                 }
             }
         }
-    }
 
-    // Show login modal
-    showLoginModal() {
-        this.showModal('login');
-    }
+        // Show login modal
+        showLoginModal() {
+            this.showModal('login');
+        }
 
-    // Show register modal
-    showRegisterModal() {
-        this.showModal('register');
-    }
+        // Show register modal
+        showRegisterModal() {
+            this.showModal('register');
+        }
 
-    // Generic modal handler
-    showModal(type) {
-        // Remove existing modal
-        const existing = document.getElementById('auth-modal');
-        if (existing) existing.remove();
+        // Generic modal handler
+        showModal(type) {
+            // Remove existing modal
+            const existing = document.getElementById('auth-modal');
+            if (existing) existing.remove();
 
-        const isLogin = type === 'login';
-        const modal = document.createElement('div');
-        modal.id = 'auth-modal';
-        modal.className = 'auth-modal-overlay';
-        modal.innerHTML = `
+            const isLogin = type === 'login';
+            const modal = document.createElement('div');
+            modal.id = 'auth-modal';
+            modal.className = 'auth-modal-overlay';
+            modal.innerHTML = `
             <div class="auth-modal">
                 <button class="auth-modal-close" onclick="auth.closeModal()">
                     <i class="fa-solid fa-times"></i>
@@ -376,46 +378,46 @@ class AuthManager {
                 
                 <p class="auth-switch">
                     ${isLogin
-                ? 'Nemáte účet? <a href="#" onclick="auth.showRegisterModal(); return false;">Registrovat se</a>'
-                : 'Máte účet? <a href="#" onclick="auth.showLoginModal(); return false;">Přihlásit se</a>'}
+                    ? 'Nemáte účet? <a href="#" onclick="auth.showRegisterModal(); return false;">Registrovat se</a>'
+                    : 'Máte účet? <a href="#" onclick="auth.showLoginModal(); return false;">Přihlásit se</a>'}
                 </p>
             </div>
         `;
 
-        document.body.appendChild(modal);
-        modal.querySelector('input').focus();
+            document.body.appendChild(modal);
+            modal.querySelector('input').focus();
 
-        // Close on backdrop click
-        modal.addEventListener('click', (e) => {
-            if (e.target === modal) this.closeModal();
-        });
+            // Close on backdrop click
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) this.closeModal();
+            });
 
-        // Close on Escape
-        document.addEventListener('keydown', this.escapeHandler = (e) => {
-            if (e.key === 'Escape') this.closeModal();
-        });
-    }
+            // Close on Escape
+            document.addEventListener('keydown', this.escapeHandler = (e) => {
+                if (e.key === 'Escape') this.closeModal();
+            });
+        }
 
-    // Login with Google
-    loginWithGoogle() {
-        window.location.href = `${API_URL}/auth/google`;
-    }
+        // Login with Google
+        loginWithGoogle() {
+            window.location.href = `${API_URL}/auth/google`;
+        }
 
-    // Link existing account with Google
-    linkWithGoogle() {
-        if (!this.token) return;
-        window.location.href = `${API_URL}/auth/google?token=${this.token}`;
-    }
+        // Link existing account with Google
+        linkWithGoogle() {
+            if (!this.token) return;
+            window.location.href = `${API_URL}/auth/google?token=${this.token}`;
+        }
 
-    // Show forgot password modal
-    showForgotPasswordModal() {
-        const existing = document.getElementById('auth-modal');
-        if (existing) existing.remove();
+        // Show forgot password modal
+        showForgotPasswordModal() {
+            const existing = document.getElementById('auth-modal');
+            if (existing) existing.remove();
 
-        const modal = document.createElement('div');
-        modal.id = 'auth-modal';
-        modal.className = 'auth-modal-overlay';
-        modal.innerHTML = `
+            const modal = document.createElement('div');
+            modal.id = 'auth-modal';
+            modal.className = 'auth-modal-overlay';
+            modal.innerHTML = `
             <div class="auth-modal">
                 <button class="auth-modal-close" onclick="auth.closeModal()">
                     <i class="fa-solid fa-times"></i>
@@ -447,197 +449,199 @@ class AuthManager {
             </div>
         `;
 
-        document.body.appendChild(modal);
-        modal.querySelector('input').focus();
+            document.body.appendChild(modal);
+            modal.querySelector('input').focus();
 
-        modal.addEventListener('click', (e) => {
-            if (e.target === modal) this.closeModal();
-        });
-
-        document.addEventListener('keydown', this.escapeHandler = (e) => {
-            if (e.key === 'Escape') this.closeModal();
-        });
-    }
-
-    async handleForgotPassword(event) {
-        event.preventDefault();
-        const form = event.target;
-        const email = form.email.value.trim();
-        const errorDiv = document.getElementById('auth-error');
-        const successDiv = document.getElementById('auth-success');
-        const submitBtn = form.querySelector('button[type="submit"]');
-
-        submitBtn.disabled = true;
-        submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
-        errorDiv.style.display = 'none';
-        successDiv.style.display = 'none';
-
-        try {
-            const response = await fetch(`${API_URL}/auth/forgot-password`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email })
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) this.closeModal();
             });
 
-            const data = await response.json();
+            document.addEventListener('keydown', this.escapeHandler = (e) => {
+                if (e.key === 'Escape') this.closeModal();
+            });
+        }
 
-            if (response.ok) {
-                successDiv.textContent = 'Pokud účet existuje, odeslali jsme vám email s odkazem pro obnovení hesla.';
-                successDiv.style.display = 'block';
-                form.style.display = 'none';
-            } else {
-                throw new Error(data.error || 'Něco se pokazilo');
+        async handleForgotPassword(event) {
+            event.preventDefault();
+            const form = event.target;
+            const email = form.email.value.trim();
+            const errorDiv = document.getElementById('auth-error');
+            const successDiv = document.getElementById('auth-success');
+            const submitBtn = form.querySelector('button[type="submit"]');
+
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
+            errorDiv.style.display = 'none';
+            successDiv.style.display = 'none';
+
+            try {
+                const response = await fetch(`${API_URL}/auth/forgot-password`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    successDiv.textContent = 'Pokud účet existuje, odeslali jsme vám email s odkazem pro obnovení hesla.';
+                    successDiv.style.display = 'block';
+                    form.style.display = 'none';
+                } else {
+                    throw new Error(data.error || 'Něco se pokazilo');
+                }
+            } catch (error) {
+                errorDiv.textContent = error.message;
+                errorDiv.style.display = 'block';
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Odeslat odkaz';
             }
-        } catch (error) {
-            errorDiv.textContent = error.message;
-            errorDiv.style.display = 'block';
-        } finally {
-            submitBtn.disabled = false;
-            submitBtn.textContent = 'Odeslat odkaz';
         }
-    }
 
-    closeModal() {
-        const modal = document.getElementById('auth-modal');
-        if (modal) modal.remove();
-        if (this.escapeHandler) {
-            document.removeEventListener('keydown', this.escapeHandler);
-        }
-    }
-
-    async handleSubmit(event, type) {
-        event.preventDefault();
-
-        const form = event.target;
-        const errorDiv = document.getElementById('auth-error');
-        const submitBtn = form.querySelector('button[type="submit"]');
-        const originalText = submitBtn.textContent;
-
-        submitBtn.disabled = true;
-        submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
-        errorDiv.style.display = 'none';
-
-        try {
-            const username = form.username.value.trim();
-            const password = form.password.value;
-
-            if (type === 'login') {
-                const rememberMe = document.getElementById('auth-remember')?.checked ?? true;
-                await this.login(username, password, rememberMe);
-            } else {
-                const email = form.email.value.trim();
-                await this.register(username, email, password);
-                // Auto-login after registration (remember by default)
-                await this.login(username, password, true);
+        closeModal() {
+            const modal = document.getElementById('auth-modal');
+            if (modal) modal.remove();
+            if (this.escapeHandler) {
+                document.removeEventListener('keydown', this.escapeHandler);
             }
+        }
 
-            this.closeModal();
+        async handleSubmit(event, type) {
+            event.preventDefault();
 
-        } catch (error) {
-            errorDiv.textContent = error.message;
-            errorDiv.style.display = 'block';
-        } finally {
-            submitBtn.disabled = false;
-            submitBtn.textContent = originalText;
+            const form = event.target;
+            const errorDiv = document.getElementById('auth-error');
+            const submitBtn = form.querySelector('button[type="submit"]');
+            const originalText = submitBtn.textContent;
+
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
+            errorDiv.style.display = 'none';
+
+            try {
+                const username = form.username.value.trim();
+                const password = form.password.value;
+
+                if (type === 'login') {
+                    const rememberMe = document.getElementById('auth-remember')?.checked ?? true;
+                    await this.login(username, password, rememberMe);
+                } else {
+                    const email = form.email.value.trim();
+                    await this.register(username, email, password);
+                    // Auto-login after registration (remember by default)
+                    await this.login(username, password, true);
+                }
+
+                this.closeModal();
+
+            } catch (error) {
+                errorDiv.textContent = error.message;
+                errorDiv.style.display = 'block';
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = originalText;
+            }
+        }
+
+        escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
         }
     }
 
-    escapeHtml(text) {
-        const div = document.createElement('div');
-        div.textContent = text;
-        return div.innerHTML;
+    // Global instance
+    if (typeof auth === 'undefined') {
+        window.auth = new AuthManager();
     }
-}
 
-// Global instance
-const auth = new AuthManager();
-
-// Wait for API_URL to be defined (handles race condition with config.js)
-const waitForConfig = (maxWait = 5000) => {
-    return new Promise((resolve) => {
-        if (typeof API_URL !== 'undefined') {
-            resolve();
-            return;
-        }
-        const start = Date.now();
-        const check = () => {
+    // Wait for API_URL to be defined (handles race condition with config.js)
+    const waitForConfig = (maxWait = 5000) => {
+        return new Promise((resolve) => {
             if (typeof API_URL !== 'undefined') {
-                console.log('[Auth] waitForConfig: API_URL is defined:', API_URL);
                 resolve();
-            } else if (Date.now() - start > maxWait) {
-                console.error('[Auth] waitForConfig: API_URL not defined after 5s');
-                resolve(); // Continue anyway
-            } else {
-                setTimeout(check, 50);
+                return;
             }
-        };
-        check();
-    });
-};
+            const start = Date.now();
+            const check = () => {
+                if (typeof API_URL !== 'undefined') {
+                    console.log('[Auth] waitForConfig: API_URL is defined:', API_URL);
+                    resolve();
+                } else if (Date.now() - start > maxWait) {
+                    console.error('[Auth] waitForConfig: API_URL not defined after 5s');
+                    resolve(); // Continue anyway
+                } else {
+                    setTimeout(check, 50);
+                }
+            };
+            check();
+        });
+    };
 
-// Initialize auth after DOM is ready (ensures config.js is loaded)
-const initAuth = async () => {
-    console.log('[Auth] initAuth() starting, readyState:', document.readyState);
+    // Initialize auth after DOM is ready (ensures config.js is loaded)
+    const initAuth = async () => {
+        console.log('[Auth] initAuth() starting, readyState:', document.readyState);
 
-    // Wait for API_URL to be defined
-    await waitForConfig();
+        // Wait for API_URL to be defined
+        await waitForConfig();
 
-    console.log('[Auth] API_URL ready, checking for OAuth callback');
+        console.log('[Auth] API_URL ready, checking for OAuth callback');
 
-    // Check for OAuth callback (Google login redirect)
-    const urlParams = new URLSearchParams(window.location.search);
-    const authToken = urlParams.get('auth_token');
-    const needsUsername = urlParams.get('needs_username');
+        // Check for OAuth callback (Google login redirect)
+        const urlParams = new URLSearchParams(window.location.search);
+        const authToken = urlParams.get('auth_token');
+        const needsUsername = urlParams.get('needs_username');
 
-    if (authToken) {
-        console.log('[Auth] OAuth callback detected, storing token');
-        // Store OAuth token
-        localStorage.setItem('auth_token', authToken);
-        auth.token = authToken;
+        if (authToken) {
+            console.log('[Auth] OAuth callback detected, storing token');
+            // Store OAuth token
+            localStorage.setItem('auth_token', authToken);
+            auth.token = authToken;
 
-        // Check if this was a linking action
-        const wasLinked = urlParams.get('linked') === 'true';
+            // Check if this was a linking action
+            const wasLinked = urlParams.get('linked') === 'true';
 
-        // Clean URL
-        window.history.replaceState({}, document.title, window.location.pathname);
+            // Clean URL
+            window.history.replaceState({}, document.title, window.location.pathname);
 
-        // Load user data
-        await auth.loadUser();
+            // Load user data
+            await auth.loadUser();
 
-        // Show username setup modal if needed
-        if (needsUsername === 'true') {
-            auth.showUsernameSetupModal();
-        } else if (wasLinked) {
-            // Show confirmation that Google was linked
-            auth.showLinkingSuccess();
+            // Show username setup modal if needed
+            if (needsUsername === 'true') {
+                auth.showUsernameSetupModal();
+            } else if (wasLinked) {
+                // Show confirmation that Google was linked
+                auth.showLinkingSuccess();
+            }
+        } else {
+            console.log('[Auth] No OAuth callback, calling auth.init()');
+            // Normal init
+            await auth.init();
         }
+
+        console.log('[Auth] initAuth() complete, user:', auth.user?.username || 'null');
+    };
+
+    if (document.readyState === 'loading') {
+        console.log('[Auth] DOM loading, adding DOMContentLoaded listener');
+        document.addEventListener('DOMContentLoaded', initAuth);
     } else {
-        console.log('[Auth] No OAuth callback, calling auth.init()');
-        // Normal init
-        await auth.init();
+        // DOM is already ready (dynamic load), run immediately
+        console.log('[Auth] DOM ready, running initAuth immediately');
+        initAuth();
     }
 
-    console.log('[Auth] initAuth() complete, user:', auth.user?.username || 'null');
-};
+    // Username setup modal for OAuth users
+    AuthManager.prototype.showUsernameSetupModal = function () {
+        const existing = document.getElementById('auth-modal');
+        if (existing) existing.remove();
 
-if (document.readyState === 'loading') {
-    console.log('[Auth] DOM loading, adding DOMContentLoaded listener');
-    document.addEventListener('DOMContentLoaded', initAuth);
-} else {
-    // DOM is already ready (dynamic load), run immediately
-    console.log('[Auth] DOM ready, running initAuth immediately');
-    initAuth();
-}
-
-// Username setup modal for OAuth users
-AuthManager.prototype.showUsernameSetupModal = function () {
-    const existing = document.getElementById('auth-modal');
-    if (existing) existing.remove();
-
-    const modal = document.createElement('div');
-    modal.id = 'auth-modal';
-    modal.className = 'auth-modal-overlay';
-    modal.innerHTML = `
+        const modal = document.createElement('div');
+        modal.id = 'auth-modal';
+        modal.className = 'auth-modal-overlay';
+        modal.innerHTML = `
         <div class="auth-modal">
             <h2><i class="fa-solid fa-user-pen"></i> Nastavte si přezdívku</h2>
             
@@ -671,79 +675,79 @@ AuthManager.prototype.showUsernameSetupModal = function () {
         </div>
     `;
 
-    document.body.appendChild(modal);
-    modal.querySelector('input').focus();
+        document.body.appendChild(modal);
+        modal.querySelector('input').focus();
 
-    // Don't allow closing this modal by clicking outside
-};
+        // Don't allow closing this modal by clicking outside
+    };
 
-AuthManager.prototype.cancelUsernameSetup = async function () {
-    // Delete the incomplete user account
-    try {
-        await fetch(`${API_URL}/auth/delete-account`, {
-            method: 'DELETE',
-            headers: this.getHeaders()
-        });
-    } catch (e) {
-        console.error('Failed to delete account:', e);
-    }
-
-    this.logout();
-    this.closeModal();
-};
-
-AuthManager.prototype.handleUsernameSetup = async function (event) {
-    event.preventDefault();
-    const form = event.target;
-    const username = form.username.value.trim();
-    const errorDiv = document.getElementById('auth-error');
-    const submitBtn = form.querySelector('button[type="submit"]');
-
-    submitBtn.disabled = true;
-    submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
-    errorDiv.style.display = 'none';
-
-    try {
-        const response = await fetch(`${API_URL}/auth/set-username`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                ...this.getHeaders()
-            },
-            body: JSON.stringify({ username })
-        });
-
-        const data = await response.json();
-
-        if (response.ok) {
-            // Update local state with new token and user
-            this.token = data.token;
-            this.user = data.user;
-            localStorage.setItem('auth_token', data.token);
-            this.notify();
-            this.closeModal();
-        } else {
-            throw new Error(data.error || 'Nepodařilo se nastavit přezdívku');
+    AuthManager.prototype.cancelUsernameSetup = async function () {
+        // Delete the incomplete user account
+        try {
+            await fetch(`${API_URL}/auth/delete-account`, {
+                method: 'DELETE',
+                headers: this.getHeaders()
+            });
+        } catch (e) {
+            console.error('Failed to delete account:', e);
         }
-    } catch (error) {
-        errorDiv.textContent = error.message;
-        errorDiv.style.display = 'block';
-    } finally {
-        submitBtn.disabled = false;
-        submitBtn.textContent = 'Uložit přezdívku';
-    }
-};
 
-// Show success notification after linking Google account
-AuthManager.prototype.showLinkingSuccess = function () {
-    // Create toast notification
-    const toast = document.createElement('div');
-    toast.className = 'auth-toast';
-    toast.innerHTML = `
+        this.logout();
+        this.closeModal();
+    };
+
+    AuthManager.prototype.handleUsernameSetup = async function (event) {
+        event.preventDefault();
+        const form = event.target;
+        const username = form.username.value.trim();
+        const errorDiv = document.getElementById('auth-error');
+        const submitBtn = form.querySelector('button[type="submit"]');
+
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
+        errorDiv.style.display = 'none';
+
+        try {
+            const response = await fetch(`${API_URL}/auth/set-username`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...this.getHeaders()
+                },
+                body: JSON.stringify({ username })
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                // Update local state with new token and user
+                this.token = data.token;
+                this.user = data.user;
+                localStorage.setItem('auth_token', data.token);
+                this.notify();
+                this.closeModal();
+            } else {
+                throw new Error(data.error || 'Nepodařilo se nastavit přezdívku');
+            }
+        } catch (error) {
+            errorDiv.textContent = error.message;
+            errorDiv.style.display = 'block';
+        } finally {
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Uložit přezdívku';
+        }
+    };
+
+    // Show success notification after linking Google account
+    AuthManager.prototype.showLinkingSuccess = function () {
+        // Create toast notification
+        const toast = document.createElement('div');
+        toast.className = 'auth-toast';
+        toast.innerHTML = `
         <i class="fa-brands fa-google" style="color: #4285f4;"></i>
         <span>Google účet byl úspěšně propojen!</span>
     `;
-    toast.style.cssText = `
+        toast.style.cssText = `
         position: fixed;
         top: 1rem;
         right: 1rem;
@@ -761,32 +765,35 @@ AuthManager.prototype.showLinkingSuccess = function () {
         animation: slideIn 0.3s ease;
     `;
 
-    // Add animation keyframes if not present
-    if (!document.getElementById('auth-toast-styles')) {
-        const style = document.createElement('style');
-        style.id = 'auth-toast-styles';
-        style.textContent = `
+        // Add animation keyframes if not present
+        if (!document.getElementById('auth-toast-styles')) {
+            const style = document.createElement('style');
+            style.id = 'auth-toast-styles';
+            style.textContent = `
             @keyframes slideIn {
                 from { transform: translateX(100%); opacity: 0; }
                 to { transform: translateX(0); opacity: 1; }
             }
         `;
-        document.head.appendChild(style);
-    }
+            document.head.appendChild(style);
+        }
 
-    document.body.appendChild(toast);
+        document.body.appendChild(toast);
 
-    // Remove after 4 seconds
-    setTimeout(() => {
-        toast.style.animation = 'slideIn 0.3s ease reverse';
-        setTimeout(() => toast.remove(), 300);
-    }, 4000);
-};
+        // Remove after 4 seconds
+        setTimeout(() => {
+            toast.style.animation = 'slideIn 0.3s ease reverse';
+            setTimeout(() => toast.remove(), 300);
+        }, 4000);
+    };
 
-// Close dropdown when clicking outside
-document.addEventListener('click', (e) => {
-    if (!e.target.closest('.user-menu')) {
-        const dropdown = document.getElementById('user-dropdown');
-        if (dropdown) dropdown.classList.remove('active');
-    }
-});
+    // Close dropdown when clicking outside
+    document.addEventListener('click', (e) => {
+        if (!e.target.closest('.user-menu')) {
+            const dropdown = document.getElementById('user-dropdown');
+            if (dropdown) dropdown.classList.remove('active');
+        }
+    });
+
+}
+
