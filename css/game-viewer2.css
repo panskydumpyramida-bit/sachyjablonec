@@ -1444,6 +1444,63 @@
     }
 }
 
+/* Desktop view: One move per line (1. e4 e5) */
+@media (min-width: 900px) {
+    .gv2-moves {
+        display: block;
+        /* Ensure block layout for floats */
+    }
+
+    .gv2-move-num {
+        display: block;
+        float: left;
+        clear: left;
+        /* Force new line */
+        width: 35px;
+        /* Fixed width for alignment */
+        margin-right: 5px;
+    }
+
+    .gv2-move {
+        display: block;
+        float: left;
+        margin-right: 8px;
+        /* Spacing between moves */
+    }
+
+    .gv2-nag {
+        display: block;
+        float: left;
+        margin-right: 5px;
+    }
+
+    .gv2-comment {
+        display: block;
+        float: left;
+        clear: both;
+        width: 100%;
+        margin: 4px 0 8px 40px;
+        color: #aaa;
+        font-style: italic;
+    }
+
+    .gv2-variation {
+        display: block;
+        clear: both;
+        padding-left: 40px;
+        color: #888;
+        font-size: 0.9em;
+        margin-bottom: 8px;
+    }
+
+    /* Clearfix for moves container */
+    .gv2-moves::after {
+        content: "";
+        display: table;
+        clear: both;
+    }
+}
+
 /* Inner content wrapper created via JS - responsive padding */
 .gv-viewer-content {
     padding: 1rem;
