@@ -1392,6 +1392,93 @@ function tableToggleHighlightLast() {
     updatePreview();
 }
 
+/**
+ * Toggle hide-mobile class on current column
+ */
+function tableToggleHideMobile() {
+    const selection = window.getSelection();
+    if (!selection.rangeCount) return;
+    const element = selection.getRangeAt(0).commonAncestorContainer;
+    const cell = (element.nodeType === 3 ? element.parentNode : element).closest('td, th');
+
+    if (!cell) {
+        showToast('Klikněte do buňky tabulky', 'error');
+        return;
+    }
+
+    const table = cell.closest('table');
+    const colIndex = Array.from(cell.parentElement.children).indexOf(cell);
+
+    // Toggle hide-mobile on all cells in this column
+    const isHidden = cell.classList.contains('hide-mobile');
+    Array.from(table.rows).forEach(row => {
+        if (row.children[colIndex]) {
+            row.children[colIndex].classList.toggle('hide-mobile', !isHidden);
+        }
+    });
+
+    // Update button state
+    const btn = document.getElementById('btnHideMobile');
+    if (btn) {
+        btn.style.opacity = !isHidden ? '1' : '0.5';
+    }
+
+    showToast(isHidden ? 'Sloupec viditelný na mobilu' : '📱 Sloupec skryt na mobilu', 'success');
+    updatePreview();
+}
+
+/**
+ * Cycle column width: normal → narrow → wide → normal
+ */
+function tableCycleColumnWidth() {
+    const selection = window.getSelection();
+    if (!selection.rangeCount) return;
+    const element = selection.getRangeAt(0).commonAncestorContainer;
+    const cell = (element.nodeType === 3 ? element.parentNode : element).closest('td, th');
+
+    if (!cell) {
+        showToast('Klikněte do buňky tabulky', 'error');
+        return;
+    }
+
+    const table = cell.closest('table');
+    const colIndex = Array.from(cell.parentElement.children).indexOf(cell);
+
+    // Determine current state and cycle
+    const hasNarrow = cell.classList.contains('col-narrow');
+    const hasWide = cell.classList.contains('col-wide');
+
+    let newClass = '';
+    let message = '';
+
+    if (!hasNarrow && !hasWide) {
+        // normal → narrow
+        newClass = 'col-narrow';
+        message = '↔ Sloupec: úzký';
+    } else if (hasNarrow) {
+        // narrow → wide
+        newClass = 'col-wide';
+        message = '↔ Sloupec: široký';
+    } else {
+        // wide → normal
+        newClass = '';
+        message = '↔ Sloupec: normální';
+    }
+
+    // Apply to all cells in column
+    Array.from(table.rows).forEach(row => {
+        if (row.children[colIndex]) {
+            row.children[colIndex].classList.remove('col-narrow', 'col-wide');
+            if (newClass) {
+                row.children[colIndex].classList.add(newClass);
+            }
+        }
+    });
+
+    showToast(message, 'success');
+    updatePreview();
+}
+
 // ================================
 // TABLE WIDGET (FLOATING)
 // ================================
@@ -1410,6 +1497,9 @@ function initTableTools() {
             <div class="divider"></div>
             <button onclick="tableAddCol()" title="Přidat sloupec vpravo" style="color: #94a3b8;"><i class="fa-solid fa-plus"></i><span style="font-size: 0.6em; margin-left:1px">C</span></button>
             <button onclick="tableDeleteCol()" title="Smazat sloupec" style="color: #ef4444;"><i class="fa-solid fa-minus"></i><span style="font-size: 0.6em; margin-left:1px">C</span></button>
+            <div class="divider"></div>
+            <button id="btnHideMobile" onclick="tableToggleHideMobile()" title="Skrýt sloupec na mobilu" style="color: #60a5fa;"><i class="fa-solid fa-mobile-screen"></i></button>
+            <button onclick="tableCycleColumnWidth()" title="Změnit šířku sloupce (norm → úzký → široký)" style="color: #94a3b8;"><i class="fa-solid fa-arrows-left-right"></i></button>
         `;
         document.body.appendChild(widget);
     }
@@ -1460,9 +1550,24 @@ function updateTableToolsPosition() {
         widget.style.left = `${window.scrollX + rect.left}px`;
 
         // Update highlight button state
-        const btn = document.getElementById('btnHighlightLast');
-        if (btn) {
-            btn.style.opacity = table.classList.contains('highlight-last') ? '1' : '0.5';
+        const btnHighlight = document.getElementById('btnHighlightLast');
+        if (btnHighlight) {
+            btnHighlight.style.opacity = table.classList.contains('highlight-last') ? '1' : '0.5';
+        }
+
+        // Update hide-mobile button state
+        const btnHide = document.getElementById('btnHideMobile');
+        if (btnHide) {
+            // Find current cell/column
+            const element = selection.getRangeAt(0).commonAncestorContainer;
+            const cell = (element.nodeType === 3 ? element.parentNode : element).closest('td, th');
+
+            if (cell) {
+                // Check if this specific cell has the class (columns should be uniform)
+                btnHide.style.opacity = cell.classList.contains('hide-mobile') ? '1' : '0.5';
+            } else {
+                btnHide.style.opacity = '0.5';
+            }
         }
     } else {
         widget.style.display = 'none';
@@ -1535,3 +1640,5 @@ window.tableDeleteRow = tableDeleteRow;
 window.tableAddCol = tableAddCol;
 window.tableDeleteCol = tableDeleteCol;
 window.tableToggleHighlightLast = tableToggleHighlightLast;
+window.tableToggleHideMobile = tableToggleHideMobile;
+window.tableCycleColumnWidth = tableCycleColumnWidth;
