@@ -966,7 +966,9 @@ class GameViewer2 {
             .replace(/\$[0-9]+/g, '');
 
         // Better cleaner:
-        let clean = this.stripVariations(pgnText);
+        // First normalize PGN format (ensure blank line between headers and moves)
+        let normalizedPgn = this.normalizePgn(pgnText);
+        let clean = this.stripVariations(normalizedPgn);
 
         // Load Clean State to get history
         const loadSuccess = this.game.load_pgn(clean);
@@ -996,6 +998,20 @@ class GameViewer2 {
 
         // Reset to start (updates board, internal state, and UI)
         setTimeout(() => this.jumpTo(0), 10);
+    }
+
+    /**
+     * Normalize PGN format to ensure chess.js compatibility
+     * - Ensures blank line between headers and moves (required by chess.js)
+     */
+    normalizePgn(pgn) {
+        if (!pgn) return pgn;
+
+        // Find the last header tag (ends with ])
+        // and ensure there's a blank line before moves start
+        // Pattern: ]\n followed by digit (move number) without blank line between
+        // Replace with ]\n\n (adding blank line)
+        return pgn.replace(/(\])\n([0-9])/g, '$1\n\n$2');
     }
 
     stripVariations(pgn) {
