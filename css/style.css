@@ -545,6 +545,25 @@ footer {
     /* Green for score/points/result */
 }
 
+/* Column width utilities */
+.results-table .col-narrow {
+    width: 50px !important;
+    min-width: 50px !important;
+    max-width: 80px !important;
+}
+
+.results-table .col-wide {
+    width: 200px !important;
+    min-width: 150px !important;
+}
+
+/* Hide column on mobile */
+@media (max-width: 768px) {
+    .results-table .hide-mobile {
+        display: none !important;
+    }
+}
+
 /* Mobile Responsive */
 @media (max-width: 768px) {
     .hero-content h1 {
