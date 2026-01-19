@@ -816,14 +816,18 @@ function insertDiagramBookToEditor(diagrams, savedRange) {
         document.getElementById('articleContent')?.focus();
     }
 
-    if (!diagrams || diagrams.length < 2) return;
+    if (!diagrams || diagrams.length === 0) return;
 
     const bookId = 'book_' + Date.now();
     const diagramsJson = JSON.stringify(diagrams.map(d => ({
         id: d.id,
         fen: d.fen,
-        title: d.title,
-        toMove: d.toMove
+        title: d.title, // Keep title for book header
+        name: d.name, // Keep name as fallback
+        toMove: d.toMove,
+        annotations: d.annotations,
+        solution: d.solution,
+        description: d.description
     })));
 
     // Generate the first board as preview
@@ -852,7 +856,7 @@ function insertDiagramBookToEditor(diagrams, savedRange) {
             </div>
             
             <!-- Navigation -->
-            <div class="book-nav" style="display: flex; justify-content: center; align-items: center; gap: 1rem; margin-top: 1rem;">
+            <div class="book-nav" style="display: ${diagrams.length > 1 ? 'flex' : 'none'}; justify-content: center; align-items: center; gap: 1rem; margin-top: 1rem;">
                 <button class="book-prev" onclick="bookNav('${bookId}', -1)" style="
                     background: rgba(255,255,255,0.1);
                     border: none;
@@ -886,7 +890,7 @@ function insertDiagramBookToEditor(diagrams, savedRange) {
             </div>
             
             <!-- Page Counter -->
-            <div class="book-counter" style="font-size: 0.75rem; color: #555; margin-top: 0.25rem; text-align: center;">
+            <div class="book-counter" style="display: ${diagrams.length > 1 ? 'block' : 'none'}; font-size: 0.75rem; color: #555; margin-top: 0.25rem; text-align: center;">
                 1 / ${diagrams.length}
             </div>
             
@@ -937,32 +941,8 @@ window.bookNav = function (bookId, direction) {
 };
 
 function insertDiagramToEditor(diagram, savedRange) {
-    if (savedRange) {
-        const sel = window.getSelection();
-        sel.removeAllRanges();
-        sel.addRange(savedRange);
-    } else {
-        document.getElementById('articleContent')?.focus();
-    }
-
-    const boardHtml = generateMiniBoard(diagram.fen);
-
-    const html = `
-        <div class="diagram-embed-wrapper" contenteditable="false" style="margin: 1rem 0; text-align: center;">
-            <div class="diagram-embed" data-diagram-id="${diagram.id}" style="display: inline-block; background: #252525; padding: 1rem; border-radius: 8px; border: 1px solid #444;">
-                <div style="margin-bottom: 0.5rem; font-weight: bold; color: #d4af37;">${diagram.title || 'Diagram #' + diagram.id}</div>
-                ${boardHtml}
-                <div style="font-size: 0.8rem; color: #888; margin-top: 0.5rem;">
-                    ${diagram.toMove === 'w' ? 'Bílý na tahu' : 'Černý na tahu'}
-                </div>
-            </div>
-        </div>
-        <p><br></p>
-    `;
-
-    document.execCommand('insertHTML', false, html);
-    updatePreview();
-    document.getElementById('articleContent')?.focus();
+    // For single diagram, we reuse the robust Book logic but with a single item array
+    insertDiagramBookToEditor([diagram], savedRange);
 }
 
 function generateMiniBoard(fen, squareSize = 25) {
