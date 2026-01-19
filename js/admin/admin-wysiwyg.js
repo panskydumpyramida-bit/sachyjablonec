@@ -1365,6 +1365,33 @@ function tableDeleteCol() {
     });
 }
 
+/**
+ * Toggle highlight-last class on table (green last column for scores)
+ */
+function tableToggleHighlightLast() {
+    const selection = window.getSelection();
+    if (!selection.rangeCount) return;
+    const element = selection.getRangeAt(0).commonAncestorContainer;
+    const table = (element.nodeType === 3 ? element.parentNode : element).closest('table');
+
+    if (!table) {
+        showToast('Klikněte do tabulky', 'error');
+        return;
+    }
+
+    const isHighlighted = table.classList.contains('highlight-last');
+    table.classList.toggle('highlight-last');
+
+    // Update button state
+    const btn = document.getElementById('btnHighlightLast');
+    if (btn) {
+        btn.style.opacity = table.classList.contains('highlight-last') ? '1' : '0.5';
+    }
+
+    showToast(isHighlighted ? 'Zvýraznění odebráno' : '✨ Poslední sloupec zvýrazněn', 'success');
+    updatePreview();
+}
+
 // ================================
 // TABLE WIDGET (FLOATING)
 // ================================
@@ -1376,6 +1403,7 @@ function initTableTools() {
         widget.id = 'tableToolsWidget';
         widget.innerHTML = `
             <button onclick="styleSelectedTable()" title="🎨 Nastylovat (Premium Gold)" style="color: #f59e0b;"><i class="fa-solid fa-palette"></i></button>
+            <button id="btnHighlightLast" onclick="tableToggleHighlightLast()" title="Zvýraznit poslední sloupec (body/výsledek)" style="color: #22c55e;"><i class="fa-solid fa-trophy"></i></button>
             <div class="divider"></div>
             <button onclick="tableAddRow()" title="Přidat řádek dolů" style="color: #94a3b8;"><i class="fa-solid fa-plus"></i><span style="font-size: 0.6em; margin-left:1px">R</span></button>
             <button onclick="tableDeleteRow()" title="Smazat řádek" style="color: #ef4444;"><i class="fa-solid fa-minus"></i><span style="font-size: 0.6em; margin-left:1px">R</span></button>
@@ -1430,6 +1458,12 @@ function updateTableToolsPosition() {
         // Add scroll offsets to fix positioning
         widget.style.top = `${window.scrollY + rect.top - 45}px`;
         widget.style.left = `${window.scrollX + rect.left}px`;
+
+        // Update highlight button state
+        const btn = document.getElementById('btnHighlightLast');
+        if (btn) {
+            btn.style.opacity = table.classList.contains('highlight-last') ? '1' : '0.5';
+        }
     } else {
         widget.style.display = 'none';
     }
@@ -1500,3 +1534,4 @@ window.tableAddRow = tableAddRow;
 window.tableDeleteRow = tableDeleteRow;
 window.tableAddCol = tableAddCol;
 window.tableDeleteCol = tableDeleteCol;
+window.tableToggleHighlightLast = tableToggleHighlightLast;

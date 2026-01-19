@@ -538,7 +538,8 @@ footer {
     color: #f1f5f9;
 }
 
-.results-table td:last-child {
+/* Opt-in: Add .highlight-last class to table for green score column */
+.results-table.highlight-last td:last-child {
     font-weight: 700;
     color: #4ade80;
     /* Green for score/points/result */
