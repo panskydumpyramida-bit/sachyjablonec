@@ -5,7 +5,7 @@ node_modules/
 .env
 
 # Prisma
-prisma/migrations/
+
 
 # Database (local dev only)
 *.db
