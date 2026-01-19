@@ -2580,8 +2580,10 @@ GameViewer2.prototype.loadGame = function (index) {
             const isActive = parseInt(item.dataset.index) === index;
             item.classList.toggle('active', isActive);
 
-            // Scroll active item into view
-            if (isActive) {
+            // Scroll active item into view - ONLY ON DESKTOP
+            // On mobile, the list is effectively below the viewer, so scrolling to it
+            // causes the page to jump down, hiding the board.
+            if (isActive && window.innerWidth > 768) {
                 item.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
             }
         });
