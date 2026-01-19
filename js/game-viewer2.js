@@ -1462,6 +1462,7 @@ class GameViewer2 {
             } else if (cleanPart.match(/^[KQRBN]?[a-h]?[1-8]?x?[a-h][1-8](=[QRBN])?[\+#]?$/) ||
                 cleanPart.match(/^O-O(-O)?[\+#]?$/)) {
                 // Fallback: This looks like a valid chess move but didn't match expected sequence
+                console.log('[processBuffer] Fallback match for:', cleanPart, 'from part:', part);
                 // Still wrap it with gv2-move class and apply figurine notation
                 // Try to find this move in history to get correct ply
                 let foundPly = -1;
@@ -1480,6 +1481,10 @@ class GameViewer2 {
                     html += `<span class="gv2-move">${this.formatSan(part)}</span>`;
                 }
             } else {
+                // Log unmatched tokens for debugging
+                if (cleanPart && !cleanPart.match(/^(1-0|0-1|1\/2-1\/2|\*)$/)) {
+                    console.log('[processBuffer] Unmatched token:', cleanPart, '| raw:', part);
+                }
                 html += part;
             }
         });
