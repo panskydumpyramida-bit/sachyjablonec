@@ -1438,7 +1438,22 @@
         /* Important for scroll */
     }
 
+
     .gv2-moves {
         flex: 1;
+    }
+}
+
+/* Inner content wrapper created via JS - responsive padding */
+.gv-viewer-content {
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+}
+
+@media (max-width: 768px) {
+    .gv-viewer-content {
+        padding: 0.25rem;
+        /* Minimal padding on mobile to save space */
     }
 }
