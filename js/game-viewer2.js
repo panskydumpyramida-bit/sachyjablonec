@@ -969,8 +969,13 @@ class GameViewer2 {
         let clean = this.stripVariations(pgnText);
 
         // Load Clean State to get history
-        this.game.load_pgn(clean);
+        const loadSuccess = this.game.load_pgn(clean);
+        if (!loadSuccess) {
+            console.warn('[parseAndLoadPGN] chess.js load_pgn failed! PGN may be malformed.');
+            console.log('[parseAndLoadPGN] Clean PGN was:', clean.substring(0, 500));
+        }
         const history = this.game.history({ verbose: true });
+        console.log('[parseAndLoadPGN] Parsed history length:', history.length);
 
         // Store FENs for main line
         let tempGame = new Chess();
