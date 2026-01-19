@@ -42,6 +42,7 @@ model User {
   travelReports   TravelReport[]
   forumTopics     ForumTopic[]
   forumPosts      ForumPost[]
+  diagrams        Diagram[]
   
   @@map("users")
 }
@@ -431,4 +432,19 @@ model ForumPost {
   author    User       @relation(fields: [authorId], references: [id])
   
   @@map("forum_posts")
+}
+
+model Diagram {
+  id          Int      @id @default(autoincrement())
+  fen         String
+  annotations Json     // Stores arrows, squares as JSON object
+  solution    Json?    // Interactive solver data (correct moves, comments)
+  name        String?
+  description String?
+  userId      Int?     @map("user_id") // Optional link to creator
+  createdAt   DateTime @default(now()) @map("created_at")
+  
+  user        User?    @relation(fields: [userId], references: [id])
+  
+  @@map("diagrams")
 }

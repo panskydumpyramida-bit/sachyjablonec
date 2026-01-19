@@ -50,27 +50,57 @@ export async function updateStandings(competitions = null) {
 
                         if (cells.length > 7) {
                             let rankStr = clean(cells[0]);
-                            let teamStr = clean(cells[2]);
-                            const urlMatch = teamStr.match(/href="([^"]+)"/);
-                            let teamDetailsUrl = urlMatch ? urlMatch[1] : null;
+
+                            // Find team cell dynamically - it's the one with <a href containing team link
+                            // This handles cases where "St.č." column is missing in some rows
+                            let teamCellIndex = -1;
+                            let teamStr = '';
+                            let teamDetailsUrl = null;
+
+                            for (let i = 1; i < Math.min(cells.length, 4); i++) {
+                                const urlMatch = cells[i].match(/href="([^"]+)"/);
+                                if (urlMatch && (cells[i].includes('snr=') || cells[i].includes('art='))) {
+                                    teamCellIndex = i;
+                                    teamDetailsUrl = urlMatch[1];
+                                    teamStr = clean(cells[i]);
+                                    break;
+                                }
+                            }
+
+                            // If no team cell found, skip this row
+                            if (teamCellIndex === -1) continue;
+
                             if (teamDetailsUrl && !teamDetailsUrl.startsWith('http')) {
                                 const origin = new URL(comp.url).origin;
                                 teamDetailsUrl = teamDetailsUrl.startsWith('/') ? origin + teamDetailsUrl : origin + '/' + teamDetailsUrl;
                             }
 
-                            teamStr = clean(teamStr);
-                            const games = parseInt(clean(cells[3])) || 0;
-                            const wins = parseInt(clean(cells[4])) || 0;
-                            const draws = parseInt(clean(cells[5])) || 0;
-                            const losses = parseInt(clean(cells[6])) || 0;
+                            // Calculate data column indices relative to team cell
+                            // Data columns are: games, wins, draws, losses, points, score (6 columns after team)
+                            const dataStart = teamCellIndex + 1;
+                            const games = parseInt(clean(cells[dataStart])) || 0;
+                            const wins = parseInt(clean(cells[dataStart + 1])) || 0;
+                            const draws = parseInt(clean(cells[dataStart + 2])) || 0;
+                            const losses = parseInt(clean(cells[dataStart + 3])) || 0;
                             // Fix comma/dot decimal
-                            let pointsStr = clean(cells[7]).replace(',', '.');
-                            let scoreStr = clean(cells[8]).replace(',', '.');
-                            const rank = parseInt(rankStr);
+                            let pointsStr = clean(cells[dataStart + 4]).replace(',', '.');
+                            let scoreStr = clean(cells[dataStart + 5]).replace(',', '.');
+
+                            // Try to parse rank from cells[0], fallback to cells[1] (St.č.), or use row position
+                            let rank = parseInt(rankStr);
+                            if (isNaN(rank) && teamCellIndex > 1) {
+                                // If cells[0] is empty (e.g. merged row), try cells[1]
+                                rank = parseInt(clean(cells[1]));
+                            }
+                            if (isNaN(rank)) {
+                                // Last resort: assign rank based on parsed order
+                                rank = standings.length + 1;
+                            }
+
                             const points = parseFloat(pointsStr);
                             const score = parseFloat(scoreStr);
 
-                            if (!isNaN(rank) && teamStr) {
+                            if (teamStr) {
                                 const lowerName = teamStr.toLowerCase();
                                 const isBizuterie = lowerName.includes('bižuterie') ||
                                     lowerName.includes('bizuterie') ||

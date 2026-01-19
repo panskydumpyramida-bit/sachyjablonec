@@ -513,6 +513,477 @@ function insertIntroBlock() {
 }
 
 // ================================
+// DIAGRAM SELECTOR
+// ================================
+
+async function insertDiagram() {
+    // Fetch available diagrams from API
+    let diagrams = [];
+    try {
+        // Try multiple sources for auth token (different admin modules use different keys)
+        const token = window.authToken ||
+            localStorage.getItem('authToken') ||
+            localStorage.getItem('auth_token') ||
+            localStorage.getItem('token') ||
+            window.auth?.token;
+        const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
+
+        document.body.style.cursor = 'wait';
+
+        const response = await fetch(`${window.API_URL}/diagrams`, { headers });
+        if (!response.ok) throw new Error('Failed to load diagrams');
+        diagrams = await response.json();
+
+    } catch (e) {
+        console.error('Error fetching diagrams:', e);
+        if (window.modal) {
+            await modal.alert('Nepodařilo se načíst seznam diagramů.');
+        } else {
+            alert('Nepodařilo se načíst seznam diagramů.');
+        }
+        return;
+    } finally {
+        document.body.style.cursor = '';
+    }
+
+    if (diagrams.length === 0) {
+        if (window.modal) await modal.alert('Zatím nejsou uloženy žádné diagramy.');
+        else alert('Zatím nejsou uloženy žádné diagramy.');
+        return;
+    }
+
+    // Show Selector Modal
+    showDiagramSelectorModal(diagrams);
+}
+
+function showDiagramSelectorModal(diagrams) {
+    if (document.getElementById('diagramSelectorModal')) return;
+
+    // Inject Styles
+    if (!document.getElementById('diagram-selector-styles')) {
+        const style = document.createElement('style');
+        style.id = 'diagram-selector-styles';
+        style.textContent = `
+            .diagram-grid {
+                display: grid;
+                grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+                gap: 1rem;
+                max-height: 400px;
+                overflow-y: auto;
+                padding: 0.5rem;
+                margin-top: 1rem;
+            }
+            .diagram-item {
+                background: rgba(255, 255, 255, 0.05);
+                border: 1px solid rgba(255, 255, 255, 0.1);
+                border-radius: 8px;
+                padding: 0.75rem;
+                cursor: pointer;
+                transition: all 0.2s;
+                text-align: center;
+            }
+            .diagram-item:hover {
+                background: rgba(212, 175, 55, 0.15);
+                border-color: rgba(212, 175, 55, 0.5);
+                transform: translateY(-2px);
+            }
+            .diagram-item i {
+                font-size: 2rem;
+                color: #d4af37;
+                margin-bottom: 0.5rem;
+                display: block;
+            }
+            .diagram-name {
+                font-weight: 600;
+                font-size: 0.9rem;
+                color: #e0e0e0;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+            }
+            .diagram-meta {
+                font-size: 0.75rem;
+                color: #888;
+                margin-top: 0.25rem;
+            }
+            .diagram-search {
+                width: 100%;
+                padding: 0.75rem;
+                background: rgba(0, 0, 0, 0.3);
+                border: 1px solid rgba(255, 255, 255, 0.1);
+                border-radius: 6px;
+                color: white;
+                font-size: 1rem;
+                box-sizing: border-box;
+            }
+            .diagram-search:focus {
+                outline: none;
+                border-color: #d4af37;
+            }
+            .book-dot {
+                width: 8px;
+                height: 8px;
+                border-radius: 50%;
+                background: rgba(255,255,255,0.2);
+                cursor: pointer;
+                transition: all 0.2s;
+            }
+            .book-dot.active {
+                background: #d4af37;
+                transform: scale(1.2);
+            }
+            .book-dot:hover {
+                background: rgba(212, 175, 55, 0.6);
+            }
+            .book-prev:hover, .book-next:hover {
+                background: rgba(212, 175, 55, 0.3);
+                color: #d4af37;
+            }
+        `;
+        document.head.appendChild(style);
+    }
+
+    const modalEl = document.createElement('div');
+    modalEl.id = 'diagramSelectorModal';
+    // Style as fixed overlay
+    modalEl.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.8);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 10000;
+    `;
+    modalEl.innerHTML = `
+        <div class="modal-overlay" onclick="document.getElementById('diagramSelectorModal').remove()"></div>
+        <div class="modal-content" style="max-width: 700px; width: 90%;">
+            <h3 style="margin-bottom:1rem; display:flex; justify-content:space-between; align-items:center;">
+                Vybrat diagram
+                <button onclick="document.getElementById('diagramSelectorModal').remove()" style="background:none; border:none; color:#888; cursor:pointer; font-size:1.2rem;">
+                    <i class="fa-solid fa-times"></i>
+                </button>
+            </h3>
+            
+            <div style="display: flex; gap: 1rem; margin-bottom: 1rem; align-items: center;">
+                <input type="text" class="diagram-search" id="diagramSearch" placeholder="Hledat..." style="flex: 1;" autofocus>
+                <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; font-size: 0.85rem; color: #aaa; white-space: nowrap;">
+                    <input type="checkbox" id="multiSelectMode" style="width: auto;">
+                    <i class="fa-solid fa-layer-group"></i> Více najednou
+                </label>
+            </div>
+            
+            <div class="diagram-grid" id="diagramGrid"></div>
+            
+            <div style="margin-top: 1rem; display: flex; justify-content: space-between; align-items: center;">
+                <span style="font-size: 0.8rem; color: #888;">
+                    Celkem: <span id="diagramCount">${diagrams.length}</span>
+                </span>
+                <div id="multiSelectActions" style="display: none; gap: 0.5rem;">
+                    <span id="selectedCount" style="font-size: 0.85rem; color: #d4af37; margin-right: 1rem;">0 vybráno</span>
+                    <button id="insertBookBtn" class="btn-primary" style="padding: 0.5rem 1rem;">
+                        <i class="fa-solid fa-book"></i> Vložit jako knihu
+                    </button>
+                </div>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(modalEl);
+
+    const grid = modalEl.querySelector('#diagramGrid');
+    const searchInput = modalEl.querySelector('#diagramSearch');
+    const countSpan = modalEl.querySelector('#diagramCount');
+    const multiSelectCheckbox = modalEl.querySelector('#multiSelectMode');
+    const multiSelectActions = modalEl.querySelector('#multiSelectActions');
+    const selectedCountSpan = modalEl.querySelector('#selectedCount');
+    const insertBookBtn = modalEl.querySelector('#insertBookBtn');
+
+    let selectedDiagrams = new Map(); // id -> diagram object
+    let isMultiSelect = false;
+
+    const updateSelectionUI = () => {
+        selectedCountSpan.textContent = `${selectedDiagrams.size} vybráno`;
+        multiSelectActions.style.display = isMultiSelect ? 'flex' : 'none';
+        insertBookBtn.disabled = selectedDiagrams.size < 2;
+        insertBookBtn.style.opacity = selectedDiagrams.size < 2 ? '0.5' : '1';
+    };
+
+    const renderList = (filter = '') => {
+        grid.innerHTML = '';
+        const lowerFilter = filter.toLowerCase();
+
+        const filtered = diagrams.filter(d =>
+            (d.title || '').toLowerCase().includes(lowerFilter) ||
+            String(d.id).includes(lowerFilter)
+        );
+
+        countSpan.textContent = filtered.length;
+
+        if (filtered.length === 0) {
+            grid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 2rem; color: #888;">Žádné diagramy nenalezeny.</div>';
+            return;
+        }
+
+        filtered.forEach(d => {
+            const el = document.createElement('div');
+            el.className = 'diagram-item';
+            el.dataset.id = d.id;
+
+            if (selectedDiagrams.has(d.id)) {
+                el.style.border = '2px solid #d4af37';
+                el.style.background = 'rgba(212, 175, 55, 0.15)';
+            }
+
+            const miniPreview = generateMiniBoard(d.fen, 18);
+            const checkbox = isMultiSelect
+                ? `<input type="checkbox" class="diagram-checkbox" ${selectedDiagrams.has(d.id) ? 'checked' : ''} style="position: absolute; top: 8px; right: 8px; width: 18px; height: 18px; cursor: pointer;">`
+                : '';
+
+            el.innerHTML = `
+                ${checkbox}
+                ${miniPreview}
+                <div class="diagram-name" title="${d.title || 'Bez názvu'}">${d.title || 'Bez názvu'}</div>
+                <div class="diagram-meta">${d.toMove === 'w' ? '⬜ Bílý' : '⬛ Černý'}</div>
+            `;
+            el.style.position = 'relative';
+
+            el.onclick = (e) => {
+                if (isMultiSelect) {
+                    // Toggle selection
+                    if (selectedDiagrams.has(d.id)) {
+                        selectedDiagrams.delete(d.id);
+                    } else {
+                        selectedDiagrams.set(d.id, d);
+                    }
+                    updateSelectionUI();
+                    renderList(searchInput.value); // Re-render to update visual
+                } else {
+                    // Single click insert
+                    insertDiagramToEditor(d);
+                    modalEl.remove();
+                }
+            };
+            grid.appendChild(el);
+        });
+    };
+
+    // Multi-select mode toggle
+    multiSelectCheckbox.onchange = () => {
+        isMultiSelect = multiSelectCheckbox.checked;
+        if (!isMultiSelect) {
+            selectedDiagrams.clear();
+        }
+        updateSelectionUI();
+        renderList(searchInput.value);
+    };
+
+    // Insert as book button
+    insertBookBtn.onclick = () => {
+        if (selectedDiagrams.size >= 2) {
+            const diagramsArray = Array.from(selectedDiagrams.values());
+            insertDiagramBookToEditor(diagramsArray);
+            modalEl.remove();
+        }
+    };
+
+    renderList();
+    searchInput.oninput = (e) => renderList(e.target.value);
+
+    document.addEventListener('keydown', function escHandler(e) {
+        if (e.key === 'Escape' && document.getElementById('diagramSelectorModal')) {
+            modalEl.remove();
+            document.removeEventListener('keydown', escHandler);
+        }
+    });
+}
+
+function insertDiagramBookToEditor(diagrams) {
+    if (!diagrams || diagrams.length < 2) return;
+
+    const bookId = 'book_' + Date.now();
+    const diagramsJson = JSON.stringify(diagrams.map(d => ({
+        id: d.id,
+        fen: d.fen,
+        title: d.title,
+        toMove: d.toMove
+    })));
+
+    // Generate the first board as preview
+    const firstBoard = generateMiniBoard(diagrams[0].fen, 30);
+
+    // Generate page dots
+    const dots = diagrams.map((_, i) =>
+        `<span class="book-dot${i === 0 ? ' active' : ''}" data-index="${i}"></span>`
+    ).join('');
+
+    const html = `<p><br></p>
+        <div class="diagram-book" id="${bookId}" data-diagrams='${diagramsJson}' data-current="0" style="
+            display: inline-block;
+            vertical-align: top;
+            background: linear-gradient(145deg, #1a1a2e 0%, #16213e 100%);
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+            min-width: 280px;
+            max-width: 320px;
+            margin: 0.5rem;
+        ">
+            <!-- Board Container -->
+            <div class="book-board-container" style="position: relative; margin: 0 auto;">
+                ${firstBoard}
+            </div>
+            
+            <!-- Navigation -->
+            <div class="book-nav" style="display: flex; justify-content: center; align-items: center; gap: 1rem; margin-top: 1rem;">
+                <button class="book-prev" onclick="bookNav('${bookId}', -1)" style="
+                    background: rgba(255,255,255,0.1);
+                    border: none;
+                    color: #888;
+                    width: 32px;
+                    height: 32px;
+                    border-radius: 50%;
+                    cursor: pointer;
+                    transition: all 0.2s;
+                ">◀</button>
+                
+                <div class="book-dots" style="display: flex; gap: 6px;">
+                    ${dots}
+                </div>
+                
+                <button class="book-next" onclick="bookNav('${bookId}', 1)" style="
+                    background: rgba(255,255,255,0.1);
+                    border: none;
+                    color: #888;
+                    width: 32px;
+                    height: 32px;
+                    border-radius: 50%;
+                    cursor: pointer;
+                    transition: all 0.2s;
+                ">▶</button>
+            </div>
+            
+            <!-- To Move Indicator -->
+            <div class="book-to-move" style="font-size: 0.8rem; color: #888; margin-top: 0.5rem; text-align: center;">
+                ${diagrams[0].toMove === 'w' ? 'Bílý na tahu' : 'Černý na tahu'}
+            </div>
+            
+            <!-- Page Counter -->
+            <div class="book-counter" style="font-size: 0.75rem; color: #555; margin-top: 0.25rem; text-align: center;">
+                1 / ${diagrams.length}
+            </div>
+            
+            <!-- Editable Caption -->
+            <div class="book-caption" contenteditable="true" style="
+                font-size: 0.85rem;
+                color: #b0b0b0;
+                margin-top: 0.75rem;
+                padding: 0.5rem;
+                background: rgba(0,0,0,0.2);
+                border-radius: 6px;
+                min-height: 1.5em;
+                text-align: center;
+            " data-placeholder="Popis..."></div>
+        </div><p><br></p>`;
+
+    document.execCommand('insertHTML', false, html);
+    updatePreview();
+    document.getElementById('articleContent')?.focus();
+}
+
+// Global book navigation function (for onclick handlers in content)
+window.bookNav = function (bookId, direction) {
+    const book = document.getElementById(bookId);
+    if (!book) return;
+
+    const diagrams = JSON.parse(book.dataset.diagrams);
+    let current = parseInt(book.dataset.current) || 0;
+
+    current += direction;
+    if (current < 0) current = diagrams.length - 1;
+    if (current >= diagrams.length) current = 0;
+
+    book.dataset.current = current;
+
+    const d = diagrams[current];
+    const boardHtml = window.generateMiniBoardGlobal ? window.generateMiniBoardGlobal(d.fen, 30) : '';
+
+
+    book.querySelector('.book-board-container').innerHTML = boardHtml;
+    book.querySelector('.book-to-move').textContent = d.toMove === 'w' ? 'Bílý na tahu' : 'Černý na tahu';
+    book.querySelector('.book-counter').textContent = `${current + 1} / ${diagrams.length}`;
+
+    // Update dots
+    book.querySelectorAll('.book-dot').forEach((dot, i) => {
+        dot.classList.toggle('active', i === current);
+    });
+};
+
+function insertDiagramToEditor(diagram) {
+    const boardHtml = generateMiniBoard(diagram.fen);
+
+    const html = `
+        <div class="diagram-embed-wrapper" contenteditable="false" style="margin: 1rem 0; text-align: center;">
+            <div class="diagram-embed" data-diagram-id="${diagram.id}" style="display: inline-block; background: #252525; padding: 1rem; border-radius: 8px; border: 1px solid #444;">
+                <div style="margin-bottom: 0.5rem; font-weight: bold; color: #d4af37;">${diagram.title || 'Diagram #' + diagram.id}</div>
+                ${boardHtml}
+                <div style="font-size: 0.8rem; color: #888; margin-top: 0.5rem;">
+                    ${diagram.toMove === 'w' ? 'Bílý na tahu' : 'Černý na tahu'}
+                </div>
+            </div>
+        </div>
+        <p><br></p>
+    `;
+
+    document.execCommand('insertHTML', false, html);
+    updatePreview();
+    document.getElementById('articleContent')?.focus();
+}
+
+function generateMiniBoard(fen, squareSize = 25) {
+    if (!fen) return `<div style="width:${squareSize * 8}px;height:${squareSize * 8}px;background:#b58863;margin:0 auto;border-radius:4px;"></div>`;
+
+    const position = fen.split(' ')[0];
+    const rows = position.split('/');
+
+    let html = '<table style="border-collapse: collapse; margin: 0 auto; border: 1px solid #555; border-radius: 2px; overflow: hidden;">';
+
+    for (let i = 0; i < 8; i++) {
+        html += '<tr>';
+        const row = rows[i] || '8';
+        let colIdx = 0;
+
+        for (const char of row) {
+            if (/\d/.test(char)) {
+                const emptyCount = parseInt(char);
+                for (let k = 0; k < emptyCount; k++) {
+                    const isLight = (i + colIdx) % 2 === 0;
+                    const bg = isLight ? '#f0d9b5' : '#b58863';
+                    html += `<td style="width:${squareSize}px;height:${squareSize}px;background:${bg};"></td>`;
+                    colIdx++;
+                }
+            } else {
+                const isLight = (i + colIdx) % 2 === 0;
+                const bg = isLight ? '#f0d9b5' : '#b58863';
+                const color = char === char.toLowerCase() ? 'b' : 'w';
+                const piece = char.toUpperCase();
+                const pieceUrl = `https://chessboardjs.com/img/chesspieces/wikipedia/${color}${piece}.png`;
+
+                html += `<td style="width:${squareSize}px;height:${squareSize}px;background:${bg};padding:0;">
+                    <img src="${pieceUrl}" style="width:100%;height:100%;display:block;">
+                </td>`;
+                colIdx++;
+            }
+        }
+        html += '</tr>';
+    }
+    html += '</table>';
+    return html;
+}
+
+// ================================
 // FLOATING TOOLBAR
 // ================================
 

@@ -7,7 +7,7 @@ let pendingPromotion = null; // Stores {source, target} during promotion check
 // Playback state
 let moveHistory = [];       // Full move history for navigation
 let currentMoveIndex = -1;  // -1 = start position, 0 = after first move, etc.
-let autoplayInterval = null;
+var autoplayInterval = null;
 
 // Track current game ID for updates (null = new game)
 let currentGameId = null;
@@ -550,7 +550,8 @@ function completePromotion(pieceType) {
             highlightMove(pendingPromotion.source, pendingPromotion.target);
         } else {
             console.error('Promotion move failed:', pendingPromotion);
-            alert('Neplatný tah povýšení.');
+            if (window.modal) modal.alert('Neplatný tah povýšení.', 'Chyba');
+            else alert('Neplatný tah povýšení.');
             board.position(game.fen()); // Reset board visual
         }
         pendingPromotion = null;
@@ -568,16 +569,19 @@ async function saveGame() {
     const black = document.getElementById('blackPlayer').value;
     const result = document.getElementById('result').value;
 
-    const token = localStorage.getItem('club_auth_token');
-    if (!token) {
+    const clubToken = localStorage.getItem('club_auth_token');
+    const userToken = localStorage.getItem('token');
+
+    if (!clubToken && !userToken) {
         const status = document.getElementById('saveStatus');
         status.style.color = 'red';
-        status.innerText = 'Pro uložení se musíte přihlásit v členské sekci!';
+        status.innerText = 'Pro uložení se musíte přihlásit!';
         return;
     }
 
     if (!white || !black) {
-        alert('Vyplňte jména hráčů!');
+        if (window.modal) await modal.alert('Vyplňte jména hráčů!', 'Chybějící údaje');
+        else alert('Vyplňte jména hráčů!');
         return;
     }
 
@@ -597,12 +601,16 @@ async function saveGame() {
         const url = isUpdate ? `${API_URL}/games/${currentGameId}` : `${API_URL}/games`;
         const method = isUpdate ? 'PUT' : 'POST';
 
+        const headers = {
+            'Content-Type': 'application/json'
+        };
+
+        if (clubToken) headers['X-Club-Password'] = clubToken;
+        if (userToken) headers['Authorization'] = `Bearer ${userToken}`;
+
         const res = await fetch(url, {
             method: method,
-            headers: {
-                'Content-Type': 'application/json',
-                'X-Club-Password': token
-            },
+            headers: headers,
             body: JSON.stringify({
                 white,
                 black,

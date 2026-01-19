@@ -12,6 +12,7 @@
     <link rel="stylesheet" href="css/style.css?v=ux12">
     <link rel="stylesheet" href="css/admin.css?v=ux12">
     <script src="js/version.js?v=ux12"></script>
+    <script src="js/modal-manager.js?v=ux12"></script>
 </head>
 
 <body>
@@ -242,6 +243,8 @@
                                         class="fa-solid fa-lightbulb"></i></button><button type="button"
                                     onclick="insertImage()" title="Obrázek" style="color: #f472b6;"><i
                                         class="fa-solid fa-image"></i></button><button type="button"
+                                    onclick="insertDiagram()" title="Vložit diagram" style="color: #d4a373;"><i
+                                        class="fa-solid fa-chess-board"></i></button><button type="button"
                                     onclick="insertCollapsibleBlock()" title="Rozbalovací sekce"
                                     style="color: #8b5cf6;"><i class="fa-solid fa-layer-group"></i></button>
                                 <!-- AI Tools -->
@@ -1227,6 +1230,22 @@
             </div>
 
             <div class="changelog-timeline">
+                <!-- 2026-01-19 v21 -->
+                <div class="changelog-entry">
+                    <div class="changelog-date">19. 1. 2026</div>
+                    <div class="changelog-version">v21</div>
+                    <div class="changelog-content">
+                        <h4>🔧 Opravy & Vylepšení</h4>
+                        <ul>
+                            <li><strong>Partie:</strong> Oprava ukládání vlastních partií pro přihlášené členy (Game
+                                Recorder).</li>
+                            <li><strong>Tabulky:</strong> Oprava načítání výsledků B týmu (KP Liberec) z Chess-Results.
+                            </li>
+                            <li><strong>Diagramy:</strong> Vylepšení "Knihy Diagramů" - 3D animace otáčení, čtvercový
+                                formát, editovatelné popisky.</li>
+                        </ul>
+                    </div>
+                </div>
                 <!-- 2026-01-18 v20 -->
                 <div class="changelog-entry">
                     <div class="changelog-date">18. 1. 2026</div>
