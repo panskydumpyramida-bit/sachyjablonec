@@ -37,7 +37,7 @@
     grid-template-areas:
         "board right"
         "controls right";
-    grid-template-columns: 1fr 200px;
+    grid-template-columns: 1fr 250px;
     grid-template-rows: 1fr auto;
     width: 100%;
     gap: 0;
@@ -56,8 +56,8 @@
 /* Right column containing both info and analysis */
 .gv2-info-panel {
     grid-area: right;
-    width: 200px !important;
-    max-width: 200px !important;
+    width: 250px !important;
+    max-width: 250px !important;
     max-height: 450px;
     display: flex;
     flex-direction: column;
@@ -921,6 +921,7 @@
     transition: all 0.1s;
     font-weight: 500;
     margin: 0 1px;
+    white-space: nowrap;
 }
 
 .gv2-move:hover {

@@ -1387,9 +1387,25 @@ class GameViewer2 {
 
         if (typeof this.nextMainLinePlyToMatch === 'undefined') this.nextMainLinePlyToMatch = 0;
 
+        let lastWasMoveNum = false;
+
         parts.forEach(part => {
             const cleanPart = part.trim();
             const nextMove = history[this.nextMainLinePlyToMatch];
+
+            // If empty/whitespace (separator)
+            if (!cleanPart) {
+                if (lastWasMoveNum) {
+                    html += '&nbsp;';
+                    lastWasMoveNum = false;
+                } else {
+                    html += part;
+                }
+                return;
+            }
+
+            // It's not whitespace, so reset flag unless we set it again
+            lastWasMoveNum = false;
 
             if (nextMove && (cleanPart === nextMove.san || cleanPart === nextMove.lan)) {
                 const ply = this.nextMainLinePlyToMatch + 1;
@@ -1420,6 +1436,7 @@ class GameViewer2 {
                 }
             } else if (part.match(/^[0-9]+\.+$/)) {
                 html += `<span class="gv2-move-num">${part}</span>`;
+                lastWasMoveNum = true;
             } else {
                 html += part;
             }
