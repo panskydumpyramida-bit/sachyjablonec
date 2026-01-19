@@ -1399,3 +1399,43 @@
     box-shadow: inset 0 0 0 4px #d46b4b !important;
     /* Gold border 4px, keep original square color */
 }
+
+/* Update: Responsive Title Stacking */
+@media (max-width: 768px) {
+    .gv2-title {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.2rem;
+        line-height: 1.2;
+    }
+
+    .gv2-vs-sep {
+        display: none !important;
+    }
+
+    .gv2-player-white,
+    .gv2-player-black {
+        display: block;
+    }
+}
+
+/* Update: Hide Metadata on Mobile to save space */
+@media (max-width: 768px) {
+    .gv2-metadata {
+        display: none !important;
+    }
+
+    /* Make moves list take more height since metadata is gone */
+    .gv2-info-content {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        min-height: 0;
+        /* Important for scroll */
+    }
+
+    .gv2-moves {
+        flex: 1;
+    }
+}
