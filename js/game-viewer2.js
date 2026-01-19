@@ -2296,8 +2296,17 @@ class GameViewer2 {
         const existing = wrapper.querySelectorAll('.board-nag-marker');
         existing.forEach(el => el.remove());
 
-        if (!this.mainLinePlies) return;
-        const currentData = this.mainLinePlies[this.currentPly];
+        let currentData = null;
+
+        if (this.inVariation && this.currentVariation && this.allVariations[this.currentVariation]) {
+            // Find move in variation
+            const currentFen = this.game.fen();
+            const varData = this.allVariations[this.currentVariation];
+            // Find the move that RESULTED in the current position
+            currentData = varData.moves.find(m => m.fen === currentFen);
+        } else if (this.mainLinePlies) {
+            currentData = this.mainLinePlies[this.currentPly];
+        }
 
         if (currentData && currentData.nag && currentData.move) {
             const nag = currentData.nag;
