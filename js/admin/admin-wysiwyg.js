@@ -2202,8 +2202,17 @@ function showDiagramToolbar(bookElement) {
                 icon.classList.add('fa-spin');
 
                 // Fetch latest data
-                const response = await fetch(`/api/diagrams/${currentDiagram.id}`);
-                if (!response.ok) throw new Error('Failed to fetch diagram');
+                // Get token from localStorage (safest approach here as auth object might not be in scope)
+                const token = localStorage.getItem('token');
+                const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
+
+                const response = await fetch(`/api/diagrams/${currentDiagram.id}`, {
+                    headers: headers
+                });
+                if (!response.ok) {
+                    if (response.status === 401) throw new Error('Neautorizovaný přístup. Přihlaste se prosím znovu.');
+                    throw new Error('Failed to fetch diagram (' + response.status + ')');
+                }
 
                 const updatedData = await response.json();
 
