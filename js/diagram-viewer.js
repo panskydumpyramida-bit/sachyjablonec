@@ -66,6 +66,23 @@ class DiagramViewer {
         this.overlayEl.style.zIndex = '10';
         wrapper.appendChild(this.overlayEl);
 
+        // Type Badge (corner indicator for puzzle vs diagram)
+        this.typeBadge = document.createElement('div');
+        this.typeBadge.className = 'diagram-type-badge';
+        this.typeBadge.style.cssText = `
+            position: absolute;
+            top: 4px;
+            right: 4px;
+            padding: 2px 6px;
+            background: rgba(0, 0, 0, 0.6);
+            border-radius: 4px;
+            font-size: 0.65rem;
+            color: #fff;
+            z-index: 15;
+            pointer-events: none;
+        `;
+        wrapper.appendChild(this.typeBadge);
+
         this.container.appendChild(wrapper);
 
         // Feedback Panel
@@ -178,6 +195,15 @@ class DiagramViewer {
 
         // Initialize board
         this.board = Chessboard(this.boardEl.id, config);
+
+        // Update type badge
+        const hasSolution = diagram.solution && Object.keys(diagram.solution).length > 0;
+        if (this.typeBadge) {
+            this.typeBadge.innerHTML = hasSolution
+                ? '<i class="fa-solid fa-puzzle-piece"></i>'
+                : '<i class="fa-solid fa-chess-board"></i>';
+            this.typeBadge.title = hasSolution ? 'Hádanka' : 'Diagram';
+        }
 
         // 2. Render Annotations
         // Timeout to ensure board is rendered and we can get dimensions

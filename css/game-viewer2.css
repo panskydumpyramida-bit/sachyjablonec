@@ -594,14 +594,14 @@
     transition: none !important;
     /* CRITICAL: High z-index ensures animation ghost piece renders ABOVE the board */
     /* chessboard.js appends the ghost to <body> during animation - needs high z-index */
-    z-index: 9999 !important;
+    z-index: 100 !important;
 }
 
 /* Also target any img inside the board container */
 #gv2-board img,
 .board-b72b1 img {
     transition: none !important;
-    z-index: 9999 !important;
+    z-index: 100 !important;
 }
 
 /* Coach Bubble - Overlay on container, semi-transparent */
