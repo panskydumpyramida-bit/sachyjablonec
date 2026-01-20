@@ -102,6 +102,8 @@ class DiagramViewer {
         this.feedbackEl.style.padding = '1rem';
         this.feedbackEl.style.borderRadius = '8px';
         this.feedbackEl.style.textAlign = 'center';
+        this.feedbackEl.style.boxSizing = 'border-box'; // Fix layout expansion
+        this.feedbackEl.style.width = '100%';
 
         this.feedbackEl.innerHTML = `
             <h4 class="feedback-title" style="margin:0; font-weight:600;"></h4>
