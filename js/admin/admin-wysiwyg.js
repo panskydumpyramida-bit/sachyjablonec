@@ -2156,10 +2156,10 @@ function initDiagramToolbar() {
             if (book) {
                 showDiagramToolbar(book);
             } else {
-                 // Do not hide here immediately if clicking inside custom toolbar logic?
-                 // But click inside toolbar is captured by toolbar mousedown prevention (preventDefault) usually.
-                 // Actually mousedown on document hides it if not clicked inside. 
-                 // So we rely on document mousedown.
+                // Do not hide here immediately if clicking inside custom toolbar logic?
+                // But click inside toolbar is captured by toolbar mousedown prevention (preventDefault) usually.
+                // Actually mousedown on document hides it if not clicked inside. 
+                // So we rely on document mousedown.
             }
         });
     }
@@ -2189,7 +2189,67 @@ function showDiagramToolbar(bookElement) {
     };
     diagramToolbar.appendChild(btnEdit);
 
-    // 2. Remove Button
+    // 2. Refresh Button
+    const btnRefresh = document.createElement('button');
+    btnRefresh.className = 'floating-btn';
+    btnRefresh.innerHTML = '<i class="fa-solid fa-rotate"></i>';
+    btnRefresh.title = 'Obnovit data (načíst aktuální verzi ze serveru)';
+    btnRefresh.onclick = async () => {
+        if (currentDiagram && currentDiagram.id) {
+            try {
+                // Determine icon spin
+                const icon = btnRefresh.querySelector('i');
+                icon.classList.add('fa-spin');
+
+                // Fetch latest data
+                const response = await fetch(`/api/diagrams/${currentDiagram.id}`);
+                if (!response.ok) throw new Error('Failed to fetch diagram');
+
+                const updatedData = await response.json();
+
+                // Construct new diagram object preserving some structure if needed, 
+                // but usually we just replace the one entry.
+                // NOTE: Multi-diagram books might be tricky if we only refresh one.
+                // Optimally we refresh the whole list if multiple IDs, but usually it is one.
+
+                // Update the array
+                diagrams[currentIdx] = {
+                    ...currentDiagram, // Keep existing props mostly? No, overwrite.
+                    ...updatedData // Overwrite with new data
+                };
+
+                // Update DOM attribute
+                bookElement.dataset.diagrams = JSON.stringify(diagrams);
+
+                // Trigger re-render of this book
+                // We can call initDiagramBooks() but it acts on all querySelector('.diagram-book').
+                // It should be safe to call again as it acts on existing elements.
+                // However, we might want to manually re-trigger specific render if possible.
+                // initDiagramBooks() inside diagram-book.js is idempotent-ish?
+                if (typeof window.initDiagramBooks === 'function') {
+                    window.initDiagramBooks();
+                } else {
+                    // Fallback check if re-init needed
+                }
+
+                // Show feedback
+                icon.classList.remove('fa-spin');
+                if (typeof showToast === 'function') showToast('Diagram aktualizován', 'success');
+
+                // Update toolbar reference if needed? No need.
+
+            } catch (e) {
+                console.error(e);
+                btnRefresh.querySelector('i').classList.remove('fa-spin');
+                alert('Chyba při aktualizaci: ' + e.message);
+            }
+        } else {
+            alert('Tento diagram nemá ID, nelze obnovit.');
+        }
+    };
+    diagramToolbar.appendChild(btnRefresh);
+
+    // 3. Remove Button
     const btnRemove = document.createElement('button');
     btnRemove.className = 'floating-btn';
     btnRemove.innerHTML = '<i class="fa-solid fa-trash"></i>';
@@ -2216,13 +2276,13 @@ function showDiagramToolbar(bookElement) {
     // Recalculate properly
     // We need to render it to measure it.
     // It is 'visible' so it exists.
-    
+
     // Better logic matching existing toolbar:
     const tbRect = diagramToolbar.getBoundingClientRect();
     top = rect.top - tbRect.height - 8;
     left = rect.left + (rect.width / 2) - (tbRect.width / 2);
 
-   if (top < 0) top = rect.bottom + 8;
+    if (top < 0) top = rect.bottom + 8;
 
     diagramToolbar.style.top = top + 'px';
     diagramToolbar.style.left = left + 'px';
