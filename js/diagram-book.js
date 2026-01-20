@@ -7,6 +7,21 @@
 (function () {
     'use strict';
 
+    // Helper function to determine who is to move
+    function getToMoveText(diagram) {
+        let turn = diagram.toMove;
+        // If not specified, try to get from FEN
+        if (!turn && diagram.fen) {
+            const fenParts = diagram.fen.split(' ');
+            if (fenParts.length > 1) {
+                turn = fenParts[1]; // 'w' or 'b'
+            }
+        }
+        // Default to white if still unknown
+        if (!turn) turn = 'w';
+        return turn === 'w' ? 'Bílý na tahu' : 'Černý na tahu';
+    }
+
     // Board generation function (same as admin but available globally)
     function generateMiniBoard(fen, squareSize = 25) {
         const boardSize = squareSize * 8;
@@ -111,7 +126,7 @@
         const counterEl = book.querySelector('.book-counter');
 
 
-        if (toMoveEl) toMoveEl.textContent = d.toMove === 'w' ? 'Bílý na tahu' : 'Černý na tahu';
+        if (toMoveEl) toMoveEl.textContent = getToMoveText(d);
         if (counterEl) counterEl.textContent = `${current + 1} / ${diagrams.length}`;
 
 
@@ -368,7 +383,7 @@
             if (counterEl) counterEl.textContent = `${current + 1} / ${diagrams.length}`;
 
             if (toMoveEl) {
-                toMoveEl.textContent = d.toMove === 'w' ? 'Bílý na tahu' : 'Černý na tahu';
+                toMoveEl.textContent = getToMoveText(d);
 
                 // Add Reset Button before/next to toMoveEl
                 let resetBtn = book.querySelector('.book-reset-btn');
