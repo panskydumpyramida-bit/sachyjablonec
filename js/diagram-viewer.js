@@ -71,16 +71,23 @@ class DiagramViewer {
         this.typeBadge.className = 'diagram-type-badge';
         this.typeBadge.style.cssText = `
             position: absolute;
-            top: 4px;
-            right: 4px;
-            padding: 2px 6px;
-            background: rgba(0, 0, 0, 0.6);
+            top: -28px;
+            right: 0;
+            padding: 2px 8px;
+            background: rgba(30, 30, 30, 0.9);
+            border: 1px solid rgba(255, 255, 255, 0.2);
             border-radius: 4px;
-            font-size: 0.65rem;
-            color: #fff;
+            font-size: 0.75rem;
+            color: #eee;
             z-index: 15;
-            pointer-events: none;
+            pointer-events: auto;
+            cursor: help;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
         `;
+        // Tooltip is set via title attribute dynamically
         wrapper.appendChild(this.typeBadge);
 
         this.container.appendChild(wrapper);
@@ -196,6 +203,17 @@ class DiagramViewer {
         // Initialize board
         this.board = Chessboard(this.boardEl.id, config);
 
+        // Add CLICK listener (delegation) for Click-to-Move
+        if (config.draggable) {
+            this.boardEl.addEventListener('click', (e) => {
+                const squareEl = e.target.closest('[data-square]');
+                if (squareEl) {
+                    const square = squareEl.getAttribute('data-square');
+                    this.handleSquareClick(square);
+                }
+            });
+        }
+
         // Update type badge
         const hasSolution = diagram.solution && Object.keys(diagram.solution).length > 0;
         if (this.typeBadge) {
@@ -230,14 +248,112 @@ class DiagramViewer {
             return false;
         }
 
+        // Select the square for consistency with click-move
+        this.selectSquare(source);
+
         // Hide previous temporary feedback
         this.hideFeedback();
         return true; // Allow drag
     }
 
     onDrop(source, target) {
-        if (source === target) return 'snapback';
+        if (source === target) {
+            this.deselectSquare();
+            return 'snapback';
+        }
 
+        // Attempt move using shared logic
+        const success = this.attemptMove(source, target);
+
+        // Cleanup selection always
+        this.deselectSquare();
+
+        return success ? undefined : 'snapback';
+    }
+
+    // --- CLICK TO MOVE LOGIC ---
+
+    handleSquareClick(square) {
+        if (this.isSolved) return;
+
+        // Check game state
+        if (this.game && (this.game.in_checkmate() || this.game.in_stalemate())) {
+            return;
+        }
+
+        // Logic:
+        // 1. If currently selected square == square -> Deselect
+        // 2. If nothing selected -> Select if own piece
+        // 3. If something selected:
+        //    a. If clicked own piece -> Change selection
+        //    b. If clicked valid target -> Move
+
+        const turn = this.game ? this.game.turn() : this.playerColor;
+        // Check if clicked square has own piece
+        let pieceOnSquare = null;
+        if (this.game) {
+            pieceOnSquare = this.game.get(square);
+        } else {
+            // Fallback for incomplete checks without game instance (shouldn't happen with current flow)
+            // We really rely on game instance for robust checking
+        }
+
+        const isOwnPiece = pieceOnSquare && pieceOnSquare.color === turn;
+
+        if (this.selectedSquare === square) {
+            this.deselectSquare();
+            return;
+        }
+
+        if (!this.selectedSquare) {
+            if (isOwnPiece) {
+                this.selectSquare(square);
+            }
+            return;
+        }
+
+        // We have a selection
+        if (isOwnPiece) {
+            this.selectSquare(square);
+            return;
+        }
+
+        // Attempt move
+        const success = this.attemptMove(this.selectedSquare, square);
+        if (success) {
+            // Visual move for click-to-move (onDrop handles it automatically for drag)
+            this.board.move(`${this.selectedSquare}-${square}`);
+            this.deselectSquare();
+        } else {
+            // Invalid move or mistake
+            // If illegal move, just deselect
+            this.deselectSquare();
+        }
+    }
+
+    selectSquare(square) {
+        this.selectedSquare = square;
+        // Visual highlight
+        this.removeHighlights();
+        const sqEl = this.boardEl.querySelector(`[data-square="${square}"]`);
+        if (sqEl) sqEl.classList.add('highlight-source');
+
+        // Optional: Highlight dest
+        // if(this.game) { ... get moves, highlight dest ... }
+    }
+
+    deselectSquare() {
+        this.selectedSquare = null;
+        this.removeHighlights();
+    }
+
+    removeHighlights() {
+        const highlighted = this.boardEl.querySelectorAll('.highlight-source, .highlight-dest');
+        highlighted.forEach(el => el.classList.remove('highlight-source', 'highlight-dest'));
+    }
+
+    // Shared move logic
+    attemptMove(source, target) {
         // First, validate legal move with chess.js
         if (this.game) {
             const move = this.game.move({
@@ -247,9 +363,11 @@ class DiagramViewer {
             });
 
             if (move === null) {
-                // Illegal move
-                this.showFeedback('error', 'Nelegální tah.');
-                return 'snapback';
+                // Illegal move (only show feedback if explicit attempt, or just silence)
+                // this.showFeedback('error', 'Nelegální tah.'); 
+                // Better to be silent for simple clicks, show error for specific drag?
+                // Let's keep existing behavior: if it's illegal, return false.
+                return false;
             }
 
             // Move was legal - undo it temporarily for solution checking

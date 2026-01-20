@@ -158,6 +158,17 @@
         style.textContent = `
             .diagram-book {
                 user-select: none;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+            }
+            .book-meta-row {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 1rem;
+                width: 100%;
+                margin-top: 0.5rem;
             }
             .mini-board-wrapper {
                 flex: none !important;
@@ -232,6 +243,10 @@
                 width: 100% !important;
                 aspect-ratio: 1 !important;
             }
+            /* Hide internal reset button when in book mode to avoid duplication */
+            .diagram-book .diagram-reset-btn {
+                display: none !important;
+            }
         `;
         document.head.appendChild(style);
     }
@@ -276,8 +291,44 @@
             const counterEl = book.querySelector('.book-counter');
 
             if (titleEl) titleEl.textContent = d.title || 'Diagram';
-            if (toMoveEl) toMoveEl.textContent = d.toMove === 'w' ? 'Bílý na tahu' : 'Černý na tahu';
             if (counterEl) counterEl.textContent = `${current + 1} / ${diagrams.length}`;
+
+            if (toMoveEl) {
+                toMoveEl.textContent = d.toMove === 'w' ? 'Bílý na tahu' : 'Černý na tahu';
+
+                // Add Reset Button before/next to toMoveEl
+                let resetBtn = book.querySelector('.book-reset-btn');
+
+                // Ensure toMoveEl is wrapped in a meta-row for alignment if not already
+                if (!toMoveEl.parentNode.classList.contains('book-meta-row')) {
+                    // This might break existing structure if strict, but let's try to inject button directly
+                    // Or check if we should wrap them. Let's look at HTML structure... usually just spans.
+                    // Let's just insert the button before the text.
+                }
+
+                if (!resetBtn) {
+                    resetBtn = document.createElement('button');
+                    resetBtn.className = 'book-reset-btn';
+                    resetBtn.innerHTML = '<i class="fa-solid fa-rotate-left"></i>';
+                    resetBtn.title = 'Resetovat pozici';
+                    resetBtn.style.cssText = 'background:none; border:none; color:#aaa; cursor:pointer; font-size:1rem; padding:0 0.5rem; transition:color 0.2s;';
+                    resetBtn.onmouseover = () => resetBtn.style.color = '#fff';
+                    resetBtn.onmouseout = () => resetBtn.style.color = '#aaa';
+
+                    resetBtn.onclick = (e) => {
+                        e.stopPropagation();
+                        // Reset viewer if exists
+                        if (book._viewer && typeof book._viewer.reset === 'function') {
+                            book._viewer.reset();
+                        }
+                    };
+
+                    // Insert before toMoveEl
+                    if (toMoveEl.parentNode) {
+                        toMoveEl.parentNode.insertBefore(resetBtn, toMoveEl);
+                    }
+                }
+            }
 
 
         });
