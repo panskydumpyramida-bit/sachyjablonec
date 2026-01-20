@@ -223,6 +223,10 @@ class DiagramViewer {
             this.typeBadge.title = hasSolution ? 'Hádanka' : 'Diagram';
         }
 
+        // State for multi-move lines
+        this.activeLine = null; // Array of moves ["e2-e4", "e7-e5"]
+        this.activeLineIndex = 0; // Current index in the line
+
         // 2. Render Annotations
         // Timeout to ensure board is rendered and we can get dimensions
         setTimeout(() => {
@@ -272,6 +276,21 @@ class DiagramViewer {
     }
 
     // --- CLICK TO MOVE LOGIC ---
+
+    reset() {
+        if (!this.diagram) return;
+
+        // Reset state
+        this.activeLine = null;
+        this.activeLineIndex = 0;
+        this.isSolved = false;
+
+        // Reload
+        this.load(this.diagram);
+
+        // Hide feedback
+        this.hideFeedback();
+    }
 
     handleSquareClick(square) {
         if (this.isSolved) return;
@@ -376,24 +395,70 @@ class DiagramViewer {
         }
 
         const moveKey = `${source}-${target}`;
+
+        // LOGIC FOR MULTI-MOVE SEQUENCES
+
+        // Case 1: Already following a line
+        if (this.activeLine) {
+            // Check if this move matches the next expected move in the line
+            const expectedMove = this.activeLine[this.activeLineIndex + 1];
+
+            if (moveKey === expectedMove) {
+                // Correct continuation!
+                this.executeMove(source, target);
+                this.activeLineIndex++;
+
+                // Check if line finished
+                if (this.activeLineIndex >= this.activeLine.length - 1) {
+                    this.handleLineSuccess();
+                } else {
+                    // Continue with opponent move
+                    this.makeOpponentMove();
+                }
+                return true;
+            } else {
+                // Warning/Error: Departed from the active line
+                this.showFeedback('error', 'To není správné pokračování varianty.');
+                return false;
+            }
+        }
+
         const solution = this.diagram.solution || {};
         const hasSolution = Object.keys(solution).length > 0;
 
         // A) Check specific solution moves
+        // Case 2: New move (start of line)
         if (solution[moveKey]) {
             const step = solution[moveKey];
 
             if (step.type === 'correct') {
-                this.isSolved = true;
-                this.showFeedback('success', step.comment || 'Správně! ✅');
-                // Apply the move in game state
-                if (this.game) {
-                    this.game.move({ from: source, to: target, promotion: 'q' });
+                this.executeMove(source, target);
+
+                // Check for multi-move line
+                if (step.line && step.line.length > 1) {
+                    this.activeLine = step.line;
+                    this.activeLineIndex = 0; // We just played index 0
+
+                    // Trigger opponent move
+                    this.makeOpponentMove();
+                    this.showFeedback('success', 'Správně! Pokračujte...');
+                } else {
+                    // Single move solution
+                    this.isSolved = true;
+                    this.showFeedback('success', step.comment || 'Správně! ✅');
+                    if (this.options.onSolve) this.options.onSolve(this.diagram);
                 }
-                this.options.onSolve(this.diagram);
-                // Update board position to show the move
-                return; // Allow move to stay
+                return true; // Allow move to stay
             } else if (step.type === 'alternative') {
+                if (step.line && step.line.length > 1) {
+                    this.executeMove(source, target);
+                    this.activeLine = step.line;
+                    this.activeLineIndex = 0;
+                    this.makeOpponentMove();
+                    this.showFeedback('info', step.comment || 'Alternativní varianta.');
+                    return true;
+                }
+
                 this.showFeedback('info', step.comment || 'Zajímavá alternativa, ale existuje lepší tah.');
                 return 'snapback';
             } else {
@@ -417,6 +482,53 @@ class DiagramViewer {
             this.game.move({ from: source, to: target, promotion: 'q' });
         }
         return;
+    }
+
+    executeMove(source, target) {
+        if (this.game) {
+            this.game.move({ from: source, to: target, promotion: 'q' });
+        }
+        this.board.move(`${source}-${target}`);
+    }
+
+    makeOpponentMove() {
+        if (!this.activeLine || this.activeLineIndex >= this.activeLine.length - 1) return;
+
+        // Next move is opponent
+        const opponentMoveKey = this.activeLine[this.activeLineIndex + 1];
+        const [source, target] = opponentMoveKey.split('-');
+
+        setTimeout(() => {
+            if (!this.game) return; // safety
+            this.executeMove(source, target);
+            this.activeLineIndex++;
+
+            // Check if line finished (after opponent move? Unlikely for "mate" puzzles, but possible for "draw" puzzles)
+            if (this.activeLineIndex >= this.activeLine.length - 1) {
+                this.handleLineSuccess();
+            }
+        }, 500);
+    }
+
+    handleLineSuccess() {
+        this.isSolved = true;
+
+        // Find the comment for the whole line (from the start index). 
+        // We need the original step object.
+        // It's keyed by the first move.
+        // Safety check if activeLine is still valid
+        if (!this.activeLine || this.activeLine.length === 0) return;
+
+        const firstMove = this.activeLine[0];
+        const step = this.diagram.solution[firstMove];
+
+        const msg = step.comment || (step.type === 'correct' ? 'Vyřešeno! ✅' : 'Konec varianty.');
+        const type = step.type === 'correct' ? 'success' : 'info';
+
+        this.showFeedback(type, msg);
+        if (step.type === 'correct' && this.options.onSolve) {
+            this.options.onSolve(this.diagram);
+        }
     }
 
     onSnapEnd() {

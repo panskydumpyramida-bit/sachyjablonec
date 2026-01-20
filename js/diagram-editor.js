@@ -16,8 +16,9 @@ let currentAnnotations = {
 let solverState = {
     isRecording: false,
     recordingType: null, // 'correct', 'alternative', 'mistake'
-    recordedMoves: {}, // Key: "e2-e4", Value: { type: 'correct', comment: '...' }
-    currentPendingMove: null
+    recordedMoves: {}, // Key: "e2-e4", Value: { type: 'correct', comment: '...', line: [] }
+    currentPendingMove: null, // First move of the sequence (key)
+    currentLine: [] // Array of moves in syntax "e2-e4"
 };
 
 // Colors mapping
@@ -426,27 +427,41 @@ function exportDiagram() {
 function enableMoveRecording(type) {
     solverState.isRecording = true;
     solverState.recordingType = type;
+    solverState.currentLine = []; // Reset line
+    solverState.currentPendingMove = null;
+
+    // Show controls
+    document.getElementById('recordingControls').style.display = 'flex';
+    document.getElementById('recordingStatusLabel').innerText = `Nahrávám: ${getLabelForType(type)}`;
+    document.getElementById('recordingMovesPreview').innerText = '-';
+
+    // Hide type buttons to prevent confusion
+    document.querySelectorAll('#solverTools > div:first-child').forEach(div => div.style.display = 'none');
 
     // Disable drawing canvas momentarily to allow board interaction
     document.getElementById('diagramOverlay').style.pointerEvents = 'none';
 
-    document.querySelectorAll('#solverTools button').forEach(b => b.style.opacity = '0.5');
-    if (type === 'correct') document.getElementById('recordCorrectBtn').style.opacity = '1';
-    if (type === 'alternative') document.getElementById('recordAltBtn').style.opacity = '1';
-    if (type === 'mistake') document.getElementById('recordBadBtn').style.opacity = '1';
-
-    // Determine who is on turn from the current game position
-    const playerTurn = game.turn(); // 'w' or 'b'
+    // Determine who is on turn based on GAME state + moves already made?
+    // Actually, for the start of recording, it is based on game.turn()
+    // But subsequent moves must flip turn.
+    // We need a local Chess instance to track legality during recording!
+    solverState.recordingGame = new Chess(game.fen());
 
     // Enable draggable to allow making moves
+    initDraggableBoardForRecording();
+}
+
+function initDraggableBoardForRecording() {
     diagramBoard = Chessboard('diagramBoard', {
-        position: diagramBoard.position(),
+        position: solverState.recordingGame.fen(),
         draggable: true,
         onDragStart: function (source, piece) {
             // Only allow moving pieces of the side to move
+            const turn = solverState.recordingGame.turn();
             const pieceColor = piece.charAt(0); // 'w' or 'b'
-            if (pieceColor !== playerTurn) {
-                return false; // Can't move opponent's pieces
+
+            if (pieceColor !== turn) {
+                return false;
             }
             return true;
         },
@@ -458,56 +473,97 @@ function enableMoveRecording(type) {
 function handleSolverDrop(source, target) {
     if (!solverState.isRecording) return 'snapback';
 
-    // Normalize move string logic
-    const moveKey = `${source}-${target}`; // Simple for now. Ideally should be SAN if we had engine, but coordinate move is fine for solver.
+    // Validate with local game instance
+    const move = solverState.recordingGame.move({
+        from: source,
+        to: target,
+        promotion: 'q'
+    });
+
+    if (move === null) return 'snapback';
+
+    // Valid move
+    const moveKey = `${source}-${target}`;
+    solverState.currentLine.push(moveKey);
+
+    // Set pending move to the FIRST move of the sequence (the key for storage)
+    if (!solverState.currentPendingMove) {
+        solverState.currentPendingMove = moveKey;
+    }
+
+    // Update UI
+    const movesText = solverState.currentLine.join(', ');
+    document.getElementById('recordingMovesPreview').innerText = movesText;
+
+    // Do NOT show editor yet. Wait for "Finish".
+    // Board updates automatically by drop, but let's confirm position
+    // diagramBoard.position(solverState.recordingGame.fen()); // optional, drop does it nicely mostly
+}
+
+function finishRecording() {
+    if (solverState.currentLine.length === 0) {
+        alert("Nebyly nahrány žádné tahy.");
+        return;
+    }
 
     // Show Editor
     document.getElementById('solutionEditor').style.display = 'block';
-    document.getElementById('activeMoveLabel').innerText = `${source} -> ${target}`;
+
+    // Hide controls
+    document.getElementById('recordingControls').style.display = 'none';
+
+    document.getElementById('activeMoveLabel').innerText = solverState.currentLine.join(', ');
 
     const typeLabel = getLabelForType(solverState.recordingType);
     const typeColor = getColorForType(solverState.recordingType);
     const badge = document.getElementById('activeMoveType');
     badge.innerText = typeLabel;
     badge.style.backgroundColor = typeColor;
+}
 
-    solverState.currentPendingMove = moveKey;
+function cancelRecording() {
+    // Reset state
+    solverState.isRecording = false;
+    solverState.currentLine = [];
+    solverState.recordingGame = null;
 
-    // Snapback to keep position clean? Or show move?
-    // Let's snapback after a short delay so user sees the move they made.
-    setTimeout(() => {
-        diagramBoard.position(game.fen());
-    }, 200);
+    // Reset UI
+    document.getElementById('recordingControls').style.display = 'none';
+    document.getElementById('solutionEditor').style.display = 'none';
+
+    // Restore buttons
+    document.querySelectorAll('#solverTools > div:first-child').forEach(div => div.style.display = 'flex');
+
+    // Reset board to initial Position
+    resetBoardToReadOnly();
+    document.getElementById('diagramOverlay').style.pointerEvents = 'auto'; // Enable drawing
+}
+
+function resetBoardToReadOnly() {
+    diagramBoard = Chessboard('diagramBoard', {
+        position: game.fen(),
+        draggable: false,
+        pieceTheme: 'https://chessboardjs.com/img/chesspieces/wikipedia/{piece}.png'
+    });
 }
 
 function saveSolverStep() {
     const comment = document.getElementById('solverComment').value;
-    const moveKey = solverState.currentPendingMove;
+    const firstMoveKey = solverState.currentPendingMove; // Key is the first move
 
-    if (moveKey && solverState.recordingType) {
-        solverState.recordedMoves[moveKey] = {
+    if (firstMoveKey && solverState.recordingType && solverState.currentLine.length > 0) {
+        solverState.recordedMoves[firstMoveKey] = {
             type: solverState.recordingType,
-            comment: comment
+            comment: comment,
+            line: [...solverState.currentLine] // Save full sequence
         };
         updateSolutionList();
 
         // Reset UI
         document.getElementById('solutionEditor').style.display = 'none';
         document.getElementById('solverComment').value = '';
-        solverState.isRecording = false;
 
-        // Re-enable drawing layer
-        document.getElementById('diagramOverlay').style.pointerEvents = 'auto';
-
-        // Reset board state to non-draggable editor mode
-        diagramBoard = Chessboard('diagramBoard', {
-            position: game.fen(),
-            draggable: false,
-            pieceTheme: 'https://chessboardjs.com/img/chesspieces/wikipedia/{piece}.png'
-        });
-
-        // Reset buttons opacity
-        document.querySelectorAll('#solverTools button').forEach(b => b.style.opacity = '1');
+        cancelRecording(); // Cleans up UI and state
     }
 }
 
@@ -518,8 +574,16 @@ function updateSolutionList() {
     Object.entries(solverState.recordedMoves).forEach(([move, data]) => {
         const div = document.createElement('div');
         div.style.cssText = 'display:flex; justify-content:space-between; padding:4px; border-bottom:1px solid rgba(255,255,255,0.1); align-items:center;';
+
+        // Display line if available
+        const lineText = data.line ? data.line.join(' -> ') : move;
+
         div.innerHTML = `
-            <span><strong style="color:${getColorForType(data.type)}">${move}</strong>: ${data.comment ? data.comment.substring(0, 30) + '...' : ''}</span>
+            <div style="flex:1; margin-right:5px; overflow:hidden;">
+                <div style="font-size:0.9rem;"><strong style="color:${getColorForType(data.type)}">${getLabelForType(data.type)}</strong></div>
+                <div style="font-size:0.8rem; opacity:0.8; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="${lineText}">${lineText}</div>
+                ${data.comment ? `<div style="font-size:0.75rem; color:#aaa; font-style:italic;">${data.comment}</div>` : ''}
+            </div>
             <button onclick="deleteSolution('${move}')" style="background:none; border:none; color:#ef4444; cursor:pointer; font-size:1.1rem;">&times;</button>
         `;
         container.appendChild(div);
