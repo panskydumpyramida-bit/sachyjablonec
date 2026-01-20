@@ -2125,3 +2125,118 @@ window.tableDeleteCol = tableDeleteCol;
 window.tableToggleHighlightLast = tableToggleHighlightLast;
 window.tableToggleHideMobile = tableToggleHideMobile;
 window.tableCycleColumnWidth = tableCycleColumnWidth;
+
+// ================================
+// DIAGRAM INTERACTIONS (Edit/Delete)
+// ================================
+
+let diagramToolbar = null;
+
+function initDiagramToolbar() {
+    if (document.getElementById('diagramToolbar')) return;
+
+    diagramToolbar = document.createElement('div');
+    diagramToolbar.id = 'diagramToolbar';
+    diagramToolbar.className = 'floating-toolbar';
+    diagramToolbar.style.zIndex = '10001';
+    document.body.appendChild(diagramToolbar);
+
+    // Hide on click outside
+    document.addEventListener('mousedown', (e) => {
+        if (!e.target.closest('#diagramToolbar') && !e.target.closest('.diagram-book')) {
+            hideDiagramToolbar();
+        }
+    });
+
+    // Editor listener
+    const editor = document.getElementById('articleContent');
+    if (editor) {
+        editor.addEventListener('click', (e) => {
+            const book = e.target.closest('.diagram-book');
+            if (book) {
+                showDiagramToolbar(book);
+            } else {
+                 // Do not hide here immediately if clicking inside custom toolbar logic?
+                 // But click inside toolbar is captured by toolbar mousedown prevention (preventDefault) usually.
+                 // Actually mousedown on document hides it if not clicked inside. 
+                 // So we rely on document mousedown.
+            }
+        });
+    }
+}
+
+function showDiagramToolbar(bookElement) {
+    if (!diagramToolbar) initDiagramToolbar();
+
+    diagramToolbar.innerHTML = '';
+    diagramToolbar.classList.add('visible');
+
+    const diagrams = JSON.parse(bookElement.dataset.diagrams || '[]');
+    const currentIdx = parseInt(bookElement.dataset.current || '0');
+    const currentDiagram = diagrams[currentIdx];
+
+    // 1. Edit Button
+    const btnEdit = document.createElement('button');
+    btnEdit.className = 'floating-btn';
+    btnEdit.innerHTML = '<i class="fa-solid fa-pen"></i>';
+    btnEdit.title = 'Upravit diagram (otevře editor v novém okně)';
+    btnEdit.onclick = () => {
+        if (currentDiagram && currentDiagram.id) {
+            window.open('game-recorder.html?diagramId=' + currentDiagram.id, '_blank');
+        } else {
+            alert('Tento diagram nemá ID (byl vložen jen jako data). Nelze upravit zdroj.');
+        }
+    };
+    diagramToolbar.appendChild(btnEdit);
+
+    // 2. Remove Button
+    const btnRemove = document.createElement('button');
+    btnRemove.className = 'floating-btn';
+    btnRemove.innerHTML = '<i class="fa-solid fa-trash"></i>';
+    btnRemove.title = 'Odstranit diagram';
+    btnRemove.style.color = '#ef4444';
+    btnRemove.onclick = () => {
+        if (confirm('Opravdu odstranit tento diagram/knihu?')) {
+            bookElement.remove();
+            hideDiagramToolbar();
+            if (typeof updatePreview === 'function') updatePreview();
+        }
+    };
+    diagramToolbar.appendChild(btnRemove);
+
+    // Position
+    const rect = bookElement.getBoundingClientRect();
+    // Use setTimeout to allow rendering of toolbar to get correct size? No, it's visible.
+    // But we just added children.
+    const toolbarRect = diagramToolbar.getBoundingClientRect();
+
+    let top = rect.top - 50; // hardcoded approx height + margin
+    let left = rect.left + (rect.width / 2) - 40; // approx half width
+
+    // Recalculate properly
+    // We need to render it to measure it.
+    // It is 'visible' so it exists.
+    
+    // Better logic matching existing toolbar:
+    const tbRect = diagramToolbar.getBoundingClientRect();
+    top = rect.top - tbRect.height - 8;
+    left = rect.left + (rect.width / 2) - (tbRect.width / 2);
+
+   if (top < 0) top = rect.bottom + 8;
+
+    diagramToolbar.style.top = top + 'px';
+    diagramToolbar.style.left = left + 'px';
+}
+
+function hideDiagramToolbar() {
+    if (diagramToolbar) {
+        diagramToolbar.classList.remove('visible');
+    }
+}
+
+// Init immediately if loaded
+if (document.readyState === 'complete') {
+    initDiagramToolbar();
+} else {
+    window.addEventListener('load', initDiagramToolbar);
+}
