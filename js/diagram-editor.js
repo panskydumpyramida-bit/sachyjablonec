@@ -7,6 +7,8 @@ let diagramBoard = null;
 let currentTool = 'arrow-green'; // Default tool
 let isDrawing = false;
 let startSquare = null;
+let currentDiagramId = null;
+let currentDiagramName = "";
 let currentAnnotations = {
     arrows: [], // {start: 'e2', end: 'e4', color: 'green'}
     squares: [] // {square: 'e4', color: 'green'}
@@ -85,7 +87,7 @@ function openDiagramEditor() {
 
 
     // Clear previous annotations
-    clearDiagram();
+    clearDiagram(); currentDiagramId = null; currentDiagramName = "";
 
     // Update turn indicator
     const turn = game.turn();
@@ -627,7 +629,9 @@ async function saveDiagramToCloud() {
         return;
     }
 
-    const name = await modal.prompt("Zadejte název diagramu:", `Diagram ${new Date().toLocaleTimeString()}`, "Uložit diagram");
+    const defaultName = currentDiagramId ? currentDiagramName : `Diagram ${new Date().toLocaleTimeString()}`;
+    const title = currentDiagramId ? "Aktualizovat diagram" : "Uložit diagram";
+    const name = await modal.prompt("Zadejte název diagramu:", defaultName, title);
     if (!name) return;
 
     // Use game.fen() for complete FEN (includes turn, castling, etc.)
@@ -647,8 +651,12 @@ async function saveDiagramToCloud() {
     };
 
     try {
-        const response = await fetch('/api/diagrams', {
-            method: 'POST',
+        const isUpdate = !!currentDiagramId;
+        const url = isUpdate ? `/api/diagrams/${currentDiagramId}` : "/api/diagrams";
+        const method = isUpdate ? "PUT" : "POST";
+
+        const response = await fetch(url, {
+            method: method,
             headers: {
                 'Content-Type': 'application/json',
                 ...auth.getHeaders()
