@@ -272,7 +272,20 @@ class DiagramViewer {
         // Cleanup selection always
         this.deselectSquare();
 
-        return success ? undefined : 'snapback';
+        if (success) {
+            // Fix for "Doubling" / Ghost pieces:
+            // Force a clean sync of the board position after a short delay to ensure
+            // chessboard.js internal state (dragged piece) is fully reconciled with game state.
+            // This clears any "ghost" pieces that might persist due to animation conflicts.
+            setTimeout(() => {
+                if (this.game && this.board) {
+                    this.board.position(this.game.fen(), false); // false = instant, no animation to avoid jump
+                }
+            }, 50); // Small delay (50ms) is usually enough
+            return undefined; // Accept move visually immediately
+        } else {
+            return 'snapback';
+        }
     }
 
     // --- CLICK TO MOVE LOGIC ---
@@ -485,8 +498,11 @@ class DiagramViewer {
         }
 
         // Only update board UI if NOT a drop (drops already updated UI by user action)
-        if (!isDrop && this.board) {
-            this.board.move(`${source}-${target}`);
+        if (!isDrop && this.board && this.game) {
+            // Use position() instead of move() for click-updates.
+            // move() animates source->target but can be flaky if state is complex (promotions, castling).
+            // position(fen, true) animates from current to new FEN, handling all side effects correctly.
+            this.board.position(this.game.fen(), true);
         }
     }
 
