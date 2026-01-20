@@ -109,9 +109,19 @@
         // Update UI elements
         const toMoveEl = book.querySelector('.book-to-move');
         const counterEl = book.querySelector('.book-counter');
+        const typeBadgeEl = book.querySelector('.book-type-badge');
 
         if (toMoveEl) toMoveEl.textContent = d.toMove === 'w' ? 'Bílý na tahu' : 'Černý na tahu';
         if (counterEl) counterEl.textContent = `${current + 1} / ${diagrams.length}`;
+
+        // Update type badge (puzzle vs diagram)
+        const hasSolution = d.solution && Object.keys(d.solution).length > 0;
+        if (typeBadgeEl) {
+            typeBadgeEl.textContent = hasSolution ? 'Hádanka 🧩' : 'Diagram';
+            typeBadgeEl.style.background = hasSolution ? 'rgba(139, 92, 246, 0.2)' : 'rgba(100, 100, 100, 0.2)';
+            typeBadgeEl.style.borderColor = hasSolution ? '#8b5cf6' : '#666';
+            typeBadgeEl.style.color = hasSolution ? '#a78bfa' : '#aaa';
+        }
 
         // Update dots
         book.querySelectorAll('.book-dot').forEach((dot, i) => {
@@ -275,6 +285,24 @@
             if (titleEl) titleEl.textContent = d.title || 'Diagram';
             if (toMoveEl) toMoveEl.textContent = d.toMove === 'w' ? 'Bílý na tahu' : 'Černý na tahu';
             if (counterEl) counterEl.textContent = `${current + 1} / ${diagrams.length}`;
+
+            // Add type badge if missing, then update
+            let typeBadgeEl = book.querySelector('.book-type-badge');
+            if (!typeBadgeEl) {
+                typeBadgeEl = document.createElement('span');
+                typeBadgeEl.className = 'book-type-badge';
+                typeBadgeEl.style.cssText = 'display:inline-block;padding:0.2rem 0.5rem;border-radius:4px;font-size:0.75rem;font-weight:500;border:1px solid;margin-left:0.5rem;';
+                // Insert after toMove badge
+                if (toMoveEl && toMoveEl.parentNode) {
+                    toMoveEl.parentNode.insertBefore(typeBadgeEl, toMoveEl.nextSibling);
+                }
+            }
+
+            const hasSolution = d.solution && Object.keys(d.solution).length > 0;
+            typeBadgeEl.textContent = hasSolution ? 'Hádanka 🧩' : 'Diagram';
+            typeBadgeEl.style.background = hasSolution ? 'rgba(139, 92, 246, 0.2)' : 'rgba(100, 100, 100, 0.2)';
+            typeBadgeEl.style.borderColor = hasSolution ? '#8b5cf6' : '#666';
+            typeBadgeEl.style.color = hasSolution ? '#a78bfa' : '#aaa';
         });
     }
 
