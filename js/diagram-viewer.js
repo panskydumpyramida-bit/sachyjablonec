@@ -36,6 +36,9 @@ class DiagramViewer {
         this.overlayEl = null;
         this.feedbackEl = null;
 
+        // Click-to-move state
+        this.selectedSquare = null;
+
         this.initUI();
     }
 
@@ -132,6 +135,15 @@ class DiagramViewer {
             this.resetBtn.style.color = '#aaa';
         };
         this.container.appendChild(this.resetBtn);
+
+        // Add CLICK listener (delegation) for Click-to-Move - ONCE in initUI
+        this.boardEl.addEventListener('click', (e) => {
+            const squareEl = e.target.closest('[data-square]');
+            if (squareEl) {
+                const square = squareEl.getAttribute('data-square');
+                this.handleSquareClick(square);
+            }
+        });
     }
 
     load(diagram) {
@@ -203,17 +215,6 @@ class DiagramViewer {
         // Initialize board
         this.board = Chessboard(this.boardEl.id, config);
 
-        // Add CLICK listener (delegation) for Click-to-Move
-        if (config.draggable) {
-            this.boardEl.addEventListener('click', (e) => {
-                const squareEl = e.target.closest('[data-square]');
-                if (squareEl) {
-                    const square = squareEl.getAttribute('data-square');
-                    this.handleSquareClick(square);
-                }
-            });
-        }
-
         // Update type badge
         const hasSolution = diagram.solution && Object.keys(diagram.solution).length > 0;
         if (this.typeBadge) {
@@ -273,16 +274,9 @@ class DiagramViewer {
         this.deselectSquare();
 
         if (success) {
-            // Fix for "Doubling" / Ghost pieces:
-            // Force a clean sync of the board position after a short delay to ensure
-            // chessboard.js internal state (dragged piece) is fully reconciled with game state.
-            // This clears any "ghost" pieces that might persist due to animation conflicts.
-            setTimeout(() => {
-                if (this.game && this.board) {
-                    this.board.position(this.game.fen(), false); // false = instant, no animation to avoid jump
-                }
-            }, 50); // Small delay (50ms) is usually enough
-            return undefined; // Accept move visually immediately
+            // For drag-and-drop: piece is already in place visually.
+            // No sync needed - chess.js state is updated in executeMove.
+            return undefined;
         } else {
             return 'snapback';
         }
@@ -493,16 +487,15 @@ class DiagramViewer {
 
     executeMove(source, target, isDrop = false) {
         if (this.game) {
-            // We use specific move command to ensure promotion etc
+            // Execute move in chess.js for state tracking
             this.game.move({ from: source, to: target, promotion: 'q' });
         }
 
         // Only update board UI if NOT a drop (drops already updated UI by user action)
-        if (!isDrop && this.board && this.game) {
-            // Use position() instead of move() for click-updates.
-            // move() animates source->target but can be flaky if state is complex (promotions, castling).
-            // position(fen, true) animates from current to new FEN, handling all side effects correctly.
-            this.board.position(this.game.fen(), true);
+        if (!isDrop && this.board) {
+            // Use board.move() for click-moves - this animates the piece from source to target
+            // Note: board.move() handles the visual update while game.move() handles the logic
+            this.board.move(`${source}-${target}`);
         }
     }
 
