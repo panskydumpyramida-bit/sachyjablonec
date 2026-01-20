@@ -261,7 +261,7 @@ class DiagramViewer {
         this.feedbackEl.classList.remove('hidden', 'success', 'info', 'error');
         this.feedbackEl.style.display = 'block'; // Ensure visible
 
-        // Remove old dynamic styles
+        // Reset styles
         this.feedbackEl.style.background = '';
         this.feedbackEl.style.border = '';
         this.feedbackEl.style.color = '';
@@ -273,21 +273,23 @@ class DiagramViewer {
 
         if (type === 'success') {
             this.feedbackEl.classList.add('success');
-            this.feedbackEl.style.border = `1px solid ${VIEWER_COLORS.green}`;
+            this.feedbackEl.style.background = 'rgba(34, 197, 94, 0.15)';
+            this.feedbackEl.style.border = `2px solid ${VIEWER_COLORS.green}`;
             this.feedbackEl.style.color = VIEWER_COLORS.green;
             titleEl.textContent = "Správně! ✅";
         } else if (type === 'info') {
             this.feedbackEl.classList.add('info');
-            this.feedbackEl.style.border = `1px solid ${VIEWER_COLORS.blue}`;
+            this.feedbackEl.style.background = 'rgba(59, 130, 246, 0.15)';
+            this.feedbackEl.style.border = `2px solid ${VIEWER_COLORS.blue}`;
             this.feedbackEl.style.color = VIEWER_COLORS.blue;
             titleEl.textContent = "Alternativa 🤔";
         } else {
             this.feedbackEl.classList.add('error');
-            this.feedbackEl.style.border = `1px solid ${VIEWER_COLORS.red}`;
+            this.feedbackEl.style.background = 'rgba(239, 68, 68, 0.15)';
+            this.feedbackEl.style.border = `2px solid ${VIEWER_COLORS.red}`;
             this.feedbackEl.style.color = VIEWER_COLORS.red;
             titleEl.textContent = "Chyba ❌";
         }
-        // Force text color for readability if needed, but inherited usually checks out
         textEl.style.color = 'inherit';
     }
 
