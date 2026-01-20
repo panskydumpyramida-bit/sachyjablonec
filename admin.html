@@ -653,6 +653,36 @@
                 chess-api.com s touto hloubkou.
             </p>
         </div>
+
+        <!-- Diagrams/Puzzles Management -->
+        <div style="margin-top: 3rem; border-top: 1px solid var(--editor-border); padding-top: 2rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <h2 style="margin: 0;"><i class="fa-solid fa-chess-pawn"></i> Diagramy a hádanky</h2>
+                <div style="display: flex; gap: 0.5rem;">
+                    <a href="/game-recorder.html" target="_blank" class="btn-primary"><i class="fa-solid fa-plus"></i>
+                        Nový diagram</a>
+                    <button class="btn-secondary" onclick="loadDiagrams()"><i class="fa-solid fa-sync"></i>
+                        Obnovit</button>
+                </div>
+            </div>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Název</th>
+                        <th>Typ</th>
+                        <th>Na tahu</th>
+                        <th>Vytvořeno</th>
+                        <th>Akce</th>
+                    </tr>
+                </thead>
+                <tbody id="diagramsTableBody"></tbody>
+            </table>
+            <div id="noDiagramsInfo"
+                style="text-align: center; padding: 2rem; color: var(--text-muted); display: none;">
+                Žádné diagramy. <a href="/game-recorder.html" style="color: var(--primary-color);">Vytvořte nový
+                    diagram</a>
+            </div>
+        </div>
     </div>
     <!-- Blicak Registrations View -->
     <div id="blicakView" class="hidden">
