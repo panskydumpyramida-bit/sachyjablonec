@@ -246,28 +246,28 @@ function previewDiagram(id) {
             const hasSolution = d.solution && Object.keys(d.solution).length > 0;
             const toMove = d.toMove === 'w' ? 'Bílý na tahu' : 'Černý na tahu';
 
+            // Generate visual board for preview
+            const boardHtml = generateMiniBoardAdmin(d.fen, 35);
+
             const modal = document.createElement('div');
             modal.id = 'diagramPreviewModal';
             modal.style.cssText = 'position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); display: flex; align-items: center; justify-content: center; z-index: 10000; backdrop-filter: blur(5px);';
             modal.innerHTML = `
-        <div style="background: var(--surface-color, #1e1e1e); max-width: 500px; width: 90%; max-height: 80vh; overflow-y: auto; padding: 1.5rem; border-radius: 12px; border: 1px solid rgba(212,175,55,0.3); box-shadow: 0 20px 60px rgba(0,0,0,0.6); position: relative;">
+        <div style="background: var(--surface-color, #1e1e1e); max-width: 400px; width: 90%; max-height: 80vh; overflow-y: auto; padding: 1.5rem; border-radius: 12px; border: 1px solid rgba(212,175,55,0.3); box-shadow: 0 20px 60px rgba(0,0,0,0.6); position: relative;">
             <span onclick="closeDiagramPreview()" style="position: absolute; top: 10px; right: 15px; font-size: 24px; cursor: pointer; color: #aaa; transition: color 0.2s;" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='#aaa'">&times;</span>
-            <h3 style="margin-top: 0; color: var(--primary-color, #d4af37);">
+            <h3 style="margin-top: 0; color: var(--primary-color, #d4af37); text-align: center;">
                 <i class="fa-solid fa-chess"></i> ${escapeHtml(displayName)}
             </h3>
-            <p style="color: var(--text-muted, #888); font-size: 0.9rem;">
-                ${toMove} • ${hasSolution ? '✅ Má řešení' : '📊 Jen pozice'}
+            <p style="color: var(--text-muted, #888); font-size: 0.9rem; text-align: center;">
+                ${toMove} • ${hasSolution ? '<span style="color:#22c55e;">✅ Hádanka</span>' : '<span style="color:#3b82f6;">📊 Diagram</span>'}
             </p>
-            <div style="background: #0a0a0a; padding: 1rem; border-radius: 6px; font-family: monospace; font-size: 0.85rem; color: #e0e0e0; border: 1px solid rgba(255,255,255,0.1); margin-bottom: 1rem;">
-                <strong>FEN:</strong><br>${escapeHtml(d.fen || 'N/A')}
+            <div style="margin: 1rem auto; display: flex; justify-content: center;">
+                ${boardHtml}
             </div>
-            ${hasSolution ? `<p style="color: #22c55e; font-size: 0.85rem;"><i class="fa-solid fa-check-circle"></i> Obsahuje ${Object.keys(d.solution).length} definovaných tahů</p>` : ''}
-            ${d.description ? `<p style="color: var(--text-muted); font-size: 0.85rem;"><i class="fa-solid fa-align-left"></i> ${escapeHtml(d.description)}</p>` : ''}
-            <div style="display: flex; gap: 0.5rem; margin-top: 1rem;">
-                <a href="/game-recorder.html?diagramId=${d.id}" target="_blank" class="btn-primary" style="text-decoration: none; padding: 0.6rem 1rem; background: var(--primary-color, #d4af37); color: #000; border-radius: 6px; font-weight: 600;">
-                    <i class="fa-solid fa-edit"></i> Upravit
-                </a>
-                <button class="btn-secondary" onclick="copyToClipboard('${escapeHtml(d.fen || '').replace(/'/g, "\\'")}')" style="padding: 0.6rem 1rem; background: transparent; color: #fff; border: 1px solid rgba(255,255,255,0.2); border-radius: 6px; cursor: pointer;">
+            ${hasSolution ? `<p style="color: #22c55e; font-size: 0.85rem; text-align: center;"><i class="fa-solid fa-check-circle"></i> Obsahuje ${Object.keys(d.solution).length} definovaných tahů</p>` : ''}
+            ${d.description ? `<p style="color: var(--text-muted); font-size: 0.85rem; text-align: center;"><i class="fa-solid fa-align-left"></i> ${escapeHtml(d.description)}</p>` : ''}
+            <div style="display: flex; gap: 0.5rem; margin-top: 1rem; justify-content: center;">
+                <button class="btn-secondary" onclick="copyToClipboard('${escapeHtml(d.fen || '').replace(/'/g, "\\'")}'); closeDiagramPreview();" style="padding: 0.6rem 1rem; background: transparent; color: #fff; border: 1px solid rgba(255,255,255,0.2); border-radius: 6px; cursor: pointer;">
                     <i class="fa-solid fa-copy"></i> Kopírovat FEN
                 </button>
             </div>
