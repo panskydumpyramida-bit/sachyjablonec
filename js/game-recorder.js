@@ -760,7 +760,7 @@ async function loadDiagramById(id) {
             // We need to inject data into diagram-editor.js variables
             // Check if we can access them. They are global 'let'.
 
-            if (typeof currentAnnotations !== 'undefined') {
+            if (typeof currentAnnotations !== 'undefined') { if (typeof currentDiagramId !== 'undefined') currentDiagramId = d.id; if (typeof currentDiagramName !== 'undefined') currentDiagramName = d.name;
                 // Determine turn from FEN or data
                 const fenParts = d.fen.split(' ');
                 const turn = d.toMove || (fenParts.length > 1 ? fenParts[1] : 'w');
