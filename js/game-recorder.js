@@ -730,6 +730,78 @@ async function loadGameById(id) {
     }
 }
 
+async function loadDiagramById(id) {
+    try {
+        const apiUrl = window.API_URL || '/api';
+        let token = localStorage.getItem('club_auth_token');
+        let userToken = localStorage.getItem('token');
+
+        // Diagrams might need auth
+        const headers = {};
+        if (token) headers['X-Club-Password'] = token;
+        if (userToken) headers['Authorization'] = `Bearer ${userToken}`;
+
+        let res = await fetch(`${apiUrl}/diagrams/${id}`, { headers });
+
+        if (!res.ok) throw new Error('Diagram not found');
+
+        const d = await res.json();
+
+        // Load into Game Recorder Board (Visual)
+        game.load(d.fen); // Use FEN
+        board.position(d.fen);
+
+        // Open Diagram Editor Modal automatically
+        // We need to verify diagram-editor is loaded
+        if (typeof openDiagramEditor === 'function') {
+            openDiagramEditor();
+
+            // Populate Editor State
+            // We need to inject data into diagram-editor.js variables
+            // Check if we can access them. They are global 'let'.
+
+            if (typeof currentAnnotations !== 'undefined') {
+                // Determine turn from FEN or data
+                const fenParts = d.fen.split(' ');
+                const turn = d.toMove || (fenParts.length > 1 ? fenParts[1] : 'w');
+
+                setDiagramTurn(turn);
+
+                // Clear and Set
+                clearDiagram();
+
+                // Annotations
+                if (d.annotations) {
+                    // Update global variable directly if exposed
+                    // We can't easily replace the object reference if it's 'let' in another module without standard exports
+                    // But we can mutate contents
+                    if (d.annotations.arrows) d.annotations.arrows.forEach(a => currentAnnotations.arrows.push(a));
+                    if (d.annotations.squares) d.annotations.squares.forEach(s => currentAnnotations.squares.push(s));
+                    renderAnnotations();
+                }
+
+                // Solution
+                if (d.solution) {
+                    solverState.recordedMoves = d.solution;
+                    updateSolutionList();
+                }
+
+                // Store diagram ID for UPDATE instead of create?
+                // diagram-editor.js uses saveDiagramToCloud which does POST.
+                // We might need to override it or set a "currentDiagramId" variable if supported.
+                // Currently diagram-editor.js doesn't seem to support updating existing diagrams easily (it uses POST).
+                // But for now, pre-filling is better than empty.
+            }
+        }
+
+        updateStatus();
+
+    } catch (e) {
+        console.error(e);
+        alert(`Nepodařilo se načíst diagram: ${e.message}`);
+    }
+}
+
 
 function copyPgn() {
     const pgnText = generateAnnotatedPgn();
@@ -1083,8 +1155,14 @@ document.addEventListener('DOMContentLoaded', () => {
     // Load game by ID if present in URL
     const urlParams = new URLSearchParams(window.location.search);
     const gameId = urlParams.get('id');
+    const diagramId = urlParams.get('diagramId');
+
     if (gameId) {
         loadGameById(gameId);
+    } else if (diagramId) {
+        // We need to wait for diagram-editor.js to be ready if we use it
+        // But game-recorder.js is defer, diagram-editor.js should be defer too
+        loadDiagramById(diagramId);
     }
 
     // CLICK-TO-MOVE HANDLING
