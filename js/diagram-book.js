@@ -121,7 +121,119 @@
         });
     };
 
-    // ... (Dot click and Keyboard listeners remain same) ...
+    // Dot click navigation
+    document.addEventListener('click', function (e) {
+        if (e.target.classList.contains('book-dot')) {
+            const dot = e.target;
+            const book = dot.closest('.diagram-book');
+            if (!book) return;
+
+            const targetIndex = parseInt(dot.dataset.index);
+            const current = parseInt(book.dataset.current) || 0;
+            const direction = targetIndex - current;
+
+            if (direction !== 0) {
+                window.bookNav(book.id, direction);
+            }
+        }
+    });
+
+    // Keyboard navigation when book is focused/hovered
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+            // Find any hovered or focused book
+            const hoveredBook = document.querySelector('.diagram-book:hover');
+            if (hoveredBook) {
+                e.preventDefault();
+                window.bookNav(hoveredBook.id, e.key === 'ArrowLeft' ? -1 : 1);
+            }
+        }
+    });
+
+    // Inject styles for animation and layout
+    if (!document.getElementById('diagram-book-styles')) {
+        const style = document.createElement('style');
+        style.id = 'diagram-book-styles';
+        style.textContent = `
+            .diagram-book {
+                user-select: none;
+            }
+            .mini-board-wrapper {
+                flex: none !important;
+                flex-shrink: 0 !important;
+                flex-grow: 0 !important;
+            }
+            .mini-board-wrapper table {
+                table-layout: fixed !important;
+                border-collapse: collapse !important;
+            }
+            .mini-board-wrapper td {
+                padding: 0 !important;
+                margin: 0 !important;
+                line-height: 0 !important;
+                font-size: 0 !important;
+            }
+            .mini-board-wrapper td img {
+                display: block !important;
+                margin: 0 !important;
+            }
+            .book-dot {
+                width: 8px;
+                height: 8px;
+                border-radius: 50%;
+                background: rgba(255,255,255,0.2);
+                cursor: pointer;
+                transition: all 0.2s;
+            }
+            .book-dot.active {
+                background: #d4af37;
+                transform: scale(1.2);
+            }
+            .book-dot:hover {
+                background: rgba(212, 175, 55, 0.6);
+            }
+            .book-prev:hover, .book-next:hover {
+                background: rgba(212, 175, 55, 0.3) !important;
+                color: #d4af37 !important;
+            }
+            .book-board-container {
+                transition: transform 0.15s ease, opacity 0.15s ease;
+                flex: none !important;
+                flex-shrink: 0 !important;
+                flex-grow: 0 !important;
+                align-self: center !important;
+                height: auto !important;
+                transform-origin: center center;
+            }
+            .book-board-container.flip-right {
+                transform: perspective(400px) rotateY(-15deg);
+                opacity: 0.3;
+            }
+            .book-board-container.flip-left {
+                transform: perspective(400px) rotateY(15deg);
+                opacity: 0.3;
+            }
+            .book-board-container.flip-in {
+                transform: perspective(400px) rotateY(0);
+                opacity: 1;
+            }
+            .book-caption {
+                user-select: text;
+                cursor: text;
+            }
+            /* Fix for DiagramViewer inside book */
+            .diagram-viewer-container {
+                width: 100% !important;
+                max-width: 280px !important;
+                margin: 0 auto !important;
+            }
+            .diagram-board-wrapper {
+                width: 100% !important;
+                aspect-ratio: 1 !important;
+            }
+        `;
+        document.head.appendChild(style);
+    }
 
     // Initialize all diagram books on page load
     function initDiagramBooks() {
