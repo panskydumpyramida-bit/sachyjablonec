@@ -244,8 +244,24 @@
                 aspect-ratio: 1 !important;
             }
             /* Hide internal reset button when in book mode to avoid duplication */
+            /* Hide internal reset button when in book mode */
             .diagram-book .diagram-reset-btn {
                 display: none !important;
+            }
+            .book-reset-btn {
+                background: rgba(255,255,255,0.1) !important;
+                border-radius: 50%;
+                width: 32px;
+                height: 32px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                transition: all 0.2s ease;
+            }
+            .book-reset-btn:hover {
+                background: rgba(255,255,255,0.2) !important;
+                transform: rotate(-90deg);
+                color: white !important;
             }
         `;
         document.head.appendChild(style);
@@ -300,10 +316,15 @@
                 let resetBtn = book.querySelector('.book-reset-btn');
 
                 // Ensure toMoveEl is wrapped in a meta-row for alignment if not already
-                if (!toMoveEl.parentNode.classList.contains('book-meta-row')) {
-                    // This might break existing structure if strict, but let's try to inject button directly
-                    // Or check if we should wrap them. Let's look at HTML structure... usually just spans.
-                    // Let's just insert the button before the text.
+                let metaRow = toMoveEl.parentNode;
+                if (!metaRow.classList.contains('book-meta-row')) {
+                    // Create wrapper
+                    metaRow = document.createElement('div');
+                    metaRow.className = 'book-meta-row';
+                    // Insert wrapper before toMoveEl
+                    toMoveEl.parentNode.insertBefore(metaRow, toMoveEl);
+                    // Move toMoveEl into wrapper
+                    metaRow.appendChild(toMoveEl);
                 }
 
                 if (!resetBtn) {
@@ -311,9 +332,7 @@
                     resetBtn.className = 'book-reset-btn';
                     resetBtn.innerHTML = '<i class="fa-solid fa-rotate-left"></i>';
                     resetBtn.title = 'Resetovat pozici';
-                    resetBtn.style.cssText = 'background:none; border:none; color:#aaa; cursor:pointer; font-size:1rem; padding:0 0.5rem; transition:color 0.2s;';
-                    resetBtn.onmouseover = () => resetBtn.style.color = '#fff';
-                    resetBtn.onmouseout = () => resetBtn.style.color = '#aaa';
+                    // styles handled by class now
 
                     resetBtn.onclick = (e) => {
                         e.stopPropagation();
@@ -323,9 +342,12 @@
                         }
                     };
 
-                    // Insert before toMoveEl
-                    if (toMoveEl.parentNode) {
-                        toMoveEl.parentNode.insertBefore(resetBtn, toMoveEl);
+                    // Insert into metaRow before toMoveEl
+                    metaRow.insertBefore(resetBtn, toMoveEl);
+                } else {
+                    // Ensure existing button is inside the row
+                    if (resetBtn.parentNode !== metaRow) {
+                        metaRow.insertBefore(resetBtn, toMoveEl);
                     }
                 }
             }
