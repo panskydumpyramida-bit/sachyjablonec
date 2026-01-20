@@ -463,12 +463,14 @@ class DiagramViewer {
                 }
 
                 this.showFeedback('info', step.comment || 'Zajímavá alternativa, ale existuje lepší tah.');
-                return 'snapback';
+                this.executeMove(source, target, isDrop);
+                return true;
             } else {
                 // Mistake type
                 this.showFeedback('error', step.comment || 'Toto není správné řešení.');
                 this.options.onMistake();
-                return 'snapback';
+                this.executeMove(source, target, isDrop);
+                return true;
             }
         }
 
@@ -476,7 +478,8 @@ class DiagramViewer {
         if (hasSolution) {
             this.showFeedback('error', 'To není správný tah. Zkuste to znovu.');
             this.options.onMistake();
-            return 'snapback';
+            this.executeMove(source, target, isDrop);
+            return true;
         }
 
         // C) Analysis mode (no solution defined) - allow free movement

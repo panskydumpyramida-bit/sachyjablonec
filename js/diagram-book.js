@@ -161,14 +161,27 @@
                 display: flex;
                 flex-direction: column;
                 align-items: center;
+                background: linear-gradient(145deg, rgba(30, 41, 59, 0.95), rgba(15, 23, 42, 0.98));
+                border-radius: 16px;
+                padding: 1.25rem;
+                box-shadow: 0 10px 40px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.05);
+                border: 1px solid rgba(255,255,255,0.08);
+                max-width: 320px;
+                margin: 1.5rem auto;
             }
             .book-meta-row {
                 display: flex;
                 align-items: center;
                 justify-content: center;
-                gap: 1rem;
+                gap: 0.75rem;
                 width: 100%;
-                margin-top: 0.5rem;
+                margin-top: 0.75rem;
+                padding: 0.5rem 0;
+            }
+            .book-to-move {
+                font-size: 0.9rem;
+                color: rgba(255,255,255,0.7);
+                font-weight: 500;
             }
             .mini-board-wrapper {
                 flex: none !important;
@@ -204,9 +217,29 @@
             .book-dot:hover {
                 background: rgba(212, 175, 55, 0.6);
             }
+            .book-nav-row {
+                display: flex;
+                justify-content: center;
+                gap: 0.5rem;
+                margin-top: 0.75rem;
+            }
+            .book-prev, .book-next {
+                background: rgba(255,255,255,0.08) !important;
+                border: none !important;
+                border-radius: 8px !important;
+                padding: 0.5rem 1rem !important;
+                color: rgba(255,255,255,0.6) !important;
+                cursor: pointer;
+                transition: all 0.2s ease !important;
+            }
             .book-prev:hover, .book-next:hover {
-                background: rgba(212, 175, 55, 0.3) !important;
+                background: rgba(212, 175, 55, 0.2) !important;
                 color: #d4af37 !important;
+            }
+            .book-counter {
+                font-size: 0.85rem;
+                color: rgba(255,255,255,0.5);
+                padding: 0.5rem 0.75rem;
             }
             .book-board-container {
                 transition: transform 0.15s ease, opacity 0.15s ease;
@@ -216,6 +249,9 @@
                 align-self: center !important;
                 height: auto !important;
                 transform-origin: center center;
+                border-radius: 8px;
+                overflow: hidden;
+                box-shadow: 0 4px 20px rgba(0,0,0,0.3);
             }
             .book-board-container.flip-right {
                 transform: perspective(400px) rotateY(-15deg);
@@ -232,36 +268,58 @@
             .book-caption {
                 user-select: text;
                 cursor: text;
+                font-size: 0.85rem;
+                color: rgba(255,255,255,0.6);
+                text-align: center;
+                margin-top: 0.5rem;
             }
             /* Fix for DiagramViewer inside book */
             .diagram-viewer-container {
                 width: 100% !important;
                 max-width: 280px !important;
                 margin: 0 auto !important;
+                background: transparent !important;
             }
             .diagram-board-wrapper {
                 width: 100% !important;
                 aspect-ratio: 1 !important;
+                border-radius: 8px !important;
+                overflow: hidden !important;
             }
-            /* Hide internal reset button when in book mode to avoid duplication */
+            /* Feedback panel styling */
+            .diagram-viewer-container .diagram-feedback {
+                border-radius: 8px !important;
+                margin-top: 0.75rem !important;
+                font-size: 0.9rem !important;
+            }
+            /* Type badge styling */
+            .diagram-type-badge {
+                background: rgba(0,0,0,0.6) !important;
+                backdrop-filter: blur(8px) !important;
+                border-radius: 6px !important;
+            }
             /* Hide internal reset button when in book mode */
             .diagram-book .diagram-reset-btn {
                 display: none !important;
             }
             .book-reset-btn {
                 background: rgba(255,255,255,0.1) !important;
+                border: 1px solid rgba(255,255,255,0.1) !important;
                 border-radius: 50%;
-                width: 32px;
-                height: 32px;
+                width: 36px;
+                height: 36px;
                 display: flex;
                 align-items: center;
                 justify-content: center;
-                transition: all 0.2s ease;
+                transition: all 0.25s ease;
+                color: rgba(255,255,255,0.6);
+                cursor: pointer;
             }
             .book-reset-btn:hover {
-                background: rgba(255,255,255,0.2) !important;
-                transform: rotate(-90deg);
-                color: white !important;
+                background: rgba(212, 175, 55, 0.2) !important;
+                border-color: rgba(212, 175, 55, 0.3) !important;
+                transform: rotate(-180deg);
+                color: #d4af37 !important;
             }
         `;
         document.head.appendChild(style);
