@@ -88,13 +88,54 @@ class DiagramViewer {
         this.isSolved = false;
         this.hideFeedback();
 
+        // Determine who is to move - prefer diagram.toMove, then parse from FEN
+        let toMove = diagram.toMove;
+        if (!toMove && diagram.fen) {
+            // Parse from FEN: position color castling en-passant halfmove fullmove
+            const fenParts = diagram.fen.split(' ');
+            toMove = fenParts.length > 1 ? fenParts[1] : 'w';
+        }
+        if (!toMove) {
+            toMove = 'w';
+        }
+        this.playerColor = toMove; // 'w' or 'b'
+
+        // Prepare full FEN for chess.js (it requires complete FEN)
+        let fullFen = diagram.fen;
+        if (diagram.fen && diagram.fen.split(' ').length === 1) {
+            // FEN only contains position, add turn and default castling/en-passant
+            fullFen = `${diagram.fen} ${toMove} KQkq - 0 1`;
+        }
+
+        // Initialize chess.js for legal move validation
+        this.game = null;
+        if (typeof Chess !== 'undefined') {
+            try {
+                this.game = new Chess(fullFen);
+            } catch (e) {
+                console.warn('Failed to initialize Chess.js with FEN:', fullFen, e);
+                // Try again with just position
+                try {
+                    this.game = new Chess();
+                    this.game.load(fullFen);
+                } catch (e2) {
+                    console.error('Chess.js load failed:', e2);
+                    this.game = null;
+                }
+            }
+        } else {
+            console.warn('chess.js not loaded, legal move validation disabled');
+        }
+
         // 1. Init Board
         const config = {
             position: diagram.fen,
             draggable: true,
+            orientation: toMove === 'b' ? 'black' : 'white', // Orient board for player to move
             onDragStart: (source, piece) => this.onDragStart(source, piece),
             onDrop: (source, target) => this.onDrop(source, target),
-            pieceTheme: 'images/chesspieces/wikipedia/{piece}.png'
+            onSnapEnd: () => this.onSnapEnd(),
+            pieceTheme: 'https://chessboardjs.com/img/chesspieces/wikipedia/{piece}.png'
         };
 
         if (this.board) {
@@ -122,22 +163,50 @@ class DiagramViewer {
     onDragStart(source, piece) {
         if (this.isSolved) return false;
 
-        // Check turn
-        const turn = this.diagram.fen.split(' ')[1]; // 'w' or 'b'
-        if ((turn === 'w' && piece.search(/^b/) !== -1) ||
-            (turn === 'b' && piece.search(/^w/) !== -1)) {
+        // Check if game ended (checkmate, stalemate)
+        if (this.game && (this.game.in_checkmate() || this.game.in_stalemate() || this.game.in_draw())) {
+            return false;
+        }
+
+        // Check turn - only allow player whose turn it is to move
+        const turn = this.game ? this.game.turn() : this.playerColor;
+        const pieceColor = piece.charAt(0); // 'w' or 'b'
+
+        if (pieceColor !== turn) {
+            // Can't move opponent's pieces
             return false;
         }
 
         // Hide previous temporary feedback
         this.hideFeedback();
+        return true; // Allow drag
     }
 
     onDrop(source, target) {
-        if (source === target) return;
+        if (source === target) return 'snapback';
+
+        // First, validate legal move with chess.js
+        if (this.game) {
+            const move = this.game.move({
+                from: source,
+                to: target,
+                promotion: 'q' // Default to queen for promotions
+            });
+
+            if (move === null) {
+                // Illegal move
+                this.showFeedback('error', 'Nelegální tah.');
+                return 'snapback';
+            }
+
+            // Move was legal - undo it temporarily for solution checking
+            // (we'll re-apply if it's correct or analysis mode)
+            this.game.undo();
+        }
 
         const moveKey = `${source}-${target}`;
         const solution = this.diagram.solution || {};
+        const hasSolution = Object.keys(solution).length > 0;
 
         // A) Check specific solution moves
         if (solution[moveKey]) {
@@ -145,13 +214,19 @@ class DiagramViewer {
 
             if (step.type === 'correct') {
                 this.isSolved = true;
-                this.showFeedback('success', step.comment || 'Správně!');
+                this.showFeedback('success', step.comment || 'Správně! ✅');
+                // Apply the move in game state
+                if (this.game) {
+                    this.game.move({ from: source, to: target, promotion: 'q' });
+                }
                 this.options.onSolve(this.diagram);
-                return; // Allow move
+                // Update board position to show the move
+                return; // Allow move to stay
             } else if (step.type === 'alternative') {
-                this.showFeedback('info', step.comment || 'Zajímavá alternativa.');
+                this.showFeedback('info', step.comment || 'Zajímavá alternativa, ale existuje lepší tah.');
                 return 'snapback';
             } else {
+                // Mistake type
                 this.showFeedback('error', step.comment || 'Toto není správné řešení.');
                 this.options.onMistake();
                 return 'snapback';
@@ -159,14 +234,25 @@ class DiagramViewer {
         }
 
         // B) If solution exists but move not found -> Mistake
-        if (Object.keys(solution).length > 0) {
+        if (hasSolution) {
             this.showFeedback('error', 'To není správný tah. Zkuste to znovu.');
             this.options.onMistake();
             return 'snapback';
         }
 
-        // C) Analysis mode (no solution)
+        // C) Analysis mode (no solution defined) - allow free movement
+        // Apply the move in game state
+        if (this.game) {
+            this.game.move({ from: source, to: target, promotion: 'q' });
+        }
         return;
+    }
+
+    onSnapEnd() {
+        // Sync board position with game state after animation
+        if (this.game && this.board) {
+            this.board.position(this.game.fen());
+        }
     }
 
     showFeedback(type, message) {

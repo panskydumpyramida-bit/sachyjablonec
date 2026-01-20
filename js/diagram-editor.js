@@ -28,6 +28,34 @@ const TOOL_COLORS = {
     'yellow': '#eab308'
 };
 
+// Track who is on turn for the diagram
+let diagramTurn = 'w'; // 'w' or 'b', default white
+
+/**
+ * Set who is on turn and update UI
+ */
+function setDiagramTurn(turn) {
+    diagramTurn = turn;
+
+    // Update button styles
+    const whiteBtn = document.getElementById('turnWhiteBtn');
+    const blackBtn = document.getElementById('turnBlackBtn');
+
+    if (whiteBtn && blackBtn) {
+        if (turn === 'w') {
+            whiteBtn.style.background = 'rgba(255,255,255,0.15)';
+            whiteBtn.style.borderColor = 'rgba(255,255,255,0.4)';
+            blackBtn.style.background = '';
+            blackBtn.style.borderColor = '';
+        } else {
+            blackBtn.style.background = 'rgba(0,0,0,0.4)';
+            blackBtn.style.borderColor = 'rgba(100,100,100,0.6)';
+            whiteBtn.style.background = '';
+            whiteBtn.style.borderColor = '';
+        }
+    }
+}
+
 /**
  * Open the diagram editor with the current game position
  */
@@ -53,6 +81,9 @@ function openDiagramEditor() {
     } else {
         diagramBoard.position(game.fen());
     }
+
+    // Initialize turn selector based on current game turn
+    setDiagramTurn(game.turn());
 
     // Clear previous annotations
     clearDiagram();
@@ -404,10 +435,21 @@ function enableMoveRecording(type) {
     if (type === 'alternative') document.getElementById('recordAltBtn').style.opacity = '1';
     if (type === 'mistake') document.getElementById('recordBadBtn').style.opacity = '1';
 
+    // Determine who is on turn from the current game position
+    const playerTurn = game.turn(); // 'w' or 'b'
+
     // Enable draggable to allow making moves
     diagramBoard = Chessboard('diagramBoard', {
         position: diagramBoard.position(),
         draggable: true,
+        onDragStart: function (source, piece) {
+            // Only allow moving pieces of the side to move
+            const pieceColor = piece.charAt(0); // 'w' or 'b'
+            if (pieceColor !== playerTurn) {
+                return false; // Can't move opponent's pieces
+            }
+            return true;
+        },
         onDrop: handleSolverDrop,
         pieceTheme: 'https://chessboardjs.com/img/chesspieces/wikipedia/{piece}.png'
     });
@@ -519,8 +561,17 @@ async function saveDiagramToCloud() {
     const name = await modal.prompt("Zadejte název diagramu:", `Diagram ${new Date().toLocaleTimeString()}`, "Uložit diagram");
     if (!name) return;
 
+    // Use game.fen() for complete FEN (includes turn, castling, etc.)
+    // game is the global Chess.js instance from game-recorder.js
+    const fullFen = game.fen();
+
+    // Use user-selected turn from the toggle, not game.turn()
+    // This allows setting custom puzzles where position differs from normal turn
+    const selectedTurn = diagramTurn || game.turn(); // fallback to game turn
+
     const payload = {
-        fen: diagramBoard.position('fen'),
+        fen: fullFen,
+        toMove: selectedTurn,
         annotations: currentAnnotations,
         solution: solverState.recordedMoves,
         name: name,

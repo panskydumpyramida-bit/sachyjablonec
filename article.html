@@ -39,6 +39,19 @@
             margin: 1rem 0;
         }
 
+        /* Fix: Reset margins on chess piece images to prevent vertical stretching */
+        .article-content .diagram-book img,
+        .article-content .book-board-container img,
+        .article-content .mini-board-wrapper img,
+        .article-content .diagram-viewer-container img,
+        .article-content .board-b72b1 img,
+        .article-content td img {
+            margin: 0 !important;
+            padding: 0 !important;
+            border-radius: 0 !important;
+            display: block !important;
+        }
+
         /* Split-view responsive for game viewer */
         /* Article-specific game list styling */
         #article-games-list {
@@ -224,6 +237,14 @@
             }
 
             document.getElementById('articleBody').innerHTML = article.content || '';
+
+            // Initialize diagram books after content is loaded (they load async after DOMContentLoaded)
+            // Use requestAnimationFrame to ensure browser has completed reflow before chessboard.js calculates dimensions
+            if (typeof window.initDiagramBooks === 'function') {
+                requestAnimationFrame(() => {
+                    window.initDiagramBooks();
+                });
+            }
 
             // Increment view count
             try {
