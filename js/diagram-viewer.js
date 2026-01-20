@@ -266,8 +266,8 @@ class DiagramViewer {
             return 'snapback';
         }
 
-        // Attempt move using shared logic
-        const success = this.attemptMove(source, target);
+        // Attempt move using shared logic (isDrop = true to prevent double UI update)
+        const success = this.attemptMove(source, target, true);
 
         // Cleanup selection always
         this.deselectSquare();
@@ -313,8 +313,7 @@ class DiagramViewer {
         if (this.game) {
             pieceOnSquare = this.game.get(square);
         } else {
-            // Fallback for incomplete checks without game instance (shouldn't happen with current flow)
-            // We really rely on game instance for robust checking
+            // Fallback
         }
 
         const isOwnPiece = pieceOnSquare && pieceOnSquare.color === turn;
@@ -338,10 +337,11 @@ class DiagramViewer {
         }
 
         // Attempt move
-        const success = this.attemptMove(this.selectedSquare, square);
+        // Pass isDrop = false because this IS a click-move, so we WANT executeMove to update the board if needed.
+        const success = this.attemptMove(this.selectedSquare, square, false);
+
         if (success) {
-            // Visual move for click-to-move (onDrop handles it automatically for drag)
-            this.board.move(`${this.selectedSquare}-${square}`);
+            // Move handled by attemptMove -> executeMove
             this.deselectSquare();
         } else {
             // Invalid move or mistake
@@ -356,9 +356,6 @@ class DiagramViewer {
         this.removeHighlights();
         const sqEl = this.boardEl.querySelector(`[data-square="${square}"]`);
         if (sqEl) sqEl.classList.add('highlight-source');
-
-        // Optional: Highlight dest
-        // if(this.game) { ... get moves, highlight dest ... }
     }
 
     deselectSquare() {
@@ -372,7 +369,7 @@ class DiagramViewer {
     }
 
     // Shared move logic
-    attemptMove(source, target) {
+    attemptMove(source, target, isDrop = false) {
         // First, validate legal move with chess.js
         if (this.game) {
             const move = this.game.move({
@@ -382,15 +379,11 @@ class DiagramViewer {
             });
 
             if (move === null) {
-                // Illegal move (only show feedback if explicit attempt, or just silence)
-                // this.showFeedback('error', 'Nelegální tah.'); 
-                // Better to be silent for simple clicks, show error for specific drag?
-                // Let's keep existing behavior: if it's illegal, return false.
+                // Illegal move
                 return false;
             }
 
             // Move was legal - undo it temporarily for solution checking
-            // (we'll re-apply if it's correct or analysis mode)
             this.game.undo();
         }
 
@@ -404,8 +397,8 @@ class DiagramViewer {
             const expectedMove = this.activeLine[this.activeLineIndex + 1];
 
             if (moveKey === expectedMove) {
-                // Correct continuation!
-                this.executeMove(source, target);
+                // Correct continuation as part of the line
+                this.executeMove(source, target, isDrop);
                 this.activeLineIndex++;
 
                 // Check if line finished
@@ -432,7 +425,7 @@ class DiagramViewer {
             const step = solution[moveKey];
 
             if (step.type === 'correct') {
-                this.executeMove(source, target);
+                this.executeMove(source, target, isDrop);
 
                 // Check for multi-move line
                 if (step.line && step.line.length > 1) {
@@ -451,7 +444,7 @@ class DiagramViewer {
                 return true; // Allow move to stay
             } else if (step.type === 'alternative') {
                 if (step.line && step.line.length > 1) {
-                    this.executeMove(source, target);
+                    this.executeMove(source, target, isDrop);
                     this.activeLine = step.line;
                     this.activeLineIndex = 0;
                     this.makeOpponentMove();
@@ -477,18 +470,21 @@ class DiagramViewer {
         }
 
         // C) Analysis mode (no solution defined) - allow free movement
-        // Apply the move in game state
-        if (this.game) {
-            this.game.move({ from: source, to: target, promotion: 'q' });
-        }
-        return;
+        // Execute move manually
+        this.executeMove(source, target, isDrop);
+        return true;
     }
 
-    executeMove(source, target) {
+    executeMove(source, target, isDrop = false) {
         if (this.game) {
+            // We use specific move command to ensure promotion etc
             this.game.move({ from: source, to: target, promotion: 'q' });
         }
-        this.board.move(`${source}-${target}`);
+
+        // Only update board UI if NOT a drop (drops already updated UI by user action)
+        if (!isDrop && this.board) {
+            this.board.move(`${source}-${target}`);
+        }
     }
 
     makeOpponentMove() {
