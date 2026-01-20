@@ -68,7 +68,7 @@ class DiagramViewer {
 
         this.container.appendChild(wrapper);
 
-        // Feedback Panel (Optional: can be external, but here we include it for self-containment if needed)
+        // Feedback Panel
         this.feedbackEl = document.createElement('div');
         this.feedbackEl.className = 'diagram-feedback hidden';
         this.feedbackEl.style.marginTop = '1rem';
@@ -81,6 +81,33 @@ class DiagramViewer {
             <p class="feedback-text" style="margin:0.5rem 0 0; color: #555;"></p>
         `;
         this.container.appendChild(this.feedbackEl);
+
+        // Reset Button
+        this.resetBtn = document.createElement('button');
+        this.resetBtn.className = 'diagram-reset-btn';
+        this.resetBtn.style.cssText = `
+            display: block;
+            margin: 0.75rem auto 0;
+            padding: 0.4rem 1rem;
+            background: rgba(100, 100, 100, 0.2);
+            border: 1px solid rgba(150, 150, 150, 0.3);
+            border-radius: 6px;
+            color: #aaa;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        `;
+        this.resetBtn.innerHTML = '<i class="fa-solid fa-rotate-left"></i>';
+        this.resetBtn.onclick = () => this.reset();
+        this.resetBtn.onmouseover = () => {
+            this.resetBtn.style.background = 'rgba(100, 100, 100, 0.3)';
+            this.resetBtn.style.color = '#fff';
+        };
+        this.resetBtn.onmouseout = () => {
+            this.resetBtn.style.background = 'rgba(100, 100, 100, 0.2)';
+            this.resetBtn.style.color = '#aaa';
+        };
+        this.container.appendChild(this.resetBtn);
     }
 
     load(diagram) {
@@ -296,6 +323,12 @@ class DiagramViewer {
     hideFeedback() {
         if (this.feedbackEl) {
             this.feedbackEl.style.display = 'none';
+        }
+    }
+
+    reset() {
+        if (this.diagram) {
+            this.load(this.diagram);
         }
     }
 
