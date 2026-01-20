@@ -141,6 +141,17 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
     });
+
+    // Check URL for editId to auto-open editor
+    const params = new URLSearchParams(window.location.search);
+    const editId = params.get('editId');
+    if (editId) {
+        // We're expecting to edit a specific article
+        // Wait slightly for other initializations if needed, although editNews handles most.
+        // Also ensure tab is switched properly via core or call it here.
+        // switchTab('editor'); // editNews calls this.
+        editNews(editId);
+    }
 });
 
 // Helper to safely select author when data is ready
@@ -437,8 +448,17 @@ function resetEditor() {
     updatePreview();
     updatePublishLabel(); // Update button/checkbox labels
 
-    // Initialize/Ensure floating toolbar exists
     if (window.initFloatingToolbar) window.initFloatingToolbar();
+
+    // Update URL to remove editId (clean state)
+    // Only if we are not loading the page initially with an intention to be here,
+    // but usually resetEditor is called explicitly by user action ("New Article")
+    // or when entering editor tab clean.
+    const url = new URL(window.location);
+    if (url.searchParams.has('editId')) {
+        url.searchParams.delete('editId');
+        window.history.pushState({}, '', url);
+    }
 
     // Auto-select current user as author
     if (window.currentUser && document.getElementById('newsAuthorId')) {
@@ -460,8 +480,18 @@ async function editNews(id) {
         const res = await fetch(`${API_URL}/news/${id}`);
         const item = await res.json();
 
+        // Update URL state
+        const url = new URL(window.location);
+        url.searchParams.set('editId', id);
+        // Ensure tab param is set too if mostly hash based
+        // But hash handles tab. Let's keep hash untouched or ensure it's correct.
+        if (!window.location.hash.includes('editor')) {
+            // Let switchTab handle hash.
+        }
+        window.history.pushState({}, '', url);
+
         switchTab('editor');
-        resetEditor(); // Clear previous state
+        resetEditor(true); // Clear previous state, pass true to skip URL clearing if we just set it (optimization)
 
         document.getElementById('editorTitle').textContent = 'Upravit novinku';
         document.getElementById('editNewsId').value = item.id;
