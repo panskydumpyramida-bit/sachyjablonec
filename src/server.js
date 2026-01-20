@@ -429,6 +429,34 @@ app.post('/api/diagrams', authMiddleware, async (req, res) => {
     }
 });
 
+app.put('/api/diagrams/:id', authMiddleware, async (req, res) => {
+    try {
+        const { fen, annotations, solution, name, description } = req.body;
+        const id = parseInt(req.params.id);
+
+        // Verify ownership or check if diagram exists
+        const existing = await prisma.diagram.findUnique({ where: { id } });
+        if (!existing) return res.status(404).json({ error: 'Diagram not found' });
+
+        const diagram = await prisma.diagram.update({
+            where: { id },
+            data: {
+                fen,
+                annotations: annotations || {},
+                solution: solution || {},
+                name,
+                description,
+                // Optional: update userId if we want to track last editor? 
+                // Currently keeping original creator is usually safer, or maybe track UpdatedBy
+            }
+        });
+        res.json(diagram);
+    } catch (error) {
+        console.error('Error updating diagram:', error);
+        res.status(500).json({ error: 'Failed to update diagram' });
+    }
+});
+
 app.delete('/api/diagrams/:id', authMiddleware, async (req, res) => {
     try {
         // Optional: Check ownership?
