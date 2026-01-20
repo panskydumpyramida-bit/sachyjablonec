@@ -723,6 +723,7 @@ function showDiagramSelectorModal(diagrams, savedRange) {
         const lowerFilter = filter.toLowerCase();
 
         const filtered = diagrams.filter(d =>
+            (d.name || '').toLowerCase().includes(lowerFilter) ||
             (d.title || '').toLowerCase().includes(lowerFilter) ||
             String(d.id).includes(lowerFilter)
         );
@@ -749,10 +750,18 @@ function showDiagramSelectorModal(diagrams, savedRange) {
                 ? `<input type="checkbox" class="diagram-checkbox" ${selectedDiagrams.has(d.id) ? 'checked' : ''} style="position: absolute; top: 8px; right: 8px; width: 18px; height: 18px; cursor: pointer;">`
                 : '';
 
+            // Determine if this is a puzzle (has solution) or just a diagram
+            const hasSolution = d.solution && Object.keys(d.solution).length > 0;
+            const typeBadge = hasSolution
+                ? '<span style="display:inline-block;background:#22c55e;color:#000;font-size:0.65rem;padding:2px 6px;border-radius:4px;margin-left:4px;">Hádanka</span>'
+                : '<span style="display:inline-block;background:#3b82f6;color:#fff;font-size:0.65rem;padding:2px 6px;border-radius:4px;margin-left:4px;">Diagram</span>';
+
+            const displayName = d.name || d.title || `Diagram #${d.id}`;
+
             el.innerHTML = `
                 ${checkbox}
                 ${miniPreview}
-                <div class="diagram-name" title="${d.title || 'Bez názvu'}">${d.title || 'Bez názvu'}</div>
+                <div class="diagram-name" title="${displayName}">${displayName} ${typeBadge}</div>
                 <div class="diagram-meta">${d.toMove === 'w' ? '⬜ Bílý' : '⬛ Černý'}</div>
             `;
             el.style.position = 'relative';
