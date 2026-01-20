@@ -83,11 +83,16 @@ function openDiagramEditor() {
         diagramBoard.position(game.fen());
     }
 
-    // Initialize turn selector based on current game turn
-    setDiagramTurn(game.turn());
 
     // Clear previous annotations
     clearDiagram();
+
+    // Update turn indicator
+    const turn = game.turn();
+    const turnText = document.getElementById('turnIndicatorText');
+    if (turnText) {
+        turnText.innerText = turn === 'w' ? 'Bílý na tahu' : 'Černý na tahu';
+    }
 
     // Resize to be sure
     setTimeout(() => diagramBoard.resize(), 200);
@@ -629,9 +634,8 @@ async function saveDiagramToCloud() {
     // game is the global Chess.js instance from game-recorder.js
     const fullFen = game.fen();
 
-    // Use user-selected turn from the toggle, not game.turn()
-    // This allows setting custom puzzles where position differs from normal turn
-    const selectedTurn = diagramTurn || game.turn(); // fallback to game turn
+    // Use game.turn() - turn is determined by position in the game
+    const selectedTurn = game.turn();
 
     const payload = {
         fen: fullFen,

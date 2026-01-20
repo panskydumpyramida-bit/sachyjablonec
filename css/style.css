@@ -1301,3 +1301,18 @@ footer {
 #gv2-board .piece-417db {
     position: absolute !important;
 }
+
+/* ===========================================
+   Chessboard.js Drag Ghosting Fix
+   =========================================== 
+   When dragging a piece, chessboard.js creates a clone that follows the cursor
+   but the original piece remains visible (ghosting). This CSS hides the 
+   source piece during active drag operations.
+   
+   chessboard.js adds classes like 'dragging-wP' to the board container during drag.
+*/
+
+/* Hide piece being dragged - targets the board wrapper when drag is active */
+.board-b72b1[class*="dragging-"] .square-55d63.highlight1-32417 img.piece-417db {
+    visibility: hidden !important;
+}

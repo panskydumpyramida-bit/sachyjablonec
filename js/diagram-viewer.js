@@ -136,14 +136,7 @@ class DiagramViewer {
         };
         this.container.appendChild(this.resetBtn);
 
-        // Add CLICK listener (delegation) for Click-to-Move - ONCE in initUI
-        this.boardEl.addEventListener('click', (e) => {
-            const squareEl = e.target.closest('[data-square]');
-            if (squareEl) {
-                const square = squareEl.getAttribute('data-square');
-                this.handleSquareClick(square);
-            }
-        });
+        // Click listener will be attached in load() after the board is created
     }
 
     load(diagram) {
@@ -164,10 +157,17 @@ class DiagramViewer {
         this.playerColor = toMove; // 'w' or 'b'
 
         // Prepare full FEN for chess.js (it requires complete FEN)
+        // IMPORTANT: Always use diagram.toMove if specified, overriding FEN's turn indicator
         let fullFen = diagram.fen;
-        if (diagram.fen && diagram.fen.split(' ').length === 1) {
+        const fenParts = diagram.fen ? diagram.fen.split(' ') : [];
+
+        if (fenParts.length === 1) {
             // FEN only contains position, add turn and default castling/en-passant
-            fullFen = `${diagram.fen} ${toMove} KQkq - 0 1`;
+            fullFen = `${fenParts[0]} ${toMove} KQkq - 0 1`;
+        } else if (fenParts.length >= 2 && diagram.toMove) {
+            // FEN has turn indicator but diagram.toMove overrides it
+            fenParts[1] = toMove;
+            fullFen = fenParts.join(' ');
         }
 
         // Initialize chess.js for legal move validation
@@ -228,12 +228,38 @@ class DiagramViewer {
         this.activeLine = null; // Array of moves ["e2-e4", "e7-e5"]
         this.activeLineIndex = 0; // Current index in the line
 
+        // Setup click-to-move listener on the actual board element (created by chessboard.js)
+        this.setupClickListener();
+
         // 2. Render Annotations
         // Timeout to ensure board is rendered and we can get dimensions
         setTimeout(() => {
             this.renderAnnotations(diagram.annotations);
             window.addEventListener('resize', () => this.renderAnnotations(diagram.annotations));
         }, 100);
+    }
+
+    setupClickListener() {
+        // Find the actual board element created by chessboard.js (has class 'board-b72b1')
+        const actualBoard = this.boardEl.querySelector('.board-b72b1') || this.boardEl;
+
+        // Remove old listener if exists (prevent duplicates on reload)
+        if (this._clickHandler) {
+            actualBoard.removeEventListener('click', this._clickHandler);
+        }
+
+        // Create bound handler
+        this._clickHandler = (e) => {
+            if (this._ignoreNextClick) return; // Handled by onDrop
+
+            const squareEl = e.target.closest('[data-square]');
+            if (squareEl) {
+                const square = squareEl.getAttribute('data-square');
+                this.handleSquareClick(square);
+            }
+        };
+
+        actualBoard.addEventListener('click', this._clickHandler);
     }
 
     onDragStart(source, piece) {
@@ -253,8 +279,19 @@ class DiagramViewer {
             return false;
         }
 
-        // Select the square for consistency with click-move
-        this.selectSquare(source);
+        // Select removed to avoid conflict with click handler which caused immediate deselect
+        // this.selectSquare(source);
+
+        // GHOSTING FIX: Hide the source piece during drag
+        // Delayed to prevent "microdrag" flickering on clicks
+        this._dragSourceSquare = source;
+        const sourceSquareEl = this.boardEl.querySelector(`[data-square="${source}"] img`);
+        if (sourceSquareEl) {
+            this._hidePieceTimer = setTimeout(() => {
+                sourceSquareEl.style.visibility = 'hidden';
+                this._hidePieceTimer = null;
+            }, 100);
+        }
 
         // Hide previous temporary feedback
         this.hideFeedback();
@@ -262,9 +299,31 @@ class DiagramViewer {
     }
 
     onDrop(source, target) {
+        // Prevent hiding if it hasn't happened yet (quick click)
+        if (this._hidePieceTimer) {
+            clearTimeout(this._hidePieceTimer);
+            this._hidePieceTimer = null;
+        }
+
+        // GHOSTING FIX: Restore source piece visibility (in case snapback happens)
+        if (this._dragSourceSquare) {
+            const sourceSquareEl = this.boardEl.querySelector(`[data-square="${this._dragSourceSquare}"] img`);
+            if (sourceSquareEl) {
+                sourceSquareEl.style.visibility = '';
+            }
+            this._dragSourceSquare = null;
+        }
+
         if (source === target) {
-            this.deselectSquare();
-            return 'snapback';
+            // Treat as click manually because chessboard.js might eat the click event
+            // This ensures selection works even if click propagation is stopped
+            this.handleSquareClick(source);
+
+            // Prevent double-handling by the actual click listener
+            this._ignoreNextClick = true;
+            setTimeout(() => { this._ignoreNextClick = false; }, 200);
+
+            return;
         }
 
         // Attempt move using shared logic (isDrop = true to prevent double UI update)
@@ -365,7 +424,7 @@ class DiagramViewer {
         // Visual highlight
         this.removeHighlights();
         const sqEl = this.boardEl.querySelector(`[data-square="${square}"]`);
-        if (sqEl) sqEl.classList.add('highlight-source');
+        if (sqEl) sqEl.classList.add('highlight-selected');
     }
 
     deselectSquare() {
@@ -374,13 +433,16 @@ class DiagramViewer {
     }
 
     removeHighlights() {
-        const highlighted = this.boardEl.querySelectorAll('.highlight-source, .highlight-dest');
-        highlighted.forEach(el => el.classList.remove('highlight-source', 'highlight-dest'));
+        const highlighted = this.boardEl.querySelectorAll('.highlight-selected, .highlight-dest');
+        highlighted.forEach(el => el.classList.remove('highlight-selected', 'highlight-dest'));
     }
 
-    // Shared move logic
+    // Shared move logic - following puzzle-racer.js pattern EXACTLY
     attemptMove(source, target, isDrop = false) {
+        const moveKey = `${source}-${target}`;
+
         // First, validate legal move with chess.js
+        // The move STAYS in the game state if legal
         if (this.game) {
             const move = this.game.move({
                 from: source,
@@ -389,38 +451,35 @@ class DiagramViewer {
             });
 
             if (move === null) {
-                // Illegal move
+                // Illegal move - chessboard.js will handle snapback
                 return false;
             }
-
-            // Move was legal - undo it temporarily for solution checking
-            this.game.undo();
         }
 
-        const moveKey = `${source}-${target}`;
+        // Move is now in game state - check against solution
 
         // LOGIC FOR MULTI-MOVE SEQUENCES
-
         // Case 1: Already following a line
         if (this.activeLine) {
-            // Check if this move matches the next expected move in the line
             const expectedMove = this.activeLine[this.activeLineIndex + 1];
 
             if (moveKey === expectedMove) {
-                // Correct continuation as part of the line
-                this.executeMove(source, target, isDrop);
+                // Correct continuation - update board visually for click-to-move
+                if (!isDrop && this.board) {
+                    this.board.move(`${source}-${target}`);
+                }
                 this.activeLineIndex++;
 
-                // Check if line finished
                 if (this.activeLineIndex >= this.activeLine.length - 1) {
                     this.handleLineSuccess();
                 } else {
-                    // Continue with opponent move
                     this.makeOpponentMove();
                 }
                 return true;
             } else {
-                // Warning/Error: Departed from the active line
+                // Wrong move - undo and sync board
+                if (this.game) this.game.undo();
+                if (this.board) this.board.position(this.game.fen(), false);
                 this.showFeedback('error', 'To není správné pokračování varianty.');
                 return false;
             }
@@ -430,31 +489,32 @@ class DiagramViewer {
         const hasSolution = Object.keys(solution).length > 0;
 
         // A) Check specific solution moves
-        // Case 2: New move (start of line)
         if (solution[moveKey]) {
             const step = solution[moveKey];
 
             if (step.type === 'correct') {
-                this.executeMove(source, target, isDrop);
+                // Correct move - update board visually for click-to-move
+                if (!isDrop && this.board) {
+                    this.board.move(`${source}-${target}`);
+                }
 
-                // Check for multi-move line
                 if (step.line && step.line.length > 1) {
                     this.activeLine = step.line;
-                    this.activeLineIndex = 0; // We just played index 0
-
-                    // Trigger opponent move
+                    this.activeLineIndex = 0;
                     this.makeOpponentMove();
                     this.showFeedback('success', 'Správně! Pokračujte...');
                 } else {
-                    // Single move solution
                     this.isSolved = true;
                     this.showFeedback('success', step.comment || 'Správně! ✅');
                     if (this.options.onSolve) this.options.onSolve(this.diagram);
                 }
-                return true; // Allow move to stay
+                return true;
             } else if (step.type === 'alternative') {
                 if (step.line && step.line.length > 1) {
-                    this.executeMove(source, target, isDrop);
+                    // Alternative with continuation - update board
+                    if (!isDrop && this.board) {
+                        this.board.move(`${source}-${target}`);
+                    }
                     this.activeLine = step.line;
                     this.activeLineIndex = 0;
                     this.makeOpponentMove();
@@ -462,10 +522,15 @@ class DiagramViewer {
                     return true;
                 }
 
+                // Alternative without continuation - undo
+                if (this.game) this.game.undo();
+                if (this.board) this.board.position(this.game.fen(), false);
                 this.showFeedback('info', step.comment || 'Zajímavá alternativa, ale existuje lepší tah.');
                 return 'snapback';
             } else {
-                // Mistake type
+                // Mistake type - undo
+                if (this.game) this.game.undo();
+                if (this.board) this.board.position(this.game.fen(), false);
                 this.showFeedback('error', step.comment || 'Toto není správné řešení.');
                 this.options.onMistake();
                 return 'snapback';
@@ -474,28 +539,34 @@ class DiagramViewer {
 
         // B) If solution exists but move not found -> Mistake
         if (hasSolution) {
+            // Wrong move - undo and sync board
+            if (this.game) this.game.undo();
+            if (this.board) this.board.position(this.game.fen(), false);
             this.showFeedback('error', 'To není správný tah. Zkuste to znovu.');
             this.options.onMistake();
             return 'snapback';
         }
 
         // C) Analysis mode (no solution defined) - allow free movement
-        // Execute move manually
-        this.executeMove(source, target, isDrop);
+        // Move is already in game.move(), just update board for click-to-move
+        if (!isDrop && this.board) {
+            this.board.move(`${source}-${target}`);
+        }
         return true;
     }
 
     executeMove(source, target, isDrop = false) {
-        if (this.game) {
-            // Execute move in chess.js for state tracking
-            this.game.move({ from: source, to: target, promotion: 'q' });
-        }
-
-        // Only update board UI if NOT a drop (drops already updated UI by user action)
-        if (!isDrop && this.board) {
-            // Use board.move() for click-moves - this animates the piece from source to target
-            // Note: board.move() handles the visual update while game.move() handles the logic
-            this.board.move(`${source}-${target}`);
+        // Update board visually (game state already updated in attemptMove)
+        if (this.board && this.game) {
+            if (!isDrop) {
+                // For click-to-move: Use position() with animation
+                this.board.position(this.game.fen(), true);
+            } else {
+                // For drag-and-drop: Sync after a short delay
+                setTimeout(() => {
+                    this.board.position(this.game.fen(), false);
+                }, 50);
+            }
         }
     }
 
@@ -508,10 +579,18 @@ class DiagramViewer {
 
         setTimeout(() => {
             if (!this.game) return; // safety
-            this.executeMove(source, target);
+
+            // Execute opponent move in game state
+            this.game.move({ from: source, to: target, promotion: 'q' });
+
+            // Animate the move on the board
+            if (this.board) {
+                this.board.position(this.game.fen(), true); // true = animate
+            }
+
             this.activeLineIndex++;
 
-            // Check if line finished (after opponent move? Unlikely for "mate" puzzles, but possible for "draw" puzzles)
+            // Check if line finished
             if (this.activeLineIndex >= this.activeLine.length - 1) {
                 this.handleLineSuccess();
             }
@@ -540,9 +619,8 @@ class DiagramViewer {
     }
 
     onSnapEnd() {
-        // Do not force position update here as it causes visual glitches (doubling) with chessboard.js
-        // during drag-and-drop. The board state is managed by onDrop and executeMove.
-        // We only need to sync if we suspect drift, but for now, disable it to fix the bug.
+        // Empty - like puzzle-racer.js
+        // Board sync is handled explicitly in attemptMove when needed
     }
 
     showFeedback(type, message) {
