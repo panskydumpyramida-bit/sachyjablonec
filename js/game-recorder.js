@@ -734,7 +734,7 @@ async function loadDiagramById(id) {
     try {
         const apiUrl = window.API_URL || '/api';
         let token = localStorage.getItem('club_auth_token');
-        let userToken = localStorage.getItem('token');
+        let userToken = localStorage.getItem('auth_token');
 
         // Diagrams might need auth
         const headers = {};
