@@ -782,6 +782,22 @@
                         class="fa-solid fa-trash"></i></button>
             </div>
 
+            <!-- Turn Selector -->
+            <div id="turnSelector"
+                style="margin: 1rem 0; padding: 0.75rem; background: rgba(0,0,0,0.3); border-radius: 8px; border: 1px solid rgba(255,255,255,0.1);">
+                <h4 style="margin: 0 0 0.5rem 0; color: var(--text-muted); font-size: 0.9rem;">Kdo je na tahu?</h4>
+                <div style="display: flex; gap: 0.5rem;">
+                    <button id="turnWhiteBtn" class="btn-control" onclick="setDiagramTurn('w')"
+                        style="flex: 1; padding: 0.5rem; font-size: 0.9rem; background: rgba(255,255,255,0.15); border-color: rgba(255,255,255,0.4);">
+                        <i class="fa-solid fa-chess-pawn" style="color: white;"></i> Bílý
+                    </button>
+                    <button id="turnBlackBtn" class="btn-control" onclick="setDiagramTurn('b')"
+                        style="flex: 1; padding: 0.5rem; font-size: 0.9rem;">
+                        <i class="fa-solid fa-chess-pawn" style="color: #333;"></i> Černý
+                    </button>
+                </div>
+            </div>
+
             <!-- Solver Admin UI -->
             <div id="solverTools"
                 style="margin: 1rem 0 0 0; padding: 1rem; background: rgba(0,0,0,0.3); border-radius: 8px; border: 1px solid rgba(255,255,255,0.1);">

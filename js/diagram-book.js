@@ -15,10 +15,10 @@
         const position = fen.split(' ')[0];
         const rows = position.split('/');
 
-        // Build the table rows
+        // Build the table rows with very strict inline styles
         let tableHtml = '';
         for (let i = 0; i < 8; i++) {
-            tableHtml += '<tr>';
+            tableHtml += `<tr style="height:${squareSize}px !important;max-height:${squareSize}px !important;">`;
             const row = rows[i] || '8';
             let colIdx = 0;
 
@@ -28,7 +28,7 @@
                     for (let k = 0; k < emptyCount; k++) {
                         const isLight = (i + colIdx) % 2 === 0;
                         const bg = isLight ? '#f0d9b5' : '#b58863';
-                        tableHtml += `<td style="width:${squareSize}px;height:${squareSize}px;background:${bg};padding:0;"></td>`;
+                        tableHtml += `<td style="width:${squareSize}px;height:${squareSize}px;max-width:${squareSize}px;max-height:${squareSize}px;background:${bg};padding:0;margin:0;line-height:0;font-size:0;box-sizing:border-box;"></td>`;
                         colIdx++;
                     }
                 } else {
@@ -38,18 +38,16 @@
                     const piece = char.toUpperCase();
                     const pieceUrl = `https://chessboardjs.com/img/chesspieces/wikipedia/${color}${piece}.png`;
 
-                    tableHtml += `<td style="width:${squareSize}px;height:${squareSize}px;background:${bg};padding:0;">
-                        <img src="${pieceUrl}" style="width:${squareSize}px;height:${squareSize}px;display:block;" alt="${piece}">
-                    </td>`;
+                    tableHtml += `<td style="width:${squareSize}px;height:${squareSize}px;max-width:${squareSize}px;max-height:${squareSize}px;background:${bg};padding:0;margin:0;line-height:0;font-size:0;box-sizing:border-box;"><img src="${pieceUrl}" style="width:${squareSize}px;height:${squareSize}px;max-width:${squareSize}px;max-height:${squareSize}px;display:block;margin:0;padding:0;" alt="${piece}"></td>`;
                     colIdx++;
                 }
             }
             tableHtml += '</tr>';
         }
 
-        // Wrap in a fixed-size container to prevent external CSS from stretching
-        return `<div class="mini-board-wrapper" style="width:${boardSize}px;height:${boardSize}px;margin:0 auto;overflow:hidden;flex:none;">
-            <table style="border-collapse:collapse;width:${boardSize}px;height:${boardSize}px;table-layout:fixed;">${tableHtml}</table>
+        // Wrap in a fixed-size container with aspect-ratio to prevent external CSS from stretching
+        return `<div class="mini-board-wrapper" style="width:${boardSize}px;height:${boardSize}px;max-width:${boardSize}px;max-height:${boardSize}px;margin:0 auto;overflow:hidden;flex:none;aspect-ratio:1/1;">
+            <table style="border-collapse:collapse;width:${boardSize}px;height:${boardSize}px;max-width:${boardSize}px;max-height:${boardSize}px;table-layout:fixed;">${tableHtml}</table>
         </div>`;
     }
 
@@ -287,6 +285,9 @@
         // DOM is already ready
         initDiagramBooks();
     }
+
+    // Export for dynamic content loading (article pages load content async)
+    window.initDiagramBooks = initDiagramBooks;
 
     console.log('DiagramBook component loaded');
 })();
