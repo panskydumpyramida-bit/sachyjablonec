@@ -293,59 +293,62 @@ class DiagramViewer {
     }
 
     handleSquareClick(square) {
-        if (this.isSolved) return;
+        try {
+            if (this.isSolved) return;
 
-        // Check game state
-        if (this.game && (this.game.in_checkmate() || this.game.in_stalemate())) {
-            return;
-        }
+            // Check game state
+            if (this.game && (this.game.in_checkmate() || this.game.in_stalemate())) {
+                return;
+            }
 
-        // Logic:
-        // 1. If currently selected square == square -> Deselect
-        // 2. If nothing selected -> Select if own piece
-        // 3. If something selected:
-        //    a. If clicked own piece -> Change selection
-        //    b. If clicked valid target -> Move
+            // Logic:
+            // 1. If currently selected square == square -> Deselect
+            // 2. If nothing selected -> Select if own piece
+            // 3. If something selected:
+            //    a. If clicked own piece -> Change selection
+            //    b. If clicked valid target -> Move
 
-        const turn = this.game ? this.game.turn() : this.playerColor;
-        // Check if clicked square has own piece
-        let pieceOnSquare = null;
-        if (this.game) {
-            pieceOnSquare = this.game.get(square);
-        } else {
-            // Fallback
-        }
+            const turn = this.game ? this.game.turn() : this.playerColor;
+            // Check if clicked square has own piece
+            let pieceOnSquare = null;
+            if (this.game) {
+                pieceOnSquare = this.game.get(square);
+            }
 
-        const isOwnPiece = pieceOnSquare && pieceOnSquare.color === turn;
+            const isOwnPiece = pieceOnSquare && pieceOnSquare.color === turn;
 
-        if (this.selectedSquare === square) {
-            this.deselectSquare();
-            return;
-        }
+            if (this.selectedSquare === square) {
+                this.deselectSquare();
+                return;
+            }
 
-        if (!this.selectedSquare) {
+            if (!this.selectedSquare) {
+                if (isOwnPiece) {
+                    this.selectSquare(square);
+                }
+                return;
+            }
+
+            // We have a selection
             if (isOwnPiece) {
                 this.selectSquare(square);
+                return;
             }
-            return;
-        }
 
-        // We have a selection
-        if (isOwnPiece) {
-            this.selectSquare(square);
-            return;
-        }
+            // Attempt move
+            // Pass isDrop = false because this IS a click-move, so we WANT executeMove to update the board if needed.
+            const success = this.attemptMove(this.selectedSquare, square, false);
 
-        // Attempt move
-        // Pass isDrop = false because this IS a click-move, so we WANT executeMove to update the board if needed.
-        const success = this.attemptMove(this.selectedSquare, square, false);
-
-        if (success) {
-            // Move handled by attemptMove -> executeMove
-            this.deselectSquare();
-        } else {
-            // Invalid move or mistake
-            // If illegal move, just deselect
+            if (success) {
+                // Move handled by attemptMove -> executeMove
+                this.deselectSquare();
+            } else {
+                // Invalid move or mistake
+                // If illegal move, just deselect
+                this.deselectSquare();
+            }
+        } catch (e) {
+            console.error('Error in handleSquareClick:', e);
             this.deselectSquare();
         }
     }
@@ -528,10 +531,9 @@ class DiagramViewer {
     }
 
     onSnapEnd() {
-        // Sync board position with game state after animation
-        if (this.game && this.board) {
-            this.board.position(this.game.fen());
-        }
+        // Do not force position update here as it causes visual glitches (doubling) with chessboard.js
+        // during drag-and-drop. The board state is managed by onDrop and executeMove.
+        // We only need to sync if we suspect drift, but for now, disable it to fix the bug.
     }
 
     showFeedback(type, message) {
