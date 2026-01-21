@@ -33,11 +33,23 @@ function getTabFromHash() {
  * @param {string} tab - Tab name to save
  */
 function setTabHash(tab) {
+    const search = window.location.search; // Preserve ?editId=... etc
     if (tab && tab !== 'dashboard') {
-        history.replaceState(null, '', `#tab=${tab}`);
+        history.replaceState(null, '', `${search}#tab=${tab}`);
     } else {
         // Clean URL for dashboard (default)
-        history.replaceState(null, '', window.location.pathname);
+        // Keep search params? Usually dashboard doesn't need them.
+        // But if we navigate to dashboard explicitly, we might want to clear specific params.
+        // However, generic behavior: setTab('dashboard') -> clean tab.
+        // Let's preserve search params unless we explicitly want to clear them.
+        // Actually dashboard usually implies clean state.
+
+        // If we want to preserve generic search params:
+        // history.replaceState(null, '', `${search}${window.location.pathname}`);
+
+        // But current implementation wiped everything.
+        // Let's stick to safe preservation or minimal change.
+        history.replaceState(null, '', `${window.location.pathname}${search}`);
     }
 }
 
