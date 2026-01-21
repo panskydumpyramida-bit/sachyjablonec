@@ -3,6 +3,7 @@ let board = null;
 let game = new Chess();
 let selectedSquare = null;
 let pendingPromotion = null; // Stores {source, target} during promotion check
+let lastMove = null; // Track last move for highlight persistence {source, target}
 
 // Playback state
 let moveHistory = [];       // Full move history for navigation
@@ -301,6 +302,7 @@ function handleSquareClick(square) {
 
         if (move) {
             // Valid move!
+            lastMove = { source: selectedSquare, target: square }; // Store for highlight persistence
             board.position(game.fen());
             updateStatus();
             updateMoveHistory(); // Update history immediately
@@ -385,6 +387,7 @@ function onDrop(source, target) {
 
     updateStatus();
     updateMoveHistory(); // Update history
+    lastMove = { source, target }; // Store for highlight persistence
     removeHighlights();
     highlightMove(source, target);
     selectedSquare = null;
@@ -392,6 +395,10 @@ function onDrop(source, target) {
 
 function onSnapEnd() {
     board.position(game.fen());
+    // Reapply last move highlight after board re-render
+    if (lastMove) {
+        highlightMove(lastMove.source, lastMove.target);
+    }
 }
 
 // Undo last move
@@ -760,7 +767,8 @@ async function loadDiagramById(id) {
             // We need to inject data into diagram-editor.js variables
             // Check if we can access them. They are global 'let'.
 
-            if (typeof currentAnnotations !== 'undefined') { if (typeof currentDiagramId !== 'undefined') currentDiagramId = d.id; if (typeof currentDiagramName !== 'undefined') currentDiagramName = d.name;
+            if (typeof currentAnnotations !== 'undefined') {
+                if (typeof currentDiagramId !== 'undefined') currentDiagramId = d.id; if (typeof currentDiagramName !== 'undefined') currentDiagramName = d.name;
                 // Determine turn from FEN or data
                 const fenParts = d.fen.split(' ');
                 const turn = d.toMove || (fenParts.length > 1 ? fenParts[1] : 'w');
