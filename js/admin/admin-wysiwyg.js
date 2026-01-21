@@ -2202,8 +2202,8 @@ function showDiagramToolbar(bookElement) {
                 icon.classList.add('fa-spin');
 
                 // Fetch latest data
-                // Get token from localStorage (safest approach here as auth object might not be in scope)
-                const token = localStorage.getItem('token');
+                // Get token from window or localStorage (use 'auth_token' as per admin-news.js conventions)
+                const token = window.authToken || localStorage.getItem('auth_token');
                 const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
 
                 const response = await fetch(`/api/diagrams/${currentDiagram.id}`, {
