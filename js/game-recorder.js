@@ -302,13 +302,19 @@ function handleSquareClick(square) {
 
         if (move) {
             // Valid move!
-            lastMove = { source: selectedSquare, target: square }; // Store for highlight persistence
+            const fromSquare = selectedSquare; // Capture before nullifying
+            const toSquare = square;
+            lastMove = { source: fromSquare, target: toSquare }; // Store for highlight persistence
             board.position(game.fen());
             updateStatus();
             updateMoveHistory(); // Update history immediately
-            removeHighlights();
-            highlightMove(selectedSquare, square);
             selectedSquare = null;
+
+            // Delay highlight application to ensure DOM is updated after board.position()
+            setTimeout(() => {
+                removeHighlights();
+                highlightMove(fromSquare, toSquare);
+            }, 50);
             return;
         }
 
