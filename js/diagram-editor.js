@@ -70,6 +70,14 @@ function openDiagramEditor() {
     modal.classList.add('active');
     document.body.style.overflow = 'hidden'; // Lock scroll
 
+    // Prevent touchmove scroll on mobile
+    const preventScroll = (e) => {
+        // Allow scrolling inside specific containers if needed, but block body scroll
+        e.preventDefault();
+    };
+    modal.addEventListener('touchmove', preventScroll, { passive: false });
+    modal._preventScroll = preventScroll; // Store reference for cleanup
+
     // Initialize board if not already done
     if (!diagramBoard) {
         diagramBoard = Chessboard('diagramBoard', {
@@ -104,8 +112,16 @@ function openDiagramEditor() {
  * Close the editor
  */
 function closeDiagramEditor() {
-    document.getElementById('diagramEditorModal').classList.remove('active');
+    const modal = document.getElementById('diagramEditorModal');
+    modal.classList.remove('active');
     document.body.style.overflow = ''; // Unlock scroll
+
+    // Remove touchmove scroll prevention
+    if (modal._preventScroll) {
+        modal.removeEventListener('touchmove', modal._preventScroll);
+        modal._preventScroll = null;
+    }
+
     // Disable solver recording if active
     if (solverState.isRecording) {
         saveSolverStep(); // or cancel
