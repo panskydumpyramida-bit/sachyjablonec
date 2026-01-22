@@ -258,7 +258,11 @@ class DiagramViewer {
 
         // Create bound handler
         this._clickHandler = (e) => {
-            if (this._ignoreNextClick) return; // Handled by onDrop
+            // Robust race-condition check: Ignore click if a drop happened very recently (< 150ms)
+            // This prevents "micro-drag" from triggering both onDrop (select) and then Click (deselect)
+            if (this._lastDropTime && (Date.now() - this._lastDropTime < 150)) {
+                return;
+            }
 
             const squareEl = e.target.closest('[data-square]');
             if (squareEl) {
@@ -288,6 +292,7 @@ class DiagramViewer {
         this._dragThresholdStart = (e) => {
             const pos = e.touches ? e.touches[0] : e;
             this._dragStartPos = { x: pos.clientX, y: pos.clientY };
+            this._dragDistance = 0;
         };
 
         // Calculate distance on end
@@ -301,8 +306,8 @@ class DiagramViewer {
 
         actualBoard.addEventListener('mousedown', this._dragThresholdStart);
         actualBoard.addEventListener('touchstart', this._dragThresholdStart, { passive: true });
-        document.addEventListener('mouseup', this._dragThresholdEnd);
-        document.addEventListener('touchend', this._dragThresholdEnd, { passive: true });
+        document.addEventListener('mouseup', this._dragThresholdEnd, true); // Capture phase to run BEFORE chessboard logic
+        document.addEventListener('touchend', this._dragThresholdEnd, { passive: true, capture: true });
     }
 
     onDragStart(source, piece) {
@@ -361,6 +366,9 @@ class DiagramViewer {
             this._hidePieceTimer = null;
         }
 
+        // Set drop timestamp to suppress subsequent click event
+        this._lastDropTime = Date.now();
+
         // GHOSTING FIX: Restore source piece visibility (in case snapback happens)
         if (this._dragSourceSquare) {
             const sourceSquareEl = this.boardEl.querySelector(`[data-square="${this._dragSourceSquare}"] img`);
@@ -383,11 +391,6 @@ class DiagramViewer {
             // Treat as click manually because chessboard.js might eat the click event
             // This ensures selection works even if click propagation is stopped
             this.handleSquareClick(source);
-
-            // Prevent double-handling by the actual click listener
-            this._ignoreNextClick = true;
-            setTimeout(() => { this._ignoreNextClick = false; }, 200);
-
             return;
         }
 
@@ -408,8 +411,6 @@ class DiagramViewer {
                 if (testMove === null) {
                     // Invalid move after micro-drag - treat as click on source
                     this.handleSquareClick(source);
-                    this._ignoreNextClick = true;
-                    setTimeout(() => { this._ignoreNextClick = false; }, 200);
                     return 'snapback';
                 } else {
                     // Valid move - undo and let normal flow handle it
