@@ -699,9 +699,28 @@ function showDiagramSelectorModal(diagrams, savedRange, initialSelection = []) {
                 <!-- Selection Basket -->
                 <div id="selectionPanel" style="flex: 1; display: none; flex-direction: column; border-left: 1px solid rgba(255,255,255,0.1); padding-left: 1rem; min-width: 250px;">
                     <!-- Preview Board -->
-                    <div id="diagramPreviewContainer" style="width: 220px; height: 220px; margin: 0 auto 1rem auto; background: rgba(0,0,0,0.3); border-radius: 4px; display: flex; align-items: center; justify-content: center; position: relative; border: 1px solid rgba(255,255,255,0.1);">
+                    <div id="diagramPreviewContainer" style="width: 220px; height: 220px; margin: 0 auto 0.5rem auto; background: rgba(0,0,0,0.3); border-radius: 4px; display: flex; align-items: center; justify-content: center; position: relative; border: 1px solid rgba(255,255,255,0.1);">
                         <p style="color: #666; font-size: 0.8rem;">Náhled</p>
                         <div id="previewBoard" style="width: 100%; height: 100%; position: absolute; inset: 0;"></div>
+                    </div>
+                    
+                    <!-- Flip Button -->
+                    <div style="display: flex; justify-content: center; margin-bottom: 0.75rem;">
+                        <button id="flipBoardBtn" style="
+                            background: rgba(255,255,255,0.1);
+                            border: 1px solid rgba(255,255,255,0.2);
+                            color: #aaa;
+                            padding: 0.4rem 0.8rem;
+                            border-radius: 6px;
+                            cursor: pointer;
+                            font-size: 0.8rem;
+                            display: flex;
+                            align-items: center;
+                            gap: 0.4rem;
+                            transition: all 0.2s;
+                        " title="Otočit šachovnici">
+                            <i class="fa-solid fa-arrows-rotate"></i> Otočit desku
+                        </button>
                     </div>
 
                     <h4 style="margin: 0 0 0.5rem 0; font-size: 0.9rem; color: #d4af37;">Vybrané diagramy (pořadí)</h4>
@@ -738,10 +757,30 @@ function showDiagramSelectorModal(diagrams, savedRange, initialSelection = []) {
         // No, we call renderSelectionList immediately below.
     }
     let previewViewer = null; // DiagramViewer instance
+    let currentPreviewDiagram = null; // Track currently previewed diagram
+    let globalFlipped = false; // Global orientation for all diagrams in this book
+
+    // Flip button handler
+    const flipBtn = modalEl.querySelector('#flipBoardBtn');
+    if (flipBtn) {
+        flipBtn.onclick = () => {
+            globalFlipped = !globalFlipped;
+            flipBtn.style.background = globalFlipped ? 'rgba(212, 175, 55, 0.3)' : 'rgba(255,255,255,0.1)';
+            flipBtn.style.color = globalFlipped ? '#d4af37' : '#aaa';
+            flipBtn.style.borderColor = globalFlipped ? 'rgba(212, 175, 55, 0.5)' : 'rgba(255,255,255,0.2)';
+
+            // Re-render preview with new orientation
+            if (currentPreviewDiagram && previewViewer) {
+                previewViewer.load({ ...currentPreviewDiagram, orientation: globalFlipped ? 'black' : 'white' });
+            }
+        };
+    }
 
     const updatePreview = (d) => {
         const previewContainer = modalEl.querySelector('#previewBoard');
         if (!previewContainer) return;
+
+        currentPreviewDiagram = d; // Store for flip button
 
         // If DiagramViewer is available (from diagram-viewer.js)
         if (typeof DiagramViewer !== 'undefined') {
@@ -750,7 +789,8 @@ function showDiagramSelectorModal(diagrams, savedRange, initialSelection = []) {
                 if (!previewContainer.id) previewContainer.id = 'preview_board_' + Date.now();
                 previewViewer = new DiagramViewer(previewContainer.id);
             }
-            previewViewer.load(d);
+            // Apply current orientation
+            previewViewer.load({ ...d, orientation: globalFlipped ? 'black' : 'white' });
         } else {
             // Fallback if DiagramViewer script missing
             previewContainer.innerHTML = generateMiniBoard(d.fen, 25);
@@ -924,7 +964,12 @@ function showDiagramSelectorModal(diagrams, savedRange, initialSelection = []) {
     // Insert as book button
     insertBookBtn.onclick = () => {
         if (selectedDiagrams.length >= 1) {
-            insertDiagramBookToEditor(selectedDiagrams, savedRange); // Pass sorted array
+            // Apply global orientation to all diagrams
+            const diagramsWithOrientation = selectedDiagrams.map(d => ({
+                ...d,
+                orientation: globalFlipped ? 'black' : 'white'
+            }));
+            insertDiagramBookToEditor(diagramsWithOrientation, savedRange);
             modalEl.remove();
         }
     };
@@ -970,12 +1015,13 @@ function insertDiagramBookToEditor(diagrams, savedRange) {
     const diagramsJson = JSON.stringify(diagrams.map(d => ({
         id: d.id,
         fen: d.fen,
-        title: d.title, // Keep title for book header
-        name: d.name, // Keep name as fallback
+        title: d.title,
+        name: d.name,
         toMove: d.toMove,
         annotations: d.annotations,
         solution: d.solution,
-        description: d.description
+        description: d.description,
+        orientation: d.orientation || 'white'
     })));
 
     // Generate the first board as preview
