@@ -69,9 +69,12 @@ document.addEventListener('DOMContentLoaded', () => {
         content.addEventListener('click', checkToolbarState);
     }
 
-    // Image Edit Listener
+    // Image Edit Listener - but not for diagram-book images
     content.addEventListener('click', (e) => {
         if (e.target.tagName === 'IMG') {
+            // Skip if inside a diagram-book (handled separately)
+            if (e.target.closest('.diagram-book')) return;
+
             if (window.showImageModal) {
                 window.showImageModal(e.target);
             }

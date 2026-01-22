@@ -2185,7 +2185,211 @@ function initDiagramToolbar() {
                 // So we rely on document mousedown.
             }
         });
+
+        // Double-click to edit diagrams in the book
+        editor.addEventListener('dblclick', (e) => {
+            const book = e.target.closest('.diagram-book');
+            if (book) {
+                e.preventDefault();
+                e.stopPropagation();
+                openDiagramBookEditor(book);
+            }
+        });
     }
+}
+
+// Open editor for an existing diagram book
+function openDiagramBookEditor(bookElement) {
+    const diagrams = JSON.parse(bookElement.dataset.diagrams || '[]');
+
+    // Show the diagram selector modal in multi-select mode with current diagrams pre-selected
+    showDiagramBookEditModal(bookElement, diagrams);
+}
+
+// Modal to edit diagram book (add/remove/reorder diagrams)
+async function showDiagramBookEditModal(bookElement, currentDiagrams) {
+    // Fetch all available diagrams from API
+    let allDiagrams = [];
+    try {
+        const token = window.authToken || localStorage.getItem('authToken') || localStorage.getItem('auth_token');
+        const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
+        const response = await fetch(`${window.API_URL}/diagrams`, { headers });
+        if (!response.ok) throw new Error('Failed to load diagrams');
+        allDiagrams = await response.json();
+    } catch (e) {
+        console.error('Error fetching diagrams:', e);
+        alert('Nepodařilo se načíst seznam diagramů.');
+        return;
+    }
+
+    // Create modal
+    const modalEl = document.createElement('div');
+    modalEl.id = 'diagramBookEditModal';
+    modalEl.style.cssText = `
+        position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+        background: rgba(0, 0, 0, 0.8); z-index: 10000;
+        display: flex; align-items: center; justify-content: center;
+    `;
+
+    // Get current diagram IDs
+    const currentIds = new Set(currentDiagrams.map(d => d.id));
+
+    modalEl.innerHTML = `
+        <div class="modal-content" style="max-width: 700px; width: 90%;">
+            <h3 style="margin-bottom:1rem; display:flex; justify-content:space-between; align-items:center;">
+                Upravit knihu diagramů
+                <button onclick="document.getElementById('diagramBookEditModal').remove()" style="background:none; border:none; color:#888; cursor:pointer; font-size:1.2rem;">
+                    <i class="fa-solid fa-times"></i>
+                </button>
+            </h3>
+            
+            <p style="color: #888; font-size: 0.9rem; margin-bottom: 1rem;">
+                Klikni pro přidání/odebrání diagramů z knihy. Vybrané diagramy jsou zvýrazněny.
+            </p>
+            
+            <input type="text" class="diagram-search" id="bookEditSearch" placeholder="Hledat..." style="width: 100%; margin-bottom: 1rem;">
+            
+            <div class="diagram-grid" id="bookEditGrid" style="max-height: 400px; overflow-y: auto;"></div>
+            
+            <div style="margin-top: 1rem; display: flex; justify-content: space-between; align-items: center;">
+                <span style="font-size: 0.85rem; color: #d4af37;">
+                    <span id="bookEditCount">${currentIds.size}</span> vybráno
+                </span>
+                <button id="bookEditSaveBtn" class="btn-primary" style="padding: 0.5rem 1.5rem;">
+                    <i class="fa-solid fa-check"></i> Uložit změny
+                </button>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(modalEl);
+
+    const grid = modalEl.querySelector('#bookEditGrid');
+    const searchInput = modalEl.querySelector('#bookEditSearch');
+    const countSpan = modalEl.querySelector('#bookEditCount');
+    const saveBtn = modalEl.querySelector('#bookEditSaveBtn');
+
+    let selectedIds = new Set(currentIds);
+
+    const renderList = (filter = '') => {
+        grid.innerHTML = '';
+        const lowerFilter = filter.toLowerCase();
+        const filtered = allDiagrams.filter(d =>
+            (d.name || '').toLowerCase().includes(lowerFilter) ||
+            (d.title || '').toLowerCase().includes(lowerFilter) ||
+            String(d.id).includes(lowerFilter)
+        );
+
+        if (filtered.length === 0) {
+            grid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 2rem; color: #888;">Žádné diagramy nenalezeny.</div>';
+            return;
+        }
+
+        filtered.forEach(d => {
+            const el = document.createElement('div');
+            el.className = 'diagram-item';
+            el.dataset.id = d.id;
+
+            const isSelected = selectedIds.has(d.id);
+            if (isSelected) {
+                el.style.border = '2px solid #d4af37';
+                el.style.background = 'rgba(212, 175, 55, 0.15)';
+            }
+
+            const miniPreview = generateMiniBoard(d.fen, 18);
+            const displayName = d.name || d.title || `Diagram #${d.id}`;
+
+            el.innerHTML = `
+                ${miniPreview}
+                <div class="diagram-name" title="${displayName}">${displayName}</div>
+                <div class="diagram-meta">${d.toMove === 'w' ? '⬜ Bílý' : '⬛ Černý'}</div>
+            `;
+
+            el.onclick = () => {
+                if (selectedIds.has(d.id)) {
+                    selectedIds.delete(d.id);
+                } else {
+                    selectedIds.add(d.id);
+                }
+                countSpan.textContent = selectedIds.size;
+                renderList(searchInput.value);
+            };
+            grid.appendChild(el);
+        });
+    };
+
+    renderList();
+    searchInput.oninput = (e) => renderList(e.target.value);
+
+    // Save changes
+    saveBtn.onclick = () => {
+        // Get selected diagrams in order
+        const newDiagrams = allDiagrams.filter(d => selectedIds.has(d.id));
+
+        if (newDiagrams.length === 0) {
+            alert('Vyberte alespoň jeden diagram.');
+            return;
+        }
+
+        // Update the book element
+        const newDiagramsJson = JSON.stringify(newDiagrams.map(d => ({
+            id: d.id,
+            fen: d.fen,
+            title: d.title,
+            name: d.name,
+            toMove: d.toMove,
+            annotations: d.annotations,
+            solution: d.solution,
+            description: d.description
+        })));
+
+        bookElement.dataset.diagrams = newDiagramsJson;
+        bookElement.dataset.current = '0';
+
+        // Update board preview
+        const boardHtml = window.generateMiniBoardGlobal ? window.generateMiniBoardGlobal(newDiagrams[0].fen, 30) : generateMiniBoard(newDiagrams[0].fen, 30);
+        const boardContainer = bookElement.querySelector('.book-board-container');
+        if (boardContainer) {
+            // Keep the badge if exists
+            const badge = boardContainer.querySelector('.diagram-type-badge');
+            boardContainer.innerHTML = (badge ? badge.outerHTML : '') + boardHtml;
+        }
+
+        // Update navigation dots
+        const dotsContainer = bookElement.querySelector('.book-dots');
+        if (dotsContainer && newDiagrams.length > 1) {
+            dotsContainer.innerHTML = newDiagrams.map((_, i) =>
+                `<span class="book-dot${i === 0 ? ' active' : ''}" data-index="${i}"></span>`
+            ).join('');
+            bookElement.querySelector('.book-nav').style.display = 'flex';
+        } else if (dotsContainer && newDiagrams.length === 1) {
+            bookElement.querySelector('.book-nav').style.display = 'none';
+        }
+
+        // Update to-move indicator
+        const toMoveEl = bookElement.querySelector('.book-to-move');
+        if (toMoveEl) {
+            toMoveEl.textContent = newDiagrams[0].toMove === 'w' ? 'Bílý na tahu' : 'Černý na tahu';
+        }
+
+        // Update counter
+        const counterEl = bookElement.querySelector('.book-counter');
+        if (counterEl) {
+            counterEl.textContent = `1 / ${newDiagrams.length}`;
+            counterEl.style.display = newDiagrams.length > 1 ? 'block' : 'none';
+        }
+
+        modalEl.remove();
+        if (typeof updatePreview === 'function') updatePreview();
+    };
+
+    // Close on escape
+    const escHandler = (e) => {
+        if (e.key === 'Escape') {
+            modalEl.remove();
+            document.removeEventListener('keydown', escHandler);
+        }
+    };
+    document.addEventListener('keydown', escHandler);
 }
 
 function showDiagramToolbar(bookElement) {
