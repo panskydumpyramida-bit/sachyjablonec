@@ -254,9 +254,12 @@
                                         class="fa-solid fa-spell-check"></i>AI</button>
                                 <!-- Table Tools -->
                                 <div class="divider"></div>
-                                <button type="button" onclick="aiTextToTable()"
-                                    title="AI Převod na tabulku (vyberte text)" style="color: #06b6d4;"><i
-                                        class="fa-solid fa-table"></i></button>
+                                title="AI Převod na tabulku (vyberte text)" style="color: #06b6d4;"><i
+                                    class="fa-solid fa-table"></i></button>
+                                <div class="divider"></div>
+                                <button type="button" onclick="showShortcutsModal()"
+                                    title="Klávesové zkratky a nápověda (?)"><i
+                                        class="fa-regular fa-keyboard"></i></button>
                             </div>
                             <div class="wysiwyg-content" id="articleContent" contenteditable="true"
                                 oninput="updatePreview()"></div><textarea id="articleSource"

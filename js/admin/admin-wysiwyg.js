@@ -2586,3 +2586,166 @@ if (document.readyState === 'complete') {
 } else {
     window.addEventListener('load', initDiagramToolbar);
 }
+// ================================
+// KEYBOARD SHORTCUTS & HELP
+// ================================
+
+function showShortcutsModal() {
+    if (document.getElementById('shortcutsModal')) return;
+
+    const modal = document.createElement('div');
+    modal.id = 'shortcutsModal';
+    modal.style.cssText = `
+        position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+        background: rgba(0,0,0,0.85); z-index: 11000;
+        display: flex; align-items: center; justify-content: center;
+        backdrop-filter: blur(4px);
+    `;
+
+    modal.innerHTML = `
+        <div class="modal-content" style="max-width: 600px; width: 90%; background: #1a1a2e; border: 1px solid rgba(255,255,255,0.1);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 1rem;">
+                <h3 style="margin: 0; display: flex; align-items: center; gap: 0.75rem;">
+                    <i class="fa-regular fa-keyboard" style="color: #d4af37;"></i>
+                    Klávesové zkratky
+                </h3>
+                <button onclick="document.getElementById('shortcutsModal').remove()" 
+                        style="background:none; border:none; color:#888; cursor:pointer; font-size: 1.25rem; padding: 0.5rem;">
+                    <i class="fa-solid fa-times"></i>
+                </button>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
+                <div>
+                    <h4 style="color: #60a5fa; margin-bottom: 1rem; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px;">Globální</h4>
+                    <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                        <div style="display: flex; justify-content: space-between;">
+                            <span>Nový článek</span>
+                            <kbd style="background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 4px; font-family: monospace; border: 1px solid rgba(255,255,255,0.2);">N</kbd>
+                        </div>
+                        <div style="display: flex; justify-content: space-between;">
+                            <span>Nový diagram</span>
+                            <kbd style="background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 4px; font-family: monospace; border: 1px solid rgba(255,255,255,0.2);">D</kbd>
+                        </div>
+                        <div style="display: flex; justify-content: space-between;">
+                            <span>Nápověda</span>
+                            <kbd style="background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 4px; font-family: monospace; border: 1px solid rgba(255,255,255,0.2);">?</kbd>
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <h4 style="color: #4ade80; margin-bottom: 1rem; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px;">Editor</h4>
+                    <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                        <div style="display: flex; justify-content: space-between;">
+                            <span>Tučně</span>
+                            <kbd style="background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 4px; font-family: monospace; border: 1px solid rgba(255,255,255,0.2);">Ctrl + B</kbd>
+                        </div>
+                        <div style="display: flex; justify-content: space-between;">
+                            <span>Kurzíva</span>
+                            <kbd style="background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 4px; font-family: monospace; border: 1px solid rgba(255,255,255,0.2);">Ctrl + I</kbd>
+                        </div>
+                        <div style="display: flex; justify-content: space-between;">
+                            <span>Podtržení</span>
+                            <kbd style="background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 4px; font-family: monospace; border: 1px solid rgba(255,255,255,0.2);">Ctrl + U</kbd>
+                        </div>
+                        <div style="display: flex; justify-content: space-between;">
+                            <span>Zpět / Vpřed</span>
+                            <kbd style="background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 4px; font-family: monospace; border: 1px solid rgba(255,255,255,0.2);">Ctrl + Z / Y</kbd>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div style="margin-top: 2rem; padding-top: 1rem; border-top: 1px solid rgba(255,255,255,0.1); text-align: center; color: #888; font-size: 0.9rem;">
+                <p style="margin: 0;">Další funkce najdete v <a href="/docs/ADMIN_MANUAL.md" target="_blank" style="color: #d4af37;">Manuálu pro administrátory</a></p>
+            </div>
+        </div>
+    `;
+
+    document.body.appendChild(modal);
+
+    // Close on click outside
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) modal.remove();
+    });
+
+    // Close on Escape
+    const escHandler = (e) => {
+        if (e.key === 'Escape') {
+            modal.remove();
+            document.removeEventListener('keydown', escHandler);
+        }
+    };
+    document.addEventListener('keydown', escHandler);
+}
+
+function handleAdminShortcuts(e) {
+    // Ignore key combinations if they involve Alt/Ctrl/Meta unless explicitly handled
+    // We want N and D to work only when NO modifiers are pressed
+
+    // Check if user is typing in an input text field
+    const tag = e.target.tagName;
+    const isInput = tag === 'INPUT' || tag === 'TEXTAREA' || e.target.isContentEditable;
+
+    // Help (?) - Shift + /
+    // Should work even in inputs? Maybe not if typing '?'
+    // Let's allow '?' only when NOT in input to avoid conflict
+    if (e.key === '?' && !isInput) {
+        showShortcutsModal();
+        return;
+    }
+
+    // New Article (N)
+    if (e.code === 'KeyN' && !isInput && !e.ctrlKey && !e.metaKey && !e.altKey) {
+        e.preventDefault();
+        // Check if resetEditor exists (from admin-news.js)
+        if (typeof window.resetEditor === 'function') {
+            window.resetEditor();
+            showToast('Nový článek', 'info');
+        } else if (typeof resetEditor === 'function') {
+            resetEditor();
+            showToast('Nový článek', 'info');
+        }
+        return;
+    }
+
+    // New Diagram (D)
+    if (e.code === 'KeyD' && !isInput && !e.ctrlKey && !e.metaKey && !e.altKey) {
+        e.preventDefault();
+        window.open('game-recorder.html', '_blank');
+        return;
+    }
+
+    // Editor formatting shortcuts (only when editor focused)
+    if (e.target.id === 'articleContent') {
+        if ((e.ctrlKey || e.metaKey) && !e.shiftKey) {
+            let handled = false;
+            switch (e.key.toLowerCase()) {
+                case 'b':
+                    formatText('bold');
+                    handled = true;
+                    break;
+                case 'i':
+                    formatText('italic');
+                    handled = true;
+                    break;
+                case 'u':
+                    formatText('underline');
+                    handled = true;
+                    break;
+                // Browser usually handles Z/Y natively for contentEditable, 
+                // but we might want to hook formatText('undo') if we have custom stack
+                // For now let browser handle undo/redo in contentEditables
+            }
+
+            if (handled) e.preventDefault();
+        }
+    }
+}
+
+// Register global shortcuts
+document.addEventListener('keydown', handleAdminShortcuts);
+
+// Expose to window
+window.showShortcutsModal = showShortcutsModal;

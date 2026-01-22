@@ -327,8 +327,11 @@
                 text-shadow: 0 1px 2px rgba(0,0,0,0.3) !important;
                 letter-spacing: 0.02em !important;
             }
-            /* Allow badge to overflow */
-            .diagram-book .diagram-board-wrapper {
+            /* Allow badge to overflow - multiple levels needed */
+            .diagram-book .diagram-board-wrapper,
+            .diagram-book .diagram-viewer-container,
+            .diagram-book .book-board-container,
+            .diagram-book {
                 overflow: visible !important;
             }
             /* Hide internal reset button when in book mode */

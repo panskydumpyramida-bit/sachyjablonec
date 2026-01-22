@@ -69,27 +69,30 @@ class DiagramViewer {
         this.overlayEl.style.zIndex = '10';
         wrapper.appendChild(this.overlayEl);
 
-        // Type Badge (corner indicator for puzzle vs diagram)
+        // Type Badge (corner indicator for puzzle vs diagram) - positioned OUTSIDE board
         this.typeBadge = document.createElement('div');
         this.typeBadge.className = 'diagram-type-badge';
         this.typeBadge.style.cssText = `
             position: absolute;
-            top: -28px;
-            right: 0;
-            padding: 2px 8px;
-            background: rgba(30, 30, 30, 0.9);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 4px;
-            font-size: 0.75rem;
-            color: #eee;
-            z-index: 15;
+            top: -12px;
+            right: -20px;
+            padding: 5px 10px;
+            background: linear-gradient(135deg, rgba(30,30,30,0.95), rgba(50,50,50,0.9));
+            border: 1px solid rgba(212, 175, 55, 0.4);
+            border-radius: 8px;
+            font-size: 0.8rem;
+            color: #d4af37;
+            z-index: 100;
             pointer-events: auto;
             cursor: help;
             display: flex;
             align-items: center;
             justify-content: center;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.5), 0 0 20px rgba(212, 175, 55, 0.15);
+            text-shadow: 0 1px 2px rgba(0,0,0,0.3);
         `;
+        // Ensure wrapper allows overflow
+        wrapper.style.overflow = 'visible';
         // Tooltip is set via title attribute dynamically
         wrapper.appendChild(this.typeBadge);
 
