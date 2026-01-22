@@ -766,23 +766,28 @@ function showDiagramSelectorModal(diagrams, savedRange, initialSelection = []) {
         }
 
         selectionList.innerHTML = '';
-        insertBookBtn.disabled = selectedDiagrams.length < 1; // Allow single item book too? Usually >=2 for book.
+        insertBookBtn.disabled = selectedDiagrams.length < 1;
         insertBookBtn.style.opacity = '1';
 
         selectedDiagrams.forEach((d, index) => {
             const row = document.createElement('div');
-            row.style.cssText = 'display: flex; align-items: center; gap: 0.5rem; padding: 0.4rem; background: rgba(255,255,255,0.05); margin-bottom: 4px; border-radius: 4px; font-size: 0.85rem;';
+            // Change layout to column for input
+            row.style.cssText = 'display: flex; flex-direction: column; gap: 0.25rem; padding: 0.5rem; background: rgba(255,255,255,0.05); margin-bottom: 6px; border-radius: 4px; font-size: 0.85rem; border: 1px solid rgba(255,255,255,0.05);';
 
             const name = d.name || d.title || `Diagram #${d.id}`;
 
             row.innerHTML = `
-                <span style="font-weight: bold; color: #888; width: 20px;">${index + 1}.</span>
-                <span style="flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${name}</span>
-                <div style="display: flex; gap: 2px;">
-                    ${index > 0 ? `<button class="move-up-btn" style="background:none; border:none; color:#aaa; cursor:pointer;" title="Posunout nahoru"><i class="fa-solid fa-arrow-up"></i></button>` : '<span style="width:14px;"></span>'}
-                    ${index < selectedDiagrams.length - 1 ? `<button class="move-down-btn" style="background:none; border:none; color:#aaa; cursor:pointer;" title="Posunout dolů"><i class="fa-solid fa-arrow-down"></i></button>` : '<span style="width:14px;"></span>'}
-                    <button class="remove-btn" style="background:none; border:none; color:#ef4444; cursor:pointer; margin-left:4px;" title="Odebrat"><i class="fa-solid fa-times"></i></button>
+                <div style="display: flex; align-items: center; gap: 0.5rem; width: 100%;">
+                    <span style="font-weight: bold; color: #d4af37; width: 20px;">${index + 1}.</span>
+                    <span style="flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight:500;">${name}</span>
+                    <div style="display: flex; gap: 2px;">
+                        ${index > 0 ? `<button class="move-up-btn" style="background:none; border:none; color:#aaa; cursor:pointer;" title="Posunout nahoru"><i class="fa-solid fa-arrow-up"></i></button>` : '<span style="width:14px;"></span>'}
+                        ${index < selectedDiagrams.length - 1 ? `<button class="move-down-btn" style="background:none; border:none; color:#aaa; cursor:pointer;" title="Posunout dolů"><i class="fa-solid fa-arrow-down"></i></button>` : '<span style="width:14px;"></span>'}
+                        <button class="remove-btn" style="background:none; border:none; color:#ef4444; cursor:pointer; margin-left:4px;" title="Odebrat"><i class="fa-solid fa-times"></i></button>
+                    </div>
                 </div>
+                <input type="text" class="desc-input" placeholder="Popisek (např. Bílý na tahu a vyhraje)" value="${d.description || ''}" 
+                    style="width: 100%; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); color: #ccc; font-size: 0.8rem; padding: 4px 6px; border-radius: 4px;">
             `;
 
             // Handlers
@@ -795,8 +800,16 @@ function showDiagramSelectorModal(diagrams, savedRange, initialSelection = []) {
             const removeBtn = row.querySelector('.remove-btn');
             removeBtn.onclick = (e) => { e.stopPropagation(); toggleDiagramSelection(d); };
 
+            const input = row.querySelector('.desc-input');
+            input.onclick = (e) => e.stopPropagation();
+            input.oninput = (e) => {
+                d.description = e.target.value;
+            };
+
             // Preview trigger
-            row.onmouseenter = () => updatePreview(d);
+            row.onmouseenter = (e) => {
+                if (e.target !== input) updatePreview(d);
+            };
 
             selectionList.appendChild(row);
         });
@@ -1026,7 +1039,7 @@ function insertDiagramBookToEditor(diagrams, savedRange) {
                     transition: all 0.2s;
                 "><i class="fa-solid fa-chevron-left"></i></button>
                 <div class="book-meta-row">
-                    <span class="book-to-move">${diagrams[0].toMove === 'w' ? 'Bílý na tahu' : 'Černý na tahu'}</span>
+                    <span class="book-to-move">${(diagrams[0].toMove || (diagrams[0].fen ? diagrams[0].fen.split(' ')[1] : 'w')).startsWith('w') ? 'Bílý na tahu' : 'Černý na tahu'}</span>
                     <span style="opacity:0.3">|</span>
                     <span class="book-counter">1 / ${diagrams.length}</span>
                 </div>
@@ -1078,7 +1091,11 @@ window.bookNav = function (bookId, direction) {
     const boardHtml = window.generateMiniBoardGlobal ? window.generateMiniBoardGlobal(d.fen, 30) : '';
 
     book.querySelector('.book-board-container').innerHTML = boardHtml;
-    book.querySelector('.book-to-move').textContent = d.toMove === 'w' ? 'Bílý na tahu' : 'Černý na tahu';
+
+    const toMove = d.toMove || (d.fen ? d.fen.split(' ')[1] : 'w');
+    const toMoveText = (toMove === 'w' || toMove === 'white') ? 'Bílý na tahu' : 'Černý na tahu';
+    book.querySelector('.book-to-move').textContent = toMoveText;
+
     book.querySelector('.book-counter').textContent = `${current + 1} / ${diagrams.length}`;
 
     // Update description if present

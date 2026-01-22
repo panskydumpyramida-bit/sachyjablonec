@@ -84,7 +84,7 @@ class DiagramViewer {
             color: #d4af37;
             z-index: 100;
             pointer-events: auto;
-            cursor: help;
+            cursor: default;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -226,7 +226,7 @@ class DiagramViewer {
             this.typeBadge.innerHTML = hasSolution
                 ? '<i class="fa-solid fa-puzzle-piece"></i>'
                 : '<i class="fa-solid fa-chess-board"></i>';
-            this.typeBadge.title = hasSolution ? 'Hádanka' : 'Diagram';
+            // Tooltip removed per request
         }
 
         // State for multi-move lines
