@@ -981,10 +981,6 @@ function insertDiagramBookToEditor(diagrams, savedRange) {
     // Generate the first board as preview
     const firstBoard = generateMiniBoard(diagrams[0].fen, 30);
 
-    // Generate page dots
-    const dots = diagrams.map((_, i) =>
-        `<span class="book-dot${i === 0 ? ' active' : ''}" data-index="${i}"></span>`
-    ).join('');
 
     // Determine if first diagram is a puzzle
     const hasSolution = diagrams[0].solution && Object.keys(diagrams[0].solution).length > 0;
