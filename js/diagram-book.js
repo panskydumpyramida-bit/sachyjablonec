@@ -181,8 +181,10 @@
                 padding: 1.25rem;
                 box-shadow: 0 10px 40px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.05);
                 border: 1px solid rgba(255,255,255,0.08);
-                max-width: 320px;
-                margin: 1.5rem auto;
+                max-width: 400px;
+                margin: 1rem 0 1rem 1.5rem;
+                float: right;
+                clear: right;
             }
             .book-meta-row {
                 display: flex;
@@ -335,6 +337,29 @@
                 border-color: rgba(212, 175, 55, 0.3) !important;
                 transform: rotate(-180deg);
                 color: #d4af37 !important;
+            }
+            /* Mobile: full-width diagram for easier interaction */
+            @media (max-width: 600px) {
+                .diagram-book {
+                    max-width: 100% !important;
+                    width: 100% !important;
+                    border-radius: 12px;
+                    padding: 1rem;
+                    margin: 1rem 0;
+                    float: none !important;
+                    clear: none !important;
+                }
+                .diagram-viewer-container {
+                    max-width: 100% !important;
+                    width: 100% !important;
+                }
+                .diagram-board-wrapper {
+                    width: 100% !important;
+                }
+                .book-caption {
+                    font-size: 0.9rem;
+                    padding: 0 0.5rem;
+                }
             }
         `;
         document.head.appendChild(style);
