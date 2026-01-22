@@ -852,8 +852,8 @@ function insertDiagramBookToEditor(diagrams, savedRange) {
     const puzzleBadge = hasSolution
         ? `<div class="diagram-type-badge" style="
             position: absolute;
-            top: 4px;
-            right: -24px;
+            top: -12px;
+            right: -20px;
             background: linear-gradient(135deg, rgba(30,30,30,0.95), rgba(50,50,50,0.9));
             backdrop-filter: blur(12px);
             border: 1px solid rgba(212, 175, 55, 0.4);
@@ -861,7 +861,7 @@ function insertDiagramBookToEditor(diagrams, savedRange) {
             padding: 5px 10px;
             font-size: 0.8rem;
             color: #d4af37;
-            z-index: 20;
+            z-index: 100;
             pointer-events: none;
             box-shadow: 0 4px 12px rgba(0,0,0,0.5), 0 0 20px rgba(212, 175, 55, 0.15);
             text-shadow: 0 1px 2px rgba(0,0,0,0.3);
@@ -2280,6 +2280,56 @@ function showDiagramToolbar(bookElement) {
         }
     };
     diagramToolbar.appendChild(btnRefresh);
+
+    // Divider
+    const divider1 = document.createElement('div');
+    divider1.className = 'floating-divider';
+    diagramToolbar.appendChild(divider1);
+
+    // Float alignment buttons
+    const floatOptions = [
+        { value: 'left', icon: 'fa-align-left', title: 'Plovoucí vlevo' },
+        { value: 'none', icon: 'fa-align-center', title: 'Na střed (bez obtékání)' },
+        { value: 'right', icon: 'fa-align-right', title: 'Plovoucí vpravo' }
+    ];
+
+    floatOptions.forEach(opt => {
+        const btn = document.createElement('button');
+        btn.className = 'floating-btn';
+        btn.innerHTML = `<i class="fa-solid ${opt.icon}"></i>`;
+        btn.title = opt.title;
+
+        // Highlight current float state
+        const currentFloat = bookElement.style.float || 'right';
+        if (currentFloat === opt.value || (opt.value === 'none' && !bookElement.style.float)) {
+            btn.style.background = 'rgba(212, 175, 55, 0.3)';
+            btn.style.color = '#d4af37';
+        }
+
+        btn.onclick = () => {
+            if (opt.value === 'none') {
+                bookElement.style.float = 'none';
+                bookElement.style.margin = '1.5rem auto';
+                bookElement.style.clear = 'both';
+            } else if (opt.value === 'left') {
+                bookElement.style.float = 'left';
+                bookElement.style.margin = '1rem 1.5rem 1rem 0';
+                bookElement.style.clear = 'left';
+            } else {
+                bookElement.style.float = 'right';
+                bookElement.style.margin = '1rem 0 1rem 1.5rem';
+                bookElement.style.clear = 'right';
+            }
+            if (typeof updatePreview === 'function') updatePreview();
+            showDiagramToolbar(bookElement); // Refresh to update active state
+        };
+        diagramToolbar.appendChild(btn);
+    });
+
+    // Divider
+    const divider2 = document.createElement('div');
+    divider2.className = 'floating-divider';
+    diagramToolbar.appendChild(divider2);
 
     // 3. Remove Button
     const btnRemove = document.createElement('button');
