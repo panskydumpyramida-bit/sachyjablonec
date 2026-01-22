@@ -357,16 +357,16 @@
                 transform: rotate(-180deg);
                 color: #d4af37 !important;
             }
-            /* Mobile: full-width diagram for easier interaction */
+            /* Mobile: full-width diagram but with small margins */
             @media (max-width: 600px) {
                 .diagram-book {
                     max-width: none !important;
-                    width: calc(100% + 2rem) !important; /* Compensate for container padding (assumed 1rem) */
-                    margin: 1.5rem -1rem !important; /* Pull out of container padding */
-                    border-radius: 0 !important;
-                    border-left: none !important;
-                    border-right: none !important;
-                    padding: 1.5rem 0 !important;
+                    width: 100% !important; 
+                    margin: 1.5rem 0 !important; /* Reset margin */
+                    border-radius: 8px !important; /* Restore slight rounding */
+                    border-left: 1px solid rgba(255,255,255,0.08) !important;
+                    border-right: 1px solid rgba(255,255,255,0.08) !important;
+                    padding: 1.5rem 0.5rem !important; /* Small side padding */
                     float: none !important;
                     clear: none !important;
                 }

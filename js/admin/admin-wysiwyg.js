@@ -2749,3 +2749,226 @@ document.addEventListener('keydown', handleAdminShortcuts);
 
 // Expose to window
 window.showShortcutsModal = showShortcutsModal;
+
+// ================================
+// MATCH TABLE INSERTION
+// ================================
+
+let mtData = null;
+
+window.showMatchTableModal = async function () {
+    if (document.getElementById('matchTableModal')) return;
+
+    const modal = document.createElement('div');
+    modal.id = 'matchTableModal';
+    modal.style.cssText = `
+        position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+        background: rgba(0,0,0,0.85); z-index: 11050;
+        display: flex; align-items: center; justify-content: center;
+        backdrop-filter: blur(4px);
+    `;
+
+    modal.innerHTML = `
+        <div class="modal-content" style="max-width: 500px; width: 90%; background: #1a1a2e; border: 1px solid rgba(255,255,255,0.1); padding: 2rem; border-radius: 12px; box-shadow: 0 10px 40px rgba(0,0,0,0.5);">
+            <h3 style="margin: 0 0 1.5rem 0; color: #d4af37; display: flex; align-items: center; gap: 0.5rem;">
+                <i class="fa-solid fa-trophy"></i> Vložit tabulku zápasu
+            </h3>
+            
+            <div id="mtLoading" style="text-align: center; color: #888; padding: 1rem;">
+                <i class="fa-solid fa-spinner fa-spin"></i> Načítám soutěže...
+            </div>
+
+            <div id="mtForm" style="display:none; flex-direction: column; gap: 1rem;">
+                <div>
+                    <label style="display: block; color: #ccc; margin-bottom: 0.5rem; font-size: 0.9rem;">Soutěž</label>
+                    <select id="mtCompetition" style="width: 100%; padding: 0.5rem; background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.1); color: #fff; border-radius: 6px;" onchange="mtLoadTeams()">
+                    </select>
+                </div>
+                <div>
+                    <label style="display: block; color: #ccc; margin-bottom: 0.5rem; font-size: 0.9rem;">Tým (Bižuterie)</label>
+                    <select id="mtTeam" style="width: 100%; padding: 0.5rem; background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.1); color: #fff; border-radius: 6px;" onchange="mtLoadRounds()">
+                    </select>
+                </div>
+                <div>
+                    <label style="display: block; color: #ccc; margin-bottom: 0.5rem; font-size: 0.9rem;">Zápas / Kolo</label>
+                    <select id="mtRound" style="width: 100%; padding: 0.5rem; background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.1); color: #fff; border-radius: 6px;">
+                    </select>
+                </div>
+                
+                <div style="margin-top: 1.5rem; display: flex; justify-content: flex-end; gap: 0.5rem;">
+                    <button onclick="document.getElementById('matchTableModal').remove()" 
+                        style="padding: 0.5rem 1rem; background: transparent; border: 1px solid rgba(255,255,255,0.2); color: #ccc; border-radius: 6px; cursor: pointer;">
+                        Zrušit
+                    </button>
+                    <button onclick="insertMatchTable()" 
+                        style="padding: 0.5rem 1.5rem; background: #d4af37; border: none; color: #000; font-weight: 600; border-radius: 6px; cursor: pointer;">
+                        Vložit
+                    </button>
+                </div>
+            </div>
+        </div>
+    `;
+
+    document.body.appendChild(modal);
+
+    // Initial Load
+    try {
+        const res = await fetch('/api/standings');
+        if (!res.ok) throw new Error('Chyba serveru');
+        const data = await res.json();
+        mtData = data.standings || data; // Compatibility
+
+        const compSelect = document.getElementById('mtCompetition');
+        // Filter only competitions where we have standings
+        mtData.forEach((comp, idx) => {
+            if (comp.standings && comp.standings.length > 0) {
+                const opt = document.createElement('option');
+                opt.value = idx;
+                opt.textContent = comp.name;
+                compSelect.appendChild(opt);
+            }
+        });
+
+        document.getElementById('mtLoading').style.display = 'none';
+        document.getElementById('mtForm').style.display = 'flex';
+        mtLoadTeams();
+
+    } catch (e) {
+        document.getElementById('mtLoading').innerHTML = `<span style="color:#f87171">Chyba: ${e.message}</span>`;
+    }
+}
+
+window.mtLoadTeams = function () {
+    const compIdx = document.getElementById('mtCompetition').value;
+    const teamSelect = document.getElementById('mtTeam');
+    teamSelect.innerHTML = '';
+
+    if (!mtData || !mtData[compIdx]) return;
+
+    const comp = mtData[compIdx];
+    const ourTeams = comp.standings.filter(s => s.team.toLowerCase().includes('bižuterie') || s.team.toLowerCase().includes('bizuterie'));
+
+    ourTeams.forEach(team => {
+        const opt = document.createElement('option');
+        opt.value = team.team;
+        opt.textContent = team.team;
+        teamSelect.appendChild(opt);
+    });
+
+    mtLoadRounds();
+}
+
+window.mtLoadRounds = function () {
+    const compIdx = document.getElementById('mtCompetition').value;
+    const teamName = document.getElementById('mtTeam').value;
+    const roundSelect = document.getElementById('mtRound');
+    roundSelect.innerHTML = '';
+
+    if (!mtData || !mtData[compIdx]) return;
+    const comp = mtData[compIdx];
+    const team = comp.standings.find(s => s.team === teamName);
+
+    if (!team || !team.schedule) {
+        roundSelect.innerHTML = '<option>Žádné zápasy</option>';
+        return;
+    }
+
+    team.schedule.forEach(match => {
+        if (match.result && /\d/.test(match.result)) {
+            const opt = document.createElement('option');
+            const val = JSON.stringify({
+                url: team.url || comp.url,
+                round: match.round,
+                home: (match.isHome !== false) ? team.team : match.opponent,
+                away: (match.isHome !== false) ? match.opponent : team.team
+            });
+            opt.value = val;
+            opt.textContent = `${match.round}. kolo: vs ${match.opponent} (${match.result})`;
+            roundSelect.appendChild(opt);
+        }
+    });
+
+    if (roundSelect.children.length === 0) {
+        roundSelect.innerHTML = '<option>Žádné odehrané zápasy</option>';
+    }
+}
+
+window.insertMatchTable = async function () {
+    const rawVal = document.getElementById('mtRound').value;
+    if (!rawVal || !rawVal.startsWith('{')) return;
+
+    const params = JSON.parse(rawVal);
+
+    const btn = document.querySelector('#matchTableModal button:last-child');
+    const oldText = btn.textContent;
+    btn.textContent = 'Načítám...';
+    btn.disabled = true;
+
+    try {
+        const url = `/api/standings/match-details?url=${encodeURIComponent(params.url)}&round=${params.round}&home=${encodeURIComponent(params.home)}&away=${encodeURIComponent(params.away)}`;
+        const res = await fetch(url);
+        if (!res.ok) throw new Error('Nelze načíst detaily');
+
+        const data = await res.json();
+        if (!data.boards || data.boards.length === 0) throw new Error('Žádná data');
+
+        // Generate HTML with inline styles
+        let html = `
+            <div class="match-result-table" contenteditable="false" style="margin: 1.5rem 0; background: rgba(30, 41, 59, 0.5); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; overflow: hidden; font-family: 'Inter', sans-serif;">
+                <div style="background: rgba(212, 175, 55, 0.1); padding: 0.75rem 1rem; border-bottom: 1px solid rgba(255,255,255,0.1); display: flex; justify-content: space-between; align-items: center;">
+                    <div style="color: #d4af37; font-weight: 600; font-size: 0.95rem;">${params.round}. KOLO</div>
+                    <div style="color: #ccc; font-size: 0.85rem;">${params.home} vs ${params.away}</div>
+                </div>
+                <table style="width: 100%; border-collapse: collapse; font-size: 0.9rem; color: #e2e8f0;">
+                    <thead>
+                        <tr style="border-bottom: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.2);">
+                            <th style="padding: 0.6rem; text-align: left; width: 2rem; color: #94a3b8;">Š.</th>
+                            <th style="padding: 0.6rem; text-align: left;">Domácí</th>
+                            <th style="padding: 0.6rem; text-align: center; width: 3rem;">Výs.</th>
+                            <th style="padding: 0.6rem; text-align: right;">Hosté</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+        `;
+
+        data.boards.forEach((b, idx) => {
+            const formatPlayer = (name, elo) => {
+                if (!name || name === '-') return '-';
+                const eloStr = elo && elo !== '-' ? ` <span style="color: #64748b; font-size: 0.85em;">(${elo})</span>` : '';
+                return `<strong>${name}</strong>${eloStr}`;
+            };
+            const homeName = formatPlayer(b.white || b.homePlayer, b.whiteElo || b.homeElo);
+            const guestName = formatPlayer(b.black || b.guestPlayer, b.blackElo || b.guestElo);
+            const resultColor = b.result === '1-0' ? '#4ade80' : (b.result === '0-1' ? '#f87171' : '#fbbf24');
+
+            html += `
+                        <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                            <td style="padding: 0.6rem; color: #64748b; text-align: center;">${idx + 1}</td>
+                            <td style="padding: 0.6rem;">${homeName}</td>
+                            <td style="padding: 0.6rem; text-align: center; font-weight: 700; color: ${resultColor}; white-space: nowrap;">${b.result || '-'}</td>
+                            <td style="padding: 0.6rem; text-align: right;">${guestName}</td>
+                        </tr>
+            `;
+        });
+
+        html += `
+                    </tbody>
+                </table>
+            </div>
+            <p><br></p>`;
+
+        const editor = document.getElementById('articleContent');
+        if (editor) {
+            editor.focus();
+            document.execCommand('insertHTML', false, html);
+        }
+
+        if (typeof showToast === 'function') showToast('Tabulka vložena', 'success');
+        document.getElementById('matchTableModal').remove();
+
+    } catch (e) {
+        alert('Chyba: ' + e.message);
+        btn.textContent = oldText;
+        btn.disabled = false;
+    }
+}
