@@ -233,6 +233,9 @@ class DiagramViewer {
         // Setup click-to-move listener on the actual board element (created by chessboard.js)
         this.setupClickListener();
 
+        // Setup pixel-based drag threshold tracking (like Lichess Chessground)
+        this.setupDragThreshold();
+
         // 2. Render Annotations
         // Timeout to ensure board is rendered and we can get dimensions
         setTimeout(() => {
@@ -262,6 +265,41 @@ class DiagramViewer {
         };
 
         actualBoard.addEventListener('click', this._clickHandler);
+    }
+
+    // Lichess-style pixel-based drag threshold
+    setupDragThreshold() {
+        const actualBoard = this.boardEl.querySelector('.board-b72b1') || this.boardEl;
+
+        // Remove old listeners
+        if (this._dragThresholdStart) {
+            actualBoard.removeEventListener('mousedown', this._dragThresholdStart);
+            actualBoard.removeEventListener('touchstart', this._dragThresholdStart);
+        }
+        if (this._dragThresholdEnd) {
+            document.removeEventListener('mouseup', this._dragThresholdEnd);
+            document.removeEventListener('touchend', this._dragThresholdEnd);
+        }
+
+        // Track start position
+        this._dragThresholdStart = (e) => {
+            const pos = e.touches ? e.touches[0] : e;
+            this._dragStartPos = { x: pos.clientX, y: pos.clientY };
+        };
+
+        // Calculate distance on end
+        this._dragThresholdEnd = (e) => {
+            if (!this._dragStartPos) return;
+            const pos = e.changedTouches ? e.changedTouches[0] : e;
+            const dx = pos.clientX - this._dragStartPos.x;
+            const dy = pos.clientY - this._dragStartPos.y;
+            this._dragDistance = Math.sqrt(dx * dx + dy * dy);
+        };
+
+        actualBoard.addEventListener('mousedown', this._dragThresholdStart);
+        actualBoard.addEventListener('touchstart', this._dragThresholdStart, { passive: true });
+        document.addEventListener('mouseup', this._dragThresholdEnd);
+        document.addEventListener('touchend', this._dragThresholdEnd, { passive: true });
     }
 
     onDragStart(source, piece) {
@@ -333,6 +371,11 @@ class DiagramViewer {
         const dragDuration = Date.now() - (this._dragStartTime || 0);
         const isQuickDrag = dragDuration < 300; // Under 300ms is likely accidental
 
+        // LICHESS-STYLE: Pixel distance threshold (15px)
+        // If finger/mouse moved less than threshold, treat as click not drag
+        const DRAG_THRESHOLD_PX = 15;
+        const isMicroDrag = (this._dragDistance || 0) < DRAG_THRESHOLD_PX;
+
         if (source === target) {
             // Treat as click manually because chessboard.js might eat the click event
             // This ensures selection works even if click propagation is stopped
@@ -345,9 +388,12 @@ class DiagramViewer {
             return;
         }
 
-        // TOLERANCE FOR MICRO-DRAGS: If quick drag to adjacent square and not a valid move,
-        // treat as a click on source instead of losing selection
-        if (isQuickDrag && this._areAdjacent(source, target)) {
+        // TOLERANCE FOR MICRO-DRAGS: 
+        // If pixel distance is below threshold OR (quick drag to adjacent square),
+        // and it's not a valid move, treat as click on source
+        const shouldTreatAsClick = isMicroDrag || (isQuickDrag && this._areAdjacent(source, target));
+
+        if (shouldTreatAsClick) {
             // Check if this would be a valid move
             if (this.game) {
                 const testMove = this.game.move({
@@ -357,7 +403,7 @@ class DiagramViewer {
                 });
 
                 if (testMove === null) {
-                    // Invalid move after quick adjacent drag - treat as click on source
+                    // Invalid move after micro-drag - treat as click on source
                     this.handleSquareClick(source);
                     this._ignoreNextClick = true;
                     setTimeout(() => { this._ignoreNextClick = false; }, 200);
