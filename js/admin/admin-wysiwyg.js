@@ -847,20 +847,43 @@ function insertDiagramBookToEditor(diagrams, savedRange) {
         `<span class="book-dot${i === 0 ? ' active' : ''}" data-index="${i}"></span>`
     ).join('');
 
+    // Determine if first diagram is a puzzle
+    const hasSolution = diagrams[0].solution && Object.keys(diagrams[0].solution).length > 0;
+    const puzzleBadge = hasSolution
+        ? `<div class="diagram-type-badge" style="
+            position: absolute;
+            top: 4px;
+            right: -24px;
+            background: linear-gradient(135deg, rgba(30,30,30,0.95), rgba(50,50,50,0.9));
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(212, 175, 55, 0.4);
+            border-radius: 8px;
+            padding: 5px 10px;
+            font-size: 0.8rem;
+            color: #d4af37;
+            z-index: 20;
+            pointer-events: none;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.5), 0 0 20px rgba(212, 175, 55, 0.15);
+            text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+        "><i class="fa-solid fa-puzzle-piece"></i></div>`
+        : '';
+
     const html = `<p><br></p>
         <div class="diagram-book" id="${bookId}" data-diagrams='${diagramsJson}' data-current="0" style="
-            display: inline-block;
-            vertical-align: top;
-            background: linear-gradient(145deg, #1a1a2e 0%, #16213e 100%);
-            border-radius: 12px;
-            padding: 1.5rem;
-            box-shadow: 0 8px 32px rgba(0,0,0,0.4);
-            min-width: 280px;
-            max-width: 320px;
-            margin: 0.5rem;
+            float: right;
+            clear: right;
+            background: linear-gradient(145deg, rgba(30, 41, 59, 0.95), rgba(15, 23, 42, 0.98));
+            border-radius: 16px;
+            padding: 1.25rem;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.08);
+            max-width: 400px;
+            margin: 1rem 0 1rem 1.5rem;
+            overflow: visible;
         ">
             <!-- Board Container -->
-            <div class="book-board-container" style="position: relative; margin: 0 auto;">
+            <div class="book-board-container" style="position: relative; margin: 0 auto; overflow: visible;">
+                ${puzzleBadge}
                 ${firstBoard}
             </div>
             
@@ -894,19 +917,19 @@ function insertDiagramBookToEditor(diagrams, savedRange) {
             </div>
             
             <!-- To Move Indicator -->
-            <div class="book-to-move" style="font-size: 0.8rem; color: #888; margin-top: 0.5rem; text-align: center;">
+            <div class="book-to-move" style="font-size: 0.9rem; color: rgba(255,255,255,0.7); font-weight: 500; margin-top: 0.75rem; text-align: center;">
                 ${diagrams[0].toMove === 'w' ? 'Bílý na tahu' : 'Černý na tahu'}
             </div>
             
             <!-- Page Counter -->
-            <div class="book-counter" style="display: ${diagrams.length > 1 ? 'block' : 'none'}; font-size: 0.75rem; color: #555; margin-top: 0.25rem; text-align: center;">
+            <div class="book-counter" style="display: ${diagrams.length > 1 ? 'block' : 'none'}; font-size: 0.85rem; color: rgba(255,255,255,0.5); margin-top: 0.25rem; text-align: center;">
                 1 / ${diagrams.length}
             </div>
             
             <!-- Editable Caption -->
             <div class="book-caption" contenteditable="true" style="
                 font-size: 0.85rem;
-                color: #b0b0b0;
+                color: rgba(255,255,255,0.6);
                 margin-top: 0.75rem;
                 padding: 0.5rem;
                 background: rgba(0,0,0,0.2);
