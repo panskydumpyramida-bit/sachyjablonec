@@ -1316,3 +1316,14 @@ footer {
 .board-b72b1[class*="dragging-"] .square-55d63.highlight1-32417 img.piece-417db {
     visibility: hidden !important;
 }
+
+/* Match Table Hover Highlight */
+.match-result-table table tbody tr {
+    transition: background-color 0.2s ease, transform 0.2s ease;
+}
+
+.match-result-table table tbody tr:hover {
+    background-color: rgba(212, 175, 55, 0.15) !important;
+    transform: translateX(4px);
+    cursor: default;
+}
