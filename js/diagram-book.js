@@ -318,14 +318,19 @@
                 backdrop-filter: blur(12px) !important;
                 border: 1px solid rgba(212, 175, 55, 0.4) !important;
                 border-radius: 8px !important;
-                padding: 5px 10px !important;
-                font-size: 0.8rem !important;
+                width: 32px !important;
+                height: 32px !important;
+                padding: 0 !important;
+                display: flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+                font-size: 0.9rem !important; /* Slightly larger icon */
                 color: #d4af37 !important;
                 z-index: 100 !important;
                 pointer-events: none !important;
                 box-shadow: 0 4px 12px rgba(0,0,0,0.5), 0 0 20px rgba(212, 175, 55, 0.15) !important;
                 text-shadow: 0 1px 2px rgba(0,0,0,0.3) !important;
-                letter-spacing: 0.02em !important;
+                letter-spacing: normal !important;
             }
             /* Allow badge to overflow - multiple levels needed */
             .diagram-book .diagram-board-wrapper,
