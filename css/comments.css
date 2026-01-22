@@ -378,7 +378,10 @@
 @media (max-width: 768px) {
     .comments-wrapper {
         padding: 1rem;
-        margin: 2rem 1rem 0;
+        margin: 2rem 0 0;
+        border-radius: 0;
+        border-left: none;
+        border-right: none;
     }
 
     .comment {
@@ -397,6 +400,7 @@
         flex-wrap: wrap;
     }
 }
+
 /* Soft Deleted Comment */
 .comment-deleted {
     opacity: 0.8;

@@ -360,11 +360,13 @@
             /* Mobile: full-width diagram for easier interaction */
             @media (max-width: 600px) {
                 .diagram-book {
-                    max-width: 100% !important;
-                    width: 100% !important;
-                    border-radius: 12px;
-                    padding: 1rem;
-                    margin: 1rem 0;
+                    max-width: none !important;
+                    width: calc(100% + 2rem) !important; /* Compensate for container padding (assumed 1rem) */
+                    margin: 1.5rem -1rem !important; /* Pull out of container padding */
+                    border-radius: 0 !important;
+                    border-left: none !important;
+                    border-right: none !important;
+                    padding: 1.5rem 0 !important;
                     float: none !important;
                     clear: none !important;
                 }
