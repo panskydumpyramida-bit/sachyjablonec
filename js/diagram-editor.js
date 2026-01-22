@@ -11,7 +11,8 @@ let currentDiagramId = null;
 let currentDiagramName = "";
 let currentAnnotations = {
     arrows: [], // {start: 'e2', end: 'e4', color: 'green'}
-    squares: [] // {square: 'e4', color: 'green'}
+    squares: [], // {square: 'e4', color: 'green'}
+    badges: [] // {square: 'e4', type: '!'}
 };
 
 // Solver State
@@ -155,7 +156,7 @@ function setDiagramTool(tool) {
  * Clear all annotations
  */
 function clearDiagram() {
-    currentAnnotations = { arrows: [], squares: [] };
+    currentAnnotations = { arrows: [], squares: [], badges: [] };
     solverState.recordedMoves = {};
     updateSolutionList();
     renderAnnotations();
@@ -262,6 +263,10 @@ function handleInputEnd(e) {
                 if (startSquare !== endSquare) {
                     addArrow(startSquare, endSquare, color);
                 }
+            } else if (type === 'badge') {
+                if (startSquare === endSquare) {
+                    toggleBadge(startSquare, currentTool.substring(6)); // remove 'badge-' prefix
+                }
             }
         }
     }
@@ -332,6 +337,87 @@ function renderAnnotations() {
             group.style.cursor = currentTool === 'eraser' ? 'pointer' : 'default';
         }
     });
+
+    // 3. Render Badges
+    if (currentAnnotations.badges) {
+        currentAnnotations.badges.forEach(bg => {
+            const coords = getSquareCenter(bg.square);
+            if (!coords) return;
+
+            const squareSize = document.getElementById('diagramBoardWrapper').clientWidth / 8;
+
+            const group = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+            // Position: Top Right corner
+            const cx = coords.x + (squareSize / 2) - (squareSize * 0.2);
+            const cy = coords.y - (squareSize / 2) + (squareSize * 0.2);
+            const r = squareSize * 0.25;
+
+            // Circle background
+            const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+            circle.setAttribute('cx', cx);
+            circle.setAttribute('cy', cy);
+            circle.setAttribute('r', r);
+            circle.setAttribute('fill', BADGE_COLORS[bg.type] || '#888');
+            circle.setAttribute('stroke', '#fff');
+            circle.setAttribute('stroke-width', '2');
+
+            // Text
+            const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+            text.setAttribute('x', cx);
+            text.setAttribute('y', cy);
+            text.setAttribute('dy', '.35em');
+            text.setAttribute('text-anchor', 'middle');
+            text.setAttribute('font-family', 'Arial, sans-serif');
+            text.setAttribute('font-weight', 'bold');
+            text.setAttribute('font-size', r * 1.6); // Scale with radius
+            text.setAttribute('fill', '#fff');
+            text.textContent = bg.type;
+
+            group.appendChild(circle);
+            group.appendChild(text);
+
+            // Interaction
+            group.style.cursor = currentTool === 'eraser' ? 'pointer' : 'default';
+            group.style.pointerEvents = 'all'; // Allow clicking
+            group.addEventListener('click', (e) => {
+                if (currentTool === 'eraser') {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    toggleBadge(bg.square, bg.type); // Toggle removes if exists
+                }
+            });
+
+            overlay.appendChild(group);
+        });
+    }
+}
+
+// Badge Colors
+const BADGE_COLORS = {
+    '!': '#22c55e',   // Good
+    '!!': '#15803d',  // Brilliant
+    '?': '#eab308',   // Mistake
+    '??': '#ef4444',  // Blunder
+    '!?': '#3b82f6',  // Interesting
+    '?!': '#a855f7'   // Dubious
+};
+
+function toggleBadge(square, type) {
+    if (!currentAnnotations.badges) currentAnnotations.badges = [];
+
+    const index = currentAnnotations.badges.findIndex(b => b.square === square);
+
+    if (index >= 0) {
+        // If same type, remove. If diff type, replace.
+        if (currentAnnotations.badges[index].type === type) {
+            currentAnnotations.badges.splice(index, 1);
+        } else {
+            currentAnnotations.badges[index].type = type;
+        }
+    } else {
+        currentAnnotations.badges.push({ square, type });
+    }
+    renderAnnotations();
 }
 
 function renderPreview(start, end) {
