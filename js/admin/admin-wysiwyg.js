@@ -517,17 +517,20 @@ function insertIntroBlock() {
 // ================================
 
 async function insertDiagram() {
-    // Save text selection before opening modal (because modal focus will clear it)
+    // Save text selection before opening modal
     const selection = window.getSelection();
     let savedRange = null;
     if (selection.rangeCount > 0) {
         savedRange = selection.getRangeAt(0).cloneRange();
     }
 
+    await window.openDiagramSelector(savedRange);
+}
+
+window.openDiagramSelector = async function (savedRange, initialSelection = []) {
     // Fetch available diagrams from API
     let diagrams = [];
     try {
-        // Try multiple sources for auth token (different admin modules use different keys)
         const token = window.authToken ||
             localStorage.getItem('authToken') ||
             localStorage.getItem('auth_token') ||
@@ -560,10 +563,10 @@ async function insertDiagram() {
     }
 
     // Show Selector Modal
-    showDiagramSelectorModal(diagrams, savedRange);
+    showDiagramSelectorModal(diagrams, savedRange, initialSelection);
 }
 
-function showDiagramSelectorModal(diagrams, savedRange) {
+function showDiagramSelectorModal(diagrams, savedRange, initialSelection = []) {
     if (document.getElementById('diagramSelectorModal')) return;
 
     // Inject Styles
@@ -724,8 +727,16 @@ function showDiagramSelectorModal(diagrams, savedRange) {
     const selectionList = modalEl.querySelector('#selectionList');
     const insertBookBtn = modalEl.querySelector('#insertBookBtn');
 
-    let selectedDiagrams = []; // Array of objects, preserving order
-    let isMultiSelect = false;
+    let selectedDiagrams = [...(initialSelection || [])]; // Array of objects, preserving order
+    let isMultiSelect = selectedDiagrams.length > 0;
+
+    // Init UI state based on initial selection
+    if (isMultiSelect) {
+        multiSelectCheckbox.checked = true;
+        selectionPanel.style.display = 'flex';
+        // Wait for next tick to ensure selectionList is populated? 
+        // No, we call renderSelectionList immediately below.
+    }
     let previewViewer = null; // DiagramViewer instance
 
     const updatePreview = (d) => {
@@ -905,6 +916,11 @@ function showDiagramSelectorModal(diagrams, savedRange) {
         }
     };
 
+    // Init
+    if (selectedDiagrams.length > 0) {
+        renderSelectionList();
+        updateSelectionUI();
+    }
     renderList();
     searchInput.oninput = (e) => renderList(e.target.value);
 
@@ -918,9 +934,19 @@ function showDiagramSelectorModal(diagrams, savedRange) {
 
 function insertDiagramBookToEditor(diagrams, savedRange) {
     if (savedRange) {
-        const sel = window.getSelection();
-        sel.removeAllRanges();
-        sel.addRange(savedRange);
+        if (savedRange instanceof Element) {
+            // If target is an element (editing mode), select it to replace
+            const range = document.createRange();
+            range.selectNode(savedRange);
+            const sel = window.getSelection();
+            sel.removeAllRanges();
+            sel.addRange(range);
+        } else {
+            // Restore saved range
+            const sel = window.getSelection();
+            sel.removeAllRanges();
+            sel.addRange(savedRange);
+        }
     } else {
         document.getElementById('articleContent')?.focus();
     }
@@ -2295,9 +2321,13 @@ function initDiagramToolbar() {
 function openDiagramBookEditor(bookElement) {
     const diagrams = JSON.parse(bookElement.dataset.diagrams || '[]');
 
-    // Show the diagram selector modal in multi-select mode with current diagrams pre-selected
-    showDiagramBookEditModal(bookElement, diagrams);
+    // Show the uniform diagram selector modal in multi-select mode with current diagrams pre-selected
+    // Pass the bookElement as the target to replace
+    window.openDiagramSelector(bookElement, diagrams);
 }
+
+// Remove old showDiagramBookEditModal function if matched
+/* Deprecated old modal */
 
 // Modal to edit diagram book (add/remove/reorder diagrams)
 async function showDiagramBookEditModal(bookElement, currentDiagrams) {

@@ -5,7 +5,7 @@
 - **Nápověda editoru:** Nový modal s přehledem všech zkratek a odkazem na manuál (ikona klávesnice v toolbaru).
 - **Tabulky zápasů:** Nová funkce pro vkládání tabulky výsledků ze soutěží (tlačítko 🏆). Obsahuje možnost mazání a interaktivní zvýraznění řádků.
 - **Editor Diagramů:** Přidána možnost vkládat značky tahů (!, ?, !? atd.) přímo do diagramu jako grafické anotace.
-- **Knihy diagramů:** Nový panel pro **řazení diagramů** v editoru (drag & drop fronta).
+- **Knihy diagramů:** Nový panel pro **řazení diagramů** v editoru (drag & drop fronta). Podpora pro řazení i při **editaci** existující knihy.
 - **Náhled:** Živý náhled diagramu v editoru včetně anotací a badges.
 - **Popisky:** Pod diagramem v knize se nyní zobrazuje popisek (description) nebo název diagramu.
 - **Admin Manuál:** Vytvořena kompletní dokumentace pro administrátory (`/docs/ADMIN_MANUAL.md`) přístupná z nápovědy.
