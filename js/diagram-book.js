@@ -312,8 +312,8 @@
             /* Type badge styling - elegant puzzle indicator */
             .diagram-book .diagram-type-badge {
                 position: absolute !important;
-                top: 6px !important;
-                right: -12px !important;
+                top: 4px !important;
+                right: -24px !important;
                 background: linear-gradient(135deg, rgba(30,30,30,0.95), rgba(50,50,50,0.9)) !important;
                 backdrop-filter: blur(12px) !important;
                 border: 1px solid rgba(212, 175, 55, 0.4) !important;
