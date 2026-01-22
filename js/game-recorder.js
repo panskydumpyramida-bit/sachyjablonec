@@ -791,6 +791,7 @@ async function loadDiagramById(id) {
                     // But we can mutate contents
                     if (d.annotations.arrows) d.annotations.arrows.forEach(a => currentAnnotations.arrows.push(a));
                     if (d.annotations.squares) d.annotations.squares.forEach(s => currentAnnotations.squares.push(s));
+                    if (d.annotations.badges) d.annotations.badges.forEach(b => currentAnnotations.badges.push(b));
                     renderAnnotations();
                 }
 

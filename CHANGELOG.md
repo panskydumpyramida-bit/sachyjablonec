@@ -4,6 +4,7 @@
 - **Klávesové zkratky:** Přidána podpora pro klávesové zkratky v admin editoru (`N` - nový článek, `D` - nový diagram, `?` - nápověda, `Ctrl+B/I/U` formátování).
 - **Nápověda editoru:** Nový modal s přehledem všech zkratek a odkazem na manuál (ikona klávesnice v toolbaru).
 - **Tabulky zápasů:** Nová funkce pro vkládání tabulky výsledků ze soutěží (tlačítko 🏆). Obsahuje možnost mazání a interaktivní zvýraznění řádků.
+- **Editor Diagramů:** Přidána možnost vkládat značky tahů (!, ?, !? atd.) přímo do diagramu jako grafické anotace.
 - **Admin Manuál:** Vytvořena kompletní dokumentace pro administrátory (`/docs/ADMIN_MANUAL.md`) přístupná z nápovědy.
 
 ### Diagramy & Editor 🧩

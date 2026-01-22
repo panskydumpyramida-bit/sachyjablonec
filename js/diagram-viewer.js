@@ -828,6 +828,52 @@ class DiagramViewer {
                 }
             });
         }
+
+        // Render Badges
+        if (annotations.badges) {
+            const BADGE_COLORS = {
+                '!': '#22c55e',   // Good
+                '!!': '#15803d',  // Brilliant
+                '?': '#eab308',   // Mistake
+                '??': '#ef4444',  // Blunder
+                '!?': '#3b82f6',  // Interesting
+                '?!': '#a855f7'   // Dubious
+            };
+
+            annotations.badges.forEach(b => {
+                const c = getSqCenter(b.square);
+                if (c) {
+                    const group = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+
+                    const cx = c.x + (c.width / 2) - (c.width * 0.2);
+                    const cy = c.y - (c.width / 2) + (c.width * 0.2);
+                    const r = c.width * 0.25;
+
+                    // Circle
+                    const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                    circle.setAttribute('cx', cx); circle.setAttribute('cy', cy);
+                    circle.setAttribute('r', r);
+                    circle.setAttribute('fill', BADGE_COLORS[b.type] || '#888');
+                    circle.setAttribute('stroke', '#fff');
+                    circle.setAttribute('stroke-width', '1.5');
+
+                    // Text
+                    const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                    text.setAttribute('x', cx); text.setAttribute('y', cy);
+                    text.setAttribute('dy', '.35em');
+                    text.setAttribute('text-anchor', 'middle');
+                    text.setAttribute('font-family', 'Arial, sans-serif');
+                    text.setAttribute('font-weight', 'bold');
+                    text.setAttribute('font-size', r * 1.5);
+                    text.setAttribute('fill', '#fff');
+                    text.textContent = b.type;
+
+                    group.appendChild(circle);
+                    group.appendChild(text);
+                    this.overlayEl.appendChild(group);
+                }
+            });
+        }
     }
 
     ensureMarkers() {
