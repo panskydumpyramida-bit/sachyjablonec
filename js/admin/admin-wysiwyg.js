@@ -675,6 +675,7 @@ function showDiagramSelectorModal(diagrams, savedRange) {
                 </button>
             </h3>
             
+            
             <div style="display: flex; gap: 1rem; margin-bottom: 1rem; align-items: center;">
                 <input type="text" class="diagram-search" id="diagramSearch" placeholder="Hledat..." style="flex: 1;" autofocus>
                 <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; font-size: 0.85rem; color: #aaa; white-space: nowrap;">
@@ -683,17 +684,32 @@ function showDiagramSelectorModal(diagrams, savedRange) {
                 </label>
             </div>
             
-            <div class="diagram-grid" id="diagramGrid"></div>
-            
-            <div style="margin-top: 1rem; display: flex; justify-content: space-between; align-items: center;">
-                <span style="font-size: 0.8rem; color: #888;">
-                    Celkem: <span id="diagramCount">${diagrams.length}</span>
-                </span>
-                <div id="multiSelectActions" style="display: none; gap: 0.5rem;">
-                    <span id="selectedCount" style="font-size: 0.85rem; color: #d4af37; margin-right: 1rem;">0 vybráno</span>
-                    <button id="insertBookBtn" class="btn-primary" style="padding: 0.5rem 1rem;">
-                        <i class="fa-solid fa-book"></i> Vložit jako knihu
-                    </button>
+            <div style="display: flex; gap: 1rem; height: 50vh;">
+                <!-- Grid Area -->
+                <div style="flex: 2; overflow-y: auto; padding-right: 0.5rem; display: flex; flex-direction: column;">
+                    <div class="diagram-grid" id="diagramGrid" style="flex: 1;"></div>
+                    <div style="margin-top: 1rem;">
+                         <span style="font-size: 0.8rem; color: #888;">Nalezeno: <span id="diagramCount">0</span></span>
+                    </div>
+                </div>
+
+                <!-- Selection Basket -->
+                <div id="selectionPanel" style="flex: 1; display: none; flex-direction: column; border-left: 1px solid rgba(255,255,255,0.1); padding-left: 1rem; min-width: 250px;">
+                    <!-- Preview Board -->
+                    <div id="diagramPreviewContainer" style="width: 220px; height: 220px; margin: 0 auto 1rem auto; background: rgba(0,0,0,0.3); border-radius: 4px; display: flex; align-items: center; justify-content: center; position: relative; border: 1px solid rgba(255,255,255,0.1);">
+                        <p style="color: #666; font-size: 0.8rem;">Náhled</p>
+                        <div id="previewBoard" style="width: 100%; height: 100%; position: absolute; inset: 0;"></div>
+                    </div>
+
+                    <h4 style="margin: 0 0 0.5rem 0; font-size: 0.9rem; color: #d4af37;">Vybrané diagramy (pořadí)</h4>
+                    <div id="selectionList" style="flex: 1; overflow-y: auto; background: rgba(0,0,0,0.2); border-radius: 6px; padding: 0.5rem;">
+                        <p style="text-align:center; color:#666; font-size:0.8rem; margin-top:2rem;">Žádné vybrané diagramy</p>
+                    </div>
+                    <div style="margin-top: 0.5rem; text-align: right;">
+                        <button id="insertBookBtn" class="btn-primary" style="padding: 0.5rem 1rem; width: 100%;" disabled>
+                            <i class="fa-solid fa-book"></i> Vložit knihu
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -704,18 +720,96 @@ function showDiagramSelectorModal(diagrams, savedRange) {
     const searchInput = modalEl.querySelector('#diagramSearch');
     const countSpan = modalEl.querySelector('#diagramCount');
     const multiSelectCheckbox = modalEl.querySelector('#multiSelectMode');
-    const multiSelectActions = modalEl.querySelector('#multiSelectActions');
-    const selectedCountSpan = modalEl.querySelector('#selectedCount');
+    const selectionPanel = modalEl.querySelector('#selectionPanel');
+    const selectionList = modalEl.querySelector('#selectionList');
     const insertBookBtn = modalEl.querySelector('#insertBookBtn');
 
-    let selectedDiagrams = new Map(); // id -> diagram object
+    let selectedDiagrams = []; // Array of objects, preserving order
     let isMultiSelect = false;
+    let previewViewer = null; // DiagramViewer instance
 
-    const updateSelectionUI = () => {
-        selectedCountSpan.textContent = `${selectedDiagrams.size} vybráno`;
-        multiSelectActions.style.display = isMultiSelect ? 'flex' : 'none';
-        insertBookBtn.disabled = selectedDiagrams.size < 2;
-        insertBookBtn.style.opacity = selectedDiagrams.size < 2 ? '0.5' : '1';
+    const updatePreview = (d) => {
+        const previewContainer = modalEl.querySelector('#previewBoard');
+        if (!previewContainer) return;
+
+        // If DiagramViewer is available (from diagram-viewer.js)
+        if (typeof DiagramViewer !== 'undefined') {
+            if (!previewViewer) {
+                // DiagramViewer expects a container ID. We must ensure it's unique but stable within modal lifespan.
+                if (!previewContainer.id) previewContainer.id = 'preview_board_' + Date.now();
+                previewViewer = new DiagramViewer(previewContainer.id);
+            }
+            previewViewer.load(d);
+        } else {
+            // Fallback if DiagramViewer script missing
+            previewContainer.innerHTML = generateMiniBoard(d.fen, 25);
+        }
+    };
+
+    const renderSelectionList = () => {
+        if (selectedDiagrams.length === 0) {
+            selectionList.innerHTML = '<p style="text-align:center; color:#666; font-size:0.8rem; margin-top:2rem;">Žádné vybrané diagramy</p>';
+            insertBookBtn.disabled = true;
+            insertBookBtn.style.opacity = '0.5';
+            return;
+        }
+
+        selectionList.innerHTML = '';
+        insertBookBtn.disabled = selectedDiagrams.length < 1; // Allow single item book too? Usually >=2 for book.
+        insertBookBtn.style.opacity = '1';
+
+        selectedDiagrams.forEach((d, index) => {
+            const row = document.createElement('div');
+            row.style.cssText = 'display: flex; align-items: center; gap: 0.5rem; padding: 0.4rem; background: rgba(255,255,255,0.05); margin-bottom: 4px; border-radius: 4px; font-size: 0.85rem;';
+
+            const name = d.name || d.title || `Diagram #${d.id}`;
+
+            row.innerHTML = `
+                <span style="font-weight: bold; color: #888; width: 20px;">${index + 1}.</span>
+                <span style="flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${name}</span>
+                <div style="display: flex; gap: 2px;">
+                    ${index > 0 ? `<button class="move-up-btn" style="background:none; border:none; color:#aaa; cursor:pointer;" title="Posunout nahoru"><i class="fa-solid fa-arrow-up"></i></button>` : '<span style="width:14px;"></span>'}
+                    ${index < selectedDiagrams.length - 1 ? `<button class="move-down-btn" style="background:none; border:none; color:#aaa; cursor:pointer;" title="Posunout dolů"><i class="fa-solid fa-arrow-down"></i></button>` : '<span style="width:14px;"></span>'}
+                    <button class="remove-btn" style="background:none; border:none; color:#ef4444; cursor:pointer; margin-left:4px;" title="Odebrat"><i class="fa-solid fa-times"></i></button>
+                </div>
+            `;
+
+            // Handlers
+            const upBtn = row.querySelector('.move-up-btn');
+            if (upBtn) upBtn.onclick = (e) => { e.stopPropagation(); moveItem(index, -1); };
+
+            const downBtn = row.querySelector('.move-down-btn');
+            if (downBtn) downBtn.onclick = (e) => { e.stopPropagation(); moveItem(index, 1); };
+
+            const removeBtn = row.querySelector('.remove-btn');
+            removeBtn.onclick = (e) => { e.stopPropagation(); toggleDiagramSelection(d); };
+
+            // Preview trigger
+            row.onmouseenter = () => updatePreview(d);
+
+            selectionList.appendChild(row);
+        });
+    };
+
+    const moveItem = (index, direction) => {
+        const newIndex = index + direction;
+        if (newIndex < 0 || newIndex >= selectedDiagrams.length) return;
+
+        const item = selectedDiagrams[index];
+        selectedDiagrams.splice(index, 1);
+        selectedDiagrams.splice(newIndex, 0, item);
+        renderSelectionList();
+    };
+
+    const toggleDiagramSelection = (d) => {
+        const index = selectedDiagrams.findIndex(item => item.id === d.id);
+        if (index >= 0) {
+            selectedDiagrams.splice(index, 1);
+        } else {
+            selectedDiagrams.push(d);
+        }
+        renderSelectionList();
+        renderList(searchInput.value); // Update grid visual
     };
 
     const renderList = (filter = '') => {
@@ -737,47 +831,47 @@ function showDiagramSelectorModal(diagrams, savedRange) {
 
         filtered.forEach(d => {
             const el = document.createElement('div');
+            const isSelected = selectedDiagrams.some(item => item.id === d.id);
+
             el.className = 'diagram-item';
             el.dataset.id = d.id;
 
-            if (selectedDiagrams.has(d.id)) {
+            if (isSelected) {
                 el.style.border = '2px solid #d4af37';
                 el.style.background = 'rgba(212, 175, 55, 0.15)';
             }
 
             const miniPreview = generateMiniBoard(d.fen, 18);
             const checkbox = isMultiSelect
-                ? `<input type="checkbox" class="diagram-checkbox" ${selectedDiagrams.has(d.id) ? 'checked' : ''} style="position: absolute; top: 8px; right: 8px; width: 18px; height: 18px; cursor: pointer;">`
+                ? `<input type="checkbox" class="diagram-checkbox" ${isSelected ? 'checked' : ''} style="position: absolute; top: 8px; right: 8px; width: 18px; height: 18px; cursor: pointer;">`
                 : '';
 
-            // Determine if this is a puzzle (has solution) or just a diagram
             const hasSolution = d.solution && Object.keys(d.solution).length > 0;
             const typeBadge = hasSolution
                 ? '<span style="display:inline-block;background:#22c55e;color:#000;font-size:0.65rem;padding:2px 6px;border-radius:4px;margin-left:4px;">Hádanka</span>'
                 : '<span style="display:inline-block;background:#3b82f6;color:#fff;font-size:0.65rem;padding:2px 6px;border-radius:4px;margin-left:4px;">Diagram</span>';
+
+            // Check for annotations badge
+            const hasAnnotations = (d.annotations && (d.annotations.arrows?.length > 0 || d.annotations.squares?.length > 0 || d.annotations.badges?.length > 0));
+            const annotBadge = hasAnnotations ? '<span title="Obsahuje grafické značky" style="margin-left:4px; color:#fbbf24;"><i class="fa-solid fa-pen-nib"></i></span>' : '';
 
             const displayName = d.name || d.title || `Diagram #${d.id}`;
 
             el.innerHTML = `
                 ${checkbox}
                 ${miniPreview}
-                <div class="diagram-name" title="${displayName}">${displayName} ${typeBadge}</div>
+                <div class="diagram-name" title="${displayName}">${displayName} ${typeBadge} ${annotBadge}</div>
                 <div class="diagram-meta">${d.toMove === 'w' ? '⬜ Bílý' : '⬛ Černý'}</div>
             `;
             el.style.position = 'relative';
 
+            // Preview trigger
+            el.onmouseenter = () => updatePreview(d);
+
             el.onclick = (e) => {
                 if (isMultiSelect) {
-                    // Toggle selection
-                    if (selectedDiagrams.has(d.id)) {
-                        selectedDiagrams.delete(d.id);
-                    } else {
-                        selectedDiagrams.set(d.id, d);
-                    }
-                    updateSelectionUI();
-                    renderList(searchInput.value); // Re-render to update visual
+                    toggleDiagramSelection(d);
                 } else {
-                    // Single click insert
                     insertDiagramToEditor(d, savedRange);
                     modalEl.remove();
                 }
@@ -789,18 +883,24 @@ function showDiagramSelectorModal(diagrams, savedRange) {
     // Multi-select mode toggle
     multiSelectCheckbox.onchange = () => {
         isMultiSelect = multiSelectCheckbox.checked;
+        selectionPanel.style.display = isMultiSelect ? 'flex' : 'none';
+
+        // Don't auto-clear on toggle off? Maybe useful to keep draft.
+        // But original logic cleared it.
         if (!isMultiSelect) {
-            selectedDiagrams.clear();
+            selectedDiagrams = [];
+            renderSelectionList();
         }
-        updateSelectionUI();
+
+        // Hide/Show selection basket logic done via display prop above
+        // Resize Grid logic? Grid is flex 2, panel flex 1. Flexbox handles it.
         renderList(searchInput.value);
     };
 
     // Insert as book button
     insertBookBtn.onclick = () => {
-        if (selectedDiagrams.size >= 2) {
-            const diagramsArray = Array.from(selectedDiagrams.values());
-            insertDiagramBookToEditor(diagramsArray, savedRange);
+        if (selectedDiagrams.length >= 1) {
+            insertDiagramBookToEditor(selectedDiagrams, savedRange); // Pass sorted array
             modalEl.remove();
         }
     };
@@ -898,12 +998,12 @@ function insertDiagramBookToEditor(diagrams, savedRange) {
                     border-radius: 50%;
                     cursor: pointer;
                     transition: all 0.2s;
-                ">◀</button>
-                
-                <div class="book-dots" style="display: flex; gap: 6px;">
-                    ${dots}
+                "><i class="fa-solid fa-chevron-left"></i></button>
+                <div class="book-meta-row">
+                    <span class="book-to-move">${diagrams[0].toMove === 'w' ? 'Bílý na tahu' : 'Černý na tahu'}</span>
+                    <span style="opacity:0.3">|</span>
+                    <span class="book-counter">1 / ${diagrams.length}</span>
                 </div>
-                
                 <button class="book-next" onclick="bookNav('${bookId}', 1)" style="
                     background: rgba(255,255,255,0.1);
                     border: none;
@@ -913,16 +1013,6 @@ function insertDiagramBookToEditor(diagrams, savedRange) {
                     border-radius: 50%;
                     cursor: pointer;
                     transition: all 0.2s;
-                ">▶</button>
-            </div>
-            
-            <!-- To Move Indicator -->
-            <div class="book-to-move" style="font-size: 0.9rem; color: rgba(255,255,255,0.7); font-weight: 500; margin-top: 0.75rem; text-align: center;">
-                ${diagrams[0].toMove === 'w' ? 'Bílý na tahu' : 'Černý na tahu'}
-            </div>
-            
-            <!-- Page Counter -->
-            <div class="book-counter" style="display: ${diagrams.length > 1 ? 'block' : 'none'}; font-size: 0.85rem; color: rgba(255,255,255,0.5); margin-top: 0.25rem; text-align: center;">
                 1 / ${diagrams.length}
             </div>
             
@@ -961,10 +1051,13 @@ window.bookNav = function (bookId, direction) {
     const d = diagrams[current];
     const boardHtml = window.generateMiniBoardGlobal ? window.generateMiniBoardGlobal(d.fen, 30) : '';
 
-
     book.querySelector('.book-board-container').innerHTML = boardHtml;
     book.querySelector('.book-to-move').textContent = d.toMove === 'w' ? 'Bílý na tahu' : 'Černý na tahu';
     book.querySelector('.book-counter').textContent = `${current + 1} / ${diagrams.length}`;
+
+    // Update description if present
+    const descriptionEl = book.querySelector('.book-description');
+    if (descriptionEl) descriptionEl.textContent = d.description || d.name || '';
 
     // Update dots
     book.querySelectorAll('.book-dot').forEach((dot, i) => {

@@ -129,6 +129,9 @@
         if (toMoveEl) toMoveEl.textContent = getToMoveText(d);
         if (counterEl) counterEl.textContent = `${current + 1} / ${diagrams.length}`;
 
+        const descriptionEl = book.querySelector('.book-description');
+        if (descriptionEl) descriptionEl.textContent = d.description || d.name || '';
+
 
 
         // Update dots
