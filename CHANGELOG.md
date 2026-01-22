@@ -1,24 +1,25 @@
-# Thu Jan 22 2026
+# 📋 Changelog
 
-### Administrace & UX 🛠️
-- **Klávesové zkratky:** Přidána podpora pro klávesové zkratky v admin editoru (`N` - nový článek, `D` - nový diagram, `?` - nápověda, `Ctrl+B/I/U` formátování).
-- **Nápověda editoru:** Nový modal s přehledem všech zkratek a odkazem na manuál (ikona klávesnice v toolbaru).
-- **Tabulky zápasů:** Nová funkce pro vkládání tabulky výsledků ze soutěží (tlačítko 🏆). Obsahuje možnost mazání a interaktivní zvýraznění řádků.
-- **Editor Diagramů:** Přidána možnost vkládat značky tahů (!, ?, !? atd.) přímo do diagramu jako grafické anotace.
-- **Knihy diagramů:** Nový panel pro **řazení diagramů**. Podpora pro řazení i při editaci.
-- **Popisky:** Možnost zadat **vlastní popisek**, který se zobrazuje přímo pod diagramem v knize.
-- **Zobrazení:** V editoru (při listování knihou) se nyní zobrazují i **grafické šipky a anotace**.
-- **Opravy:** Odstraněny tooltipy, opravena indikace tahu, skripty na webu, problém s vnořováním knih a chybějící navigační šipka.
-- **Admin Manuál:** Vytvořena kompletní dokumentace pro administrátory (`/docs/ADMIN_MANUAL.md`) přístupná z nápovědy.
+## 22. ledna 2026 (v24)
 
-### Diagramy & Editor 🧩
-- **Vylepšená kniha diagramů:**
-  - **Plovoucí pozice:** Přidána tlačítka pro zarovnání knihy (vlevo/střed/vpravo) s obtékáním textu.
-  - **Rychlá editace:** Dvojklikem na knihu se otevře modal pro správu diagramů (přidání/odebrání/řazení).
-  - **Vizuální styling:** Odznak hádanky (puzzle badge) nyní vyčnívá z šachovnice pro lepší viditelnost (z-index fix).
-  - **Konzistence:** WYSIWYG editor nyní přesně odpovídá vzhledu na webu (šířka 400px, badge, barvy).
-- **Oprava interakce:** Kliknutí na diagram v editoru již neotevírá editor obrázků, ale zobrazí toolbar diagramu.
-- **Vylepšená tolerance tahu:** Implementována "Lichess-style" detekce (pixel threshold + time check), která zabraňuje nechtěnému odznačení figurky při mikro-posunu myší.
+### 🧩 Knihy diagramů – Velká aktualizace
+- **Vlastní popisky:** U každého diagramu lze zadat text, který se zobrazuje pod šachovnicí
+- **Grafické anotace:** Šipky a značky tahů (!, ?) se nyní zobrazují i v editoru
+- **Panel řazení:** Vybraný seznam diagramů s možností měnit pořadí (↑↓)
+- **Editace dvojklikem:** Dvojklik na knihu otevře modal pro správu obsahu
+
+### 🛠️ Administrace & Editor
+- **Klávesové zkratky:** `N` nový článek, `D` diagram, `?` nápověda
+- **Tabulky zápasů:** Tlačítko 🏆 pro vkládání výsledkových tabulek
+- **Admin Manuál:** Dokumentace v `/docs/ADMIN_MANUAL.md`
+- **Plovoucí pozice:** Tlačítka pro zarovnání knihy (vlevo/střed/vpravo)
+
+### 🐛 Opravy
+- Chybějící navigační šipka (→) u knihy diagramů
+- Indikace "Bílý/Černý na tahu" (nyní z FEN)
+- Chybějící skripty na frontend (`article.html`, `index.html`)
+- Bug "frame-in-frame" při opakované editaci knihy
+- Odstraněny rušivé tooltipy
 
 # Sat Jan 17 2026
 

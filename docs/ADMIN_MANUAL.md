@@ -169,49 +169,55 @@ Příklad: Bílý dá mat ve 2 tazích
 
 ### Co je kniha?
 
-Kniha = více diagramů v jednom bloku s navigačními šipkami
+Kniha = více diagramů v jednom bloku s navigačními šipkami. Ideální pro:
+- Sérii pozic z jedné partie
+- Hádanky s variantami
+- Výukové materiály (krok za krokem)
 
 ```
      ┌─────────────────┐
-     │   ♟ Šachovnice  │
+     │   ♟ Šachovnice  │  ← zobrazuje i šipky a anotace
      │                 │
      │  ◀  ● ○ ○  ▶   │  ← navigace mezi diagramy
      │   Bílý na tahu  │
      │  "1 / 3"        │
+     │                 │
+     │  "Popisek..."   │  ← volitelný popisek
      └─────────────────┘
 ```
 
 ### Vytvoření knihy
 
 1. V editoru klikni 🧩 **Vložit diagram**
-2. Zaškrtni ☑️ **Více najednou**
-3. Vyber 2+ diagramy (kliknutím)
-4. Klik **Vložit jako knihu**
+2. Zaškrtni ☑️ **Více najednou** (vpravo nahoře)
+3. Klikáním vyber 2+ diagramy
+4. **Nově:** U každého diagramu můžeš napsat **vlastní popisek** (pole "Popisek")
+5. Přetahováním změň pořadí (ikony ↑↓)
+6. Klik **Vložit jako knihu**
 
-### Úprava knihy
+> [!TIP]
+> **Popisky** se zobrazují pod šachovnicí a mění se podle aktuálního diagramu.
+> Např.: "Bílý na tahu vyhraje" nebo "Po tahu 15. Jg5?"
+
+### Úprava existující knihy
 
 | Akce | Jak |
 |------|-----|
-| Zobrazit toolbar | Klik na diagram |
-| Změnit diagramy | **Dvojklik** na diagram |
-| Přesunout vlevo | Tlačítko ⬅️ v toolbaru |
-| Přesunout na střed | Tlačítko ⬜ v toolbaru |
-| Přesunout vpravo | Tlačítko ➡️ v toolbaru |
+| **Otevřít editor** | Dvojklik na knihu v článku |
+| Přidat/odebrat diagramy | V modalu zaškrtni/odškrtni |
+| Změnit pořadí | Šipky ↑↓ u každého diagramu |
+| Změnit popisek | Pole "Popisek" u diagramu |
+| Pozice v textu | Tlačítka ⬅️ ⬜ ➡️ v toolbaru |
 | Smazat | Tlačítko 🗑️ v toolbaru |
 
-### Jak vypadá na webu
+> [!IMPORTANT]
+> **Po aktualizaci editoru** (např. po nasazení oprav) může být nutné knihu znovu otevřít a uložit, aby se projevily nové funkce.
 
-```
-DESKTOP (šířka > 600px)          MOBIL (šířka ≤ 600px)
-┌────────────────────────┐       ┌──────────────────────┐
-│ Text článku            │       │ Text článku          │
-│ obtéká kolem        ╔══╧══╗    ├──────────────────────┤
-│ diagramu            ║  ♟  ║    │                      │
-│ který je            ║     ║    │    ♟ CELÁ ŠÍŘKA     │
-│ plovoucí            ╚═════╝    │                      │
-│ vpravo...              │       ├──────────────────────┤
-└────────────────────────┘       │ ...pokračování textu │
-```
+### Grafické anotace
+
+Šipky a značky (!, ?, ☆) vytvořené v Game Recorderu se zobrazují:
+- ✅ V náhledu v editoru (po vložení/listování)
+- ✅ Na webu (pokud jsou načteny skripty)
 
 ### Puzzle Badge
 
