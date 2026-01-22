@@ -239,27 +239,48 @@
             }
             .book-nav-row {
                 display: flex;
-                justify-content: center;
-                gap: 0.5rem;
-                margin-top: 0.75rem;
+                justify-content: space-between;
+                width: 100%;
+                margin-top: 0.35rem;
+                padding: 0.4rem 0;
+            }
+            .book-nav {
+                justify-content: space-between !important;
+                width: 100% !important;
+                margin-top: 0.35rem !important;
+                padding: 0.4rem 0 !important;
             }
             .book-prev, .book-next {
                 background: rgba(255,255,255,0.08) !important;
-                border: none !important;
+                border: 1px solid rgba(255,255,255,0.1) !important;
                 border-radius: 8px !important;
-                padding: 0.5rem 1rem !important;
-                color: rgba(255,255,255,0.6) !important;
+                width: 36px !important;
+                height: 36px !important;
+                padding: 0 !important;
+                color: rgba(255,255,255,0.7) !important;
                 cursor: pointer;
                 transition: all 0.2s ease !important;
+                display: flex !important;
+                align-items: center !important;
+                justify-content: center !important;
             }
             .book-prev:hover, .book-next:hover {
                 background: rgba(212, 175, 55, 0.2) !important;
                 color: #d4af37 !important;
+                border-color: rgba(212, 175, 55, 0.3) !important;
+            }
+            .book-meta-row {
+                display: flex;
+                align-items: center;
+                gap: 0.5rem;
+                padding: 0.35rem 0.75rem;
+                background: rgba(255,255,255,0.05);
+                border-radius: 8px;
+                border: 1px solid rgba(255,255,255,0.08);
             }
             .book-counter {
-                font-size: 0.85rem;
+                font-size: 0.8rem;
                 color: rgba(255,255,255,0.5);
-                padding: 0.5rem 0.75rem;
             }
             .book-board-container {
                 transition: transform 0.15s ease, opacity 0.15s ease;

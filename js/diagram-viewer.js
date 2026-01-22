@@ -259,11 +259,13 @@ class DiagramViewer {
             actualBoard.removeEventListener('click', this._clickHandler);
         }
 
-        // Create bound handler
+        // Lichess-style: Click handler runs ONLY if the interaction was not a drag.
+        // We detect this via _isDragInProgress flag set by chessboard.js onDragStart.
+        // onDrop/onSnapEnd will handle the piece movement or selection.
         this._clickHandler = (e) => {
-            // Robust race-condition check: Ignore click if a drop happened very recently (< 150ms)
-            // This prevents "micro-drag" from triggering both onDrop (select) and then Click (deselect)
-            if (this._lastDropTime && (Date.now() - this._lastDropTime < 150)) {
+            // If a drag just happened, onDrop already handled it - skip click
+            if (this._isDragInProgress) {
+                this._isDragInProgress = false;
                 return;
             }
 
@@ -330,7 +332,8 @@ class DiagramViewer {
             return false;
         }
 
-        // Track drag start time for micro-drag detection
+        // Lichess-style: Mark that a drag interaction has started
+        this._isDragInProgress = true;
         this._dragStartTime = Date.now();
 
         // Select removed to avoid conflict with click handler which caused immediate deselect
@@ -369,8 +372,7 @@ class DiagramViewer {
             this._hidePieceTimer = null;
         }
 
-        // Set drop timestamp to suppress subsequent click event
-        this._lastDropTime = Date.now();
+        // _isDragInProgress remains true - click handler will check and reset it
 
         // GHOSTING FIX: Restore source piece visibility (in case snapback happens)
         if (this._dragSourceSquare) {
@@ -550,6 +552,9 @@ class DiagramViewer {
                 // Illegal move - chessboard.js will handle snapback
                 return false;
             }
+
+            // Hide annotations (arrows, ?? badges) after first move
+            this.hideAnnotations();
         }
 
         // Move is now in game state - check against solution
@@ -715,8 +720,9 @@ class DiagramViewer {
     }
 
     onSnapEnd() {
-        // Empty - like puzzle-racer.js
-        // Board sync is handled explicitly in attemptMove when needed
+        // Reset the drag flag - this is called at the end of every drag interaction
+        // (whether successful move or snapback). Ensures click handler works correctly.
+        this._isDragInProgress = false;
     }
 
     showFeedback(type, message) {
@@ -787,6 +793,43 @@ class DiagramViewer {
             titleEl.style.color = VIEWER_COLORS.red;
         }
         textEl.style.color = 'rgba(255,255,255,0.9)';
+
+        // Clear any existing auto-hide timer
+        if (this._feedbackAutoHideTimer) {
+            clearTimeout(this._feedbackAutoHideTimer);
+            this._feedbackAutoHideTimer = null;
+        }
+
+        // Reset styles for animation
+        this.feedbackEl.style.transition = 'opacity 0.5s ease-out';
+        this.feedbackEl.style.opacity = '1';
+
+        // Auto-hide success feedback after 3 seconds
+        if (type === 'success') {
+            const el = this.feedbackEl;
+
+            this._feedbackAutoHideTimer = setTimeout(() => {
+                if (el && el.style.display !== 'none') {
+                    // Simple fade out
+                    el.style.opacity = '0';
+
+                    // Hide completely after fade
+                    setTimeout(() => {
+                        if (el) {
+                            el.style.display = 'none';
+                            el.style.opacity = '1'; // Reset for next time
+                        }
+                    }, 500);
+                }
+            }, 3000);
+        }
+    }
+
+    hideAnnotations() {
+        // Clear the SVG overlay containing arrows and ?? badges
+        if (this.overlayEl) {
+            this.overlayEl.innerHTML = '';
+        }
     }
 
     hideFeedback() {
