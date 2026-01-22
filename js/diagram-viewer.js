@@ -723,38 +723,70 @@ class DiagramViewer {
         if (!this.feedbackEl) return;
 
         this.feedbackEl.classList.remove('hidden', 'success', 'info', 'error');
-        this.feedbackEl.style.display = 'block'; // Ensure visible
+        this.feedbackEl.style.display = 'block';
 
-        // Reset styles
-        this.feedbackEl.style.background = '';
-        this.feedbackEl.style.border = '';
-        this.feedbackEl.style.color = '';
+        // Reset and apply solid base styles
+        this.feedbackEl.style.position = 'relative';
+        this.feedbackEl.style.backdropFilter = 'blur(8px)';
+        this.feedbackEl.style.boxShadow = '0 4px 20px rgba(0,0,0,0.3)';
 
         const titleEl = this.feedbackEl.querySelector('.feedback-title');
         const textEl = this.feedbackEl.querySelector('.feedback-text');
 
         textEl.textContent = message;
 
+        // Ensure close button exists
+        let closeBtn = this.feedbackEl.querySelector('.feedback-close-btn');
+        if (!closeBtn) {
+            closeBtn = document.createElement('button');
+            closeBtn.className = 'feedback-close-btn';
+            closeBtn.style.cssText = `
+                position: absolute;
+                top: 8px;
+                right: 8px;
+                background: rgba(255,255,255,0.1);
+                border: none;
+                color: inherit;
+                width: 24px;
+                height: 24px;
+                border-radius: 50%;
+                cursor: pointer;
+                font-size: 0.8rem;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                transition: all 0.2s;
+            `;
+            closeBtn.innerHTML = '<i class="fa-solid fa-times"></i>';
+            closeBtn.onclick = () => this.hideFeedback();
+            closeBtn.onmouseover = () => { closeBtn.style.background = 'rgba(255,255,255,0.2)'; };
+            closeBtn.onmouseout = () => { closeBtn.style.background = 'rgba(255,255,255,0.1)'; };
+            this.feedbackEl.appendChild(closeBtn);
+        }
+
         if (type === 'success') {
             this.feedbackEl.classList.add('success');
-            this.feedbackEl.style.background = 'rgba(34, 197, 94, 0.15)';
+            this.feedbackEl.style.background = 'linear-gradient(135deg, rgba(34, 97, 64, 0.95), rgba(22, 78, 50, 0.98))';
             this.feedbackEl.style.border = `2px solid ${VIEWER_COLORS.green}`;
-            this.feedbackEl.style.color = VIEWER_COLORS.green;
+            this.feedbackEl.style.color = '#fff';
             titleEl.textContent = "Správně! ✅";
+            titleEl.style.color = VIEWER_COLORS.green;
         } else if (type === 'info') {
             this.feedbackEl.classList.add('info');
-            this.feedbackEl.style.background = 'rgba(59, 130, 246, 0.15)';
+            this.feedbackEl.style.background = 'linear-gradient(135deg, rgba(30, 64, 130, 0.95), rgba(20, 50, 100, 0.98))';
             this.feedbackEl.style.border = `2px solid ${VIEWER_COLORS.blue}`;
-            this.feedbackEl.style.color = VIEWER_COLORS.blue;
+            this.feedbackEl.style.color = '#fff';
             titleEl.textContent = "Alternativa 🤔";
+            titleEl.style.color = VIEWER_COLORS.blue;
         } else {
             this.feedbackEl.classList.add('error');
-            this.feedbackEl.style.background = 'rgba(239, 68, 68, 0.15)';
+            this.feedbackEl.style.background = 'linear-gradient(135deg, rgba(120, 40, 40, 0.95), rgba(90, 30, 30, 0.98))';
             this.feedbackEl.style.border = `2px solid ${VIEWER_COLORS.red}`;
-            this.feedbackEl.style.color = VIEWER_COLORS.red;
+            this.feedbackEl.style.color = '#fff';
             titleEl.textContent = "Chyba ❌";
+            titleEl.style.color = VIEWER_COLORS.red;
         }
-        textEl.style.color = 'inherit';
+        textEl.style.color = 'rgba(255,255,255,0.9)';
     }
 
     hideFeedback() {
