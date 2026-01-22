@@ -1021,7 +1021,7 @@ function insertDiagramBookToEditor(diagrams, savedRange) {
             overflow: visible;
         ">
             <!-- Board Container -->
-            <div class="book-board-container" style="position: relative; margin: 0 auto; overflow: visible;">
+            <div class="book-board-container" style="position: relative; margin: 0 auto; overflow: visible; width: 100%; aspect-ratio: 1/1;">
                 ${puzzleBadge}
                 ${firstBoard}
             </div>
