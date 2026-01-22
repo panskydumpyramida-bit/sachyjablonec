@@ -1067,19 +1067,9 @@ function insertDiagramBookToEditor(diagrams, savedRange) {
                 ${puzzleBadge}
                 ${firstBoard}
             </div>
-            
-            <!-- Description -->
-            <div class="book-description" style="
-                font-size: 0.9rem;
-                color: #e2e8f0;
-                margin-top: 1rem;
-                text-align: center;
-                min-height: 1.2em;
-                line-height: 1.4;
-            ">${diagrams[0].description || diagrams[0].name || ''}</div>
 
             <!-- Navigation -->
-            <div class="book-nav" style="display: ${diagrams.length > 1 ? 'flex' : 'none'}; justify-content: center; align-items: center; gap: 1rem; margin-top: 0.5rem;">
+            <div class="book-nav" style="display: ${diagrams.length > 1 ? 'flex' : 'none'}; justify-content: center; align-items: center; gap: 1rem; margin-top: 0.75rem;">
                 <button class="book-prev" onclick="bookNav('${bookId}', -1)" style="
                     background: rgba(255,255,255,0.1);
                     border: none;
@@ -1107,17 +1097,19 @@ function insertDiagramBookToEditor(diagrams, savedRange) {
                 "><i class="fa-solid fa-chevron-right"></i></button>
             </div>
             
-            <!-- Editable Caption -->
-            <div class="book-caption" contenteditable="true" style="
-                font-size: 0.85rem;
-                color: rgba(255,255,255,0.6);
+            <!-- Description Panel (below navigation) -->
+            <div class="book-description" style="
+                font-size: 0.9rem;
+                color: #e2e8f0;
                 margin-top: 0.75rem;
-                padding: 0.5rem;
-                background: rgba(0,0,0,0.2);
-                border-radius: 6px;
-                min-height: 1.5em;
+                padding: 0.75rem 1rem;
+                background: rgba(0,0,0,0.3);
+                border-radius: 8px;
+                border: 1px solid rgba(255,255,255,0.05);
                 text-align: center;
-            " data-placeholder="Popis..."></div>
+                min-height: 1.5em;
+                line-height: 1.4;
+            ">${diagrams[0].description || diagrams[0].name || ''}</div>
         </div><p><br></p>`;
 
     // If we are editing (savedRange is an Element), use DOM replacement to avoid nesting bugs
