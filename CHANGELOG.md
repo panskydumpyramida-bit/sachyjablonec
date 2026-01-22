@@ -20,6 +20,7 @@
 - Chybějící skripty na frontend (`article.html`, `index.html`)
 - Bug "frame-in-frame" při opakované editaci knihy
 - Odstraněny rušivé tooltipy
+- **Rychlé kliky:** Lichess-style click handling - okamžitá odezva bez časových zpoždění
 
 # Sat Jan 17 2026
 

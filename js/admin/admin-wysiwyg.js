@@ -1069,31 +1069,45 @@ function insertDiagramBookToEditor(diagrams, savedRange) {
             </div>
 
             <!-- Navigation -->
-            <div class="book-nav" style="display: ${diagrams.length > 1 ? 'flex' : 'none'}; justify-content: center; align-items: center; gap: 1rem; margin-top: 0.75rem;">
+            <div class="book-nav" style="display: ${diagrams.length > 1 ? 'flex' : 'none'}; justify-content: space-between; align-items: center; width: 100%; margin-top: 0.35rem; padding: 0.4rem 0;">
                 <button class="book-prev" onclick="bookNav('${bookId}', -1)" style="
-                    background: rgba(255,255,255,0.1);
-                    border: none;
-                    color: #888;
-                    width: 32px;
-                    height: 32px;
-                    border-radius: 50%;
+                    background: rgba(255,255,255,0.08);
+                    border: 1px solid rgba(255,255,255,0.1);
+                    color: rgba(255,255,255,0.7);
+                    width: 36px;
+                    height: 36px;
+                    border-radius: 8px;
                     cursor: pointer;
                     transition: all 0.2s;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
                 "><i class="fa-solid fa-chevron-left"></i></button>
-                <div class="book-meta-row">
-                    <span class="book-to-move">${(diagrams[0].toMove || (diagrams[0].fen ? diagrams[0].fen.split(' ')[1] : 'w')).startsWith('w') ? 'Bílý na tahu' : 'Černý na tahu'}</span>
-                    <span style="opacity:0.3">|</span>
-                    <span class="book-counter">1 / ${diagrams.length}</span>
+                <div class="book-meta-row" style="
+                    display: flex;
+                    align-items: center;
+                    gap: 0.5rem;
+                    padding: 0.35rem 0.75rem;
+                    background: rgba(255,255,255,0.05);
+                    border-radius: 8px;
+                    border: 1px solid rgba(255,255,255,0.08);
+                ">
+                    <span class="book-to-move" style="font-size: 0.8rem; color: rgba(255,255,255,0.7);">${(diagrams[0].toMove || (diagrams[0].fen ? diagrams[0].fen.split(' ')[1] : 'w')).startsWith('w') ? 'Bílý na tahu' : 'Černý na tahu'}</span>
+                    <span style="opacity:0.3; font-size: 0.75rem;">|</span>
+                    <span class="book-counter" style="font-size: 0.8rem; color: rgba(255,255,255,0.5);">1 / ${diagrams.length}</span>
                 </div>
                 <button class="book-next" onclick="bookNav('${bookId}', 1)" style="
-                    background: rgba(255,255,255,0.1);
-                    border: none;
-                    color: #888;
-                    width: 32px;
-                    height: 32px;
-                    border-radius: 50%;
+                    background: rgba(255,255,255,0.08);
+                    border: 1px solid rgba(255,255,255,0.1);
+                    color: rgba(255,255,255,0.7);
+                    width: 36px;
+                    height: 36px;
+                    border-radius: 8px;
                     cursor: pointer;
                     transition: all 0.2s;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
                 "><i class="fa-solid fa-chevron-right"></i></button>
             </div>
             
