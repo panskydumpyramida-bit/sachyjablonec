@@ -309,20 +309,23 @@
                 margin-top: 0.75rem !important;
                 font-size: 0.9rem !important;
             }
-            /* Type badge styling - minimalist puzzle indicator */
+            /* Type badge styling - elegant puzzle indicator */
             .diagram-book .diagram-type-badge {
                 position: absolute !important;
                 top: 8px !important;
                 right: 8px !important;
-                background: rgba(0,0,0,0.7) !important;
-                backdrop-filter: blur(8px) !important;
-                border-radius: 6px !important;
-                padding: 4px 8px !important;
-                font-size: 0.85rem !important;
+                background: linear-gradient(135deg, rgba(30,30,30,0.9), rgba(50,50,50,0.85)) !important;
+                backdrop-filter: blur(12px) !important;
+                border: 1px solid rgba(212, 175, 55, 0.3) !important;
+                border-radius: 8px !important;
+                padding: 5px 10px !important;
+                font-size: 0.8rem !important;
                 color: #d4af37 !important;
                 z-index: 20 !important;
                 pointer-events: none !important;
-                box-shadow: 0 2px 8px rgba(0,0,0,0.3) !important;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.4), 0 0 20px rgba(212, 175, 55, 0.1) !important;
+                text-shadow: 0 1px 2px rgba(0,0,0,0.3) !important;
+                letter-spacing: 0.02em !important;
             }
             /* Hide internal reset button when in book mode */
             .diagram-book .diagram-reset-btn {
