@@ -1062,7 +1062,7 @@ function insertDiagramBookToEditor(diagrams, savedRange) {
                     border-radius: 50%;
                     cursor: pointer;
                     transition: all 0.2s;
-                1 / ${diagrams.length}
+                "><i class="fa-solid fa-chevron-right"></i></button>
             </div>
             
             <!-- Editable Caption -->
@@ -1105,6 +1105,25 @@ function insertDiagramBookToEditor(diagrams, savedRange) {
     }
 
     updatePreview();
+
+    // Initialize DiagramViewer immediately to show arrows/annotations
+    setTimeout(() => {
+        if (typeof DiagramViewer !== 'undefined') {
+            const insertedBook = document.getElementById(bookId);
+            if (insertedBook) {
+                const boardContainer = insertedBook.querySelector('.book-board-container');
+                if (boardContainer) {
+                    if (!boardContainer.id) boardContainer.id = 'board-container-' + bookId;
+                    try {
+                        const viewer = new DiagramViewer(boardContainer.id);
+                        viewer.load(diagrams[0]);
+                    } catch (e) {
+                        console.warn('Failed to init viewer in editor:', e);
+                    }
+                }
+            }
+        }
+    }, 50);
 }
 
 // Global book navigation function (for onclick handlers in content)
