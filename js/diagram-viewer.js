@@ -281,6 +281,9 @@ class DiagramViewer {
             return false;
         }
 
+        // Track drag start time for micro-drag detection
+        this._dragStartTime = Date.now();
+
         // Select removed to avoid conflict with click handler which caused immediate deselect
         // this.selectSquare(source);
 
@@ -300,6 +303,16 @@ class DiagramViewer {
         return true; // Allow drag
     }
 
+    // Helper: Check if two squares are adjacent (including diagonals)
+    _areAdjacent(sq1, sq2) {
+        if (!sq1 || !sq2 || sq1.length !== 2 || sq2.length !== 2) return false;
+        const file1 = sq1.charCodeAt(0), rank1 = parseInt(sq1[1]);
+        const file2 = sq2.charCodeAt(0), rank2 = parseInt(sq2[1]);
+        const fileDiff = Math.abs(file1 - file2);
+        const rankDiff = Math.abs(rank1 - rank2);
+        return fileDiff <= 1 && rankDiff <= 1 && (fileDiff > 0 || rankDiff > 0);
+    }
+
     onDrop(source, target) {
         // Prevent hiding if it hasn't happened yet (quick click)
         if (this._hidePieceTimer) {
@@ -316,6 +329,10 @@ class DiagramViewer {
             this._dragSourceSquare = null;
         }
 
+        // Calculate drag duration for micro-drag detection
+        const dragDuration = Date.now() - (this._dragStartTime || 0);
+        const isQuickDrag = dragDuration < 300; // Under 300ms is likely accidental
+
         if (source === target) {
             // Treat as click manually because chessboard.js might eat the click event
             // This ensures selection works even if click propagation is stopped
@@ -326,6 +343,30 @@ class DiagramViewer {
             setTimeout(() => { this._ignoreNextClick = false; }, 200);
 
             return;
+        }
+
+        // TOLERANCE FOR MICRO-DRAGS: If quick drag to adjacent square and not a valid move,
+        // treat as a click on source instead of losing selection
+        if (isQuickDrag && this._areAdjacent(source, target)) {
+            // Check if this would be a valid move
+            if (this.game) {
+                const testMove = this.game.move({
+                    from: source,
+                    to: target,
+                    promotion: 'q'
+                });
+
+                if (testMove === null) {
+                    // Invalid move after quick adjacent drag - treat as click on source
+                    this.handleSquareClick(source);
+                    this._ignoreNextClick = true;
+                    setTimeout(() => { this._ignoreNextClick = false; }, 200);
+                    return 'snapback';
+                } else {
+                    // Valid move - undo and let normal flow handle it
+                    this.game.undo();
+                }
+            }
         }
 
         // Attempt move using shared logic (isDrop = true to prevent double UI update)
