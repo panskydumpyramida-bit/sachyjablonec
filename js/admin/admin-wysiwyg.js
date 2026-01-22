@@ -1078,9 +1078,33 @@ function insertDiagramBookToEditor(diagrams, savedRange) {
             " data-placeholder="Popis..."></div>
         </div><p><br></p>`;
 
-    document.execCommand('insertHTML', false, html);
+    // If we are editing (savedRange is an Element), use DOM replacement to avoid nesting bugs
+    if (savedRange instanceof Element) {
+        // Extract just the book DIV from the full HTML (which contains P wrappers)
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = html;
+        const bookDiv = tempDiv.querySelector('.diagram-book');
+
+        if (bookDiv) {
+            // Clean replace showing only the book content, no wrappers
+            savedRange.outerHTML = bookDiv.outerHTML;
+        } else {
+            // Fallback if parsing fails
+            savedRange.outerHTML = html;
+        }
+    } else {
+        // Standard insertion for new items
+        if (savedRange && savedRange instanceof Range) {
+            const sel = window.getSelection();
+            sel.removeAllRanges();
+            sel.addRange(savedRange);
+        } else {
+            document.getElementById('articleContent')?.focus();
+        }
+        document.execCommand('insertHTML', false, html);
+    }
+
     updatePreview();
-    document.getElementById('articleContent')?.focus();
 }
 
 // Global book navigation function (for onclick handlers in content)

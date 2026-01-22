@@ -8,7 +8,7 @@
 - **Knihy diagramů:** Nový panel pro **řazení diagramů**. Podpora pro řazení i při editaci.
 - **Popisky:** Možnost zadat **vlastní popisek**, který se zobrazuje přímo pod diagramem v knize.
 - **Zobrazení:** V editoru (při listování knihou) se nyní zobrazují i **grafické šipky a anotace**.
-- **Opravy:** Odstraněny tooltipy, opravena indikace tahu a chybějící skripty.
+- **Opravy:** Odstraněny tooltipy, opravena indikace tahu, skripty na webu a **problém s vnořováním knih** při editaci.
 - **Admin Manuál:** Vytvořena kompletní dokumentace pro administrátory (`/docs/ADMIN_MANUAL.md`) přístupná z nápovědy.
 
 ### Diagramy & Editor 🧩
