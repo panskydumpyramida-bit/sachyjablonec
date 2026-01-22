@@ -1,3 +1,18 @@
+# Thu Jan 22 2026
+
+### Administrace & UX 🛠️
+- **Klávesové zkratky:** Přidána podpora pro klávesové zkratky v admin editoru (`N` - nový článek, `D` - nový diagram, `?` - nápověda, `Ctrl+B/I/U` formátování).
+- **Nápověda editoru:** Nový modal s přehledem všech zkratek a odkazem na manuál (ikona klávesnice v toolbaru).
+- **Admin Manuál:** Vytvořena kompletní dokumentace pro administrátory (`/docs/ADMIN_MANUAL.md`) přístupná z nápovědy.
+
+### Diagramy & Editor 🧩
+- **Vylepšená kniha diagramů:**
+  - **Plovoucí pozice:** Přidána tlačítka pro zarovnání knihy (vlevo/střed/vpravo) s obtékáním textu.
+  - **Rychlá editace:** Dvojklikem na knihu se otevře modal pro správu diagramů (přidání/odebrání/řazení).
+  - **Vizuální styling:** Odznak hádanky (puzzle badge) nyní vyčnívá z šachovnice pro lepší viditelnost (z-index fix).
+  - **Konzistence:** WYSIWYG editor nyní přesně odpovídá vzhledu na webu (šířka 400px, badge, barvy).
+- **Oprava interakce:** Kliknutí na diagram v editoru již neotevírá editor obrázků, ale zobrazí toolbar diagramu.
+
 # Sat Jan 17 2026
 
 ### Game Viewer Enhancements & Stockfish Integration ♟️🤖
