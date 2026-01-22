@@ -2972,3 +2972,113 @@ window.insertMatchTable = async function () {
         btn.disabled = false;
     }
 }
+
+// ================================
+// MATCH TABLE TOOLBAR (Delete)
+// ================================
+
+let mtToolbar = null;
+
+function initMatchTableToolbar() {
+    if (document.getElementById('mtToolbar')) return;
+
+    mtToolbar = document.createElement('div');
+    mtToolbar.id = 'mtToolbar';
+    mtToolbar.className = 'floating-toolbar';
+    mtToolbar.style.zIndex = '10002'; // Above others
+    document.body.appendChild(mtToolbar);
+
+    // Hide on click outside
+    document.addEventListener('mousedown', (e) => {
+        if (!e.target.closest('#mtToolbar') && !e.target.closest('.match-result-table')) {
+            if (mtToolbar) mtToolbar.classList.remove('visible');
+        }
+    });
+
+    // Editor listener
+    const editor = document.getElementById('articleContent');
+    if (editor) {
+        editor.addEventListener('click', (e) => {
+            const table = e.target.closest('.match-result-table');
+            if (table) {
+                showMatchTableToolbar(table);
+            }
+        });
+    }
+}
+
+function showMatchTableToolbar(tableElement) {
+    if (!mtToolbar) initMatchTableToolbar();
+
+    mtToolbar.innerHTML = '';
+    mtToolbar.classList.add('visible');
+
+    // Position logic (copied from diagramToolbar)
+    const rect = tableElement.getBoundingClientRect();
+    const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+    const scrollLeft = window.pageXOffset || document.documentElement.scrollLeft;
+
+    // Position centered above
+    let top = rect.top + scrollTop - 50;
+    let left = rect.left + scrollLeft + (rect.width / 2);
+
+    mtToolbar.style.top = `${top}px`;
+    mtToolbar.style.left = `${left}px`;
+    mtToolbar.style.transform = 'translateX(-50%)';
+
+    // Delete Button
+    const btnDelete = document.createElement('button');
+    btnDelete.className = 'floating-btn delete';
+    btnDelete.innerHTML = '<i class="fa-solid fa-trash"></i>';
+    btnDelete.title = 'Odstranit tabulku';
+    btnDelete.style.color = '#ef4444';
+    btnDelete.onclick = () => confirmDeleteMatchTable(tableElement);
+    mtToolbar.appendChild(btnDelete);
+}
+
+function confirmDeleteMatchTable(tableElement) {
+    // Custom modal
+    const modal = document.createElement('div');
+    modal.style.cssText = `
+        position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+        background: rgba(0,0,0,0.85); z-index: 11100;
+        display: flex; align-items: center; justify-content: center;
+        backdrop-filter: blur(2px);
+    `;
+
+    modal.innerHTML = `
+        <div style="background: #1a1a2e; border: 1px solid rgba(239, 68, 68, 0.3); padding: 2rem; border-radius: 12px; max-width: 400px; text-align: center; box-shadow: 0 10px 40px rgba(0,0,0,0.5);">
+            <div style="font-size: 3rem; color: #ef4444; margin-bottom: 1rem;">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+            </div>
+            <h3 style="margin-bottom: 0.5rem; color: #f1f5f9;">Smazat tabulku?</h3>
+            <p style="color: #94a3b8; margin-bottom: 2rem;">Opravdu chcete odstranit tuto tabulku výsledků? Tuto akci nelze vrátit zpět.</p>
+            
+            <div style="display: flex; gap: 1rem; justify-content: center;">
+                <button id="mtDeleteCancel" style="padding: 0.75rem 1.5rem; background: transparent; border: 1px solid rgba(255,255,255,0.2); color: #fff; border-radius: 8px; cursor: pointer;">Zrušit</button>
+                <button id="mtDeleteConfirm" style="padding: 0.75rem 1.5rem; background: #dc2626; border: none; color: #fff; font-weight: 600; border-radius: 8px; cursor: pointer; box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);">Smazat</button>
+            </div>
+        </div>
+    `;
+
+    document.body.appendChild(modal);
+
+    modal.querySelector('#mtDeleteCancel').onclick = () => modal.remove();
+    modal.querySelector('#mtDeleteConfirm').onclick = () => {
+        tableElement.remove();
+        // Also remove current spacer paragraph if it's empty? Maybe safer to leave it.
+        modal.remove();
+        if (mtToolbar) mtToolbar.classList.remove('visible');
+        if (typeof showToast === 'function') showToast('Tabulka smazána', 'info');
+    };
+
+    // Close on click outside
+    modal.addEventListener('mousedown', (e) => {
+        if (e.target === modal) modal.remove();
+    });
+}
+
+// Init on load
+document.addEventListener('DOMContentLoaded', () => {
+    initMatchTableToolbar();
+});
