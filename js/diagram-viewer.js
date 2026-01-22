@@ -196,10 +196,13 @@ class DiagramViewer {
         }
 
         // 1. Init Board
+        // Orientation: Use explicit diagram.orientation if set, otherwise default by player color
+        const boardOrientation = diagram.orientation || (toMove === 'b' ? 'black' : 'white');
+
         const config = {
             position: diagram.fen,
             draggable: true,
-            orientation: toMove === 'b' ? 'black' : 'white', // Orient board for player to move
+            orientation: boardOrientation,
             onDragStart: (source, piece) => this.onDragStart(source, piece),
             onDrop: (source, target) => this.onDrop(source, target),
             onSnapEnd: () => this.onSnapEnd(),
