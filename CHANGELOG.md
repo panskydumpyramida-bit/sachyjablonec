@@ -5,10 +5,10 @@
 - **Nápověda editoru:** Nový modal s přehledem všech zkratek a odkazem na manuál (ikona klávesnice v toolbaru).
 - **Tabulky zápasů:** Nová funkce pro vkládání tabulky výsledků ze soutěží (tlačítko 🏆). Obsahuje možnost mazání a interaktivní zvýraznění řádků.
 - **Editor Diagramů:** Přidána možnost vkládat značky tahů (!, ?, !? atd.) přímo do diagramu jako grafické anotace.
-- **Knihy diagramů:** Nový panel pro **řazení diagramů** v editoru. Podpora pro řazení i při editaci.
-- **Popisky:** Možnost zadat **vlastní popisek** ke každému diagramu přímo v editoru (v pravém panelu výběru).
-- **Náhled:** Živý náhled v editoru (včetně anotací). Odstraněny rušivé tooltipy.
-- **Opravy:** Opravena indikace tahu (bílý/černý) a načítání knihoven pro náhled.
+- **Knihy diagramů:** Nový panel pro **řazení diagramů**. Podpora pro řazení i při editaci.
+- **Popisky:** Možnost zadat **vlastní popisek**, který se zobrazuje přímo pod diagramem v knize.
+- **Zobrazení:** V editoru (při listování knihou) se nyní zobrazují i **grafické šipky a anotace**.
+- **Opravy:** Odstraněny tooltipy, opravena indikace tahu a chybějící skripty.
 - **Admin Manuál:** Vytvořena kompletní dokumentace pro administrátory (`/docs/ADMIN_MANUAL.md`) přístupná z nápovědy.
 
 ### Diagramy & Editor 🧩

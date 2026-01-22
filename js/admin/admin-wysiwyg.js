@@ -1026,8 +1026,18 @@ function insertDiagramBookToEditor(diagrams, savedRange) {
                 ${firstBoard}
             </div>
             
+            <!-- Description -->
+            <div class="book-description" style="
+                font-size: 0.9rem;
+                color: #e2e8f0;
+                margin-top: 1rem;
+                text-align: center;
+                min-height: 1.2em;
+                line-height: 1.4;
+            ">${diagrams[0].description || diagrams[0].name || ''}</div>
+
             <!-- Navigation -->
-            <div class="book-nav" style="display: ${diagrams.length > 1 ? 'flex' : 'none'}; justify-content: center; align-items: center; gap: 1rem; margin-top: 1rem;">
+            <div class="book-nav" style="display: ${diagrams.length > 1 ? 'flex' : 'none'}; justify-content: center; align-items: center; gap: 1rem; margin-top: 0.5rem;">
                 <button class="book-prev" onclick="bookNav('${bookId}', -1)" style="
                     background: rgba(255,255,255,0.1);
                     border: none;
@@ -1088,9 +1098,19 @@ window.bookNav = function (bookId, direction) {
     book.dataset.current = current;
 
     const d = diagrams[current];
-    const boardHtml = window.generateMiniBoardGlobal ? window.generateMiniBoardGlobal(d.fen, 30) : '';
 
-    book.querySelector('.book-board-container').innerHTML = boardHtml;
+    // Use DiagramViewer if available to show annotations (arrows)
+    if (typeof DiagramViewer !== 'undefined') {
+        const boardContainer = book.querySelector('.book-board-container');
+        if (!boardContainer.id) boardContainer.id = 'board-container-' + bookId;
+
+        const viewer = new DiagramViewer(boardContainer.id);
+        viewer.load(d);
+    } else {
+        // Fallback
+        const boardHtml = window.generateMiniBoardGlobal ? window.generateMiniBoardGlobal(d.fen, 30) : '';
+        book.querySelector('.book-board-container').innerHTML = boardHtml;
+    }
 
     const toMove = d.toMove || (d.fen ? d.fen.split(' ')[1] : 'w');
     const toMoveText = (toMove === 'w' || toMove === 'white') ? 'Bílý na tahu' : 'Černý na tahu';
