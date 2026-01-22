@@ -12,6 +12,7 @@
   - **Vizuální styling:** Odznak hádanky (puzzle badge) nyní vyčnívá z šachovnice pro lepší viditelnost (z-index fix).
   - **Konzistence:** WYSIWYG editor nyní přesně odpovídá vzhledu na webu (šířka 400px, badge, barvy).
 - **Oprava interakce:** Kliknutí na diagram v editoru již neotevírá editor obrázků, ale zobrazí toolbar diagramu.
+- **Vylepšená tolerance tahu:** Implementována "Lichess-style" detekce (pixel threshold + time check), která zabraňuje nechtěnému odznačení figurky při mikro-posunu myší.
 
 # Sat Jan 17 2026
 
