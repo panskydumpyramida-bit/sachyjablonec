@@ -1192,8 +1192,17 @@
     align-items: flex-end;
     justify-content: center;
     padding-bottom: 100px;
-    /* Position above controls */
+    /* Position above controls (desktop) */
     z-index: 99999;
+}
+
+/* Mobile: control panel is at top, position modal there */
+@media (max-width: 900px) {
+    .gv2-var-modal {
+        align-items: flex-start;
+        padding-top: 120px;
+        padding-bottom: 0;
+    }
 }
 
 .gv2-var-modal-content {
