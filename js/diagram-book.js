@@ -317,7 +317,7 @@
             /* Fix for DiagramViewer inside book */
             .diagram-viewer-container {
                 width: 100% !important;
-                max-width: 280px !important;
+                max-width: none !important;
                 margin: 0 auto !important;
                 background: transparent !important;
             }
