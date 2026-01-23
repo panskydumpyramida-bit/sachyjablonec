@@ -2281,10 +2281,17 @@ class GameViewer2 {
             }
         });
 
-        // Close on outside click
+        // Close on outside click (backdrop) - same as choosing main line
         modal.addEventListener('click', (e) => {
             if (e.target === modal) {
+                // Clicking backdrop = continue in main line
+                this.modalCooldown = true;
+                setTimeout(() => { this.modalCooldown = false; }, 500);
                 cleanup();
+                this.jumpTo(this.currentPly + 1);
+                if (withAutoplayTimeout) {
+                    setTimeout(() => this.toggleAutoplay(true), 300);
+                }
             }
         });
 
