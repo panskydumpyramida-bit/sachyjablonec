@@ -305,7 +305,7 @@ async function initChessApiDepthSlider() {
     // Load saved value from API
     try {
         const response = await fetch('/api/settings', {
-            headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+            headers: { 'Authorization': `Bearer ${window.authToken || localStorage.getItem('authToken')}` }
         });
         if (response.ok) {
             const settings = await response.json();
@@ -330,7 +330,7 @@ async function updateChessApiDepth(value) {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': `Bearer ${localStorage.getItem('token')}`
+                'Authorization': `Bearer ${window.authToken || localStorage.getItem('authToken')}`
             },
             body: JSON.stringify({ key: 'chessApiDepth', value: String(value) })
         });

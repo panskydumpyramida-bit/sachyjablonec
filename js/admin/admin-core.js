@@ -6,7 +6,9 @@
  */
 
 // Global State
+// Global State
 let authToken = localStorage.getItem('authToken') || localStorage.getItem('auth_token');
+window.authToken = authToken; // Expose globally
 let currentUser = null;
 
 // API URL from config.js (already declared globally, just ensure fallback)
@@ -103,6 +105,7 @@ async function login() {
         if (res.ok) {
             const data = await res.json();
             authToken = data.token;
+            window.authToken = data.token;
             localStorage.setItem('authToken', data.token);
             currentUser = data.user;
             showAdmin();
@@ -118,6 +121,7 @@ async function login() {
 function logout() {
     localStorage.removeItem('authToken');
     authToken = null;
+    window.authToken = null;
     currentUser = null;
     showLogin();
 }
