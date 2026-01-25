@@ -253,10 +253,12 @@ window.handleAuthorChange = () => {
             input.value = user.realName || user.username;
         }
     } else {
-        // Custom author
+        // Custom author - show input but DO NOT clear it blindly
+        // This fixes the bug where loading a custom author would be wiped
         input.style.display = 'block';
-        input.value = '';
-        input.placeholder = 'Jméno autora';
+        if (!input.value) {
+            input.placeholder = 'Jméno autora';
+        }
     }
     updatePreview();
 };
@@ -273,12 +275,11 @@ window.handleCoAuthorChange = () => {
         }
     } else {
         // If "None/Custom" selected
-        input.style.display = 'none';
-        // Wait, "None/Custom" is valid for custom co-author too?
-        // Let's make the option value="" be "Custom / None".
-        // If they type in input logic handles it. 
         input.style.display = 'block';
-        input.value = '';
+        // Do not wipe value blindly
+        if (!input.value) {
+            input.placeholder = 'Jméno spoluautora';
+        }
     }
     updatePreview();
 };
@@ -507,10 +508,29 @@ async function editNews(id) {
         document.getElementById('publishCheck').checked = item.isPublished;
 
         // Set authors
-        document.getElementById('newsAuthorId').value = item.authorId || '';
+        // Set authors
+        const authorId = item.authorId || '';
+        document.getElementById('newsAuthorId').value = authorId;
+        // Store for race condition restore
+        document.getElementById('newsAuthorId').setAttribute('data-pending-value', authorId);
+
         document.getElementById('newsAuthorName').value = item.authorName || '';
-        document.getElementById('newsCoAuthorId').value = item.coAuthorId || '';
+
+        const coAuthorId = item.coAuthorId || '';
+        document.getElementById('newsCoAuthorId').value = coAuthorId;
+        document.getElementById('newsCoAuthorId').setAttribute('data-pending-value', coAuthorId);
+
         document.getElementById('newsCoAuthorName').value = item.coAuthorName || '';
+
+        // Manually trigger change handlers to set visibility correctly without wiping values
+        // We call the modified handlers that now respect existing values
+        if (window.handleAuthorChange) window.handleAuthorChange();
+
+        // Ensure co-author section is visible if used
+        if ((item.coAuthorId || item.coAuthorName) && document.getElementById('coAuthorSection').style.display === 'none') {
+            window.toggleCoAuthorSection();
+        }
+        if (window.handleCoAuthorChange) window.handleCoAuthorChange();
 
         currentViewCount = item.viewCount || 0;
 
