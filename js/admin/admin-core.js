@@ -346,12 +346,17 @@ async function loadDashboard() {
                 statusText = ' Konc';
             }
 
+            let authorDisplay = item.authorName || (item.author ? item.author.username : '-');
+            if (item.coAuthorName) {
+                authorDisplay += ` & ${item.coAuthorName}`;
+            }
+
             return `
             <tr>
                 <td>${new Date(item.publishedDate).toLocaleDateString('cs-CZ')}</td>
                 <td>${item.title}</td>
                 <td class="hide-mobile">${item.category}</td>
-                <td class="hide-mobile"><span class="highlight-name" style="font-size: 0.85rem;">${item.author?.username || '-'}</span></td>
+                <td class="hide-mobile"><span class="highlight-name" style="font-size: 0.85rem;">${authorDisplay}</span></td>
                 <td class="hide-mobile"><span class="status-badge ${statusClass}">${statusIcon}<span class="status-text">${statusText}</span></span></td>
                 <td>
                     <button class="action-btn btn-edit" onclick="editNews(${item.id})"><i class="fa-solid fa-pen"></i></button>
