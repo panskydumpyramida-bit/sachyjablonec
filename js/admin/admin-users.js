@@ -54,8 +54,8 @@ async function loadUsers() {
 
 async function updateUserRole(id, newRole) {
     try {
-        const res = await fetch(`${API_URL}/users/${id}/role`, {
-            method: 'PATCH',
+        const res = await fetch(`${API_URL}/users/${id}`, {
+            method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${authToken}`
@@ -87,7 +87,7 @@ async function createUser() {
     }
 
     try {
-        const res = await fetch(`${API_URL}/auth/register`, {
+        const res = await fetch(`${API_URL}/users`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
