@@ -109,3 +109,27 @@ document.addEventListener('DOMContentLoaded', () => {
     // Small delay to not annoy user immediately
     setTimeout(checkCookieConsent, 1000);
 });
+
+// Results Tab Switching
+document.addEventListener('DOMContentLoaded', () => {
+    const tabBtns = document.querySelectorAll('.results-tab-btn');
+    if (tabBtns.length > 0) {
+        tabBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                // Remove active class from all buttons and content
+                document.querySelectorAll('.results-tab-btn').forEach(b => b.classList.remove('active'));
+                document.querySelectorAll('.results-category-content').forEach(c => c.classList.remove('active'));
+
+                // Add active class to clicked button
+                btn.classList.add('active');
+
+                // Show corresponding content
+                const targetId = btn.getAttribute('data-tab');
+                const targetContent = document.getElementById(targetId);
+                if (targetContent) {
+                    targetContent.classList.add('active');
+                }
+            });
+        });
+    }
+});
