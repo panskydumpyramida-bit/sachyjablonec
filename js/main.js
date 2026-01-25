@@ -110,26 +110,26 @@ document.addEventListener('DOMContentLoaded', () => {
     setTimeout(checkCookieConsent, 1000);
 });
 
-// Results Tab Switching
-document.addEventListener('DOMContentLoaded', () => {
-    const tabBtns = document.querySelectorAll('.results-tab-btn');
-    if (tabBtns.length > 0) {
-        tabBtns.forEach(btn => {
-            btn.addEventListener('click', () => {
-                // Remove active class from all buttons and content
-                document.querySelectorAll('.results-tab-btn').forEach(b => b.classList.remove('active'));
-                document.querySelectorAll('.results-category-content').forEach(c => c.classList.remove('active'));
+// Results Tab Switching (Event Delegation for dynamic content)
+document.addEventListener('click', (e) => {
+    // Check if clicked element is a tab button
+    if (e.target && e.target.classList.contains('results-tab-btn')) {
+        const btn = e.target;
 
-                // Add active class to clicked button
-                btn.classList.add('active');
+        // Remove active class from all buttons and content in the same container context 
+        // (assuming multiple tab groups could exist, though usually one per page)
+        // Ideally we scope to the parent container, but global is fine for this specific article usage
+        document.querySelectorAll('.results-tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.results-category-content').forEach(c => c.classList.remove('active'));
 
-                // Show corresponding content
-                const targetId = btn.getAttribute('data-tab');
-                const targetContent = document.getElementById(targetId);
-                if (targetContent) {
-                    targetContent.classList.add('active');
-                }
-            });
-        });
+        // Add active class to clicked button
+        btn.classList.add('active');
+
+        // Show corresponding content
+        const targetId = btn.getAttribute('data-tab');
+        const targetContent = document.getElementById(targetId);
+        if (targetContent) {
+            targetContent.classList.add('active');
+        }
     }
 });
