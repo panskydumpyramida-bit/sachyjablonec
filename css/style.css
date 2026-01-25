@@ -1395,3 +1395,50 @@ footer {
     font-weight: 700;
     color: var(--primary-color);
 }
+
+/* Results Tabs */
+.results-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-bottom: 1.5rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    padding-bottom: 1rem;
+}
+
+.results-tab-btn {
+    background: transparent;
+    border: 1px solid rgba(255, 215, 0, 0.3);
+    color: var(--text-muted);
+    padding: 0.5rem 1rem;
+    cursor: pointer;
+    font-family: var(--font-main);
+    font-weight: 600;
+    transition: all 0.3s ease;
+    border-radius: 4px;
+}
+
+.results-tab-btn:hover {
+    color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+.results-tab-btn.active {
+    background: rgba(212, 175, 55, 0.15);
+    color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+.results-category-content {
+    display: none;
+    animation: fadeIn 0.3s ease;
+}
+
+.results-category-content.active {
+    display: block;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(5px); }
+    to { opacity: 1; transform: translateY(0); }
+}
