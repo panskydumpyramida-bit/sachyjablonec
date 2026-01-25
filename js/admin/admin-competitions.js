@@ -7,7 +7,7 @@
 
 // Get API_URL and authToken from global scope (defined in admin-core.js)
 const getApiUrl = () => window.API_URL || '';
-const getAuthToken = () => window.authToken || localStorage.getItem('authToken') || '';
+const getAuthToken = () => window.authToken || localStorage.getItem('authToken') || localStorage.getItem('auth_token') || '';
 
 /**
  * Update standings from chess.cz
