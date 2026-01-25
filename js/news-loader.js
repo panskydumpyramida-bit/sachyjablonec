@@ -17,6 +17,16 @@ function getGamesIndicator(item) {
     </span>`;
 }
 
+// Helper: Check if article has diagrams and return indicator HTML
+function getDiagramsIndicator(item) {
+    if (!item.content || !item.content.includes('class="diagram-book"')) {
+        return '';
+    }
+    return `<span class="diagrams-indicator" title="Obsahuje diagramy" style="margin-left: 0.5rem; color: #3b82f6;">
+        <i class="fa-solid fa-puzzle-piece"></i>
+    </span>`;
+}
+
 // Helper: Get comment indicator with count and latest info
 function getCommentsIndicator(item) {
     const count = item._count?.comments || 0;
@@ -199,7 +209,7 @@ async function loadNews(options = {}) {
                     </div>
                     <div class="card-content">
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.25rem;">
-                            <span class="card-category" style="margin-bottom: 0;">${escapeHtml(item.category)}${getGamesIndicator(item)}</span>
+                            <span class="card-category" style="margin-bottom: 0;">${escapeHtml(item.category)}${getGamesIndicator(item)}${getDiagramsIndicator(item)}</span>
                             <span class="card-date" style="margin-bottom: 0; font-size: 0.8rem;">${formatDate(item.publishedDate)}</span>
                         </div>
                         
@@ -240,7 +250,7 @@ async function loadNews(options = {}) {
                         <div class="news-cols-layout">
                             <div class="news-cols-content">
                                 <h2 style="font-family: 'Playfair Display', serif; margin: 0 0 0.5rem 0; color: var(--primary-color);">${escapeHtml(item.title)}</h2>
-                                <div style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1rem;">${formatDate(item.publishedDate)}${getGamesIndicator(item)}</div>
+                                <div style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1rem;">${formatDate(item.publishedDate)}${getGamesIndicator(item)}${getDiagramsIndicator(item)}</div>
                                 
                                 <div style="line-height: 1.6; color: var(--text-light); margin-bottom: 1.5rem;">
                                     ${displayMode === 'full'
@@ -286,7 +296,7 @@ async function loadNews(options = {}) {
                         <li>
                             <a href="${getArticleUrl(item)}" class="news-link">
                                 <span class="news-date">${formatDate(item.publishedDate)}</span>
-                                <span class="news-title">${escapeHtml(item.title)}${getGamesIndicator(item)}</span>
+                                <span class="news-title">${escapeHtml(item.title)}${getGamesIndicator(item)}${getDiagramsIndicator(item)}</span>
                             </a>
                         </li>
                     `).join('')}
