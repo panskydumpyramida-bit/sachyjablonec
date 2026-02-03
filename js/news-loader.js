@@ -62,41 +62,105 @@ function getCommentsIndicator(item) {
     </div>`;
 }
 
+// Helper to render pagination controls
+function renderPaginator(meta, options) {
+    if (meta.lastPage <= 1) return '';
+
+    const { page, lastPage } = meta;
+    const { containerId, category, displayMode, limit } = options;
+    const catArg = category ? `'${category}'` : 'null';
+
+    let html = '<div class="pagination-controls" style="grid-column: 1 / -1; display: flex; justify-content: center; align-items: center; gap: 0.5rem; margin-top: 2rem;">';
+
+    // Prev Button
+    if (page > 1) {
+        html += `
+            <button onclick="loadNews({ containerId: '${containerId}', category: ${catArg}, displayMode: '${displayMode}', limit: ${limit}, page: ${page - 1} })"
+                class="pagination-btn" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: var(--text-color); padding: 0.5rem 1rem; border-radius: 4px; cursor: pointer; transition: all 0.2s;">
+                <i class="fa-solid fa-chevron-left"></i>
+            </button>
+        `;
+    }
+
+    // Page Numbers
+    // Simple logic: Show 1, current-1, current, current+1, last
+    const pages = [];
+    if (lastPage <= 7) {
+        for (let i = 1; i <= lastPage; i++) pages.push(i);
+    } else {
+        pages.push(1);
+        if (page > 3) pages.push('...');
+
+        let start = Math.max(2, page - 1);
+        let end = Math.min(lastPage - 1, page + 1);
+
+        for (let i = start; i <= end; i++) pages.push(i);
+
+        if (page < lastPage - 2) pages.push('...');
+        pages.push(lastPage);
+    }
+
+    pages.forEach(p => {
+        if (p === '...') {
+            html += '<span style="color: var(--text-muted);">...</span>';
+        } else {
+            const isActive = p === page;
+            const style = isActive
+                ? 'background: var(--primary-color); color: var(--secondary-color); border-color: var(--primary-color);'
+                : 'background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: var(--text-color);';
+
+            html += `
+                <button onclick="loadNews({ containerId: '${containerId}', category: ${catArg}, displayMode: '${displayMode}', limit: ${limit}, page: ${p} })"
+                    class="pagination-btn" style="${style} padding: 0.5rem 1rem; border-radius: 4px; cursor: pointer; transition: all 0.2s;">
+                    ${p}
+                </button>
+            `;
+        }
+    });
+
+    // Next Button
+    if (page < lastPage) {
+        html += `
+            <button onclick="loadNews({ containerId: '${containerId}', category: ${catArg}, displayMode: '${displayMode}', limit: ${limit}, page: ${page + 1} })"
+                class="pagination-btn" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: var(--text-color); padding: 0.5rem 1rem; border-radius: 4px; cursor: pointer; transition: all 0.2s;">
+                <i class="fa-solid fa-chevron-right"></i>
+            </button>
+        `;
+    }
+
+    html += '</div>';
+    return html;
+}
+
 // Load and render news
 async function loadNews(options = {}) {
     const {
         containerId = 'newsGrid',
         category = null,
-        limit = null,
-        displayMode = 'cards' // 'cards' or 'list'
+        limit = null, // If explicit limit provided, use it. Else backend default?
+        displayMode = 'cards', // 'cards' or 'list'
+        page = 1
     } = options;
 
     const container = document.getElementById(containerId);
 
     if (!container) return;
 
-    // Show loading state only if we are probably doing a fresh load (limit is not 0)
-    // If limit is 0, it means we are expanding "Show More", so we might want to keep content
-    // But currently loadNews fetches everything again.
-    // To prevent layout shift (footer jump), let's keep the old content and append spinner, 
-    // OR just set min-height.
-    // Simplest fix for jump: Don't clear innerHTML immediately if container has content.
-    const isExpanding = limit === 0 && container.children.length > 0;
+    // Use default limit = 6 if not specified, especially for paginated views
+    const effectiveLimit = limit || 6;
 
-    if (!isExpanding) {
-        container.innerHTML = '<div class="loading-spinner"><i class="fa-solid fa-chess-knight fa-spin" style="font-size: 2rem; color: var(--primary-color);"></i></div>';
-    } else {
-        // Appending spinner to end
-        const spinner = document.createElement('div');
-        spinner.className = 'loading-spinner-append';
-        spinner.innerHTML = '<i class="fa-solid fa-chess-knight fa-spin" style="font-size: 2rem; color: var(--primary-color);"></i>';
-        spinner.style.cssText = 'text-align: center; padding: 2rem; width: 100%; grid-column: 1 / -1;';
+    // Show loading state
+    container.innerHTML = '<div class="loading-spinner" style="grid-column: 1 / -1; text-align: center; padding: 4rem;"><i class="fa-solid fa-chess-knight fa-spin" style="font-size: 2rem; color: var(--primary-color);"></i></div>';
 
-        // Remove old "Show More" button if it exists to avoid confusion
-        const oldBtn = container.querySelector('button.read-more');
-        if (oldBtn) oldBtn.closest('div').remove();
-
-        container.appendChild(spinner);
+    // Scroll to top of container if page > 1 (pagination navigation)
+    if (page > 1) {
+        const headerOffset = 100;
+        const elementPosition = container.getBoundingClientRect().top;
+        const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+        window.scrollTo({
+            top: offsetPosition,
+            behavior: "smooth"
+        });
     }
 
     try {
@@ -105,26 +169,30 @@ async function loadNews(options = {}) {
             url += `&category=${encodeURIComponent(category)}`;
         }
 
+        // Pass pagination params
+        url += `&page=${page}&limit=${effectiveLimit}`;
+
         const response = await fetch(url);
 
         if (!response.ok) {
             throw new Error('Failed to fetch news');
         }
 
-        let news = await response.json();
+        const jsonResponse = await response.json();
 
-        // Save full list for stats before applying limit
+        // Handle both simple array (legacy) and { data, meta } (paginated) responses
+        let news = [];
+        let meta = null;
+
+        if (Array.isArray(jsonResponse)) {
+            news = jsonResponse; // Fallback if backend not updated
+        } else {
+            news = jsonResponse.data;
+            meta = jsonResponse.meta;
+        }
+
         // Filter out empty news (no title)
         news = news.filter(item => item.title && item.title.trim() !== '');
-
-        const fullNewsList = [...news];
-
-        // Apply limit logic
-        let hasMore = false;
-        if (limit && limit > 0 && news.length > limit) {
-            news = news.slice(0, limit);
-            hasMore = true;
-        }
 
         if (news.length === 0) {
             // Check if we should hide the parent wrapper
@@ -147,65 +215,72 @@ async function loadNews(options = {}) {
             return;
         }
 
-        // Check if we should show stats header (data-news-show-stats attribute)
+        // Show stats only on first page or always?
         const showStats = container.hasAttribute('data-news-show-stats');
         let statsHtml = '';
 
-        if (showStats && fullNewsList && fullNewsList.length > 0) {
-            const totalCount = fullNewsList.length;
-            const latestPost = fullNewsList[0]; // First item is the latest (sorted by date)
-            const latestDate = formatDate(latestPost.publishedDate);
-            const latestTitle = escapeHtml(latestPost.title);
-
+        if (showStats && meta) {
             statsHtml = `
-                <div class="news-stats-header" style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem; padding: 0.75rem; margin-bottom: 0.75rem; background: rgba(255,255,255,0.03); border-radius: 8px; border: 1px solid rgba(255,255,255,0.05);">
+                <div class="news-stats-header" style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem; padding: 0.75rem; margin-bottom: 0.75rem; background: rgba(255,255,255,0.03); border-radius: 8px; border: 1px solid rgba(255,255,255,0.05); grid-column: 1 / -1;">
                     <div style="display: flex; align-items: center; gap: 1rem;">
                         <span style="display: flex; align-items: center; gap: 0.4rem; color: var(--primary-color); font-weight: 600; font-size: 0.85rem;">
                             <i class="fa-solid fa-newspaper"></i>
-                            ${totalCount} příspěvků
+                            ${meta.total} příspěvků (Strana ${meta.page} z ${meta.lastPage})
                         </span>
                     </div>
-                    <a href="${getArticleUrl(latestPost)}" style="display: flex; align-items: center; gap: 0.5rem; color: var(--text-muted); font-size: 0.8rem; text-decoration: none; transition: color 0.2s;" onmouseover="this.style.color='var(--primary-color)'" onmouseout="this.style.color='var(--text-muted)'">
-                        <i class="fa-solid fa-clock" style="color: var(--primary-color);"></i>
-                        <span>Poslední: <strong style="color: var(--text-light);">${latestTitle.length > 40 ? latestTitle.substring(0, 40) + '...' : latestTitle}</strong></span>
-                        <span style="opacity: 0.7;">${latestDate}</span>
-                    </a>
                 </div>
             `;
+        } else if (showStats && news.length > 0) {
+            // Fallback stats without meta
+            statsHtml = `
+                <div class="news-stats-header" style="grid-column: 1 / -1; display: flex; align-items: center; gap: 1rem; padding: 0.75rem; margin-bottom: 0.75rem; background: rgba(255,255,255,0.03); border-radius: 8px; border: 1px solid rgba(255,255,255,0.05);">
+                    <span style="color: var(--primary-color); font-weight: 600; font-size: 0.85rem;">
+                        <i class="fa-solid fa-newspaper"></i> Novinky
+                    </span>
+                </div>
+             `;
         }
 
         let htmlContent = '';
 
         // Render based on display mode
         if (displayMode === 'cards') {
-            htmlContent = news.map((item, index) => `
-                <article class="card" onclick="window.location.href='${getArticleUrl(item)}'" style="cursor: pointer;">
+            htmlContent = news.map((item, index) => {
+                // Featured logic REMOVED: All cards equal size
+                const cardClass = 'card';
+
+                return `
+                <article class="${cardClass}" onclick="window.location.href='${getArticleUrl(item)}'" style="cursor: pointer;">
                     <div class="card-image">
                         ${(() => {
-                    let thumb = item.thumbnailUrl || 'images/chess_placeholder.jpg';
-                    let crop = 'center';
-                    if (thumb.includes('#crop=')) {
-                        const parts = thumb.split('#crop=');
-                        thumb = parts[0];
-                        crop = parts[1]; // e.g. "25%" or "50%"
-                    }
+                        let thumb = item.thumbnailUrl || 'images/chess_placeholder.jpg';
+                        let crop = 'center';
+                        if (thumb.includes('#crop=')) {
+                            const parts = thumb.split('#crop=');
+                            thumb = parts[0];
+                            crop = parts[1]; // e.g. "25%" or "50%"
+                        }
 
-                    // Use thumbnail version for local uploads if available
-                    // We assume thumbnail exists if it matches our upload pattern
-                    let src = thumb;
-                    if (thumb.startsWith('/uploads/') && !thumb.includes('-thumb')) {
-                        const ext = thumb.split('.').pop();
-                        src = thumb.replace(`.${ext}`, `-thumb.${ext}`);
-                    }
+                        // Use thumbnail version for local uploads if available
+                        let src = thumb;
+                        if (thumb.startsWith('/uploads/') && !thumb.includes('-thumb')) {
+                            const ext = thumb.split('.').pop();
+                            src = thumb.replace(`.${ext}`, `-thumb.${ext}`);
+                        }
 
-                    const loadingAttr = index < 2 ? 'eager' : 'lazy';
-                    return `<img src="${src}" 
+                        // First item on page 1 is eager
+                        const actualLoading = (page === 1 && index < 2) ? 'eager' : 'lazy';
+
+                        const imgWidth = "400";
+                        const imgHeight = "300";
+
+                        return `<img src="${src}" 
                                      alt="${escapeHtml(item.title)}"
-                                     loading="${loadingAttr}"
-                                     width="400" height="300"
+                                     loading="${actualLoading}"
+                                     width="${imgWidth}" height="${imgHeight}"
                                      style="object-position: center ${crop};"
                                      onerror="this.src='${thumb}'; this.onerror=null; this.src='images/chess_placeholder.jpg'">`;
-                })()}
+                    })()}
                     </div>
                     <div class="card-content">
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.25rem;">
@@ -218,19 +293,19 @@ async function loadNews(options = {}) {
                         <!-- Author & Stats -->
                         <div style="display: flex; gap: 1rem; color: var(--text-muted); font-size: 0.8rem; margin: 0 0 0.75rem 0; align-items: center; opacity: 0.8;">
                             ${(() => {
-                    let author = item.authorName;
-                    if (!author && item.author) {
-                        author = (item.author.useRealName && item.author.realName) ? item.author.realName : (item.author.username || 'Admin');
-                    }
-                    if (item.coAuthorName || item.coAuthor) {
-                        let co = item.coAuthorName;
-                        if (!co && item.coAuthor) {
-                            co = (item.coAuthor.useRealName && item.coAuthor.realName) ? item.coAuthor.realName : item.coAuthor.username;
+                        let author = item.authorName;
+                        if (!author && item.author) {
+                            author = (item.author.useRealName && item.author.realName) ? item.author.realName : (item.author.username || 'Admin');
                         }
-                        if (co) author += ` a ${co}`;
-                    }
-                    return author ? `<span><i class="fa-solid fa-user-pen" style="font-size: 0.8em;"></i> ${escapeHtml(author)}</span>` : '';
-                })()}
+                        if (item.coAuthorName || item.coAuthor) {
+                            let co = item.coAuthorName;
+                            if (!co && item.coAuthor) {
+                                co = (item.coAuthor.useRealName && item.coAuthor.realName) ? item.coAuthor.realName : item.coAuthor.username;
+                            }
+                            if (co) author += ` a ${co}`;
+                        }
+                        return author ? `<span><i class="fa-solid fa-user-pen" style="font-size: 0.8em;"></i> ${escapeHtml(author)}</span>` : '';
+                    })()}
                             ${item.viewCount !== undefined ? `<span title="Počet zobrazení"><i class="fa-regular fa-eye" style="font-size: 0.8em;"></i> ${item.viewCount}</span>` : ''}
                         </div>
 
@@ -241,7 +316,7 @@ async function loadNews(options = {}) {
                         </a>
                     </div>
                 </article>
-            `).join('');
+            `}).join('');
         } else if (displayMode === 'full' || displayMode === 'full-short') {
             // Full content display mode - side-by-side layout
             htmlContent = news.map(item => `
@@ -304,43 +379,13 @@ async function loadNews(options = {}) {
             `;
         }
 
-        // Add Show More button if there are more items
-        if (hasMore) {
-            const catArg = category ? `'${category}'` : 'null';
-            htmlContent += `
-                <div style="grid-column: 1 / -1; text-align: center; margin-top: 2rem; width: 100%;">
-                    <button onclick="loadNews({ containerId: '${containerId}', category: ${catArg}, displayMode: '${displayMode}', limit: 0 })"
-                        class="read-more"
-                        style="background: transparent; border: 1px solid var(--primary-color); color: var(--primary-color); cursor: pointer; padding: 0.8rem 2rem; border-radius: 50px; font-weight: 600; display: inline-flex; align-items: center; gap: 0.5rem; transition: all 0.3s;"
-                        onmouseover="this.style.background='rgba(212,175,55,0.1)'"
-                        onmouseout="this.style.background='transparent'">
-                        <i class="fa-solid fa-clock-rotate-left"></i> Zobrazit starší novinky
-                    </button>
-                </div>
-            `;
-        } else {
-            // Check if we are in "Expanded" state to show "Show Less" button
-            // We need to know what the original limit was.
-            const el = document.getElementById(containerId);
-            const originalLimit = el && el.dataset.newsLimit ? parseInt(el.dataset.newsLimit) : 0;
-
-            if (limit === 0 && originalLimit > 0 && news.length > originalLimit) {
-                const catArg = category ? `'${category}'` : 'null';
-                htmlContent += `
-                    <div style="grid-column: 1 / -1; text-align: center; margin-top: 2rem; width: 100%;">
-                        <button onclick="loadNews({ containerId: '${containerId}', category: ${catArg}, displayMode: '${displayMode}', limit: ${originalLimit} })"
-                            class="read-more"
-                            style="background: transparent; border: 1px solid var(--primary-color); color: var(--primary-color); cursor: pointer; padding: 0.8rem 2rem; border-radius: 50px; font-weight: 600; display: inline-flex; align-items: center; gap: 0.5rem; transition: all 0.3s;"
-                            onmouseover="this.style.background='rgba(212,175,55,0.1)'"
-                            onmouseout="this.style.background='transparent'">
-                            <i class="fa-solid fa-compress-arrows-alt"></i> Zobrazit méně
-                        </button>
-                    </div>
-                `;
-            }
+        // Add Paginator if meta allows
+        let paginatorHtml = '';
+        if (meta && meta.lastPage > 1) {
+            paginatorHtml = renderPaginator(meta, { containerId, category, displayMode, limit: effectiveLimit });
         }
 
-        container.innerHTML = statsHtml + htmlContent;
+        container.innerHTML = statsHtml + htmlContent + paginatorHtml;
 
     } catch (error) {
         console.error('Error loading news:', error);

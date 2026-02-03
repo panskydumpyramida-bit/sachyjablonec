@@ -12,7 +12,7 @@ const createSlug = (title) => {
 
 export const getAllNews = async (req, res) => {
     try {
-        const { published, category } = req.query;
+        const { published, category, page, limit } = req.query;
 
         const where = {};
         if (published !== undefined) {
@@ -28,7 +28,12 @@ export const getAllNews = async (req, res) => {
             where.category = category;
         }
 
-        const news = await prisma.news.findMany({
+        // Pagination calculations
+        const pageNum = parseInt(page);
+        const limitNum = parseInt(limit);
+        const isPaginated = !isNaN(pageNum) && !isNaN(limitNum) && pageNum > 0 && limitNum > 0;
+
+        const findOptions = {
             where: Object.keys(where).length > 0 ? where : undefined,
             include: {
                 author: {
@@ -77,9 +82,31 @@ export const getAllNews = async (req, res) => {
             orderBy: {
                 publishedDate: 'desc'
             }
-        });
+        };
 
-        res.json(news);
+        if (isPaginated) {
+            findOptions.skip = (pageNum - 1) * limitNum;
+            findOptions.take = limitNum;
+
+            const [news, total] = await prisma.$transaction([
+                prisma.news.findMany(findOptions),
+                prisma.news.count({ where: findOptions.where })
+            ]);
+
+            res.json({
+                data: news,
+                meta: {
+                    total,
+                    page: pageNum,
+                    limit: limitNum,
+                    lastPage: Math.ceil(total / limitNum)
+                }
+            });
+        } else {
+            const news = await prisma.news.findMany(findOptions);
+            res.json(news);
+        }
+
     } catch (error) {
         console.error('Get news error:', error);
         res.status(500).json({ error: 'Failed to get news' });

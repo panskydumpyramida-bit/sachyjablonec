@@ -110,7 +110,6 @@ const UpcomingMatches = {
 
             // Render to Rotator
             this.render(null, selectedMatches);
-
         } catch (e) {
             console.error('UpcomingMatches error:', e);
         }
@@ -128,15 +127,32 @@ const UpcomingMatches = {
                 const parts = cleanDate.split('/');
                 return `${parseInt(parts[2])}. ${parseInt(parts[1])}.`;
             }
-            const parts = cleanDate.split('.');
-            return `${parseInt(parts[0])}. ${parseInt(parts[1])}.`;
+            if (cleanDate.includes('.')) {
+                const parts = cleanDate.split('.');
+                // Assuming d.m.yyyy or similar
+                return `${parseInt(parts[0])}. ${parseInt(parts[1])}.`;
+            }
+            return dateStr;
         } catch (e) { return dateStr; }
     },
 
     render(container, matches) {
         // Find the rotator elements
-        const rotator = document.querySelector('#match-rotator-tile .rotator-inner');
+        const tile = document.getElementById('match-rotator-tile');
+        const rotator = tile.querySelector('.rotator-inner');
         if (!rotator) return;
+
+        // Static click handler - always go to calendar
+        // If we want specific match anchor, we can update a data attribute
+        tile.onclick = (e) => {
+            // Check if we have a specific match ID stored
+            const matchId = tile.dataset.matchId;
+            if (matchId) {
+                window.location.href = `calendar.html?matchId=${matchId}`;
+            } else {
+                window.location.href = 'calendar.html';
+            }
+        };
 
         const faceFront = rotator.querySelector('.face-front');
         const faceBack = rotator.querySelector('.face-back');
@@ -150,13 +166,15 @@ const UpcomingMatches = {
             ...matches.map(m => ({ type: 'match', data: m }))
         ];
 
-        let currentIndex = 0; // Currently visible item index
-        let isFlipped = false; // false = Front visible, true = Back visible
+        let currentIndex = 0;
+        let isFlipped = false;
 
         // Function to render match content
         const getMatchHtml = (m) => {
             const homeAway = m.isHome ? 'DOMA' : 'VENKU';
             const homeAwayColor = m.isHome ? 'var(--primary-color)' : 'rgba(255,255,255,0.7)';
+            // We need to re-format date from the object
+            // The object has dateStr which is original string
             const dateFmt = this.formatDate(m.dateStr);
 
             return `
@@ -182,29 +200,28 @@ const UpcomingMatches = {
         setInterval(() => {
             const nextIndex = (currentIndex + 1) % items.length;
             const item = items[nextIndex];
-            const html = item.type === 'title' ? item.content : getMatchHtml(item.data);
+
+            // Determine content for the NEXT face
+            // If currently front (isFlipped=false), we want to update BACK and then flip to True.
+            // If currently back (isFlipped=true), we want to update FRONT and then flip to False.
 
             const targetFace = isFlipped ? faceFront : faceBack;
-            targetFace.innerHTML = html;
 
-            requestAnimationFrame(() => {
-                isFlipped = !isFlipped;
-                if (isFlipped) {
-                    rotator.classList.add('rotated');
-                } else {
-                    rotator.classList.remove('rotated');
-                }
+            if (item.type === 'title') {
+                targetFace.innerHTML = item.content;
+                tile.dataset.matchId = ''; // Clear match ID
+            } else {
+                targetFace.innerHTML = getMatchHtml(item.data);
+                tile.dataset.matchId = item.data.matchId; // Store match ID
+            }
 
-                // Update click handler on the container
-                const tile = document.getElementById('match-rotator-tile');
-                if (tile) {
-                    if (item.type === 'match') {
-                        tile.onclick = () => window.location.href = `calendar.html?matchId=${item.data.matchId}`;
-                    } else {
-                        tile.onclick = () => window.location.href = 'calendar.html';
-                    }
-                }
-            });
+            // Perform flip
+            isFlipped = !isFlipped;
+            if (isFlipped) {
+                rotator.classList.add('rotated');
+            } else {
+                rotator.classList.remove('rotated');
+            }
 
             currentIndex = nextIndex;
 

@@ -1,237 +1,487 @@
-<div class="article-container">
+
+    
+    <style>
+        .article-container {
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+        @media (min-width: 1024px) {
+            .article-container {
+                flex-direction: row;
+                align-items: flex-start;
+            }
+            .article-text {
+                flex: 1;
+                padding-right: 2rem;
+            }
+            .article-results {
+                flex: 1;
+                min-width: 0;
+            }
+        }
+        
+        /* Tab Buttons - Classic Dark */
+        .results-tab-btn {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            color: #ccc;
+            padding: 0.5rem 1rem;
+            cursor: pointer;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+        .results-tab-btn:hover {
+            background: rgba(255,255,255,0.1);
+            color: #fff;
+        }
+        .results-tab-btn.active {
+            background: rgba(255,255,255,0.15);
+            color: #d4af37; /* Gold accent */
+            border-color: #d4af37;
+        }
+        
+        /* Animation */
+        .results-category-content {
+            display: none;
+            animation: fadeIn 0.3s ease-in-out;
+        }
+        .results-category-content.active {
+            display: block;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+    
+    <div class="article-container">
+        
     <div class="article-text">
-        <p class="MsoNormal" style="margin: 0cm 0cm 8pt; line-height: 18.4px;">V sobotu 17. ledna 2026 se v prostorách
-            Základní školy Broumovská v Liberci uskutečnil tradiční šachový turnaj O pohár ředitele ZŠ Broumovská.
-            Přilákal mladé talenty z celého šachového severu.</p>
-        <p class="MsoNormal" style="margin: 0cm 0cm 8pt; line-height: 18.4px;">Sedmikolový turnaj se hrál standardním
-            rapidovým tempem 2x15 minut na partii s přídavkem 5 sekund na tah. Turnaje se zúčastnilo 125 hráčů především
-            z Libereckého kraje. Účastníky ale byli i šachisté a šachistky z jiných krajů.</p>
-        <p class="MsoNormal" style="margin: 0cm 0cm 8pt; line-height: 18.4px;">V kategorii U8-10 soutěžily čtyři desítky
-            nejmladších účastníků, mezi nimi sedm z našeho oddílu. Mezi chlapci si výborně vedli v absolutním pořadí
-            třináctý <span class="highlight-name">Roman Tsantsala</span> a patnáctý <span class="highlight-name">David
-                Čermák</span>, oba se 4 body. <span class="highlight-name">Roman Tsantsala</span> získal skvělé zlato v
-            kategorii osmiletých chlapců. Premiéru na tomto turnaji měly dvě sourozenecké dvojice: Maiia a <span
-                class="highlight-name">Marta Votus</span> získaly po 3 body, bodovali i Eduard a Čeněk Arnoštovi.
-            Nejúspěšnější účastnicí v této kategorii byla <span class="highlight-name">Lola Vojnov</span>á, která s 5
-            body vyhrála kategorii desetiletých dívek, když se o prvenství přetahovala až do posledního kola s <span
-                class="highlight-name">Terezií Pospíšilovou</span> z turnovské Zikudy. Celkovým vítězem se stal <span
-                class="highlight-name">Munkhduuren Enkhbaatar</span> z TJ <span class="highlight-name">Lázně
-                Bělohrad</span>.</p>
-        <p class="MsoNormal" style="margin: 0cm 0cm 8pt; line-height: 18.4px;">Téměř stejně hojný počet účastníků (39)
-            měla soutěžní kategorie U12, patnáct z nich tvořili hráči našeho oddílu. Z chlapců se nejlépe, na 9. místě,
-            umístil <span class="highlight-name">Tobiáš Bárta</span> se 4,5 body, do druhé desítky také zamířili
-            čtyřbodoví <span class="highlight-name">Jonáš Mal</span>ý, <span class="highlight-name">Jakub Šikola</span>
-            a <span class="highlight-name">Martin Bubeník</span>. Vítězem v této věkové skupině se stal českolipský
-            <span class="highlight-name">Michael Marcinkovskij</span>.
-        </p>
-        <p class="MsoNormal" style="margin: 0cm 0cm 8pt; line-height: 18.4px;"> V kategorii U14 se utkalo se utkalo více
-            než dvacítka šachistů, z toho polovina v barvách Bižuterie. Dívky byly lepší chlapců. V absolutním pořadí
-            obsadila pěkné 5. místo Žofie Sengrová (4,5 bodů), která těsně vyhrála kategorii dívek před <span
-                class="highlight-name">Emou Brehmovou</span> (4 body). V první desítce byli rovněž na 7. místě <span
-                class="highlight-name">Lukáš Adámek</span> a na 8. místě <span class="highlight-name">Nikita
-                Busko</span>, oba se 4 body. V kategorii zvítězil <span class="highlight-name">Jonáš Roubíček</span> z
-            ŠK <span class="highlight-name">Zikuda Turnov</span>.</p>
-        <p class="MsoNormal" style="margin: 0cm 0cm 8pt; line-height: 18.4px;">Ve spojené kategorii šachistů od
-            šestnácti do osmnácti let (U16-18) soutěžila pětice hráčů Bižuterie. V kategorii H16 turnaj skončil velkým
-            úspěchem našeho oddílu, když 1. místo obsadil <span class="highlight-name">Aleš Červe</span>ň (6. bodů, 1.
-            celkově), stříbro bral <span class="highlight-name">Tomáš Mrlina</span> (5 bodů, 3. celkově) a bronz <span
-                class="highlight-name">Vojtěch Hádek</span> (4,5 bodu, 4. celkově). Šestý v celkovém pořadí byl také
-            <span class="highlight-name">Ivan Sengr</span> (4 body).
-        </p>
-        <p class="MsoNormal" style="margin: 0cm 0cm 8pt; line-height: 18.4px;">V kategorii Elite jsme měli dvě želízka v
-            ohni. Mezi dvanáctkou hráčů s nejvyšším ratingem na turnaji se na bronzovou příčku prosadil <span
-                class="highlight-name">Kosťa Tsantsala</span> (celkově 4,5 bodu), když po zaváháních v první části
-            turnaje předvedl výborný finiš (2,5 bodu ze 3). Druhý zástupce našeho oddílu, <span
-                class="highlight-name">Jonáš Chvátal</span>, získal 1,5 bodu. Celkovým vítězem kategorie se stal <span
-                class="highlight-name">Václav Bělaška</span> z TJ <span class="highlight-name">Desko Liberec</span>.</p>
-        <p class="MsoNormal" style="margin: 0cm 0cm 8pt; line-height: 18.4px;">Blahopřejeme našim dětem za dosažené
-            úspěchy v jednotlivých kategoriích libereckého turnaje.</p>
-        <p style="margin: 0cm 0cm 8pt; line-height: 18.4px;">Organizátorům patří poděkování za hladký průběh celého
-            turnaje a přátelské šachové prostředí. ZŠ Broumovská opět potvrdila, že podporuje nejen vzdělávání, ale také
-            smysluplné trávení volného času dětí na čtyřiašedesáti černobílých polích.</p>
-        <p><br><strong>Zde jsou výsledky našich hráčů v jednotlivých kategoriích:</strong></p>
+        <p class="MsoNormal" style="margin: 0cm 0cm 8pt; line-height: 1.6; color: #e5e7eb;">V sobotu 17. ledna 2026 se v prostorách Základní školy Broumovská v Liberci uskutečnil tradiční šachový turnaj O pohár ředitele ZŠ Broumovská. Přilákal mladé talenty z celého šachového severu.</p>
+        <p class="MsoNormal" style="margin: 0cm 0cm 8pt; line-height: 1.6; color: #e5e7eb;">Sedmikolový turnaj se hrál standardním rapidovým tempem 2x15 minut na partii s přídavkem 5 sekund na tah. Turnaje se zúčastnilo 125 hráčů především z Libereckého kraje. Účastníky ale byli i šachisté a šachistky z jiných krajů.</p>
+        <p class="MsoNormal" style="margin: 0cm 0cm 8pt; line-height: 1.6; color: #e5e7eb;">V kategorii U8-10 soutěžily čtyři desítky nejmladších účastníků, mezi nimi sedm z našeho oddílu. Mezi chlapci si výborně vedli v absolutním pořadí třináctý <strong>Roman Tsantsala</strong> a patnáctý <strong>David Čermák</strong>, oba se 4 body. <strong>Roman Tsantsala</strong> získal skvělé zlato v kategorii osmiletých chlapců. Premiéru na tomto turnaji měly dvě sourozenecké dvojice: Maiia a <strong>Marta Votus</strong> získaly po 3 body, bodovali i Eduard a Čeněk Arnoštovi. Nejúspěšnější účastnicí v této kategorii byla <strong>Lola Vojnová</strong>, která s 5 body vyhrála kategorii desetiletých dívek, když se o prvenství přetahovala až do posledního kola s Terezií Pospíšilovou z turnovské Zikudy. Celkovým vítězem se stal Munkhduuren Enkhbaatar z TJ Lázně Bělohrad.</p>
+        <p class="MsoNormal" style="margin: 0cm 0cm 8pt; line-height: 1.6; color: #e5e7eb;">Téměř stejně hojný počet účastníků (39) měla soutěžní kategorie U12, patnáct z nich tvořili hráči našeho oddílu. Z chlapců se nejlépe, na 9. místě, umístil <strong>Tobiáš Bárta</strong> se 4,5 body, do druhé desítky také zamířili čtyřbodoví Jonáš Malý, Jakub Šikola a Martin Bubeník. Vítězem v této věkové skupině se stal českolipský Michael Marcinkovskij.</p>
+        <p class="MsoNormal" style="margin: 0cm 0cm 8pt; line-height: 1.6; color: #e5e7eb;">V kategorii U14 se utkalo se utkalo více než dvacítka šachistů, z toho polovina v barvách Bižuterie. Dívky byly lepší chlapců. V absolutním pořadí obsadila pěkné 5. místo Žofie Sengrová (4,5 bodů), která těsně vyhrála kategorii dívek před Emou Brehmovou (4 body). V první desítce byli rovněž na 7. místě Lukáš Adámek a na 8. místě Nikita Busko, oba se 4 body. V kategorii zvítězil Jonáš Roubíček z ŠK Zikuda Turnov.</p>
+        <p class="MsoNormal" style="margin: 0cm 0cm 8pt; line-height: 1.6; color: #e5e7eb;">Ve spojené kategorii šachistů od šestnácti do osmnácti let (U16-18) soutěžila pětice hráčů Bižuterie. V kategorii H16 turnaj skončil velkým úspěchem našeho oddílu, když 1. místo obsadil <strong>Aleš Červeň</strong> (6. bodů, 1. celkově), stříbro bral <strong>Tomáš Mrlina</strong> (5 bodů, 3. celkově) a bronz <strong>Vojtěch Hádek</strong> (4,5 bodu, 4. celkově). Šestý v celkovém pořadí byl také Ivan Sengr (4 body).</p>
+        <p class="MsoNormal" style="margin: 0cm 0cm 8pt; line-height: 1.6; color: #e5e7eb;">V kategorii Elite jsme měli dvě želízka v ohni. Mezi dvanáctkou hráčů s nejvyšším ratingem na turnaji se na bronzovou příčku prosadil <strong>Kosťa Tsantsala</strong> (celkově 4,5 bodu), když po zaváháních v první části turnaje předvedl výborný finiš (2,5 bodu ze 3). Druhý zástupce našeho oddílu, Jonáš Chvátal, získal 1,5 bodu. Celkovým vítězem kategorie se stal Václav Bělaška z TJ Desko Liberec.</p>
+        <p class="MsoNormal" style="margin: 0cm 0cm 8pt; line-height: 1.6; color: #e5e7eb;">Blahopřejeme našim dětem za dosažené úspěchy v jednotlivých kategoriích libereckého turnaje.</p>
+        <p class="MsoNormal" style="margin: 0cm 0cm 8pt; line-height: 1.6; color: #e5e7eb;">Organizátorům patří poděkování za hladký průběh celého turnaje a přátelské šachové prostředí. ZŠ Broumovská opět potvrdila, že podporuje nejen vzdělávání, ale také smysluplné trávení volného času dětí na čtyřiašedesáti černobílých polích.</p>
     </div>
-
-    <div class="article-results">
-        <div class="results-tabs">
-            <button class="results-tab-btn active" data-tab="tab-U8-10">U8-10</button>
-            <button class="results-tab-btn" data-tab="tab-U12">U12</button>
-            <button class="results-tab-btn" data-tab="tab-U14">U14</button>
-            <button class="results-tab-btn" data-tab="tab-U16-18">U16-18</button>
-            <button class="results-tab-btn" data-tab="tab-Elite">Elite</button>
-        </div>
-
+    
+        <div class="article-results"><div class="article-results-tabs-wrapper"><div class="results-tabs" style="display: flex; gap: 0.5rem; margin-bottom: 1.5rem; flex-wrap: wrap;"><button class="results-tab-btn active" data-tab="tab-U8-10">U8-10</button><button class="results-tab-btn " data-tab="tab-U12">U12</button><button class="results-tab-btn " data-tab="tab-U14">U14</button><button class="results-tab-btn " data-tab="tab-U16-18">U16-18</button><button class="results-tab-btn " data-tab="tab-Elite">Elite</button></div></div>
         <div id="tab-U8-10" class="results-category-content active">
-            <h3 class="results-category-title">Kategorie U8-10</h3>
-            <table class="results-table">
+            <h3 class="results-category-title" style="color: #d4af37; margin-bottom: 1rem;">Kategorie U8-10</h3>
+            <table class="results-table" style="width: 100%; border-collapse: collapse; font-size: 0.95rem;">
                 <thead>
-                    <tr>
-                        <th>Poř.</th>
-                        <th>Jméno</th>
-                        <th>Oddíl</th>
-                        <th>Body</th>
+                    <tr style="background: rgba(255,255,255,0.05);">
+                        <th style="padding: 8px; text-align: center; color: #888; font-size: 0.85rem;">Poř.</th>
+                        <th style="padding: 8px; text-align: left; color: #888; font-size: 0.85rem;">Jméno</th>
+                        <th style="padding: 8px; text-align: left; color: #888; font-size: 0.85rem;">Oddíl</th>
+                        <th style="padding: 8px; text-align: center; color: #888; font-size: 0.85rem;">Body</th>
                     </tr>
                 </thead>
                 <tbody>
-                    <tr>
-                        <td>1.</td>
-                        <td>ŞEN, UTKU</td>
-                        <td>1261</td>
-                        <td><strong>72,5</strong></td>
-                    </tr>
-                    <tr>
-                        <td>2.</td>
-                        <td>KASAP, ÖMÜR KAYRA</td>
-                        <td>1191</td>
-                        <td><strong>68</strong></td>
-                    </tr>
-                    <tr>
-                        <td>3.</td>
-                        <td>DURMUŞ, ULAÇ EYMEN</td>
-                        <td>1205</td>
-                        <td><strong>75</strong></td>
-                    </tr>
+                    
+            <tr style="border-bottom: 1px solid #333;">
+                <td style="padding: 8px; text-align: center; color: #aaa;">1.</td>
+                <td style="padding: 8px; ">Enkhbaatar, Munkhduuren</td>
+                <td style="padding: 8px; font-size: 0.9em; color: #aaa;">Lázně Bělohrad z.s.</td>
+                <td style="padding: 8px; text-align: center;"><strong>7</strong></td>
+            </tr>
+        
+            <tr style="border-bottom: 1px solid #333;">
+                <td style="padding: 8px; text-align: center; color: #aaa;">2.</td>
+                <td style="padding: 8px; ">Žabka, Jiří</td>
+                <td style="padding: 8px; font-size: 0.9em; color: #aaa;">Desko Liberec</td>
+                <td style="padding: 8px; text-align: center;"><strong>5,5</strong></td>
+            </tr>
+        
+            <tr style="border-bottom: 1px solid #333;">
+                <td style="padding: 8px; text-align: center; color: #aaa;">3.</td>
+                <td style="padding: 8px; ">Buchta, Marek</td>
+                <td style="padding: 8px; font-size: 0.9em; color: #aaa;">ZIKUDA Turnov, z.s.</td>
+                <td style="padding: 8px; text-align: center;"><strong>5,5</strong></td>
+            </tr>
+        
+            <tr style="background-color: rgba(59, 130, 246, 0.15); border-left: 2px solid #2563eb;">
+                <td style="padding: 8px; text-align: center; color: #aaa;">8.</td>
+                <td style="padding: 8px; color: #ffca28; font-weight: bold;">Vojnová, Lola</td>
+                <td style="padding: 8px; font-size: 0.9em; color: #aaa;"><strong>TJ Bižuterie</strong></td>
+                <td style="padding: 8px; text-align: center;"><strong>5</strong></td>
+            </tr>
+        
+            <tr style="background-color: rgba(59, 130, 246, 0.15); border-left: 2px solid #2563eb;">
+                <td style="padding: 8px; text-align: center; color: #aaa;">13.</td>
+                <td style="padding: 8px; color: #ffca28; font-weight: bold;">Tsantsala, Roman</td>
+                <td style="padding: 8px; font-size: 0.9em; color: #aaa;"><strong>TJ Bižuterie</strong></td>
+                <td style="padding: 8px; text-align: center;"><strong>4</strong></td>
+            </tr>
+        
+            <tr style="background-color: rgba(59, 130, 246, 0.15); border-left: 2px solid #2563eb;">
+                <td style="padding: 8px; text-align: center; color: #aaa;">16.</td>
+                <td style="padding: 8px; color: #ffca28; font-weight: bold;">Čermák, David</td>
+                <td style="padding: 8px; font-size: 0.9em; color: #aaa;"><strong>TJ Bižuterie</strong></td>
+                <td style="padding: 8px; text-align: center;"><strong>4</strong></td>
+            </tr>
+        
+            <tr style="background-color: rgba(59, 130, 246, 0.15); border-left: 2px solid #2563eb;">
+                <td style="padding: 8px; text-align: center; color: #aaa;">28.</td>
+                <td style="padding: 8px; color: #ffca28; font-weight: bold;">Votus, Maiia</td>
+                <td style="padding: 8px; font-size: 0.9em; color: #aaa;"><strong>TJ Bižuterie</strong></td>
+                <td style="padding: 8px; text-align: center;"><strong>3</strong></td>
+            </tr>
+        
+            <tr style="background-color: rgba(59, 130, 246, 0.15); border-left: 2px solid #2563eb;">
+                <td style="padding: 8px; text-align: center; color: #aaa;">29.</td>
+                <td style="padding: 8px; color: #ffca28; font-weight: bold;">Votus, Marta</td>
+                <td style="padding: 8px; font-size: 0.9em; color: #aaa;"><strong>TJ Bižuterie</strong></td>
+                <td style="padding: 8px; text-align: center;"><strong>3</strong></td>
+            </tr>
+        
                 </tbody>
             </table>
         </div>
-
+    
         <div id="tab-U12" class="results-category-content">
-            <h3 class="results-category-title">Kategorie U12</h3>
-            <table class="results-table">
+            <h3 class="results-category-title" style="color: #d4af37; margin-bottom: 1rem;">Kategorie U12</h3>
+            <table class="results-table" style="width: 100%; border-collapse: collapse; font-size: 0.95rem;">
                 <thead>
-                    <tr>
-                        <th>Poř.</th>
-                        <th>Jméno</th>
-                        <th>Oddíl</th>
-                        <th>Body</th>
+                    <tr style="background: rgba(255,255,255,0.05);">
+                        <th style="padding: 8px; text-align: center; color: #888; font-size: 0.85rem;">Poř.</th>
+                        <th style="padding: 8px; text-align: left; color: #888; font-size: 0.85rem;">Jméno</th>
+                        <th style="padding: 8px; text-align: left; color: #888; font-size: 0.85rem;">Oddíl</th>
+                        <th style="padding: 8px; text-align: center; color: #888; font-size: 0.85rem;">Body</th>
                     </tr>
                 </thead>
                 <tbody>
-                    <tr>
-                        <td>1.</td>
-                        <td>Bùi, Đức Huy</td>
-                        <td>6</td>
-                        <td><strong>4</strong></td>
-                    </tr>
-                    <tr>
-                        <td>2.</td>
-                        <td>Nguyễn, Thế Tuấn Anh</td>
-                        <td>5,5</td>
-                        <td><strong>3</strong></td>
-                    </tr>
-                    <tr>
-                        <td>3.</td>
-                        <td>Chang, Phạm Hoàng Hải</td>
-                        <td>4,5</td>
-                        <td><strong>2</strong></td>
-                    </tr>
+                    
+            <tr style="border-bottom: 1px solid #333;">
+                <td style="padding: 8px; text-align: center; color: #aaa;">1.</td>
+                <td style="padding: 8px; ">Marcinkovskij, Michael</td>
+                <td style="padding: 8px; font-size: 0.9em; color: #aaa;">Česká Lípa</td>
+                <td style="padding: 8px; text-align: center;"><strong>6</strong></td>
+            </tr>
+        
+            <tr style="border-bottom: 1px solid #333;">
+                <td style="padding: 8px; text-align: center; color: #aaa;">2.</td>
+                <td style="padding: 8px; ">Jihlavec, Petr</td>
+                <td style="padding: 8px; font-size: 0.9em; color: #aaa;">ZIKUDA Turnov, z.s.</td>
+                <td style="padding: 8px; text-align: center;"><strong>6</strong></td>
+            </tr>
+        
+            <tr style="border-bottom: 1px solid #333;">
+                <td style="padding: 8px; text-align: center; color: #aaa;">3.</td>
+                <td style="padding: 8px; ">Dorchynets, Mykhaylo</td>
+                <td style="padding: 8px; font-size: 0.9em; color: #aaa;">ZIKUDA Turnov, z.s.</td>
+                <td style="padding: 8px; text-align: center;"><strong>5,5</strong></td>
+            </tr>
+        
+            <tr style="background-color: rgba(59, 130, 246, 0.15); border-left: 2px solid #2563eb;">
+                <td style="padding: 8px; text-align: center; color: #aaa;">9.</td>
+                <td style="padding: 8px; color: #ffca28; font-weight: bold;">Bárta, Tobiáš</td>
+                <td style="padding: 8px; font-size: 0.9em; color: #aaa;"><strong>TJ Bižuterie</strong></td>
+                <td style="padding: 8px; text-align: center;"><strong>4,5</strong></td>
+            </tr>
+        
+            <tr style="background-color: rgba(59, 130, 246, 0.15); border-left: 2px solid #2563eb;">
+                <td style="padding: 8px; text-align: center; color: #aaa;">11.</td>
+                <td style="padding: 8px; color: #ffca28; font-weight: bold;">Malý, Jonáš</td>
+                <td style="padding: 8px; font-size: 0.9em; color: #aaa;"><strong>TJ Bižuterie</strong></td>
+                <td style="padding: 8px; text-align: center;"><strong>4</strong></td>
+            </tr>
+        
+            <tr style="background-color: rgba(59, 130, 246, 0.15); border-left: 2px solid #2563eb;">
+                <td style="padding: 8px; text-align: center; color: #aaa;">16.</td>
+                <td style="padding: 8px; color: #ffca28; font-weight: bold;">Šikola, Jakub</td>
+                <td style="padding: 8px; font-size: 0.9em; color: #aaa;"><strong>TJ Bižuterie</strong></td>
+                <td style="padding: 8px; text-align: center;"><strong>4</strong></td>
+            </tr>
+        
+            <tr style="background-color: rgba(59, 130, 246, 0.15); border-left: 2px solid #2563eb;">
+                <td style="padding: 8px; text-align: center; color: #aaa;">18.</td>
+                <td style="padding: 8px; color: #ffca28; font-weight: bold;">Bubeník, Martin</td>
+                <td style="padding: 8px; font-size: 0.9em; color: #aaa;"><strong>TJ Bižuterie</strong></td>
+                <td style="padding: 8px; text-align: center;"><strong>4</strong></td>
+            </tr>
+        
+            <tr style="background-color: rgba(59, 130, 246, 0.15); border-left: 2px solid #2563eb;">
+                <td style="padding: 8px; text-align: center; color: #aaa;">20.</td>
+                <td style="padding: 8px; color: #ffca28; font-weight: bold;">Yakym, Matvii</td>
+                <td style="padding: 8px; font-size: 0.9em; color: #aaa;"><strong>TJ Bižuterie</strong></td>
+                <td style="padding: 8px; text-align: center;"><strong>3,5</strong></td>
+            </tr>
+        
+            <tr style="background-color: rgba(59, 130, 246, 0.15); border-left: 2px solid #2563eb;">
+                <td style="padding: 8px; text-align: center; color: #aaa;">23.</td>
+                <td style="padding: 8px; color: #ffca28; font-weight: bold;">Bubeník, Jaroslav</td>
+                <td style="padding: 8px; font-size: 0.9em; color: #aaa;"><strong>TJ Bižuterie</strong></td>
+                <td style="padding: 8px; text-align: center;"><strong>3</strong></td>
+            </tr>
+        
+            <tr style="background-color: rgba(59, 130, 246, 0.15); border-left: 2px solid #2563eb;">
+                <td style="padding: 8px; text-align: center; color: #aaa;">24.</td>
+                <td style="padding: 8px; color: #ffca28; font-weight: bold;">Kosina, Filip</td>
+                <td style="padding: 8px; font-size: 0.9em; color: #aaa;"><strong>TJ Bižuterie</strong></td>
+                <td style="padding: 8px; text-align: center;"><strong>3</strong></td>
+            </tr>
+        
+            <tr style="background-color: rgba(59, 130, 246, 0.15); border-left: 2px solid #2563eb;">
+                <td style="padding: 8px; text-align: center; color: #aaa;">26.</td>
+                <td style="padding: 8px; color: #ffca28; font-weight: bold;">Paul, Matyáš</td>
+                <td style="padding: 8px; font-size: 0.9em; color: #aaa;"><strong>TJ Bižuterie</strong></td>
+                <td style="padding: 8px; text-align: center;"><strong>3</strong></td>
+            </tr>
+        
+            <tr style="background-color: rgba(59, 130, 246, 0.15); border-left: 2px solid #2563eb;">
+                <td style="padding: 8px; text-align: center; color: #aaa;">27.</td>
+                <td style="padding: 8px; color: #ffca28; font-weight: bold;">Žabka, Martin</td>
+                <td style="padding: 8px; font-size: 0.9em; color: #aaa;"><strong>TJ Bižuterie</strong></td>
+                <td style="padding: 8px; text-align: center;"><strong>3</strong></td>
+            </tr>
+        
+            <tr style="background-color: rgba(59, 130, 246, 0.15); border-left: 2px solid #2563eb;">
+                <td style="padding: 8px; text-align: center; color: #aaa;">32.</td>
+                <td style="padding: 8px; color: #ffca28; font-weight: bold;">Zasche, Theodor</td>
+                <td style="padding: 8px; font-size: 0.9em; color: #aaa;"><strong>TJ Bižuterie</strong></td>
+                <td style="padding: 8px; text-align: center;"><strong>2,5</strong></td>
+            </tr>
+        
+            <tr style="background-color: rgba(59, 130, 246, 0.15); border-left: 2px solid #2563eb;">
+                <td style="padding: 8px; text-align: center; color: #aaa;">33.</td>
+                <td style="padding: 8px; color: #ffca28; font-weight: bold;">Novotný, Petr</td>
+                <td style="padding: 8px; font-size: 0.9em; color: #aaa;"><strong>TJ Bižuterie</strong></td>
+                <td style="padding: 8px; text-align: center;"><strong>2</strong></td>
+            </tr>
+        
+            <tr style="background-color: rgba(59, 130, 246, 0.15); border-left: 2px solid #2563eb;">
+                <td style="padding: 8px; text-align: center; color: #aaa;">36.</td>
+                <td style="padding: 8px; color: #ffca28; font-weight: bold;">Bubeník, Václav</td>
+                <td style="padding: 8px; font-size: 0.9em; color: #aaa;"><strong>TJ Bižuterie</strong></td>
+                <td style="padding: 8px; text-align: center;"><strong>2</strong></td>
+            </tr>
+        
+            <tr style="background-color: rgba(59, 130, 246, 0.15); border-left: 2px solid #2563eb;">
+                <td style="padding: 8px; text-align: center; color: #aaa;">38.</td>
+                <td style="padding: 8px; color: #ffca28; font-weight: bold;">Němcová, Anna</td>
+                <td style="padding: 8px; font-size: 0.9em; color: #aaa;"><strong>TJ Bižuterie</strong></td>
+                <td style="padding: 8px; text-align: center;"><strong>1,5</strong></td>
+            </tr>
+        
                 </tbody>
             </table>
         </div>
-
+    
         <div id="tab-U14" class="results-category-content">
-            <h3 class="results-category-title">Kategorie U14</h3>
-            <table class="results-table">
+            <h3 class="results-category-title" style="color: #d4af37; margin-bottom: 1rem;">Kategorie U14</h3>
+            <table class="results-table" style="width: 100%; border-collapse: collapse; font-size: 0.95rem;">
                 <thead>
-                    <tr>
-                        <th>Poř.</th>
-                        <th>Jméno</th>
-                        <th>Oddíl</th>
-                        <th>Body</th>
+                    <tr style="background: rgba(255,255,255,0.05);">
+                        <th style="padding: 8px; text-align: center; color: #888; font-size: 0.85rem;">Poř.</th>
+                        <th style="padding: 8px; text-align: left; color: #888; font-size: 0.85rem;">Jméno</th>
+                        <th style="padding: 8px; text-align: left; color: #888; font-size: 0.85rem;">Oddíl</th>
+                        <th style="padding: 8px; text-align: center; color: #888; font-size: 0.85rem;">Body</th>
                     </tr>
                 </thead>
                 <tbody>
-                    <tr>
-                        <td>1.</td>
-                        <td>BÖCÜ, EDİZ</td>
-                        <td>ARTVİN</td>
-                        <td><strong>4</strong></td>
-                    </tr>
-                    <tr>
-                        <td>2.</td>
-                        <td>YILMAZLAR, TARIK</td>
-                        <td>ARTVİN</td>
-                        <td><strong>3</strong></td>
-                    </tr>
-                    <tr>
-                        <td>3.</td>
-                        <td>KARACA, MEVLÜT YUSUF</td>
-                        <td>ARTVİN</td>
-                        <td><strong>2</strong></td>
-                    </tr>
+                    
+            <tr style="border-bottom: 1px solid #333;">
+                <td style="padding: 8px; text-align: center; color: #aaa;">1.</td>
+                <td style="padding: 8px; ">Roubíček, Jonáš</td>
+                <td style="padding: 8px; font-size: 0.9em; color: #aaa;">ZIKUDA Turnov, z.s.</td>
+                <td style="padding: 8px; text-align: center;"><strong>7</strong></td>
+            </tr>
+        
+            <tr style="border-bottom: 1px solid #333;">
+                <td style="padding: 8px; text-align: center; color: #aaa;">2.</td>
+                <td style="padding: 8px; ">Král, Michal</td>
+                <td style="padding: 8px; font-size: 0.9em; color: #aaa;">ZIKUDA Turnov, z.s.</td>
+                <td style="padding: 8px; text-align: center;"><strong>5</strong></td>
+            </tr>
+        
+            <tr style="border-bottom: 1px solid #333;">
+                <td style="padding: 8px; text-align: center; color: #aaa;">3.</td>
+                <td style="padding: 8px; ">Bondarenko, Dmytro</td>
+                <td style="padding: 8px; font-size: 0.9em; color: #aaa;">ZIKUDA Turnov, z.s.</td>
+                <td style="padding: 8px; text-align: center;"><strong>5</strong></td>
+            </tr>
+        
+            <tr style="background-color: rgba(59, 130, 246, 0.15); border-left: 2px solid #2563eb;">
+                <td style="padding: 8px; text-align: center; color: #aaa;">5.</td>
+                <td style="padding: 8px; color: #ffca28; font-weight: bold;">Sengrová, Žofie</td>
+                <td style="padding: 8px; font-size: 0.9em; color: #aaa;"><strong>TJ Bižuterie</strong></td>
+                <td style="padding: 8px; text-align: center;"><strong>4,5</strong></td>
+            </tr>
+        
+            <tr style="background-color: rgba(59, 130, 246, 0.15); border-left: 2px solid #2563eb;">
+                <td style="padding: 8px; text-align: center; color: #aaa;">7.</td>
+                <td style="padding: 8px; color: #ffca28; font-weight: bold;">Adámek, Lukáš</td>
+                <td style="padding: 8px; font-size: 0.9em; color: #aaa;"><strong>TJ Bižuterie</strong></td>
+                <td style="padding: 8px; text-align: center;"><strong>4</strong></td>
+            </tr>
+        
+            <tr style="background-color: rgba(59, 130, 246, 0.15); border-left: 2px solid #2563eb;">
+                <td style="padding: 8px; text-align: center; color: #aaa;">8.</td>
+                <td style="padding: 8px; color: #ffca28; font-weight: bold;">Busko, Nikita</td>
+                <td style="padding: 8px; font-size: 0.9em; color: #aaa;"><strong>TJ Bižuterie</strong></td>
+                <td style="padding: 8px; text-align: center;"><strong>4</strong></td>
+            </tr>
+        
+            <tr style="background-color: rgba(59, 130, 246, 0.15); border-left: 2px solid #2563eb;">
+                <td style="padding: 8px; text-align: center; color: #aaa;">10.</td>
+                <td style="padding: 8px; color: #ffca28; font-weight: bold;">Brehmová, Ema</td>
+                <td style="padding: 8px; font-size: 0.9em; color: #aaa;"><strong>TJ Bižuterie</strong></td>
+                <td style="padding: 8px; text-align: center;"><strong>4</strong></td>
+            </tr>
+        
+            <tr style="background-color: rgba(59, 130, 246, 0.15); border-left: 2px solid #2563eb;">
+                <td style="padding: 8px; text-align: center; color: #aaa;">11.</td>
+                <td style="padding: 8px; color: #ffca28; font-weight: bold;">Dražan, Jonáš</td>
+                <td style="padding: 8px; font-size: 0.9em; color: #aaa;"><strong>TJ Bižuterie</strong></td>
+                <td style="padding: 8px; text-align: center;"><strong>4</strong></td>
+            </tr>
+        
+            <tr style="background-color: rgba(59, 130, 246, 0.15); border-left: 2px solid #2563eb;">
+                <td style="padding: 8px; text-align: center; color: #aaa;">15.</td>
+                <td style="padding: 8px; color: #ffca28; font-weight: bold;">Ricka, Mikuláš</td>
+                <td style="padding: 8px; font-size: 0.9em; color: #aaa;"><strong>TJ Bižuterie</strong></td>
+                <td style="padding: 8px; text-align: center;"><strong>3</strong></td>
+            </tr>
+        
+            <tr style="background-color: rgba(59, 130, 246, 0.15); border-left: 2px solid #2563eb;">
+                <td style="padding: 8px; text-align: center; color: #aaa;">16.</td>
+                <td style="padding: 8px; color: #ffca28; font-weight: bold;">Durda, Šimon</td>
+                <td style="padding: 8px; font-size: 0.9em; color: #aaa;"><strong>TJ Bižuterie</strong></td>
+                <td style="padding: 8px; text-align: center;"><strong>3</strong></td>
+            </tr>
+        
+            <tr style="background-color: rgba(59, 130, 246, 0.15); border-left: 2px solid #2563eb;">
+                <td style="padding: 8px; text-align: center; color: #aaa;">18.</td>
+                <td style="padding: 8px; color: #ffca28; font-weight: bold;">Koun, Bartoloměj</td>
+                <td style="padding: 8px; font-size: 0.9em; color: #aaa;"><strong>TJ Bižuterie</strong></td>
+                <td style="padding: 8px; text-align: center;"><strong>3</strong></td>
+            </tr>
+        
                 </tbody>
             </table>
         </div>
-
+    
         <div id="tab-U16-18" class="results-category-content">
-            <h3 class="results-category-title">Kategorie U16-18</h3>
-            <table class="results-table">
+            <h3 class="results-category-title" style="color: #d4af37; margin-bottom: 1rem;">Kategorie U16-18</h3>
+            <table class="results-table" style="width: 100%; border-collapse: collapse; font-size: 0.95rem;">
                 <thead>
-                    <tr>
-                        <th>Poř.</th>
-                        <th>Jméno</th>
-                        <th>Oddíl</th>
-                        <th>Body</th>
+                    <tr style="background: rgba(255,255,255,0.05);">
+                        <th style="padding: 8px; text-align: center; color: #888; font-size: 0.85rem;">Poř.</th>
+                        <th style="padding: 8px; text-align: left; color: #888; font-size: 0.85rem;">Jméno</th>
+                        <th style="padding: 8px; text-align: left; color: #888; font-size: 0.85rem;">Oddíl</th>
+                        <th style="padding: 8px; text-align: center; color: #888; font-size: 0.85rem;">Body</th>
                     </tr>
                 </thead>
                 <tbody>
-                    <tr>
-                        <td>1.</td>
-                        <td>DİLEKÇİ, TAYFUN ARAS</td>
-                        <td>TRABZON</td>
-                        <td><strong>4</strong></td>
-                    </tr>
-                    <tr>
-                        <td>2.</td>
-                        <td>HACIFAZLIOĞLU, AZUR ALP</td>
-                        <td>ARTVİN</td>
-                        <td><strong>3</strong></td>
-                    </tr>
-                    <tr>
-                        <td>3.</td>
-                        <td>DEMİRCİ, DENİZ ÖMER</td>
-                        <td>BURSA</td>
-                        <td><strong>2</strong></td>
-                    </tr>
+                    
+            <tr style="background-color: rgba(59, 130, 246, 0.15); border-left: 2px solid #2563eb;">
+                <td style="padding: 8px; text-align: center; color: #aaa;">1.</td>
+                <td style="padding: 8px; color: #ffca28; font-weight: bold;">Červeň, Aleš</td>
+                <td style="padding: 8px; font-size: 0.9em; color: #aaa;"><strong>TJ Bižuterie</strong></td>
+                <td style="padding: 8px; text-align: center;"><strong>6</strong></td>
+            </tr>
+        
+            <tr style="border-bottom: 1px solid #333;">
+                <td style="padding: 8px; text-align: center; color: #aaa;">2.</td>
+                <td style="padding: 8px; ">Vacek, Ondřej</td>
+                <td style="padding: 8px; font-size: 0.9em; color: #aaa;">Slovan Varnsdorf z.s.</td>
+                <td style="padding: 8px; text-align: center;"><strong>5,5</strong></td>
+            </tr>
+        
+            <tr style="background-color: rgba(59, 130, 246, 0.15); border-left: 2px solid #2563eb;">
+                <td style="padding: 8px; text-align: center; color: #aaa;">3.</td>
+                <td style="padding: 8px; color: #ffca28; font-weight: bold;">Mrlina, Tomáš</td>
+                <td style="padding: 8px; font-size: 0.9em; color: #aaa;"><strong>TJ Bižuterie</strong></td>
+                <td style="padding: 8px; text-align: center;"><strong>5</strong></td>
+            </tr>
+        
+            <tr style="background-color: rgba(59, 130, 246, 0.15); border-left: 2px solid #2563eb;">
+                <td style="padding: 8px; text-align: center; color: #aaa;">4.</td>
+                <td style="padding: 8px; color: #ffca28; font-weight: bold;">Hádek, Vojtěch</td>
+                <td style="padding: 8px; font-size: 0.9em; color: #aaa;"><strong>TJ Bižuterie</strong></td>
+                <td style="padding: 8px; text-align: center;"><strong>4,5</strong></td>
+            </tr>
+        
+            <tr style="background-color: rgba(59, 130, 246, 0.15); border-left: 2px solid #2563eb;">
+                <td style="padding: 8px; text-align: center; color: #aaa;">6.</td>
+                <td style="padding: 8px; color: #ffca28; font-weight: bold;">Sengr, Ivan</td>
+                <td style="padding: 8px; font-size: 0.9em; color: #aaa;"><strong>TJ Bižuterie</strong></td>
+                <td style="padding: 8px; text-align: center;"><strong>4</strong></td>
+            </tr>
+        
+            <tr style="background-color: rgba(59, 130, 246, 0.15); border-left: 2px solid #2563eb;">
+                <td style="padding: 8px; text-align: center; color: #aaa;">13.</td>
+                <td style="padding: 8px; color: #ffca28; font-weight: bold;">Nekvinda, Jan</td>
+                <td style="padding: 8px; font-size: 0.9em; color: #aaa;"><strong>TJ Bižuterie</strong></td>
+                <td style="padding: 8px; text-align: center;"><strong>2</strong></td>
+            </tr>
+        
+            <tr style="background-color: rgba(59, 130, 246, 0.15); border-left: 2px solid #2563eb;">
+                <td style="padding: 8px; text-align: center; color: #aaa;">14.</td>
+                <td style="padding: 8px; color: #ffca28; font-weight: bold;">Vedral, Zbyněk</td>
+                <td style="padding: 8px; font-size: 0.9em; color: #aaa;"><strong>TJ Bižuterie</strong></td>
+                <td style="padding: 8px; text-align: center;"><strong>2</strong></td>
+            </tr>
+        
                 </tbody>
             </table>
         </div>
-
+    
         <div id="tab-Elite" class="results-category-content">
-            <h3 class="results-category-title">Kategorie Elite</h3>
-            <table class="results-table">
+            <h3 class="results-category-title" style="color: #d4af37; margin-bottom: 1rem;">Kategorie Elite</h3>
+            <table class="results-table" style="width: 100%; border-collapse: collapse; font-size: 0.95rem;">
                 <thead>
-                    <tr>
-                        <th>Poř.</th>
-                        <th>Jméno</th>
-                        <th>Oddíl</th>
-                        <th>Body</th>
+                    <tr style="background: rgba(255,255,255,0.05);">
+                        <th style="padding: 8px; text-align: center; color: #888; font-size: 0.85rem;">Poř.</th>
+                        <th style="padding: 8px; text-align: left; color: #888; font-size: 0.85rem;">Jméno</th>
+                        <th style="padding: 8px; text-align: left; color: #888; font-size: 0.85rem;">Oddíl</th>
+                        <th style="padding: 8px; text-align: center; color: #888; font-size: 0.85rem;">Body</th>
                     </tr>
                 </thead>
                 <tbody>
-                    <tr>
-                        <td>1.</td>
-                        <td>YILMAZ, RÜZGAR</td>
-                        <td>0</td>
-                        <td><strong>6</strong></td>
-                    </tr>
-                    <tr>
-                        <td>2.</td>
-                        <td>UZUN, DEFNE ARZU</td>
-                        <td>0</td>
-                        <td><strong>2</strong></td>
-                    </tr>
-                    <tr>
-                        <td>3.</td>
-                        <td>DEMİRCİ, ELİF</td>
-                        <td>0</td>
-                        <td><strong>2</strong></td>
-                    </tr>
+                    
+            <tr style="border-bottom: 1px solid #333;">
+                <td style="padding: 8px; text-align: center; color: #aaa;">1.</td>
+                <td style="padding: 8px; ">Bělaška, Václav</td>
+                <td style="padding: 8px; font-size: 0.9em; color: #aaa;">Desko Liberec</td>
+                <td style="padding: 8px; text-align: center;"><strong>6</strong></td>
+            </tr>
+        
+            <tr style="border-bottom: 1px solid #333;">
+                <td style="padding: 8px; text-align: center; color: #aaa;">2.</td>
+                <td style="padding: 8px; ">Mauder, Karel</td>
+                <td style="padding: 8px; font-size: 0.9em; color: #aaa;">Desko Liberec</td>
+                <td style="padding: 8px; text-align: center;"><strong>5</strong></td>
+            </tr>
+        
+            <tr style="background-color: rgba(59, 130, 246, 0.15); border-left: 2px solid #2563eb;">
+                <td style="padding: 8px; text-align: center; color: #aaa;">3.</td>
+                <td style="padding: 8px; color: #ffca28; font-weight: bold;">Tsantsala, Kostiantyn</td>
+                <td style="padding: 8px; font-size: 0.9em; color: #aaa;"><strong>TJ Bižuterie</strong></td>
+                <td style="padding: 8px; text-align: center;"><strong>4,5</strong></td>
+            </tr>
+        
+            <tr style="background-color: rgba(59, 130, 246, 0.15); border-left: 2px solid #2563eb;">
+                <td style="padding: 8px; text-align: center; color: #aaa;">11.</td>
+                <td style="padding: 8px; color: #ffca28; font-weight: bold;">Chvátal, Jonáš</td>
+                <td style="padding: 8px; font-size: 0.9em; color: #aaa;"><strong>TJ Bižuterie</strong></td>
+                <td style="padding: 8px; text-align: center;"><strong>1,5</strong></td>
+            </tr>
+        
                 </tbody>
             </table>
         </div>
-
-        <div class="results-link"><a href="https://chess-results.com/tnr1091599.aspx?lan=5&art=1" target="_blank"
-                rel="noopener noreferrer" class="btn">Kompletní výsledky na Chess-Results</a></div>
+    
+    <div class="results-link" style="margin-top: 2rem; text-align: center;">
+        <a href="https://chess-results.com/tnr1333688.aspx?lan=5&art=1" target="_blank" rel="noopener noreferrer" class="btn" style="display: inline-block; padding: 0.75rem 1.5rem; background: linear-gradient(135deg, #d4af37, #b8941f); color: #000; font-weight: 600; text-decoration: none; border-radius: 6px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); transition: background 0.2s;">
+            Kompletní výsledky na Chess-Results
+        </a>
+    </div></div>
     </div>
-</div>
+    
