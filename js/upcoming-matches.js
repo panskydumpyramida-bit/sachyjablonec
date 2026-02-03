@@ -178,7 +178,7 @@ const UpcomingMatches = {
             const dateFmt = this.formatDate(m.dateStr);
 
             return `
-                <div style="width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: space-between; padding: 4px; box-sizing: border-box;">
+                <div style="width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: space-between; padding: 6px; box-sizing: border-box;">
                     <div style="display: flex; justify-content: space-between; align-items: center;">
                         <span style="font-weight: 700; color: var(--primary-color); font-size: 0.7rem;">${dateFmt}</span>
                         <span style="background: var(--primary-color); color: #000; width: 14px; height: 14px; border-radius: 3px; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 0.55rem;">${m.teamShort}</span>
