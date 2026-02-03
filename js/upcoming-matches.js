@@ -178,19 +178,19 @@ const UpcomingMatches = {
             const dateFmt = this.formatDate(m.dateStr);
 
             return `
-                <div style="width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: space-between;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 4px; margin-bottom: 2px;">
-                        <span style="font-weight: 700; color: var(--primary-color); font-size: 0.9rem;">${dateFmt}</span>
-                        <span style="background: var(--primary-color); color: #000; width: 16px; height: 16px; border-radius: 3px; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 0.65rem;">${m.teamShort}</span>
+                <div style="width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: space-between; padding: 2px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 2px;">
+                        <span style="font-weight: 700; color: var(--primary-color); font-size: 0.75rem;">${dateFmt}</span>
+                        <span style="background: var(--primary-color); color: #000; width: 14px; height: 14px; border-radius: 3px; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 0.55rem;">${m.teamShort}</span>
                     </div>
                     
-                    <div style="flex: 1; display: flex; align-items: center; justify-content: center; text-align: center; font-size: 0.85rem; line-height: 1.1; font-weight: 600; color: #fff; padding: 2px 0;">
+                    <div style="flex: 1; display: flex; align-items: center; justify-content: center; text-align: center; font-size: 0.7rem; line-height: 1.1; font-weight: 600; color: #fff; padding: 1px 0; overflow: hidden;">
                         ${m.opponent}
                     </div>
 
-                    <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 4px;">
-                        <span style="font-size: 0.65rem; font-weight: 700; color: ${homeAwayColor}; text-transform: uppercase;">${homeAway}</span>
-                        <span style="font-size: 0.6rem; color: rgba(255,255,255,0.4);">${m.round}. kolo</span>
+                    <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 2px;">
+                        <span style="font-size: 0.55rem; font-weight: 700; color: ${homeAwayColor}; text-transform: uppercase;">${homeAway}</span>
+                        <span style="font-size: 0.5rem; color: rgba(255,255,255,0.4);">${m.round}. kolo</span>
                     </div>
                 </div>
             `;

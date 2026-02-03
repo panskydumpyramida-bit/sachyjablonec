@@ -367,12 +367,10 @@ nav {
 }
 
 @media (max-width: 768px) {
-    .hero-content h1 {
-        font-size: 2rem;
-    }
 
+    .hero-content h1,
     .hero-content p {
-        font-size: 1rem;
+        display: none;
     }
 }
 
