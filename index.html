@@ -203,13 +203,19 @@
 
         @media (max-width: 768px) {
             .latest-comment-card {
-                flex-direction: column;
-                border-radius: 12px;
-                align-items: flex-start;
-                gap: 0.5rem;
-                padding: 1rem;
+                flex-direction: row;
+                flex-wrap: wrap;
+                border-radius: 10px;
+                align-items: center;
+                gap: 0.4rem;
+                padding: 0.5rem 0.8rem;
                 white-space: normal;
-                line-height: 1.4;
+                line-height: 1.3;
+                font-size: 0.75rem;
+            }
+
+            .lc-badge-wrapper {
+                font-size: 0.7rem;
             }
 
             .lc-separator {
@@ -221,16 +227,20 @@
             }
 
             .lc-content-inline {
-                flex-wrap: wrap;
-                width: 100%;
+                flex: 1;
+                min-width: 0;
+            }
+
+            .lc-text {
+                display: -webkit-box;
+                -webkit-line-clamp: 1;
+                -webkit-box-orient: vertical;
+                line-clamp: 1;
+                overflow: hidden;
             }
 
             .lc-meta-inline {
-                width: 100%;
-                justify-content: flex-end;
-                border-top: 1px solid rgba(255, 255, 255, 0.1);
-                padding-top: 0.5rem;
-                margin-top: 0.2rem;
+                display: none;
             }
 
             .lc-article-title {
