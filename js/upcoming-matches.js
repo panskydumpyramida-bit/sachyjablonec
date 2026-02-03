@@ -178,19 +178,19 @@ const UpcomingMatches = {
             const dateFmt = this.formatDate(m.dateStr);
 
             return `
-                <div style="width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: space-between; padding: 1px; box-sizing: border-box;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 1px;">
+                <div style="width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 2px; padding: 2px; box-sizing: border-box;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
                         <span style="font-weight: 700; color: var(--primary-color); font-size: 0.65rem;">${dateFmt}</span>
                         <span style="background: var(--primary-color); color: #000; width: 12px; height: 12px; border-radius: 2px; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 0.5rem;">${m.teamShort}</span>
                     </div>
                     
-                    <div style="flex: 1; display: flex; align-items: center; justify-content: center; text-align: center; font-size: 0.6rem; line-height: 1.0; font-weight: 600; color: #fff; padding: 0; overflow: hidden;">
+                    <div style="text-align: center; font-size: 0.65rem; line-height: 1.1; font-weight: 600; color: #fff; overflow: hidden;">
                         ${m.opponent}
                     </div>
 
-                    <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 1px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
                         <span style="font-size: 0.5rem; font-weight: 700; color: ${homeAwayColor}; text-transform: uppercase;">${homeAway}</span>
-                        <span style="font-size: 0.45rem; color: rgba(255,255,255,0.4);">${m.round}. kolo</span>
+                        <span style="font-size: 0.5rem; color: rgba(255,255,255,0.4);">${m.round}. kolo</span>
                     </div>
                 </div>
             `;
