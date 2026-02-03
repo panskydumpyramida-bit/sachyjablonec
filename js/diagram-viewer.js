@@ -245,6 +245,10 @@ class DiagramViewer {
         // 2. Render Annotations
         // Timeout to ensure board is rendered and we can get dimensions
         setTimeout(() => {
+            // Force resize after layout is complete - fixes tiny board issue
+            if (this.board && typeof this.board.resize === 'function') {
+                this.board.resize();
+            }
             this.renderAnnotations(diagram.annotations);
             window.addEventListener('resize', () => this.renderAnnotations(diagram.annotations));
         }, 100);
