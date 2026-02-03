@@ -323,6 +323,7 @@
             }
             .diagram-board-wrapper {
                 width: 100% !important;
+                min-width: 200px !important;
                 aspect-ratio: 1 !important;
                 border-radius: 8px !important;
                 overflow: hidden !important;

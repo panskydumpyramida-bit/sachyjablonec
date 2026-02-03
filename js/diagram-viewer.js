@@ -242,16 +242,29 @@ class DiagramViewer {
         // Setup pixel-based drag threshold tracking (like Lichess Chessground)
         this.setupDragThreshold();
 
-        // 2. Render Annotations
-        // Timeout to ensure board is rendered and we can get dimensions
-        setTimeout(() => {
-            // Force resize after layout is complete - fixes tiny board issue
+        // 2. Render Annotations & Force Board Resize
+        // Use cascading resize strategy for floated containers with text
+        // chessboard.js may calculate wrong size if layout isn't complete
+        const forceResize = () => {
             if (this.board && typeof this.board.resize === 'function') {
                 this.board.resize();
             }
+        };
+
+        // Multiple resize attempts to handle various layout timing scenarios
+        setTimeout(() => {
+            forceResize();
             this.renderAnnotations(diagram.annotations);
-            window.addEventListener('resize', () => this.renderAnnotations(diagram.annotations));
-        }, 100);
+        }, 50);
+
+        setTimeout(forceResize, 150);  // After initial paint
+        setTimeout(forceResize, 300);  // After float layout calculates
+        setTimeout(forceResize, 500);  // Final safety resize
+
+        window.addEventListener('resize', () => {
+            forceResize();
+            this.renderAnnotations(diagram.annotations);
+        });
     }
 
     setupClickListener() {
