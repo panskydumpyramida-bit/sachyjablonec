@@ -119,13 +119,13 @@ class DiagramViewer {
         this.resetBtn.className = 'diagram-reset-btn';
         this.resetBtn.style.cssText = `
             display: block;
-            margin: 0.75rem auto 0;
-            padding: 0.4rem 1rem;
+            margin: 0.25rem auto 0;
+            padding: 0.3rem 0.8rem;
             background: rgba(100, 100, 100, 0.2);
             border: 1px solid rgba(150, 150, 150, 0.3);
             border-radius: 6px;
             color: #aaa;
-            font-size: 0.85rem;
+            font-size: 0.75rem;
             cursor: pointer;
             transition: all 0.2s;
         `;

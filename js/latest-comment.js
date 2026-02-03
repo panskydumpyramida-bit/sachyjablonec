@@ -78,7 +78,8 @@ class LatestCommentWidget {
         if (diff < 60000) return 'právě teď';
         if (diff < 3600000) return `před ${Math.floor(diff / 60000)} min`;
         if (diff < 86400000) return `před ${Math.floor(diff / 3600000)} hod`;
-        return date.toLocaleDateString('cs-CZ');
+        // Short date format without year: "1. 2."
+        return `${date.getDate()}. ${date.getMonth() + 1}.`;
     }
 
     escapeHtml(text) {
