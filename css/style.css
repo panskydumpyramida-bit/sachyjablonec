@@ -314,6 +314,17 @@ nav {
         max-width: 500px;
         /* 4 items * ~120px + gaps */
     }
+
+    /* Reorder for desktop checkerboard: L-D-L-D */
+    /* HTML order is: Aktuality(L), Rozpis(D), Blicák(D), Mládež(L) */
+    /* Need: Aktuality(L), Rozpis(D), Mládež(L), Blicák(D) */
+    .hero-grid>a[href="/blicak"] {
+        order: 4;
+    }
+
+    .hero-grid>a[href="youth.html"] {
+        order: 3;
+    }
 }
 
 .hero-grid-item {
