@@ -220,7 +220,10 @@ nav {
 
 /* Hero Section */
 .hero {
-    height: 80vh;
+    height: 40vh;
+    min-height: 250px;
+    padding-top: 1rem;
+    padding-bottom: 0.5rem;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -237,16 +240,140 @@ nav {
     }
 }
 
+/* 3D Rotator Animation */
+.rotator-inner {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+    transform-style: preserve-3d;
+}
+
+.rotator-inner.rotated {
+    transform: rotateY(180deg);
+}
+
+.rotator-face {
+    position: absolute;
+    inset: 0;
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+    border-radius: 12px;
+}
+
+.face-front {
+    z-index: 2;
+}
+
+.face-back {
+    transform: rotateY(180deg);
+}
+
+.hero-content {
+    width: 100%;
+    max-width: 1200px;
+    padding: 0 1rem;
+    position: relative;
+    z-index: 2;
+}
+
 .hero-content h1 {
-    font-size: 4rem;
-    margin-bottom: 1rem;
-    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+    font-size: 2.5rem;
+    margin-bottom: 0.5rem;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.7);
+    font-weight: 700;
+    line-height: 1.2;
 }
 
 .hero-content p {
-    font-size: 1.5rem;
+    font-size: 1.2rem;
     margin-bottom: 2rem;
     color: var(--text-color);
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.7);
+    opacity: 0.9;
+}
+
+/* Hero Grid Navigation */
+.hero-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 4px;
+    margin: 0 auto;
+    max-width: 280px;
+    background: rgba(0, 0, 0, 0.4);
+    padding: 4px;
+    border-radius: 12px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(4px);
+    transition: max-width 0.3s ease;
+}
+
+@media (min-width: 768px) {
+    .hero-grid {
+        grid-template-columns: repeat(4, 1fr);
+        max-width: 500px;
+        /* 4 items * ~120px + gaps */
+    }
+}
+
+.hero-grid-item {
+    aspect-ratio: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    text-decoration: none;
+    padding: 1rem;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+}
+
+.hero-grid-item.light {
+    background: linear-gradient(135deg, rgba(230, 200, 150, 0.95) 0%, rgba(200, 160, 110, 0.95) 100%);
+    color: #3e2723;
+}
+
+.hero-grid-item.dark {
+    background: rgba(30, 30, 50, 0.85);
+    /* Darker/Blueish chess square */
+    color: #fff;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.hero-grid-item:hover {
+    transform: scale(1.05);
+    z-index: 10;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+}
+
+.hero-grid-item i {
+    font-size: 1.8rem;
+    margin-bottom: 0.5rem;
+    transition: transform 0.3s;
+}
+
+.hero-grid-item span {
+    font-weight: 700;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    line-height: 1.2;
+}
+
+.hero-grid-item:hover i {
+    transform: translateY(-2px);
+}
+
+@media (max-width: 768px) {
+    .hero-content h1 {
+        font-size: 2rem;
+    }
+
+    .hero-content p {
+        font-size: 1rem;
+    }
 }
 
 .btn {
@@ -400,6 +527,41 @@ section {
 
 .read-more:hover {
     gap: 0.8rem;
+}
+
+/* Featured Card (First item on homepage) */
+.card-featured {
+    grid-column: span 2;
+    display: flex;
+    flex-direction: column;
+}
+
+.card-featured .card-image {
+    height: 400px;
+}
+
+.card-featured .card-title {
+    font-size: 2rem;
+    font-weight: 700;
+}
+
+.card-featured .card-excerpt {
+    font-size: 1.1rem;
+    line-height: 1.7;
+}
+
+@media (max-width: 900px) {
+    .card-featured {
+        grid-column: span 1;
+    }
+
+    .card-featured .card-image {
+        height: 250px;
+    }
+
+    .card-featured .card-title {
+        font-size: 1.5rem;
+    }
 }
 
 /* Responsive Iframe */
@@ -1327,6 +1489,7 @@ footer {
     transform: translateX(4px);
     cursor: default;
 }
+
 /* Added for Tournament Results Article */
 .results-category-title {
     color: var(--primary-color);
@@ -1354,26 +1517,29 @@ footer {
         flex-direction: row;
         align-items: flex-start;
     }
-    
+
     .article-text {
         flex: 1;
         padding-right: 2rem;
         /* Sticky text could be nice but lets keep it simple first */
     }
-    
+
     .article-results {
         flex: 1;
-        min-width: 0; /* Fix flex overflow issues */
+        min-width: 0;
+        /* Fix flex overflow issues */
     }
 }
 
 /* Updated Table Styles */
 .results-table th.club-cell,
 .results-table td.club-cell {
-    display: none; /* Hide by default on very small screens if needed, or adjust */
+    display: none;
+    /* Hide by default on very small screens if needed, or adjust */
 }
 
 @media (min-width: 480px) {
+
     .results-table th.club-cell,
     .results-table td.club-cell {
         display: table-cell;
@@ -1439,6 +1605,13 @@ footer {
 }
 
 @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(5px); }
-    to { opacity: 1; transform: translateY(0); }
+    from {
+        opacity: 0;
+        transform: translateY(5px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
