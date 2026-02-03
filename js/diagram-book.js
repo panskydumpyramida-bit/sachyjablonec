@@ -364,9 +364,9 @@
             .diagram-book {
                 overflow: visible !important;
             }
-            /* Reset button styling for book mode - show but style differently */
+            /* Hide internal reset button in book mode - use book-reset-btn instead */
             .diagram-book .diagram-reset-btn {
-                margin-top: 0.5rem !important;
+                display: none !important;
             }
             .book-reset-btn {
                 background: rgba(255,255,255,0.1) !important;
