@@ -184,7 +184,7 @@
                 padding: 1.25rem;
                 box-shadow: 0 10px 40px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.05);
                 border: 1px solid rgba(255,255,255,0.08);
-                max-width: 600px;
+                max-width: 400px;
                 margin: 1rem 0 1rem 1.5rem;
                 float: right;
                 clear: right;
@@ -364,9 +364,9 @@
             .diagram-book {
                 overflow: visible !important;
             }
-            /* Hide internal reset button when in book mode */
+            /* Reset button styling for book mode - show but style differently */
             .diagram-book .diagram-reset-btn {
-                display: none !important;
+                margin-top: 0.5rem !important;
             }
             .book-reset-btn {
                 background: rgba(255,255,255,0.1) !important;
