@@ -178,22 +178,23 @@ const UpcomingMatches = {
             const dateFmt = this.formatDate(m.dateStr);
 
             return `
-                <div style="width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: space-between; padding: 6px; box-sizing: border-box;">
+            return `
+                < div style = "width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: space-between; padding: 4px 6px; box-sizing: border-box; overflow: hidden;" >
                     <div style="display: flex; justify-content: space-between; align-items: center;">
-                        <span style="font-weight: 700; color: var(--primary-color); font-size: 0.7rem;">${dateFmt}</span>
-                        <span style="background: var(--primary-color); color: #000; width: 14px; height: 14px; border-radius: 3px; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 0.55rem;">${m.teamShort}</span>
+                        <span style="font-weight: 700; color: var(--primary-color); font-size: 0.65rem;">${dateFmt}</span>
+                        <span style="background: var(--primary-color); color: #000; width: 13px; height: 13px; border-radius: 3px; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 0.5rem;">${m.teamShort}</span>
                     </div>
                     
-                    <div style="text-align: center; font-size: 0.7rem; line-height: 1.15; font-weight: 600; color: #fff;">
+                    <div style="text-align: center; font-size: 0.65rem; line-height: 1.1; font-weight: 600; color: #fff; display: flex; align-items: center; justify-content: center; flex: 1; overflow: hidden;">
                         ${m.opponent}
                     </div>
 
                     <div style="display: flex; justify-content: space-between; align-items: center;">
-                        <span style="font-size: 0.55rem; font-weight: 700; color: ${homeAwayColor}; text-transform: uppercase;">${homeAway}</span>
-                        <span style="font-size: 0.55rem; color: rgba(255,255,255,0.5);">${m.round}. kolo</span>
+                        <span style="font-size: 0.5rem; font-weight: 700; color: ${homeAwayColor}; text-transform: uppercase;">${homeAway}</span>
+                        <span style="font-size: 0.5rem; color: rgba(255,255,255,0.5);">${m.round}. kolo</span>
                     </div>
-                </div>
-            `;
+                </div >
+    `;
         };
 
         // Rotation Interval
