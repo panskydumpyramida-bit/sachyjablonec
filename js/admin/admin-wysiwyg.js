@@ -1058,7 +1058,7 @@ function insertDiagramBookToEditor(diagrams, savedRange) {
             padding: 1.25rem;
             box-shadow: 0 10px 40px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.05);
             border: 1px solid rgba(255,255,255,0.08);
-            max-width: 400px;
+            max-width: 600px;
             margin: 1rem 0 1rem 1.5rem;
             overflow: visible;
         ">
