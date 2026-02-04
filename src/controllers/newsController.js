@@ -429,7 +429,7 @@ export const deleteNews = async (req, res) => {
         const { id } = req.params;
 
         // Restriction: Only admin/superadmin can delete
-        if (req.user.role !== 'admin' && req.user.role !== 'superadmin') {
+        if (req.user.role !== 'ADMIN' && req.user.role !== 'SUPERADMIN') {
             return res.status(403).json({ error: 'Nemáte oprávnění mazat články.' });
         }
 

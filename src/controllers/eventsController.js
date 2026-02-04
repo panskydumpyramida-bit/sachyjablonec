@@ -5,7 +5,7 @@ const prisma = new PrismaClient();
 // Get public events (no auth required)
 export const getPublicEvents = async (req, res) => {
     try {
-        const { category, from, to } = req.query;
+        const { category, from, to, eventType } = req.query;
 
         const where = {
             isPublic: true,
@@ -24,6 +24,10 @@ export const getPublicEvents = async (req, res) => {
             where.startDate = { ...where.startDate, lte: new Date(to) };
         }
 
+        if (eventType) {
+            where.eventType = eventType;
+        }
+
         const events = await prisma.event.findMany({
             where,
             orderBy: { startDate: 'asc' }
@@ -39,7 +43,7 @@ export const getPublicEvents = async (req, res) => {
 // Get internal events (MEMBER+ required)
 export const getInternalEvents = async (req, res) => {
     try {
-        const { category, from, to } = req.query;
+        const { category, from, to, eventType } = req.query;
 
         const where = {};
 
@@ -53,6 +57,10 @@ export const getInternalEvents = async (req, res) => {
 
         if (to) {
             where.startDate = { ...where.startDate, lte: new Date(to) };
+        }
+
+        if (eventType) {
+            where.eventType = eventType;
         }
 
         // Return all events (public + internal) for members
