@@ -103,6 +103,11 @@
             box-shadow: 0 8px 30px rgba(34, 211, 238, 0.1);
         }
 
+        .event-card.featured-card {
+            border: 1px solid #d4af37;
+            background: linear-gradient(135deg, rgba(212, 175, 55, 0.1), rgba(30, 45, 60, 0.98));
+        }
+
         .event-date {
             text-align: center;
             min-width: 55px;
@@ -517,9 +522,14 @@
                     <i class="fa-solid fa-trophy" style="color: #22d3ee;"></i>
                     Turnaje a akce
                 </h1>
-                <p class="subtitle" style="color: var(--text-muted);">
+                <p class="subtitle" style="color: var(--text-muted); margin-bottom: 1.5rem;">
                     Přehled nadcházejících šachových turnajů a dalších akcí v okolí.
                 </p>
+
+                <a href="/individual-competitions" class="btn-primary"
+                    style="display: inline-flex; align-items: center; gap: 0.5rem; background: linear-gradient(135deg, #d4af37 0%, #a08c3e 100%); color: #000; border: none; font-weight: 600;">
+                    <i class="fa-solid fa-chess"></i> Soutěže jednotlivců
+                </a>
             </div>
 
             <!-- Compact Filters -->
@@ -1034,9 +1044,10 @@
             }
 
             const googleCalUrl = generateGoogleCalendarUrl(event);
+            const featuredClass = event.isFeatured ? 'featured-card' : '';
 
             return `
-                <div class="event-card ${borderClass}">
+                <div class="event-card ${borderClass} ${featuredClass}">
                     <div class="event-content" style="position: relative;">
                          <!-- Google Calendar Icon (Top Right) -->
                         <a href="${googleCalUrl}" target="_blank" class="gcal-icon-link" title="Přidat do Google kalendáře">

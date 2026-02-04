@@ -310,6 +310,7 @@ model Event {
   // Visibility
   isInternal  Boolean   @default(false) @map("is_internal") // true = only MEMBER+
   isPublic    Boolean   @default(true) @map("is_public")
+  isFeatured  Boolean   @default(false) @map("is_featured") // Shown in featured banner
   
   createdBy   Int?      @map("created_by")
   createdAt   DateTime  @default(now()) @map("created_at")
