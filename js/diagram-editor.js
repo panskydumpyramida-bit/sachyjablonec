@@ -524,42 +524,39 @@ function exportDiagram() {
     const turnBg = turn === 'w' ? '#fff' : '#000';
 
     // Create footer bar element (NOT absolute - appended to end of wrapper)
+    // Create footer bar element (NOT absolute - appended to end of wrapper)
     const footer = document.createElement('div');
     footer.id = 'export-footer';
+    // Using display: table for rock-solid vertical alignment in html2canvas
     footer.style.cssText = `
         width: 100%;
-        height: 48px;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
+        height: 50px;
+        display: table;
         background: #262421;
         color: #fff;
         font-family: 'Open Sans', Arial, sans-serif;
-        font-size: 15px;
-        font-weight: 600;
         padding: 0 16px;
         box-sizing: border-box;
     `;
 
-    // Left side: Knight icon + "Bižuterie Jablonec" text
-    const logoDiv = document.createElement('div');
-    logoDiv.style.cssText = 'display: flex; align-items: center; gap: 8px;';
-    // Using Unicode chess knight character
-    logoDiv.innerHTML = `
-        <span style="font-size: 24px; color: #c9a227; display: flex; align-items: center;">♞</span>
-        <span style="color: #c9a227; font-weight: 700; font-size: 16px; display: flex; align-items: center;">Bižuterie Jablonec</span>
+    // Left cell: Logo
+    const leftCell = document.createElement('div');
+    leftCell.style.cssText = 'display: table-cell; vertical-align: middle; text-align: left;';
+    leftCell.innerHTML = `
+        <span style="font-size: 26px; color: #c9a227; vertical-align: middle; display: inline-block; margin-right: 8px;">♞</span>
+        <span style="color: #c9a227; font-weight: 700; font-size: 16px; vertical-align: middle; display: inline-block;">Bižuterie Jablonec</span>
     `;
 
-    // Right side: Turn indicator
-    const turnDiv = document.createElement('div');
-    turnDiv.style.cssText = 'display: flex; align-items: center; gap: 10px;';
-    turnDiv.innerHTML = `
-        <span style="width: 16px; height: 16px; background: ${turnBg}; border-radius: 50%; border: 2px solid #666;"></span>
-        <span style="color: #fff; font-size: 16px; display: flex; align-items: center;">${turnText}</span>
+    // Right cell: Turn indicator
+    const rightCell = document.createElement('div');
+    rightCell.style.cssText = 'display: table-cell; vertical-align: middle; text-align: right;';
+    rightCell.innerHTML = `
+        <span style="display: inline-block; width: 14px; height: 14px; background: ${turnBg}; border-radius: 50%; border: 2px solid #888; vertical-align: middle; margin-right: 8px;"></span>
+        <span style="color: #fff; font-size: 16px; font-weight: 600; vertical-align: middle; display: inline-block;">${turnText}</span>
     `;
 
-    footer.appendChild(logoDiv);
-    footer.appendChild(turnDiv);
+    footer.appendChild(leftCell);
+    footer.appendChild(rightCell);
 
     // Append footer AFTER the board (at the end of wrapper)
     element.appendChild(footer);
@@ -572,7 +569,7 @@ function exportDiagram() {
     // Small delay to ensure DOM is updated before capture
     setTimeout(() => {
         captureBoard();
-    }, 100);
+    }, 150);
 
     let captured = false;
     function captureBoard() {
@@ -584,7 +581,12 @@ function exportDiagram() {
             scale: 2,
             useCORS: true,
             allowTaint: true,
-            logging: false
+            logging: false,
+            // Force line-heights to be respected
+            onclone: (doc) => {
+                const f = doc.getElementById('export-footer');
+                if (f) f.style.height = '50px';
+            }
         }).then(canvas => {
             // Cleanup
             if (footer.parentNode) footer.parentNode.removeChild(footer);
