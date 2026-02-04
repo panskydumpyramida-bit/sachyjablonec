@@ -543,13 +543,11 @@ function exportDiagram() {
 
     // Left side: Knight icon + "Bižuterie Jablonec" text
     const logoDiv = document.createElement('div');
-    logoDiv.style.cssText = 'display: flex; align-items: center; gap: 10px; height: 100%;';
-    // Font Awesome 6 Free - chess-knight solid
+    logoDiv.style.cssText = 'display: flex; align-items: center; gap: 8px; height: 100%;';
+    // Using Unicode chess knight character instead of SVG (html2canvas renders it better)
     logoDiv.innerHTML = `
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512" style="width: 24px; height: 24px; fill: #c9a227; flex-shrink: 0;">
-            <path d="M19.7 97.9L1.8 153.3C-1.9 164.6 .4 177.1 8.3 186.3L24 204.6V288l128 0 0-75.5 54.7-43.8c8.5-6.8 13.3-17.1 13.3-28l0-44.8c0-17.7-14.3-32-32-32c0 0 0 0 0 0s0 0 0 0l-56 0 0-32c0-17.7-14.3-32-32-32s-32 14.3-32 32l0 35.9c-15 4.8-28.9 12.5-40.8 22.7L19.7 97.9zM0 448c0 35.3 28.7 64 64 64l256 0c35.3 0 64-28.7 64-64l0-128-24.5 0C299 233.4 237.3 160 160 160l-8 0 0 64 16 0c56.6 0 104 42.2 111.1 96.8l1.4 11.2L152 332l0 76-16 0c-53 0-96-43-96-96l0-96L0 216l0 232z"/>
-        </svg>
-        <span style="color: #c9a227; font-weight: 700; line-height: 1;">Bižuterie Jablonec</span>
+        <span style="font-size: 28px; line-height: 1; color: #c9a227;">♞</span>
+        <span style="color: #c9a227; font-weight: 700; font-size: 16px; line-height: 1;">Bižuterie Jablonec</span>
     `;
 
     // Right side: Turn indicator
