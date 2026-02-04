@@ -1,5 +1,36 @@
 # 📋 Changelog
 
+## 4. února 2026 (v25)
+
+### 🏆 Soutěže jednotlivců – Nová sekce
+- **Nová stránka:** `individual-competitions.html` pro přehled individuálních turnajů
+- **Featured Tournament Banner:** Zvýrazněný turnaj v horní části stránky
+- **Kategorie v Editoru:** Do admin editoru přidána kategorie "Soutěže jednotlivců"
+- **Navigace:** Přidán odkaz "Soutěže jednotlivců" do hlavního menu
+- **Propojení stránek:** Tlačítka pro přepínání mezi `tournaments.html` a `individual-competitions.html`
+
+### ⭐ Featured Turnaje
+- **Nový příznak `isFeatured`:** Možnost označit turnaj jako doporučený
+- **Vizuální zvýraznění:** Featured turnaje mají zlatý okraj na stránce turnajů
+- **Import PICF 2026:** Skript pro import Prague International Chess Festival (Masters, Challengers, Open)
+
+### 🏠 Homepage – Redesign dlaždic zápasů
+- **Nový layout:** Kompaktnější zobrazení s menšími fonty
+- **Lepší čitelnost:** Úprava paddingu a velikostí pro lepší responsivitu
+- **3D rotace:** Zachována animace rotujících dlaždic
+
+### 🛠️ Administrace
+- **Kategorie editoru:** Přidána možnost "Soutěže jednotlivců" v dropdown menu
+
+### 🐛 Opravy
+- **News Loader:** Opraveno načítání aktualit na stránce Soutěží jednotlivců (chybějící `news-loader.js`)
+- **Deployment Script:** Vytvořen `scripts/deploy.sh` pro automatizaci nasazení
+
+### 📦 Databáze
+- **Migrace:** Přidán sloupec `is_featured` do tabulky `events`
+
+---
+
 ## 22. ledna 2026 (v24)
 
 ### 🧩 Knihy diagramů – Velká aktualizace
