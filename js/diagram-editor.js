@@ -518,63 +518,76 @@ function exportDiagram() {
     const element = document.getElementById('diagramBoardWrapper');
     const originalStyle = element.style.cssText; // Save original styles
 
-    // 1. Prepare Wrapper for "Polaroid" style capture
-    // Add padding at bottom for the label and ensure background is set
-    element.style.paddingBottom = "40px";
-    element.style.backgroundColor = "#262421"; // Match board border/theme
-    element.style.position = "relative"; // Ensure positioning context
-
-    // 2. Inject "To Move" indicator BELOW the board
+    // Get who is on turn
     const turn = game.turn(); // 'w' or 'b'
     const turnText = turn === 'w' ? 'Bílý na tahu' : 'Černý na tahu';
+    const turnBg = turn === 'w' ? '#fff' : '#000';
 
-    const indicator = document.createElement('div');
-    indicator.style.cssText = `
-        position: absolute;
-        bottom: 0;
-        left: 0;
+    // Create footer bar element (NOT absolute - appended to end of wrapper)
+    const footer = document.createElement('div');
+    footer.id = 'export-footer';
+    footer.style.cssText = `
         width: 100%;
-        height: 40px;
+        height: 44px;
         display: flex;
         align-items: center;
-        justify-content: center;
+        justify-content: space-between;
         background: #262421;
         color: #fff;
         font-family: 'Open Sans', sans-serif;
-        font-size: 16px;
-        font-weight: bold;
-        z-index: 100;
-        border-top: 1px solid rgba(255,255,255,0.1);
+        font-size: 14px;
+        font-weight: 600;
+        padding: 0 12px;
+        box-sizing: border-box;
+        border-top: 1px solid rgba(255,255,255,0.15);
     `;
-    indicator.innerHTML = `<span style="display:inline-block; width:12px; height:12px; background:${turn === 'w' ? '#fff' : '#000'}; border-radius:50%; margin-right:8px; border:1px solid #777;"></span> ${turnText}`;
-    element.appendChild(indicator);
 
-    // 3. Fix CORS for Images
-    // html2canvas needs crossorigin="anonymous" on images to read them
-    const images = element.querySelectorAll('img');
-    images.forEach(img => {
-        // We add the attribute. Use currentSrc if possible to avoid reload flicker, 
-        // but setting crossOrigin might trigger reload anyway.
-        if (!img.crossOrigin) {
-            img.crossOrigin = "anonymous";
-            // Force reload to ensure headers are respected if cached without them
-            const src = img.src;
-            img.src = src;
-        }
-    });
+    // Left side: Logo
+    const logoImg = document.createElement('img');
+    logoImg.src = '/images/jablonec_logo.png';
+    logoImg.style.cssText = 'height: 32px; width: auto;';
 
-    // Give browser a moment to re-render images with new CORS settings
+    // Right side: Turn indicator
+    const turnDiv = document.createElement('div');
+    turnDiv.style.cssText = 'display: flex; align-items: center; gap: 8px;';
+    turnDiv.innerHTML = `
+        <span style="display:inline-block; width:14px; height:14px; background:${turnBg}; border-radius:50%; border:1px solid #777;"></span>
+        <span>${turnText}</span>
+    `;
+
+    footer.appendChild(logoImg);
+    footer.appendChild(turnDiv);
+
+    // Append footer AFTER the board (at the end of wrapper)
+    element.appendChild(footer);
+
+    // Set wrapper background to match footer
+    element.style.backgroundColor = "#262421";
+
+    // Wait for logo to load before capturing
+    logoImg.onload = () => captureBoard();
+    logoImg.onerror = () => captureBoard(); // Capture even if logo fails
+
+    // Fallback timeout if onload doesn't fire (cached image)
     setTimeout(() => {
+        if (footer.parentNode) captureBoard();
+    }, 300);
+
+    let captured = false;
+    function captureBoard() {
+        if (captured) return;
+        captured = true;
+
         html2canvas(element, {
             backgroundColor: null,
             scale: 2,
             useCORS: true,
-            allowTaint: true, // Allow tainting (though we prefer CORS)
+            allowTaint: true,
             logging: false
         }).then(canvas => {
             // Cleanup
-            if (indicator.parentNode) indicator.parentNode.removeChild(indicator);
-            element.style.cssText = originalStyle; // Restore original styles
+            if (footer.parentNode) footer.parentNode.removeChild(footer);
+            element.style.cssText = originalStyle;
 
             const link = document.createElement('a');
             link.download = `sachovy-diagram-${new Date().getTime()}.png`;
@@ -582,13 +595,13 @@ function exportDiagram() {
             link.click();
         }).catch(err => {
             // Cleanup in case of error
-            if (indicator.parentNode) indicator.parentNode.removeChild(indicator);
+            if (footer.parentNode) footer.parentNode.removeChild(footer);
             element.style.cssText = originalStyle;
 
             console.error("Export failed", err);
             alert("Chyba při exportu diagramu.");
         });
-    }, 250); // Increased delay slightly to allow image reload
+    }
 }
 
 // --- Solver Admin Functions ---
