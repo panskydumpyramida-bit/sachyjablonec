@@ -534,7 +534,7 @@ function showPromotionModal(color) {
         const prefix = color === 'w' ? 'w' : 'b';
         document.querySelectorAll('.promotion-piece img').forEach(img => {
             const pieceType = img.getAttribute('data-piece').toUpperCase();
-            img.src = `https://chessboardjs.com/img/chesspieces/wikipedia/${prefix}${pieceType}.png`;
+            img.src = `/img/chesspieces/wikipedia/${prefix}${pieceType}.png`;
         });
         console.log('Promotion modal shown for:', color);
     } else {
@@ -1160,7 +1160,7 @@ document.addEventListener('DOMContentLoaded', () => {
         onDragStart: onDragStart,
         onDrop: onDrop,
         onSnapEnd: onSnapEnd,
-        pieceTheme: 'https://chessboardjs.com/img/chesspieces/wikipedia/{piece}.png'
+        pieceTheme: '/img/chesspieces/wikipedia/{piece}.png'
     };
     board = Chessboard('board', config);
     window.board = board;
