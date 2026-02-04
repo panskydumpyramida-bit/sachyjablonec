@@ -517,18 +517,56 @@ function getSquareCenter(square) {
 function exportDiagram() {
     const element = document.getElementById('diagramBoardWrapper');
 
-    html2canvas(element, {
-        backgroundColor: null,
-        scale: 2
-    }).then(canvas => {
-        const link = document.createElement('a');
-        link.download = 'sachovy-diagram.png';
-        link.href = canvas.toDataURL();
-        link.click();
-    }).catch(err => {
-        console.error("Export failed", err);
-        alert("Chyba při exportu obrázku.");
-    });
+    // Inject custom "To Move" indicator for the screenshot
+    const turn = game.turn(); // 'w' or 'b'
+    const turnText = turn === 'w' ? 'Bílý na tahu' : 'Černý na tahu';
+    const turnBg = turn === 'w' ? '#f0f0f0' : '#1a1a1a';
+    const turnColor = turn === 'w' ? '#000' : '#fff';
+
+    const indicator = document.createElement('div');
+    indicator.style.cssText = `
+        position: absolute;
+        bottom: 5px;
+        right: 5px;
+        background: ${turnBg};
+        color: ${turnColor};
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-family: sans-serif;
+        font-size: 14px;
+        font-weight: bold;
+        z-index: 14000;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.5);
+        border: 1px solid #888;
+        pointer-events: none;
+    `;
+    indicator.innerHTML = `<span style="margin-right:4px;">${turn === 'w' ? '⚪' : '⚫'}</span> ${turnText}`;
+    element.appendChild(indicator);
+
+    // Give browser a moment to render the inserted element
+    setTimeout(() => {
+        html2canvas(element, {
+            backgroundColor: null,
+            scale: 2,
+            useCORS: true, // Crucial for external piece images
+            allowTaint: true,
+            logging: true
+        }).then(canvas => {
+            // Remove indicator
+            if (indicator.parentNode) indicator.parentNode.removeChild(indicator);
+
+            const link = document.createElement('a');
+            link.download = `sachovy-diagram-${new Date().getTime()}.png`;
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+        }).catch(err => {
+            // Remove indicator in case of error
+            if (indicator.parentNode) indicator.parentNode.removeChild(indicator);
+
+            console.error("Export failed", err);
+            alert("Chyba při exportu obrázku. Zkontrolujte konzoli.");
+        });
+    }, 50);
 }
 
 // --- Solver Admin Functions ---
