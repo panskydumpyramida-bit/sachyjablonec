@@ -561,8 +561,10 @@ function exportDiagram() {
     // Append footer AFTER the board (at the end of wrapper)
     element.appendChild(footer);
 
-    // Set wrapper background to match footer
+    // Override wrapper styles for capture (fixed height would clip footer)
     element.style.backgroundColor = "#262421";
+    element.style.height = "auto"; // Allow wrapper to expand for footer
+    element.style.overflow = "visible";
 
     // Wait for logo to load before capturing
     logoImg.onload = () => captureBoard();
