@@ -516,57 +516,79 @@ function getSquareCenter(square) {
 
 function exportDiagram() {
     const element = document.getElementById('diagramBoardWrapper');
+    const originalStyle = element.style.cssText; // Save original styles
 
-    // Inject custom "To Move" indicator for the screenshot
+    // 1. Prepare Wrapper for "Polaroid" style capture
+    // Add padding at bottom for the label and ensure background is set
+    element.style.paddingBottom = "40px";
+    element.style.backgroundColor = "#262421"; // Match board border/theme
+    element.style.position = "relative"; // Ensure positioning context
+
+    // 2. Inject "To Move" indicator BELOW the board
     const turn = game.turn(); // 'w' or 'b'
     const turnText = turn === 'w' ? 'Bílý na tahu' : 'Černý na tahu';
-    const turnBg = turn === 'w' ? '#f0f0f0' : '#1a1a1a';
-    const turnColor = turn === 'w' ? '#000' : '#fff';
 
     const indicator = document.createElement('div');
     indicator.style.cssText = `
         position: absolute;
-        bottom: 5px;
-        right: 5px;
-        background: ${turnBg};
-        color: ${turnColor};
-        padding: 4px 8px;
-        border-radius: 4px;
-        font-family: sans-serif;
-        font-size: 14px;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #262421;
+        color: #fff;
+        font-family: 'Open Sans', sans-serif;
+        font-size: 16px;
         font-weight: bold;
-        z-index: 14000;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.5);
-        border: 1px solid #888;
-        pointer-events: none;
+        z-index: 100;
+        border-top: 1px solid rgba(255,255,255,0.1);
     `;
-    indicator.innerHTML = `<span style="margin-right:4px;">${turn === 'w' ? '⚪' : '⚫'}</span> ${turnText}`;
+    indicator.innerHTML = `<span style="display:inline-block; width:12px; height:12px; background:${turn === 'w' ? '#fff' : '#000'}; border-radius:50%; margin-right:8px; border:1px solid #777;"></span> ${turnText}`;
     element.appendChild(indicator);
 
-    // Give browser a moment to render the inserted element
+    // 3. Fix CORS for Images
+    // html2canvas needs crossorigin="anonymous" on images to read them
+    const images = element.querySelectorAll('img');
+    images.forEach(img => {
+        // We add the attribute. Use currentSrc if possible to avoid reload flicker, 
+        // but setting crossOrigin might trigger reload anyway.
+        if (!img.crossOrigin) {
+            img.crossOrigin = "anonymous";
+            // Force reload to ensure headers are respected if cached without them
+            const src = img.src;
+            img.src = src;
+        }
+    });
+
+    // Give browser a moment to re-render images with new CORS settings
     setTimeout(() => {
         html2canvas(element, {
             backgroundColor: null,
             scale: 2,
-            useCORS: true, // Crucial for external piece images
-            allowTaint: true,
-            logging: true
+            useCORS: true,
+            allowTaint: true, // Allow tainting (though we prefer CORS)
+            logging: false
         }).then(canvas => {
-            // Remove indicator
+            // Cleanup
             if (indicator.parentNode) indicator.parentNode.removeChild(indicator);
+            element.style.cssText = originalStyle; // Restore original styles
 
             const link = document.createElement('a');
             link.download = `sachovy-diagram-${new Date().getTime()}.png`;
             link.href = canvas.toDataURL('image/png');
             link.click();
         }).catch(err => {
-            // Remove indicator in case of error
+            // Cleanup in case of error
             if (indicator.parentNode) indicator.parentNode.removeChild(indicator);
+            element.style.cssText = originalStyle;
 
             console.error("Export failed", err);
-            alert("Chyba při exportu obrázku. Zkontrolujte konzoli.");
+            alert("Chyba při exportu diagramu.");
         });
-    }, 50);
+    }, 250); // Increased delay slightly to allow image reload
 }
 
 // --- Solver Admin Functions ---
