@@ -338,9 +338,14 @@
                     <i class="fa-solid fa-user-tie" style="color: #22d3ee;"></i>
                     Soutěže jednotlivců
                 </h1>
-                <p class="subtitle" style="color: var(--text-muted);">
-                    Přehled individuálních šachových turnajů a mistrovství.
+                <p class="subtitle" style="color: var(--text-muted); margin-bottom: 2rem;">
+                    Přehled individuálních turnajů a mistrovství.
                 </p>
+
+                <a href="/tournaments" class="btn-secondary"
+                    style="display: inline-flex; align-items: center; gap: 0.5rem; margin-bottom: 2rem;">
+                    <i class="fa-solid fa-calendar-days"></i> Zobrazit kalendář všech akcí
+                </a>
             </div>
 
             <!-- Featured Tournament Section -->
@@ -471,8 +476,12 @@
         function renderFeatured(events) {
             const container = document.getElementById('featured-tournament-container');
             const now = new Date();
-            // Find first future individual tournament
-            const featured = events.find(e => new Date(e.startDate) >= now);
+            // Find explicitly featured event first, otherwise first future event
+            let featured = events.find(e => e.isFeatured && new Date(e.startDate) >= now);
+
+            if (!featured) {
+                featured = events.find(e => new Date(e.startDate) >= now);
+            }
 
             if (featured) {
                 const date = new Date(featured.startDate).toLocaleDateString('cs-CZ');

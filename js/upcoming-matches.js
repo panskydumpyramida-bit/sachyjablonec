@@ -176,25 +176,35 @@ const UpcomingMatches = {
         const getMatchHtml = (m) => {
             const homeAway = m.isHome ? 'DOMA' : 'VENKU';
             const homeAwayColor = m.isHome ? 'var(--primary-color)' : 'rgba(255,255,255,0.7)';
-            // We need to re-format date from the object
-            // The object has dateStr which is original string
             const dateFmt = this.formatDate(m.dateStr);
 
+            // New Layout: 3 Rows
+            // 1. Date (Left) | Team Badge (Right)
+            // 2. Opponent (Center, Large)
+            // 3. Home/Away (Left) | Round (Right)
+
             return `
-                <div style="width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: space-between; padding: 4px 6px; box-sizing: border-box; overflow: hidden;">
-                    <div style="display: flex; justify-content: space-between; align-items: center;">
-                        <span style="font-weight: 700; color: var(--primary-color); font-size: 0.65rem;">${dateFmt}</span>
-                        <span style="background: var(--primary-color); color: #000; width: 13px; height: 13px; border-radius: 3px; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 0.5rem;">${m.teamShort}</span>
+                <div style="width: 100%; height: 100%; display: flex; flex-direction: column; padding: 8px; box-sizing: border-box; overflow: hidden; justify-content: space-between;">
+                    
+                    <!-- Header -->
+                    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 4px;">
+                        <span style="font-weight: 700; color: var(--primary-color); font-size: 0.8rem;">${dateFmt}</span>
+                        <span style="background: var(--primary-color); color: #000; width: 18px; height: 18px; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 0.7rem;">${m.teamShort}</span>
                     </div>
                     
-                    <div style="text-align: center; font-size: 0.65rem; line-height: 1.1; font-weight: 600; color: #fff; display: flex; align-items: center; justify-content: center; flex: 1; overflow: hidden;">
-                        ${m.opponent}
+                    <!-- Body (Opponent) -->
+                    <div style="flex: 1; display: flex; align-items: center; justify-content: center; text-align: center; overflow: hidden;">
+                        <span style="font-size: 0.85rem; line-height: 1.2; font-weight: 700; color: #fff; word-wrap: break-word; max-width: 100%;">
+                            ${m.opponent}
+                        </span>
                     </div>
 
-                    <div style="display: flex; justify-content: space-between; align-items: center;">
-                        <span style="font-size: 0.5rem; font-weight: 700; color: ${homeAwayColor}; text-transform: uppercase;">${homeAway}</span>
-                        <span style="font-size: 0.5rem; color: rgba(255,255,255,0.5);">${m.round}. kolo</span>
+                    <!-- Footer -->
+                    <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 4px;">
+                        <span style="font-size: 0.65rem; font-weight: 700; color: ${homeAwayColor}; text-transform: uppercase; letter-spacing: 0.5px;">${homeAway}</span>
+                        <span style="font-size: 0.65rem; color: rgba(255,255,255,0.5);">${m.round}. kolo</span>
                     </div>
+
                 </div>
             `;
         };
