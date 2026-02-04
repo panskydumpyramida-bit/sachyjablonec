@@ -283,7 +283,7 @@ const allowedHtmlFiles = [
     'index.html', 'about.html', 'teams.html', 'club-tournaments.html',
     'youth.html', 'gallery.html', 'admin.html', 'article.html',
     'members.html', 'calendar.html', 'blicak.html', 'partie.html', 'games.html',
-    'tournaments.html', 'chess-database.html'
+    'tournaments.html', 'chess-database.html', 'individual-competitions.html'
 ];
 
 // --- Blicak Registration Endpoints ---

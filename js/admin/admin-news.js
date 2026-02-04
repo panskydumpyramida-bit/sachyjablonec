@@ -660,6 +660,7 @@ async function saveNews() {
         });
 
         if (res.ok) {
+            localStorage.removeItem('newsDraft'); // Clear draft to prevent duplication on reload
             showAlert('Uloženo!', 'success');
             window.isNewsDirty = false; // Reset dirty flag
             switchTab('dashboard');
