@@ -7,10 +7,13 @@ const UpcomingMatches = {
     containerId: 'upcoming-matches-widget',
 
     async init() {
+        console.log('UpcomingMatches: init');
         // Find the rotator elements - New Target
         const rotator = document.querySelector('#match-rotator-tile .rotator-inner');
         // Fallback for old container if still present (should not be)
         const container = document.getElementById(this.containerId);
+
+        console.log('UpcomingMatches found:', { rotator, container });
 
         // If neither exists, we can't do anything
         if (!rotator && !container) return;
@@ -178,8 +181,7 @@ const UpcomingMatches = {
             const dateFmt = this.formatDate(m.dateStr);
 
             return `
-            return `
-                < div style = "width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: space-between; padding: 4px 6px; box-sizing: border-box; overflow: hidden;" >
+                <div style="width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: space-between; padding: 4px 6px; box-sizing: border-box; overflow: hidden;">
                     <div style="display: flex; justify-content: space-between; align-items: center;">
                         <span style="font-weight: 700; color: var(--primary-color); font-size: 0.65rem;">${dateFmt}</span>
                         <span style="background: var(--primary-color); color: #000; width: 13px; height: 13px; border-radius: 3px; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 0.5rem;">${m.teamShort}</span>
@@ -193,8 +195,8 @@ const UpcomingMatches = {
                         <span style="font-size: 0.5rem; font-weight: 700; color: ${homeAwayColor}; text-transform: uppercase;">${homeAway}</span>
                         <span style="font-size: 0.5rem; color: rgba(255,255,255,0.5);">${m.round}. kolo</span>
                     </div>
-                </div >
-    `;
+                </div>
+            `;
         };
 
         // Rotation Interval
