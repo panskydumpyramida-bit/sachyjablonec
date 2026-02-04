@@ -85,7 +85,7 @@ function openDiagramEditor() {
             position: game.fen(),
             draggable: false, // Read only
             showNotation: true,
-            pieceTheme: 'https://chessboardjs.com/img/chesspieces/wikipedia/{piece}.png'
+            pieceTheme: '/img/chesspieces/wikipedia/{piece}.png'
         });
 
         // Setup event listeners on overlay
@@ -635,7 +635,7 @@ function initDraggableBoardForRecording() {
             return true;
         },
         onDrop: handleSolverDrop,
-        pieceTheme: 'https://chessboardjs.com/img/chesspieces/wikipedia/{piece}.png'
+        pieceTheme: '/img/chesspieces/wikipedia/{piece}.png'
     });
 }
 
@@ -712,7 +712,7 @@ function resetBoardToReadOnly() {
     diagramBoard = Chessboard('diagramBoard', {
         position: game.fen(),
         draggable: false,
-        pieceTheme: 'https://chessboardjs.com/img/chesspieces/wikipedia/{piece}.png'
+        pieceTheme: '/img/chesspieces/wikipedia/{piece}.png'
     });
 }
 
