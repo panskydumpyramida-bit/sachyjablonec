@@ -524,80 +524,92 @@ function exportDiagram() {
     const turnBg = turn === 'w' ? '#fff' : '#000';
 
     // Create footer bar element (NOT absolute - appended to end of wrapper)
-    // Create footer bar element (NOT absolute - appended to end of wrapper)
-    const footer = document.createElement('div');
-    footer.id = 'export-footer';
-    // Using display: flex with explicit centering for simple layout
-    footer.style.cssText = `
-        width: 100%;
-        height: 48px;
-        display: flex;
-        align-items: center;
-        justify-content: flex-end; /* Right align the turn indicator */
-        background: #262421;
-        color: #fff;
-        font-family: 'Open Sans', Arial, sans-serif;
-        padding: 0 16px;
-        box-sizing: border-box;
-    `;
-
-    // Turn indicator container
-    const turnDiv = document.createElement('div');
-    turnDiv.style.cssText = 'display: flex; align-items: center; gap: 10px; height: 100%;';
-    turnDiv.innerHTML = `
-        <span style="display: block; width: 16px; height: 16px; background: ${turnBg}; border-radius: 50%; border: 2px solid #888; box-sizing: border-box;"></span>
-        <span style="display: block; color: #fff; font-size: 16px; font-weight: 600; line-height: 1;">${turnText}</span>
-    `;
-
-    footer.appendChild(turnDiv);
-
-    // Append footer AFTER the board (at the end of wrapper)
-    element.appendChild(footer);
-
-    // Override wrapper styles for capture (fixed height would clip footer)
+    // Override wrapper styles for capture
     element.style.backgroundColor = "#262421";
-    element.style.height = "auto"; // Allow wrapper to expand for footer
-    element.style.overflow = "visible";
+    // We don't add the footer to DOM anymore, so no need for height auto hack if we just capture board
+    // usage of html2canvas on the board wrapper
 
-    // Small delay to ensure DOM is updated before capture
+    // Scale factor for high res
+    const scale = 2;
+    const footerHeight = 48 * scale;
+    const paddingX = 16 * scale;
+
     setTimeout(() => {
-        captureBoard();
-    }, 150);
-
-    let captured = false;
-    function captureBoard() {
-        if (captured) return;
-        captured = true;
-
         html2canvas(element, {
             backgroundColor: null,
-            scale: 2,
+            scale: scale,
             useCORS: true,
             allowTaint: true,
-            logging: false,
-            // Force footer height in clone
-            onclone: (doc) => {
-                const f = doc.getElementById('export-footer');
-                if (f) f.style.height = '48px';
-            }
-        }).then(canvas => {
-            // Cleanup
-            if (footer.parentNode) footer.parentNode.removeChild(footer);
-            element.style.cssText = originalStyle;
+            logging: false
+        }).then(originalCanvas => {
+            element.style.cssText = originalStyle; // Restore styles immediately
 
+            // Create final canvas with extra height for footer
+            const finalCanvas = document.createElement('canvas');
+            const width = originalCanvas.width;
+            const height = originalCanvas.height + footerHeight;
+
+            finalCanvas.width = width;
+            finalCanvas.height = height;
+
+            const ctx = finalCanvas.getContext('2d');
+
+            // 1. Draw Board
+            ctx.drawImage(originalCanvas, 0, 0);
+
+            // 2. Draw Footer Background
+            ctx.fillStyle = "#262421";
+            ctx.fillRect(0, originalCanvas.height, width, footerHeight);
+
+            // 3. Draw Content (Right Aligned)
+            ctx.textBaseline = 'middle';
+            ctx.font = `600 ${15 * scale}px "Open Sans", Arial, sans-serif`;
+
+            const text = turnText;
+            const textMetrics = ctx.measureText(text);
+            const textWidth = textMetrics.width;
+
+            // Circle dimensions
+            const circleSize = 14 * scale; // diameter
+            const gap = 10 * scale;
+
+            // Calculate starting X (from right)
+            const totalContentWidth = circleSize + gap + textWidth;
+            const startX = width - paddingX - totalContentWidth;
+            const centerY = originalCanvas.height + (footerHeight / 2);
+
+            // Draw Circle
+            const radius = circleSize / 2;
+            const circleX = startX + radius;
+
+            // Circle fill
+            ctx.fillStyle = turnBg; // #fff or #000
+            ctx.beginPath();
+            ctx.arc(circleX, centerY, radius, 0, 2 * Math.PI);
+            ctx.fill();
+
+            // Circle border
+            ctx.lineWidth = 2 * scale;
+            ctx.strokeStyle = "#888";
+            ctx.stroke();
+
+            // Draw Text
+            ctx.fillStyle = "#fff";
+            const textX = startX + circleSize + gap;
+            ctx.fillText(text, textX, centerY); // vertically centered because textBaseline='middle'
+
+            // Download
             const link = document.createElement('a');
             link.download = `sachovy-diagram-${new Date().getTime()}.png`;
-            link.href = canvas.toDataURL('image/png');
+            link.href = finalCanvas.toDataURL('image/png');
             link.click();
         }).catch(err => {
-            // Cleanup in case of error
-            if (footer.parentNode) footer.parentNode.removeChild(footer);
             element.style.cssText = originalStyle;
-
             console.error("Export failed", err);
             alert("Chyba při exportu diagramu.");
         });
-    }
+    }, 100);
+
 }
 
 // --- Solver Admin Functions ---
