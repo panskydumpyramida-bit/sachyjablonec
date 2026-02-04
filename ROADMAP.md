@@ -1,6 +1,6 @@
 ¨# Roadmap – Šachy Jablonec
 
-> **Poslední aktualizace:** 25. 12. 2025
+> **Poslední aktualizace:** 4. 2. 2026
 
 Plán budoucího vývoje webu [sachyjablonec.cz](https://www.sachyjablonec.cz).
 
@@ -25,6 +25,7 @@ Plán budoucího vývoje webu [sachyjablonec.cz](https://www.sachyjablonec.cz).
 | Úkol | Stav | Poznámka |
 |------|------|----------|
 | Kalendář událostí | ✅ Hotovo | Backend + Admin + Frontend implementováno |
+| Soutěže jednotlivců | ✅ Hotovo | Nová stránka + Featured turnaje |
 | Členská sekce – rozšíření | 🟡 Plánováno | Dokumenty, fórum, interní oznámení |
 | Admin panel – redesign | 🟡 Plánováno | Modularizace, dashboard, lepší UX |
 | Email služba (reset hesla) | 🔴 Blokováno | Čeká na výběr poskytovatele |
@@ -41,6 +42,15 @@ Plán budoucího vývoje webu [sachyjablonec.cz](https://www.sachyjablonec.cz).
 - [x] Export do Google Calendar (iCal)
 - [x] Filtry podle kategorie (mládež/dospělí) a typu (turnaj/trénink)
 - [x] Admin CRUD pro správu událostí
+
+### ✅ Priorita 1.5: Soutěže jednotlivců (HOTOVO)
+> Implementováno 4. 2. 2026
+
+- [x] **Nová stránka** – `individual-competitions.html`
+- [x] **Featured turnaje** – příznak `isFeatured` pro zvýraznění
+- [x] Vizuální zvýraznění featured turnajů
+- [x] Kategorie "Soutěže jednotlivců" v admin editoru
+- [x] Import Prague Chess Festival 2026
 
 
 ### Priorita 2: Rozšíření členské sekce 🆕
@@ -146,6 +156,20 @@ Plán budoucího vývoje webu [sachyjablonec.cz](https://www.sachyjablonec.cz).
 ---
 
 ## ✅ Dokončeno
+
+<details open>
+<summary><strong>Únor 2026</strong></summary>
+
+#### 4. 2. 2026 – Soutěže jednotlivců
+- ✅ Nová stránka `individual-competitions.html`
+- ✅ Featured Tournament Banner
+- ✅ Příznak `isFeatured` v databázi
+- ✅ Kategorie "Soutěže jednotlivců" v admin editoru
+- ✅ Propojení mezi tournaments a individual-competitions
+- ✅ Homepage dlaždice zápasů – kompaktnější layout
+- ✅ Deployment script `scripts/deploy.sh`
+
+</details>
 
 <details open>
 <summary><strong>Prosinec 2025</strong></summary>
