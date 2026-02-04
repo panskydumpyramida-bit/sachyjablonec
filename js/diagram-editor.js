@@ -543,19 +543,19 @@ function exportDiagram() {
 
     // Left side: Knight icon + "Bižuterie Jablonec" text
     const logoDiv = document.createElement('div');
-    logoDiv.style.cssText = 'display: flex; align-items: center; gap: 8px; height: 100%;';
-    // Using Unicode chess knight character instead of SVG (html2canvas renders it better)
+    logoDiv.style.cssText = 'display: flex; align-items: center; gap: 8px;';
+    // Using Unicode chess knight character
     logoDiv.innerHTML = `
-        <span style="font-size: 28px; line-height: 1; color: #c9a227;">♞</span>
-        <span style="color: #c9a227; font-weight: 700; font-size: 16px; line-height: 1;">Bižuterie Jablonec</span>
+        <span style="font-size: 24px; color: #c9a227; display: flex; align-items: center;">♞</span>
+        <span style="color: #c9a227; font-weight: 700; font-size: 16px; display: flex; align-items: center;">Bižuterie Jablonec</span>
     `;
 
     // Right side: Turn indicator
     const turnDiv = document.createElement('div');
-    turnDiv.style.cssText = 'display: flex; align-items: center; gap: 10px; height: 100%;';
+    turnDiv.style.cssText = 'display: flex; align-items: center; gap: 10px;';
     turnDiv.innerHTML = `
-        <span style="display: flex; align-items: center; justify-content: center; width: 16px; height: 16px; background: ${turnBg}; border-radius: 50%; border: 2px solid #666; flex-shrink: 0;"></span>
-        <span style="color: #fff; line-height: 1;">${turnText}</span>
+        <span style="width: 16px; height: 16px; background: ${turnBg}; border-radius: 50%; border: 2px solid #666;"></span>
+        <span style="color: #fff; font-size: 16px; display: flex; align-items: center;">${turnText}</span>
     `;
 
     footer.appendChild(logoDiv);
