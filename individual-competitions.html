@@ -429,6 +429,7 @@
 
     <script src="js/config.js?v=4" defer></script>
     <script src="js/layout-loader.js?v=5" defer></script>
+    <script src="js/news-loader.js?v=4" defer></script>
     <!-- Use main.js for standard utilities -->
     <script src="js/main.js?v=20251226" defer></script>
 
@@ -439,17 +440,8 @@
 
         document.addEventListener('DOMContentLoaded', () => {
             loadEvents();
-            loadNews();
+            // loadNews is handled automatically by news-loader.js via data-news-category
         });
-
-        // Load News specifically for this category
-        async function loadNews() {
-            // Using main.js loadNews logic if exposed or reimplementing simple fetch
-            // main.js usually scans for data-news-category.
-            // If main.js runs on DOMContentLoaded, it will pick it up automatically!
-            // So we might not need to do anything if main.js is smart.
-            // But let's verification.
-        }
 
         async function loadEvents() {
             try {
