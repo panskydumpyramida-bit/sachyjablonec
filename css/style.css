@@ -298,7 +298,7 @@ nav {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
     gap: 4px;
-    margin: 0 auto;
+    margin: 0.5rem auto 0;
     max-width: 280px;
     background: rgba(0, 0, 0, 0.4);
     padding: 4px;
