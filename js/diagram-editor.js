@@ -542,20 +542,26 @@ function exportDiagram() {
         border-top: 1px solid rgba(255,255,255,0.15);
     `;
 
-    // Left side: Logo
-    const logoImg = document.createElement('img');
-    logoImg.src = '/images/jablonec_logo.png';
-    logoImg.style.cssText = 'height: 32px; width: auto;';
+    // Left side: Knight SVG + "Bižuterie Jablonec" text
+    const logoDiv = document.createElement('div');
+    logoDiv.style.cssText = 'display: flex; align-items: center; gap: 8px; color: var(--primary-color, #c9a227);';
+    // Inline SVG for chess knight (Font Awesome style)
+    logoDiv.innerHTML = `
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512" style="width: 22px; height: 22px; fill: #c9a227;">
+            <path d="M226.6 48H117.3l17.1 12.8c6 4.5 9.6 11.6 9.6 19.2s-3.6 14.7-9.6 19.2l-6.5 4.9c-10 7.5-16 19.3-16 31.9l-.3 91c-1 17.9-15.5 32-33.5 32H96C78.3 259 64 244.7 64 227v-3.8c0-12.1-7.2-23.1-18.3-27.9l-21.5-9.2C10.6 180.5 0 167 0 151.6V144c0-26.5 21.5-48 48-48h42.8L77.1 85.7C71.2 81.1 64 73.9 64 64c0-17.7 14.3-32 32-32h64c46 0 85.3 29.5 100.6 70.4l71.3 202.8c12.4 35.2-12.4 72.8-49.6 72.8H256v64c0 35.3-28.7 64-64 64H64c-35.3 0-64-28.7-64-64V320c0-35.3 28.7-64 64-64h116.1l-27.4-77.8C143.5 163.8 136 147.5 136 130.5V128h.2L136 96.3V96c0-5.1 .7-10 2-14.6C138 81.4 138 81.4 138 81.4V81.2C148.9 59.6 167.6 46 189.2 42c2.4-.4 4.9-.8 7.4-1 5.4-.4 10.8-.4 16.2 0 5.9 .4 11.7 1.4 17.4 3l-3.5-9.5V32z"/>
+        </svg>
+        <span style="color: #c9a227; font-weight: 700;">Bižuterie Jablonec</span>
+    `;
 
     // Right side: Turn indicator
     const turnDiv = document.createElement('div');
     turnDiv.style.cssText = 'display: flex; align-items: center; gap: 8px;';
     turnDiv.innerHTML = `
-        <span style="display:inline-block; width:14px; height:14px; background:${turnBg}; border-radius:50%; border:1px solid #777;"></span>
-        <span>${turnText}</span>
+        <span style="display:inline-block; width:14px; height:14px; background:${turnBg}; border-radius:50%; border:2px solid #888;"></span>
+        <span style="color: #fff;">${turnText}</span>
     `;
 
-    footer.appendChild(logoImg);
+    footer.appendChild(logoDiv);
     footer.appendChild(turnDiv);
 
     // Append footer AFTER the board (at the end of wrapper)
@@ -566,14 +572,10 @@ function exportDiagram() {
     element.style.height = "auto"; // Allow wrapper to expand for footer
     element.style.overflow = "visible";
 
-    // Wait for logo to load before capturing
-    logoImg.onload = () => captureBoard();
-    logoImg.onerror = () => captureBoard(); // Capture even if logo fails
-
-    // Fallback timeout if onload doesn't fire (cached image)
+    // Small delay to ensure DOM is updated before capture
     setTimeout(() => {
-        if (footer.parentNode) captureBoard();
-    }, 300);
+        captureBoard();
+    }, 100);
 
     let captured = false;
     function captureBoard() {
