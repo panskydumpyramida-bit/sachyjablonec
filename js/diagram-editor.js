@@ -527,11 +527,13 @@ function exportDiagram() {
     // Create footer bar element (NOT absolute - appended to end of wrapper)
     const footer = document.createElement('div');
     footer.id = 'export-footer';
-    // Using display: table for rock-solid vertical alignment in html2canvas
+    // Using display: flex with explicit centering for simple layout
     footer.style.cssText = `
         width: 100%;
-        height: 50px;
-        display: table;
+        height: 48px;
+        display: flex;
+        align-items: center;
+        justify-content: flex-end; /* Right align the turn indicator */
         background: #262421;
         color: #fff;
         font-family: 'Open Sans', Arial, sans-serif;
@@ -539,24 +541,15 @@ function exportDiagram() {
         box-sizing: border-box;
     `;
 
-    // Left cell: Logo
-    const leftCell = document.createElement('div');
-    leftCell.style.cssText = 'display: table-cell; vertical-align: middle; text-align: left;';
-    leftCell.innerHTML = `
-        <span style="font-size: 26px; color: #c9a227; vertical-align: middle; display: inline-block; margin-right: 8px;">♞</span>
-        <span style="color: #c9a227; font-weight: 700; font-size: 16px; vertical-align: middle; display: inline-block;">Bižuterie Jablonec</span>
+    // Turn indicator container
+    const turnDiv = document.createElement('div');
+    turnDiv.style.cssText = 'display: flex; align-items: center; gap: 10px; height: 100%;';
+    turnDiv.innerHTML = `
+        <span style="display: block; width: 16px; height: 16px; background: ${turnBg}; border-radius: 50%; border: 2px solid #888; box-sizing: border-box;"></span>
+        <span style="display: block; color: #fff; font-size: 16px; font-weight: 600; line-height: 1;">${turnText}</span>
     `;
 
-    // Right cell: Turn indicator
-    const rightCell = document.createElement('div');
-    rightCell.style.cssText = 'display: table-cell; vertical-align: middle; text-align: right;';
-    rightCell.innerHTML = `
-        <span style="display: inline-block; width: 14px; height: 14px; background: ${turnBg}; border-radius: 50%; border: 2px solid #888; vertical-align: middle; margin-right: 8px;"></span>
-        <span style="color: #fff; font-size: 16px; font-weight: 600; vertical-align: middle; display: inline-block;">${turnText}</span>
-    `;
-
-    footer.appendChild(leftCell);
-    footer.appendChild(rightCell);
+    footer.appendChild(turnDiv);
 
     // Append footer AFTER the board (at the end of wrapper)
     element.appendChild(footer);
@@ -582,10 +575,10 @@ function exportDiagram() {
             useCORS: true,
             allowTaint: true,
             logging: false,
-            // Force line-heights to be respected
+            // Force footer height in clone
             onclone: (doc) => {
                 const f = doc.getElementById('export-footer');
-                if (f) f.style.height = '50px';
+                if (f) f.style.height = '48px';
             }
         }).then(canvas => {
             // Cleanup
