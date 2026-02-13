@@ -179,23 +179,23 @@ const UpcomingMatches = {
             const dateFmt = this.formatDate(m.dateStr);
 
             return `
-                <div style="width: 100%; height: 100%; display: flex; flex-direction: column; padding: 8%; box-sizing: border-box; overflow: hidden;">
+                <div style="width: 100%; height: 100%; display: flex; flex-direction: column; padding: 5%; box-sizing: border-box; overflow: hidden;">
                     
                     <!-- Header: Date + Team Badge -->
-                    <div style="display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 5%; margin-bottom: 2%;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 3%; margin-bottom: 1%;">
                         <span style="font-weight: 700; color: var(--primary-color); font-size: clamp(0.55rem, 2.5vw, 0.75rem);">${dateFmt}</span>
                         <span style="background: var(--primary-color); color: #000; width: clamp(14px, 5vw, 20px); height: clamp(14px, 5vw, 20px); border-radius: 3px; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: clamp(0.5rem, 2vw, 0.7rem);">${m.teamShort}</span>
                     </div>
                     
                     <!-- Body: Opponent Name (flex-grow, centered) -->
                     <div style="flex: 1; display: flex; align-items: center; justify-content: center; text-align: center; overflow: hidden; min-height: 0;">
-                        <span style="font-size: clamp(0.55rem, 3vw, 0.8rem); line-height: 1.15; font-weight: 700; color: #fff; word-break: break-word; overflow-wrap: break-word; max-width: 100%; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;">
+                        <span style="font-size: clamp(0.5rem, 2.8vw, 0.75rem); line-height: 1.15; font-weight: 700; color: #fff; word-break: break-word; overflow-wrap: break-word; max-width: 100%; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;">
                             ${m.opponent}
                         </span>
                     </div>
 
                     <!-- Footer: Home/Away + Round -->
-                    <div style="display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 5%; margin-top: 2%;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 3%; margin-top: 1%;">
                         <span style="font-size: clamp(0.45rem, 2vw, 0.6rem); font-weight: 700; color: ${homeAwayColor}; text-transform: uppercase; letter-spacing: 0.5px;">${homeAway}</span>
                         <span style="font-size: clamp(0.45rem, 2vw, 0.55rem); color: rgba(255,255,255,0.5); white-space: nowrap;">${m.round}. kolo</span>
                     </div>
