@@ -1015,13 +1015,32 @@ function showPuzzleDetail(idx) {
     const fenParts = puzzle.initialFen.split(' ');
     const playerColor = fenParts[1] === 'w' ? 'white' : 'black';
 
-    // Format solution moves
-    const solutionMoves = puzzle.solution.map((uci, i) => {
-        const from = uci.substring(0, 2);
-        const to = uci.substring(2, 4);
-        const promo = uci.length > 4 ? '=' + uci.charAt(4).toUpperCase() : '';
-        return `${from}-${to}${promo}`;
-    }).join(', ');
+    // Format solution moves using chess.js for proper algebraic notation
+    const solutionMoves = (() => {
+        try {
+            const tempGame = new Chess(puzzle.initialFen);
+            return puzzle.solution.map((uci) => {
+                const from = uci.substring(0, 2);
+                const to = uci.substring(2, 4);
+                const promotion = uci.length > 4 ? uci.charAt(4) : undefined;
+                const moveObj = tempGame.move({ from, to, promotion });
+                if (!moveObj) return uci; // fallback to UCI if move fails
+                // Convert English piece letters to Czech: N→J, B→S, R→V, Q→D, K→K
+                return moveObj.san
+                    .replace(/^N/, 'J')
+                    .replace(/^B/, 'S')
+                    .replace(/^R/, 'V')
+                    .replace(/^Q/, 'D');
+            }).join(', ');
+        } catch (e) {
+            // Fallback: plain UCI
+            return puzzle.solution.map(uci => {
+                const from = uci.substring(0, 2);
+                const to = uci.substring(2, 4);
+                return `${from}-${to}`;
+            }).join(', ');
+        }
+    })();
 
     const statusText = puzzle.correct
         ? '<span style="color: #4ade80;"><i class="fa-solid fa-check-circle"></i> Správně</span>'
