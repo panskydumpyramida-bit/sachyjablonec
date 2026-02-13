@@ -346,6 +346,14 @@ nav {
     overflow: hidden;
 }
 
+/* Back face of rotating tile: override centering so match content fills from top to bottom */
+.hero-grid-item.face-back {
+    padding: 0;
+    justify-content: stretch;
+    align-items: stretch;
+    text-align: left;
+}
+
 .hero-grid-item.light {
     background: linear-gradient(135deg, rgba(230, 200, 150, 0.95) 0%, rgba(200, 160, 110, 0.95) 100%);
     color: #3e2723;
