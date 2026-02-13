@@ -157,6 +157,38 @@
                             </div>
                         </div>
                     </div>
+
+                    <!-- Site Settings Panel -->
+                    <div class="site-settings-panel" data-role="superadmin"
+                        style="margin-top: 1rem; background: rgba(30, 41, 59, 0.5); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 1rem 1.5rem;">
+                        <div
+                            style="font-weight: 600; margin-bottom: 0.75rem; color: #94a3b8; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.5px;">
+                            <i class="fa-solid fa-sliders"></i> Nastavení webu
+                        </div>
+                        <div style="display: flex; flex-wrap: wrap; gap: 1rem;">
+                            <!-- Maintenance Mode Toggle -->
+                            <label
+                                style="display: flex; align-items: center; gap: 0.75rem; cursor: pointer; padding: 0.5rem 0; flex: 1; min-width: 200px;">
+                                <input type="checkbox" id="maintenanceToggle" onchange="toggleMaintenance()"
+                                    style="width: 18px; height: 18px; accent-color: #ef4444; cursor: pointer;">
+                                <span style="font-size: 0.9rem;">
+                                    <i class="fa-solid fa-wrench" style="color: #ef4444; margin-right: 0.3rem;"></i>
+                                    Režim údržby
+                                </span>
+                            </label>
+
+                            <!-- Latest Comment Toggle -->
+                            <label
+                                style="display: flex; align-items: center; gap: 0.75rem; cursor: pointer; padding: 0.5rem 0; flex: 1; min-width: 200px;">
+                                <input type="checkbox" id="showLatestCommentToggle" onchange="toggleLatestComment()"
+                                    style="width: 18px; height: 18px; accent-color: #60a5fa; cursor: pointer;">
+                                <span style="font-size: 0.9rem;">
+                                    <i class="fa-solid fa-comments" style="color: #60a5fa; margin-right: 0.3rem;"></i>
+                                    Info panel – Nový komentář
+                                </span>
+                            </label>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- News List Section -->
@@ -206,7 +238,9 @@
                                         class="fa-solid fa-italic"></i></button><button type="button" id="btnUnderline"
                                     onclick="formatText('underline')" title="Podtržení (Ctrl+U)"><i
                                         class="fa-solid fa-underline"></i></button><button type="button"
-                                    onclick="removeFormatting()" title="Odstranit formátování"
+                                    onclick="formatText('strikethrough')" title="Přeškrtnutí (Ctrl+Shift+X)"
+                                    style="color: #94a3b8;"><i class="fa-solid fa-strikethrough"></i></button><button
+                                    type="button" onclick="removeFormatting()" title="Odstranit formátování"
                                     style="color: #94a3b8;"><i class="fa-solid fa-eraser"></i></button>
                                 <div class="divider"></div>
                                 <!-- Heading buttons -->
@@ -222,9 +256,15 @@
                                         type="button" id="headingH3" onclick="applyHeading('h3')" title="Nadpis 3"
                                         style="padding: 0.25rem 0.5rem; font-size: 0.7rem; font-weight: 500; border-radius: 3px; min-width: 28px;">H3</button>
                                 </div>
-                                <div class="divider"></div><button type="button" onclick="insertLink()" title="Odkaz"><i
-                                        class="fa-solid fa-link"></i></button><button type="button"
-                                    onclick="toggleSource()" title="HTML" id="btnSource"><i
+                                <div class="divider"></div><button type="button" onclick="insertList('ul')"
+                                    title="Odrážkový seznam"><i class="fa-solid fa-list-ul"></i></button><button
+                                    type="button" onclick="insertList('ol')" title="Číslovaný seznam"><i
+                                        class="fa-solid fa-list-ol"></i></button>
+                                <div class="divider"></div><button type="button" onclick="insertLink()"
+                                    title="Odkaz (Ctrl+K)"><i class="fa-solid fa-link"></i></button><button
+                                    type="button" onclick="showColorPicker()" title="Barva textu"
+                                    style="color: #f472b6;"><i class="fa-solid fa-palette"></i></button><button
+                                    type="button" onclick="toggleSource()" title="HTML" id="btnSource"><i
                                         class="fa-solid fa-code"></i></button>
                                 <!-- Row 2: Highlights and blocks (will wrap on smaller
                                                             screens) -->
@@ -1268,6 +1308,77 @@
             </div>
 
             <div class="changelog-timeline">
+                <!-- 2026-02-13 v26 -->
+                <div class="changelog-entry">
+                    <div class="changelog-date">13. 2. 2026</div>
+                    <div class="changelog-version">v26</div>
+                    <div class="changelog-content">
+                        <h4>♟️ Game Viewer 2.0 – Redesign</h4>
+                        <ul>
+                            <li><strong>Dvousloupcový seznam tahů:</strong> Nový tabulkový layout (číslo | bílý | černý)
+                                inspirovaný chess.com a Lichess.</li>
+                            <li><strong>Inline komentáře:</strong> Komentáře se zobrazují přímo v seznamu tahů se 💬
+                                ikonou místo překryvné bubliny.</li>
+                            <li><strong>NAG odznaky:</strong> Barevné pozadí pro anotace (!! zelené, ?? červené, ?!
+                                žluté).</li>
+                            <li><strong>Ovládací prvky:</strong> Navigační tlačítka přesunuta přímo pod šachovnici.</li>
+                            <li><strong>Zvýraznění tahu:</strong> Aktivní tah s levým okrajem a jemným svícením.</li>
+                        </ul>
+                        <h4>🏠 Homepage</h4>
+                        <ul>
+                            <li><strong>Rozpis zápasů:</strong> Oprava layoutu rotujícího dlaždice – responzivní font
+                                sizing, ořez dlouhých jmen.</li>
+                        </ul>
+                        <h4>🔒 Admin</h4>
+                        <ul>
+                            <li><strong>Superadmin:</strong> Citlivá nastavení webu (údržba, komentáře) omezena na
+                                superadmin roli.</li>
+                            <li><strong>Manuál:</strong> Nový stylovaný HTML manuál (dark theme, glassmorphism, obsah).
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+                <!-- 2026-02-13 v25 -->
+                <div class="changelog-entry">
+                    <div class="changelog-date">13. 2. 2026</div>
+                    <div class="changelog-version">v25</div>
+                    <div class="changelog-content">
+                        <h4>✏️ WYSIWYG Editor vylepšení</h4>
+                        <ul>
+                            <li><strong>Nová tlačítka:</strong> Přeškrtnutí, odrážkový/číslovaný seznam, paleta barev
+                                textu.</li>
+                            <li><strong>Počítadlo slov:</strong> Live zobrazení počtu slov a znaků pod editorem.</li>
+                            <li><strong>Barva textu:</strong> Paleta s 8 barvami + reset na výchozí.</li>
+                            <li><strong>Klávesové zkratky:</strong> ⌘K (odkaz), ⌘⇧X (přeškrtnutí), ⌘⇧S (AI pravopis),
+                                ⌘⇧L (seznam), ⌘⇧V (čistý text).</li>
+                            <li><strong>Drag & Drop:</strong> Přetáhněte obrázek přímo do editoru – automatický upload.
+                            </li>
+                            <li><strong>Paste as Plain Text:</strong> Shift+Paste vloží text bez formátování.</li>
+                            <li><strong>Floating toolbar:</strong> Rozšířen o underline, přeškrtnutí, gumu a H3.</li>
+                            <li><strong>Shortcuts modal:</strong> Kompletní přehled zkratek + sekce Tipy.</li>
+                        </ul>
+                    </div>
+                </div>
+                <!-- 2026-02-13 v24 -->
+                <div class="changelog-entry">
+                    <div class="changelog-date">13. 2. 2026</div>
+                    <div class="changelog-version">v24</div>
+                    <div class="changelog-content">
+                        <h4>🏗️ Refaktoring & Homepage opravy</h4>
+                        <ul>
+                            <li><strong>Turnaje:</strong> Extrakce inline CSS (485 řádků) a JS (560 řádků) z
+                                tournaments.html do <code>css/tournaments.css</code> a <code>js/tournaments.js</code>.
+                            </li>
+                            <li><strong>Turnaje SEO:</strong> Přidány Open Graph a Twitter Card meta tagy.</li>
+                            <li><strong>Homepage:</strong> Oprava překrývání komentářového banneru s nadpisem "Novinky"
+                                – widget přesunut mimo hero sekci.</li>
+                            <li><strong>Homepage:</strong> Oprava dlaždic hero gridu schovaných pod hlavičkou
+                                (margin-top 60→70px).</li>
+                            <li><strong>Admin:</strong> Nový panel "Nastavení webu" na dashboardu – toggle pro režim
+                                údržby a info panel komentářů.</li>
+                        </ul>
+                    </div>
+                </div>
                 <!-- 2026-01-22 v23 -->
                 <div class="changelog-entry">
                     <div class="changelog-date">22. 1. 2026</div>

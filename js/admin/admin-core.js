@@ -427,8 +427,34 @@ async function toggleMaintenance() {
     }
 }
 
+async function toggleLatestComment() {
+    const toggle = document.getElementById('showLatestCommentToggle');
+    const value = toggle.checked;
+
+    try {
+        const res = await fetch(`${API_URL}/settings`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${authToken}`
+            },
+            body: JSON.stringify({ key: 'show_latest_comment', value: String(value) })
+        });
+
+        if (res.ok) {
+            showAlert(value ? 'Info panel komentářů ZAPNUT' : 'Info panel komentářů VYPNUT', 'success');
+        } else {
+            toggle.checked = !value;
+            showAlert('Chyba při změně nastavení', 'error');
+        }
+    } catch (e) {
+        toggle.checked = !value;
+        showAlert('Chyba spojení', 'error');
+    }
+}
+
 /**
- * Check maintenance mode status on load
+ * Check maintenance mode and other settings on load
  */
 async function checkMaintenance() {
     try {
@@ -436,10 +462,14 @@ async function checkMaintenance() {
             headers: { 'Authorization': `Bearer ${authToken}` }
         });
         const settings = await res.json();
-        const toggle = document.getElementById('maintenanceToggle');
-        if (toggle) toggle.checked = settings.maintenance_mode === 'true';
+
+        const maintenanceToggle = document.getElementById('maintenanceToggle');
+        if (maintenanceToggle) maintenanceToggle.checked = settings.maintenance_mode === 'true';
+
+        const commentToggle = document.getElementById('showLatestCommentToggle');
+        if (commentToggle) commentToggle.checked = settings.show_latest_comment === 'true';
     } catch (e) {
-        console.error('Failed to check maintenance status:', e);
+        console.error('Failed to check settings:', e);
     }
 }
 
@@ -508,6 +538,7 @@ window.deleteNews = deleteNews;
 window.showToast = showToast;
 window.showAlert = showAlert;
 window.toggleMaintenance = toggleMaintenance;
+window.toggleLatestComment = toggleLatestComment;
 window.checkMaintenance = checkMaintenance;
 window.toggleSidebarSection = toggleSidebarSection;
 

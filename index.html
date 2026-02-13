@@ -29,7 +29,7 @@
     <header id="global-header"></header>
 
     <main>
-        <section class="hero" style="position: relative;">
+        <section class="hero">
 
 
             <div class="container hero-content">
@@ -78,23 +78,13 @@
                     </a>
                 </div>
 
-                <!-- Latest Comment Widget - Placed immediately below navigation -->
-                <div id="latest-comment-widget" class="container"
-                    style="margin-top: 0.5rem; margin-bottom: 0; min-height: 48px; display: flex; align-items: center; justify-content: center; width: 100%; max-width: 800px;">
-                    <!-- Skeleton placeholder -->
-                    <div class="latest-comment-skeleton"
-                        style="display: flex; gap: 1rem; align-items: center; width: 100%; padding: 0.5rem 1rem; background: rgba(36, 36, 68, 0.5); border: 1px solid rgba(255,255,255,0.05); border-radius: 12px; opacity: 0.5;">
-                        <div
-                            style="width: 100px; height: 16px; background: linear-gradient(90deg, rgba(255,255,255,0.05) 25%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0.05) 75%); border-radius: 4px; animation: shimmer 1.5s infinite;">
-                        </div>
-                        <div
-                            style="flex: 1; height: 16px; background: linear-gradient(90deg, rgba(255,255,255,0.05) 25%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0.05) 75%); border-radius: 4px; animation: shimmer 1.5s infinite;">
-                        </div>
-                    </div>
-                </div>
-
             </div>
         </section>
+
+        <!-- Latest Comment Widget - Between hero and news -->
+        <div id="latest-comment-widget" class="latest-comment-container hidden">
+            <!-- Content injected by latest-comment.js -->
+        </div>
 
         <section id="news" class="container">
             <h2 class="section-title">Novinky</h2>
@@ -105,6 +95,22 @@
     </main>
 
     <style>
+        /* Comment widget container */
+        .latest-comment-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0.75rem 1rem;
+            max-width: 900px;
+            margin: -0.5rem auto 0;
+            position: relative;
+            z-index: 5;
+        }
+
+        .latest-comment-container.hidden {
+            display: none;
+        }
+
         .latest-comment-card {
             display: flex;
             align-items: center;

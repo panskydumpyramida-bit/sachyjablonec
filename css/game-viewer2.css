@@ -31,14 +31,13 @@
     flex-direction: column;
 }
 
-/* Main Content Area - Grid Layout with right column spanning both rows */
+/* Main Content Area - Two-column layout: board (with controls) + info panel */
 .gv2-content {
     display: grid;
     grid-template-areas:
-        "board right"
-        "controls right";
+        "board right";
     grid-template-columns: 1fr 250px;
-    grid-template-rows: 1fr auto;
+    grid-template-rows: 1fr;
     width: 100%;
     gap: 0;
 }
@@ -47,8 +46,7 @@
     grid-area: board;
     display: flex;
     flex-direction: column;
-    justify-content: flex-end;
-    /* Push to bottom near controls */
+    justify-content: center;
     align-items: center;
     overflow: hidden;
 }
@@ -73,10 +71,7 @@
     overflow: auto;
 }
 
-.gv2-controls {
-    grid-area: controls;
-    border-top: 1px solid rgba(255, 255, 255, 0.05);
-}
+/* Controls are now inside .gv2-board-section, not a grid cell */
 
 /* Analysis info is now a CHILD of info-panel, not grid cell */
 .gv2-analysis-info {
@@ -891,19 +886,65 @@
     font-weight: 600;
 }
 
-/* Move List (Scrollable) */
+/* Move List (Scrollable) - Two-column table layout like chess.com */
 .gv2-moves {
     flex-grow: 1;
     overflow-y: auto;
-    padding: 1rem;
+    padding: 0.5rem;
     font-family: 'Roboto Mono', monospace;
-    line-height: 1.8;
-    /* More readable spacing */
-    font-size: 1em;
+    font-size: 0.95em;
     text-align: left;
     scrollbar-width: thin;
     scrollbar-color: var(--gv-border-color) transparent;
     position: relative;
+}
+
+/* Two-column move table */
+.gv2-move-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.gv2-move-row {
+    display: flex;
+    align-items: stretch;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.gv2-move-row:hover {
+    background: rgba(255, 255, 255, 0.03);
+}
+
+.gv2-move-num-cell {
+    width: 32px;
+    min-width: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #777;
+    font-size: 0.8em;
+    font-weight: 600;
+    background: rgba(0, 0, 0, 0.15);
+    border-right: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.gv2-move-cell {
+    flex: 1;
+    padding: 4px 8px;
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    min-height: 28px;
+}
+
+.gv2-move-cell:first-of-type {
+    border-right: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+/* Comment row spans full width below moves */
+.gv2-comment-row {
+    display: block;
+    width: 100%;
 }
 
 .gv2-moves::-webkit-scrollbar {
@@ -934,34 +975,34 @@
 
 .gv2-move {
     cursor: pointer;
-    padding: 2px 6px;
+    padding: 3px 6px;
     border-radius: 4px;
-    transition: all 0.1s;
+    transition: all 0.15s;
     font-weight: 500;
-    margin: 0 1px;
     white-space: nowrap;
+    border-left: 2px solid transparent;
 }
 
 .gv2-move:hover {
-    background-color: rgba(255, 255, 255, 0.15);
+    background-color: rgba(255, 255, 255, 0.12);
     color: #fff;
 }
 
 .gv2-move.active {
-    background-color: var(--gv-active-color);
-    color: #000;
-    /* Black text on gold is high contrast */
+    background-color: rgba(212, 175, 55, 0.25);
+    color: var(--gv-active-color);
     font-weight: 700;
-    box-shadow: 0 0 8px rgba(212, 175, 55, 0.5);
+    border-left-color: var(--gv-active-color);
+    box-shadow: inset 0 0 0 1px rgba(212, 175, 55, 0.3);
 }
 
+/* Legacy move number (inline flow fallback) */
 .gv2-move-num {
-    color: #b0b0b0;
-    /* Brighter gray for better visibility */
-    margin-right: 6px;
-    margin-left: 10px;
-    font-size: 0.9em;
-    font-weight: 500;
+    color: #777;
+    margin-right: 4px;
+    margin-left: 8px;
+    font-size: 0.85em;
+    font-weight: 600;
 }
 
 .gv2-move-num:first-of-type {
@@ -972,15 +1013,25 @@
 .gv2-comment {
     display: block;
     width: 100%;
-    margin: 0.75rem 0;
-    padding: 0.75rem 1rem;
-    background-color: var(--gv-comment-bg);
+    margin: 0.4rem 0;
+    padding: 0.5rem 0.75rem 0.5rem 0.6rem;
+    background: linear-gradient(135deg, rgba(212, 175, 55, 0.08), rgba(212, 175, 55, 0.03));
     border-left: 3px solid var(--gv-comment-border);
-    border-radius: 0 4px 4px 0;
-    color: #ccc;
+    border-radius: 0 6px 6px 0;
+    color: #d0d0d0;
     font-style: italic;
-    font-size: 0.95em;
-    line-height: 1.5;
+    font-size: 0.88em;
+    line-height: 1.45;
+    font-family: 'Inter', sans-serif;
+    position: relative;
+}
+
+.gv2-comment::before {
+    content: '💬';
+    margin-right: 0.4rem;
+    font-style: normal;
+    font-size: 0.85em;
+    opacity: 0.7;
 }
 
 .gv2-variation {
@@ -1009,10 +1060,45 @@
     box-shadow: 0 2px 6px rgba(212, 175, 55, 0.4);
 }
 
+/* NAG badges with colored backgrounds */
 .gv2-nag {
-    font-weight: bold;
-    color: #17a2b8;
+    font-weight: 800;
     margin-left: 2px;
+    padding: 0px 4px;
+    border-radius: 3px;
+    font-size: 0.85em;
+    display: inline-block;
+    line-height: 1.4;
+}
+
+.gv2-nag-brilliant {
+    color: #22c55e;
+    background: rgba(34, 197, 94, 0.15);
+}
+
+.gv2-nag-good {
+    color: #4ade80;
+    background: rgba(74, 222, 128, 0.12);
+}
+
+.gv2-nag-interesting {
+    color: #60a5fa;
+    background: rgba(96, 165, 250, 0.12);
+}
+
+.gv2-nag-dubious {
+    color: #fbbf24;
+    background: rgba(251, 191, 36, 0.15);
+}
+
+.gv2-nag-mistake {
+    color: #ef4444;
+    background: rgba(239, 68, 68, 0.15);
+}
+
+.gv2-nag-blunder {
+    color: #dc2626;
+    background: rgba(220, 38, 38, 0.2);
 }
 
 /* Fix for standard "7 rows" bug */

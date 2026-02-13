@@ -1,6 +1,7 @@
 /**
  * Latest Comment Widget
  * Fetches and displays the most recent comment on the homepage
+ * Respects the show_latest_comment admin setting
  */
 
 class LatestCommentWidget {
@@ -9,8 +10,28 @@ class LatestCommentWidget {
         this.container = document.getElementById('latest-comment-widget');
 
         if (this.container) {
-            this.load();
+            this.init();
         }
+    }
+
+    async init() {
+        // Check if the widget is enabled in admin settings
+        try {
+            const settingRes = await fetch(`${API_URL}/settings/public/show_latest_comment`);
+            if (settingRes.ok) {
+                const { value } = await settingRes.json();
+                // If setting exists and is explicitly 'false', hide the widget
+                if (value === 'false') {
+                    this.container.classList.add('hidden');
+                    return;
+                }
+            }
+        } catch (e) {
+            // If settings check fails, default to showing the widget
+            console.warn('Could not check show_latest_comment setting:', e);
+        }
+
+        this.load();
     }
 
     async load() {

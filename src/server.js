@@ -537,6 +537,15 @@ app.post('/api/settings', authMiddleware, async (req, res) => {
         const { key, value } = req.body;
         if (!key) return res.status(400).json({ error: 'Key required' });
 
+        // Superadmin-only settings
+        const superadminKeys = ['maintenance_mode', 'show_latest_comment'];
+        if (superadminKeys.includes(key)) {
+            const role = (req.user.role || '').toUpperCase();
+            if (role !== 'SUPERADMIN') {
+                return res.status(403).json({ error: 'Pouze superadmin může měnit toto nastavení' });
+            }
+        }
+
         const setting = await prisma.systemSetting.upsert({
             where: { key },
             update: { value: String(value) },
@@ -552,7 +561,7 @@ app.post('/api/settings', authMiddleware, async (req, res) => {
 app.get('/api/settings/public/:key', async (req, res) => {
     const { key } = req.params;
     // Only allow specific public keys
-    const publicKeys = ['chessApiDepth'];
+    const publicKeys = ['chessApiDepth', 'show_latest_comment'];
     if (!publicKeys.includes(key)) {
         return res.status(403).json({ error: 'This setting is not public' });
     }
