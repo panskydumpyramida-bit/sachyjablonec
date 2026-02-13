@@ -49,35 +49,41 @@ async function loadComponent(id, file) {
 
 function setActiveLink() {
     const path = window.location.pathname;
-    const page = path.split('/').pop() || 'index.html';
+
+    // Normalize a path: strip .html, trailing slashes, leading slashes
+    // e.g. "/about.html" -> "about", "/about" -> "about", "/" -> "", "/teams" -> "teams"
+    const normalize = (p) => {
+        let s = (p || '').replace(/\.html$/i, '').replace(/^\/+|\/+$/g, '');
+        if (s === 'index') s = '';
+        return s.toLowerCase();
+    };
+
+    const currentPage = normalize(path);
 
     // Find all links in nav
     const links = document.querySelectorAll('.nav-links a');
 
     links.forEach(link => {
         const href = link.getAttribute('href');
+        if (!href || href === '#') return;
 
         // Remove active class first
         link.classList.remove('active');
 
-        // Add active class if matches
-        if (href === page) {
+        const linkPage = normalize(href);
+
+        // Match current page
+        if (linkPage === currentPage) {
             link.classList.add('active');
 
             // Handle dropdown parent active state
             const parentDropdown = link.closest('.dropdown');
             if (parentDropdown) {
-                const parentLink = parentDropdown.querySelector('a');
+                const parentLink = parentDropdown.querySelector(':scope > a');
                 if (parentLink) parentLink.classList.add('active');
             }
         }
     });
-
-    // Special case for root
-    if (page === '' || page === '/') {
-        const homeLink = document.querySelector('.nav-links a[href="index.html"]');
-        if (homeLink) homeLink.classList.add('active');
-    }
 }
 
 // Mobile menu init (extracted from main.js or similar logic)
