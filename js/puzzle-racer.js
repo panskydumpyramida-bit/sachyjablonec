@@ -44,6 +44,12 @@ let loggedInUser = null;
 // Personal best for new record detection
 let personalBest = 0;
 
+// Per-game stats for dashboard
+let gameCorrectCount = 0;
+let gameWrongCount = 0;
+let currentStreak = 0;
+let gameMaxStreak = 0;
+
 // Vanilla defaults (fixed, not affected by admin settings)
 const VANILLA_DEFAULTS = {
     puzzleTheme: 'mix',
@@ -270,6 +276,13 @@ function startGameLoop() {
     // timeLeft is already set by loadGameSettings()
     currentPuzzleIndex = 0;
     isGameActive = true;
+
+    // Reset per-game stats
+    gameCorrectCount = 0;
+    gameWrongCount = 0;
+    currentStreak = 0;
+    gameMaxStreak = 0;
+    puzzleHistory = [];
 
     updateScore();
     updateTimer();
@@ -654,6 +667,9 @@ function makeOpponentMove() {
 function handleCorrectPuzzle() {
     score++;
     totalPuzzlesSolved++;
+    gameCorrectCount++;
+    currentStreak++;
+    if (currentStreak > gameMaxStreak) gameMaxStreak = currentStreak;
     updateScore();
 
     // Track puzzle for post-solve review
@@ -748,6 +764,8 @@ function loadNextPuzzleOrWait() {
 
 function handleWrongMove() {
     mistakeCount++;
+    gameWrongCount++;
+    currentStreak = 0;
     updateLivesDisplay();
     showFeedback('wrong');
 
@@ -1088,7 +1106,11 @@ async function saveScore() {
                 score,
                 playerName,
                 userId: loggedInUser ? loggedInUser.id : null,
-                mode: gameMode // Send current game mode
+                mode: gameMode,
+                correctCount: gameCorrectCount,
+                wrongCount: gameWrongCount,
+                maxStreak: gameMaxStreak,
+                puzzleCount: gameCorrectCount + gameWrongCount
             })
         });
 
@@ -1179,7 +1201,11 @@ function escapeHtml(text) {
 // Detect logged-in user from JWT in localStorage
 function detectLoggedInUser() {
     try {
-        const token = localStorage.getItem('token');
+        // Check all possible token keys used across the app
+        const token = localStorage.getItem('auth_token')
+            || localStorage.getItem('authToken')
+            || localStorage.getItem('token')
+            || sessionStorage.getItem('auth_token');
         if (!token) return null;
 
         // Decode JWT payload (base64)
@@ -1220,10 +1246,26 @@ async function loadPersonalStats() {
         // Store personal best for new record detection
         personalBest = stats.bestScore || 0;
 
+        // Build top 3 list
+        let top3Html = '';
+        if (stats.top3 && stats.top3.length > 0) {
+            top3Html = '<div class="ps-top3"><div class="ps-top3-title">🏅 Top 3</div>';
+            stats.top3.forEach((r, i) => {
+                const medals = ['🥇', '🥈', '🥉'];
+                const dateStr = new Date(r.date).toLocaleDateString('cs-CZ');
+                top3Html += `<div class="ps-top3-row">
+                    <span class="ps-medal">${medals[i]}</span>
+                    <span class="ps-top3-score">${r.score}</span>
+                    <span class="ps-top3-date">${dateStr}</span>
+                </div>`;
+            });
+            top3Html += '</div>';
+        }
+
         // Build trend sparkline
         let trendHtml = '';
-        if (stats.recentScores.length > 1) {
-            const scores = stats.recentScores.map(s => s.score).reverse(); // oldest first
+        if (stats.recentScores && stats.recentScores.length > 1) {
+            const scores = stats.recentScores.map(s => s.score).reverse();
             const max = Math.max(...scores, 1);
             trendHtml = '<div class="trend-sparkline">' +
                 scores.map(s => `<div class="trend-bar" style="height: ${Math.max(10, (s / max) * 100)}%" title="${s}"></div>`).join('') +
@@ -1238,6 +1280,21 @@ async function loadPersonalStats() {
                     <span class="ps-label">Nejlepší</span>
                 </div>
                 <div class="ps-stat">
+                    <span class="ps-icon">📊</span>
+                    <span class="ps-value">${stats.avgScore || '–'}</span>
+                    <span class="ps-label">Průměr</span>
+                </div>
+                <div class="ps-stat">
+                    <span class="ps-icon">🔥</span>
+                    <span class="ps-value">${stats.bestStreak || '–'}</span>
+                    <span class="ps-label">Streak</span>
+                </div>
+                <div class="ps-stat">
+                    <span class="ps-icon">🎯</span>
+                    <span class="ps-value">${stats.avgAccuracy != null ? stats.avgAccuracy + '%' : '–'}</span>
+                    <span class="ps-label">Přesnost</span>
+                </div>
+                <div class="ps-stat">
                     <span class="ps-icon">🎮</span>
                     <span class="ps-value">${stats.totalGames}</span>
                     <span class="ps-label">Her</span>
@@ -1247,6 +1304,7 @@ async function loadPersonalStats() {
                     ${trendHtml || '<span style="color: var(--text-muted); font-size: 0.8rem;">–</span>'}
                 </div>
             </div>
+            ${top3Html}
         `;
         statsPanel.classList.remove('hidden');
     } catch (e) {

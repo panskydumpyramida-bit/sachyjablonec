@@ -241,14 +241,18 @@ model SystemSetting {
 }
 
 model PuzzleRaceResult {
-  id        Int      @id @default(autoincrement())
-  score     Int
-  playerName String   @map("player_name")
-  userId    Int?     @map("user_id")
-  createdAt DateTime @default(now()) @map("created_at")
-  mode      String   @default("vanilla") // 'vanilla', 'thematic'
+  id           Int      @id @default(autoincrement())
+  score        Int
+  playerName   String   @map("player_name")
+  userId       Int?     @map("user_id")
+  createdAt    DateTime @default(now()) @map("created_at")
+  mode         String   @default("vanilla") // 'vanilla', 'thematic'
+  correctCount Int?     @default(0) @map("correct_count")
+  wrongCount   Int?     @default(0) @map("wrong_count")
+  maxStreak    Int?     @default(0) @map("max_streak")
+  puzzleCount  Int?     @default(0) @map("puzzle_count")
 
-  user      User?    @relation(fields: [userId], references: [id])
+  user         User?    @relation(fields: [userId], references: [id])
 
   @@map("puzzle_race_results")
 }
