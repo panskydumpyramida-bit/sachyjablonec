@@ -348,10 +348,18 @@ nav {
 
 /* Back face of rotating tile: override centering so match content fills from top to bottom */
 .hero-grid-item.face-back {
-    padding: 0;
-    justify-content: stretch;
+    padding: 0 !important;
+    justify-content: flex-start;
     align-items: stretch;
     text-align: left;
+}
+
+/* Don't apply hero-grid-item span styles to match tile content */
+.hero-grid-item.face-back span {
+    font-size: inherit;
+    font-weight: inherit;
+    text-transform: none;
+    letter-spacing: normal;
 }
 
 .hero-grid-item.light {
