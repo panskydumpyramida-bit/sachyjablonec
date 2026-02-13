@@ -236,6 +236,47 @@ router.post('/save', async (req, res) => {
     }
 });
 
+// GET /api/racer/my-stats?userId=X&mode=vanilla|thematic
+// Returns personal stats for a logged-in user
+router.get('/my-stats', async (req, res) => {
+    try {
+        const userId = parseInt(req.query.userId);
+        const mode = req.query.mode || 'vanilla';
+
+        if (!userId || isNaN(userId)) {
+            return res.status(400).json({ error: 'userId is required' });
+        }
+
+        // Get best score
+        const bestResult = await prisma.puzzleRaceResult.findFirst({
+            where: { userId, mode },
+            orderBy: { score: 'desc' }
+        });
+
+        // Get total games count
+        const totalGames = await prisma.puzzleRaceResult.count({
+            where: { userId, mode }
+        });
+
+        // Get last 5 scores (for trend)
+        const recentResults = await prisma.puzzleRaceResult.findMany({
+            where: { userId, mode },
+            orderBy: { createdAt: 'desc' },
+            take: 5,
+            select: { score: true, createdAt: true }
+        });
+
+        res.json({
+            bestScore: bestResult?.score || 0,
+            totalGames,
+            recentScores: recentResults.map(r => ({ score: r.score, date: r.createdAt }))
+        });
+    } catch (error) {
+        console.error('Error fetching user stats:', error);
+        res.status(500).json({ error: 'Failed to fetch stats' });
+    }
+});
+
 // GET /api/racer/leaderboard?period=week|all&mode=vanilla|thematic
 router.get('/leaderboard', async (req, res) => {
     try {
