@@ -41,6 +41,9 @@ let puzzleHistory = [];
 // Logged-in user info (decoded from JWT)
 let loggedInUser = null;
 
+// Personal best for new record detection
+let personalBest = 0;
+
 // Vanilla defaults (fixed, not affected by admin settings)
 const VANILLA_DEFAULTS = {
     puzzleTheme: 'mix',
@@ -400,7 +403,17 @@ function loadPuzzle(puzzleData) {
         }, 350);
     } else {
         // Should not happen for valid puzzles, but graceful fallback
-        // If initialPly is 0? Puzzle starts from start position? Unlikely.
+    }
+
+    // Display current puzzle rating
+    const ratingEl = document.getElementById('puzzleRating');
+    if (ratingEl && puzzleData.puzzle.rating) {
+        const r = puzzleData.puzzle.rating;
+        let ratingColor = '#4ade80'; // green (easy)
+        if (r >= 2000) ratingColor = '#f87171'; // red (hard)
+        else if (r >= 1500) ratingColor = '#fbbf24'; // yellow (medium)
+        ratingEl.innerHTML = `<i class="fa-solid fa-signal"></i> ${r}`;
+        ratingEl.style.color = ratingColor;
     }
 
     // Store current puzzle solution for validation
@@ -847,7 +860,12 @@ function skipPuzzle() {
 }
 
 function updateScore() {
-    document.getElementById('score').innerText = score;
+    const scoreEl = document.getElementById('score');
+    scoreEl.innerText = score;
+    // Pop animation
+    scoreEl.classList.remove('score-pop');
+    void scoreEl.offsetWidth; // trigger reflow
+    scoreEl.classList.add('score-pop');
 }
 
 
@@ -877,7 +895,16 @@ function updateDifficultyDisplay() {
 function updateTimer() {
     const min = Math.floor(timeLeft / 60);
     const sec = timeLeft % 60;
-    document.getElementById('timer').innerText = `${min}:${sec < 10 ? '0' + sec : sec}`;
+    const timerEl = document.getElementById('timer');
+    timerEl.innerText = `${min}:${sec < 10 ? '0' + sec : sec}`;
+
+    // Timer urgency classes
+    timerEl.classList.remove('timer-warning', 'timer-urgent');
+    if (timeLeft <= 10) {
+        timerEl.classList.add('timer-urgent');
+    } else if (timeLeft <= 30) {
+        timerEl.classList.add('timer-warning');
+    }
 }
 
 function endGame() {
@@ -890,6 +917,21 @@ function endGame() {
     document.getElementById('gameInterface').classList.add('hidden');
     document.getElementById('gameOverScreen').classList.remove('hidden');
     document.getElementById('finalScore').innerText = score;
+
+    // Check for new personal best
+    const isNewRecord = score > personalBest && score > 0;
+    const recordBanner = document.getElementById('newRecordBanner');
+    if (recordBanner) {
+        if (isNewRecord) {
+            recordBanner.classList.remove('hidden');
+            // Store new best locally too
+            const mode = gameMode || 'vanilla';
+            const localKey = `puzzle_racer_best_${mode}`;
+            localStorage.setItem(localKey, score.toString());
+        } else {
+            recordBanner.classList.add('hidden');
+        }
+    }
 
     // Auto-fill name and userId for logged-in users
     if (loggedInUser) {
@@ -1156,6 +1198,9 @@ async function loadPersonalStats() {
 
         const stats = await res.json();
 
+        // Store personal best for new record detection
+        personalBest = stats.bestScore || 0;
+
         // Build trend sparkline
         let trendHtml = '';
         if (stats.recentScores.length > 1) {
@@ -1209,7 +1254,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (loggedInUser) {
         const nameInput = document.getElementById('playerName');
         if (nameInput) nameInput.value = loggedInUser.realName || loggedInUser.username;
-        // Load personal stats
+        // Load personal stats (also sets personalBest)
         loadPersonalStats();
         // Hide anonymous CTA
         const anonCta = document.getElementById('anonCta');
@@ -1220,6 +1265,9 @@ document.addEventListener('DOMContentLoaded', () => {
             const nameInput = document.getElementById('playerName');
             if (nameInput) nameInput.value = savedName;
         }
+        // Load personal best from localStorage for anonymous users
+        const mode = new URLSearchParams(window.location.search).get('mode') === 'thematic' ? 'thematic' : 'vanilla';
+        personalBest = parseInt(localStorage.getItem(`puzzle_racer_best_${mode}`)) || 0;
         // Show anonymous CTA
         const anonCta = document.getElementById('anonCta');
         if (anonCta) anonCta.classList.remove('hidden');
