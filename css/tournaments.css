@@ -1,0 +1,685 @@
+/* ===========================================
+   Tournaments & Events Page Styles
+   Extracted from tournaments.html inline <style>
+   =========================================== */
+
+/* --- Hero Section --- */
+.hero-compact {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.hero-compact .subtitle {
+    color: var(--text-muted);
+    margin-bottom: 1.5rem;
+}
+
+.btn-individual-comp {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: linear-gradient(135deg, #d4af37 0%, #a08c3e 100%);
+    color: #000;
+    border: none;
+    font-weight: 600;
+}
+
+/* --- Filter Bar --- */
+.events-filter-bar {
+    margin-bottom: 2rem;
+    background: linear-gradient(135deg, rgba(30, 45, 60, 0.95), rgba(25, 35, 50, 0.98));
+    backdrop-filter: blur(10px);
+    padding: 1rem;
+    border-radius: 16px;
+    border: 1px solid rgba(34, 211, 238, 0.2);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+
+.filter-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    align-items: center;
+    justify-content: center;
+}
+
+.filter-pill-group {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.filter-pill-group .filter-label {
+    color: var(--text-muted);
+    font-size: 0.8rem;
+    font-weight: 500;
+}
+
+.filter-pill-track {
+    display: flex;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 50px;
+    padding: 2px;
+    gap: 2px;
+}
+
+.filter-pill {
+    padding: 0.35rem 0.8rem;
+    border-radius: 50px;
+    border: none;
+    background: transparent;
+    color: var(--text-muted);
+    font-weight: 500;
+    font-size: 0.75rem;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.filter-pill.active {
+    background: #d4af37;
+    color: #000;
+    font-weight: 600;
+}
+
+.filter-pill i {
+    margin-right: 0.3rem;
+}
+
+/* Icon colors for filter pills */
+.filter-pill .fa-child {
+    color: #4ade80;
+}
+
+.filter-pill .fa-chess-knight {
+    color: #FFD700;
+}
+
+.filter-pill .fa-bolt {
+    color: #fbbf24;
+}
+
+.filter-pill .fa-stopwatch {
+    color: #fb923c;
+}
+
+.filter-pill .fa-chess-king {
+    color: #60a5fa;
+}
+
+.filter-pill.active i {
+    color: inherit;
+}
+
+/* --- Past Events Toggle --- */
+.toggle-past-label {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    cursor: pointer;
+    user-select: none;
+}
+
+.toggle-past-text {
+    color: var(--text-muted);
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+.toggle-switch {
+    position: relative;
+    width: 36px;
+    height: 20px;
+}
+
+.toggle-switch input {
+    opacity: 0;
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    cursor: pointer;
+    z-index: 2;
+}
+
+.toggle-track {
+    position: absolute;
+    inset: 0;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    transition: all 0.3s;
+}
+
+.toggle-thumb {
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 16px;
+    height: 16px;
+    background: white;
+    border-radius: 50%;
+    transition: all 0.3s;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.toggle-icon {
+    color: var(--text-muted);
+    font-size: 0.7rem;
+}
+
+/* --- Filter Container (legacy) --- */
+.filter-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    justify-content: center;
+    margin-bottom: 2rem;
+}
+
+.filter-btn {
+    padding: 0.6rem 1.2rem;
+    border-radius: 25px;
+    border: 1px solid rgba(34, 211, 238, 0.3);
+    background: rgba(34, 211, 238, 0.1);
+    color: #22d3ee;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.filter-btn:hover {
+    background: rgba(34, 211, 238, 0.2);
+    border-color: #22d3ee;
+}
+
+.filter-btn.active {
+    background: linear-gradient(135deg, #22d3ee, #06b6d4);
+    color: #000;
+    border-color: transparent;
+    font-weight: 600;
+}
+
+/* --- Filter Sections --- */
+.filter-section {
+    margin-bottom: 1.5rem;
+}
+
+.filter-section-title {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    margin-bottom: 0.75rem;
+    text-align: center;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+/* --- Events Grid --- */
+.events-grid {
+    display: grid;
+    gap: 1rem;
+}
+
+/* --- Event Card --- */
+.event-card {
+    background: linear-gradient(135deg, rgba(30, 45, 60, 0.95), rgba(25, 35, 50, 0.98));
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(34, 211, 238, 0.2);
+    border-left: 3px solid transparent;
+    border-radius: 12px;
+    padding: 1.25rem;
+    display: flex;
+    gap: 1rem;
+    align-items: flex-start;
+    transition: all 0.3s ease;
+}
+
+.event-card.region-home {
+    border-left-color: #22d3ee;
+}
+
+.event-card.region-away {
+    border-left-color: #94a3b8;
+}
+
+.event-card:hover {
+    border-color: rgba(34, 211, 238, 0.4);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 30px rgba(34, 211, 238, 0.1);
+}
+
+.event-card.featured-card {
+    border: 1px solid #d4af37;
+    background: linear-gradient(135deg, rgba(212, 175, 55, 0.1), rgba(30, 45, 60, 0.98));
+}
+
+/* --- Event Date --- */
+.event-date {
+    text-align: center;
+    min-width: 55px;
+}
+
+.event-date-day {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #22d3ee;
+}
+
+.event-date-name {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+}
+
+.event-date-time {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    margin-top: 0.25rem;
+}
+
+/* --- Event Content --- */
+.event-content {
+    flex: 1;
+}
+
+.event-category {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    margin-bottom: 0.25rem;
+}
+
+.event-category i {
+    color: #22d3ee;
+    margin-right: 0.25rem;
+}
+
+.event-title {
+    font-weight: 600;
+    color: var(--text-color);
+    margin-bottom: 0.35rem;
+    font-size: 1.05rem;
+}
+
+/* --- Event Tags --- */
+.event-tags {
+    display: flex;
+    gap: 0.35rem;
+    flex-wrap: wrap;
+    margin-top: 0.35rem;
+}
+
+.event-tag {
+    padding: 0.1rem 0.4rem;
+    border-radius: 4px;
+    font-size: 0.65rem;
+}
+
+.tag-age {
+    background: rgba(74, 222, 128, 0.15);
+    color: #4ade80;
+}
+
+.tag-type {
+    background: rgba(96, 165, 250, 0.15);
+    color: #60a5fa;
+}
+
+.tag-tempo-blitz {
+    background: rgba(251, 191, 36, 0.15);
+    color: #fbbf24;
+}
+
+.tag-tempo-rapid {
+    background: rgba(251, 146, 60, 0.15);
+    color: #fb923c;
+}
+
+.tag-tempo-classical {
+    background: rgba(167, 139, 250, 0.15);
+    color: #a78bfa;
+}
+
+/* --- Event Location --- */
+.event-location {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    margin-top: 0.35rem;
+}
+
+.event-location i {
+    margin-right: 0.25rem;
+}
+
+/* --- Event Description --- */
+.event-description {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    margin-top: 0.5rem;
+    line-height: 1.4;
+}
+
+/* --- Event Details --- */
+.event-details {
+    margin-top: 0.75rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    font-size: 0.75rem;
+}
+
+.event-detail-row {
+    color: var(--text-muted);
+    margin-bottom: 0.25rem;
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+}
+
+.detail-item {
+    color: var(--text-muted);
+    margin-bottom: 0.25rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.85rem;
+}
+
+.detail-item.alert-deadline {
+    color: #f87171;
+}
+
+.detail-item.gold-text {
+    color: #fbbf24;
+}
+
+.detail-item i {
+    width: 1.2em;
+    text-align: center;
+}
+
+.event-detail-row i.fa-clock {
+    color: #f87171;
+}
+
+.event-detail-row i.fa-coins {
+    color: #fbbf24;
+}
+
+.event-detail-row strong {
+    color: #f87171;
+}
+
+/* --- Event Actions --- */
+.event-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.event-action-btn {
+    color: var(--text-muted);
+    font-size: 1.1rem;
+    padding: 0.5rem;
+    transition: color 0.2s;
+    text-decoration: none;
+}
+
+.event-action-btn:hover {
+    color: #22d3ee;
+}
+
+/* --- Expandable Details --- */
+.event-details-expanded {
+    display: none;
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid #f1f5f9;
+    animation: slideDown 0.3s ease-out;
+}
+
+.event-details-expanded.open {
+    display: block;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* --- Details Toggle --- */
+.details-toggle {
+    background: none;
+    border: none;
+    color: #64748b;
+    cursor: pointer;
+    padding: 0;
+    font-size: 0.875rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: auto;
+    padding-top: 1rem;
+    transition: color 0.2s;
+}
+
+.details-toggle:hover {
+    color: #22d3ee;
+}
+
+.details-toggle i {
+    transition: transform 0.3s;
+}
+
+.details-toggle.open i {
+    transform: rotate(180deg);
+}
+
+/* --- No Events --- */
+.no-events {
+    text-align: center;
+    padding: 3rem 1rem;
+    color: var(--text-muted);
+}
+
+.no-events i {
+    font-size: 3rem;
+    color: #22d3ee;
+    opacity: 0.5;
+    margin-bottom: 1rem;
+}
+
+/* --- Month Section --- */
+.month-header {
+    color: #22d3ee;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 1.1rem;
+}
+
+.month-section {
+    margin-bottom: 2rem;
+}
+
+/* --- Mini Czech Map --- */
+.event-map {
+    width: 140px;
+    height: 105px;
+    flex-shrink: 0;
+    background: rgba(255, 255, 255, 0.03);
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 8px;
+    margin-left: 0.5rem;
+}
+
+.event-map svg {
+    width: 100%;
+    height: 100%;
+    display: block;
+}
+
+.event-map .region {
+    fill: rgba(255, 255, 255, 0.05);
+    stroke: rgba(255, 255, 255, 0.1);
+    stroke-width: 0.5;
+    transition: fill 0.3s ease;
+}
+
+.event-map .region.highlight {
+    fill: #22d3ee;
+    stroke: #22d3ee;
+}
+
+.event-map .region.home {
+    fill: rgba(34, 211, 238, 0.2);
+    stroke: #22d3ee;
+}
+
+/* --- Google Calendar Icon --- */
+.gcal-icon-link {
+    position: absolute;
+    top: 0;
+    right: 0;
+    color: #94a3b8;
+    font-size: 1.2rem;
+    padding: 0.5rem;
+    transition: color 0.2s;
+    z-index: 10;
+}
+
+.gcal-icon-link:hover {
+    color: #22d3ee;
+}
+
+/* --- Event Meta --- */
+.event-meta-top {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+    margin-bottom: 0.25rem;
+}
+
+.event-badges-inline {
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 0.4rem;
+    overflow-x: auto;
+}
+
+/* --- Highlight & Warning --- */
+.feature-highlight {
+    color: #e2e8f0;
+    border-left: 3px solid #f59e0b;
+    padding-left: 0.5rem;
+}
+
+.text-warning {
+    color: #fca5a5;
+}
+
+/* --- Badge Icon --- */
+.badge-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.05);
+    color: #94a3b8;
+    font-size: 0.9rem;
+    transition: all 0.2s;
+    cursor: help;
+}
+
+.badge-icon:hover {
+    background: rgba(34, 211, 238, 0.1);
+    color: #22d3ee;
+}
+
+/* --- Location Link --- */
+.location-link {
+    text-decoration: none;
+    color: #94a3b8;
+    transition: color 0.2s;
+    position: relative;
+    z-index: 5;
+}
+
+.location-link:hover {
+    color: #22d3ee;
+    text-decoration: underline;
+}
+
+/* --- Badge Control --- */
+.badge-control {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.25rem 0.6rem;
+    background: rgba(245, 158, 11, 0.1);
+    color: #fbbf24;
+    border-radius: 4px;
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+
+/* --- Loading Spinner --- */
+.events-loading {
+    text-align: center;
+    padding: 3rem;
+}
+
+.events-loading i {
+    color: #22d3ee;
+}
+
+/* --- Content Section Override --- */
+.tournaments-section {
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+/* ===========================================
+   Responsive
+   =========================================== */
+@media (max-width: 768px) {
+    .filter-container {
+        gap: 0.5rem;
+    }
+
+    .filter-btn {
+        padding: 0.5rem 0.9rem;
+        font-size: 0.8rem;
+    }
+
+    .event-card {
+        flex-direction: column;
+        padding: 1rem;
+    }
+
+    .event-date {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .event-actions {
+        flex-direction: row;
+        justify-content: flex-end;
+        width: 100%;
+    }
+}

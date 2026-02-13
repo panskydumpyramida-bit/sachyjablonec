@@ -712,6 +712,17 @@ class GameViewer2 {
                                 <div id="gv2-board"></div>
                             </div>
                         </div>
+                        <div class="gv2-controls">
+                            <button class="gv2-btn" onclick="gameViewer2.goToStart()" title="Start"><i class="fa-solid fa-backward-fast"></i></button>
+                            <button class="gv2-btn" onclick="gameViewer2.stepBack()" title="Zpět"><i class="fa-solid fa-backward-step"></i></button>
+                            <button class="gv2-btn" onclick="gameViewer2.toggleAutoplay()" title="Přehrát"><i class="fa-solid fa-play" id="gv2-play-icon"></i></button>
+                            <button class="gv2-btn" onclick="gameViewer2.stepForward()" title="Vpřed"><i class="fa-solid fa-forward-step"></i></button>
+                            <button class="gv2-btn" onclick="gameViewer2.goToEnd()" title="Konec"><i class="fa-solid fa-forward-fast"></i></button>
+                            <button class="gv2-btn" onclick="gameViewer2.flipBoard()" title="Otočit"><i class="fa-solid fa-retweet"></i></button>
+                            <button class="gv2-btn gv2-btn-analysis" id="gv2-analysis-btn" onclick="gameViewer2.toggleAnalysis()" title="Analýza Stockfish">
+                                <i class="fa-solid fa-microchip" id="gv2-analysis-icon"></i>
+                            </button>
+                        </div>
                     </div>
                     <div class="gv2-info-panel">
                         <div class="gv2-info-content">
@@ -725,17 +736,6 @@ class GameViewer2 {
                             </div>
                             <div class="gv2-pv-line" id="gv2-pv-line"></div>
                         </div>
-                    </div>
-                    <div class="gv2-controls">
-                        <button class="gv2-btn" onclick="gameViewer2.goToStart()" title="Start"><i class="fa-solid fa-backward-fast"></i></button>
-                        <button class="gv2-btn" onclick="gameViewer2.stepBack()" title="Zpět"><i class="fa-solid fa-backward-step"></i></button>
-                        <button class="gv2-btn" onclick="gameViewer2.toggleAutoplay()" title="Přehrát"><i class="fa-solid fa-play" id="gv2-play-icon"></i></button>
-                        <button class="gv2-btn" onclick="gameViewer2.stepForward()" title="Vpřed"><i class="fa-solid fa-forward-step"></i></button>
-                        <button class="gv2-btn" onclick="gameViewer2.goToEnd()" title="Konec"><i class="fa-solid fa-forward-fast"></i></button>
-                        <button class="gv2-btn" onclick="gameViewer2.flipBoard()" title="Otočit"><i class="fa-solid fa-retweet"></i></button>
-                        <button class="gv2-btn gv2-btn-analysis" id="gv2-analysis-btn" onclick="gameViewer2.toggleAnalysis()" title="Analýza Stockfish">
-                            <i class="fa-solid fa-microchip" id="gv2-analysis-icon"></i>
-                        </button>
                     </div>
                 </div>
             `;
@@ -1069,18 +1069,222 @@ class GameViewer2 {
         this.nextMainLinePlyToMatch = 0;
         this.lastMatchedPly = 0;
 
-        // Parse and render with variation support
-        const html = this.parseAndRenderPgn(pgnBody, mainLineHistory, null, 0);
+        // Parse into structured data first, then render as table
+        const tokens = this.tokenizePgn(pgnBody, mainLineHistory, null, 0);
 
-        movesEl.innerHTML = html;
+        // Build two-column table from tokens
+        movesEl.innerHTML = this.buildMoveTable(tokens);
         this.nextMainLinePlyToMatch = 0;
     }
 
-    // Recursive parser that handles variations
+    // Tokenize PGN into structured list of {type, data} objects
+    tokenizePgn(pgnBody, history, parentVarId, startPly) {
+        const tokens = [];
+        let buffer = '';
+        let commentBuffer = '';
+        let state = 'text';
+        let varDepth = 0;
+        let varContent = '';
+
+        const flushBuffer = () => {
+            if (!buffer.trim()) { buffer = ''; return; }
+            const moveTokens = this.extractMoveTokens(buffer, history, parentVarId);
+            tokens.push(...moveTokens);
+            buffer = '';
+        };
+
+        for (let i = 0; i < pgnBody.length; i++) {
+            const char = pgnBody[i];
+
+            if (state === 'text') {
+                if (char === '{') {
+                    flushBuffer();
+                    state = 'comment';
+                    commentBuffer = '';
+                } else if (char === '(') {
+                    flushBuffer();
+                    state = 'variation';
+                    varDepth = 1;
+                    varContent = '';
+                } else {
+                    buffer += char;
+                }
+            } else if (state === 'comment') {
+                if (char === '}') {
+                    // Store comment in data model
+                    if (this.lastMatchedPly >= 0 && this.mainLinePlies[this.lastMatchedPly]) {
+                        const existing = this.mainLinePlies[this.lastMatchedPly].comment || '';
+                        this.mainLinePlies[this.lastMatchedPly].comment = existing ? existing + ' ' + commentBuffer.trim() : commentBuffer.trim();
+                    }
+                    tokens.push({ type: 'comment', text: commentBuffer.trim() });
+                    state = 'text';
+                } else {
+                    commentBuffer += char;
+                }
+            } else if (state === 'variation') {
+                if (char === '(') { varDepth++; varContent += char; }
+                else if (char === ')') {
+                    varDepth--;
+                    if (varDepth === 0) {
+                        tokens.push({ type: 'variation', content: varContent, history });
+                        state = 'text';
+                    } else { varContent += char; }
+                } else { varContent += char; }
+            }
+        }
+        flushBuffer();
+        return tokens;
+    }
+
+    // Extract moves, NAGs, and results from text buffer
+    extractMoveTokens(text, history, parentVarId) {
+        if (!text.trim()) return [];
+        const tokens = [];
+        const parts = text.split(/(\s+|\.|[0-9]+\.+)/).filter(x => x);
+
+        if (typeof this.nextMainLinePlyToMatch === 'undefined') this.nextMainLinePlyToMatch = 0;
+
+        parts.forEach(part => {
+            const cleanPart = part.trim();
+            if (!cleanPart) return;
+
+            const nextMove = history[this.nextMainLinePlyToMatch];
+
+            if (nextMove && (cleanPart === nextMove.san || cleanPart === nextMove.lan)) {
+                const ply = this.nextMainLinePlyToMatch + 1;
+                const isWhite = (ply % 2 === 1);
+                const moveNum = Math.ceil(ply / 2);
+                tokens.push({ type: 'move', san: part, ply, isWhite, moveNum, formatted: this.formatSan(part) });
+                this.lastMatchedPly = ply;
+                this.nextMainLinePlyToMatch++;
+            } else if (part.match(/^\$[0-9]+$/)) {
+                const nagMap = { '$1': '!', '$2': '?', '$3': '!!', '$4': '??', '$5': '!?', '$6': '?!' };
+                const classMap = {
+                    '$1': 'gv2-nag-good', '$2': 'gv2-nag-mistake', '$3': 'gv2-nag-brilliant',
+                    '$4': 'gv2-nag-blunder', '$5': 'gv2-nag-interesting', '$6': 'gv2-nag-dubious'
+                };
+                tokens.push({ type: 'nag', symbol: nagMap[part] || part, cssClass: classMap[part] || '', raw: part });
+                if (this.lastMatchedPly > 0 && this.mainLinePlies[this.lastMatchedPly]) {
+                    this.mainLinePlies[this.lastMatchedPly].nag = part;
+                }
+            } else if (cleanPart.match(/^[0-9]+\.+$/)) {
+                // Move number - skip, we generate our own
+            } else if (cleanPart.match(/^[KQRBN]?[a-h]?[1-8]?x?[a-h][1-8](=[QRBN])?[+#]?$/) ||
+                cleanPart.match(/^O-O(-O)?[+#]?$/)) {
+                let foundPly = -1;
+                for (let i = 0; i < history.length; i++) {
+                    if (history[i] && (history[i].san === cleanPart || history[i].lan === cleanPart)) {
+                        foundPly = i + 1; break;
+                    }
+                }
+                if (foundPly > 0) {
+                    const isWhite = (foundPly % 2 === 1);
+                    const moveNum = Math.ceil(foundPly / 2);
+                    tokens.push({ type: 'move', san: part, ply: foundPly, isWhite, moveNum, formatted: this.formatSan(part) });
+                    this.lastMatchedPly = foundPly;
+                } else {
+                    tokens.push({ type: 'move', san: part, ply: -1, isWhite: true, moveNum: 0, formatted: this.formatSan(part) });
+                }
+            } else if (cleanPart.match(/^(1-0|0-1|1\/2-1\/2|\*)$/)) {
+                tokens.push({ type: 'result', text: cleanPart });
+            }
+        });
+        return tokens;
+    }
+
+    // Build two-column table HTML from tokens
+    buildMoveTable(tokens) {
+        let html = '<div class="gv2-move-table">';
+        let i = 0;
+
+        while (i < tokens.length) {
+            const token = tokens[i];
+
+            if (token.type === 'move') {
+                if (token.isWhite) {
+                    // Start a new row
+                    html += '<div class="gv2-move-row">';
+                    html += `<div class="gv2-move-num-cell">${token.moveNum}.</div>`;
+
+                    // White move cell
+                    html += '<div class="gv2-move-cell">';
+                    html += `<span class="gv2-move" data-ply="${token.ply}" onclick="gameViewer2.jumpTo(${token.ply})">${token.formatted}</span>`;
+                    // Check for NAG after white move
+                    if (i + 1 < tokens.length && tokens[i + 1].type === 'nag') {
+                        i++;
+                        html += `<span class="gv2-nag ${tokens[i].cssClass}">${tokens[i].symbol}</span>`;
+                    }
+                    html += '</div>';
+
+                    // Black move cell
+                    html += '<div class="gv2-move-cell">';
+                    // Look ahead for black move (skip comments/variations for now)
+                    let j = i + 1;
+                    // Collect any comments/variations between white and black
+                    const betweenTokens = [];
+                    while (j < tokens.length && tokens[j].type !== 'move') {
+                        betweenTokens.push(tokens[j]);
+                        j++;
+                    }
+
+                    if (j < tokens.length && tokens[j].type === 'move' && !tokens[j].isWhite) {
+                        html += `<span class="gv2-move" data-ply="${tokens[j].ply}" onclick="gameViewer2.jumpTo(${tokens[j].ply})">${tokens[j].formatted}</span>`;
+                        // Check for NAG after black move
+                        if (j + 1 < tokens.length && tokens[j + 1].type === 'nag') {
+                            j++;
+                            html += `<span class="gv2-nag ${tokens[j].cssClass}">${tokens[j].symbol}</span>`;
+                        }
+                        i = j;
+                    } else {
+                        // No black move yet (could be comment/variation between)
+                        html += '&nbsp;';
+                        // Put back the pointer to process between tokens
+                        i = i; // stay here, will advance at end
+                    }
+                    html += '</div>';
+                    html += '</div>'; // close row
+
+                    // Render any between-tokens as full-width rows (comments, variations)
+                    for (const bt of betweenTokens) {
+                        if (bt.type === 'comment') {
+                            html += `<div class="gv2-comment-row"><span class="gv2-comment">${this.escapeHtml(bt.text)}</span></div>`;
+                        } else if (bt.type === 'variation') {
+                            html += `<div class="gv2-comment-row">${this.renderVariation(bt.content, bt.history)}</div>`;
+                        }
+                    }
+                } else {
+                    // Black move without white (shouldn't happen often, but handle)
+                    html += '<div class="gv2-move-row">';
+                    html += `<div class="gv2-move-num-cell">${token.moveNum}.</div>`;
+                    html += '<div class="gv2-move-cell">&hellip;</div>';
+                    html += '<div class="gv2-move-cell">';
+                    html += `<span class="gv2-move" data-ply="${token.ply}" onclick="gameViewer2.jumpTo(${token.ply})">${token.formatted}</span>`;
+                    if (i + 1 < tokens.length && tokens[i + 1].type === 'nag') {
+                        i++;
+                        html += `<span class="gv2-nag ${tokens[i].cssClass}">${tokens[i].symbol}</span>`;
+                    }
+                    html += '</div>';
+                    html += '</div>';
+                }
+            } else if (token.type === 'comment') {
+                html += `<div class="gv2-comment-row"><span class="gv2-comment">${this.escapeHtml(token.text)}</span></div>`;
+            } else if (token.type === 'variation') {
+                html += `<div class="gv2-comment-row">${this.renderVariation(token.content, token.history)}</div>`;
+            } else if (token.type === 'result') {
+                html += `<div class="gv2-comment-row"><span class="gv2-result">${token.text}</span></div>`;
+            }
+            i++;
+        }
+
+        html += '</div>';
+        return html;
+    }
+
+    // Legacy parseAndRenderPgn - kept for variation rendering
     parseAndRenderPgn(pgnBody, history, parentVarId, startPly) {
         let buffer = '';
         let commentBuffer = '';
-        let state = 'text'; // text, comment, variation
+        let state = 'text';
         let varDepth = 0;
         let varContent = '';
         let html = '';
@@ -1126,7 +1330,6 @@ class GameViewer2 {
                 } else if (char === ')') {
                     varDepth--;
                     if (varDepth === 0) {
-                        // Process complete variation
                         html += this.renderVariation(varContent, history);
                         state = 'text';
                     } else {
@@ -1460,19 +1663,14 @@ class GameViewer2 {
             } else if (part.match(/^\$[0-9]+$/)) {
                 // NAG (Numeric Annotation Glyph)
                 const map = { '$1': '!', '$2': '?', '$3': '!!', '$4': '??', '$5': '!?', '$6': '?!' };
-                // High contrast colors for text
-                const colorMap = {
-                    '$1': '#4ade80', // ! (Good)
-                    '$2': '#ef4444', // ? (Bad/Mistake - Red)
-                    '$3': '#22c55e', // !! (Brilliant - Green)
-                    '$4': '#dc2626', // ?? (Blunder - Dark Red)
-                    '$5': '#60a5fa', // !? (Interesting)
-                    '$6': '#fbbf24'  // ?! (Dubious)
+                const classMap = {
+                    '$1': 'gv2-nag-good', '$2': 'gv2-nag-mistake', '$3': 'gv2-nag-brilliant',
+                    '$4': 'gv2-nag-blunder', '$5': 'gv2-nag-interesting', '$6': 'gv2-nag-dubious'
                 };
 
                 const symbol = map[part] || part;
-                const color = colorMap[part] || '#17a2b8';
-                html += `<span class="gv2-nag" style="color: ${color}">${symbol}</span>`;
+                const cssClass = classMap[part] || '';
+                html += `<span class="gv2-nag ${cssClass}">${symbol}</span>`;
 
                 // Store NAG in data model logic
                 if (this.lastMatchedPly > 0 && this.mainLinePlies[this.lastMatchedPly]) {

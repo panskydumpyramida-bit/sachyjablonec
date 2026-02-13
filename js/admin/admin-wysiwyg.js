@@ -1282,8 +1282,12 @@ function initFloatingToolbar() {
     const buttons = [
         { icon: 'fa-bold', action: () => formatText('bold'), title: 'Tučně' },
         { icon: 'fa-italic', action: () => formatText('italic'), title: 'Kurzíva' },
+        { icon: 'fa-underline', action: () => formatText('underline'), title: 'Podtržení' },
+        { icon: 'fa-strikethrough', action: () => formatText('strikethrough'), title: 'Přeškrtnutí' },
+        { icon: 'fa-eraser', action: () => removeFormatting(), title: 'Smazat formát', style: 'color: #94a3b8;' },
         { divider: true },
         { icon: 'fa-heading', action: () => applyHeading('h2'), title: 'Nadpis 2' },
+        { text: 'H3', action: () => applyHeading('h3'), title: 'Nadpis 3' },
         { icon: 'fa-link', action: () => insertLink(), title: 'Odkaz' },
         { divider: true },
         { icon: 'fa-user', action: () => insertHighlight('name'), title: 'Jméno' },
@@ -1298,8 +1302,10 @@ function initFloatingToolbar() {
         } else {
             const button = document.createElement('button');
             button.className = 'floating-btn';
-            button.innerHTML = `<i class="fa-solid ${btn.icon}"></i>`;
+            button.innerHTML = btn.text ? btn.text : `<i class="fa-solid ${btn.icon}"></i>`;
             button.title = btn.title;
+            if (btn.style) button.style.cssText = btn.style;
+            if (btn.text) button.style.cssText += 'font-size: 0.7rem; font-weight: 700; min-width: 24px;';
             // Prevent toolbar from stealing focus (mouseDown defaults to focus)
             button.onmousedown = (e) => {
                 e.preventDefault(); // Critical!
@@ -2363,8 +2369,253 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }
         });
+
+        // ================================
+        // PASTE AS PLAIN TEXT (Ctrl+Shift+V)
+        // ================================
+        editor.addEventListener('paste', (e) => {
+            // If Shift is held, paste as plain text
+            if (e.shiftKey) {
+                e.preventDefault();
+                const text = (e.clipboardData || window.clipboardData).getData('text/plain');
+                // Insert as plain text preserving line breaks
+                const lines = text.split('\n').map(l => `<p>${l || '<br>'}</p>`).join('');
+                document.execCommand('insertHTML', false, lines);
+                updatePreview();
+                showToast('Vloženo jako čistý text', 'info');
+            }
+        });
+
+        // ================================
+        // DRAG & DROP IMAGE UPLOAD
+        // ================================
+        editor.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            if (!editor.classList.contains('drag-over')) {
+                editor.classList.add('drag-over');
+            }
+        });
+
+        editor.addEventListener('dragleave', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            editor.classList.remove('drag-over');
+        });
+
+        editor.addEventListener('drop', async (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            editor.classList.remove('drag-over');
+
+            const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/'));
+            if (files.length === 0) return;
+
+            for (const file of files) {
+                const formData = new FormData();
+                formData.append('image', file);
+
+                showToast(`⏳ Nahrávám ${file.name}...`, 'info');
+
+                try {
+                    const token = window.authToken || localStorage.getItem('auth_token');
+                    const res = await fetch(`${API_URL}/gallery/upload`, {
+                        method: 'POST',
+                        headers: { 'Authorization': `Bearer ${token}` },
+                        body: formData
+                    });
+
+                    if (!res.ok) throw new Error('Upload failed');
+                    const data = await res.json();
+                    const imgUrl = data.url || data.path;
+
+                    // Insert image at drop position
+                    const imgHtml = `<p><img src="${imgUrl}" alt="${file.name}" style="max-width: 100%; height: auto; border-radius: 8px; margin: 0.5rem 0;"></p>`;
+                    document.execCommand('insertHTML', false, imgHtml);
+                    updatePreview();
+                    showToast(`✅ ${file.name} nahráno`, 'success');
+                } catch (err) {
+                    console.error('Drop upload error:', err);
+                    showToast(`❌ Chyba při nahrávání ${file.name}`, 'error');
+                }
+            }
+        });
+
+        // ================================
+        // WORD COUNTER
+        // ================================
+        const counterEl = document.createElement('div');
+        counterEl.id = 'editorWordCount';
+        counterEl.style.cssText = `
+            display: flex;
+            gap: 1rem;
+            justify-content: flex-end;
+            padding: 0.35rem 0.75rem;
+            font-size: 0.75rem;
+            color: rgba(255,255,255,0.4);
+            background: rgba(0,0,0,0.2);
+            border-radius: 0 0 8px 8px;
+            border-top: 1px solid rgba(255,255,255,0.05);
+            user-select: none;
+        `;
+        editor.parentNode.insertBefore(counterEl, editor.nextSibling);
+
+        function updateWordCount() {
+            const text = editor.innerText || '';
+            const words = text.trim().split(/\s+/).filter(w => w.length > 0).length;
+            const chars = text.replace(/\s/g, '').length;
+            counterEl.innerHTML = `<span>${words} slov</span><span>${chars} znaků</span>`;
+        }
+
+        editor.addEventListener('input', updateWordCount);
+        // Initial count
+        setTimeout(updateWordCount, 500);
     }
 });
+
+// ================================
+// COLOR PICKER
+// ================================
+
+function showColorPicker() {
+    // Remove existing picker
+    const existing = document.getElementById('colorPickerPopup');
+    if (existing) { existing.remove(); return; }
+
+    // Save selection before opening picker
+    const sel = window.getSelection();
+    let savedRange = null;
+    if (sel.rangeCount > 0) {
+        savedRange = sel.getRangeAt(0).cloneRange();
+    }
+
+    const colors = [
+        { label: 'Červená', value: '#ef4444' },
+        { label: 'Oranžová', value: '#f59e0b' },
+        { label: 'Zelená', value: '#22c55e' },
+        { label: 'Modrá', value: '#3b82f6' },
+        { label: 'Fialová', value: '#a855f7' },
+        { label: 'Růžová', value: '#ec4899' },
+        { label: 'Šedá', value: '#94a3b8' },
+        { label: 'Bílá', value: '#f1f5f9' },
+    ];
+
+    const popup = document.createElement('div');
+    popup.id = 'colorPickerPopup';
+    popup.style.cssText = `
+        position: fixed; z-index: 10300;
+        background: linear-gradient(135deg, #1e293b, #0f172a);
+        border: 1px solid rgba(255,255,255,0.1);
+        border-radius: 12px;
+        padding: 0.75rem;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+        display: flex; flex-wrap: wrap; gap: 6px;
+        max-width: 200px;
+    `;
+
+    // Position near the palette button
+    const btn = document.querySelector('[onclick="showColorPicker()"]');
+    if (btn) {
+        const rect = btn.getBoundingClientRect();
+        popup.style.top = `${rect.bottom + 8}px`;
+        popup.style.left = `${rect.left}px`;
+    } else {
+        popup.style.top = '200px';
+        popup.style.left = '200px';
+    }
+
+    colors.forEach(c => {
+        const swatch = document.createElement('button');
+        swatch.style.cssText = `
+            width: 32px; height: 32px; border-radius: 8px;
+            background: ${c.value}; border: 2px solid rgba(255,255,255,0.15);
+            cursor: pointer; transition: transform 0.15s, box-shadow 0.15s;
+        `;
+        swatch.title = c.label;
+        swatch.onmouseenter = () => { swatch.style.transform = 'scale(1.15)'; swatch.style.boxShadow = `0 0 12px ${c.value}50`; };
+        swatch.onmouseleave = () => { swatch.style.transform = ''; swatch.style.boxShadow = ''; };
+        swatch.onmousedown = (e) => {
+            e.preventDefault();
+            // Restore selection and apply color
+            if (savedRange) {
+                const s = window.getSelection();
+                s.removeAllRanges();
+                s.addRange(savedRange);
+            }
+            document.execCommand('foreColor', false, c.value);
+            updatePreview();
+            popup.remove();
+        };
+        popup.appendChild(swatch);
+    });
+
+    // Reset button
+    const resetBtn = document.createElement('button');
+    resetBtn.style.cssText = `
+        width: 100%; padding: 0.35rem; border-radius: 6px;
+        background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
+        color: #94a3b8; cursor: pointer; font-size: 0.75rem;
+        margin-top: 4px; transition: background 0.2s;
+    `;
+    resetBtn.textContent = '↺ Výchozí barva';
+    resetBtn.onmouseenter = () => resetBtn.style.background = 'rgba(255,255,255,0.1)';
+    resetBtn.onmouseleave = () => resetBtn.style.background = 'rgba(255,255,255,0.05)';
+    resetBtn.onmousedown = (e) => {
+        e.preventDefault();
+        if (savedRange) {
+            const s = window.getSelection();
+            s.removeAllRanges();
+            s.addRange(savedRange);
+        }
+        document.execCommand('removeFormat', false, null);
+        updatePreview();
+        popup.remove();
+    };
+    popup.appendChild(resetBtn);
+
+    document.body.appendChild(popup);
+
+    // Close on click outside
+    setTimeout(() => {
+        const closeHandler = (e) => {
+            if (!popup.contains(e.target) && e.target !== btn) {
+                popup.remove();
+                document.removeEventListener('mousedown', closeHandler);
+            }
+        };
+        document.addEventListener('mousedown', closeHandler);
+    }, 50);
+}
+
+// ================================
+// DRAG-OVER CSS INJECTION
+// ================================
+(function () {
+    const style = document.createElement('style');
+    style.textContent = `
+        #articleContent.drag-over {
+            outline: 3px dashed rgba(212, 175, 55, 0.5) !important;
+            outline-offset: -3px;
+            background: rgba(212, 175, 55, 0.03) !important;
+        }
+        #articleContent.drag-over::after {
+            content: '🖼️ Přetáhněte obrázek sem';
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0, 0, 0, 0.4);
+            color: #d4af37;
+            font-size: 1.2rem;
+            font-weight: 600;
+            border-radius: inherit;
+            pointer-events: none;
+            z-index: 10;
+        }
+    `;
+    document.head.appendChild(style);
+})();
 
 // ================================
 // EXPORTS
@@ -2395,6 +2646,7 @@ window.tableDeleteCol = tableDeleteCol;
 window.tableToggleHighlightLast = tableToggleHighlightLast;
 window.tableToggleHideMobile = tableToggleHideMobile;
 window.tableCycleColumnWidth = tableCycleColumnWidth;
+window.showColorPicker = showColorPicker;
 
 // ================================
 // DIAGRAM INTERACTIONS (Edit/Delete)
@@ -2870,46 +3122,39 @@ function showShortcutsModal() {
                 <div>
                     <h4 style="color: #60a5fa; margin-bottom: 1rem; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px;">Globální</h4>
                     <div style="display: flex; flex-direction: column; gap: 0.75rem;">
-                        <div style="display: flex; justify-content: space-between;">
-                            <span>Nový článek</span>
-                            <kbd style="background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 4px; font-family: monospace; border: 1px solid rgba(255,255,255,0.2);">N</kbd>
-                        </div>
-                        <div style="display: flex; justify-content: space-between;">
-                            <span>Nový diagram</span>
-                            <kbd style="background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 4px; font-family: monospace; border: 1px solid rgba(255,255,255,0.2);">D</kbd>
-                        </div>
-                        <div style="display: flex; justify-content: space-between;">
-                            <span>Nápověda</span>
-                            <kbd style="background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 4px; font-family: monospace; border: 1px solid rgba(255,255,255,0.2);">?</kbd>
-                        </div>
+                        <div style="display: flex; justify-content: space-between;"><span>Nový článek</span><kbd style="background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 4px; font-family: monospace; border: 1px solid rgba(255,255,255,0.2);">N</kbd></div>
+                        <div style="display: flex; justify-content: space-between;"><span>Nový diagram</span><kbd style="background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 4px; font-family: monospace; border: 1px solid rgba(255,255,255,0.2);">D</kbd></div>
+                        <div style="display: flex; justify-content: space-between;"><span>Nápověda</span><kbd style="background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 4px; font-family: monospace; border: 1px solid rgba(255,255,255,0.2);">?</kbd></div>
                     </div>
                 </div>
 
                 <div>
                     <h4 style="color: #4ade80; margin-bottom: 1rem; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px;">Editor</h4>
-                    <div style="display: flex; flex-direction: column; gap: 0.75rem;">
-                        <div style="display: flex; justify-content: space-between;">
-                            <span>Tučně</span>
-                            <kbd style="background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 4px; font-family: monospace; border: 1px solid rgba(255,255,255,0.2);">Ctrl + B</kbd>
-                        </div>
-                        <div style="display: flex; justify-content: space-between;">
-                            <span>Kurzíva</span>
-                            <kbd style="background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 4px; font-family: monospace; border: 1px solid rgba(255,255,255,0.2);">Ctrl + I</kbd>
-                        </div>
-                        <div style="display: flex; justify-content: space-between;">
-                            <span>Podtržení</span>
-                            <kbd style="background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 4px; font-family: monospace; border: 1px solid rgba(255,255,255,0.2);">Ctrl + U</kbd>
-                        </div>
-                        <div style="display: flex; justify-content: space-between;">
-                            <span>Zpět / Vpřed</span>
-                            <kbd style="background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 4px; font-family: monospace; border: 1px solid rgba(255,255,255,0.2);">Ctrl + Z / Y</kbd>
-                        </div>
+                    <div style="display: flex; flex-direction: column; gap: 0.6rem; font-size: 0.9rem;">
+                        <div style="display: flex; justify-content: space-between;"><span>Tučně</span><kbd style="background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 4px; font-family: monospace; border: 1px solid rgba(255,255,255,0.2);">⌘B</kbd></div>
+                        <div style="display: flex; justify-content: space-between;"><span>Kurzíva</span><kbd style="background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 4px; font-family: monospace; border: 1px solid rgba(255,255,255,0.2);">⌘I</kbd></div>
+                        <div style="display: flex; justify-content: space-between;"><span>Podtržení</span><kbd style="background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 4px; font-family: monospace; border: 1px solid rgba(255,255,255,0.2);">⌘U</kbd></div>
+                        <div style="display: flex; justify-content: space-between;"><span>Odkaz</span><kbd style="background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 4px; font-family: monospace; border: 1px solid rgba(255,255,255,0.2);">⌘K</kbd></div>
+                        <div style="display: flex; justify-content: space-between;"><span>Přeškrtnutí</span><kbd style="background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 4px; font-family: monospace; border: 1px solid rgba(255,255,255,0.2);">⌘⇧X</kbd></div>
+                        <div style="display: flex; justify-content: space-between;"><span>AI Pravopis</span><kbd style="background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 4px; font-family: monospace; border: 1px solid rgba(255,255,255,0.2);">⌘⇧S</kbd></div>
+                        <div style="display: flex; justify-content: space-between;"><span>Seznam</span><kbd style="background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 4px; font-family: monospace; border: 1px solid rgba(255,255,255,0.2);">⌘⇧L</kbd></div>
+                        <div style="display: flex; justify-content: space-between;"><span>Čistý text</span><kbd style="background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 4px; font-family: monospace; border: 1px solid rgba(255,255,255,0.2);">⌘⇧V</kbd></div>
+                        <div style="display: flex; justify-content: space-between;"><span>Zpět / Vpřed</span><kbd style="background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 4px; font-family: monospace; border: 1px solid rgba(255,255,255,0.2);">⌘Z / Y</kbd></div>
                     </div>
                 </div>
             </div>
 
+            <div style="margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid rgba(255,255,255,0.08);">
+                <h4 style="color: #f59e0b; margin-bottom: 0.75rem; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px;">Tipy</h4>
+                <div style="color: #94a3b8; font-size: 0.85rem; display: flex; flex-direction: column; gap: 0.5rem;">
+                    <div>🖼️ <strong>Drag & Drop</strong> – Přetáhněte obrázek přímo do editoru</div>
+                    <div>📋 <strong>Shift+Paste</strong> – Vloží text bez formátování</div>
+                    <div>🎨 <strong>Paleta</strong> – Klikněte na ikonu palety pro barvy textu</div>
+                </div>
+            </div>
+
             <div style="margin-top: 2rem; padding-top: 1rem; border-top: 1px solid rgba(255,255,255,0.1); text-align: center; color: #888; font-size: 0.9rem;">
-                <p style="margin: 0;">Další funkce najdete v <a href="/docs/ADMIN_MANUAL.md" target="_blank" style="color: #d4af37;">Manuálu pro administrátory</a></p>
+                <p style="margin: 0;">Další funkce najdete v <a href="/docs/admin-manual.html" target="_blank" style="color: #d4af37;">Manuálu pro administrátory</a></p>
             </div>
         </div>
     `;
@@ -2940,8 +3185,6 @@ function handleAdminShortcuts(e) {
     const isInput = tag === 'INPUT' || tag === 'TEXTAREA' || e.target.isContentEditable;
 
     // Help (?) - Shift + /
-    // Should work even in inputs? Maybe not if typing '?'
-    // Let's allow '?' only when NOT in input to avoid conflict
     if (e.key === '?' && !isInput) {
         showShortcutsModal();
         return;
@@ -2950,7 +3193,6 @@ function handleAdminShortcuts(e) {
     // New Article (N)
     if (e.code === 'KeyN' && !isInput && !e.ctrlKey && !e.metaKey && !e.altKey) {
         e.preventDefault();
-        // Check if resetEditor exists (from admin-news.js)
         if (typeof window.resetEditor === 'function') {
             window.resetEditor();
             showToast('Nový článek', 'info');
@@ -2969,8 +3211,31 @@ function handleAdminShortcuts(e) {
     }
 
     // Editor formatting shortcuts (only when editor focused)
-    if (e.target.id === 'articleContent') {
-        if ((e.ctrlKey || e.metaKey) && !e.shiftKey) {
+    if (e.target.id === 'articleContent' || e.target.closest('#articleContent')) {
+        const mod = e.ctrlKey || e.metaKey;
+
+        // Ctrl+Shift combos
+        if (mod && e.shiftKey) {
+            let handled = false;
+            switch (e.key.toLowerCase()) {
+                case 'x':
+                    formatText('strikethrough');
+                    handled = true;
+                    break;
+                case 's':
+                    aiSpellCheck();
+                    handled = true;
+                    break;
+                case 'l':
+                    insertList('ul');
+                    handled = true;
+                    break;
+            }
+            if (handled) { e.preventDefault(); return; }
+        }
+
+        // Ctrl combos (no shift)
+        if (mod && !e.shiftKey) {
             let handled = false;
             switch (e.key.toLowerCase()) {
                 case 'b':
@@ -2985,11 +3250,11 @@ function handleAdminShortcuts(e) {
                     formatText('underline');
                     handled = true;
                     break;
-                // Browser usually handles Z/Y natively for contentEditable, 
-                // but we might want to hook formatText('undo') if we have custom stack
-                // For now let browser handle undo/redo in contentEditables
+                case 'k':
+                    insertLink();
+                    handled = true;
+                    break;
             }
-
             if (handled) e.preventDefault();
         }
     }

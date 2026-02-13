@@ -1,0 +1,1063 @@
+<!DOCTYPE html>
+<html lang="cs">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manuál pro administrátory | ŠO TJ Bižuterie</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0a0e1a;
+            --bg-card: #111827;
+            --bg-card-hover: #1a2035;
+            --border: rgba(255, 255, 255, 0.06);
+            --border-accent: rgba(212, 175, 55, 0.2);
+            --text: #e2e8f0;
+            --text-muted: #94a3b8;
+            --text-dim: #64748b;
+            --gold: #d4af37;
+            --gold-glow: rgba(212, 175, 55, 0.15);
+            --blue: #3b82f6;
+            --green: #22c55e;
+            --red: #ef4444;
+            --purple: #a855f7;
+            --orange: #f59e0b;
+            --pink: #ec4899;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text);
+            line-height: 1.7;
+            min-height: 100vh;
+        }
+
+        /* Animated gradient bg */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background:
+                radial-gradient(ellipse at 20% 0%, rgba(59, 130, 246, 0.08) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 100%, rgba(212, 175, 55, 0.06) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 2rem 1.5rem 4rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Back button */
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 0.85rem;
+            margin-bottom: 2rem;
+            padding: 0.4rem 0.8rem;
+            border-radius: 6px;
+            transition: all 0.2s;
+        }
+
+        .back-link:hover {
+            color: var(--gold);
+            background: var(--gold-glow);
+        }
+
+        /* Header */
+        .hero-header {
+            text-align: center;
+            padding: 3rem 2rem;
+            margin-bottom: 3rem;
+            background: linear-gradient(135deg, rgba(17, 24, 39, 0.8), rgba(30, 41, 59, 0.5));
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero-header::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, rgba(212, 175, 55, 0.04), transparent 60%);
+            pointer-events: none;
+        }
+
+        .hero-header h1 {
+            font-size: 2.2rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #fff, var(--gold));
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.5rem;
+        }
+
+        .hero-header p {
+            color: var(--text-muted);
+            font-size: 1rem;
+        }
+
+        .hero-badges {
+            display: flex;
+            justify-content: center;
+            gap: 0.75rem;
+            margin-top: 1.25rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.3rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+
+        .badge-gold {
+            background: var(--gold-glow);
+            color: var(--gold);
+            border: 1px solid rgba(212, 175, 55, 0.25);
+        }
+
+        .badge-blue {
+            background: rgba(59, 130, 246, 0.1);
+            color: var(--blue);
+            border: 1px solid rgba(59, 130, 246, 0.2);
+        }
+
+        .badge-green {
+            background: rgba(34, 197, 94, 0.1);
+            color: var(--green);
+            border: 1px solid rgba(34, 197, 94, 0.2);
+        }
+
+        /* Quick Start Flow */
+        .quick-start {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0;
+            margin: 2rem 0 3rem;
+            flex-wrap: wrap;
+        }
+
+        .qs-step {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.6rem 1rem;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            white-space: nowrap;
+        }
+
+        .qs-step i {
+            font-size: 1rem;
+        }
+
+        .qs-arrow {
+            color: var(--text-dim);
+            padding: 0 0.4rem;
+            font-size: 0.9rem;
+        }
+
+        /* Table of Contents */
+        .toc {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 0.75rem;
+            margin-bottom: 3rem;
+        }
+
+        .toc-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.9rem 1.1rem;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            text-decoration: none;
+            color: var(--text);
+            transition: all 0.25s;
+        }
+
+        .toc-item:hover {
+            background: var(--bg-card-hover);
+            border-color: var(--border-accent);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+        }
+
+        .toc-num {
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            flex-shrink: 0;
+        }
+
+        .toc-text {
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        .toc-desc {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        /* Section Cards */
+        .section {
+            margin-bottom: 2.5rem;
+            scroll-margin-top: 2rem;
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 1.25rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .section-header i {
+            font-size: 1.4rem;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 10px;
+            flex-shrink: 0;
+        }
+
+        .section-header h2 {
+            font-size: 1.4rem;
+            font-weight: 700;
+        }
+
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .card h3 {
+            font-size: 1.05rem;
+            font-weight: 600;
+            margin-bottom: 0.75rem;
+            color: #f1f5f9;
+        }
+
+        .card p,
+        .card li {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        .card ul,
+        .card ol {
+            padding-left: 1.5rem;
+            margin: 0.5rem 0;
+        }
+
+        .card li {
+            margin-bottom: 0.4rem;
+        }
+
+        /* Tables */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 0.75rem 0;
+            font-size: 0.85rem;
+        }
+
+        th {
+            text-align: left;
+            padding: 0.6rem 0.8rem;
+            background: rgba(255, 255, 255, 0.03);
+            color: var(--text-muted);
+            font-weight: 600;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        td {
+            padding: 0.55rem 0.8rem;
+            border-bottom: 1px solid var(--border);
+            color: var(--text-muted);
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        tr:hover td {
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        /* Callout boxes */
+        .callout {
+            padding: 1rem 1.25rem;
+            border-radius: 10px;
+            margin: 1rem 0;
+            display: flex;
+            gap: 0.75rem;
+            font-size: 0.88rem;
+        }
+
+        .callout-icon {
+            font-size: 1.1rem;
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+
+        .callout-tip {
+            background: rgba(34, 197, 94, 0.06);
+            border: 1px solid rgba(34, 197, 94, 0.15);
+            color: var(--green);
+        }
+
+        .callout-info {
+            background: rgba(59, 130, 246, 0.06);
+            border: 1px solid rgba(59, 130, 246, 0.15);
+            color: var(--blue);
+        }
+
+        .callout-warn {
+            background: rgba(245, 158, 11, 0.06);
+            border: 1px solid rgba(245, 158, 11, 0.15);
+            color: var(--orange);
+        }
+
+        /* Keyboard shortcut badges */
+        kbd {
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 5px;
+            padding: 2px 7px;
+            font-family: 'SF Mono', 'Fira Code', monospace;
+            font-size: 0.78rem;
+            color: #f1f5f9;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+            white-space: nowrap;
+        }
+
+        /* Highlight examples */
+        .highlight-demo {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem 1.25rem;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 10px;
+            margin: 0.5rem 0;
+            font-size: 0.95rem;
+        }
+
+        .hl-name {
+            color: var(--gold);
+            font-weight: 600;
+        }
+
+        .hl-score {
+            color: var(--green);
+            font-weight: 600;
+        }
+
+        /* Status flow */
+        .status-flow {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0;
+            margin: 1rem 0;
+            flex-wrap: wrap;
+        }
+
+        .status-box {
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        /* Troubleshooting */
+        .trouble-item {
+            padding: 1rem 1.25rem;
+            background: rgba(239, 68, 68, 0.04);
+            border: 1px solid rgba(239, 68, 68, 0.1);
+            border-radius: 10px;
+            margin-bottom: 0.75rem;
+        }
+
+        .trouble-item h4 {
+            color: var(--red);
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .trouble-item .solution {
+            color: var(--green);
+            font-size: 0.85rem;
+        }
+
+        .trouble-item .solution li {
+            margin-bottom: 0.25rem;
+        }
+
+        /* Footer */
+        .manual-footer {
+            text-align: center;
+            padding: 2rem;
+            color: var(--text-dim);
+            font-size: 0.8rem;
+            border-top: 1px solid var(--border);
+            margin-top: 3rem;
+        }
+
+        /* Responsive */
+        @media (max-width: 640px) {
+            .container {
+                padding: 1rem;
+            }
+
+            .hero-header {
+                padding: 2rem 1.25rem;
+            }
+
+            .hero-header h1 {
+                font-size: 1.6rem;
+            }
+
+            .toc {
+                grid-template-columns: 1fr;
+            }
+
+            .quick-start {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+
+            .qs-arrow {
+                transform: rotate(90deg);
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+
+        <a href="/admin.html" class="back-link">
+            <i class="fa-solid fa-arrow-left"></i> Zpět do admin panelu
+        </a>
+
+        <!-- Hero Header -->
+        <div class="hero-header">
+            <h1>🏆 Manuál pro administrátory</h1>
+            <p>Webové stránky ŠO TJ Bižuterie Jablonec nad Nisou</p>
+            <div class="hero-badges">
+                <span class="badge badge-gold">♟️ Šachy Jablonec</span>
+                <span class="badge badge-blue">Verze v25</span>
+                <span class="badge badge-green">Únor 2026</span>
+            </div>
+        </div>
+
+        <!-- Quick Start -->
+        <div class="quick-start">
+            <div class="qs-step"><i class="fa-solid fa-lock" style="color: var(--gold)"></i> Přihlášení</div>
+            <span class="qs-arrow">→</span>
+            <div class="qs-step"><i class="fa-solid fa-chart-line" style="color: var(--blue)"></i> Dashboard</div>
+            <span class="qs-arrow">→</span>
+            <div class="qs-step"><i class="fa-solid fa-pen" style="color: var(--green)"></i> Tvořte!</div>
+        </div>
+
+        <!-- Table of Contents -->
+        <div class="toc">
+            <a href="#dashboard" class="toc-item">
+                <div class="toc-num" style="background: rgba(59,130,246,0.1); color: var(--blue);">1</div>
+                <div>
+                    <div class="toc-text">Dashboard</div>
+                    <div class="toc-desc">Přehled a navigace</div>
+                </div>
+            </a>
+            <a href="#editor" class="toc-item">
+                <div class="toc-num" style="background: rgba(34,197,94,0.1); color: var(--green);">2</div>
+                <div>
+                    <div class="toc-text">Editor novinek</div>
+                    <div class="toc-desc">Psaní článků</div>
+                </div>
+            </a>
+            <a href="#diagrams" class="toc-item">
+                <div class="toc-num" style="background: rgba(168,85,247,0.1); color: var(--purple);">3</div>
+                <div>
+                    <div class="toc-text">Šachové diagramy</div>
+                    <div class="toc-desc">Hádanky a pozice</div>
+                </div>
+            </a>
+            <a href="#books" class="toc-item">
+                <div class="toc-num" style="background: rgba(245,158,11,0.1); color: var(--orange);">4</div>
+                <div>
+                    <div class="toc-text">Kniha diagramů</div>
+                    <div class="toc-desc">Více diagramů v článku</div>
+                </div>
+            </a>
+            <a href="#events" class="toc-item">
+                <div class="toc-num" style="background: rgba(236,72,153,0.1); color: var(--pink);">5</div>
+                <div>
+                    <div class="toc-text">Správa událostí</div>
+                    <div class="toc-desc">Turnaje a tréninky</div>
+                </div>
+            </a>
+            <a href="#gallery" class="toc-item">
+                <div class="toc-num" style="background: rgba(212,175,55,0.1); color: var(--gold);">6</div>
+                <div>
+                    <div class="toc-text">Galerie</div>
+                    <div class="toc-desc">Fotografie</div>
+                </div>
+            </a>
+        </div>
+
+        <!-- 1. Dashboard -->
+        <div class="section" id="dashboard">
+            <div class="section-header">
+                <i class="fa-solid fa-chart-line" style="background: rgba(59,130,246,0.1); color: var(--blue);"></i>
+                <h2>Dashboard</h2>
+            </div>
+            <div class="card">
+                <h3>Rychlé akce</h3>
+                <p>Dashboard je váš hlavní přehled – vidíte zde všechny články a rychlé akce.</p>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Tlačítko</th>
+                            <th>Akce</th>
+                            <th>Zkratka</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>➕ Nová novinka</td>
+                            <td>Vytvoří prázdný článek</td>
+                            <td><kbd>N</kbd></td>
+                        </tr>
+                        <tr>
+                            <td>🧩 Nový diagram</td>
+                            <td>Otevře editor diagramů</td>
+                            <td><kbd>D</kbd></td>
+                        </tr>
+                    </tbody>
+                </table>
+                <div class="callout callout-tip">
+                    <span class="callout-icon">💡</span>
+                    <span>Použijte klávesové zkratky pro rychlejší práci!</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. Editor novinek -->
+        <div class="section" id="editor">
+            <div class="section-header">
+                <i class="fa-solid fa-pen-to-square" style="background: rgba(34,197,94,0.1); color: var(--green);"></i>
+                <h2>Editor novinek</h2>
+            </div>
+
+            <div class="card">
+                <h3>Panel nástrojů (Toolbar)</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Ikona</th>
+                            <th>Název</th>
+                            <th>Co dělá</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>B</strong></td>
+                            <td>Tučně</td>
+                            <td>Zvýrazní vybraný text tučně</td>
+                        </tr>
+                        <tr>
+                            <td><em>I</em></td>
+                            <td>Kurzíva</td>
+                            <td>Nakloní text</td>
+                        </tr>
+                        <tr>
+                            <td><u>U</u></td>
+                            <td>Podtržení</td>
+                            <td>Podtrhne text</td>
+                        </tr>
+                        <tr>
+                            <td><s>S</s></td>
+                            <td>Přeškrtnutí</td>
+                            <td>Přeškrtne text</td>
+                        </tr>
+                        <tr>
+                            <td>🎨</td>
+                            <td>Barva textu</td>
+                            <td>Otevře paletu 8 barev</td>
+                        </tr>
+                        <tr>
+                            <td>H2 / H3</td>
+                            <td>Nadpisy</td>
+                            <td>Velký/menší nadpis sekce</td>
+                        </tr>
+                        <tr>
+                            <td>☰</td>
+                            <td>Seznamy</td>
+                            <td>Odrážkový / číslovaný seznam</td>
+                        </tr>
+                        <tr>
+                            <td>🔗</td>
+                            <td>Odkaz</td>
+                            <td>Vloží hypertextový odkaz</td>
+                        </tr>
+                        <tr>
+                            <td>📦</td>
+                            <td>Sbalitelný</td>
+                            <td>Blok co se dá rozbalit/sbalit</td>
+                        </tr>
+                        <tr>
+                            <td>💡</td>
+                            <td>Info box</td>
+                            <td>Zvýrazněný box s pozadím</td>
+                        </tr>
+                        <tr>
+                            <td>🧩</td>
+                            <td>Diagram</td>
+                            <td>Vloží šachový diagram</td>
+                        </tr>
+                        <tr>
+                            <td>🖼️</td>
+                            <td>Obrázek</td>
+                            <td>Vloží fotku do textu</td>
+                        </tr>
+                        <tr>
+                            <td>📊</td>
+                            <td>Tabulka</td>
+                            <td>AI převod textu na tabulku</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="card">
+                <h3>Zvýraznění textu</h3>
+                <div class="highlight-demo">
+                    <span class="hl-name">Novák Jan</span> vyhrál <span class="hl-score">2 : 0</span>
+                </div>
+                <ol>
+                    <li>Vyberte text myší</li>
+                    <li>Klikněte na <strong>👤 Jméno</strong> (zlatá) nebo <strong>🏆 Skóre</strong> (zelená)</li>
+                </ol>
+                <div class="callout callout-warn">
+                    <span class="callout-icon">⚠️</span>
+                    <span><strong>Tlačítko Auto</strong> dokáže automaticky najít a zvýraznit všechna jména a výsledky v
+                        textu.</span>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>Drag & Drop obrázky</h3>
+                <p>Přetáhněte obrázek přímo z plochy do editoru – automaticky se nahraje do galerie a vloží do článku.
+                </p>
+            </div>
+
+            <div class="card">
+                <h3>Stavy publikace</h3>
+                <div class="status-flow">
+                    <div class="status-box" style="background: rgba(59,130,246,0.1); color: var(--blue);">📝 Koncept
+                    </div>
+                    <span class="qs-arrow">→</span>
+                    <div class="status-box" style="background: rgba(245,158,11,0.1); color: var(--orange);">⏰
+                        Naplánováno</div>
+                    <span class="qs-arrow">→</span>
+                    <div class="status-box" style="background: rgba(34,197,94,0.1); color: var(--green);">🚀 Publikováno
+                    </div>
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Stav</th>
+                            <th>Kdy se zobrazí veřejně</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>📝 Koncept</td>
+                            <td>Nikdy (jen pro adminy)</td>
+                        </tr>
+                        <tr>
+                            <td>⏰ Naplánováno</td>
+                            <td>V nastavený den</td>
+                        </tr>
+                        <tr>
+                            <td>🚀 Publikováno</td>
+                            <td>Ihned</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- 3. Šachové diagramy -->
+        <div class="section" id="diagrams">
+            <div class="section-header">
+                <i class="fa-solid fa-chess" style="background: rgba(168,85,247,0.1); color: var(--purple);"></i>
+                <h2>Šachové diagramy</h2>
+            </div>
+
+            <div class="card">
+                <h3>Co je diagram?</h3>
+                <p>Interaktivní šachovnice, kde návštěvník může:</p>
+                <ul>
+                    <li><strong>Hádanka</strong> – Hádat správný tah (s řešením)</li>
+                    <li><strong>Pozice</strong> – Prohlížet pozici (bez řešení)</li>
+                </ul>
+            </div>
+
+            <div class="card">
+                <h3>Vytvoření diagramu</h3>
+                <ol>
+                    <li>Otevřete <strong>Game Recorder</strong> (<code>/game-recorder.html</code>)</li>
+                    <li>Nastavte pozici – FEN notace nebo přetahování figurek</li>
+                    <li>Vyplňte název a kdo je na tahu</li>
+                    <li>Volitelně přidejte řešení (správné tahy)</li>
+                    <li>Uložte diagram</li>
+                </ol>
+                <div class="callout callout-info">
+                    <span class="callout-icon">ℹ️</span>
+                    <span>Systém automaticky kontroluje, jestli hráč táhne správně podle zadaného řešení.</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 4. Kniha diagramů -->
+        <div class="section" id="books">
+            <div class="section-header">
+                <i class="fa-solid fa-book-open" style="background: rgba(245,158,11,0.1); color: var(--orange);"></i>
+                <h2>Kniha diagramů</h2>
+            </div>
+
+            <div class="card">
+                <h3>Co je kniha?</h3>
+                <p>Více diagramů v jednom bloku s navigačními šipkami. Ideální pro:</p>
+                <ul>
+                    <li>Sérii pozic z jedné partie</li>
+                    <li>Hádanky s variantami</li>
+                    <li>Výukové materiály (krok za krokem)</li>
+                </ul>
+            </div>
+
+            <div class="card">
+                <h3>Vytvoření knihy</h3>
+                <ol>
+                    <li>V editoru klikněte 🧩 <strong>Vložit diagram</strong></li>
+                    <li>Zaškrtněte ☑️ <strong>Více najednou</strong></li>
+                    <li>Vyberte 2+ diagramy</li>
+                    <li>U každého můžete napsat vlastní popisek</li>
+                    <li>Přetahováním změňte pořadí (ikony ↑↓)</li>
+                    <li>Klikněte <strong>Vložit jako knihu</strong></li>
+                </ol>
+                <div class="callout callout-tip">
+                    <span class="callout-icon">💡</span>
+                    <span>Popisky se zobrazují pod šachovnicí a mění se podle aktuálního diagramu.</span>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>Úprava existující knihy</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Akce</th>
+                            <th>Jak na to</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Otevřít editor</td>
+                            <td>Dvojklik na knihu v článku</td>
+                        </tr>
+                        <tr>
+                            <td>Přidat / odebrat</td>
+                            <td>V modalu zaškrtněte / odškrtněte</td>
+                        </tr>
+                        <tr>
+                            <td>Změnit pořadí</td>
+                            <td>Šipky ↑↓ u každého diagramu</td>
+                        </tr>
+                        <tr>
+                            <td>Změnit popisek</td>
+                            <td>Pole „Popisek" u diagramu</td>
+                        </tr>
+                        <tr>
+                            <td>Smazat</td>
+                            <td>Tlačítko 🗑️ v toolbaru</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- 5. Správa událostí -->
+        <div class="section" id="events">
+            <div class="section-header">
+                <i class="fa-solid fa-calendar-days" style="background: rgba(236,72,153,0.1); color: var(--pink);"></i>
+                <h2>Správa událostí</h2>
+            </div>
+
+            <div class="card">
+                <h3>Typy událostí</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Typ</th>
+                            <th>Ikona</th>
+                            <th>Příklad</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Turnaj</td>
+                            <td>🏆</td>
+                            <td>Josefův Důl Open</td>
+                        </tr>
+                        <tr>
+                            <td>Trénink</td>
+                            <td>📚</td>
+                            <td>Oddílový trénink</td>
+                        </tr>
+                        <tr>
+                            <td>Soustředění</td>
+                            <td>⛺</td>
+                            <td>Letní soustředění</td>
+                        </tr>
+                        <tr>
+                            <td>Zápas</td>
+                            <td>⚔️</td>
+                            <td>Krajský přebor</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="card">
+                <h3>Přidání události</h3>
+                <ol>
+                    <li>Přejděte na záložku <strong>Události</strong></li>
+                    <li>Vyplňte: 📝 Název, 📅 Datum a čas, 📍 Místo, 🏷️ Kategorie</li>
+                </ol>
+                <div class="callout callout-tip">
+                    <span class="callout-icon">💡</span>
+                    <span>Zaškrtněte <strong>Pouze pro členy</strong> pro interní schůzky, co nevidí veřejnost.</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 6. Galerie -->
+        <div class="section" id="gallery">
+            <div class="section-header">
+                <i class="fa-solid fa-images" style="background: rgba(212,175,55,0.1); color: var(--gold);"></i>
+                <h2>Galerie</h2>
+            </div>
+
+            <div class="card">
+                <h3>Nahrávání fotek</h3>
+                <ol>
+                    <li>Záložka <strong>Galerie</strong></li>
+                    <li>Klikněte <strong>Nahrát obrázky</strong></li>
+                    <li>Vyberte soubory (možno více najednou)</li>
+                    <li>Přiřaďte kategorii</li>
+                </ol>
+
+                <h3 style="margin-top: 1.25rem;">Kategorie</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Kategorie</th>
+                            <th>Použití</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Novinky</td>
+                            <td>Fotky do článků</td>
+                        </tr>
+                        <tr>
+                            <td>Členové</td>
+                            <td>Profilové fotky</td>
+                        </tr>
+                        <tr>
+                            <td>Úvodní</td>
+                            <td>Hlavní stránka</td>
+                        </tr>
+                        <tr>
+                            <td>Bličáky</td>
+                            <td>Fotky z bličáků</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Keyboard Shortcuts -->
+        <div class="section" id="shortcuts">
+            <div class="section-header">
+                <i class="fa-solid fa-keyboard"
+                    style="background: rgba(255,255,255,0.05); color: var(--text-muted);"></i>
+                <h2>Klávesové zkratky</h2>
+            </div>
+
+            <div class="card">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Zkratka</th>
+                            <th>Akce</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><kbd>N</kbd></td>
+                            <td>Nový článek</td>
+                        </tr>
+                        <tr>
+                            <td><kbd>D</kbd></td>
+                            <td>Nový diagram</td>
+                        </tr>
+                        <tr>
+                            <td><kbd>⌘B</kbd></td>
+                            <td>Tučně</td>
+                        </tr>
+                        <tr>
+                            <td><kbd>⌘I</kbd></td>
+                            <td>Kurzíva</td>
+                        </tr>
+                        <tr>
+                            <td><kbd>⌘U</kbd></td>
+                            <td>Podtržení</td>
+                        </tr>
+                        <tr>
+                            <td><kbd>⌘K</kbd></td>
+                            <td>Vložit odkaz</td>
+                        </tr>
+                        <tr>
+                            <td><kbd>⌘⇧X</kbd></td>
+                            <td>Přeškrtnutí</td>
+                        </tr>
+                        <tr>
+                            <td><kbd>⌘⇧S</kbd></td>
+                            <td>AI Pravopis</td>
+                        </tr>
+                        <tr>
+                            <td><kbd>⌘⇧L</kbd></td>
+                            <td>Odrážkový seznam</td>
+                        </tr>
+                        <tr>
+                            <td><kbd>⌘⇧V</kbd></td>
+                            <td>Vložit jako čistý text</td>
+                        </tr>
+                        <tr>
+                            <td><kbd>⌘Z</kbd> / <kbd>⌘Y</kbd></td>
+                            <td>Zpět / Vpřed</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Troubleshooting -->
+        <div class="section" id="troubleshooting">
+            <div class="section-header">
+                <i class="fa-solid fa-life-ring" style="background: rgba(239,68,68,0.1); color: var(--red);"></i>
+                <h2>Řešení problémů</h2>
+            </div>
+
+            <div class="trouble-item">
+                <h4><i class="fa-solid fa-chess-board"></i> Diagram nereaguje na kliknutí</h4>
+                <div class="solution">
+                    <ol>
+                        <li>✓ Zkontrolujte, že má diagram řešení</li>
+                        <li>✓ Obnovte stránku (<kbd>Ctrl+Shift+R</kbd>)</li>
+                        <li>✓ Zkuste znovu vložit diagram</li>
+                    </ol>
+                </div>
+            </div>
+
+            <div class="trouble-item">
+                <h4><i class="fa-solid fa-image"></i> Obrázek se nenahrává</h4>
+                <div class="solution">
+                    <ol>
+                        <li>✓ Max velikost 10 MB</li>
+                        <li>✓ Formáty: JPG, PNG, WEBP</li>
+                        <li>✓ Zkuste jiný prohlížeč</li>
+                    </ol>
+                </div>
+            </div>
+
+            <div class="trouble-item">
+                <h4><i class="fa-solid fa-eye-slash"></i> Změny se neprojevují</h4>
+                <div class="solution">
+                    <ol>
+                        <li>✓ Vyčistěte cache (<kbd>Ctrl+Shift+R</kbd>)</li>
+                        <li>✓ Počkejte 1–2 minuty (deploy)</li>
+                        <li>✓ Podívejte se do changelogu</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+
+        <div class="manual-footer">
+            📧 Potřebujete pomoc? Kontaktujte technickou podporu.<br>
+            Manuál v2.0 | Aktualizováno: 13. února 2026
+        </div>
+
+    </div>
+
+</body>
+
+</html>
