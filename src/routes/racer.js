@@ -214,7 +214,7 @@ router.post('/settings/refresh-set', async (req, res) => {
 // POST /api/racer/save
 router.post('/save', async (req, res) => {
     try {
-        const { score, playerName, userId, mode } = req.body;
+        const { score, playerName, userId, mode, correctCount, wrongCount, maxStreak, puzzleCount } = req.body;
 
         if (score === undefined || score === null) {
             return res.status(400).json({ error: 'Score is required' });
@@ -225,7 +225,11 @@ router.post('/save', async (req, res) => {
                 score: parseInt(score),
                 playerName: playerName || 'Anonymous',
                 userId: userId ? parseInt(userId) : null,
-                mode: mode || 'vanilla'
+                mode: mode || 'vanilla',
+                correctCount: correctCount != null ? parseInt(correctCount) : null,
+                wrongCount: wrongCount != null ? parseInt(wrongCount) : null,
+                maxStreak: maxStreak != null ? parseInt(maxStreak) : null,
+                puzzleCount: puzzleCount != null ? parseInt(puzzleCount) : null
             },
         });
 
@@ -237,7 +241,7 @@ router.post('/save', async (req, res) => {
 });
 
 // GET /api/racer/my-stats?userId=X&mode=vanilla|thematic
-// Returns personal stats for a logged-in user
+// Returns enriched personal dashboard data
 router.get('/my-stats', async (req, res) => {
     try {
         const userId = parseInt(req.query.userId);
@@ -247,10 +251,12 @@ router.get('/my-stats', async (req, res) => {
             return res.status(400).json({ error: 'userId is required' });
         }
 
-        // Get best score
-        const bestResult = await prisma.puzzleRaceResult.findFirst({
+        // Get top 3 scores with timestamps
+        const top3 = await prisma.puzzleRaceResult.findMany({
             where: { userId, mode },
-            orderBy: { score: 'desc' }
+            orderBy: { score: 'desc' },
+            take: 3,
+            select: { score: true, createdAt: true, correctCount: true, wrongCount: true, maxStreak: true }
         });
 
         // Get total games count
@@ -258,7 +264,24 @@ router.get('/my-stats', async (req, res) => {
             where: { userId, mode }
         });
 
-        // Get last 5 scores (for trend)
+        // Get average score
+        const avgResult = await prisma.puzzleRaceResult.aggregate({
+            where: { userId, mode },
+            _avg: { score: true },
+            _max: { maxStreak: true }
+        });
+
+        // Get average accuracy (correctCount / puzzleCount)
+        const accuracyResult = await prisma.puzzleRaceResult.aggregate({
+            where: { userId, mode, puzzleCount: { gt: 0 } },
+            _sum: { correctCount: true, puzzleCount: true }
+        });
+
+        const totalCorrect = accuracyResult._sum.correctCount || 0;
+        const totalPuzzles = accuracyResult._sum.puzzleCount || 0;
+        const avgAccuracy = totalPuzzles > 0 ? Math.round((totalCorrect / totalPuzzles) * 100) : null;
+
+        // Get last 5 scores (for trend sparkline)
         const recentResults = await prisma.puzzleRaceResult.findMany({
             where: { userId, mode },
             orderBy: { createdAt: 'desc' },
@@ -267,8 +290,18 @@ router.get('/my-stats', async (req, res) => {
         });
 
         res.json({
-            bestScore: bestResult?.score || 0,
+            bestScore: top3[0]?.score || 0,
+            top3: top3.map(r => ({
+                score: r.score,
+                date: r.createdAt,
+                correctCount: r.correctCount,
+                wrongCount: r.wrongCount,
+                maxStreak: r.maxStreak
+            })),
             totalGames,
+            avgScore: Math.round(avgResult._avg.score || 0),
+            bestStreak: avgResult._max.maxStreak || 0,
+            avgAccuracy,
             recentScores: recentResults.map(r => ({ score: r.score, date: r.createdAt }))
         });
     } catch (error) {
