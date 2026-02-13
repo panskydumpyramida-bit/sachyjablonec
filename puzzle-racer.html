@@ -84,6 +84,14 @@
             display: none !important;
         }
 
+        /* Hide header and footer during active gameplay (all screen sizes) */
+        body.game-active #global-header,
+        body.game-active header,
+        body.game-active footer,
+        body.game-active #global-footer {
+            display: none !important;
+        }
+
         /* MOBILE ONLY - fullscreen game mode */
         @media (max-width: 768px) {
             body.game-active {
@@ -98,14 +106,6 @@
                 padding-top: 5px !important;
                 height: 100vh;
                 overflow: hidden;
-            }
-
-            /* Hide header and footer only on mobile */
-            body.game-active #global-header,
-            body.game-active header,
-            body.game-active footer,
-            body.game-active #global-footer {
-                display: none !important;
             }
 
             body.game-active .game-container {
@@ -492,6 +492,101 @@
             align-items: center;
             margin-bottom: 0.5rem;
         }
+
+        /* Timer Urgency */
+        .timer-warning {
+            color: #fbbf24 !important;
+        }
+
+        .timer-urgent {
+            color: #f87171 !important;
+            animation: timerPulse 0.5s ease-in-out infinite;
+        }
+
+        @keyframes timerPulse {
+
+            0%,
+            100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+
+            50% {
+                opacity: 0.6;
+                transform: scale(1.15);
+            }
+        }
+
+        /* Score Pop Animation */
+        .score-pop {
+            animation: scorePop 0.3s ease-out;
+        }
+
+        @keyframes scorePop {
+            0% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.4);
+                color: #4ade80;
+            }
+
+            100% {
+                transform: scale(1);
+            }
+        }
+
+        /* Puzzle Rating */
+        .puzzle-rating {
+            font-size: 0.85rem;
+            font-weight: 600;
+            transition: color 0.3s ease;
+        }
+
+        /* New Record Banner */
+        .new-record-banner {
+            background: linear-gradient(135deg, rgba(251, 191, 36, 0.2), rgba(245, 158, 11, 0.1));
+            border: 1px solid rgba(251, 191, 36, 0.4);
+            border-radius: 0.75rem;
+            padding: 1rem;
+            margin-top: 1rem;
+            text-align: center;
+            animation: recordGlow 1.5s ease-in-out infinite alternate;
+        }
+
+        .new-record-banner .record-emoji {
+            font-size: 2rem;
+            display: block;
+            margin-bottom: 0.3rem;
+            animation: recordBounce 0.6s ease-in-out infinite alternate;
+        }
+
+        .new-record-banner .record-text {
+            color: #fbbf24;
+            font-weight: 700;
+            font-size: 1.1rem;
+        }
+
+        @keyframes recordGlow {
+            0% {
+                box-shadow: 0 0 5px rgba(251, 191, 36, 0.2);
+            }
+
+            100% {
+                box-shadow: 0 0 20px rgba(251, 191, 36, 0.4);
+            }
+        }
+
+        @keyframes recordBounce {
+            0% {
+                transform: translateY(0);
+            }
+
+            100% {
+                transform: translateY(-5px);
+            }
+        }
     </style>
 </head>
 
@@ -574,6 +669,10 @@
                             <span class="stat-value" id="difficultyDisplay"
                                 style="font-size: 1rem; line-height: 1.5;">Začítečník</span>
                         </div>
+                        <div class="stat-box">
+                            <span class="stat-label">Rating</span>
+                            <span class="stat-value puzzle-rating" id="puzzleRating">–</span>
+                        </div>
                     </div>
 
                     <div id="gameArea" style="position: relative;">
@@ -606,6 +705,12 @@
                     <p>Váš výsledek:</p>
                     <div class="final-score" id="finalScore">0</div>
 
+                    <!-- New Record Banner -->
+                    <div id="newRecordBanner" class="new-record-banner hidden">
+                        <span class="record-emoji">🎉🏆🎉</span>
+                        <span class="record-text">Nový osobní rekord!</span>
+                    </div>
+
                     <div style="margin-top: 2rem; display: flex; gap: 1rem; justify-content: center;">
                         <input type="text" id="playerName" placeholder="Vaše jméno"
                             style="padding: 0.8rem; border-radius: 0.5rem; border: 1px solid rgba(255,255,255,0.2); background: rgba(0,0,0,0.3); color: white;">
@@ -621,10 +726,15 @@
                                 class="fa-solid fa-chess-board"></i> Přehled úloh</h3>
                     </div>
 
-                    <div style="margin-top: 1rem;">
+                    <div
+                        style="margin-top: 1rem; display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap;">
                         <button class="btn-secondary" onclick="location.reload()">
                             <i class="fa-solid fa-rotate-right"></i> Hrát znovu
                         </button>
+                        <a href="/diagrams" class="btn-secondary"
+                            style="text-decoration: none; display: inline-flex; align-items: center;">
+                            <i class="fa-solid fa-chess-board"></i> Diagramy
+                        </a>
                     </div>
                 </div>
 
