@@ -35,6 +35,12 @@ let skipOnMistake = false;
 // Game mode: 'vanilla' uses fixed defaults, 'thematic' uses admin settings
 let gameMode = 'vanilla';
 
+// Puzzle history for post-solve review
+let puzzleHistory = [];
+
+// Logged-in user info (decoded from JWT)
+let loggedInUser = null;
+
 // Vanilla defaults (fixed, not affected by admin settings)
 const VANILLA_DEFAULTS = {
     puzzleTheme: 'mix',
@@ -219,6 +225,7 @@ async function startRace() {
     currentPuzzleIndex = 0;
     currentDifficultyIndex = 0;
     totalPuzzlesSolved = 0;
+    puzzleHistory = []; // Reset puzzle history
 
     try {
         // Initial load: Fetch 2 batches (12 puzzles) to build buffer
@@ -635,6 +642,19 @@ function handleCorrectPuzzle() {
     score++;
     totalPuzzlesSolved++;
     updateScore();
+
+    // Track puzzle for post-solve review
+    const currentPuzzle = puzzles[currentPuzzleIndex];
+    if (currentPuzzle) {
+        puzzleHistory.push({
+            fen: game.fen(),
+            initialFen: getInitialFen(currentPuzzle),
+            solution: currentPuzzle.puzzle.solution,
+            rating: currentPuzzle.puzzle.rating,
+            puzzleId: currentPuzzle.puzzle.id,
+            correct: true
+        });
+    }
     showFeedback('correct');
 
     // Easter egg: Completed all difficulty levels! (5 × 6 = 30 puzzles)
@@ -717,6 +737,23 @@ function handleWrongMove() {
     mistakeCount++;
     updateLivesDisplay();
     showFeedback('wrong');
+
+    // Track failed puzzle for post-solve review
+    const currentPuzzle = puzzles[currentPuzzleIndex];
+    if (currentPuzzle) {
+        // Only add if not already tracked (avoid duplicates on multiple wrong moves)
+        const alreadyTracked = puzzleHistory.some(p => p.puzzleId === currentPuzzle.puzzle.id);
+        if (!alreadyTracked) {
+            puzzleHistory.push({
+                fen: game.fen(),
+                initialFen: getInitialFen(currentPuzzle),
+                solution: currentPuzzle.puzzle.solution,
+                rating: currentPuzzle.puzzle.rating,
+                puzzleId: currentPuzzle.puzzle.id,
+                correct: false
+            });
+        }
+    }
 
     // Check if lives system is enabled and we're out of lives
     if (livesEnabled && mistakeCount >= MAX_MISTAKES) {
@@ -854,7 +891,125 @@ function endGame() {
     document.getElementById('gameOverScreen').classList.remove('hidden');
     document.getElementById('finalScore').innerText = score;
 
-    // Pre-fill name if user is logged in (optional later)
+    // Auto-fill name and userId for logged-in users
+    if (loggedInUser) {
+        const nameInput = document.getElementById('playerName');
+        if (nameInput) {
+            nameInput.value = loggedInUser.realName || loggedInUser.username;
+            nameInput.readOnly = true;
+            nameInput.style.opacity = '0.7';
+        }
+    }
+
+    // Render post-solve review
+    renderPuzzleReview();
+}
+
+// Helper: get the initial FEN (position where player needs to move)
+function getInitialFen(puzzleData) {
+    try {
+        const tempGame = new Chess();
+        const gamePgn = puzzleData.game.pgn;
+        tempGame.load_pgn(gamePgn);
+        const history = tempGame.history({ verbose: true });
+        tempGame.reset();
+        // Replay up to initialPly + 1 (includes opponent's last move)
+        const movesToReplay = (puzzleData.puzzle.initialPly || 0) + 1;
+        for (let i = 0; i < movesToReplay && i < history.length; i++) {
+            tempGame.move(history[i]);
+        }
+        return tempGame.fen();
+    } catch (e) {
+        return 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1';
+    }
+}
+
+// Render post-solve puzzle review grid
+function renderPuzzleReview() {
+    const container = document.getElementById('puzzleReviewGrid');
+    if (!container || puzzleHistory.length === 0) return;
+
+    const correctCount = puzzleHistory.filter(p => p.correct).length;
+    const totalCount = puzzleHistory.length;
+    const pct = Math.round((correctCount / totalCount) * 100);
+
+    let html = `
+        <div class="review-stats">
+            <span class="review-stat correct"><i class="fa-solid fa-check"></i> ${correctCount}</span>
+            <span class="review-stat wrong"><i class="fa-solid fa-xmark"></i> ${totalCount - correctCount}</span>
+            <span class="review-stat pct">${pct}%</span>
+        </div>
+        <div class="review-grid">
+    `;
+
+    puzzleHistory.forEach((puzzle, idx) => {
+        const statusClass = puzzle.correct ? 'review-correct' : 'review-wrong';
+        const icon = puzzle.correct ? '✅' : '❌';
+        const ratingText = puzzle.rating ? `${puzzle.rating}` : '?';
+        html += `
+            <div class="review-card ${statusClass}" onclick="showPuzzleDetail(${idx})">
+                <div class="review-card-icon">${icon}</div>
+                <div class="review-card-num">#${idx + 1}</div>
+                <div class="review-card-rating"><i class="fa-solid fa-signal"></i> ${ratingText}</div>
+            </div>
+        `;
+    });
+
+    html += '</div>';
+    html += '<div id="puzzleDetailView" class="puzzle-detail hidden"></div>';
+    container.innerHTML = html;
+    container.classList.remove('hidden');
+}
+
+// Show individual puzzle detail with mini board
+function showPuzzleDetail(idx) {
+    const puzzle = puzzleHistory[idx];
+    if (!puzzle) return;
+
+    const detailEl = document.getElementById('puzzleDetailView');
+    if (!detailEl) return;
+
+    // Determine player color from FEN
+    const fenParts = puzzle.initialFen.split(' ');
+    const playerColor = fenParts[1] === 'w' ? 'white' : 'black';
+
+    // Format solution moves
+    const solutionMoves = puzzle.solution.map((uci, i) => {
+        const from = uci.substring(0, 2);
+        const to = uci.substring(2, 4);
+        const promo = uci.length > 4 ? '=' + uci.charAt(4).toUpperCase() : '';
+        return `${from}-${to}${promo}`;
+    }).join(', ');
+
+    const statusText = puzzle.correct
+        ? '<span style="color: #4ade80;"><i class="fa-solid fa-check-circle"></i> Správně</span>'
+        : '<span style="color: #f87171;"><i class="fa-solid fa-times-circle"></i> Chybně</span>';
+
+    detailEl.innerHTML = `
+        <div class="puzzle-detail-header">
+            <span>${statusText}</span>
+            <span style="color: var(--text-muted); font-size: 0.85rem;">Rating: ${puzzle.rating || '?'}</span>
+            <button onclick="document.getElementById('puzzleDetailView').classList.add('hidden')" 
+                    style="background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 1.2rem;">
+                <i class="fa-solid fa-times"></i>
+            </button>
+        </div>
+        <div id="reviewBoard" style="width: 280px; max-width: 100%; margin: 0.5rem auto;"></div>
+        <div style="text-align: center; margin-top: 0.5rem; color: var(--text-muted); font-size: 0.85rem;">
+            <strong>Řešení:</strong> ${solutionMoves}
+        </div>
+    `;
+    detailEl.classList.remove('hidden');
+
+    // Render mini board
+    setTimeout(() => {
+        Chessboard('reviewBoard', {
+            position: puzzle.initialFen,
+            orientation: playerColor,
+            draggable: false,
+            pieceTheme: 'https://chessboardjs.com/img/chesspieces/wikipedia/{piece}.png'
+        });
+    }, 50);
 }
 
 async function saveScore() {
@@ -871,6 +1026,7 @@ async function saveScore() {
             body: JSON.stringify({
                 score,
                 playerName,
+                userId: loggedInUser ? loggedInUser.id : null,
                 mode: gameMode // Send current game mode
             })
         });
@@ -959,6 +1115,81 @@ function escapeHtml(text) {
     return div.innerHTML;
 }
 
+// Detect logged-in user from JWT in localStorage
+function detectLoggedInUser() {
+    try {
+        const token = localStorage.getItem('token');
+        if (!token) return null;
+
+        // Decode JWT payload (base64)
+        const parts = token.split('.');
+        if (parts.length !== 3) return null;
+        const payload = JSON.parse(atob(parts[1]));
+
+        // Check expiry
+        if (payload.exp && payload.exp * 1000 < Date.now()) return null;
+
+        return {
+            id: payload.userId || payload.id,
+            username: payload.username,
+            realName: payload.realName || payload.real_name,
+            role: payload.role
+        };
+    } catch (e) {
+        return null;
+    }
+}
+
+// Load and display personal stats for logged-in user
+async function loadPersonalStats() {
+    if (!loggedInUser) return;
+
+    const statsPanel = document.getElementById('personalStatsPanel');
+    if (!statsPanel) return;
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const mode = urlParams.get('mode') === 'thematic' ? 'thematic' : 'vanilla';
+
+    try {
+        const res = await fetch(`${API_URL}/racer/my-stats?userId=${loggedInUser.id}&mode=${mode}`);
+        if (!res.ok) throw new Error('Failed to fetch stats');
+
+        const stats = await res.json();
+
+        // Build trend sparkline
+        let trendHtml = '';
+        if (stats.recentScores.length > 1) {
+            const scores = stats.recentScores.map(s => s.score).reverse(); // oldest first
+            const max = Math.max(...scores, 1);
+            trendHtml = '<div class="trend-sparkline">' +
+                scores.map(s => `<div class="trend-bar" style="height: ${Math.max(10, (s / max) * 100)}%" title="${s}"></div>`).join('') +
+                '</div>';
+        }
+
+        statsPanel.innerHTML = `
+            <div class="personal-stats-row">
+                <div class="ps-stat">
+                    <span class="ps-icon">🏆</span>
+                    <span class="ps-value">${stats.bestScore}</span>
+                    <span class="ps-label">Nejlepší</span>
+                </div>
+                <div class="ps-stat">
+                    <span class="ps-icon">🎮</span>
+                    <span class="ps-value">${stats.totalGames}</span>
+                    <span class="ps-label">Her</span>
+                </div>
+                <div class="ps-stat ps-trend">
+                    <span class="ps-label" style="margin-bottom: 0.3rem;">Trend</span>
+                    ${trendHtml || '<span style="color: var(--text-muted); font-size: 0.8rem;">–</span>'}
+                </div>
+            </div>
+        `;
+        statsPanel.classList.remove('hidden');
+    } catch (e) {
+        console.error('Failed to load personal stats:', e);
+    }
+}
+
 // Initialize on load
 document.addEventListener('DOMContentLoaded', () => {
     // expose functions to window
@@ -966,13 +1197,32 @@ document.addEventListener('DOMContentLoaded', () => {
     window.saveScore = saveScore;
     window.skipPuzzle = skipPuzzle;
     window.switchLeaderboard = switchLeaderboard;
+    window.showPuzzleDetail = showPuzzleDetail;
+
+    // Detect logged-in user
+    loggedInUser = detectLoggedInUser();
 
     // Load leaderboard and player name on init
     loadLeaderboard();
-    const savedName = localStorage.getItem('puzzle_racer_name');
-    if (savedName) {
+
+    // Auto-fill name from user or localStorage
+    if (loggedInUser) {
         const nameInput = document.getElementById('playerName');
-        if (nameInput) nameInput.value = savedName;
+        if (nameInput) nameInput.value = loggedInUser.realName || loggedInUser.username;
+        // Load personal stats
+        loadPersonalStats();
+        // Hide anonymous CTA
+        const anonCta = document.getElementById('anonCta');
+        if (anonCta) anonCta.classList.add('hidden');
+    } else {
+        const savedName = localStorage.getItem('puzzle_racer_name');
+        if (savedName) {
+            const nameInput = document.getElementById('playerName');
+            if (nameInput) nameInput.value = savedName;
+        }
+        // Show anonymous CTA
+        const anonCta = document.getElementById('anonCta');
+        if (anonCta) anonCta.classList.remove('hidden');
     }
 
     // ROBUST CLICK HANDLING (Capture Phase)

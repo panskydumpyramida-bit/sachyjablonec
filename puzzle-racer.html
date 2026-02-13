@@ -321,6 +321,177 @@
             background: linear-gradient(135deg, #f472b6, #ec4899);
             color: white;
         }
+
+        /* Personal Stats Panel */
+        .personal-stats-panel {
+            background: linear-gradient(145deg, rgba(74, 222, 128, 0.1), rgba(59, 130, 246, 0.1));
+            border: 1px solid rgba(74, 222, 128, 0.2);
+            border-radius: 0.75rem;
+            padding: 1rem;
+            margin-top: 1.5rem;
+            max-width: 400px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .personal-stats-row {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            align-items: flex-end;
+        }
+
+        .ps-stat {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.1rem;
+            min-width: 70px;
+        }
+
+        .ps-icon {
+            font-size: 1.3rem;
+        }
+
+        .ps-value {
+            font-size: 1.6rem;
+            font-weight: 800;
+            color: var(--primary-color);
+        }
+
+        .ps-label {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .trend-sparkline {
+            display: flex;
+            gap: 3px;
+            align-items: flex-end;
+            height: 30px;
+        }
+
+        .trend-bar {
+            width: 8px;
+            background: linear-gradient(to top, #3b82f6, #60a5fa);
+            border-radius: 2px;
+            min-height: 3px;
+            transition: height 0.3s ease;
+        }
+
+        /* Anonymous CTA */
+        .anon-cta {
+            background: rgba(59, 130, 246, 0.08);
+            border: 1px dashed rgba(59, 130, 246, 0.3);
+            border-radius: 0.75rem;
+            padding: 0.8rem 1.2rem;
+            margin-top: 1.5rem;
+            max-width: 400px;
+            margin-left: auto;
+            margin-right: auto;
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .anon-cta a {
+            color: #60a5fa;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        /* Post-solve Review */
+        .review-stats {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            margin-bottom: 1rem;
+        }
+
+        .review-stat {
+            font-size: 1.1rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+        }
+
+        .review-stat.correct {
+            color: #4ade80;
+        }
+
+        .review-stat.wrong {
+            color: #f87171;
+        }
+
+        .review-stat.pct {
+            color: var(--primary-color);
+        }
+
+        .review-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
+            gap: 0.5rem;
+            max-width: 500px;
+            margin: 0 auto;
+        }
+
+        .review-card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 0.5rem;
+            padding: 0.5rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: 2px solid transparent;
+        }
+
+        .review-card:hover {
+            transform: scale(1.05);
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .review-correct {
+            border-color: rgba(74, 222, 128, 0.3);
+        }
+
+        .review-wrong {
+            border-color: rgba(248, 113, 113, 0.3);
+        }
+
+        .review-card-icon {
+            font-size: 1.1rem;
+        }
+
+        .review-card-num {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-top: 0.1rem;
+        }
+
+        .review-card-rating {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            margin-top: 0.1rem;
+        }
+
+        /* Puzzle Detail View */
+        .puzzle-detail {
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 0.75rem;
+            padding: 1rem;
+            margin-top: 1rem;
+        }
+
+        .puzzle-detail-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
     </style>
 </head>
 
@@ -357,8 +528,18 @@
                         style="font-size: 1.1rem; color: var(--text-muted); margin-bottom: 2rem; max-width: 500px; margin-left: auto; margin-right: auto;">
                         Vyřešte co nejvíce taktických úloh během 3 minut! Obtížnost se postupně zvyšuje.
                     </p>
+
+                    <!-- Personal Stats for logged-in users -->
+                    <div id="personalStatsPanel" class="personal-stats-panel hidden"></div>
+
+                    <!-- Anonymous CTA -->
+                    <div id="anonCta" class="anon-cta hidden">
+                        <i class="fa-solid fa-chart-line"></i>
+                        <a href="members.html">Přihlaste se</a> a sledujte svůj pokrok, personal best a trend!
+                    </div>
+
                     <button class="btn-primary" onclick="window.startRace()"
-                        style="font-size: 1.2rem; padding: 1rem 3rem;">
+                        style="font-size: 1.2rem; padding: 1rem 3rem; margin-top: 1.5rem;">
                         <i class="fa-solid fa-play"></i> Start
                     </button>
 
@@ -432,6 +613,14 @@
                             <i class="fa-solid fa-save"></i> Uložit
                         </button>
                     </div>
+
+                    <!-- Post-solve Puzzle Review -->
+                    <div id="puzzleReviewGrid" class="hidden"
+                        style="margin-top: 2rem; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 1.5rem;">
+                        <h3 style="color: var(--primary-color); margin-bottom: 1rem;"><i
+                                class="fa-solid fa-chess-board"></i> Přehled úloh</h3>
+                    </div>
+
                     <div style="margin-top: 1rem;">
                         <button class="btn-secondary" onclick="location.reload()">
                             <i class="fa-solid fa-rotate-right"></i> Hrát znovu
