@@ -72,6 +72,15 @@ window.updateCastlingRights = updateCastlingRights;
  * Switch between diagram editor tabs (annotate / position)
  */
 function switchDiagramTab(tab) {
+    // If solver recording is active, cancel it before switching tabs
+    if (solverState.isRecording) {
+        cancelRecording();
+    }
+
+    // Always ensure overlay pointer events are enabled
+    const overlay = document.getElementById('diagramOverlay');
+    if (overlay) overlay.style.pointerEvents = 'auto';
+
     currentDiagramTab = tab;
 
     // Toggle tab buttons
@@ -920,8 +929,10 @@ function cancelRecording() {
 }
 
 function resetBoardToReadOnly() {
+    // Preserve current diagram position instead of resetting to main game
+    const currentPos = diagramBoard ? diagramBoard.fen() : game.fen();
     diagramBoard = Chessboard('diagramBoard', {
-        position: game.fen(),
+        position: currentPos,
         draggable: false,
         pieceTheme: '/img/chesspieces/wikipedia/{piece}.png'
     });
