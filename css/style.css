@@ -346,8 +346,8 @@ nav {
     overflow: hidden;
 }
 
-/* Back face of rotating tile: override centering so match content fills from top to bottom */
-.hero-grid-item.face-back {
+/* Match content on rotating tile: override centering so content fills top to bottom */
+.hero-grid-item.match-content {
     padding: 0 !important;
     justify-content: flex-start;
     align-items: stretch;
@@ -355,7 +355,7 @@ nav {
 }
 
 /* Don't apply hero-grid-item span styles to match tile content */
-.hero-grid-item.face-back span {
+.hero-grid-item.match-content span {
     font-size: inherit;
     font-weight: inherit;
     text-transform: none;

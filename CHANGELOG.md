@@ -1,5 +1,15 @@
 # 📋 Changelog
 
+## 14. února 2026 (v16)
+
+### 🎮 Game Viewer 2 – Oprava variant
+- **Oprava navigace variant:** Kliknutí na variantní tah (vedlejší linie) nyní správně zobrazí pozici na šachovnici
+- **Root cause:** `parentPly` se v `tokenizePgn()` ukládal příliš pozdě – variace odkazovaly na nesprávný bod v hlavní linii
+- **Fix:** `parentPly` se nyní zachycuje v okamžiku parsování a obnovuje se před renderováním variace
+- **Variační modál:** Opraveno zobrazení modálu výběru tahu na rozcestí při krokování vpřed
+
+---
+
 ## 4. února 2026 (v25)
 
 ### 🏆 Soutěže jednotlivců – Nová sekce

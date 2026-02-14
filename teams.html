@@ -241,6 +241,62 @@
                     </div>
                 </div>
 
+                <!-- Krajská soutěž – Nadstavba (Finále B) -->
+                <div class="card" style="grid-column: 1 / -1;">
+                    <div class="card-content">
+                        <h2
+                            style="margin-bottom: 2rem; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 1rem;">
+                            KS východ – Nadstavba <span
+                                style="font-size: 0.6em; color: var(--text-muted); font-weight: 400;">Finále
+                                "B" 2025/2026</span>
+                        </h2>
+
+                        <div
+                            style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem;">
+                            <!-- C Team - Nadstavba -->
+                            <div id="team-ksf-C">
+                                <h3 style="color: var(--primary-color);">C Tým</h3>
+                                <div id="lastMatch-ksf-C" class="last-match-badge"
+                                    style="margin-bottom: 0.75rem; font-size: 0.9rem;"></div>
+
+                                <div style="display: flex; justify-content: center;">
+                                    <button
+                                        onclick="toggleRoster('roster-ksf-C', 'https://s2.chess-results.com/tnr1350680.aspx?lan=5', 4)"
+                                        class="read-more"
+                                        style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); padding: 0.5rem 1.5rem; border-radius: 50px; cursor: pointer; margin-bottom: 0.75rem; display: flex; align-items: center; gap: 0.5rem; font-size: 0.9rem; transition: all 0.2s;">
+                                        <i class="fa-solid fa-users"></i> Soupiska
+                                        <i class="fa-solid fa-chevron-down" id="icon-roster-ksf-C"
+                                            style="font-size: 0.7em; transition: transform 0.2s;"></i>
+                                    </button>
+                                </div>
+                                <div id="roster-ksf-C" style="display: none; margin-bottom: 1rem;"></div>
+                            </div>
+
+                            <!-- D Team - Nadstavba -->
+                            <div id="team-ksf-D">
+                                <h3 style="color: var(--primary-color);">D Tým</h3>
+                                <div id="lastMatch-ksf-D" class="last-match-badge"
+                                    style="margin-bottom: 0.75rem; font-size: 0.9rem;"></div>
+
+                                <div style="display: flex; justify-content: center;">
+                                    <button
+                                        onclick="toggleRoster('roster-ksf-D', 'https://s2.chess-results.com/tnr1350680.aspx?lan=5', 5)"
+                                        class="read-more"
+                                        style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); padding: 0.5rem 1.5rem; border-radius: 50px; cursor: pointer; margin-bottom: 0.75rem; display: flex; align-items: center; gap: 0.5rem; font-size: 0.9rem; transition: all 0.2s;">
+                                        <i class="fa-solid fa-users"></i> Soupiska
+                                        <i class="fa-solid fa-chevron-down" id="icon-roster-ksf-D"
+                                            style="font-size: 0.7em; transition: transform 0.2s;"></i>
+                                    </button>
+                                </div>
+                                <div id="roster-ksf-D" style="display: none; margin-bottom: 1rem;"></div>
+                            </div>
+                        </div>
+
+                        <!-- Standings Placeholder - Nadstavba -->
+                        <div id="standings-ks-finale" style="margin-top: 2rem;"></div>
+                    </div>
+                </div>
+
                 <!-- Game Viewer Section - Created by GameViewer2.create() -->
                 <div id="teams-games-section" class="card" style="grid-column: 1 / -1; display: none;">
                     <div class="card-content" style="padding: 0; border-radius: 12px;">
@@ -342,6 +398,7 @@
             loadNews('Soutěže družstev', 'teamsNewsList', 'list');
             loadStandings('kp-liberec', 'standings-kp-liberec');
             loadStandings('ks-vychod', 'standings-ks-vychod');
+            loadStandings('ks-vychod-finale', 'standings-ks-finale');
 
             // Load last match badges
             loadLastMatches();
@@ -364,6 +421,8 @@
                     { containerId: 'lastMatch-kp-B', compId: 'kp-liberec', pattern: /bižuterie.*"B"/i },
                     { containerId: 'lastMatch-ks-C', compId: 'ks-vychod', pattern: /bižuterie.*"C"/i },
                     { containerId: 'lastMatch-ks-D', compId: 'ks-vychod', pattern: /bižuterie.*"D"/i },
+                    { containerId: 'lastMatch-ksf-C', compId: 'ks-vychod-finale', pattern: /bižuterie.*"C"/i },
+                    { containerId: 'lastMatch-ksf-D', compId: 'ks-vychod-finale', pattern: /bižuterie.*"D"/i },
                 ];
 
                 for (const mapping of teamMappings) {

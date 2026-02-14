@@ -217,9 +217,11 @@ const UpcomingMatches = {
 
             if (item.type === 'title') {
                 targetFace.innerHTML = item.content;
+                targetFace.classList.remove('match-content');
                 tile.dataset.matchId = ''; // Clear match ID
             } else {
                 targetFace.innerHTML = getMatchHtml(item.data);
+                targetFace.classList.add('match-content');
                 tile.dataset.matchId = item.data.matchId; // Store match ID
             }
 
