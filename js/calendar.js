@@ -16,6 +16,7 @@ const competitionColors = {
     'Krajský přebor mládeže': '#4ADE80',   // Green
     'Krajský přebor mládeže - Liberec': '#4ADE80', // Green
     'KPM': '#4ADE80',                       // Green
+    'KS východ – nadstavba': '#818CF8',     // Indigo - nadstavba
     'default': '#A78BFA'                   // Purple for unknown
 };
 
@@ -43,7 +44,8 @@ const competitionIdMap = {
     'Krajský přebor mládeže': '3363',
     'Krajský přebor mládeže - Liberec': '3363',
     'KPM': '3363',
-    'Krajská soutěž st. žáků': 'ks-st-zaku'
+    'Krajská soutěž st. žáků': 'ks-st-zaku',
+    'KS východ – nadstavba': 'ks-vychod-finale'
 };
 
 function getCompetitionId(compName) {

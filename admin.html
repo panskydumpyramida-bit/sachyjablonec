@@ -286,7 +286,9 @@
                                     onclick="insertDiagram()" title="Vložit diagram" style="color: #d4a373;"><i
                                         class="fa-solid fa-chess-board"></i></button><button type="button"
                                     onclick="insertCollapsibleBlock()" title="Rozbalovací sekce"
-                                    style="color: #8b5cf6;"><i class="fa-solid fa-layer-group"></i></button>
+                                    style="color: #8b5cf6;"><i class="fa-solid fa-layer-group"></i></button><button
+                                    type="button" onclick="insertColumnBlock()" title="Sloupcový blok (rozložení)"
+                                    style="color: #38bdf8;"><i class="fa-solid fa-columns"></i></button>
                                 <!-- AI Tools -->
                                 <div class="divider"></div>
                                 <button type="button" onclick="aiSpellCheck()"
@@ -1338,6 +1340,52 @@
             </div>
 
             <div class="changelog-timeline">
+                <!-- 2026-02-14 v30 -->
+                <div class="changelog-entry">
+                    <div class="changelog-date">14. 2. 2026</div>
+                    <div class="changelog-version">v30</div>
+                    <div class="changelog-content">
+                        <h4>🔍 Analýza pozice – Lichess integrace</h4>
+                        <ul>
+                            <li><strong>Nové tlačítko „Analyzovat":</strong> V editoru diagramů – otevře aktuální
+                                pozici na Lichess.org v novém tabu pro analýzu enginem (Stockfish).</li>
+                            <li><strong>Automatický FEN přenos:</strong> Pozice včetně tahu, rošád a en passant se
+                                korektně přenáší do Lichess analysis boardu.</li>
+                        </ul>
+                        <h4>🔧 Opravy diagramů</h4>
+                        <ul>
+                            <li><strong>Resize ve sloupcích:</strong> Diagramy ve sloupcových blocích se nyní správně
+                                překreslí při změně rozložení (1:1, 1:2, 2:1).</li>
+                            <li><strong>Skryté zarovnání:</strong> Tlačítka plovoucího zarovnání (vlevo/střed/vpravo)
+                                jsou automaticky skryta, pokud je diagram uvnitř sloupcového bloku.</li>
+                        </ul>
+                    </div>
+                </div>
+                <!-- 2026-02-14 v29 -->
+                <div class="changelog-entry">
+                    <div class="changelog-date">14. 2. 2026</div>
+                    <div class="changelog-version">v29</div>
+                    <div class="changelog-content">
+                        <h4>📐 Sloupcové bloky v editoru (Avia-style)</h4>
+                        <ul>
+                            <li><strong>Nové tlačítko „Bloky":</strong> V toolbaru editoru – vložení 2-sloupcového
+                                rozložení s volbou poměru (1/2+1/2, 1/3+2/3, 2/3+1/3).</li>
+                            <li><strong>Plovoucí toolbar:</strong> Kliknutím na sloupcový blok se zobrazí toolbar pro
+                                přepínání rozložení nebo smazání bloku.</li>
+                            <li><strong>Responzivní design:</strong> Na mobilech se sloupce automaticky skládají pod
+                                sebe.</li>
+                        </ul>
+                        <h4>🔧 Opravy diagramů</h4>
+                        <ul>
+                            <li><strong>Centrovány diagramy:</strong> Oprava roztahování diagramu při zarovnání na
+                                střed – diagram nyní zachovává správnou šířku.</li>
+                            <li><strong>Popisek pouze ke čtení:</strong> Pole s popisem diagramu už nejde na frontendu
+                                editovat.</li>
+                            <li><strong>Diagram ve sloupcích:</strong> Diagramy vložené do sloupcového bloku se
+                                automaticky přizpůsobí šířce sloupce.</li>
+                        </ul>
+                    </div>
+                </div>
                 <!-- 2026-02-14 v28 -->
                 <div class="changelog-entry">
                     <div class="changelog-date">14. 2. 2026</div>

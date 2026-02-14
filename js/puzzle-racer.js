@@ -1092,16 +1092,26 @@ function showPuzzleDetail(idx) {
 }
 
 async function saveScore() {
-    const playerName = document.getElementById('playerName').value;
-    if (!playerName) {
-        alert('Zadejte prosím své jméno.');
-        return;
+    let playerName;
+
+    if (loggedInUser) {
+        // Registered user: use their real name, no input needed
+        playerName = loggedInUser.realName || loggedInUser.username;
+    } else {
+        // Anonymous: require name from input
+        playerName = document.getElementById('playerName')?.value;
+        if (!playerName) {
+            alert('Zadejte prosím své jméno.');
+            return;
+        }
     }
 
     try {
+        const headers = { 'Content-Type': 'application/json' };
+
         const res = await fetch(`${API_URL}/racer/save`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers,
             body: JSON.stringify({
                 score,
                 playerName,
@@ -1115,9 +1125,10 @@ async function saveScore() {
         });
 
         if (res.ok) {
-            // Save name for next time
-            localStorage.setItem('puzzle_racer_name', playerName);
-
+            if (!loggedInUser) {
+                // Save name for next time (anonymous only)
+                localStorage.setItem('puzzle_racer_name', playerName);
+            }
             alert('Výsledek uložen!');
             location.reload();
         } else {
@@ -1160,10 +1171,15 @@ async function loadLeaderboard(period = 'all') {
             if (index === 1) medal = '🥈 ';
             if (index === 2) medal = '🥉 ';
 
+            // Distinguish registered vs anonymous
+            const userIcon = entry.isRegistered
+                ? '<i class="fa-solid fa-circle-check" style="color: #4ade80; margin-right: 0.3rem;" title="Registrovaný hráč"></i>'
+                : '<i class="fa-solid fa-user-secret" style="color: var(--text-muted); margin-right: 0.3rem; opacity: 0.5;" title="Anonymní hráč"></i>';
+
             return `
                 <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
                     <td style="padding: 1rem; color: var(--text-muted);">#${index + 1}</td>
-                    <td style="padding: 1rem; font-weight: 600;">${medal}${escapeHtml(entry.playerName)}</td>
+                    <td style="padding: 1rem; font-weight: 600;">${medal}${userIcon}${escapeHtml(entry.playerName)}</td>
                     <td style="padding: 1rem; color: #4ade80; font-weight: 700; font-size: 1.1rem;">${entry.score}</td>
                     <td style="padding: 1rem; color: var(--text-muted); font-size: 0.85rem;">${new Date(entry.createdAt).toLocaleString('cs-CZ')}</td>
                 </tr>
@@ -1329,8 +1345,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Auto-fill name from user or localStorage
     if (loggedInUser) {
-        const nameInput = document.getElementById('playerName');
-        if (nameInput) nameInput.value = loggedInUser.realName || loggedInUser.username;
+        // Hide name input, show registered label + save button
+        const nameWrapper = document.getElementById('nameInputWrapper');
+        if (nameWrapper) {
+            const displayName = loggedInUser.realName || loggedInUser.username;
+            nameWrapper.innerHTML = `
+                <span style="display: flex; align-items: center; gap: 0.5rem; color: #4ade80; font-weight: 600;">
+                    <i class="fa-solid fa-circle-check"></i> ${displayName}
+                </span>
+                <button class="btn-primary" onclick="window.saveScore()">
+                    <i class="fa-solid fa-save"></i> Uložit
+                </button>
+            `;
+        }
         // Load personal stats (also sets personalBest)
         loadPersonalStats();
         // Hide anonymous CTA

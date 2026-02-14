@@ -1645,3 +1645,66 @@ footer {
         transform: translateY(0);
     }
 }
+
+/* ==========================================
+   Content Column Blocks (Avia-style layouts)
+   ========================================== */
+
+.content-columns {
+    display: flex;
+    gap: 1.5rem;
+    margin: 1.5rem 0;
+    align-items: flex-start;
+}
+
+.content-columns .content-col {
+    min-width: 0;
+    /* Prevent flex children from overflowing */
+}
+
+/* Layout ratios */
+.content-columns[data-layout="50-50"] .content-col {
+    flex: 1;
+}
+
+.content-columns[data-layout="33-67"] .content-col:first-child {
+    flex: 1;
+}
+
+.content-columns[data-layout="33-67"] .content-col:last-child {
+    flex: 2;
+}
+
+.content-columns[data-layout="67-33"] .content-col:first-child {
+    flex: 2;
+}
+
+.content-columns[data-layout="67-33"] .content-col:last-child {
+    flex: 1;
+}
+
+/* Mobile: stack vertically */
+@media (max-width: 768px) {
+    .content-columns {
+        flex-direction: column;
+    }
+
+    .content-columns .content-col {
+        flex: 1 1 100% !important;
+    }
+}
+
+/* Diagram inside column blocks */
+.content-columns .diagram-book {
+    max-width: 100% !important;
+    float: none !important;
+    margin: 0 auto !important;
+    overflow: hidden;
+}
+
+/* Description field - read-only on frontend */
+.book-description {
+    user-select: none;
+    cursor: default;
+    pointer-events: none;
+}

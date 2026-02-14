@@ -1168,6 +1168,7 @@ function insertDiagramBookToEditor(diagrams, savedRange) {
                     try {
                         const viewer = new DiagramViewer(boardContainer.id);
                         viewer.load(diagrams[0]);
+                        insertedBook._viewer = viewer;
                     } catch (e) {
                         console.warn('Failed to init viewer in editor:', e);
                     }
@@ -1200,6 +1201,7 @@ window.bookNav = function (bookId, direction) {
 
         const viewer = new DiagramViewer(boardContainer.id);
         viewer.load(d);
+        book._viewer = viewer;
     } else {
         // Fallback
         const boardHtml = window.generateMiniBoardGlobal ? window.generateMiniBoardGlobal(d.fen, 30) : '';
@@ -1228,12 +1230,12 @@ function insertDiagramToEditor(diagram, savedRange) {
 }
 
 function generateMiniBoard(fen, squareSize = 25) {
-    if (!fen) return `<div style="width:${squareSize * 8}px;height:${squareSize * 8}px;background:#b58863;margin:0 auto;border-radius:4px;"></div>`;
+    if (!fen) return `<div style="width:100%;aspect-ratio:1/1;max-width:${squareSize * 8}px;background:#b58863;margin:0 auto;border-radius:4px;"></div>`;
 
     const position = fen.split(' ')[0];
     const rows = position.split('/');
 
-    let html = '<table style="border-collapse: collapse; margin: 0 auto; border: 1px solid #555; border-radius: 2px; overflow: hidden;">';
+    let html = `<table style="border-collapse: collapse; margin: 0 auto; border: 1px solid #555; border-radius: 2px; overflow: hidden; width: 100%; max-width: ${squareSize * 8}px; table-layout: fixed;">`;
 
     for (let i = 0; i < 8; i++) {
         html += '<tr>';
@@ -1246,7 +1248,7 @@ function generateMiniBoard(fen, squareSize = 25) {
                 for (let k = 0; k < emptyCount; k++) {
                     const isLight = (i + colIdx) % 2 === 0;
                     const bg = isLight ? '#f0d9b5' : '#b58863';
-                    html += `<td style="width:${squareSize}px;height:${squareSize}px;background:${bg};"></td>`;
+                    html += `<td style="width:12.5%;aspect-ratio:1/1;background:${bg};"></td>`;
                     colIdx++;
                 }
             } else {
@@ -1256,7 +1258,7 @@ function generateMiniBoard(fen, squareSize = 25) {
                 const piece = char.toUpperCase();
                 const pieceUrl = `https://chessboardjs.com/img/chesspieces/wikipedia/${color}${piece}.png`;
 
-                html += `<td style="width:${squareSize}px;height:${squareSize}px;background:${bg};padding:0;">
+                html += `<td style="width:12.5%;aspect-ratio:1/1;background:${bg};padding:0;">
                     <img src="${pieceUrl}" style="width:100%;height:100%;display:block;">
                 </td>`;
                 colIdx++;
@@ -2591,6 +2593,296 @@ function showColorPicker() {
 }
 
 // ================================
+// COLUMN BLOCK INSERTION
+// ================================
+
+function insertColumnBlock() {
+    const content = document.getElementById('articleContent');
+    const selection = window.getSelection();
+
+    // If cursor is inside a content-columns block, move cursor after it
+    if (selection.rangeCount > 0) {
+        let node = selection.getRangeAt(0).commonAncestorContainer;
+        while (node && node !== content) {
+            if (node.nodeType === 1 && node.classList?.contains('content-columns')) {
+                let afterBlock = node.nextElementSibling;
+                if (!afterBlock || afterBlock.tagName !== 'P') {
+                    afterBlock = document.createElement('p');
+                    afterBlock.innerHTML = '<br>';
+                    node.parentNode.insertBefore(afterBlock, node.nextSibling);
+                }
+                const newRange = document.createRange();
+                newRange.setStart(afterBlock, 0);
+                newRange.collapse(true);
+                selection.removeAllRanges();
+                selection.addRange(newRange);
+                content.focus();
+                updatePreview();
+                return;
+            }
+            node = node.parentNode;
+        }
+    }
+
+    // Show layout picker popup
+    const existing = document.getElementById('columnLayoutPicker');
+    if (existing) { existing.remove(); return; }
+
+    const popup = document.createElement('div');
+    popup.id = 'columnLayoutPicker';
+    popup.style.cssText = `
+        position: fixed; z-index: 10300;
+        background: linear-gradient(135deg, #1e293b, #0f172a);
+        border: 1px solid rgba(255,255,255,0.12);
+        border-radius: 12px;
+        padding: 0.75rem;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+        display: flex; gap: 8px;
+    `;
+
+    // Position near the button
+    const btn = document.querySelector('[onclick="insertColumnBlock()"]');
+    if (btn) {
+        const rect = btn.getBoundingClientRect();
+        popup.style.top = `${rect.bottom + 8}px`;
+        popup.style.left = `${rect.left}px`;
+    }
+
+    const layouts = [
+        { value: '50-50', label: '1/2 + 1/2', bars: [1, 1] },
+        { value: '33-67', label: '1/3 + 2/3', bars: [1, 2] },
+        { value: '67-33', label: '2/3 + 1/3', bars: [2, 1] },
+    ];
+
+    layouts.forEach(l => {
+        const opt = document.createElement('button');
+        opt.style.cssText = `
+            display: flex; flex-direction: column; align-items: center; gap: 6px;
+            padding: 0.6rem 0.8rem; border-radius: 8px;
+            background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1);
+            color: rgba(255,255,255,0.8); cursor: pointer; transition: all 0.2s;
+            min-width: 70px;
+        `;
+        opt.onmouseenter = () => { opt.style.background = 'rgba(56, 189, 248, 0.15)'; opt.style.borderColor = 'rgba(56, 189, 248, 0.4)'; };
+        opt.onmouseleave = () => { opt.style.background = 'rgba(255,255,255,0.06)'; opt.style.borderColor = 'rgba(255,255,255,0.1)'; };
+
+        // Visual bars representing column ratio
+        const barsDiv = document.createElement('div');
+        barsDiv.style.cssText = 'display: flex; gap: 3px; width: 100%; height: 20px;';
+        l.bars.forEach(flex => {
+            const bar = document.createElement('div');
+            bar.style.cssText = `flex: ${flex}; background: rgba(56, 189, 248, 0.3); border-radius: 3px; border: 1px solid rgba(56, 189, 248, 0.4);`;
+            barsDiv.appendChild(bar);
+        });
+        opt.appendChild(barsDiv);
+
+        const label = document.createElement('span');
+        label.style.cssText = 'font-size: 0.7rem; opacity: 0.7;';
+        label.textContent = l.label;
+        opt.appendChild(label);
+
+        opt.onmousedown = (e) => {
+            e.preventDefault();
+            popup.remove();
+            doInsertColumns(l.value);
+        };
+        popup.appendChild(opt);
+    });
+
+    document.body.appendChild(popup);
+
+    // Close on click outside
+    setTimeout(() => {
+        const closeHandler = (e) => {
+            if (!popup.contains(e.target) && e.target !== btn) {
+                popup.remove();
+                document.removeEventListener('mousedown', closeHandler);
+            }
+        };
+        document.addEventListener('mousedown', closeHandler);
+    }, 50);
+}
+
+function doInsertColumns(layout) {
+    const content = document.getElementById('articleContent');
+    if (!content) return;
+
+    // Ensure editor has focus and a valid selection
+    const sel = window.getSelection();
+    if (!sel.rangeCount || !content.contains(sel.anchorNode)) {
+        content.focus();
+        const range = document.createRange();
+        range.selectNodeContents(content);
+        range.collapse(false); // move to end
+        sel.removeAllRanges();
+        sel.addRange(range);
+    }
+
+    const html = `<p><br></p>
+<div class="content-columns" data-layout="${layout}" contenteditable="false" style="
+    display: flex; gap: 1.5rem; margin: 1.5rem 0;
+">
+    <div class="content-col" contenteditable="true" style="
+        flex: ${layout === '67-33' ? '2' : '1'};
+        min-height: 60px;
+        padding: 0.75rem;
+        border: 1px dashed rgba(255,255,255,0.15);
+        border-radius: 8px;
+        background: rgba(255,255,255,0.02);
+    "><p><br></p></div>
+    <div class="content-col" contenteditable="true" style="
+        flex: ${layout === '33-67' ? '2' : '1'};
+        min-height: 60px;
+        padding: 0.75rem;
+        border: 1px dashed rgba(255,255,255,0.15);
+        border-radius: 8px;
+        background: rgba(255,255,255,0.02);
+    "><p><br></p></div>
+</div>
+<p><br></p>`;
+
+    document.execCommand('insertHTML', false, html);
+
+    // Focus inside the first column
+    setTimeout(() => {
+        const cols = document.querySelectorAll('.content-columns .content-col');
+        const lastFirstCol = cols[cols.length - 2]; // second-to-last is the first col of the last inserted block
+        if (lastFirstCol) {
+            lastFirstCol.focus();
+            const range = document.createRange();
+            range.selectNodeContents(lastFirstCol);
+            range.collapse(true);
+            const sel = window.getSelection();
+            sel.removeAllRanges();
+            sel.addRange(range);
+        }
+    }, 10);
+
+    if (typeof updatePreview === 'function') updatePreview();
+}
+
+// ================================
+// COLUMN BLOCK TOOLBAR
+// ================================
+
+let columnToolbar = null;
+
+function initColumnToolbar() {
+    if (document.getElementById('columnBlockToolbar')) return;
+
+    columnToolbar = document.createElement('div');
+    columnToolbar.id = 'columnBlockToolbar';
+    columnToolbar.className = 'floating-toolbar';
+    columnToolbar.style.zIndex = '10001';
+    document.body.appendChild(columnToolbar);
+
+    // Hide on click outside
+    document.addEventListener('mousedown', (e) => {
+        if (!e.target.closest('#columnBlockToolbar') && !e.target.closest('.content-columns')) {
+            hideColumnToolbar();
+        }
+    });
+
+    // Editor listener
+    const editor = document.getElementById('articleContent');
+    if (editor) {
+        editor.addEventListener('click', (e) => {
+            const colBlock = e.target.closest('.content-columns');
+            if (colBlock && editor.contains(colBlock)) {
+                showColumnToolbar(colBlock);
+            }
+        });
+    }
+}
+
+function showColumnToolbar(colBlock) {
+    if (!columnToolbar) initColumnToolbar();
+
+    columnToolbar.innerHTML = '';
+    columnToolbar.classList.add('visible');
+
+    const currentLayout = colBlock.dataset.layout || '50-50';
+
+    // Layout options
+    const layouts = [
+        { value: '50-50', label: '1:1' },
+        { value: '33-67', label: '1:2' },
+        { value: '67-33', label: '2:1' },
+    ];
+
+    layouts.forEach(l => {
+        const btn = document.createElement('button');
+        btn.className = 'floating-btn';
+        btn.textContent = l.label;
+        btn.title = `Rozložení ${l.label}`;
+        btn.style.fontSize = '0.75rem';
+        btn.style.fontWeight = '600';
+        btn.style.minWidth = '36px';
+        if (currentLayout === l.value) {
+            btn.style.background = 'rgba(56, 189, 248, 0.3)';
+            btn.style.color = '#38bdf8';
+        }
+        btn.onclick = () => {
+            colBlock.dataset.layout = l.value;
+            const cols = colBlock.querySelectorAll('.content-col');
+            if (cols.length === 2) {
+                if (l.value === '50-50') {
+                    cols[0].style.flex = '1';
+                    cols[1].style.flex = '1';
+                } else if (l.value === '33-67') {
+                    cols[0].style.flex = '1';
+                    cols[1].style.flex = '2';
+                } else if (l.value === '67-33') {
+                    cols[0].style.flex = '2';
+                    cols[1].style.flex = '1';
+                }
+            }
+            if (typeof updatePreview === 'function') updatePreview();
+            // Resize any diagram boards inside this column block
+            setTimeout(() => {
+                colBlock.querySelectorAll('.diagram-book').forEach(book => {
+                    if (book._viewer && book._viewer.board) {
+                        book._viewer.board.resize();
+                    }
+                });
+            }, 100);
+            showColumnToolbar(colBlock); // Refresh active state
+        };
+        columnToolbar.appendChild(btn);
+    });
+
+    // Divider
+    const divider = document.createElement('div');
+    divider.className = 'floating-divider';
+    columnToolbar.appendChild(divider);
+
+    // Delete button
+    const btnDelete = document.createElement('button');
+    btnDelete.className = 'floating-btn';
+    btnDelete.innerHTML = '<i class="fa-solid fa-trash"></i>';
+    btnDelete.title = 'Smazat sloupcový blok';
+    btnDelete.style.color = '#ef4444';
+    btnDelete.onclick = () => {
+        if (confirm('Opravdu smazat tento sloupcový blok?')) {
+            colBlock.remove();
+            hideColumnToolbar();
+            if (typeof updatePreview === 'function') updatePreview();
+        }
+    };
+    columnToolbar.appendChild(btnDelete);
+
+    // Position the toolbar
+    const rect = colBlock.getBoundingClientRect();
+    columnToolbar.style.position = 'fixed';
+    columnToolbar.style.top = `${rect.top - 45}px`;
+    columnToolbar.style.left = `${rect.left}px`;
+}
+
+function hideColumnToolbar() {
+    if (columnToolbar) columnToolbar.classList.remove('visible');
+}
+
+// ================================
 // DRAG-OVER CSS INJECTION
 // ================================
 (function () {
@@ -2650,6 +2942,7 @@ window.tableToggleHighlightLast = tableToggleHighlightLast;
 window.tableToggleHideMobile = tableToggleHideMobile;
 window.tableCycleColumnWidth = tableCycleColumnWidth;
 window.showColorPicker = showColorPicker;
+window.insertColumnBlock = insertColumnBlock;
 
 // ================================
 // DIAGRAM INTERACTIONS (Edit/Delete)
@@ -2991,50 +3284,63 @@ function showDiagramToolbar(bookElement) {
     };
     diagramToolbar.appendChild(btnRefresh);
 
-    // Divider
-    const divider1 = document.createElement('div');
-    divider1.className = 'floating-divider';
-    diagramToolbar.appendChild(divider1);
+    // Float alignment buttons — only show when diagram is NOT inside a column block
+    const isInsideColumn = !!bookElement.closest('.content-columns');
+    if (!isInsideColumn) {
+        // Divider
+        const divider1 = document.createElement('div');
+        divider1.className = 'floating-divider';
+        diagramToolbar.appendChild(divider1);
 
-    // Float alignment buttons
-    const floatOptions = [
-        { value: 'left', icon: 'fa-align-left', title: 'Plovoucí vlevo' },
-        { value: 'none', icon: 'fa-align-center', title: 'Na střed (bez obtékání)' },
-        { value: 'right', icon: 'fa-align-right', title: 'Plovoucí vpravo' }
-    ];
+        const floatOptions = [
+            { value: 'left', icon: 'fa-align-left', title: 'Plovoucí vlevo' },
+            { value: 'none', icon: 'fa-align-center', title: 'Na střed (bez obtékání)' },
+            { value: 'right', icon: 'fa-align-right', title: 'Plovoucí vpravo' }
+        ];
 
-    floatOptions.forEach(opt => {
-        const btn = document.createElement('button');
-        btn.className = 'floating-btn';
-        btn.innerHTML = `<i class="fa-solid ${opt.icon}"></i>`;
-        btn.title = opt.title;
+        floatOptions.forEach(opt => {
+            const btn = document.createElement('button');
+            btn.className = 'floating-btn';
+            btn.innerHTML = `<i class="fa-solid ${opt.icon}"></i>`;
+            btn.title = opt.title;
 
-        // Highlight current float state
-        const currentFloat = bookElement.style.float || 'right';
-        if (currentFloat === opt.value || (opt.value === 'none' && !bookElement.style.float)) {
-            btn.style.background = 'rgba(212, 175, 55, 0.3)';
-            btn.style.color = '#d4af37';
-        }
-
-        btn.onclick = () => {
-            if (opt.value === 'none') {
-                bookElement.style.float = 'none';
-                bookElement.style.margin = '1.5rem auto';
-                bookElement.style.clear = 'both';
-            } else if (opt.value === 'left') {
-                bookElement.style.float = 'left';
-                bookElement.style.margin = '1rem 1.5rem 1rem 0';
-                bookElement.style.clear = 'left';
-            } else {
-                bookElement.style.float = 'right';
-                bookElement.style.margin = '1rem 0 1rem 1.5rem';
-                bookElement.style.clear = 'right';
+            // Highlight current float state
+            const currentFloat = bookElement.style.float || 'right';
+            if (currentFloat === opt.value || (opt.value === 'none' && !bookElement.style.float)) {
+                btn.style.background = 'rgba(212, 175, 55, 0.3)';
+                btn.style.color = '#d4af37';
             }
-            if (typeof updatePreview === 'function') updatePreview();
-            showDiagramToolbar(bookElement); // Refresh to update active state
-        };
-        diagramToolbar.appendChild(btn);
-    });
+
+            btn.onclick = () => {
+                if (opt.value === 'none') {
+                    bookElement.style.float = 'none';
+                    bookElement.style.margin = '1.5rem auto';
+                    bookElement.style.clear = 'both';
+                    bookElement.style.width = 'fit-content';
+                } else if (opt.value === 'left') {
+                    bookElement.style.float = 'left';
+                    bookElement.style.margin = '1rem 1.5rem 1rem 0';
+                    bookElement.style.clear = 'left';
+                    bookElement.style.width = '';
+                } else {
+                    bookElement.style.float = 'right';
+                    bookElement.style.margin = '1rem 0 1rem 1.5rem';
+                    bookElement.style.clear = 'right';
+                    bookElement.style.width = '';
+                }
+                // Resize chessboard.js board after layout change
+                setTimeout(() => {
+                    // The viewer is stored on the book element as _viewer (set by diagram-book.js)
+                    if (bookElement._viewer && bookElement._viewer.board) {
+                        bookElement._viewer.board.resize();
+                    }
+                }, 50);
+                if (typeof updatePreview === 'function') updatePreview();
+                showDiagramToolbar(bookElement); // Refresh to update active state
+            };
+            diagramToolbar.appendChild(btn);
+        });
+    } // end if (!isInsideColumn)
 
     // Divider
     const divider2 = document.createElement('div');
@@ -3089,8 +3395,12 @@ function hideDiagramToolbar() {
 // Init immediately if loaded
 if (document.readyState === 'complete') {
     initDiagramToolbar();
+    initColumnToolbar();
 } else {
-    window.addEventListener('load', initDiagramToolbar);
+    window.addEventListener('load', () => {
+        initDiagramToolbar();
+        initColumnToolbar();
+    });
 }
 // ================================
 // KEYBOARD SHORTCUTS & HELP
