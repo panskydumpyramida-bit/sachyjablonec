@@ -143,6 +143,49 @@ export async function updateStandings(competitions = null) {
                     }
                 }
 
+                // 4. If standings are empty but we have matches, create stub teams from schedule
+                // This handles tournaments that haven't started yet but have pairings scheduled
+                if (standings.length === 0 && competitionMatches.length > 0) {
+                    console.log(`[StandingsService] No standings yet for ${comp.name}, creating stub teams from schedule...`);
+                    const teamNames = new Set();
+                    for (const m of competitionMatches) {
+                        if (m.home) teamNames.add(m.home);
+                        if (m.away) teamNames.add(m.away);
+                    }
+
+                    let rank = 1;
+                    for (const teamName of teamNames) {
+                        const lowerName = teamName.toLowerCase();
+                        const isBizuterie = lowerName.includes('bižuterie') ||
+                            lowerName.includes('bizuterie') ||
+                            (lowerName.includes('jablonec') &&
+                                (lowerName.includes('tj') || lowerName.includes('šk') ||
+                                    lowerName.includes('sk') || lowerName.includes('ddm')));
+
+                        const schedule = competitionMatches.filter(m =>
+                            isMatch(teamName, m.home) || isMatch(teamName, m.away)
+                        ).map(m => {
+                            const isHome = m.home === teamName || m.home.includes(teamName);
+                            return {
+                                round: m.round,
+                                date: m.date || 'TBD',
+                                opponent: isHome ? m.away : m.home,
+                                result: m.result,
+                                isHome: isHome
+                            };
+                        });
+
+                        standings.push({
+                            rank: rank++,
+                            team: teamName,
+                            games: 0, wins: 0, draws: 0, losses: 0,
+                            points: 0, score: 0,
+                            isBizuterie,
+                            schedule
+                        });
+                    }
+                }
+
             } else {
                 // LEGACY: chess.cz parser (deprecated)
                 console.warn(`[StandingsService] ⚠️ LEGACY: Using chess.cz parser for ${comp.name} - this is deprecated!`);

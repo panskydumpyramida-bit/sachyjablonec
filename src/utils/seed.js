@@ -183,7 +183,7 @@ const initialCompetitions = [
     { id: "3363", name: "Krajský přebor mládeže", type: "chess-results", url: "https://s2.chess-results.com/tnr1303510.aspx?lan=5&art=46&SNode=S0", category: "youth", active: true },
     { id: "ks-st-zaku", name: "Krajská soutěž st. žáků", type: "chess-results", url: "https://s1.chess-results.com/tnr1310849.aspx?lan=5&art=0&SNode=S0", category: "youth", active: true },
     { id: "ks-vychod", name: "Krajská soutěž východ", type: "chess-results", url: "https://s2.chess-results.com/tnr1278502.aspx?lan=5&art=46&SNode=S0", category: "teams", active: true },
-    { id: "ks-vychod-finale", name: "KS východ – nadstavba", type: "chess-results", url: "https://s2.chess-results.com/tnr1350680.aspx?lan=5&art=46&SNode=S0", category: "teams", active: true },
+    { id: "ks-vychod-finale", name: "KS východ – nadstavba", type: "chess-results", url: "https://s1.chess-results.com/tnr1350680.aspx?lan=5&art=46&SNode=S0", category: "teams", active: true },
     { id: "kp-liberec", name: "Krajský přebor", type: "chess-results", url: "https://chess-results.com/tnr1276470.aspx?lan=5&art=46", category: "teams", active: true }
 ];
 

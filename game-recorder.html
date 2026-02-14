@@ -810,11 +810,24 @@
                         class="fa-solid fa-trash"></i></button>
             </div>
 
-            <!-- Turn Indicator (read-only) -->
-            <div id="turnIndicator"
-                style="text-align: center; padding: 0.5rem; background: rgba(0,0,0,0.2); border-radius: 6px; color: var(--text-muted); font-size: 0.9rem;">
-                <i class="fa-solid fa-chess-pawn" style="margin-right: 0.3rem;"></i>
-                <span id="turnIndicatorText">Bílý na tahu</span>
+            <!-- Turn + FEN Input -->
+            <div
+                style="display: flex; gap: 0.5rem; align-items: center; background: rgba(0,0,0,0.2); border-radius: 6px; padding: 0.4rem 0.5rem;">
+                <div style="display: flex; gap: 0.25rem; flex-shrink: 0;">
+                    <button id="turnWhiteBtn" class="tool-btn active" onclick="setDiagramTurn('w')" title="Bílý na tahu"
+                        style="width:30px; height:30px; font-size:0.9rem;">⬜</button>
+                    <button id="turnBlackBtn" class="tool-btn" onclick="setDiagramTurn('b')" title="Černý na tahu"
+                        style="width:30px; height:30px; font-size:0.9rem;">⬛</button>
+                </div>
+                <input type="text" id="diagramFenInput" placeholder="Vložte FEN..."
+                    style="flex: 1; padding: 0.3rem 0.5rem; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.15); color: #fff; border-radius: 4px; font-family: monospace; font-size: 0.75rem; min-width: 0;">
+                <button class="tool-btn" onclick="loadFenIntoDiagram()" title="Načíst FEN"
+                    style="width:30px; height:30px; font-size:0.8rem;">✓</button>
+                <button class="tool-btn" onclick="loadFenIntoDiagram('start')" title="Startovní pozice"
+                    style="width:auto; height:30px; font-size:0.7rem; padding: 0 0.4rem;">Start</button>
+                <button class="tool-btn" onclick="loadFenIntoDiagram('8/8/8/8/8/8/8/8 w - - 0 1')"
+                    title="Prázdná šachovnice"
+                    style="width:auto; height:30px; font-size:0.7rem; padding: 0 0.4rem;">∅</button>
             </div>
 
             <!-- Solver Admin UI -->

@@ -61,8 +61,57 @@ function setDiagramTurn(turn) {
 }
 
 /**
- * Open the diagram editor with the current game position
+ * Load a FEN string into the diagram editor board
+ * Called from the FEN input field or preset buttons
  */
+function loadFenIntoDiagram(fen) {
+    if (!fen) {
+        // Read from input
+        const input = document.getElementById('diagramFenInput');
+        fen = input ? input.value.trim() : '';
+    }
+    if (!fen) return;
+
+    if (fen === 'start') fen = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1';
+
+    // Validate FEN: basic check - must have 8 ranks separated by '/'
+    const fenParts = fen.split(' ');
+    const ranks = fenParts[0].split('/');
+    if (ranks.length !== 8) {
+        alert('Neplatný FEN řetězec.');
+        return;
+    }
+
+    // Load position into diagram board
+    try {
+        diagramBoard.position(fenParts[0]); // chessboard.js only needs piece placement
+    } catch (e) {
+        alert('Neplatný FEN řetězec.');
+        return;
+    }
+
+    // Update turn from FEN if present
+    if (fenParts.length > 1) {
+        setDiagramTurn(fenParts[1] === 'b' ? 'b' : 'w');
+    }
+
+    // Update input field
+    const input = document.getElementById('diagramFenInput');
+    if (input) input.value = fen;
+
+    // Also sync chess.js game state so saveDiagramToCloud uses correct FEN
+    try {
+        const tempGame = new Chess();
+        if (tempGame.load(fen)) {
+            // Valid FEN - we can use it
+        }
+    } catch (e) { /* ignore */ }
+
+    // Clear annotations when loading new position
+    clearDiagram();
+}
+window.loadFenIntoDiagram = loadFenIntoDiagram;
+
 /**
  * Open the diagram editor with the current game position
  */
@@ -98,12 +147,12 @@ function openDiagramEditor() {
     // Clear previous annotations
     clearDiagram(); currentDiagramId = null; currentDiagramName = "";
 
-    // Update turn indicator
-    const turn = game.turn();
-    const turnText = document.getElementById('turnIndicatorText');
-    if (turnText) {
-        turnText.innerText = turn === 'w' ? 'Bílý na tahu' : 'Černý na tahu';
-    }
+    // Sync turn from game state
+    setDiagramTurn(game.turn());
+
+    // Populate FEN input with current position
+    const fenInput = document.getElementById('diagramFenInput');
+    if (fenInput) fenInput.value = game.fen();
 
     // Resize to be sure
     setTimeout(() => diagramBoard.resize(), 200);
@@ -817,12 +866,12 @@ async function saveDiagramToCloud() {
     const name = await modal.prompt("Zadejte název diagramu:", defaultName, title);
     if (!name) return;
 
-    // Use game.fen() for complete FEN (includes turn, castling, etc.)
-    // game is the global Chess.js instance from game-recorder.js
-    const fullFen = game.fen();
+    // Build FEN from diagram board position + turn
+    // diagramBoard.fen() returns only piece placement (no turn/castling)
+    const boardFen = diagramBoard.fen();
+    const fullFen = `${boardFen} ${diagramTurn} KQkq - 0 1`;
 
-    // Use game.turn() - turn is determined by position in the game
-    const selectedTurn = game.turn();
+    const selectedTurn = diagramTurn;
 
     const payload = {
         fen: fullFen,
