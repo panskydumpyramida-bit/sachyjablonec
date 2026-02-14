@@ -369,7 +369,7 @@
         <div class="games-container">
             <div class="games-header">
                 <h1><i class="fa-solid fa-chess-board"></i> Partie</h1>
-                <div class="header-actions">
+                <div class="header-actions" id="authActions" style="display: none;">
                     <a href="/game-recorder" class="btn-primary" style="text-decoration: none;">
                         <i class="fa-solid fa-plus"></i> Nahrát partii
                     </a>
@@ -384,10 +384,10 @@
                 <!-- Left: Games panel -->
                 <div class="games-panel">
                     <div class="tabs">
-                        <button class="tab-btn active" onclick="switchTab('recorded')">
+                        <button class="tab-btn" id="recordedTab" onclick="switchTab('recorded')" style="display: none;">
                             <i class="fa-solid fa-microphone"></i> Nahrané
                         </button>
-                        <button class="tab-btn" onclick="switchTab('articles')">
+                        <button class="tab-btn active" onclick="switchTab('articles')">
                             <i class="fa-solid fa-newspaper"></i> Z článků
                         </button>
                     </div>
@@ -450,13 +450,33 @@
     <script src="js/game-viewer2.js?v=final59"></script>
     <script>
         let allGames = [];
-        let currentTab = 'recorded';
+        let currentTab = 'articles';
         let currentViewer = null;
         let selectedGameIndex = -1;
 
         document.addEventListener('DOMContentLoaded', () => {
-            loadRecordedGames();
+            loadArticleGames();
+            // Wait for auth to initialize, then show/hide elements
+            const checkAuth = () => {
+                if (typeof auth !== 'undefined') {
+                    updateAuthUI();
+                    auth.onChange(() => updateAuthUI());
+                } else {
+                    setTimeout(checkAuth, 200);
+                }
+            };
+            checkAuth();
         });
+
+        function updateAuthUI() {
+            const loggedIn = auth.isLoggedIn();
+            document.getElementById('authActions').style.display = loggedIn ? '' : 'none';
+            const recTab = document.getElementById('recordedTab');
+            recTab.style.display = loggedIn ? '' : 'none';
+            if (!loggedIn && currentTab === 'recorded') {
+                switchTab('articles');
+            }
+        }
 
         function switchTab(tab) {
             currentTab = tab;
