@@ -681,6 +681,9 @@ function showDiagramSelectorModal(diagrams, savedRange, initialSelection = []) {
             
             <div style="display: flex; gap: 1rem; margin-bottom: 1rem; align-items: center;">
                 <input type="text" class="diagram-search" id="diagramSearch" placeholder="Hledat..." style="flex: 1;" autofocus>
+                <a href="/game-recorder.html" target="_blank" style="display: flex; align-items: center; gap: 0.4rem; padding: 0.5rem 0.8rem; background: rgba(74, 222, 128, 0.15); border: 1px solid rgba(74, 222, 128, 0.4); border-radius: 6px; color: #4ade80; font-size: 0.85rem; text-decoration: none; white-space: nowrap; transition: all 0.2s;" onmouseover="this.style.background='rgba(74,222,128,0.25)'" onmouseout="this.style.background='rgba(74,222,128,0.15)'">
+                    <i class="fa-solid fa-plus"></i> Nový diagram
+                </a>
                 <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; font-size: 0.85rem; color: #aaa; white-space: nowrap;">
                     <input type="checkbox" id="multiSelectMode" style="width: auto;">
                     <i class="fa-solid fa-layer-group"></i> Více najednou
