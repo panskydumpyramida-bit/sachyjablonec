@@ -1126,7 +1126,7 @@ class GameViewer2 {
                 else if (char === ')') {
                     varDepth--;
                     if (varDepth === 0) {
-                        tokens.push({ type: 'variation', content: varContent, history });
+                        tokens.push({ type: 'variation', content: varContent, history, parentPly: this.lastMatchedPly });
                         state = 'text';
                     } else { varContent += char; }
                 } else { varContent += char; }
@@ -1249,6 +1249,7 @@ class GameViewer2 {
                         if (bt.type === 'comment') {
                             html += `<div class="gv2-comment-row"><span class="gv2-comment">${this.escapeHtml(bt.text)}</span></div>`;
                         } else if (bt.type === 'variation') {
+                            if (bt.parentPly !== undefined) this.lastMatchedPly = bt.parentPly;
                             html += `<div class="gv2-comment-row">${this.renderVariation(bt.content, bt.history)}</div>`;
                         }
                     }
@@ -1269,6 +1270,7 @@ class GameViewer2 {
             } else if (token.type === 'comment') {
                 html += `<div class="gv2-comment-row"><span class="gv2-comment">${this.escapeHtml(token.text)}</span></div>`;
             } else if (token.type === 'variation') {
+                if (token.parentPly !== undefined) this.lastMatchedPly = token.parentPly;
                 html += `<div class="gv2-comment-row">${this.renderVariation(token.content, token.history)}</div>`;
             } else if (token.type === 'result') {
                 html += `<div class="gv2-comment-row"><span class="gv2-result">${token.text}</span></div>`;
