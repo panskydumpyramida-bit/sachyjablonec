@@ -196,8 +196,8 @@ const UpcomingMatches = {
 
                     <!-- Footer: Home/Away + Round -->
                     <div style="display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 3%; margin-top: 1%;">
-                        <span style="font-size: clamp(0.45rem, 2vw, 0.6rem); font-weight: 700; color: ${homeAwayColor}; text-transform: uppercase; letter-spacing: 0.5px;">${homeAway}</span>
-                        <span style="font-size: clamp(0.45rem, 2vw, 0.55rem); color: rgba(255,255,255,0.5); white-space: nowrap;">${m.round}. kolo</span>
+                        <span style="font-size: clamp(0.55rem, 2.5vw, 0.75rem); font-weight: 700; color: ${homeAwayColor}; text-transform: uppercase; letter-spacing: 0.5px;">${homeAway}</span>
+                        <span style="font-size: clamp(0.55rem, 2.5vw, 0.7rem); color: rgba(255,255,255,0.5); white-space: nowrap;">${m.round}. kolo</span>
                     </div>
 
                 </div>
