@@ -500,7 +500,7 @@
             <p>Webové stránky ŠO TJ Bižuterie Jablonec nad Nisou</p>
             <div class="hero-badges">
                 <span class="badge badge-gold">♟️ Šachy Jablonec</span>
-                <span class="badge badge-blue">Verze v25</span>
+                <span class="badge badge-blue">Verze v29</span>
                 <span class="badge badge-green">Únor 2026</span>
             </div>
         </div>
@@ -556,6 +556,13 @@
                 <div>
                     <div class="toc-text">Galerie</div>
                     <div class="toc-desc">Fotografie</div>
+                </div>
+            </a>
+            <a href="#columns" class="toc-item">
+                <div class="toc-num" style="background: rgba(99,102,241,0.1); color: #818cf8;">7</div>
+                <div>
+                    <div class="toc-text">Sloupcové bloky</div>
+                    <div class="toc-desc">Rozložení obsahu do sloupců</div>
                 </div>
             </a>
         </div>
@@ -669,6 +676,11 @@
                             <td>🧩</td>
                             <td>Diagram</td>
                             <td>Vloží šachový diagram</td>
+                        </tr>
+                        <tr>
+                            <td>📐</td>
+                            <td>Bloky</td>
+                            <td>Vloží sloupcový blok (2 sloupce)</td>
                         </tr>
                         <tr>
                             <td>🖼️</td>
@@ -944,6 +956,93 @@
             </div>
         </div>
 
+        <!-- 7. Sloupcové bloky -->
+        <div class="section" id="columns">
+            <div class="section-header">
+                <i class="fa-solid fa-columns" style="background: rgba(99,102,241,0.1); color: #818cf8;"></i>
+                <h2>Sloupcové bloky</h2>
+            </div>
+
+            <div class="card">
+                <h3>Co jsou sloupcové bloky?</h3>
+                <p>Rozdělení obsahu do dvou sloupců vedle sebe – ideální pro kombinaci textu s diagramem, obrázkem či
+                    tabulkou. Na mobilech se sloupce automaticky skládají pod sebe.</p>
+            </div>
+
+            <div class="card">
+                <h3>Jak vložit sloupcový blok</h3>
+                <ol>
+                    <li>V toolbaru klikněte na 📐 <strong>Bloky</strong></li>
+                    <li>Zobrazí se výběr rozložení:</li>
+                </ol>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Rozložení</th>
+                            <th>Popis</th>
+                            <th>Ideální pro</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>1/2 + 1/2</strong></td>
+                            <td>Dva stejně široké sloupce</td>
+                            <td>Text + diagram</td>
+                        </tr>
+                        <tr>
+                            <td><strong>1/3 + 2/3</strong></td>
+                            <td>Úzký levý, široký pravý</td>
+                            <td>Obrázek + popis</td>
+                        </tr>
+                        <tr>
+                            <td><strong>2/3 + 1/3</strong></td>
+                            <td>Široký levý, úzký pravý</td>
+                            <td>Hlavní text + sidebar</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <div class="callout callout-tip">
+                    <span class="callout-icon">💡</span>
+                    <span>Po kliknutí na rozložení se vloží blok se dvěma editovatelnými oblastmi. Pište přímo do nich.
+                    </span>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>Plovoucí toolbar</h3>
+                <p>Kliknutím na sloupcový blok se zobrazí plovoucí toolbar s těmito možnostmi:</p>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Akce</th>
+                            <th>Popis</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>📐 Přepnout rozložení</td>
+                            <td>Změna poměru sloupců (50/50, 33/67, 67/33)</td>
+                        </tr>
+                        <tr>
+                            <td>🗑️ Smazat blok</td>
+                            <td>Odstraní celý sloupcový blok</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="card">
+                <h3>Diagram ve sloupci</h3>
+                <p>Diagramy vložené do sloupcového bloku se automaticky přizpůsobí šířce sloupce. Float (obtékání) je
+                    v rámci sloupce vypnutý.</p>
+                <div class="callout callout-info">
+                    <span class="callout-icon">ℹ️</span>
+                    <span>Popisek diagramu je na veřejném webu pouze ke čtení – editovat ho můžete jen v admin
+                        editoru.</span>
+                </div>
+            </div>
+        </div>
+
         <!-- Keyboard Shortcuts -->
         <div class="section" id="shortcuts">
             <div class="section-header">
@@ -1053,7 +1152,7 @@
 
         <div class="manual-footer">
             📧 Potřebujete pomoc? Kontaktujte technickou podporu.<br>
-            Manuál v2.0 | Aktualizováno: 13. února 2026
+            Manuál v3.0 | Aktualizováno: 14. února 2026
         </div>
 
     </div>

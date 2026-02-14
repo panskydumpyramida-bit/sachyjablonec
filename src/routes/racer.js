@@ -220,11 +220,29 @@ router.post('/save', async (req, res) => {
             return res.status(400).json({ error: 'Score is required' });
         }
 
+        // For registered users, resolve name from DB (ignore client-sent playerName)
+        let resolvedName = playerName || 'Anonym';
+        const parsedUserId = userId ? parseInt(userId) : null;
+
+        if (parsedUserId) {
+            try {
+                const user = await prisma.user.findUnique({
+                    where: { id: parsedUserId },
+                    select: { realName: true, username: true }
+                });
+                if (user) {
+                    resolvedName = user.realName || user.username;
+                }
+            } catch (e) {
+                console.warn('Could not resolve user name for userId', parsedUserId, e);
+            }
+        }
+
         const result = await prisma.puzzleRaceResult.create({
             data: {
                 score: parseInt(score),
-                playerName: playerName || 'Anonymous',
-                userId: userId ? parseInt(userId) : null,
+                playerName: resolvedName,
+                userId: parsedUserId,
                 mode: mode || 'vanilla',
                 correctCount: correctCount != null ? parseInt(correctCount) : null,
                 wrongCount: wrongCount != null ? parseInt(wrongCount) : null,
@@ -336,12 +354,28 @@ router.get('/leaderboard', async (req, res) => {
             include: {
                 user: {
                     select: {
-                        username: true
+                        username: true,
+                        realName: true
                     }
                 }
             }
         });
-        res.json(leaderboard);
+
+        // Enrich with display info
+        const enriched = leaderboard.map(entry => ({
+            id: entry.id,
+            score: entry.score,
+            playerName: entry.userId && entry.user
+                ? (entry.user.realName || entry.user.username)
+                : entry.playerName,
+            isRegistered: !!entry.userId,
+            createdAt: entry.createdAt,
+            correctCount: entry.correctCount,
+            wrongCount: entry.wrongCount,
+            maxStreak: entry.maxStreak
+        }));
+
+        res.json(enriched);
     } catch (error) {
         console.error('Error fetching leaderboard:', error);
         res.status(500).json({ error: 'Failed to fetch leaderboard' });

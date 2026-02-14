@@ -35,6 +35,70 @@ const TOOL_COLORS = {
 // Track who is on turn for the diagram
 let diagramTurn = 'w'; // 'w' or 'b', default white
 
+// Piece palette state
+let selectedPalettePiece = null; // e.g. 'wQ', 'bN', 'remove', or null
+
+// Castling rights state
+let diagramCastling = { K: true, Q: true, k: true, q: true };
+
+// Track which diagram tab is active
+let currentDiagramTab = 'annotate'; // 'annotate' or 'position'
+
+/**
+ * Get castling string from current state (e.g. 'KQkq', 'Kq', '-')
+ */
+function getCastlingString() {
+    let s = '';
+    if (diagramCastling.K) s += 'K';
+    if (diagramCastling.Q) s += 'Q';
+    if (diagramCastling.k) s += 'k';
+    if (diagramCastling.q) s += 'q';
+    return s || '-';
+}
+
+/**
+ * Called when castling checkboxes change — update state and FEN
+ */
+function updateCastlingRights() {
+    diagramCastling.K = document.getElementById('castleWK')?.checked ?? true;
+    diagramCastling.Q = document.getElementById('castleWQ')?.checked ?? true;
+    diagramCastling.k = document.getElementById('castleBK')?.checked ?? true;
+    diagramCastling.q = document.getElementById('castleBQ')?.checked ?? true;
+    updateFenFromBoard();
+}
+window.updateCastlingRights = updateCastlingRights;
+
+/**
+ * Switch between diagram editor tabs (annotate / position)
+ */
+function switchDiagramTab(tab) {
+    currentDiagramTab = tab;
+
+    // Toggle tab buttons
+    document.querySelectorAll('.diagram-tab').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.tab === tab);
+    });
+
+    // Toggle tab content panels
+    const annotateTab = document.getElementById('diagramTabAnnotate');
+    const positionTab = document.getElementById('diagramTabPosition');
+    if (annotateTab) {
+        annotateTab.classList.toggle('active', tab === 'annotate');
+        annotateTab.style.display = tab === 'annotate' ? '' : 'none';
+    }
+    if (positionTab) {
+        positionTab.classList.toggle('active', tab === 'position');
+        positionTab.style.display = tab === 'position' ? '' : 'none';
+    }
+
+    // Deselect palette piece when switching to annotation mode
+    if (tab === 'annotate') {
+        selectedPalettePiece = null;
+        document.querySelectorAll('.palette-piece').forEach(el => el.classList.remove('active'));
+    }
+}
+window.switchDiagramTab = switchDiagramTab;
+
 /**
  * Set who is on turn and update UI
  */
@@ -95,6 +159,20 @@ function loadFenIntoDiagram(fen) {
         setDiagramTurn(fenParts[1] === 'b' ? 'b' : 'w');
     }
 
+    // Update castling rights from FEN if present
+    if (fenParts.length > 2) {
+        const c = fenParts[2];
+        diagramCastling.K = c.includes('K');
+        diagramCastling.Q = c.includes('Q');
+        diagramCastling.k = c.includes('k');
+        diagramCastling.q = c.includes('q');
+        const ids = { castleWK: 'K', castleWQ: 'Q', castleBK: 'k', castleBQ: 'q' };
+        for (const [id, key] of Object.entries(ids)) {
+            const cb = document.getElementById(id);
+            if (cb) cb.checked = diagramCastling[key];
+        }
+    }
+
     // Update input field
     const input = document.getElementById('diagramFenInput');
     if (input) input.value = fen;
@@ -146,6 +224,23 @@ function openDiagramEditor() {
 
     // Clear previous annotations
     clearDiagram(); currentDiagramId = null; currentDiagramName = "";
+
+    // Reset piece palette selection
+    selectedPalettePiece = null;
+    document.querySelectorAll('.palette-piece').forEach(el => el.classList.remove('active'));
+
+    // Reset castling rights to all checked
+    diagramCastling = { K: true, Q: true, k: true, q: true };
+    ['castleWK', 'castleWQ', 'castleBK', 'castleBQ'].forEach(id => {
+        const cb = document.getElementById(id);
+        if (cb) cb.checked = true;
+    });
+
+    // Default to Anotace tab
+    switchDiagramTab('annotate');
+
+    // Initialize piece palette
+    initPiecePalette();
 
     // Sync turn from game state
     setDiagramTurn(game.turn());
@@ -258,6 +353,9 @@ function getSquareFromCoords(x, y) {
 function handleInputStart(e) {
     if (solverState.isRecording) return; // Don't draw while recording moves
 
+    // In Pozice tab, only allow piece placement (not annotation drawing)
+    if (currentDiagramTab === 'position' && !selectedPalettePiece) return;
+
     e.preventDefault();
     const clientX = e.touches ? e.touches[0].clientX : e.clientX;
     const clientY = e.touches ? e.touches[0].clientY : e.clientY;
@@ -291,13 +389,37 @@ function handleInputEnd(e) {
 
     const endSquare = getSquareFromCoords(clientX, clientY);
 
+    // --- Piece palette mode: place/remove piece ---
+    if (selectedPalettePiece && startSquare && endSquare && startSquare === endSquare) {
+        if (selectedPalettePiece === 'remove') {
+            removePieceFromSquare(endSquare);
+        } else {
+            placePieceOnSquare(endSquare, selectedPalettePiece);
+        }
+        return;
+    }
+
     if (startSquare && endSquare) {
         if (currentTool === 'eraser') {
-            // Eraser logic logic for squares
+            // Eraser: click a square to remove highlight, drag to remove arrow
             if (startSquare === endSquare) {
+                // Remove square highlight
                 const sqIndex = currentAnnotations.squares.findIndex(s => s.square === startSquare);
                 if (sqIndex >= 0) {
                     currentAnnotations.squares.splice(sqIndex, 1);
+                }
+                // Also remove any badge on that square
+                const badgeIndex = currentAnnotations.badges.findIndex(b => b.square === startSquare);
+                if (badgeIndex >= 0) {
+                    currentAnnotations.badges.splice(badgeIndex, 1);
+                }
+            } else {
+                // Drag from A to B with eraser = remove that arrow
+                const arrowIndex = currentAnnotations.arrows.findIndex(
+                    a => a.start === startSquare && a.end === endSquare
+                );
+                if (arrowIndex >= 0) {
+                    currentAnnotations.arrows.splice(arrowIndex, 1);
                 }
             }
         } else {
@@ -661,6 +783,25 @@ function exportDiagram() {
 
 }
 
+// --- Lichess Analysis Integration ---
+
+/**
+ * Open the current diagram position on Lichess.org for engine analysis.
+ * Constructs a Lichess analysis URL from the current board FEN.
+ * Lichess URL format: https://lichess.org/analysis/{FEN_with_underscores}
+ */
+function analyzeOnLichess() {
+    if (!diagramBoard) return;
+
+    const boardFen = diagramBoard.fen();
+    const fullFen = `${boardFen} ${diagramTurn} ${getCastlingString()} - 0 1`;
+
+    // Lichess uses underscores instead of spaces in the URL
+    const lichessUrl = `https://lichess.org/analysis/${fullFen.replace(/ /g, '_')}`;
+    window.open(lichessUrl, '_blank');
+}
+window.analyzeOnLichess = analyzeOnLichess;
+
 // --- Solver Admin Functions ---
 
 function enableMoveRecording(type) {
@@ -848,7 +989,72 @@ function getColorForType(type) {
     return '#ccc';
 }
 
+/**
+ * Validate position legality before saving
+ * Returns array of error messages (empty = valid)
+ */
+function validatePosition() {
+    if (!diagramBoard) return ['Šachovnice není inicializována.'];
+
+    const pos = diagramBoard.position();
+    const errors = [];
+
+    // Count pieces
+    let wK = 0, bK = 0, wP = 0, bP = 0;
+    let whiteTotal = 0, blackTotal = 0;
+
+    for (const [square, piece] of Object.entries(pos)) {
+        const color = piece[0]; // 'w' or 'b'
+        const type = piece[1];  // 'K', 'Q', 'R', 'B', 'N', 'P'
+        const rank = square[1]; // '1' to '8'
+
+        if (color === 'w') {
+            whiteTotal++;
+            if (type === 'K') wK++;
+            if (type === 'P') {
+                wP++;
+                if (rank === '1' || rank === '8') {
+                    errors.push(`Bílý pěšec na ${square} — pěšci nemohou stát na 1. nebo 8. řadě.`);
+                }
+            }
+        } else {
+            blackTotal++;
+            if (type === 'K') bK++;
+            if (type === 'P') {
+                bP++;
+                if (rank === '1' || rank === '8') {
+                    errors.push(`Černý pěšec na ${square} — pěšci nemohou stát na 1. nebo 8. řadě.`);
+                }
+            }
+        }
+    }
+
+    // King validation
+    if (wK === 0) errors.push('Chybí bílý král.');
+    if (wK > 1) errors.push(`Na šachovnici je ${wK} bílých králů (musí být právě 1).`);
+    if (bK === 0) errors.push('Chybí černý král.');
+    if (bK > 1) errors.push(`Na šachovnici je ${bK} černých králů (musí být právě 1).`);
+
+    // Pawn count
+    if (wP > 8) errors.push(`Bílý má ${wP} pěšců (max 8).`);
+    if (bP > 8) errors.push(`Černý má ${bP} pěšců (max 8).`);
+
+    // Total piece count
+    if (whiteTotal > 16) errors.push(`Bílý má ${whiteTotal} figur (max 16).`);
+    if (blackTotal > 16) errors.push(`Černý má ${blackTotal} figur (max 16).`);
+
+    return errors;
+}
+
 async function saveDiagramToCloud() {
+    // Validate position before saving
+    const posErrors = validatePosition();
+    if (posErrors.length > 0) {
+        const msg = '⚠️ Neplatná pozice:\n\n• ' + posErrors.join('\n• ') + '\n\nOpravte pozici a zkuste to znovu.';
+        await modal.alert(msg, 'Neplatná pozice');
+        return;
+    }
+
     // Wait for auth to be fully initialized (token loaded from localstorage)
     let retries = 0;
     while ((!window.auth || !auth.token) && retries < 20) {
@@ -869,7 +1075,7 @@ async function saveDiagramToCloud() {
     // Build FEN from diagram board position + turn
     // diagramBoard.fen() returns only piece placement (no turn/castling)
     const boardFen = diagramBoard.fen();
-    const fullFen = `${boardFen} ${diagramTurn} KQkq - 0 1`;
+    const fullFen = `${boardFen} ${diagramTurn} ${getCastlingString()} - 0 1`;
 
     const selectedTurn = diagramTurn;
 
@@ -909,3 +1115,158 @@ async function saveDiagramToCloud() {
         await modal.alert("Chyba při komunikaci se serverem.", "Chyba sítě");
     }
 }
+
+// --- Piece Palette Functions ---
+
+/**
+ * Select a palette piece (or deselect if same one clicked again)
+ */
+function selectPalettePiece(piece) {
+    if (selectedPalettePiece === piece) {
+        // Deselect
+        selectedPalettePiece = null;
+    } else {
+        selectedPalettePiece = piece;
+    }
+
+    // Update visual state
+    document.querySelectorAll('.palette-piece').forEach(el => {
+        el.classList.toggle('active', el.dataset.piece === selectedPalettePiece);
+    });
+}
+window.selectPalettePiece = selectPalettePiece;
+
+/**
+ * Place a piece on a given square using chessboard.js position API
+ */
+function placePieceOnSquare(square, piece) {
+    if (!diagramBoard) return;
+
+    const pos = diagramBoard.position();
+    pos[square] = piece; // e.g. pos['e4'] = 'wQ'
+    diagramBoard.position(pos, false); // false = no animation
+
+    updateFenFromBoard();
+}
+
+/**
+ * Remove a piece from a given square
+ */
+function removePieceFromSquare(square) {
+    if (!diagramBoard) return;
+
+    const pos = diagramBoard.position();
+    delete pos[square];
+    diagramBoard.position(pos, false);
+
+    updateFenFromBoard();
+}
+
+/**
+ * Sync castling rights based on king positions.
+ * Castling is impossible if kings are not on their starting squares.
+ */
+function syncCastlingWithBoard() {
+    if (!diagramBoard) return;
+
+    const pos = diagramBoard.position();
+    const whiteKingOnE1 = pos['e1'] === 'wK';
+    const blackKingOnE8 = pos['e8'] === 'bK';
+
+    // White castling: disable if king not on e1
+    const wkCb = document.getElementById('castleWK');
+    const wqCb = document.getElementById('castleWQ');
+    if (wkCb) {
+        wkCb.disabled = !whiteKingOnE1;
+        if (!whiteKingOnE1) { wkCb.checked = false; diagramCastling.K = false; }
+    }
+    if (wqCb) {
+        wqCb.disabled = !whiteKingOnE1;
+        if (!whiteKingOnE1) { wqCb.checked = false; diagramCastling.Q = false; }
+    }
+
+    // Black castling: disable if king not on e8
+    const bkCb = document.getElementById('castleBK');
+    const bqCb = document.getElementById('castleBQ');
+    if (bkCb) {
+        bkCb.disabled = !blackKingOnE8;
+        if (!blackKingOnE8) { bkCb.checked = false; diagramCastling.k = false; }
+    }
+    if (bqCb) {
+        bqCb.disabled = !blackKingOnE8;
+        if (!blackKingOnE8) { bqCb.checked = false; diagramCastling.q = false; }
+    }
+}
+
+/**
+ * Sync the FEN input field with the current board position
+ */
+function updateFenFromBoard() {
+    if (!diagramBoard) return;
+
+    syncCastlingWithBoard();
+
+    const boardFen = diagramBoard.fen();
+    const fullFen = `${boardFen} ${diagramTurn} ${getCastlingString()} - 0 1`;
+    const input = document.getElementById('diagramFenInput');
+    if (input) input.value = fullFen;
+}
+
+/**
+ * Initialize piece palette: click to select, drag to place
+ */
+function initPiecePalette() {
+    const palette = document.getElementById('piecePalette');
+    if (!palette || palette._initialized) return;
+    palette._initialized = true;
+
+    // Click handler for palette pieces
+    palette.querySelectorAll('.palette-piece').forEach(el => {
+        el.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            selectPalettePiece(el.dataset.piece);
+        });
+
+        // HTML5 Drag start
+        if (el.dataset.piece && el.dataset.piece !== 'remove') {
+            el.addEventListener('dragstart', (e) => {
+                e.dataTransfer.setData('text/plain', el.dataset.piece);
+                e.dataTransfer.effectAllowed = 'copy';
+            });
+        }
+    });
+
+    // Drop handler on the SVG overlay (sits on top of the board, z-index 13000)
+    const overlay = document.getElementById('diagramOverlay');
+    if (overlay) {
+        overlay.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'copy';
+        });
+
+        overlay.addEventListener('drop', (e) => {
+            e.preventDefault();
+            const piece = e.dataTransfer.getData('text/plain');
+            if (!piece || piece === 'remove') return;
+
+            const square = getSquareFromCoords(e.clientX, e.clientY);
+            if (square) {
+                placePieceOnSquare(square, piece);
+            }
+        });
+    }
+}
+
+// Auto-open diagram editor if URL has ?mode=diagram
+document.addEventListener('DOMContentLoaded', () => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('mode') === 'diagram') {
+        // Small delay to let the page fully initialize
+        setTimeout(() => {
+            if (typeof openDiagramEditor === 'function') {
+                openDiagramEditor();
+            }
+        }, 500);
+    }
+});

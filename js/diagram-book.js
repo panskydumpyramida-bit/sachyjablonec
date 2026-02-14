@@ -123,10 +123,12 @@
 
         // Update UI elements
         const toMoveEl = book.querySelector('.book-to-move');
+        const toMoveStandalone = book.querySelector('.book-to-move-standalone');
         const counterEl = book.querySelector('.book-counter');
 
 
         if (toMoveEl) toMoveEl.textContent = getToMoveText(d);
+        if (toMoveStandalone) toMoveStandalone.textContent = getToMoveText(d);
         if (counterEl) counterEl.textContent = `${current + 1} / ${diagrams.length}`;
 
         const descriptionEl = book.querySelector('.book-description');
@@ -307,8 +309,8 @@
                 opacity: 1;
             }
             .book-caption {
-                user-select: text;
-                cursor: text;
+                user-select: none;
+                cursor: default;
                 font-size: 0.85rem;
                 color: rgba(255,255,255,0.6);
                 text-align: center;
@@ -387,6 +389,13 @@
                 transform: rotate(-180deg);
                 color: #d4af37 !important;
             }
+            /* Diagram inside column blocks - constrain width */
+            .content-columns .diagram-book {
+                max-width: 100% !important;
+                float: none !important;
+                margin: 0 auto !important;
+                overflow: hidden;
+            }
             /* Mobile: full-width diagram but with small margins */
             @media (max-width: 600px) {
                 .diagram-book {
@@ -452,53 +461,56 @@
 
             // Update title and meta
             const titleEl = book.querySelector('.book-title');
-            const toMoveEl = book.querySelector('.book-to-move');
             const counterEl = book.querySelector('.book-counter');
 
             if (titleEl) titleEl.textContent = d.title || 'Diagram';
             if (counterEl) counterEl.textContent = `${current + 1} / ${diagrams.length}`;
 
-            if (toMoveEl) {
-                toMoveEl.textContent = getToMoveText(d);
+            // Create standalone meta-row with reset button OUTSIDE .book-nav
+            // so it's always visible even for single-diagram books
+            let metaRow = book.querySelector('.book-meta-row-standalone');
+            if (!metaRow) {
+                metaRow = document.createElement('div');
+                metaRow.className = 'book-meta-row-standalone';
+                metaRow.style.cssText = 'display: flex; align-items: center; justify-content: center; gap: 0.5rem; padding: 0.35rem 0.75rem; background: rgba(255,255,255,0.05); border-radius: 8px; border: 1px solid rgba(255,255,255,0.08); margin-top: 0.5rem; width: 100%;';
 
-                // Add Reset Button before/next to toMoveEl
-                let resetBtn = book.querySelector('.book-reset-btn');
+                // Reset button
+                const resetBtn = document.createElement('button');
+                resetBtn.className = 'book-reset-btn';
+                resetBtn.innerHTML = '<i class="fa-solid fa-rotate-left"></i>';
+                resetBtn.title = 'Resetovat pozici';
+                resetBtn.onclick = (e) => {
+                    e.stopPropagation();
+                    if (book._viewer && typeof book._viewer.reset === 'function') {
+                        book._viewer.reset();
+                    }
+                };
+                metaRow.appendChild(resetBtn);
 
-                // Ensure toMoveEl is wrapped in a meta-row for alignment if not already
-                let metaRow = toMoveEl.parentNode;
-                if (!metaRow.classList.contains('book-meta-row')) {
-                    // Create wrapper
-                    metaRow = document.createElement('div');
-                    metaRow.className = 'book-meta-row';
-                    // Insert wrapper before toMoveEl
-                    toMoveEl.parentNode.insertBefore(metaRow, toMoveEl);
-                    // Move toMoveEl into wrapper
-                    metaRow.appendChild(toMoveEl);
-                }
+                // To-move text
+                const toMoveSpan = document.createElement('span');
+                toMoveSpan.className = 'book-to-move-standalone';
+                toMoveSpan.style.cssText = 'font-size: 0.8rem; color: rgba(255,255,255,0.7);';
+                toMoveSpan.textContent = getToMoveText(d);
+                metaRow.appendChild(toMoveSpan);
 
-                if (!resetBtn) {
-                    resetBtn = document.createElement('button');
-                    resetBtn.className = 'book-reset-btn';
-                    resetBtn.innerHTML = '<i class="fa-solid fa-rotate-left"></i>';
-                    resetBtn.title = 'Resetovat pozici';
-                    // styles handled by class now
-
-                    resetBtn.onclick = (e) => {
-                        e.stopPropagation();
-                        // Reset viewer if exists
-                        if (book._viewer && typeof book._viewer.reset === 'function') {
-                            book._viewer.reset();
-                        }
-                    };
-
-                    // Insert into metaRow before toMoveEl
-                    metaRow.insertBefore(resetBtn, toMoveEl);
+                // Insert after board container but before .book-nav
+                const navEl = book.querySelector('.book-nav');
+                if (navEl) {
+                    book.insertBefore(metaRow, navEl);
                 } else {
-                    // Ensure existing button is inside the row
-                    if (resetBtn.parentNode !== metaRow) {
-                        metaRow.insertBefore(resetBtn, toMoveEl);
+                    // Insert after board container
+                    const boardContainer = book.querySelector('.book-board-container');
+                    if (boardContainer && boardContainer.nextSibling) {
+                        book.insertBefore(metaRow, boardContainer.nextSibling);
+                    } else {
+                        book.appendChild(metaRow);
                     }
                 }
+            } else {
+                // Update existing to-move text
+                const toMoveSpan = metaRow.querySelector('.book-to-move-standalone');
+                if (toMoveSpan) toMoveSpan.textContent = getToMoveText(d);
             }
 
 
