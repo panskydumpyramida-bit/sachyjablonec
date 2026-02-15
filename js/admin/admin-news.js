@@ -594,6 +594,13 @@ async function editNews(id) {
 async function saveNews() {
     console.log('[admin-news] saveNews()');
 
+    // Prevent double-click: disable save button during save
+    const saveBtn = document.getElementById('saveNewsBtn');
+    if (saveBtn) {
+        if (saveBtn.disabled) return; // Already saving
+        saveBtn.disabled = true;
+    }
+
     // Check for pending thumbnail rotation
     if (pendingThumbnailBlob || window.pendingThumbnailBlob) {
         const blob = pendingThumbnailBlob || window.pendingThumbnailBlob;
@@ -614,11 +621,13 @@ async function saveNews() {
                 window.uploadedImageData = uploadedImageData;
             } else {
                 showAlert('Nepodařilo se nahrát rotovaný náhled', 'error');
+                if (saveBtn) saveBtn.disabled = false;
                 return;
             }
         } catch (e) {
             console.error('Thumbnail upload error:', e);
             showAlert('Chyba při nahrávání náhledu', 'error');
+            if (saveBtn) saveBtn.disabled = false;
             return;
         }
         pendingThumbnailBlob = null;
@@ -648,6 +657,7 @@ async function saveNews() {
     // Validate required fields (ONLY Title is mandatory now)
     if (!data.title) {
         showAlert('Vyplňte nadpis', 'error');
+        if (saveBtn) saveBtn.disabled = false;
         return;
     }
     // Relaxed validation: Date and Excerpt are optional for saving
@@ -660,6 +670,15 @@ async function saveNews() {
         });
 
         if (res.ok) {
+            const savedArticle = await res.json();
+
+            // After POST (new article), store the ID so subsequent saves
+            // become PUT (update) instead of creating duplicates
+            if (!id && savedArticle.id) {
+                document.getElementById('editNewsId').value = savedArticle.id;
+                console.log('[admin-news] New article created with ID:', savedArticle.id);
+            }
+
             localStorage.removeItem('newsDraft'); // Clear draft to prevent duplication on reload
             showAlert('Uloženo!', 'success');
             window.isNewsDirty = false; // Reset dirty flag
@@ -689,6 +708,9 @@ async function saveNews() {
     } catch (e) {
         console.error('Connection error:', e);
         showAlert('Chyba spojení: ' + e.message, 'error');
+    } finally {
+        // Re-enable button regardless of outcome
+        if (saveBtn) saveBtn.disabled = false;
     }
 }
 
