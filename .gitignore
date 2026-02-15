@@ -40,3 +40,5 @@ test-*.js
 # Agent/local tooling
 .agent/
 data/SSCR_2003_2025.pgn
+debug_output.txt
+generated_table.html

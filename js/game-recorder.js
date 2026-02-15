@@ -18,6 +18,9 @@ let moveComments = {};
 // NAG storage: FEN -> NAG String (e.g. "$1")
 let moveNags = {};
 
+// Track custom starting FEN (when game doesn't start from standard position)
+let startingFen = null; // null = standard start, string = custom FEN
+
 // Helper: Normalize FEN (remove move counters for more stable keying if needed, but standard FEN is fine for specific positions)
 // We will use full FEN to ensure unique positions (including castling rights/en passant) have their own comments.
 const getFenKey = () => game.fen();
@@ -224,8 +227,12 @@ function jumpToMove(targetPly) {
     // Clamp target to valid range
     targetPly = Math.max(0, Math.min(targetPly, savedMoves.length));
 
-    // Reset and replay to target position
-    game.reset();
+    // Reset and replay to target position (use custom starting FEN if set)
+    if (startingFen) {
+        game.load(startingFen);
+    } else {
+        game.reset();
+    }
     for (let i = 0; i < targetPly; i++) {
         game.move(savedMoves[i]);
     }
@@ -435,9 +442,14 @@ function goToStart() {
         saveCurrentHistory();
     }
 
-    // Reset to starting position
-    game.reset();
-    board.position('start');
+    // Reset to starting position (may be custom FEN)
+    if (startingFen) {
+        game.load(startingFen);
+        board.position(game.fen());
+    } else {
+        game.reset();
+        board.position('start');
+    }
     currentMoveIdx = 0;
     updateStatus();
     updateMoveHistory();
@@ -598,7 +610,12 @@ async function saveGame() {
         return;
     }
 
-    const pgnHeader = `[White "${white}"]\n[Black "${black}"]\n[Result "${result}"]\n[Date "${new Date().toISOString().split('T')[0]}"]\n\n`;
+    // Include FEN header if game doesn't start from standard position
+    let fenHeader = '';
+    if (startingFen) {
+        fenHeader = `[SetUp "1"]\n[FEN "${startingFen}"]\n`;
+    }
+    const pgnHeader = `[White "${white}"]\n[Black "${black}"]\n[Result "${result}"]\n[Date "${new Date().toISOString().split('T')[0]}"]\n${fenHeader}\n`;
     const fullPgn = pgnHeader + generateAnnotatedPgn();
 
     const btn = document.querySelector('.main-btn');
@@ -906,13 +923,23 @@ window.handlePgnFileSelect = handlePgnFileSelect;
 
 function resetEditor() {
     if (confirm('Opravdu chcete resetovat celou partii? Přijdete o neuložená data.')) {
+        startingFen = null; // Clear custom starting position
         game.reset();
         board.position('start');
         moveComments = {};
         moveNags = {};
+        savedMoves = [];
+        currentMoveIdx = 0;
         updateStatus();
         updateMoveHistory();
         removeHighlights();
+
+        // Clear custom position indicator
+        const overlay = document.getElementById('recorder-board-overlay');
+        if (overlay) {
+            overlay.style.display = 'none';
+            overlay.style.borderLeftColor = '#4ade80';
+        }
 
         // Clear inputs
         document.getElementById('whitePlayer').value = '';
@@ -1057,7 +1084,8 @@ function generateAnnotatedPgn() {
     let pgn = '';
 
     // We need to replay to get FENs to match comments
-    let tempGame = new Chess();
+    // Use correct starting position (may be custom FEN from diagram editor)
+    let tempGame = new Chess(startingFen || undefined);
     // Copy headers?
     // tempGame.header(game.header()); 
     // Just build string.
@@ -1247,5 +1275,112 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // --- Engine Analysis Integration ---
+    initRecorderEngine();
 
 });
+
+// ========================================
+// Engine Analysis for Game Recorder
+// ========================================
+let recAnalyzer = null;
+let recEngineActive = false;
+
+function initRecorderEngine() {
+    // ChessAnalyzer is loaded from game-viewer2.js
+    if (typeof ChessAnalyzer !== 'undefined') {
+        recAnalyzer = new ChessAnalyzer((data) => handleRecAnalysisUpdate(data));
+    } else {
+        console.warn('[GameRecorder] ChessAnalyzer not available, engine feature disabled');
+    }
+}
+
+function toggleRecorderEngine() {
+    recEngineActive = !recEngineActive;
+
+    const btn = document.getElementById('recEngineBtn');
+    const evalBar = document.getElementById('recEvalBar');
+    const analysisPanel = document.getElementById('recAnalysisInfo');
+
+    if (recEngineActive) {
+        btn.style.background = 'rgba(74, 222, 128, 0.2)';
+        btn.style.borderColor = 'rgba(74, 222, 128, 0.5)';
+        btn.style.color = '#4ade80';
+        if (evalBar) evalBar.classList.add('active');
+        if (analysisPanel) analysisPanel.style.display = 'flex';
+        // Analyze current position
+        analyzeCurrentPosition();
+    } else {
+        btn.style.background = '';
+        btn.style.borderColor = 'rgba(74, 222, 128, 0.3)';
+        btn.style.color = 'rgba(74, 222, 128, 0.7)';
+        if (evalBar) evalBar.classList.remove('active');
+        if (analysisPanel) analysisPanel.style.display = 'none';
+        if (recAnalyzer) recAnalyzer.stopAnalysis();
+    }
+}
+window.toggleRecorderEngine = toggleRecorderEngine;
+
+function analyzeCurrentPosition() {
+    if (!recEngineActive || !recAnalyzer) return;
+    const fen = game.fen();
+    recAnalyzer.analyze(fen);
+}
+
+function handleRecAnalysisUpdate(data) {
+    if (!recEngineActive) return;
+
+    // Update eval bar using ChessEvalDisplay if available
+    if (typeof ChessEvalDisplay !== 'undefined') {
+        ChessEvalDisplay.update('rec', data);
+    } else {
+        // Fallback: direct DOM update
+        const evalFill = document.getElementById('recEvalFill');
+        const evalText = document.getElementById('recEvalText');
+        const bestMove = document.getElementById('recBestMove');
+
+        if (!evalFill || !evalText) return;
+
+        let percentage = 50;
+        let displayText = '—';
+
+        if (data.mate !== null && data.mate !== undefined) {
+            percentage = data.mate > 0 ? 100 : 0;
+            displayText = `M${Math.abs(data.mate)}`;
+        } else if (data.eval !== null && data.eval !== undefined) {
+            percentage = data.winChance || 50;
+            displayText = (data.eval >= 0 ? '+' : '') + data.eval.toFixed(1);
+        }
+
+        evalFill.style.height = `${percentage}%`;
+        evalText.textContent = displayText;
+        if (bestMove) bestMove.textContent = data.text || displayText;
+    }
+
+    // Sync eval bar height with board
+    syncRecEvalBarHeight();
+}
+
+function syncRecEvalBarHeight() {
+    requestAnimationFrame(() => {
+        const boardEl = document.getElementById('board');
+        const evalBar = document.getElementById('recEvalBar');
+        if (boardEl && evalBar) {
+            const height = boardEl.offsetHeight;
+            if (height > 0) {
+                evalBar.style.height = height + 'px';
+            }
+        }
+    });
+}
+
+// Hook into existing updateStatus to trigger analysis on position change
+const _origUpdateStatus = updateStatus;
+updateStatus = function () {
+    _origUpdateStatus();
+    analyzeCurrentPosition();
+    syncRecEvalBarHeight();
+};
+
+// Sync eval bar height on resize
+window.addEventListener('resize', syncRecEvalBarHeight);

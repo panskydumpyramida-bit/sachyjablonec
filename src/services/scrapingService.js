@@ -216,14 +216,32 @@ function parseArt8(html) {
         const rankMatch = cells[0]?.match(/<td[^>]*>(\d+)/);
         const rank = rankMatch ? parseInt(rankMatch[1]) : null;
 
-        // Name
+        // Name - extract from <td class="CR"> cells (not <a> tags which contain FIDE IDs)
         let name = null;
+        // First try: look for <a class="CRdb"> (some pages use this for player links)
         const nameMatch = row.match(/<a[^>]*class="CRdb"[^>]*>([^<]+)</i);
         if (nameMatch) {
             name = clean(nameMatch[1]);
         } else {
-            const altNameMatch = row.match(/<a[^>]*>([^<]+)<\/a>/);
-            if (altNameMatch) name = clean(altNameMatch[1]);
+            // Look through <td class="CR"> cells for one containing a comma (name format: "Surname, Firstname")
+            const crCells = row.match(/<td class="CR"[^>]*>([^<]*)<\/td>/g) || [];
+            for (const cell of crCells) {
+                const content = clean(cell.replace(/<td class="CR"[^>]*>/, '').replace(/<\/td>/, ''));
+                if (content && content.includes(',') && content.length > 3) {
+                    name = content;
+                    break;
+                }
+            }
+            // Fallback: any non-empty CR cell that looks like a name (no digits only)
+            if (!name) {
+                for (const cell of crCells) {
+                    const content = clean(cell.replace(/<td class="CR"[^>]*>/, '').replace(/<\/td>/, ''));
+                    if (content && content.length > 3 && !content.match(/^\d+$/) && !content.match(/^[A-Z]{2,3}$/)) {
+                        name = content;
+                        break;
+                    }
+                }
+            }
         }
 
         // Elo
@@ -260,11 +278,29 @@ function parseArt1(html) {
         const rank = rankMatch ? parseInt(rankMatch[1]) : null;
 
         let name = null;
+        // First try: <a class="CRdb"> (some pages use this for player links)
         const nameMatch = row.match(/<a[^>]*class="CRdb"[^>]*>([^<]+)</i);
         if (nameMatch) name = clean(nameMatch[1]);
         else {
-            const altNameMatch = row.match(/<a[^>]*>([^<]+)<\/a>/);
-            if (altNameMatch) name = clean(altNameMatch[1]);
+            // Look through <td class="CR"> cells for one containing a comma ("Surname, Firstname")
+            const crCells = row.match(/<td class="CR"[^>]*>([^<]*)<\/td>/g) || [];
+            for (const cell of crCells) {
+                const content = clean(cell.replace(/<td class="CR"[^>]*>/, '').replace(/<\/td>/, ''));
+                if (content && content.includes(',') && content.length > 3) {
+                    name = content;
+                    break;
+                }
+            }
+            // Fallback: any non-empty CR cell that looks like a name
+            if (!name) {
+                for (const cell of crCells) {
+                    const content = clean(cell.replace(/<td class="CR"[^>]*>/, '').replace(/<\/td>/, ''));
+                    if (content && content.length > 3 && !content.match(/^\d+$/) && !content.match(/^[A-Z]{2,3}$/)) {
+                        name = content;
+                        break;
+                    }
+                }
+            }
         }
 
         // Extract ELO, Perf (same as original logic)
