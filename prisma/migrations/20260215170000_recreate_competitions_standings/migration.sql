@@ -36,6 +36,10 @@ CREATE TABLE IF NOT EXISTS "standings" (
 CREATE UNIQUE INDEX IF NOT EXISTS "standings_competition_id_team_key" ON "standings"("competition_id", "team");
 
 -- AddForeignKey (idempotent check)
+-- Add missing columns if tables already existed
+ALTER TABLE "standings" ADD COLUMN IF NOT EXISTS "snr" INTEGER;
+ALTER TABLE "competitions" ADD COLUMN IF NOT EXISTS "sort_order" INTEGER NOT NULL DEFAULT 0;
+
 DO $$
 BEGIN
     IF NOT EXISTS (
