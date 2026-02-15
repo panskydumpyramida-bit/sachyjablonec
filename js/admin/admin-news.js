@@ -145,16 +145,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Check URL for editId to auto-open editor
-    const params = new URLSearchParams(window.location.search);
-    const editId = params.get('editId');
-    if (editId) {
-        // We're expecting to edit a specific article
-        // Wait slightly for other initializations if needed, although editNews handles most.
-        // Also ensure tab is switched properly via core or call it here.
-        // switchTab('editor'); // editNews calls this.
-        editNews(editId);
-    }
+    // editId handling moved to admin-core.js showAdmin() to ensure auth is ready
 });
 
 // Helper to safely select author when data is ready

@@ -556,6 +556,13 @@ window.showAdmin = function () {
     if (savedTabFromHash && savedTabFromHash !== 'dashboard') {
         setTimeout(() => switchTab(savedTabFromHash), 100);
     }
+
+    // Restore article editing from URL ?editId=... parameter
+    const editIdParam = new URLSearchParams(window.location.search).get('editId');
+    if (editIdParam && typeof editNews === 'function') {
+        // Delay slightly to ensure tab switch and user data are ready
+        setTimeout(() => editNews(editIdParam), 200);
+    }
 };
 
 // Handle browser back/forward
