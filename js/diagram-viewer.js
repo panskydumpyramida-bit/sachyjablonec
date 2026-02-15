@@ -265,6 +265,24 @@ class DiagramViewer {
             forceResize();
             this.renderAnnotations(diagram.annotations);
         });
+
+        // ResizeObserver for WYSIWYG block ratio changes (1:1, 1:2, 2:1)
+        if (typeof ResizeObserver !== 'undefined') {
+            // Clean up previous observer
+            if (this._resizeObserver) {
+                this._resizeObserver.disconnect();
+            }
+            let resizeTimer;
+            this._resizeObserver = new ResizeObserver(() => {
+                clearTimeout(resizeTimer);
+                resizeTimer = setTimeout(() => {
+                    forceResize();
+                    this.renderAnnotations(diagram.annotations);
+                }, 100);
+            });
+            const wrapper = this.boardEl.closest('.diagram-board-wrapper') || this.container;
+            this._resizeObserver.observe(wrapper);
+        }
     }
 
     setupClickListener() {
@@ -903,21 +921,32 @@ class DiagramViewer {
 
         // Render Arrows
         if (annotations.arrows) {
-            // Define markers if not exists
-            this.ensureMarkers();
+            // Get a reference square width for marker sizing
+            const refSq = getSqCenter('e4');
+            this.ensureMarkers(refSq ? refSq.width : 40);
 
             annotations.arrows.forEach(a => {
                 const s = getSqCenter(a.start);
                 const e = getSqCenter(a.end);
                 if (s && e) {
+                    // Shorten the line end so it stops before the arrowhead
+                    const dx = e.x - s.x;
+                    const dy = e.y - s.y;
+                    const len = Math.sqrt(dx * dx + dy * dy);
+                    const arrowSize = Math.max(8, s.width * 0.3);
+                    const shortenBy = arrowSize * 0.6;
+                    const ex = len > 0 ? e.x - (dx / len) * shortenBy : e.x;
+                    const ey = len > 0 ? e.y - (dy / len) * shortenBy : e.y;
+
                     const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
                     line.setAttribute('x1', s.x);
                     line.setAttribute('y1', s.y);
-                    line.setAttribute('x2', e.x);
-                    line.setAttribute('y2', e.y);
+                    line.setAttribute('x2', ex);
+                    line.setAttribute('y2', ey);
                     line.setAttribute('stroke', VIEWER_COLORS[a.color]);
                     line.setAttribute('stroke-width', (s.width * 0.15) || 6); // Responsive width
                     line.setAttribute('stroke-opacity', '0.8');
+                    line.setAttribute('stroke-linecap', 'round');
                     line.setAttribute('marker-end', `url(#arrowhead-${a.color})`);
                     this.overlayEl.appendChild(line);
                 }
@@ -971,24 +1000,30 @@ class DiagramViewer {
         }
     }
 
-    ensureMarkers() {
-        if (this.overlayEl.querySelector('defs')) return;
+    ensureMarkers(squareWidth) {
+        // Remove old defs to update marker sizes on resize
+        const oldDefs = this.overlayEl.querySelector('defs');
+        if (oldDefs) oldDefs.remove();
 
         const defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
+        // Arrow size proportional to square (~30% of square width)
+        const arrowSize = Math.max(8, (squareWidth || 40) * 0.3);
 
         Object.keys(VIEWER_COLORS).forEach(colorKey => {
             const color = VIEWER_COLORS[colorKey];
             const marker = document.createElementNS('http://www.w3.org/2000/svg', 'marker');
             marker.setAttribute('id', `arrowhead-${colorKey}`);
-            marker.setAttribute('markerWidth', '6'); // smaller marker
-            marker.setAttribute('markerHeight', '6');
-            marker.setAttribute('refX', '5'); // Adjust to tip of arrow
-            marker.setAttribute('refY', '3');
+            marker.setAttribute('markerUnits', 'userSpaceOnUse');
+            marker.setAttribute('markerWidth', arrowSize);
+            marker.setAttribute('markerHeight', arrowSize);
+            marker.setAttribute('refX', arrowSize);  // Tip of arrow
+            marker.setAttribute('refY', arrowSize / 2);
             marker.setAttribute('orient', 'auto');
 
             const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-            path.setAttribute('d', 'M0,0 L6,3 L0,6 L0,0'); // Simple triangle
+            path.setAttribute('d', `M0,0 L${arrowSize},${arrowSize / 2} L0,${arrowSize} L${arrowSize * 0.25},${arrowSize / 2} Z`);
             path.setAttribute('fill', color);
+            path.setAttribute('fill-opacity', '0.85');
 
             marker.appendChild(path);
             defs.appendChild(marker);
