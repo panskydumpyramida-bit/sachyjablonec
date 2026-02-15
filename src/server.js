@@ -650,6 +650,7 @@ app.get('/api/standings', async (req, res) => {
             updatedAt: comp.updatedAt, // Use competition's updatedAt
             standings: comp.standings.map(s => ({
                 rank: s.rank,
+                snr: s.snr,
                 team: s.team,
                 games: s.games,
                 wins: s.wins,
@@ -730,11 +731,12 @@ app.get('/api/standings/team-snr', async (req, res) => {
             if (!exactTeam) {
                 return res.status(404).json({ error: 'Team not found in standings' });
             }
-            return res.json({ snr: exactTeam.rank, url: competition.url, team: exactTeam.team });
+            // Use stored snr if available, fallback to rank
+            return res.json({ snr: exactTeam.snr || exactTeam.rank, url: competition.url, team: exactTeam.team });
         }
 
-        // SNR is typically the rank/position in standings for chess-results
-        res.json({ snr: team.rank, url: competition.url, team: team.team });
+        // Use stored snr (actual chess-results serial number) if available, fallback to rank
+        res.json({ snr: team.snr || team.rank, url: competition.url, team: team.team });
     } catch (e) {
         console.error('Team SNR lookup error:', e);
         res.status(500).json({ error: 'Failed to look up team' });

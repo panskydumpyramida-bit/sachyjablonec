@@ -11,19 +11,24 @@
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://www.sachyjablonec.cz/youth</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.9</priority>
-  </url>
-  <url>
     <loc>https://www.sachyjablonec.cz/teams</loc>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://www.sachyjablonec.cz/gallery</loc>
+    <loc>https://www.sachyjablonec.cz/tournaments</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.sachyjablonec.cz/youth</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://www.sachyjablonec.cz/blicak</loc>
     <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
+    <priority>0.6</priority>
   </url>
   <url>
     <loc>https://www.sachyjablonec.cz/calendar</loc>
@@ -31,8 +36,43 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://www.sachyjablonec.cz/blicak</loc>
+    <loc>https://www.sachyjablonec.cz/gallery</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.sachyjablonec.cz/training</loc>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://www.sachyjablonec.cz/partie</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>https://www.sachyjablonec.cz/game-recorder</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.4</priority>
+  </url>
+  <url>
+    <loc>https://www.sachyjablonec.cz/individual-competitions</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.sachyjablonec.cz/club-tournaments</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.sachyjablonec.cz/chess-database</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>https://www.sachyjablonec.cz/puzzle-racer</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
   </url>
 </urlset>

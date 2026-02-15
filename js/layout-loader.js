@@ -92,16 +92,44 @@ function initMobileMenu() {
     const navLinks = document.querySelector('.nav-links');
 
     if (menuToggle && navLinks) {
-        // Remove old listeners to avoid duplicates if re-initialized (though innerHTML replaces elements so listeners are gone)
-        menuToggle.addEventListener('click', () => {
-            navLinks.classList.toggle('active');
+        // Create overlay backdrop
+        let overlay = document.querySelector('.mobile-menu-overlay');
+        if (!overlay) {
+            overlay = document.createElement('div');
+            overlay.className = 'mobile-menu-overlay';
+            document.body.appendChild(overlay);
+        }
+
+        const closeMenu = () => {
+            navLinks.classList.remove('active');
+            overlay.classList.remove('active');
+            menuToggle.classList.remove('active');
             const icon = menuToggle.querySelector('i');
-            if (navLinks.classList.contains('active')) {
+            icon.classList.remove('fa-times');
+            icon.classList.add('fa-bars');
+        };
+
+        menuToggle.addEventListener('click', () => {
+            const isOpen = navLinks.classList.toggle('active');
+            overlay.classList.toggle('active', isOpen);
+            menuToggle.classList.toggle('active', isOpen);
+            const icon = menuToggle.querySelector('i');
+            if (isOpen) {
                 icon.classList.remove('fa-bars');
                 icon.classList.add('fa-times');
             } else {
                 icon.classList.remove('fa-times');
                 icon.classList.add('fa-bars');
+            }
+        });
+
+        // Close on overlay click
+        overlay.addEventListener('click', closeMenu);
+
+        // Close on Escape key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && navLinks.classList.contains('active')) {
+                closeMenu();
             }
         });
     }

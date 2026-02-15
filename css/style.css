@@ -226,7 +226,7 @@ nav {
 /* Hero Section */
 .hero {
     height: 40vh;
-    min-height: 250px;
+    min-height: 280px;
     padding-top: 1rem;
     padding-bottom: 0.5rem;
     display: flex;
@@ -400,7 +400,21 @@ nav {
 
 @media (max-width: 768px) {
 
-    .hero-content h1,
+    .hero {
+        align-items: flex-start;
+        padding-top: 0.5rem;
+        min-height: 320px;
+    }
+
+    .hero-content h1 {
+        display: block;
+        font-size: 0.85rem;
+        margin-bottom: 0.2rem;
+        line-height: 1.2;
+        opacity: 0.8;
+        letter-spacing: 0.5px;
+    }
+
     .hero-content p {
         display: none;
     }
@@ -495,6 +509,7 @@ section {
 .card-image {
     height: 200px;
     overflow: hidden;
+    background: rgba(255, 255, 255, 0.03);
 }
 
 .card-image img {
@@ -758,8 +773,22 @@ footer {
 
 /* Mobile Responsive */
 @media (max-width: 768px) {
-    .hero-content h1 {
-        font-size: 2.5rem;
+
+    /* Mobile Menu Overlay */
+    .mobile-menu-overlay {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.5);
+        backdrop-filter: blur(2px);
+        z-index: 998;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+
+    .mobile-menu-overlay.active {
+        display: block;
+        opacity: 1;
     }
 
     .nav-links {
@@ -1315,14 +1344,6 @@ footer {
         /* Tighter icon gap */
     }
 
-    .hero-content h1 {
-        font-size: 2rem;
-    }
-
-    .hero-content p {
-        font-size: 1.1rem;
-    }
-
     .card-content h3,
     .card-title {
         font-size: 1.1rem;
@@ -1707,4 +1728,40 @@ footer {
     user-select: none;
     cursor: default;
     pointer-events: none;
+}
+
+/* ==========================
+   Table Scroll Indicator (Mobile)
+   ========================== */
+.table-scroll-wrapper {
+    position: relative;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.table-scroll-wrapper::after {
+    content: '';
+    position: absolute;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    width: 30px;
+    background: linear-gradient(to right, transparent, rgba(0, 0, 0, 0.4));
+    pointer-events: none;
+    opacity: 1;
+    transition: opacity 0.3s;
+}
+
+.table-scroll-wrapper.scrolled-end::after {
+    opacity: 0;
+}
+
+/* CLS Prevention: use background on card-image to reserve space */
+
+/* Accessibility: button focus styles */
+.hero-grid-item:focus-visible,
+.btn:focus-visible,
+.nav-links a:focus-visible {
+    outline: 2px solid var(--primary-color);
+    outline-offset: 2px;
 }

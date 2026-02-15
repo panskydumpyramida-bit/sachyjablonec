@@ -5,6 +5,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Editor Partií - Šachový oddíl TJ Bižuterie Jablonec</title>
+    <meta name="description"
+        content="Editor šachových partií. Nahrávejte a analyzujte své partie s diagramy a anotacemi.">
+    <meta property="og:title" content="Editor Partií - Šachový oddíl TJ Bižuterie Jablonec">
+    <meta property="og:description" content="Editor šachových partií s diagramy a anotacemi.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://sachyjablonec.cz/game-recorder.html">
+    <meta property="og:image" content="https://sachyjablonec.cz/images/og-default.png">
+    <meta name="twitter:card" content="summary_large_image">
     <link
         href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Open+Sans:wght@400;600&display=swap"
         rel="stylesheet">
@@ -12,6 +20,7 @@
 
     <!-- Using same CSS as rest of site -->
     <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/game-viewer2.css">
     <!-- Chess Libraries -->
     <link rel="stylesheet" href="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.css">
     <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
@@ -664,8 +673,20 @@
                                 display: none;
                                 border-left: 4px solid #4ade80;
                             "></div>
-                        <div style="position: relative;">
-                            <div id="board"></div>
+                        <div class="gv2-board-area" id="recBoardArea" style="width: 100%; max-width: 570px;">
+                            <div class="gv2-eval-bar" id="recEvalBar">
+                                <div class="gv2-eval-fill" id="recEvalFill" style="height: 50%;"></div>
+                                <div class="gv2-eval-text" id="recEvalText">0.0</div>
+                            </div>
+                            <div style="position: relative; flex: 1; min-width: 0;">
+                                <div id="board"></div>
+                            </div>
+                        </div>
+                        <div class="gv2-analysis-info" id="recAnalysisInfo" style="display: none;">
+                            <div class="gv2-analysis-row">
+                                <span class="gv2-best-move" id="recBestMove">—</span>
+                            </div>
+                            <div class="gv2-pv-line" id="recPvLine"></div>
                         </div>
                         <div class="controls" style="margin-top: 1rem;">
                             <button class="btn-control" onclick="resetEditor()"><i class="fa-solid fa-rotate-left"></i>
@@ -674,6 +695,11 @@
                                 Otočit</button>
                             <button class="btn-control" onclick="undoMove()"><i class="fa-solid fa-arrow-left"></i>
                                 Zpět</button>
+                            <button class="btn-control" id="recEngineBtn" onclick="toggleRecorderEngine()"
+                                title="Zapnout/vypnout analýzu enginem"
+                                style="border-color: rgba(74, 222, 128, 0.3); color: rgba(74, 222, 128, 0.7);">
+                                <i class="fa-solid fa-microchip"></i> <span class="desktop-text">Motor</span>
+                            </button>
                             <!-- Mobile Info Button -->
                             <!-- Mobile Info Button -->
                             <button class="btn-control mobile-only-btn">
@@ -789,7 +815,8 @@
     <script src="js/config.js?v=4" defer></script>
     <script src="js/layout-loader.js?v=5" defer></script>
     <script src="js/main.js" defer></script>
-    <script src="js/game-recorder.js?v=7.0" defer></script>
+    <script src="js/game-viewer2.js?v=2" defer></script>
+    <script src="js/game-recorder.js?v=8.0" defer></script>
     <div id="promotionModal">
         <div class="promotion-content">
             <h3 class="promotion-title">Vyberte figuru pro povýšení</h3>
@@ -1065,9 +1092,9 @@
 
             <div style="display: flex; gap: 1rem; justify-content: flex-end; margin-top: 0.5rem; flex-wrap: wrap;">
                 <button class="btn-control" onclick="closeDiagramEditor()">Zavřít</button>
-                <button class="btn-control" onclick="analyzeOnLichess()"
+                <button class="btn-control" onclick="analyzeInGameRecorder()"
                     style="background: rgba(255, 255, 255, 0.08); border-color: rgba(255, 255, 255, 0.2); color: #fff;"
-                    title="Otevřít pozici na Lichess.org pro analýzu enginem">
+                    title="Načíst pozici do záznamníku partií pro analýzu">
                     <i class="fa-solid fa-magnifying-glass-chart"></i> Analyzovat
                 </button>
                 <button class="btn-control" onclick="saveDiagramToCloud()"

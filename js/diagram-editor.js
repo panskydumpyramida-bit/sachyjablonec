@@ -795,21 +795,55 @@ function exportDiagram() {
 // --- Lichess Analysis Integration ---
 
 /**
- * Open the current diagram position on Lichess.org for engine analysis.
- * Constructs a Lichess analysis URL from the current board FEN.
- * Lichess URL format: https://lichess.org/analysis/{FEN_with_underscores}
+ * Load the current diagram position into the Game Recorder for analysis.
+ * Closes the diagram editor and sets the position on the main board.
  */
-function analyzeOnLichess() {
+function analyzeInGameRecorder() {
     if (!diagramBoard) return;
 
     const boardFen = diagramBoard.fen();
     const fullFen = `${boardFen} ${diagramTurn} ${getCastlingString()} - 0 1`;
 
-    // Lichess uses underscores instead of spaces in the URL
-    const lichessUrl = `https://lichess.org/analysis/${fullFen.replace(/ /g, '_')}`;
-    window.open(lichessUrl, '_blank');
+    // Close the diagram editor
+    closeDiagramEditor();
+
+    // Load the FEN into the game recorder's Chess.js instance and board
+    if (typeof game !== 'undefined' && typeof board !== 'undefined') {
+        game.load(fullFen);
+        board.position(game.fen());
+
+        // Track custom starting FEN for correct PGN save
+        if (typeof startingFen !== 'undefined') {
+            startingFen = fullFen;
+        }
+
+        // Clear move history and comments for a fresh start
+        if (typeof moveComments !== 'undefined') {
+            for (const key in moveComments) delete moveComments[key];
+        }
+        if (typeof moveNags !== 'undefined') {
+            for (const key in moveNags) delete moveNags[key];
+        }
+        if (typeof savedMoves !== 'undefined') {
+            savedMoves = [];
+            currentMoveIdx = 0;
+        }
+        if (typeof updateStatus === 'function') updateStatus();
+        if (typeof updateMoveHistory === 'function') updateMoveHistory();
+        if (typeof removeHighlights === 'function') removeHighlights();
+
+        // Show persistent indicator for custom starting position
+        const overlay = document.getElementById('recorder-board-overlay');
+        if (overlay) {
+            overlay.innerHTML = '<i class="fa-solid fa-chess-board" style="margin-right:0.3rem;"></i> Vlastní výchozí pozice <span style="opacity:0.6;font-size:0.85em;">(z editoru diagramů)</span>';
+            overlay.style.display = 'block';
+            overlay.style.borderLeftColor = '#60a5fa';
+        }
+    }
 }
-window.analyzeOnLichess = analyzeOnLichess;
+window.analyzeInGameRecorder = analyzeInGameRecorder;
+// Keep backward compatibility
+window.analyzeOnLichess = analyzeInGameRecorder;
 
 // --- Solver Admin Functions ---
 

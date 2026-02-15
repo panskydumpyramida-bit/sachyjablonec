@@ -205,6 +205,7 @@ model Standing {
   competitionId String   @map("competition_id")
   team          String
   rank          Int
+  snr           Int?     // chess-results serial number (different from rank)
   points        Float?
   wins          Int?
   draws         Int?

@@ -108,8 +108,16 @@ export async function updateStandings(competitions = null) {
                                         (lowerName.includes('tj') || lowerName.includes('šk') ||
                                             lowerName.includes('sk') || lowerName.includes('ddm')));
 
+                                // Extract actual SNR from team details URL (e.g. snr=5)
+                                let snr = null;
+                                if (teamDetailsUrl) {
+                                    const snrMatch = teamDetailsUrl.match(/snr=(\d+)/);
+                                    if (snrMatch) snr = parseInt(snrMatch[1]);
+                                }
+
                                 standings.push({
                                     rank,
+                                    snr: snr || rank, // Fallback to rank if SNR not found
                                     team: teamStr,
                                     games,
                                     wins,
@@ -121,6 +129,56 @@ export async function updateStandings(competitions = null) {
                                     url: teamDetailsUrl
                                 });
                             }
+                        } else if (cells.length >= 2) {
+                            // Simplified standings table (e.g., nadstavba/playoffs)
+                            // Columns: Rank, Team (with link), maybe avg ELO
+                            let rankStr = clean(cells[0]);
+                            let teamStr = '';
+                            let teamDetailsUrl = null;
+
+                            // Find team cell with link
+                            for (let i = 0; i < cells.length; i++) {
+                                const urlMatch = cells[i].match(/href="([^"]+)"/);
+                                if (urlMatch && (cells[i].includes('snr=') || cells[i].includes('art='))) {
+                                    teamDetailsUrl = urlMatch[1];
+                                    teamStr = clean(cells[i]);
+                                    break;
+                                }
+                            }
+
+                            if (!teamStr) continue;
+
+                            if (teamDetailsUrl && !teamDetailsUrl.startsWith('http')) {
+                                const origin = new URL(comp.url).origin;
+                                teamDetailsUrl = teamDetailsUrl.startsWith('/') ? origin + teamDetailsUrl : origin + '/' + teamDetailsUrl;
+                            }
+
+                            let rank = parseInt(rankStr);
+                            if (isNaN(rank)) rank = standings.length + 1;
+
+                            // Extract SNR from URL
+                            let snr = null;
+                            if (teamDetailsUrl) {
+                                const snrMatch = teamDetailsUrl.match(/snr=(\d+)/);
+                                if (snrMatch) snr = parseInt(snrMatch[1]);
+                            }
+
+                            const lowerName = teamStr.toLowerCase();
+                            const isBizuterie = lowerName.includes('bižuterie') ||
+                                lowerName.includes('bizuterie') ||
+                                (lowerName.includes('jablonec') &&
+                                    (lowerName.includes('tj') || lowerName.includes('šk') ||
+                                        lowerName.includes('sk') || lowerName.includes('ddm')));
+
+                            standings.push({
+                                rank,
+                                snr: snr || rank,
+                                team: teamStr,
+                                games: 0, wins: 0, draws: 0, losses: 0,
+                                points: 0, score: 0,
+                                isBizuterie: isBizuterie,
+                                url: teamDetailsUrl
+                            });
                         }
                     }
                 }
@@ -257,6 +315,7 @@ export async function updateStandings(competitions = null) {
                             competitionId: competitionResult.competitionId,
                             team: s.team,
                             rank: parseInt(s.rank) || 0,
+                            snr: s.snr ? parseInt(s.snr) : null,
                             games: s.games,
                             wins: s.wins,
                             draws: s.draws,
