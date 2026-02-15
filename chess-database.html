@@ -372,18 +372,14 @@
         }
 
         .board-wrapper {
-            flex: 0 1 auto;
-            width: auto;
-            max-width: 55%;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
+            /* Board is square, so limit width to available vertical space */
+            /* 350px accounts for: header(90) + search(60) + panel-header(40) + game-info(80) + controls(50) + padding(30) */
+            max-width: min(55%, calc(100vh - 350px));
+            flex-shrink: 0;
         }
 
         #chessBoard {
             width: 100% !important;
-            max-height: 100%;
-            aspect-ratio: 1;
         }
 
         .board-controls {
