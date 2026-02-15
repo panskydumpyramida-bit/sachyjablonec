@@ -29,6 +29,9 @@
     position: relative;
     display: flex;
     flex-direction: column;
+    /* Enable container queries so layout responds to container width, not viewport */
+    container-type: inline-size;
+    container-name: gameviewer;
 }
 
 /* Main Content Area - Two-column layout: board (with controls) + info panel */
@@ -187,7 +190,53 @@
     overflow: hidden;
 }
 
-/* Responsive adjustments - Tablet */
+/* Container query: stack vertically when container is narrow */
+/* This works in articles where the container is narrow but viewport is wide */
+@container gameviewer (max-width: 600px) {
+    .gv2-content {
+        display: flex !important;
+        flex-direction: column;
+        height: auto;
+    }
+
+    .gv2-main-area {
+        flex-direction: column;
+    }
+
+    .gv2-sidebar-left,
+    .gv2-info-panel {
+        width: 100% !important;
+        max-width: 100% !important;
+        border-left: none;
+        border-right: none;
+        border-bottom: 1px solid var(--gv-border-color);
+    }
+
+    .gv2-sidebar-left {
+        max-height: 180px;
+        order: 3;
+    }
+
+    .gv2-board-section {
+        order: 1;
+        min-height: auto;
+    }
+
+    .gv2-info-panel {
+        order: 2;
+        max-height: 250px;
+        border-top: 1px solid var(--gv-border-color);
+    }
+
+    .gv2-board-wrapper {
+        width: 100%;
+        max-width: min(95cqi, 50vh);
+        height: auto;
+        margin: 0 auto;
+    }
+}
+
+/* Responsive adjustments - Tablet (viewport fallback for older browsers) */
 @media (max-width: 900px) {
     .gv2-content {
         display: flex;
