@@ -358,6 +358,7 @@ async function loadDashboard() {
                 <td class="hide-mobile">${item.category}</td>
                 <td class="hide-mobile"><span class="highlight-name" style="font-size: 0.85rem;">${authorDisplay}</span></td>
                 <td class="hide-mobile"><span class="status-badge ${statusClass}">${statusIcon}<span class="status-text">${statusText}</span></span></td>
+                <td class="hide-mobile" style="font-size: 0.8rem; color: var(--text-muted);" title="${item.updatedAt ? new Date(item.updatedAt).toLocaleString('cs-CZ') : ''}">${formatRelativeTime(item.updatedAt)}</td>
                 <td>
                     <button class="action-btn btn-edit" onclick="editNews(${item.id})"><i class="fa-solid fa-pen"></i></button>
                     <button class="action-btn btn-publish" onclick="togglePublish(${item.id})" title="${item.isPublished ? 'Skrýt' : 'Publikovat'}"><i class="fa-solid fa-${item.isPublished ? 'eye-slash' : 'eye'}"></i></button>

@@ -147,10 +147,32 @@ function showToast(message, type = 'success', duration = 3000) {
     }, duration);
 }
 
+/**
+ * Format a date as a compact relative time in Czech
+ * @param {Date|string} date - Date to format
+ * @returns {string} Relative time string (e.g. "před 2h", "před 3d")
+ */
+function formatRelativeTime(date) {
+    if (!date) return '-';
+    const d = date instanceof Date ? date : new Date(date);
+    const now = new Date();
+    const diffMs = now - d;
+    const diffMin = Math.floor(diffMs / 60000);
+    const diffHrs = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+
+    if (diffMin < 1) return 'právě teď';
+    if (diffMin < 60) return `před ${diffMin}m`;
+    if (diffHrs < 24) return `před ${diffHrs}h`;
+    if (diffDays < 30) return `před ${diffDays}d`;
+    return d.toLocaleDateString('cs-CZ');
+}
+
 // Export to global scope for non-module scripts
 window.escapeHtml = escapeHtml;
 window.formatDate = formatDate;
 window.formatDateTime = formatDateTime;
+window.formatRelativeTime = formatRelativeTime;
 window.debounce = debounce;
 window.throttle = throttle;
 window.showToast = showToast;
