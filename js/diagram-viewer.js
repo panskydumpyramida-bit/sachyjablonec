@@ -273,15 +273,29 @@ class DiagramViewer {
                 this._resizeObserver.disconnect();
             }
             let resizeTimer;
-            this._resizeObserver = new ResizeObserver(() => {
+            let lastWidth = 0;
+            this._resizeObserver = new ResizeObserver((entries) => {
+                // Guard against re-entrancy (board.resize changes wrapper → triggers observer)
+                if (this._isResizing) return;
+
+                // Only act if width actually changed
+                const entry = entries[0];
+                const newWidth = entry.contentRect.width;
+                if (Math.abs(newWidth - lastWidth) < 2) return;
+                lastWidth = newWidth;
+
                 clearTimeout(resizeTimer);
                 resizeTimer = setTimeout(() => {
+                    this._isResizing = true;
                     forceResize();
                     this.renderAnnotations(diagram.annotations);
-                }, 100);
+                    // Release guard after layout settles
+                    requestAnimationFrame(() => { this._isResizing = false; });
+                }, 150);
             });
-            const wrapper = this.boardEl.closest('.diagram-board-wrapper') || this.container;
-            this._resizeObserver.observe(wrapper);
+            // Observe the outer container (diagram-book), NOT the board wrapper
+            const outerContainer = this.container.closest('.diagram-book') || this.container.parentElement || this.container;
+            this._resizeObserver.observe(outerContainer);
         }
     }
 
