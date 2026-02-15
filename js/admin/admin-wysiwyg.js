@@ -1235,10 +1235,10 @@ function generateMiniBoard(fen, squareSize = 25) {
     const position = fen.split(' ')[0];
     const rows = position.split('/');
 
-    let html = `<table style="border-collapse: collapse; margin: 0 auto; border: 1px solid #555; border-radius: 2px; overflow: hidden; width: 100%; max-width: ${squareSize * 8}px; table-layout: fixed;">`;
+    let html = `<div style="width:100%;max-width:${squareSize * 8}px;margin:0 auto;aspect-ratio:1/1;"><table style="border-collapse: collapse; border: 1px solid #555; border-radius: 2px; overflow: hidden; width: 100%; height: 100%; table-layout: fixed;">`;
 
     for (let i = 0; i < 8; i++) {
-        html += '<tr>';
+        html += '<tr style="height:12.5%;">';
         const row = rows[i] || '8';
         let colIdx = 0;
 
@@ -1248,7 +1248,7 @@ function generateMiniBoard(fen, squareSize = 25) {
                 for (let k = 0; k < emptyCount; k++) {
                     const isLight = (i + colIdx) % 2 === 0;
                     const bg = isLight ? '#f0d9b5' : '#b58863';
-                    html += `<td style="width:12.5%;aspect-ratio:1/1;background:${bg};"></td>`;
+                    html += `<td style="width:12.5%;background:${bg};padding:0;"></td>`;
                     colIdx++;
                 }
             } else {
@@ -1258,17 +1258,18 @@ function generateMiniBoard(fen, squareSize = 25) {
                 const piece = char.toUpperCase();
                 const pieceUrl = `https://chessboardjs.com/img/chesspieces/wikipedia/${color}${piece}.png`;
 
-                html += `<td style="width:12.5%;aspect-ratio:1/1;background:${bg};padding:0;">
-                    <img src="${pieceUrl}" style="width:100%;height:100%;display:block;">
+                html += `<td style="width:12.5%;background:${bg};padding:0;">
+                    <img src="${pieceUrl}" style="width:100%;display:block;">
                 </td>`;
                 colIdx++;
             }
         }
         html += '</tr>';
     }
-    html += '</table>';
+    html += '</table></div>';
     return html;
 }
+
 
 // ================================
 // FLOATING TOOLBAR
