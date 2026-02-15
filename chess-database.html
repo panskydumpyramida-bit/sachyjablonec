@@ -155,7 +155,8 @@
 
             .board-wrapper {
                 width: 100%;
-                max-width: 100%;
+                /* Keep board square and within viewport height even in stacked layout */
+                max-width: min(100%, calc(100vh - 200px));
                 margin: 0 auto;
                 height: auto;
             }
