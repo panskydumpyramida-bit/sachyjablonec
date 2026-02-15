@@ -798,6 +798,8 @@ footer {
         right: 1rem;
         width: 250px;
         height: auto;
+        max-height: calc(100vh - 80px);
+        overflow-y: auto;
         /* Match User Menu Style */
         background-color: var(--surface-color);
         /* #1e1e1e or similar */
