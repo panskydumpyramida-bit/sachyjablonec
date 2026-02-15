@@ -343,12 +343,14 @@
             padding: 1rem;
             display: flex;
             flex-direction: column;
+            overflow: hidden;
         }
 
         .game-info {
             margin-bottom: 0.75rem;
             padding-bottom: 0.75rem;
             border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            flex-shrink: 0;
         }
 
         .game-info h3 {
@@ -366,17 +368,22 @@
             gap: 1rem;
             flex: 1;
             min-height: 0;
-            flex-wrap: wrap;
+            overflow: hidden;
         }
 
         .board-wrapper {
-            width: 55%;
-            min-width: 300px;
-            flex: 1 1 300px;
+            flex: 0 1 auto;
+            width: auto;
+            max-width: 55%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
         }
 
         #chessBoard {
             width: 100% !important;
+            max-height: 100%;
+            aspect-ratio: 1;
         }
 
         .board-controls {
