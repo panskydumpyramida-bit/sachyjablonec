@@ -1397,7 +1397,7 @@ const AUTO_FORMAT_PATTERNS = {
 
     // Common Czech chess names (can be expanded)
     // Format: "Příjmení, J." or "J. Příjmení" - detected by capital letters
-    names: /\b([A-ZÁČĎÉĚÍŇÓŘŠŤÚŮÝŽ][a-záčďéěíňóřšťúůýž]+),?\s+([A-ZÁČĎÉĚÍŇÓŘŠŤÚŮÝŽ])\./g
+    names: /(?<![A-ZÁČĎÉĚÍŇÓŘŠŤÚŮÝŽa-záčďéěíňóřšťúůýž])([A-ZÁČĎÉĚÍŇÓŘŠŤÚŮÝŽ][a-záčďéěíňóřšťúůýž]+),?\s+([A-ZÁČĎÉĚÍŇÓŘŠŤÚŮÝŽ])\./g
 };
 
 /**
@@ -1543,7 +1543,7 @@ function autoFormatEntireContent() {
     // 2. Format player names: Two words with first capital letter = name
     // Examples: "Petr Novák", "Jan Kowalski", "Marie Dvořáková"
     // Pattern: Word starting with uppercase + space + Word starting with uppercase
-    const namePattern = /(?<!<span[^>]*>)\b([A-ZÁČĎÉĚÍŇÓŘŠŤÚŮÝŽ][a-záčďéěíňóřšťúůýž]+)\s+([A-ZÁČĎÉĚÍŇÓŘŠŤÚŮÝŽ][a-záčďéěíňóřšťúůýž]+)\b(?![^<]*<\/span>)/g;
+    const namePattern = /(?<!<span[^>]*>)(?<![A-ZÁČĎÉĚÍŇÓŘŠŤÚŮÝŽa-záčďéěíňóřšťúůýž])([A-ZÁČĎÉĚÍŇÓŘŠŤÚŮÝŽ][a-záčďéěíňóřšťúůýž]+)\s+([A-ZÁČĎÉĚÍŇÓŘŠŤÚŮÝŽ][a-záčďéěíňóřšťúůýž]+)(?![A-ZÁČĎÉĚÍŇÓŘŠŤÚŮÝŽa-záčďéěíňóřšťúůýž])(?![^<]*<\/span>)/g;
 
     html = html.replace(namePattern, (match, firstName, lastName) => {
         nameChanges++;
