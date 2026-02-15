@@ -947,7 +947,7 @@ class DiagramViewer {
                     const dx = e.x - s.x;
                     const dy = e.y - s.y;
                     const len = Math.sqrt(dx * dx + dy * dy);
-                    const arrowSize = Math.max(8, s.width * 0.3);
+                    const arrowSize = Math.max(12, s.width * 0.5);
                     const shortenBy = arrowSize * 0.6;
                     const ex = len > 0 ? e.x - (dx / len) * shortenBy : e.x;
                     const ey = len > 0 ? e.y - (dy / len) * shortenBy : e.y;
@@ -1021,7 +1021,7 @@ class DiagramViewer {
 
         const defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
         // Arrow size proportional to square (~30% of square width)
-        const arrowSize = Math.max(8, (squareWidth || 40) * 0.3);
+        const arrowSize = Math.max(12, (squareWidth || 40) * 0.5);
 
         Object.keys(VIEWER_COLORS).forEach(colorKey => {
             const color = VIEWER_COLORS[colorKey];
