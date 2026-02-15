@@ -566,6 +566,7 @@
                     </div>
                     ${game.source === 'recorded' ? `
                         <div class="game-actions" onclick="event.stopPropagation()">
+                            ${auth.isAdmin() ? `<a href="/game-recorder?id=${game.id}" class="action-btn-mini" title="Upravit" style="text-decoration:none;"><i class="fa-solid fa-pen-to-square"></i></a>` : ''}
                             <button class="action-btn-mini" onclick="downloadPgn(${game.id})" title="Stáhnout PGN">
                                 <i class="fa-solid fa-download"></i>
                             </button>
