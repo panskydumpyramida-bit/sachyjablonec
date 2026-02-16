@@ -491,6 +491,14 @@ section {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
     gap: 2rem;
+    min-height: 700px;
+    /* Reserve space for JS-loaded cards — prevents CLS */
+}
+
+@media (max-width: 768px) {
+    .card-grid {
+        min-height: 400px;
+    }
 }
 
 .card {
