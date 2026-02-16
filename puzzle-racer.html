@@ -477,10 +477,15 @@
         }
 
         .ps-badges-grid {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 0.5rem;
-            justify-content: center;
+            display: grid;
+            grid-template-columns: repeat(8, 1fr);
+            gap: 0.4rem;
+        }
+
+        @media (max-width: 768px) {
+            .ps-badges-grid {
+                grid-template-columns: repeat(4, 1fr);
+            }
         }
 
         .ps-badge {
@@ -488,10 +493,8 @@
             flex-direction: column;
             align-items: center;
             gap: 0.15rem;
-            padding: 0.5rem 0.6rem 0.4rem;
+            padding: 0.4rem 0.2rem 0.3rem;
             border-radius: 0.6rem;
-            min-width: 65px;
-            max-width: 90px;
             transition: all 0.3s ease;
             cursor: default;
             position: relative;
