@@ -1288,17 +1288,32 @@ async function loadPersonalStats() {
                 '</div>';
         }
 
-        // Build badges grid
+        // Build badges grid (tiered system)
         let badgesHtml = '';
         if (stats.badges && stats.badges.length > 0) {
-            const earnedCount = stats.badges.filter(b => b.earned).length;
+            const tierLabels = { 0: '', 1: 'Bronze', 2: 'Stříbro', 3: 'Zlato', 4: 'Diamant' };
+            const tierColors = { 0: 'locked', 1: 'bronze', 2: 'silver', 3: 'gold', 4: 'diamond' };
+            const totalEarned = stats.badges.reduce((sum, b) => sum + b.tier, 0);
+            const totalPossible = stats.badges.reduce((sum, b) => sum + b.maxTier, 0);
+
             badgesHtml = `<div class="ps-badges-section">
-                <div class="ps-badges-title">🏅 Odznaky <span class="ps-badges-count">${earnedCount}/${stats.badges.length}</span></div>
+                <div class="ps-badges-title">🏅 Odznaky <span class="ps-badges-count">${totalEarned}/${totalPossible}</span></div>
                 <div class="ps-badges-grid">`;
             stats.badges.forEach(b => {
-                badgesHtml += `<div class="ps-badge ${b.earned ? 'earned' : 'locked'}" title="${b.name}: ${b.desc}">
+                const tierClass = tierColors[b.tier] || 'locked';
+                const tierLabel = b.tier > 0 ? tierLabels[b.tier] : '';
+                const tooltip = b.tier > 0
+                    ? `${b.name} — ${tierLabel}${b.nextReq ? '\nDalší: ' + b.nextReq : ' ✓ MAX'}`
+                    : `${b.name}\nDalší: ${b.nextReq || ''}`;
+                // Tier dots (filled up to current tier)
+                let dotsHtml = '';
+                for (let i = 1; i <= b.maxTier; i++) {
+                    dotsHtml += `<span class="tier-dot ${i <= b.tier ? 'filled tier-' + tierColors[i] : ''}"></span>`;
+                }
+                badgesHtml += `<div class="ps-badge tier-${tierClass}" title="${tooltip}">
                     <span class="ps-badge-icon">${b.icon}</span>
                     <span class="ps-badge-name">${b.name}</span>
+                    <div class="ps-badge-dots">${dotsHtml}</div>
                 </div>`;
             });
             badgesHtml += '</div></div>';

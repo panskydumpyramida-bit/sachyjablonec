@@ -387,26 +387,67 @@ router.get('/my-stats', async (req, res) => {
         });
         const hasPerfectGame = !!perfectGame;
 
-        // --- Compute Badges ---
+        // --- Compute Tiered Badges ---
         const bestScore = top3[0]?.score || 0;
         const bestStreak = avgResult._max.maxStreak || 0;
 
+        // Each category has tiers: bronze → silver → gold (→ diamond for 4-tier categories)
+        // `tier` = highest earned level (0=none, 1=bronze, 2=silver, 3=gold, 4=diamond)
         const allBadges = [
-            { id: 'first_game', name: 'První hra', icon: '🎮', desc: 'Odehraj svou první hru', earned: totalGames >= 1 },
-            { id: 'ten_games', name: 'Desítka', icon: '🔟', desc: 'Odehraj 10 her', earned: totalGames >= 10 },
-            { id: 'fifty_games', name: 'Veterán', icon: '⭐', desc: 'Odehraj 50 her', earned: totalGames >= 50 },
-            { id: 'century', name: 'Stovka', icon: '💯', desc: 'Odehraj 100 her', earned: totalGames >= 100 },
-            { id: 'score_10', name: 'Řešitel', icon: '⚡', desc: 'Dosáhni skóre 10+', earned: bestScore >= 10 },
-            { id: 'score_20', name: 'Expert', icon: '🧠', desc: 'Dosáhni skóre 20+', earned: bestScore >= 20 },
-            { id: 'score_30', name: 'Mistr', icon: '👑', desc: 'Dosáhni skóre 30+', earned: bestScore >= 30 },
-            { id: 'score_40', name: 'Legenda', icon: '🌟', desc: 'Dosáhni skóre 40+', earned: bestScore >= 40 },
-            { id: 'streak_3', name: '3 dny v řadě', icon: '🔥', desc: 'Hraj 3 dny po sobě', earned: dayStreak >= 3 },
-            { id: 'streak_7', name: 'Týden v řadě', icon: '📅', desc: 'Hraj 7 dní po sobě', earned: dayStreak >= 7 },
-            { id: 'streak_30', name: 'Měsíční série', icon: '🏔️', desc: 'Hraj 30 dní po sobě', earned: dayStreak >= 30 },
-            { id: 'accuracy_80', name: 'Přesný střelec', icon: '🎯', desc: 'Průměrná přesnost 80%+', earned: avgAccuracy !== null && avgAccuracy >= 80 },
-            { id: 'accuracy_95', name: 'Snajpr', icon: '💎', desc: 'Průměrná přesnost 95%+', earned: avgAccuracy !== null && avgAccuracy >= 95 },
-            { id: 'perfect_game', name: 'Bezchybná hra', icon: '✨', desc: 'Dokonči hru bez chyby (5+ úloh)', earned: hasPerfectGame },
+            {
+                id: 'games', name: 'Hráč', icon: '🎮',
+                tiers: [
+                    { level: 1, label: 'Bronze', req: 'Odehraj 1 hru', earned: totalGames >= 1 },
+                    { level: 2, label: 'Stříbro', req: 'Odehraj 10 her', earned: totalGames >= 10 },
+                    { level: 3, label: 'Zlato', req: 'Odehraj 50 her', earned: totalGames >= 50 },
+                    { level: 4, label: 'Diamant', req: 'Odehraj 100 her', earned: totalGames >= 100 },
+                ],
+            },
+            {
+                id: 'score', name: 'Skóre', icon: '⚡',
+                tiers: [
+                    { level: 1, label: 'Bronze', req: 'Skóre 10+', earned: bestScore >= 10 },
+                    { level: 2, label: 'Stříbro', req: 'Skóre 20+', earned: bestScore >= 20 },
+                    { level: 3, label: 'Zlato', req: 'Skóre 30+', earned: bestScore >= 30 },
+                    { level: 4, label: 'Diamant', req: 'Skóre 40+', earned: bestScore >= 40 },
+                ],
+            },
+            {
+                id: 'streak', name: 'Série', icon: '🔥',
+                tiers: [
+                    { level: 1, label: 'Bronze', req: '3 dny v řadě', earned: dayStreak >= 3 },
+                    { level: 2, label: 'Stříbro', req: '7 dní v řadě', earned: dayStreak >= 7 },
+                    { level: 3, label: 'Zlato', req: '30 dní v řadě', earned: dayStreak >= 30 },
+                ],
+            },
+            {
+                id: 'accuracy', name: 'Přesnost', icon: '🎯',
+                tiers: [
+                    { level: 1, label: 'Bronze', req: 'Přesnost 80%+', earned: avgAccuracy !== null && avgAccuracy >= 80 },
+                    { level: 2, label: 'Stříbro', req: 'Přesnost 90%+', earned: avgAccuracy !== null && avgAccuracy >= 90 },
+                    { level: 3, label: 'Zlato', req: 'Přesnost 95%+', earned: avgAccuracy !== null && avgAccuracy >= 95 },
+                ],
+            },
+            {
+                id: 'perfect', name: 'Bezchybná hra', icon: '✨',
+                tiers: [
+                    { level: 1, label: 'Zlato', req: 'Dokonči hru bez chyby (5+ úloh)', earned: hasPerfectGame },
+                ],
+            },
         ];
+
+        // Compute tier for each badge category
+        allBadges.forEach(badge => {
+            badge.tier = 0;
+            for (const t of badge.tiers) {
+                if (t.earned) badge.tier = t.level;
+            }
+            // Next tier info for progress display
+            const nextTier = badge.tiers.find(t => !t.earned);
+            badge.nextReq = nextTier ? nextTier.req : null;
+            badge.nextLevel = nextTier ? nextTier.level : null;
+            badge.maxTier = badge.tiers.length;
+        });
 
         res.json({
             bestScore,
