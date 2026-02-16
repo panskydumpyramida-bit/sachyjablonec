@@ -79,9 +79,10 @@ export const getAllNews = async (req, res) => {
                     }
                 }
             },
-            orderBy: {
-                publishedDate: 'desc'
-            }
+            orderBy: [
+                { publishedDate: 'desc' },
+                { id: 'desc' }
+            ]
         };
 
         if (isPaginated) {

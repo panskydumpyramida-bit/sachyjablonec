@@ -237,7 +237,15 @@ function switchTab(tab) {
     setTabHash(tab);
 
     // Load data for view
-    if (tab === 'dashboard') loadDashboard();
+    if (tab === 'dashboard') {
+        loadDashboard();
+        // Clean up stale editId from URL when going to dashboard
+        const url = new URL(window.location);
+        if (url.searchParams.has('editId')) {
+            url.searchParams.delete('editId');
+            window.history.replaceState({}, '', url);
+        }
+    }
     else if (tab === 'members') loadMembers();
     else if (tab === 'users') loadUsers();
     else if (tab === 'messages') loadAdminMessages();
@@ -552,16 +560,19 @@ window.showAdmin = function () {
     if (typeof checkMaintenance === 'function') {
         checkMaintenance();
     }
-    // Restore tab from URL hash after login/auth
-    if (savedTabFromHash && savedTabFromHash !== 'dashboard') {
-        setTimeout(() => switchTab(savedTabFromHash), 100);
-    }
-
     // Restore article editing from URL ?editId=... parameter
     const editIdParam = new URLSearchParams(window.location.search).get('editId');
     if (editIdParam && typeof editNews === 'function') {
         // Delay slightly to ensure tab switch and user data are ready
         setTimeout(() => editNews(editIdParam), 200);
+    } else if (savedTabFromHash && savedTabFromHash !== 'dashboard') {
+        // Restore tab from URL hash, but if it's 'editor' without editId,
+        // redirect to dashboard (empty editor after reload is confusing)
+        if (savedTabFromHash === 'editor') {
+            setTimeout(() => switchTab('dashboard'), 100);
+        } else {
+            setTimeout(() => switchTab(savedTabFromHash), 100);
+        }
     }
 };
 
