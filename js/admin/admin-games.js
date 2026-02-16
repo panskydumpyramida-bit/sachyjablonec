@@ -103,18 +103,24 @@ function previewGamePgn(id) {
                 <p style="color: var(--text-muted, #888); font-size: 0.9rem;">
                     ${game.event || ''} • ${game.result || '*'} • ${new Date(game.date || game.createdAt).toLocaleDateString('cs-CZ')}
                 </p>
-                <pre style="background: #0a0a0a; padding: 1rem; border-radius: 6px; overflow-x: auto; font-size: 0.85rem; white-space: pre-wrap; word-break: break-word; color: #e0e0e0; border: 1px solid rgba(255,255,255,0.1);">${escapeHtml(game.pgn || 'Žádná PGN data')}</pre>
+                <pre id="pgnPreviewText" style="background: #0a0a0a; padding: 1rem; border-radius: 6px; overflow-x: auto; font-size: 0.85rem; white-space: pre-wrap; word-break: break-word; color: #e0e0e0; border: 1px solid rgba(255,255,255,0.1);">${escapeHtml(game.pgn || 'Žádná PGN data')}</pre>
                 <div style="display: flex; gap: 0.5rem; margin-top: 1rem;">
                     <a href="/game-recorder?id=${game.id}" target="_blank" class="btn-primary" style="text-decoration: none; padding: 0.6rem 1rem; background: var(--primary-color, #d4af37); color: #000; border-radius: 6px; font-weight: 600;">
                         <i class="fa-solid fa-edit"></i> Upravit
                     </a>
-                    <button class="btn-secondary" onclick="copyToClipboard(\`${escapeHtml(game.pgn || '').replace(/`/g, '\\`')}\`)" style="padding: 0.6rem 1rem; background: transparent; color: #fff; border: 1px solid rgba(255,255,255,0.2); border-radius: 6px; cursor: pointer;">
+                    <button class="btn-secondary" id="copyPgnBtn" style="padding: 0.6rem 1rem; background: transparent; color: #fff; border: 1px solid rgba(255,255,255,0.2); border-radius: 6px; cursor: pointer;">
                         <i class="fa-solid fa-copy"></i> Kopírovat PGN
                     </button>
                 </div>
             </div>
         `;
             document.body.appendChild(modal);
+
+            // Attach copy handler properly (avoids inline escaping issues)
+            document.getElementById('copyPgnBtn').addEventListener('click', () => {
+                const pgnText = game.pgn || '';
+                copyToClipboard(pgnText);
+            });
 
             modal.addEventListener('click', (e) => {
                 if (e.target === modal) closePgnPreview();
