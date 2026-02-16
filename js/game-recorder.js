@@ -680,6 +680,10 @@ function onSnapEnd() {
     if (lastMove) {
         highlightMove(lastMove.source, lastMove.target);
     }
+    // Re-trigger engine analysis after board settles (fixes engine not running for last move)
+    if (recEngineActive) {
+        setTimeout(() => analyzeCurrentPosition(), 50);
+    }
 }
 
 // Undo / Go Back — navigate to parent node
