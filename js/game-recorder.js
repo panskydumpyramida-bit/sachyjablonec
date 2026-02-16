@@ -408,6 +408,23 @@ function updateMoveHistory() {
         });
     });
 
+    // Attach click-to-edit handlers for inline comments
+    moveListEl.querySelectorAll('.move-comment').forEach(el => {
+        el.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const idx = parseInt(el.getAttribute('data-comment-idx'));
+            const node = _nodeRegistry[idx];
+            if (!node) return;
+            navigateToNode(node);
+            // Focus the comment textarea for editing
+            const commentBox = document.getElementById('moveComment');
+            if (commentBox) {
+                commentBox.focus();
+                commentBox.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+            }
+        });
+    });
+
     // Scroll to current move
     const activeMove = moveListEl.querySelector('.move.active');
     if (activeMove) {
@@ -420,6 +437,8 @@ function renderMoveLine(startNode, startPly, isVariation) {
     let node = startNode;
     let ply = startPly;
 
+    let pairOpen = false;
+
     while (node.children.length > 0) {
         const mainChild = node.children[0];
         ply++;
@@ -429,27 +448,56 @@ function renderMoveLine(startNode, startPly, isVariation) {
         const regIdx = _nodeRegistry.length;
         _nodeRegistry.push(mainChild);
 
+        // Check for inline comment on this move
+        const comment = moveComments[mainChild.fen];
+        const commentHtml = comment ? `<span class="move-comment" data-comment-idx="${regIdx}" title="Klikni pro úpravu">${comment}</span>` : '';
+
         if (isWhite) {
             html += `<div class="move-pair">`;
+            pairOpen = true;
             html += `<span class="move-number">${moveNum}.</span>`;
             html += `<span class="move ${isActive}" data-node-idx="${regIdx}">${mainChild.san}</span>`;
+            if (mainChild.children.length === 0) {
+                // Last move — close pair
+                html += `</div>`;
+                pairOpen = false;
+                if (comment) html += commentHtml;
+            } else if (comment) {
+                // White has comment but game continues — close pair, show comment
+                html += `</div>`;
+                pairOpen = false;
+                html += commentHtml;
+            }
+            // Otherwise pair stays open for black move
         } else {
-            // If starting a variation on black's move, show move number with "..."
             if (node === startNode && isVariation) {
+                // Variation starting on black's move — needs its own pair
                 html += `<div class="move-pair">`;
                 html += `<span class="move-number">${moveNum}...</span>`;
-                html += `<span class="move"></span>`; // empty white
+                html += `<span class="move"></span>`;
+                html += `<span class="move ${isActive}" data-node-idx="${regIdx}">${mainChild.san}</span>`;
+                html += `</div>`;
+                pairOpen = false;
+            } else if (!pairOpen) {
+                // Pair was closed early (white had a comment) — black needs its own pair
+                html += `<div class="move-pair">`;
+                html += `<span class="move-number">${moveNum}...</span>`;
+                html += `<span class="move"></span>`;
                 html += `<span class="move ${isActive}" data-node-idx="${regIdx}">${mainChild.san}</span>`;
                 html += `</div>`;
             } else {
+                // Normal: append black move to existing pair
                 html += `<span class="move ${isActive}" data-node-idx="${regIdx}">${mainChild.san}</span>`;
                 html += `</div>`;
+                pairOpen = false;
             }
+            if (comment) html += commentHtml;
         }
 
-        // Close the pair if white move and no black sibling coming
-        if (isWhite && mainChild.children.length === 0) {
+        // Close pair if white's last move without comment (and pair still open)
+        if (isWhite && mainChild.children.length === 0 && !comment && pairOpen) {
             html += `</div>`;
+            pairOpen = false;
         }
 
         // Render sub-variations (children[1+] of the current node)
@@ -462,6 +510,9 @@ function renderMoveLine(startNode, startPly, isVariation) {
             const varIsWhite = (varPly % 2 === 1);
             const varActive = (varNode === currentNode) ? 'active' : '';
 
+            const varComment = moveComments[varNode.fen];
+            const varCommentHtml = varComment ? `<span class="move-comment" data-comment-idx="${varIdx}" title="Klikni pro úpravu">${varComment}</span>` : '';
+
             html += `<div class="variation-line">`;
             html += `<div class="variation-header">`;
             html += `<div class="variation-actions">`;
@@ -470,13 +521,12 @@ function renderMoveLine(startNode, startPly, isVariation) {
             html += `<span class="var-btn var-btn-delete" data-action="delete" data-target-idx="${varIdx}" title="Smazat">×</span>`;
             html += `</div></div>`;
 
-            // Render first move of variation
             html += `<div class="move-pair">`;
             html += `<span class="move-number">${varMoveNum}.${varIsWhite ? '' : '..'}</span>`;
             html += `<span class="move ${varActive}" data-node-idx="${varIdx}">${varNode.san}</span>`;
             html += `</div>`;
+            if (varComment) html += varCommentHtml;
 
-            // Continue rendering the rest of this variation line
             if (varNode.children.length > 0) {
                 html += renderMoveLine(varNode, varPly, true);
             }
@@ -1254,6 +1304,18 @@ document.addEventListener('DOMContentLoaded', () => {
                     bubble.style.display = 'none';
                 }
             }
+
+            // Update inline comment in move list without full re-render
+            updateMoveHistory();
+
+            // Update PGN output
+            const pgnOutput = document.getElementById('pgnOutput');
+            if (pgnOutput) {
+                pgnOutput.value = generateAnnotatedPgn();
+            }
+
+            // Re-focus comment box after move list update
+            commentBox.focus();
         });
     }
 });
