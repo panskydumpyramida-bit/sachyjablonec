@@ -510,6 +510,7 @@ section {
     height: 200px;
     overflow: hidden;
     background: rgba(255, 255, 255, 0.03);
+    contain: layout style;
 }
 
 .card-image img {
@@ -656,6 +657,8 @@ footer {
     padding: 3rem 0;
     margin-top: 3rem;
     border-top: 1px solid rgba(255, 255, 255, 0.05);
+    min-height: 450px;
+    /* Reserve space to prevent CLS when loaded via XHR */
 }
 
 .footer-content {
