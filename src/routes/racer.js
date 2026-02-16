@@ -327,6 +327,7 @@ router.get('/my-stats', async (req, res) => {
 
         // --- Day Streak (consecutive days with at least 1 game, counting back from today) ---
         let dayStreak = 0;
+        let uniqueDates = [];
         if (totalGames > 0) {
             // Get distinct dates (as date strings) with games, ordered desc
             const allGames = await prisma.puzzleRaceResult.findMany({
@@ -336,7 +337,7 @@ router.get('/my-stats', async (req, res) => {
             });
 
             // Extract unique dates (YYYY-MM-DD in local time)
-            const uniqueDates = [...new Set(allGames.map(g => {
+            uniqueDates = [...new Set(allGames.map(g => {
                 const d = new Date(g.createdAt);
                 return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
             }))].sort().reverse(); // most recent first
@@ -393,15 +394,14 @@ router.get('/my-stats', async (req, res) => {
         // --- Leaderboard rank (for Šampion badge) ---
         let leaderboardRank = 999;
         try {
-            const betterResults = await prisma.puzzleRaceResult.groupBy({
-                by: ['userId'],
-                where: { mode, userId: { not: null } },
-                _max: { score: true },
-                orderBy: { _max: { score: 'desc' } },
-                take: 100
-            });
-            const rankIndex = betterResults.findIndex(r => r.userId === userId);
-            if (rankIndex >= 0) leaderboardRank = rankIndex + 1;
+            const rankResult = await prisma.$queryRaw`
+                SELECT COUNT(DISTINCT user_id) + 1 AS rank
+                FROM puzzle_race_results
+                WHERE mode = ${mode}
+                  AND user_id IS NOT NULL
+                  AND score > COALESCE((SELECT MAX(score) FROM puzzle_race_results WHERE user_id = ${userId} AND mode = ${mode}), 0)
+            `;
+            leaderboardRank = Number(rankResult[0]?.rank || 999);
         } catch (e) { /* ignore */ }
 
         // --- Compute Tiered Badges ---
