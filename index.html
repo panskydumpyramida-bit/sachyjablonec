@@ -20,7 +20,12 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
         href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@400;700&display=swap"
-        rel="stylesheet">
+        rel="stylesheet" media="print" onload="this.media='all'">
+    <noscript>
+        <link
+            href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@400;700&display=swap"
+            rel="stylesheet">
+    </noscript>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
         media="print" onload="this.media='all'">
     <noscript>
@@ -290,20 +295,24 @@
 
     <footer id="global-footer"></footer>
 
-    <script src="js/config.js?v=4"></script>
-    <script src="js/auth.js?v=6"></script>
-    <script src="js/layout-loader.js?v=5"></script>
+    <script src="js/config.js?v=4" defer></script>
+    <script src="js/auth.js?v=6" defer></script>
+    <script src="js/layout-loader.js?v=5" defer></script>
     <script src="js/main.js?v=2" defer></script>
     <script src="js/news-loader.js?v=4" defer></script>
     <script src="js/upcoming-matches.js" defer></script>
 
-    <!-- Chessboard.js & Diagram Dependencies -->
-    <link rel="stylesheet" href="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.css">
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
-    <script src="js/diagram-viewer.js"></script>
-    <script src="js/diagram-book.js"></script>
+    <!-- Chessboard.js & Diagram Dependencies (deferred — needed only for diagrams below fold) -->
+    <link rel="stylesheet" href="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.css"
+        media="print" onload="this.media='all'">
+    <noscript>
+        <link rel="stylesheet" href="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.css">
+    </noscript>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js" defer></script>
+    <script src="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.js" defer></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js" defer></script>
+    <script src="js/diagram-viewer.js" defer></script>
+    <script src="js/diagram-book.js" defer></script>
 </body>
 
 </html>
