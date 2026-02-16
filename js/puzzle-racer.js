@@ -1241,10 +1241,15 @@ async function loadLeaderboard(period = 'all') {
                 ? '<i class="fa-solid fa-circle-check" style="color: #4ade80; margin-right: 0.3rem;" title="Registrovaný hráč"></i>'
                 : '<i class="fa-solid fa-user-secret" style="color: var(--text-muted); margin-right: 0.3rem; opacity: 0.5;" title="Anonymní hráč"></i>';
 
+            // Make registered player names clickable
+            const nameHtml = entry.isRegistered && entry.userId
+                ? `<a href="#" onclick="showPlayerProfile(${entry.userId}, '${escapeHtml(entry.playerName).replace(/'/g, "\\'")}'); return false;" style="color: inherit; text-decoration: none; border-bottom: 1px dashed rgba(255,255,255,0.3); cursor: pointer;" title="Zobrazit profil hráče">${escapeHtml(entry.playerName)}</a>`
+                : escapeHtml(entry.playerName);
+
             return `
                 <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
                     <td style="padding: 1rem; color: var(--text-muted);">#${index + 1}</td>
-                    <td style="padding: 1rem; font-weight: 600;">${medal}${userIcon}${escapeHtml(entry.playerName)}</td>
+                    <td style="padding: 1rem; font-weight: 600;">${medal}${userIcon}${nameHtml}</td>
                     <td style="padding: 1rem; color: #4ade80; font-weight: 700; font-size: 1.1rem;">${entry.score}</td>
                     <td style="padding: 1rem; color: var(--text-muted); font-size: 0.85rem;">${new Date(entry.createdAt).toLocaleString('cs-CZ')}</td>
                 </tr>
@@ -1359,6 +1364,112 @@ function detectLoggedInUser() {
         };
     } catch (e) {
         return null;
+    }
+}
+// Show another player's profile in a modal
+async function showPlayerProfile(userId, playerName) {
+    const urlParams = new URLSearchParams(window.location.search);
+    const mode = urlParams.get('mode') === 'thematic' ? 'thematic' : 'vanilla';
+
+    // Create overlay
+    let overlay = document.getElementById('playerProfileOverlay');
+    if (!overlay) {
+        overlay = document.createElement('div');
+        overlay.id = 'playerProfileOverlay';
+        overlay.style.cssText = 'position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,0.85);display:flex;align-items:center;justify-content:center;padding:1rem;';
+        overlay.addEventListener('click', (e) => { if (e.target === overlay) overlay.remove(); });
+        document.body.appendChild(overlay);
+    }
+
+    overlay.innerHTML = `<div style="background:var(--card-bg,#1a1a2e);border:1px solid rgba(255,255,255,0.1);border-radius:1rem;padding:1.5rem;max-width:600px;width:100%;max-height:90vh;overflow-y:auto;color:var(--text-main,#fff);">
+        <div style="text-align:center;"><i class="fa-solid fa-spinner fa-spin"></i> Načítám profil...</div>
+    </div>`;
+
+    try {
+        const res = await fetch(`${API_URL}/racer/my-stats?userId=${userId}&mode=${mode}`);
+        if (!res.ok) throw new Error('Failed');
+        const stats = await res.json();
+
+        const tierColors = { 0: 'locked', 1: 'bronze', 2: 'silver', 3: 'gold', 4: 'diamond' };
+
+        // Build badges
+        let badgesHtml = '';
+        if (stats.badges && stats.badges.length > 0) {
+            const totalEarned = stats.badges.reduce((sum, b) => sum + b.tier, 0);
+            const totalPossible = stats.badges.reduce((sum, b) => sum + b.maxTier, 0);
+            badgesHtml = `<div style="margin-top:1rem;"><div style="text-align:center;font-weight:600;margin-bottom:0.5rem;">🏅 Odznaky ${totalEarned}/${totalPossible}</div>
+                <div class="ps-badges-grid">`;
+            stats.badges.forEach(b => {
+                const tierClass = tierColors[b.tier] || 'locked';
+                const currentReq = b.tier > 0 && b.tiers[b.tier - 1] ? b.tiers[b.tier - 1].req : '';
+                const nextReq = b.nextReq || '';
+                const reqText = b.tier > 0 ? currentReq : nextReq;
+                let dotsHtml = '';
+                for (let i = 1; i <= b.maxTier; i++) {
+                    dotsHtml += `<span class="tier-dot ${i <= b.tier ? 'filled tier-' + tierColors[i] : ''}"></span>`;
+                }
+                badgesHtml += `<div class="ps-badge tier-${tierClass}">
+                    <span class="ps-badge-icon">${b.icon}</span>
+                    <span class="ps-badge-name">${b.name}</span>
+                    <span class="ps-badge-req">${reqText}</span>
+                    <div class="ps-badge-dots">${dotsHtml}</div>
+                </div>`;
+            });
+            badgesHtml += '</div></div>';
+        }
+
+        // Build top3
+        let top3Html = '';
+        if (stats.top3 && stats.top3.length > 0) {
+            const medals = ['🥇', '🥈', '🥉'];
+            top3Html = `<div style="margin-top:0.8rem;border-top:1px solid rgba(255,255,255,0.1);padding-top:0.8rem;">
+                <div style="text-align:center;font-weight:600;margin-bottom:0.4rem;">🏅 Top 3</div>`;
+            stats.top3.forEach((r, i) => {
+                top3Html += `<div style="display:flex;align-items:center;gap:0.5rem;justify-content:center;padding:0.2rem 0;">
+                    <span>${medals[i]}</span>
+                    <span style="color:#4ade80;font-weight:700;">${r.score}</span>
+                    <span style="color:var(--text-muted);font-size:0.8rem;">${new Date(r.date).toLocaleDateString('cs-CZ')}</span>
+                </div>`;
+            });
+            top3Html += '</div>';
+        }
+
+        const modal = overlay.querySelector('div');
+        modal.innerHTML = `
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">
+                <h3 style="margin:0;color:#fbbf24;">👤 ${escapeHtml(playerName)}</h3>
+                <button onclick="document.getElementById('playerProfileOverlay').remove();" style="background:none;border:none;color:var(--text-muted);font-size:1.3rem;cursor:pointer;">✕</button>
+            </div>
+            <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:0.5rem;text-align:center;">
+                <div style="background:rgba(255,255,255,0.05);border-radius:0.5rem;padding:0.5rem;">
+                    <div style="font-size:1.2rem;font-weight:700;">${stats.bestScore}</div>
+                    <div style="font-size:0.7rem;color:var(--text-muted);">Nejlepší</div>
+                </div>
+                <div style="background:rgba(255,255,255,0.05);border-radius:0.5rem;padding:0.5rem;">
+                    <div style="font-size:1.2rem;font-weight:700;">${stats.avgScore || '–'}</div>
+                    <div style="font-size:0.7rem;color:var(--text-muted);">Průměr</div>
+                </div>
+                <div style="background:rgba(255,255,255,0.05);border-radius:0.5rem;padding:0.5rem;">
+                    <div style="font-size:1.2rem;font-weight:700;">${stats.totalGames}</div>
+                    <div style="font-size:0.7rem;color:var(--text-muted);">Her</div>
+                </div>
+                <div style="background:rgba(255,255,255,0.05);border-radius:0.5rem;padding:0.5rem;">
+                    <div style="font-size:1.2rem;font-weight:700;">${stats.avgAccuracy != null ? stats.avgAccuracy + '%' : '–'}</div>
+                    <div style="font-size:0.7rem;color:var(--text-muted);">Přesnost</div>
+                </div>
+            </div>
+            ${top3Html}
+            ${badgesHtml}
+        `;
+    } catch (e) {
+        console.error('Profile error:', e);
+        overlay.querySelector('div').innerHTML = `
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">
+                <h3 style="margin:0;">👤 ${escapeHtml(playerName)}</h3>
+                <button onclick="document.getElementById('playerProfileOverlay').remove();" style="background:none;border:none;color:var(--text-muted);font-size:1.3rem;cursor:pointer;">✕</button>
+            </div>
+            <p style="color:#fca5a5;text-align:center;">Nepodařilo se načíst profil hráče.</p>
+        `;
     }
 }
 
