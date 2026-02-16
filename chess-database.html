@@ -377,14 +377,23 @@
         }
 
         .board-wrapper {
-            /* Board is square, so limit width to available vertical space */
-            /* Takes remaining space after 220px moves panel, capped by available height */
             flex: 1;
             max-width: calc(100vh - 350px);
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+            overflow: hidden;
+        }
+
+        .gv2-board-area-inner {
+            flex: 1;
+            min-height: 0;
+            overflow: hidden;
         }
 
         #chessBoard {
             width: 100% !important;
+            max-height: 100%;
         }
 
         .board-controls {
@@ -392,6 +401,7 @@
             justify-content: center;
             gap: 0.4rem;
             margin-top: 0.5rem;
+            flex-shrink: 0;
         }
 
         .board-controls button {
