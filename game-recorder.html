@@ -450,6 +450,69 @@
             border-radius: 3px;
         }
 
+        /* Variation styles */
+        .variation-line {
+            margin: 2px 0 2px 8px;
+            padding: 3px 6px;
+            border-left: 2px solid rgba(212, 175, 55, 0.4);
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 0 4px 4px 0;
+            font-size: 0.88em;
+        }
+
+        .variation-line .variation-line {
+            border-left-color: rgba(96, 165, 250, 0.4);
+        }
+
+        .variation-header {
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: 1px;
+        }
+
+        .variation-actions {
+            display: flex;
+            gap: 2px;
+        }
+
+        .var-btn {
+            cursor: pointer;
+            padding: 0 4px;
+            font-size: 0.85em;
+            color: rgba(255, 255, 255, 0.4);
+            border-radius: 3px;
+            transition: all 0.15s;
+            line-height: 1.4;
+        }
+
+        .var-btn:hover {
+            color: white;
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .var-btn-delete:hover {
+            color: #f87171;
+            background: rgba(248, 113, 113, 0.15);
+        }
+
+        /* Variation Modal */
+        #variationModal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 10000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        #variationModal.active {
+            display: flex;
+        }
+
         /* Chess Board Highlights & Hints */
         .highlight-selected {
             box-shadow: inset 0 0 3px 3px yellow;
@@ -816,7 +879,7 @@
     <script src="js/layout-loader.js?v=5" defer></script>
     <script src="js/main.js" defer></script>
     <script src="js/game-viewer2.js?v=2" defer></script>
-    <script src="js/game-recorder.js?v=8.0" defer></script>
+    <script src="js/game-recorder.js?v=9.0" defer></script>
     <div id="promotionModal">
         <div class="promotion-content">
             <h3 class="promotion-title">Vyberte figuru pro povýšení</h3>
@@ -833,6 +896,30 @@
                 <div class="promotion-piece" onclick="completePromotion('n')">
                     <img src="https://chessboardjs.com/img/chesspieces/wikipedia/wN.png" data-piece="n" alt="Jezdec">
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Variation Modal -->
+    <div id="variationModal">
+        <div
+            style="background: var(--surface-color, #1e1e2e); padding: 1.5rem; border-radius: 12px; max-width: 380px; width: 90%; border: 1px solid var(--primary-color, #d4af37); text-align: center;">
+            <h3 style="color: var(--primary-color, #d4af37); margin: 0 0 0.5rem 0; font-size: 1.1rem;"><i
+                    class="fa-solid fa-code-branch"></i> Odlišný tah</h3>
+            <p id="variationInfo" style="color: rgba(255,255,255,0.7); font-size: 0.9rem; margin-bottom: 1rem;"></p>
+            <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                <button class="btn-control" onclick="resolveVariation('variation')"
+                    style="padding: 0.6rem 1rem; width: 100%; justify-content: center; background: rgba(74, 222, 128, 0.1); border-color: rgba(74, 222, 128, 0.3); color: #4ade80;">
+                    <i class="fa-solid fa-code-branch"></i> Vložit variantu
+                </button>
+                <button class="btn-control" onclick="resolveVariation('overwrite')"
+                    style="padding: 0.6rem 1rem; width: 100%; justify-content: center; background: rgba(248, 113, 113, 0.1); border-color: rgba(248, 113, 113, 0.3); color: #f87171;">
+                    <i class="fa-solid fa-pen"></i> Přepsat hlavní tah
+                </button>
+                <button class="btn-control" onclick="resolveVariation('mainline')"
+                    style="padding: 0.6rem 1rem; width: 100%; justify-content: center; background: rgba(96, 165, 250, 0.1); border-color: rgba(96, 165, 250, 0.3); color: #60a5fa;">
+                    <i class="fa-solid fa-arrow-up"></i> Nová hlavní varianta
+                </button>
             </div>
         </div>
     </div>

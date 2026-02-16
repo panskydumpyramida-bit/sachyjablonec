@@ -2,24 +2,226 @@
 let board = null;
 let game = new Chess();
 let selectedSquare = null;
-let pendingPromotion = null; // Stores {source, target} during promotion check
-let lastMove = null; // Track last move for highlight persistence {source, target}
-
-// Playback state
-let moveHistory = [];       // Full move history for navigation
-let currentMoveIndex = -1;  // -1 = start position, 0 = after first move, etc.
+let pendingPromotion = null;
+let lastMove = null;
 var autoplayInterval = null;
-
-// Track current game ID for updates (null = new game)
 let currentGameId = null;
-
-// Comments storage: FEN -> Comment String
 let moveComments = {};
-// NAG storage: FEN -> NAG String (e.g. "$1")
 let moveNags = {};
+let startingFen = null;
 
-// Track custom starting FEN (when game doesn't start from standard position)
-let startingFen = null; // null = standard start, string = custom FEN
+// ========================================
+// Move Tree Data Structure
+// ========================================
+// Each node: { move (verbose obj or null for root), san, fen, children: [node...], parent, comment, nag }
+// children[0] = main line, children[1+] = variations
+
+function createNode(move, fen, parent) {
+    return { move: move, san: move ? move.san : null, fen: fen, children: [], parent: parent || null, comment: '', nag: '' };
+}
+
+let moveTreeRoot = createNode(null, new Chess().fen(), null);
+let currentNode = moveTreeRoot;
+
+// Pending variation state
+let pendingVariationMove = null; // { from, to, promotion } waiting for modal choice
+
+function initTreeFromStartingPos() {
+    const fen = startingFen || new Chess().fen();
+    moveTreeRoot = createNode(null, fen, null);
+    currentNode = moveTreeRoot;
+}
+
+// Find child of currentNode matching a SAN
+function findChildBySan(node, san) {
+    return node.children.find(c => c.san === san);
+}
+
+// Get the ply number (half-moves from root) for a node
+function getNodePly(node) {
+    let ply = 0;
+    let n = node;
+    while (n.parent) { ply++; n = n.parent; }
+    return ply;
+}
+
+// Get main line from root as array of nodes
+function getMainLine(node) {
+    const line = [];
+    let n = node || moveTreeRoot;
+    while (n.children.length > 0) {
+        n = n.children[0];
+        line.push(n);
+    }
+    return line;
+}
+
+// Navigate game state to a specific node
+function navigateToNode(node) {
+    // Build path from root to node
+    const path = [];
+    let n = node;
+    while (n.parent) { path.unshift(n); n = n.parent; }
+    // Replay from start
+    if (startingFen) game.load(startingFen);
+    else game.reset();
+    for (const step of path) {
+        game.move(step.move);
+    }
+    currentNode = node;
+    board.position(game.fen());
+    updateStatus();
+    updateMoveHistory();
+    if (node.move) {
+        removeHighlights();
+        highlightMove(node.move.from, node.move.to);
+        lastMove = { source: node.move.from, target: node.move.to };
+    } else {
+        removeHighlights();
+        lastMove = null;
+    }
+}
+
+// Central move handler — called by onDrop, handleSquareClick, completePromotion
+function makeTreeMove(moveObj) {
+    // moveObj = { from, to, promotion }
+    // First validate the move
+    const testGame = new Chess(game.fen());
+    const result = testGame.move(moveObj);
+    if (!result) return null;
+
+    const san = result.san;
+
+    // Check if this move already exists as a child
+    const existing = findChildBySan(currentNode, san);
+    if (existing) {
+        // Same move exists — just navigate into it
+        game.move(moveObj);
+        currentNode = existing;
+        board.position(game.fen());
+        updateStatus();
+        updateMoveHistory();
+        removeHighlights();
+        highlightMove(result.from, result.to);
+        lastMove = { source: result.from, target: result.to };
+        return result;
+    }
+
+    // If there are existing children and new move differs — show variation modal
+    if (currentNode.children.length > 0) {
+        pendingVariationMove = moveObj;
+        pendingVariationMove._result = result;
+        showVariationModal(currentNode.children[0].san, san);
+        return 'pending'; // Signal that move is pending modal
+    }
+
+    // No children — just append
+    return appendMoveToTree(moveObj, result);
+}
+
+function appendMoveToTree(moveObj, result) {
+    if (!result) {
+        result = game.move(moveObj);
+        if (!result) return null;
+    } else {
+        game.move(moveObj);
+    }
+    const newNode = createNode(result, game.fen(), currentNode);
+    currentNode.children.push(newNode);
+    currentNode = newNode;
+    board.position(game.fen());
+    updateStatus();
+    updateMoveHistory();
+    removeHighlights();
+    highlightMove(result.from, result.to);
+    lastMove = { source: result.from, target: result.to };
+    return result;
+}
+
+// --- Variation Modal ---
+function showVariationModal(existingSan, newSan) {
+    const modal = document.getElementById('variationModal');
+    if (!modal) { resolveVariation('variation'); return; }
+    const info = document.getElementById('variationInfo');
+    if (info) info.textContent = `Hlavní tah: ${existingSan}  →  Váš tah: ${newSan}`;
+    modal.classList.add('active');
+}
+
+function resolveVariation(choice) {
+    const modal = document.getElementById('variationModal');
+    if (modal) modal.classList.remove('active');
+    if (!pendingVariationMove) return;
+
+    const moveObj = { from: pendingVariationMove.from, to: pendingVariationMove.to, promotion: pendingVariationMove.promotion };
+    const result = pendingVariationMove._result;
+    pendingVariationMove = null;
+
+    if (choice === 'variation') {
+        // Add as sub-variation (append to children)
+        game.move(moveObj);
+        const newNode = createNode(result, game.fen(), currentNode);
+        currentNode.children.push(newNode);
+        currentNode = newNode;
+    } else if (choice === 'overwrite') {
+        // Replace main line child
+        game.move(moveObj);
+        const newNode = createNode(result, game.fen(), currentNode);
+        currentNode.children[0] = newNode;
+        currentNode = newNode;
+    } else if (choice === 'mainline') {
+        // Insert as new main line, demote old main
+        game.move(moveObj);
+        const newNode = createNode(result, game.fen(), currentNode);
+        currentNode.children.unshift(newNode); // Insert at front
+        currentNode = newNode;
+    }
+
+    board.position(game.fen());
+    updateStatus();
+    updateMoveHistory();
+    removeHighlights();
+    highlightMove(result.from, result.to);
+    lastMove = { source: result.from, target: result.to };
+}
+window.resolveVariation = resolveVariation;
+
+// --- Promote / Demote / Delete Variation ---
+function promoteVariation(node) {
+    if (!node.parent) return;
+    const siblings = node.parent.children;
+    const idx = siblings.indexOf(node);
+    if (idx <= 0) return; // Already main or not found
+    [siblings[idx - 1], siblings[idx]] = [siblings[idx], siblings[idx - 1]];
+    updateMoveHistory();
+}
+window.promoteVariation = promoteVariation;
+
+function demoteVariation(node) {
+    if (!node.parent) return;
+    const siblings = node.parent.children;
+    const idx = siblings.indexOf(node);
+    if (idx < 0 || idx >= siblings.length - 1) return;
+    [siblings[idx], siblings[idx + 1]] = [siblings[idx + 1], siblings[idx]];
+    updateMoveHistory();
+}
+window.demoteVariation = demoteVariation;
+
+function deleteVariation(node) {
+    if (!node.parent) return;
+    const siblings = node.parent.children;
+    const idx = siblings.indexOf(node);
+    if (idx < 0) return;
+    // Don't allow deleting main line if it's the only child — or do allow it
+    siblings.splice(idx, 1);
+    // If currentNode is inside deleted subtree, navigate to parent
+    let n = currentNode;
+    while (n) {
+        if (n === node) { navigateToNode(node.parent); return; }
+        n = n.parent;
+    }
+    updateMoveHistory();
+}
+window.deleteVariation = deleteVariation;
 
 // Helper: Normalize FEN (remove move counters for more stable keying if needed, but standard FEN is fine for specific positions)
 // We will use full FEN to ensure unique positions (including castling rights/en passant) have their own comments.
@@ -165,46 +367,44 @@ function updateNagMarkerOnBoard(fenKey) {
     }
 }
 
+// Node registry for click handlers (avoids inline closures in HTML)
+let _nodeRegistry = [];
+
 function updateMoveHistory() {
     const moveListEl = document.getElementById('moveList');
     if (!moveListEl) return;
 
-    // Use savedMoves if we're in navigation mode, otherwise current game history
-    const history = savedMoves.length > 0 ? savedMoves : game.history({ verbose: true });
-    const currentPosition = savedMoves.length > 0 ? currentMoveIdx : history.length;
+    _nodeRegistry = [];
 
-    if (history.length === 0) {
+    if (moveTreeRoot.children.length === 0) {
         moveListEl.innerHTML = '<span style="color: var(--text-muted); font-size: 0.9rem;">Partie začíná...</span>';
         return;
     }
 
-    // Build move list HTML
-    let html = '';
-    for (let i = 0; i < history.length; i += 2) {
-        const moveNumber = Math.floor(i / 2) + 1;
-        const whiteMove = history[i]?.san || '';
-        const blackMove = history[i + 1]?.san || '';
-
-        // Highlight current position
-        const whiteActive = (i + 1) === currentPosition ? 'active' : '';
-        const blackActive = (i + 2) === currentPosition ? 'active' : '';
-        const whiteFuture = (i + 1) > currentPosition ? 'future' : '';
-        const blackFuture = (i + 2) > currentPosition ? 'future' : '';
-
-        html += `<div class="move-pair">
-            <span class="move-number">${moveNumber}.</span>
-            <span class="move ${whiteActive} ${whiteFuture}" data-ply="${i}">${whiteMove}</span>
-            ${blackMove ? `<span class="move ${blackActive} ${blackFuture}" data-ply="${i + 1}">${blackMove}</span>` : ''}
-        </div>`;
-    }
-
+    // Render the tree starting from root
+    const html = renderMoveLine(moveTreeRoot, 0, false);
     moveListEl.innerHTML = html;
 
-    // Add click handlers for move navigation
-    moveListEl.querySelectorAll('.move').forEach(moveEl => {
-        moveEl.addEventListener('click', () => {
-            const ply = parseInt(moveEl.getAttribute('data-ply'));
-            jumpToMove(ply + 1); // ply is 0-indexed, jumpToMove expects 1-indexed
+    // Attach click handlers via node registry
+    moveListEl.querySelectorAll('[data-node-idx]').forEach(el => {
+        el.addEventListener('click', () => {
+            const idx = parseInt(el.getAttribute('data-node-idx'));
+            const node = _nodeRegistry[idx];
+            if (node) navigateToNode(node);
+        });
+    });
+
+    // Attach variation action handlers
+    moveListEl.querySelectorAll('[data-action]').forEach(el => {
+        el.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const action = el.getAttribute('data-action');
+            const idx = parseInt(el.getAttribute('data-target-idx'));
+            const node = _nodeRegistry[idx];
+            if (!node) return;
+            if (action === 'promote') promoteVariation(node);
+            else if (action === 'demote') demoteVariation(node);
+            else if (action === 'delete') deleteVariation(node);
         });
     });
 
@@ -215,40 +415,89 @@ function updateMoveHistory() {
     }
 }
 
-// Jump to specific move by ply number (1-indexed)
+function renderMoveLine(startNode, startPly, isVariation) {
+    let html = '';
+    let node = startNode;
+    let ply = startPly;
+
+    while (node.children.length > 0) {
+        const mainChild = node.children[0];
+        ply++;
+        const moveNum = Math.ceil(ply / 2);
+        const isWhite = (ply % 2 === 1);
+        const isActive = (mainChild === currentNode) ? 'active' : '';
+        const regIdx = _nodeRegistry.length;
+        _nodeRegistry.push(mainChild);
+
+        if (isWhite) {
+            html += `<div class="move-pair">`;
+            html += `<span class="move-number">${moveNum}.</span>`;
+            html += `<span class="move ${isActive}" data-node-idx="${regIdx}">${mainChild.san}</span>`;
+        } else {
+            // If starting a variation on black's move, show move number with "..."
+            if (node === startNode && isVariation) {
+                html += `<div class="move-pair">`;
+                html += `<span class="move-number">${moveNum}...</span>`;
+                html += `<span class="move"></span>`; // empty white
+                html += `<span class="move ${isActive}" data-node-idx="${regIdx}">${mainChild.san}</span>`;
+                html += `</div>`;
+            } else {
+                html += `<span class="move ${isActive}" data-node-idx="${regIdx}">${mainChild.san}</span>`;
+                html += `</div>`;
+            }
+        }
+
+        // Close the pair if white move and no black sibling coming
+        if (isWhite && mainChild.children.length === 0) {
+            html += `</div>`;
+        }
+
+        // Render sub-variations (children[1+] of the current node)
+        for (let v = 1; v < node.children.length; v++) {
+            const varNode = node.children[v];
+            const varIdx = _nodeRegistry.length;
+            _nodeRegistry.push(varNode);
+            const varPly = ply;
+            const varMoveNum = Math.ceil(varPly / 2);
+            const varIsWhite = (varPly % 2 === 1);
+            const varActive = (varNode === currentNode) ? 'active' : '';
+
+            html += `<div class="variation-line">`;
+            html += `<div class="variation-header">`;
+            html += `<div class="variation-actions">`;
+            if (v > 0) html += `<span class="var-btn" data-action="promote" data-target-idx="${varIdx}" title="Povýšit">↑</span>`;
+            if (v < node.children.length - 1) html += `<span class="var-btn" data-action="demote" data-target-idx="${varIdx}" title="Ponížit">↓</span>`;
+            html += `<span class="var-btn var-btn-delete" data-action="delete" data-target-idx="${varIdx}" title="Smazat">×</span>`;
+            html += `</div></div>`;
+
+            // Render first move of variation
+            html += `<div class="move-pair">`;
+            html += `<span class="move-number">${varMoveNum}.${varIsWhite ? '' : '..'}</span>`;
+            html += `<span class="move ${varActive}" data-node-idx="${varIdx}">${varNode.san}</span>`;
+            html += `</div>`;
+
+            // Continue rendering the rest of this variation line
+            if (varNode.children.length > 0) {
+                html += renderMoveLine(varNode, varPly, true);
+            }
+            html += `</div>`;
+        }
+
+        node = mainChild;
+    }
+
+    return html;
+}
+
+// jumpToMove is now handled by navigateToNode — kept for legacy compatibility
 function jumpToMove(targetPly) {
-    // Ensure we have saved history
-    if (savedMoves.length === 0 && game.history().length > 0) {
-        saveCurrentHistory();
-    }
-
-    if (savedMoves.length === 0) return;
-
-    // Clamp target to valid range
-    targetPly = Math.max(0, Math.min(targetPly, savedMoves.length));
-
-    // Reset and replay to target position (use custom starting FEN if set)
-    if (startingFen) {
-        game.load(startingFen);
-    } else {
-        game.reset();
-    }
+    // Navigate main line to the given ply
+    let node = moveTreeRoot;
     for (let i = 0; i < targetPly; i++) {
-        game.move(savedMoves[i]);
+        if (node.children.length === 0) break;
+        node = node.children[0];
     }
-
-    currentMoveIdx = targetPly;
-    board.position(game.fen());
-    updateStatus();
-    updateMoveHistory();
-
-    // Highlight last move
-    if (targetPly > 0) {
-        const lastMove = savedMoves[targetPly - 1];
-        highlightMove(lastMove.from, lastMove.to);
-    } else {
-        removeHighlights();
-    }
+    navigateToNode(node);
 }
 
 // --- Click-to-Move & Highlight Logic ---
@@ -256,7 +505,7 @@ function jumpToMove(targetPly) {
 function removeHighlights() {
     $('#board .square-55d63').removeClass('highlight-selected');
     $('#board .square-55d63').removeClass('highlight-move');
-    $('#board .square-55d63').find('.hint-dot').remove(); // Remove dots
+    $('#board .square-55d63').find('.hint-dot').remove();
 }
 
 function highlightSquare(square) {
@@ -272,7 +521,6 @@ function showLegalMoves(square) {
     const moves = game.moves({ square: square, verbose: true });
     moves.forEach(move => {
         const squareEl = $('#board .square-' + move.to);
-        // Avoid adding multiple dots
         if (squareEl.find('.hint-dot').length === 0) {
             squareEl.append('<div class="hint-dot"></div>');
         }
@@ -280,55 +528,36 @@ function showLegalMoves(square) {
 }
 
 function handleSquareClick(square) {
-    // If we have a selected square
     if (selectedSquare) {
-        // 1. Try to move to the clicked square
-        // Check for promotion
-        // Check for promotion
         const sourcePiece = game.get(selectedSquare);
+        if (!sourcePiece) { selectedSquare = null; removeHighlights(); return; }
         const targetRank = square.charAt(1);
         const isPromotion = sourcePiece.type === 'p' &&
             ((sourcePiece.color === 'w' && targetRank === '8') || (sourcePiece.color === 'b' && targetRank === '1'));
 
         if (isPromotion) {
-            // Validate promotion intent
             const tempMove = game.move({ from: selectedSquare, to: square, promotion: 'q' });
             if (tempMove) {
-                game.undo(); // Revert test move
+                game.undo();
                 pendingPromotion = { source: selectedSquare, target: square };
                 showPromotionModal(game.turn());
                 return;
             }
         }
 
-        const move = game.move({
-            from: selectedSquare,
-            to: square,
-            promotion: 'q' // Fallback
-        });
+        // Use makeTreeMove instead of game.move directly
+        const result = makeTreeMove({ from: selectedSquare, to: square, promotion: 'q' });
 
-        if (move) {
-            // Valid move!
-            const fromSquare = selectedSquare; // Capture before nullifying
-            const toSquare = square;
-            lastMove = { source: fromSquare, target: toSquare }; // Store for highlight persistence
-            board.position(game.fen());
-            updateStatus();
-            updateMoveHistory(); // Update history immediately
+        if (result && result !== 'pending') {
             selectedSquare = null;
-
-            // Delay highlight application to ensure DOM is updated after board.position()
-            setTimeout(() => {
-                removeHighlights();
-                highlightMove(fromSquare, toSquare);
-            }, 50);
+            return;
+        } else if (result === 'pending') {
+            // Variation modal shown — board stays put until resolved
+            selectedSquare = null;
             return;
         }
 
-        // 2. If move invalid...
-        // ... (rest is same)
-
-        // Check piece on clicked square
+        // Invalid move — check if clicking own piece to reselect
         const piece = game.get(square);
         if (piece && piece.color === game.turn()) {
             removeHighlights();
@@ -336,12 +565,10 @@ function handleSquareClick(square) {
             highlightSquare(square);
             showLegalMoves(square);
         } else {
-            // Clicked empty or opponent piece (invalid move) -> Deselect
             removeHighlights();
             selectedSquare = null;
         }
     } else {
-        // No selection. Check if clicked own piece
         const piece = game.get(square);
         if (piece && piece.color === game.turn()) {
             selectedSquare = square;
@@ -356,13 +583,10 @@ function handleSquareClick(square) {
 
 function onDragStart(source, piece, position, orientation) {
     if (game.game_over()) return false;
-    // only pick up pieces for the side to move
     if ((game.turn() === 'w' && piece.search(/^b/) !== -1) ||
         (game.turn() === 'b' && piece.search(/^w/) !== -1)) {
         return false;
     }
-
-    // Sync selection with drag
     removeHighlights();
     selectedSquare = source;
     highlightSquare(source);
@@ -370,10 +594,8 @@ function onDragStart(source, piece, position, orientation) {
 }
 
 function onDrop(source, target) {
-    // see if the move is legal
-    // Check for promotion
     const piece = game.get(source);
-    if (!piece) return 'snapback'; // No piece at source
+    if (!piece) return 'snapback';
 
     const targetRank = target.charAt(1);
     const isPromotion = piece.type === 'p' &&
@@ -382,134 +604,78 @@ function onDrop(source, target) {
     if (isPromotion) {
         pendingPromotion = { source: source, target: target };
         showPromotionModal(game.turn());
-        return 'snapback'; // Don't move on board yet
+        return 'snapback';
     }
 
-    var move = game.move({
-        from: source,
-        to: target,
-        promotion: 'q'
-    });
+    // Use makeTreeMove
+    const result = makeTreeMove({ from: source, to: target, promotion: 'q' });
 
-    // illegal move
-    if (move === null) {
+    if (result === null) {
         removeHighlights();
         selectedSquare = null;
         return 'snapback';
     }
 
-    updateStatus();
-    updateMoveHistory(); // Update history
-    lastMove = { source, target }; // Store for highlight persistence
-    removeHighlights();
-    highlightMove(source, target);
+    if (result === 'pending') {
+        // Variation modal shown — snapback for now, resolve will update board
+        return 'snapback';
+    }
+
     selectedSquare = null;
 }
 
 function onSnapEnd() {
     board.position(game.fen());
-    // Reapply last move highlight after board re-render
     if (lastMove) {
         highlightMove(lastMove.source, lastMove.target);
     }
 }
 
-// Undo last move
+// Undo / Go Back — navigate to parent node
 function undoMove() {
-    const move = game.undo();
-    if (move) {
-        board.position(game.fen());
-        updateStatus();
-        updateMoveHistory();
-        removeHighlights();
+    if (currentNode.parent) {
+        navigateToNode(currentNode.parent);
     }
 }
 
-// Playback controls - for reviewing recorded games
-// savedMoves stores the complete move history for navigation
-let savedMoves = [];
-let currentMoveIdx = 0;
-
-function saveCurrentHistory() {
-    // Save current game history for navigation
-    savedMoves = game.history({ verbose: true });
-    currentMoveIdx = savedMoves.length;
+// Build tree from current Chess.js game history (for loadGameById, importPgn)
+function buildTreeFromGame() {
+    const history = game.history({ verbose: true });
+    initTreeFromStartingPos();
+    let node = moveTreeRoot;
+    const tempGame = new Chess(startingFen || undefined);
+    for (const move of history) {
+        tempGame.move(move);
+        const newNode = createNode(move, tempGame.fen(), node);
+        node.children.push(newNode);
+        node = newNode;
+    }
+    currentNode = node; // end of main line
 }
 
 function goToStart() {
-    // Save history before navigation if not already saved
-    if (savedMoves.length === 0 && game.history().length > 0) {
-        saveCurrentHistory();
-    }
-
-    // Reset to starting position (may be custom FEN)
-    if (startingFen) {
-        game.load(startingFen);
-        board.position(game.fen());
-    } else {
-        game.reset();
-        board.position('start');
-    }
-    currentMoveIdx = 0;
-    updateStatus();
-    updateMoveHistory();
-    removeHighlights();
+    navigateToNode(moveTreeRoot);
 }
 
 function goBack() {
-    // Save history before first navigation
-    if (savedMoves.length === 0 && game.history().length > 0) {
-        saveCurrentHistory();
-    }
-
-    const move = game.undo();
-    if (move) {
-        currentMoveIdx = Math.max(0, currentMoveIdx - 1);
-        board.position(game.fen());
-        updateStatus();
-        updateMoveHistory();
-        removeHighlights();
+    if (currentNode.parent) {
+        navigateToNode(currentNode.parent);
     }
 }
 
 function goForward() {
-    // Can only go forward if we have saved moves and aren't at the end
-    if (savedMoves.length === 0 || currentMoveIdx >= savedMoves.length) {
-        return;
-    }
-
-    const moveToPlay = savedMoves[currentMoveIdx];
-    if (moveToPlay) {
-        game.move(moveToPlay);
-        currentMoveIdx++;
-        board.position(game.fen());
-        updateStatus();
-        updateMoveHistory();
-        highlightMove(moveToPlay.from, moveToPlay.to);
+    if (currentNode.children.length > 0) {
+        navigateToNode(currentNode.children[0]); // Follow main line
     }
 }
 
 function goToEnd() {
-    // Replay all remaining moves
-    while (currentMoveIdx < savedMoves.length) {
-        const moveToPlay = savedMoves[currentMoveIdx];
-        if (moveToPlay) {
-            game.move(moveToPlay);
-            currentMoveIdx++;
-        } else {
-            break;
-        }
+    // Follow main line to the end
+    let node = currentNode;
+    while (node.children.length > 0) {
+        node = node.children[0];
     }
-
-    board.position(game.fen());
-    updateStatus();
-    updateMoveHistory();
-
-    // Highlight last move
-    if (savedMoves.length > 0) {
-        const lastMove = savedMoves[savedMoves.length - 1];
-        highlightMove(lastMove.from, lastMove.to);
-    }
+    navigateToNode(node);
 }
 
 function toggleAutoplay() {
@@ -518,14 +684,9 @@ function toggleAutoplay() {
         autoplayInterval = null;
         document.getElementById('autoplayBtn').innerHTML = '<i class="fa-solid fa-play"></i>';
     } else {
-        // Save history if needed
-        if (savedMoves.length === 0 && game.history().length > 0) {
-            saveCurrentHistory();
-        }
-
         document.getElementById('autoplayBtn').innerHTML = '<i class="fa-solid fa-pause"></i>';
         autoplayInterval = setInterval(() => {
-            if (currentMoveIdx >= savedMoves.length) {
+            if (currentNode.children.length === 0) {
                 clearInterval(autoplayInterval);
                 autoplayInterval = null;
                 document.getElementById('autoplayBtn').innerHTML = '<i class="fa-solid fa-play"></i>';
@@ -555,34 +716,22 @@ function showPromotionModal(color) {
 }
 
 function completePromotion(pieceType) {
-    console.log('Completing promotion with:', pieceType);
     const modal = document.getElementById('promotionModal');
     if (modal) modal.classList.remove('active');
 
     if (pendingPromotion) {
-        const move = game.move({
+        const result = makeTreeMove({
             from: pendingPromotion.source,
             to: pendingPromotion.target,
             promotion: pieceType
         });
 
-        if (move) {
-            console.log('Promotion successful:', move);
+        if (!result && result !== 'pending') {
+            alert('Neplatný tah povýšení.');
             board.position(game.fen());
-            updateStatus();
-            updateMoveHistory(); // Sync history
-            removeHighlights();
-            highlightMove(pendingPromotion.source, pendingPromotion.target);
-        } else {
-            console.error('Promotion move failed:', pendingPromotion);
-            if (window.modal) modal.alert('Neplatný tah povýšení.', 'Chyba');
-            else alert('Neplatný tah povýšení.');
-            board.position(game.fen()); // Reset board visual
         }
         pendingPromotion = null;
         selectedSquare = null;
-    } else {
-        console.warn('No pending promotion found.');
     }
 }
 window.completePromotion = completePromotion; // Export for HTML onclick
@@ -737,16 +886,11 @@ async function loadGameById(id) {
 
         if (gameData.pgn) {
             game.load_pgn(gameData.pgn);
-            extractAnnotationsFromPgn(gameData.pgn);
             board.position(game.fen());
-
-            // Initialize playback history
-            moveHistory = game.history({ verbose: true });
-            currentMoveIndex = moveHistory.length - 1;
-
-            saveCurrentHistory(); // Initialize navigation history
-            updateStatus();       // Update markers and textareas
-            updateMoveHistory();  // RENDER THE MOVE LIST
+            buildTreeFromGame();
+            extractAnnotationsFromPgn(gameData.pgn);
+            updateStatus();
+            updateMoveHistory();
         }
 
         // Update save button text to indicate update mode
@@ -923,25 +1067,22 @@ window.handlePgnFileSelect = handlePgnFileSelect;
 
 function resetEditor() {
     if (confirm('Opravdu chcete resetovat celou partii? Přijdete o neuložená data.')) {
-        startingFen = null; // Clear custom starting position
+        startingFen = null;
         game.reset();
         board.position('start');
         moveComments = {};
         moveNags = {};
-        savedMoves = [];
-        currentMoveIdx = 0;
+        initTreeFromStartingPos();
         updateStatus();
         updateMoveHistory();
         removeHighlights();
 
-        // Clear custom position indicator
         const overlay = document.getElementById('recorder-board-overlay');
         if (overlay) {
             overlay.style.display = 'none';
             overlay.style.borderLeftColor = '#4ade80';
         }
 
-        // Clear inputs
         document.getElementById('whitePlayer').value = '';
         document.getElementById('blackPlayer').value = '';
         document.getElementById('result').value = '*';
@@ -957,21 +1098,20 @@ function importPgn() {
         return;
     }
 
-    // Reset game and try to load
+    // Reset
     game.reset();
-    moveComments = {}; // Clear previous comments
+    moveComments = {};
+    moveNags = {};
+    startingFen = null;
 
-    // Try to load PGN (chess.js loads the FIRST game if multiple)
-    const success = game.load_pgn(pgnText);
-
-    if (!success) {
-        alert('Nepodařilo se načíst PGN. Zkontrolujte formát zápisu.');
-        return;
+    // Extract FEN if present
+    const fenMatch = pgnText.match(/\[FEN\s+"([^"]+)"\]/i);
+    if (fenMatch) {
+        startingFen = fenMatch[1];
+        game.load(startingFen);
     }
 
-    extractAnnotationsFromPgn(pgnText);
-
-    // Extract header info if present
+    // Extract header info
     const whiteMatch = pgnText.match(/\[White\s+"([^"]+)"\]/i);
     const blackMatch = pgnText.match(/\[Black\s+"([^"]+)"\]/i);
     const resultMatch = pgnText.match(/\[Result\s+"([^"]+)"\]/i);
@@ -980,28 +1120,90 @@ function importPgn() {
     if (blackMatch) document.getElementById('blackPlayer').value = blackMatch[1];
     if (resultMatch) {
         const resultSelect = document.getElementById('result');
-        const resultValue = resultMatch[1];
-        // Find matching option
         for (let opt of resultSelect.options) {
-            if (opt.value === resultValue || opt.text === resultValue) {
+            if (opt.value === resultMatch[1] || opt.text === resultMatch[1]) {
                 resultSelect.value = opt.value;
                 break;
             }
         }
     }
 
-    // Update board and UI
+    // Parse movetext with variations
+    const body = pgnText.replace(/\[[^\]]*\]\s*/g, '').trim();
+    // Tokenize: move numbers, moves, comments, NAGs, parens
+    const tokenRegex = /(\{[^}]*\})|(\$[0-9]+)|(\()|(\))|([a-zA-Z][a-zA-Z0-9+#=!?-]*)|([0-9]+\.+)/g;
+    const tokens = [];
+    let m;
+    while ((m = tokenRegex.exec(body)) !== null) {
+        tokens.push(m[0]);
+    }
+
+    // Build tree
+    initTreeFromStartingPos();
+    let treeNode = moveTreeRoot;
+    let gameStack = []; // Stack for variations { node, fen }
+    let tempGame = new Chess(startingFen || undefined);
+
+    for (let i = 0; i < tokens.length; i++) {
+        const tok = tokens[i];
+
+        if (tok === '(') {
+            // Save current position and go back to parent
+            gameStack.push({ node: treeNode, fen: tempGame.fen() });
+            // Go back to parent to branch
+            if (treeNode.parent) {
+                treeNode = treeNode.parent;
+                tempGame.load(treeNode.fen);
+            }
+        } else if (tok === ')') {
+            // Restore position
+            if (gameStack.length > 0) {
+                const saved = gameStack.pop();
+                treeNode = saved.node;
+                tempGame.load(saved.fen);
+            }
+        } else if (tok.startsWith('{')) {
+            // Comment — attach to current node
+            const comment = tok.replace(/^\{|\}$/g, '').trim();
+            if (comment && treeNode) {
+                treeNode.comment = comment;
+                moveComments[treeNode.fen] = comment;
+            }
+        } else if (tok.startsWith('$')) {
+            // NAG
+            if (treeNode) {
+                treeNode.nag = tok;
+                moveNags[treeNode.fen] = tok;
+            }
+        } else if (tok.match(/^[0-9]+\.+$/)) {
+            // Move number — skip
+        } else if (tok === '1-0' || tok === '0-1' || tok === '1/2-1/2' || tok === '*') {
+            // Result — skip
+        } else {
+            // Attempt move
+            const result = tempGame.move(tok);
+            if (result) {
+                const newNode = createNode(result, tempGame.fen(), treeNode);
+                treeNode.children.push(newNode);
+                treeNode = newNode;
+            }
+        }
+    }
+
+    // Navigate to end of main line
+    currentNode = moveTreeRoot;
+    while (currentNode.children.length > 0) {
+        currentNode = currentNode.children[0];
+    }
+    // Sync chess.js game state to current position
+    navigateToNode(currentNode);
+
     board.position(game.fen());
-
-    // Save history for navigation
-    saveCurrentHistory();
-
     updateStatus();
     updateMoveHistory();
 
     closeImportPgnModal();
 
-    // Show success message
     const status = document.getElementById('saveStatus');
     if (status) {
         status.style.color = '#4ade80';
@@ -1059,69 +1261,71 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Custom PGN Generator to include comments
 function generateAnnotatedPgn() {
-    const header = game.header();
-    let headerStr = '';
-    // Reconstruct header (chess.js .pgn() does this, but we are building manually)
-    // Actually, let's use game.pgn() output as base IS NOT ENOUGH because it lacks custom comments.
-    // We must iterate history.
+    if (moveTreeRoot.children.length === 0) return '';
+    return generateTreePgn(moveTreeRoot, 0).trim();
+}
 
-    // Header
-    /* 
-       We only have access to raw header via game.header() object.
-       We should reconstruct standard headers.
-    */
-    // Default Header keys
-    const tags = ['Event', 'Site', 'Date', 'Round', 'White', 'Black', 'Result'];
-    // Merge with UI inputs just in case? 
-    // Actually `saveGame` constructs header manually.
-    // For specific PGN export, let's just minimal header or use what's in game object
+function generateTreePgn(node, ply) {
+    let text = '';
+    let currentNode = node;
+    let currentPly = ply;
 
-    // Let's iterate history and build the movetext.
+    while (currentNode.children.length > 0) {
+        const mainChild = currentNode.children[0];
+        currentPly++;
+        const moveNum = Math.ceil(currentPly / 2);
+        const isWhite = (currentPly % 2 === 1);
 
-    const history = game.history({ verbose: true });
-    if (history.length === 0) return ''; // Or just headers?
+        if (isWhite) {
+            text += `${moveNum}. ${mainChild.san} `;
+        } else {
+            // Show move number with dots if first move in a variation
+            if (currentNode === node && ply > 0) {
+                text += `${moveNum}... ${mainChild.san} `;
+            } else {
+                text += `${mainChild.san} `;
+            }
+        }
 
-    let pgn = '';
+        // NAG
+        if (mainChild.nag) text += `${mainChild.nag} `;
+        // Also check legacy moveNags by FEN
+        if (moveNags[mainChild.fen]) text += `${moveNags[mainChild.fen]} `;
 
-    // We need to replay to get FENs to match comments
-    // Use correct starting position (may be custom FEN from diagram editor)
-    let tempGame = new Chess(startingFen || undefined);
-    // Copy headers?
-    // tempGame.header(game.header()); 
-    // Just build string.
+        // Comment
+        if (mainChild.comment) text += `{${mainChild.comment}} `;
+        if (moveComments[mainChild.fen]) text += `{${moveComments[mainChild.fen]}} `;
 
-    let moveText = '';
-    let row = '';
+        // Render sub-variations
+        for (let v = 1; v < currentNode.children.length; v++) {
+            const varNode = currentNode.children[v];
+            const varPly = currentPly;
+            const varMoveNum = Math.ceil(varPly / 2);
+            const varIsWhite = (varPly % 2 === 1);
 
-    // Check for initial comment (start pos)
-    if (moveComments[tempGame.fen()]) {
-        moveText += `{ ${moveComments[tempGame.fen()]} } `;
+            text += `(`;
+            if (varIsWhite) {
+                text += `${varMoveNum}. ${varNode.san} `;
+            } else {
+                text += `${varMoveNum}... ${varNode.san} `;
+            }
+
+            if (varNode.nag) text += `${varNode.nag} `;
+            if (moveNags[varNode.fen]) text += `${moveNags[varNode.fen]} `;
+            if (varNode.comment) text += `{${varNode.comment}} `;
+            if (moveComments[varNode.fen]) text += `{${moveComments[varNode.fen]}} `;
+
+            // Continue variation
+            if (varNode.children.length > 0) {
+                text += generateTreePgn(varNode, varPly);
+            }
+            text += `) `;
+        }
+
+        currentNode = mainChild;
     }
 
-    history.forEach((move, i) => {
-        const moveNum = Math.floor(i / 2) + 1;
-
-        if (i % 2 === 0) {
-            moveText += `${moveNum}. ${move.san} `;
-        } else {
-            moveText += `${move.san} `;
-        }
-
-        // Apply move to temp to get new FEN
-        tempGame.move(move);
-        const fen = tempGame.fen();
-
-        // Append NAG if any
-        if (moveNags[fen]) {
-            moveText += `${moveNags[fen]} `;
-        }
-
-        if (moveComments[fen]) {
-            moveText += `{ ${moveComments[fen]} } `;
-        }
-    });
-
-    return moveText.trim();
+    return text;
 }
 
 // Mobile Modal Logic
