@@ -376,13 +376,13 @@ router.get('/my-stats', async (req, res) => {
             }
         }
 
-        // --- Perfect Game (any game with wrongCount=0 and correctCount >= 5) ---
+        // --- Perfect Game (30/30 — all puzzles correct, 0 wrong) ---
         const perfectGame = await prisma.puzzleRaceResult.findFirst({
             where: {
                 userId,
                 mode,
                 wrongCount: 0,
-                correctCount: { gte: 5 }
+                correctCount: { gte: 30 }
             }
         });
         const hasPerfectGame = !!perfectGame;
@@ -431,7 +431,7 @@ router.get('/my-stats', async (req, res) => {
             {
                 id: 'perfect', name: 'Bezchybná hra', icon: '✨',
                 tiers: [
-                    { level: 1, label: 'Zlato', req: 'Dokonči hru bez chyby (5+ úloh)', earned: hasPerfectGame },
+                    { level: 1, label: 'Diamant', req: '30/30 — všech 30 správně!', earned: hasPerfectGame },
                 ],
             },
         ];
