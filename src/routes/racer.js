@@ -387,6 +387,23 @@ router.get('/my-stats', async (req, res) => {
         });
         const hasPerfectGame = !!perfectGame;
 
+        // --- Unique days played (for Veterán badge) ---
+        const uniqueDaysCount = uniqueDates ? uniqueDates.length : 0;
+
+        // --- Leaderboard rank (for Šampion badge) ---
+        let leaderboardRank = 999;
+        try {
+            const betterResults = await prisma.puzzleRaceResult.groupBy({
+                by: ['userId'],
+                where: { mode, userId: { not: null } },
+                _max: { score: true },
+                orderBy: { _max: { score: 'desc' } },
+                take: 100
+            });
+            const rankIndex = betterResults.findIndex(r => r.userId === userId);
+            if (rankIndex >= 0) leaderboardRank = rankIndex + 1;
+        } catch (e) { /* ignore */ }
+
         // --- Compute Tiered Badges ---
         const bestScore = top3[0]?.score || 0;
         const bestStreak = avgResult._max.maxStreak || 0;
@@ -413,6 +430,15 @@ router.get('/my-stats', async (req, res) => {
                 ],
             },
             {
+                id: 'combo', name: 'Combo', icon: '💥',
+                tiers: [
+                    { level: 1, label: 'Bronze', req: '5 v řadě', earned: bestStreak >= 5 },
+                    { level: 2, label: 'Stříbro', req: '10 v řadě', earned: bestStreak >= 10 },
+                    { level: 3, label: 'Zlato', req: '15 v řadě', earned: bestStreak >= 15 },
+                    { level: 4, label: 'Diamant', req: '20 v řadě', earned: bestStreak >= 20 },
+                ],
+            },
+            {
                 id: 'streak', name: 'Série', icon: '🔥',
                 tiers: [
                     { level: 1, label: 'Bronze', req: '3 dny v řadě', earned: dayStreak >= 3 },
@@ -429,9 +455,25 @@ router.get('/my-stats', async (req, res) => {
                 ],
             },
             {
+                id: 'veteran', name: 'Veterán', icon: '📅',
+                tiers: [
+                    { level: 1, label: 'Bronze', req: 'Hraj 5 dnů', earned: uniqueDaysCount >= 5 },
+                    { level: 2, label: 'Stříbro', req: 'Hraj 15 dnů', earned: uniqueDaysCount >= 15 },
+                    { level: 3, label: 'Zlato', req: 'Hraj 30 dnů', earned: uniqueDaysCount >= 30 },
+                ],
+            },
+            {
+                id: 'champion', name: 'Šampion', icon: '🏆',
+                tiers: [
+                    { level: 1, label: 'Bronze', req: 'Top 10', earned: leaderboardRank <= 10 },
+                    { level: 2, label: 'Stříbro', req: 'Top 3', earned: leaderboardRank <= 3 },
+                    { level: 3, label: 'Zlato', req: '#1 v žebříčku', earned: leaderboardRank === 1 },
+                ],
+            },
+            {
                 id: 'perfect', name: 'Bezchybná hra', icon: '✨',
                 tiers: [
-                    { level: 1, label: 'Diamant', req: '30/30 — všech 30 správně!', earned: hasPerfectGame },
+                    { level: 1, label: 'Diamant', req: '30/30 — perfektní!', earned: hasPerfectGame },
                 ],
             },
         ];
