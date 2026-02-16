@@ -951,8 +951,11 @@ function endGame() {
         }
     }
 
-    // Auto-fill name and userId for logged-in users
-    if (loggedInUser) {
+    // Auto-save for logged-in users (always save the result)
+    if (loggedInUser && score > 0) {
+        autoSaveScore();
+    } else if (loggedInUser) {
+        // Score is 0, no need to save
         const nameInput = document.getElementById('playerName');
         if (nameInput) {
             nameInput.value = loggedInUser.realName || loggedInUser.username;
@@ -963,6 +966,67 @@ function endGame() {
 
     // Render post-solve review
     renderPuzzleReview();
+}
+
+// Auto-save score for logged-in users
+async function autoSaveScore() {
+    const playerName = loggedInUser.realName || loggedInUser.username;
+
+    // Hide the manual save UI for logged-in users
+    const nameWrapper = document.getElementById('nameInputWrapper');
+    if (nameWrapper) {
+        nameWrapper.innerHTML = `
+            <span style="display: flex; align-items: center; gap: 0.5rem; color: var(--text-muted); font-size: 0.85rem;">
+                <i class="fa-solid fa-spinner fa-spin"></i> Ukládám výsledek...
+            </span>
+        `;
+    }
+
+    try {
+        const res = await fetch(`${API_URL}/racer/save`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                score,
+                playerName,
+                userId: loggedInUser.id,
+                mode: gameMode,
+                correctCount: gameCorrectCount,
+                wrongCount: gameWrongCount,
+                maxStreak: gameMaxStreak,
+                puzzleCount: gameCorrectCount + gameWrongCount
+            })
+        });
+
+        if (res.ok) {
+            if (nameWrapper) {
+                nameWrapper.innerHTML = `
+                    <span style="display: flex; align-items: center; gap: 0.5rem; color: #4ade80; font-weight: 600;">
+                        <i class="fa-solid fa-circle-check"></i> Výsledek uložen!
+                    </span>
+                `;
+            }
+            // Reload leaderboard to show updated results
+            loadLeaderboard(currentLeaderboardPeriod);
+        } else {
+            if (nameWrapper) {
+                nameWrapper.innerHTML = `
+                    <span style="display: flex; align-items: center; gap: 0.5rem; color: #fca5a5;">
+                        <i class="fa-solid fa-triangle-exclamation"></i> Chyba při ukládání
+                    </span>
+                `;
+            }
+        }
+    } catch (e) {
+        console.error('Auto-save failed:', e);
+        if (nameWrapper) {
+            nameWrapper.innerHTML = `
+                <span style="display: flex; align-items: center; gap: 0.5rem; color: #fca5a5;">
+                    <i class="fa-solid fa-triangle-exclamation"></i> Chyba připojení
+                </span>
+            `;
+        }
+    }
 }
 
 // Helper: get the initial FEN (position where player needs to move)
