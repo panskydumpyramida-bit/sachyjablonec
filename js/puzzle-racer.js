@@ -1208,6 +1208,7 @@ async function saveScore() {
 
 // Current leaderboard period
 let currentLeaderboardPeriod = 'all';
+let leaderboardRegisteredOnly = true;
 
 async function loadLeaderboard(period = 'all') {
     // Detect mode again to be sure (since this runs on init)
@@ -1215,7 +1216,7 @@ async function loadLeaderboard(period = 'all') {
     const mode = urlParams.get('mode') === 'thematic' ? 'thematic' : 'vanilla';
 
     try {
-        const res = await fetch(`${API_URL}/racer/leaderboard?period=${period}&mode=${mode}`);
+        const res = await fetch(`${API_URL}/racer/leaderboard?period=${period}&mode=${mode}&registeredOnly=${leaderboardRegisteredOnly}`);
         if (!res.ok) throw new Error('Failed to fetch leaderboard');
 
         const data = await res.json();
@@ -1276,6 +1277,12 @@ function escapeHtml(text) {
     const div = document.createElement('div');
     div.textContent = text;
     return div.innerHTML;
+}
+
+function toggleAnonymousLeaderboard() {
+    const toggle = document.getElementById('showAnonymousToggle');
+    leaderboardRegisteredOnly = !toggle.checked;
+    loadLeaderboard(currentLeaderboardPeriod);
 }
 
 // Detect logged-in user from JWT in localStorage
@@ -1352,34 +1359,34 @@ async function loadPersonalStats() {
                 '</div>';
         }
 
-        // Build badges grid (tiered system)
+        // Build badges grid (tiered system - expanded view)
         let badgesHtml = '';
         if (stats.badges && stats.badges.length > 0) {
-            const tierLabels = { 0: '', 1: 'Bronze', 2: 'Stříbro', 3: 'Zlato', 4: 'Diamant' };
-            const tierColors = { 0: 'locked', 1: 'bronze', 2: 'silver', 3: 'gold', 4: 'diamond' };
-            const totalEarned = stats.badges.reduce((sum, b) => sum + b.tier, 0);
-            const totalPossible = stats.badges.reduce((sum, b) => sum + b.maxTier, 0);
+            const tierColors = { 1: 'bronze', 2: 'silver', 3: 'gold', 4: 'diamond' };
+            const tierLabels = { 1: '🥉', 2: '🥈', 3: '🥇', 4: '💎' };
+            let totalEarned = 0;
+            let totalPossible = 0;
+            stats.badges.forEach(b => { totalEarned += b.tier; totalPossible += b.maxTier; });
 
             badgesHtml = `<div class="ps-badges-section">
                 <div class="ps-badges-title">🏅 Odznaky <span class="ps-badges-count">${totalEarned}/${totalPossible}</span></div>
-                <div class="ps-badges-grid">`;
+                <div class="ps-badges-list">`;
+
             stats.badges.forEach(b => {
-                const tierClass = tierColors[b.tier] || 'locked';
-                const tierLabel = b.tier > 0 ? tierLabels[b.tier] : '';
-                const tooltip = b.tier > 0
-                    ? `${b.name} — ${tierLabel}${b.nextReq ? '\nDalší: ' + b.nextReq : ' ✓ MAX'}`
-                    : `${b.name}\nDalší: ${b.nextReq || ''}`;
-                // Tier dots (filled up to current tier)
-                let dotsHtml = '';
-                for (let i = 1; i <= b.maxTier; i++) {
-                    dotsHtml += `<span class="tier-dot ${i <= b.tier ? 'filled tier-' + tierColors[i] : ''}"></span>`;
-                }
-                badgesHtml += `<div class="ps-badge tier-${tierClass}" title="${tooltip}">
-                    <span class="ps-badge-icon">${b.icon}</span>
-                    <span class="ps-badge-name">${b.name}</span>
-                    <div class="ps-badge-dots">${dotsHtml}</div>
-                </div>`;
+                // Show each tier individually as a row
+                b.tiers.forEach(t => {
+                    const isEarned = t.earned;
+                    const color = tierColors[t.level] || 'bronze';
+                    const medal = tierLabels[t.level] || '';
+                    badgesHtml += `<div class="ps-badge-row ${isEarned ? 'earned tier-' + color : 'locked'}">
+                        <span class="ps-badge-row-icon">${b.icon}</span>
+                        <span class="ps-badge-row-req">${t.req}</span>
+                        <span class="ps-badge-row-medal">${medal}</span>
+                        ${isEarned ? '<i class="fa-solid fa-check" style="color: #4ade80; font-size: 0.7rem;"></i>' : '<i class="fa-solid fa-lock" style="opacity: 0.3; font-size: 0.6rem;"></i>'}
+                    </div>`;
+                });
             });
+
             badgesHtml += '</div></div>';
         }
 
