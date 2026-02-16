@@ -259,7 +259,7 @@ router.post('/save', async (req, res) => {
 });
 
 // GET /api/racer/my-stats?userId=X&mode=vanilla|thematic
-// Returns enriched personal dashboard data
+// Returns enriched personal dashboard data with badges
 router.get('/my-stats', async (req, res) => {
     try {
         const userId = parseInt(req.query.userId);
@@ -282,7 +282,7 @@ router.get('/my-stats', async (req, res) => {
             where: { userId, mode }
         });
 
-        // Get average score
+        // Get average score + best streak
         const avgResult = await prisma.puzzleRaceResult.aggregate({
             where: { userId, mode },
             _avg: { score: true },
@@ -307,8 +307,109 @@ router.get('/my-stats', async (req, res) => {
             select: { score: true, createdAt: true }
         });
 
+        // --- Best Today ---
+        const todayStart = new Date();
+        todayStart.setHours(0, 0, 0, 0);
+        const bestTodayResult = await prisma.puzzleRaceResult.aggregate({
+            where: { userId, mode, createdAt: { gte: todayStart } },
+            _max: { score: true }
+        });
+        const bestToday = bestTodayResult._max.score || null;
+
+        // --- Best This Week ---
+        const weekStart = new Date();
+        weekStart.setDate(weekStart.getDate() - 7);
+        const bestWeekResult = await prisma.puzzleRaceResult.aggregate({
+            where: { userId, mode, createdAt: { gte: weekStart } },
+            _max: { score: true }
+        });
+        const bestThisWeek = bestWeekResult._max.score || null;
+
+        // --- Day Streak (consecutive days with at least 1 game, counting back from today) ---
+        let dayStreak = 0;
+        if (totalGames > 0) {
+            // Get distinct dates (as date strings) with games, ordered desc
+            const allGames = await prisma.puzzleRaceResult.findMany({
+                where: { userId, mode },
+                orderBy: { createdAt: 'desc' },
+                select: { createdAt: true }
+            });
+
+            // Extract unique dates (YYYY-MM-DD in local time)
+            const uniqueDates = [...new Set(allGames.map(g => {
+                const d = new Date(g.createdAt);
+                return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+            }))].sort().reverse(); // most recent first
+
+            if (uniqueDates.length > 0) {
+                const today = new Date();
+                const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+
+                // Start from today or yesterday
+                let checkDate = new Date(todayStr);
+                if (uniqueDates[0] !== todayStr) {
+                    // If no game today, check if yesterday was the last day
+                    const yesterday = new Date(today);
+                    yesterday.setDate(yesterday.getDate() - 1);
+                    const yesterdayStr = `${yesterday.getFullYear()}-${String(yesterday.getMonth() + 1).padStart(2, '0')}-${String(yesterday.getDate()).padStart(2, '0')}`;
+                    if (uniqueDates[0] !== yesterdayStr) {
+                        dayStreak = 0; // Gap - streak broken
+                    } else {
+                        checkDate = yesterday;
+                    }
+                }
+
+                if (dayStreak === 0 && uniqueDates[0] === todayStr || dayStreak === 0 && uniqueDates.includes(`${checkDate.getFullYear()}-${String(checkDate.getMonth() + 1).padStart(2, '0')}-${String(checkDate.getDate()).padStart(2, '0')}`)) {
+                    // Count consecutive days backward
+                    const dateSet = new Set(uniqueDates);
+                    let d = new Date(checkDate);
+                    while (true) {
+                        const dStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+                        if (dateSet.has(dStr)) {
+                            dayStreak++;
+                            d.setDate(d.getDate() - 1);
+                        } else {
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+
+        // --- Perfect Game (any game with wrongCount=0 and correctCount >= 5) ---
+        const perfectGame = await prisma.puzzleRaceResult.findFirst({
+            where: {
+                userId,
+                mode,
+                wrongCount: 0,
+                correctCount: { gte: 5 }
+            }
+        });
+        const hasPerfectGame = !!perfectGame;
+
+        // --- Compute Badges ---
+        const bestScore = top3[0]?.score || 0;
+        const bestStreak = avgResult._max.maxStreak || 0;
+
+        const allBadges = [
+            { id: 'first_game', name: 'První hra', icon: '🎮', desc: 'Odehraj svou první hru', earned: totalGames >= 1 },
+            { id: 'ten_games', name: 'Desítka', icon: '🔟', desc: 'Odehraj 10 her', earned: totalGames >= 10 },
+            { id: 'fifty_games', name: 'Veterán', icon: '⭐', desc: 'Odehraj 50 her', earned: totalGames >= 50 },
+            { id: 'century', name: 'Stovka', icon: '💯', desc: 'Odehraj 100 her', earned: totalGames >= 100 },
+            { id: 'score_10', name: 'Řešitel', icon: '⚡', desc: 'Dosáhni skóre 10+', earned: bestScore >= 10 },
+            { id: 'score_20', name: 'Expert', icon: '🧠', desc: 'Dosáhni skóre 20+', earned: bestScore >= 20 },
+            { id: 'score_30', name: 'Mistr', icon: '👑', desc: 'Dosáhni skóre 30+', earned: bestScore >= 30 },
+            { id: 'score_40', name: 'Legenda', icon: '🌟', desc: 'Dosáhni skóre 40+', earned: bestScore >= 40 },
+            { id: 'streak_3', name: '3 dny v řadě', icon: '🔥', desc: 'Hraj 3 dny po sobě', earned: dayStreak >= 3 },
+            { id: 'streak_7', name: 'Týden v řadě', icon: '📅', desc: 'Hraj 7 dní po sobě', earned: dayStreak >= 7 },
+            { id: 'streak_30', name: 'Měsíční série', icon: '🏔️', desc: 'Hraj 30 dní po sobě', earned: dayStreak >= 30 },
+            { id: 'accuracy_80', name: 'Přesný střelec', icon: '🎯', desc: 'Průměrná přesnost 80%+', earned: avgAccuracy !== null && avgAccuracy >= 80 },
+            { id: 'accuracy_95', name: 'Snajpr', icon: '💎', desc: 'Průměrná přesnost 95%+', earned: avgAccuracy !== null && avgAccuracy >= 95 },
+            { id: 'perfect_game', name: 'Bezchybná hra', icon: '✨', desc: 'Dokonči hru bez chyby (5+ úloh)', earned: hasPerfectGame },
+        ];
+
         res.json({
-            bestScore: top3[0]?.score || 0,
+            bestScore,
             top3: top3.map(r => ({
                 score: r.score,
                 date: r.createdAt,
@@ -318,9 +419,13 @@ router.get('/my-stats', async (req, res) => {
             })),
             totalGames,
             avgScore: Math.round(avgResult._avg.score || 0),
-            bestStreak: avgResult._max.maxStreak || 0,
+            bestStreak,
             avgAccuracy,
-            recentScores: recentResults.map(r => ({ score: r.score, date: r.createdAt }))
+            recentScores: recentResults.map(r => ({ score: r.score, date: r.createdAt })),
+            bestToday,
+            bestThisWeek,
+            dayStreak,
+            badges: allBadges
         });
     } catch (error) {
         console.error('Error fetching user stats:', error);

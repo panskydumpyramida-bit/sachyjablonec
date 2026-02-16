@@ -1288,6 +1288,22 @@ async function loadPersonalStats() {
                 '</div>';
         }
 
+        // Build badges grid
+        let badgesHtml = '';
+        if (stats.badges && stats.badges.length > 0) {
+            const earnedCount = stats.badges.filter(b => b.earned).length;
+            badgesHtml = `<div class="ps-badges-section">
+                <div class="ps-badges-title">🏅 Odznaky <span class="ps-badges-count">${earnedCount}/${stats.badges.length}</span></div>
+                <div class="ps-badges-grid">`;
+            stats.badges.forEach(b => {
+                badgesHtml += `<div class="ps-badge ${b.earned ? 'earned' : 'locked'}" title="${b.name}: ${b.desc}">
+                    <span class="ps-badge-icon">${b.icon}</span>
+                    <span class="ps-badge-name">${b.name}</span>
+                </div>`;
+            });
+            badgesHtml += '</div></div>';
+        }
+
         statsPanel.innerHTML = `
             <div class="personal-stats-row">
                 <div class="ps-stat">
@@ -1302,25 +1318,43 @@ async function loadPersonalStats() {
                 </div>
                 <div class="ps-stat">
                     <span class="ps-icon">🔥</span>
-                    <span class="ps-value">${stats.bestStreak || '–'}</span>
-                    <span class="ps-label">Streak</span>
+                    <span class="ps-value">${stats.dayStreak || 0}</span>
+                    <span class="ps-label">Dnů v řadě</span>
                 </div>
                 <div class="ps-stat">
                     <span class="ps-icon">🎯</span>
                     <span class="ps-value">${stats.avgAccuracy != null ? stats.avgAccuracy + '%' : '–'}</span>
                     <span class="ps-label">Přesnost</span>
                 </div>
-                <div class="ps-stat">
-                    <span class="ps-icon">🎮</span>
-                    <span class="ps-value">${stats.totalGames}</span>
-                    <span class="ps-label">Her</span>
-                </div>
                 <div class="ps-stat ps-trend">
                     <span class="ps-label" style="margin-bottom: 0.3rem;">Trend</span>
                     ${trendHtml || '<span style="color: var(--text-muted); font-size: 0.8rem;">–</span>'}
                 </div>
             </div>
+            <div class="ps-secondary-row">
+                <div class="ps-stat-mini">
+                    <span class="ps-mini-icon">📅</span>
+                    <span class="ps-mini-label">Dnes</span>
+                    <span class="ps-mini-value">${stats.bestToday != null ? stats.bestToday : '–'}</span>
+                </div>
+                <div class="ps-stat-mini">
+                    <span class="ps-mini-icon">📆</span>
+                    <span class="ps-mini-label">Týden</span>
+                    <span class="ps-mini-value">${stats.bestThisWeek != null ? stats.bestThisWeek : '–'}</span>
+                </div>
+                <div class="ps-stat-mini">
+                    <span class="ps-mini-icon">🎮</span>
+                    <span class="ps-mini-label">Her</span>
+                    <span class="ps-mini-value">${stats.totalGames}</span>
+                </div>
+                <div class="ps-stat-mini">
+                    <span class="ps-mini-icon">⚡</span>
+                    <span class="ps-mini-label">Best streak</span>
+                    <span class="ps-mini-value">${stats.bestStreak || '–'}</span>
+                </div>
+            </div>
             ${top3Html}
+            ${badgesHtml}
         `;
         statsPanel.classList.remove('hidden');
     } catch (e) {
