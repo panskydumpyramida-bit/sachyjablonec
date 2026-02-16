@@ -1265,15 +1265,14 @@
 
             <div style="display: grid; gap: 0.75rem;">
                 <div
-                    style="display: flex; gap: 1rem; padding: 0.75rem 1rem; background: rgba(234,179,8,0.1); border-radius: 8px;">
+                    style="display: flex; gap: 1rem; padding: 0.75rem 1rem; background: rgba(16,185,129,0.15); border-radius: 8px; border-left: 3px solid #10b981;">
                     <span
-                        style="background: #eab308; color: #000; padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.7rem; font-weight: 600; height: fit-content;">P1</span>
+                        style="background: #10b981; color: #000; padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.7rem; font-weight: 600; height: fit-content;">DONE</span>
                     <div>
-                        <strong style="font-size: 0.9rem;">Puzzle Racer – osobní dashboard</strong>
+                        <strong style="font-size: 0.9rem;">Puzzle Racer – dashboard, odznaky, síň slávy</strong>
                         <p style="margin: 0.2rem 0 0; font-size: 0.8rem; color: var(--text-muted);">Top 3 výsledky,
-                            průměrné skóre, přesnost, trend sparkline, best streak.</p>
-                        <p style="margin: 0.2rem 0 0; font-size: 0.75rem; color: #eab308;">🔄 V procesu – backend API
-                            hotovo</p>
+                            průměrné skóre, přesnost, trend, 8 tiered badges, síň slávy, klikací profily hráčů.</p>
+                        <p style="margin: 0.2rem 0 0; font-size: 0.75rem; color: #10b981;">✅ Dokončeno – v34</p>
                     </div>
                 </div>
                 <div
@@ -1341,6 +1340,26 @@
             </div>
 
             <div class="changelog-timeline">
+                <!-- 2026-02-16 v34 -->
+                <div class="changelog-entry">
+                    <div class="changelog-date">16. 2. 2026</div>
+                    <div class="changelog-version">v34</div>
+                    <div class="changelog-content">
+                        <h4>🎮 Puzzle Racer – odznaky, síň slávy, profily</h4>
+                        <ul>
+                            <li><strong>8 odznaků (badges):</strong> Hráč, Skóre, Combo, Série, Přesnost, Veterán,
+                                Šampion, Bezchybná hra. Tier systém (Bronze → Diamant). Grid 8×1 desktop / 4×2 mobil.
+                            </li>
+                            <li><strong>Bezchybná hra:</strong> Ultimate badge za 30/30 (všech 30 úloh správně).</li>
+                            <li><strong>Síň slávy:</strong> Nová sekce týdenních šampionů pod leaderboardem.</li>
+                            <li><strong>Leaderboard dedup:</strong> Každý hráč jen jednou (osobní rekord).</li>
+                            <li><strong>Klikací profily:</strong> Klik na hráče → modal se statistikami, Top 3 a
+                                odznaky.</li>
+                            <li><strong>Auto-save skóre:</strong> Automatické ukládání osobního rekordu.</li>
+                            <li><strong>Filtr leaderboardu:</strong> Toggle pro anonymní hráče.</li>
+                        </ul>
+                    </div>
+                </div>
                 <!-- 2026-02-16 v33 -->
                 <div class="changelog-entry">
                     <div class="changelog-date">16. 2. 2026</div>
