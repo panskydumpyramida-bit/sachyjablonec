@@ -334,7 +334,7 @@ const ChessDB = {
                         <!-- Board + Eval Bar Row -->
                         <div style="display: flex; gap: 0; align-items: stretch; width: 100%;" class="gv2-board-area-inner">
                             <!-- Eval Bar (vertical thermometer) - Initially hidden -->
-                            <div id="dbEvalBar" class="gv2-eval-bar" style="display: none;">
+                            <div id="dbEvalBar" class="gv2-eval-bar">
                                 <div class="gv2-eval-fill" id="dbEvalFill" style="height: 50%;"></div>
                                 <span class="gv2-eval-text" id="dbEvalText">0.0</span>
                             </div>
@@ -758,8 +758,14 @@ const ChessDB = {
             // Optional: add background/border if supported by board-controls styles
         }
 
-        // Show/hide eval bar and analysis info
-        if (evalBar) evalBar.style.display = this.analysisEnabled ? '' : 'none';
+        // Show/hide eval bar (uses opacity via .active class) and analysis info
+        if (evalBar) {
+            if (this.analysisEnabled) {
+                evalBar.classList.add('active');
+            } else {
+                evalBar.classList.remove('active');
+            }
+        }
         if (analysisInfo) analysisInfo.style.display = this.analysisEnabled ? '' : 'none';
 
         if (this.analysisEnabled) {
