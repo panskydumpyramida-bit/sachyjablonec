@@ -1366,6 +1366,59 @@ function detectLoggedInUser() {
         return null;
     }
 }
+// Show badge detail tip on click
+function showBadgeTip(jsonStr) {
+    const b = JSON.parse(jsonStr);
+    const tierLabels = { 1: 'Bronze', 2: 'Stříbro', 3: 'Zlato', 4: 'Diamant' };
+    const tierEmojis = { 1: '🥉', 2: '🥈', 3: '🥇', 4: '💎' };
+
+    // Remove existing tip
+    const existing = document.getElementById('badgeTipOverlay');
+    if (existing) existing.remove();
+
+    // Build tiers list
+    let tiersHtml = b.tiers.map((t, i) => {
+        const earned = i < b.tier;
+        const isCurrent = i === b.tier - 1;
+        return `<div style="display:flex;align-items:center;gap:0.5rem;padding:0.3rem 0;${isCurrent ? 'font-weight:700;' : ''}">
+            <span style="width:1.2rem;text-align:center;">${earned ? '✅' : '⬜'}</span>
+            <span>${tierEmojis[t.level] || ''} ${tierLabels[t.level] || ''}</span>
+            <span style="color:var(--text-muted);font-size:0.8rem;margin-left:auto;">${t.req}</span>
+        </div>`;
+    }).join('');
+
+    // Status message
+    let statusHtml;
+    if (b.tier === 0) {
+        statusHtml = `<div style="margin-top:0.6rem;padding:0.5rem;background:rgba(251,191,36,0.1);border-radius:0.4rem;text-align:center;font-size:0.85rem;">
+            🎯 <strong>Cíl:</strong> ${b.nextReq || 'Splň první úroveň!'}
+        </div>`;
+    } else if (b.tier >= b.maxTier) {
+        statusHtml = `<div style="margin-top:0.6rem;padding:0.5rem;background:rgba(16,185,129,0.15);border-radius:0.4rem;text-align:center;font-size:0.85rem;color:#4ade80;">
+            🏆 <strong>MAX úroveň!</strong> Gratulujeme!
+        </div>`;
+    } else {
+        statusHtml = `<div style="margin-top:0.6rem;padding:0.5rem;background:rgba(251,191,36,0.1);border-radius:0.4rem;text-align:center;font-size:0.85rem;">
+            ⬆️ <strong>Další úroveň:</strong> ${b.nextReq}
+        </div>`;
+    }
+
+    const overlay = document.createElement('div');
+    overlay.id = 'badgeTipOverlay';
+    overlay.style.cssText = 'position:fixed;inset:0;z-index:10001;background:rgba(0,0,0,0.7);display:flex;align-items:center;justify-content:center;padding:1rem;';
+    overlay.addEventListener('click', (e) => { if (e.target === overlay) overlay.remove(); });
+    overlay.innerHTML = `<div style="background:var(--card-bg,#1a1a2e);border:1px solid rgba(255,255,255,0.15);border-radius:0.8rem;padding:1.2rem;max-width:320px;width:100%;color:var(--text-main,#fff);">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.8rem;">
+            <div style="font-size:1.3rem;">${b.icon} <strong>${b.name}</strong></div>
+            <button onclick="document.getElementById('badgeTipOverlay').remove();" style="background:none;border:none;color:var(--text-muted);font-size:1.2rem;cursor:pointer;">✕</button>
+        </div>
+        <div style="font-size:0.8rem;color:var(--text-muted);margin-bottom:0.5rem;">Úroveň ${b.tier} / ${b.maxTier}</div>
+        ${tiersHtml}
+        ${statusHtml}
+    </div>`;
+    document.body.appendChild(overlay);
+}
+
 // Show another player's profile in a modal
 async function showPlayerProfile(userId, playerName) {
     const urlParams = new URLSearchParams(window.location.search);
@@ -1401,6 +1454,8 @@ async function showPlayerProfile(userId, playerName) {
                 <div class="ps-badges-grid">`;
             stats.badges.forEach(b => {
                 const tierClass = tierColors[b.tier] || 'locked';
+                const tierLabelsMap = { 0: '', 1: 'Bronze', 2: 'Stříbro', 3: 'Zlato', 4: 'Diamant' };
+                const tierLabel = b.tier > 0 ? tierLabelsMap[b.tier] : '';
                 const currentReq = b.tier > 0 && b.tiers[b.tier - 1] ? b.tiers[b.tier - 1].req : '';
                 const nextReq = b.nextReq || '';
                 const reqText = b.tier > 0 ? currentReq : nextReq;
@@ -1408,7 +1463,11 @@ async function showPlayerProfile(userId, playerName) {
                 for (let i = 1; i <= b.maxTier; i++) {
                     dotsHtml += `<span class="tier-dot ${i <= b.tier ? 'filled tier-' + tierColors[i] : ''}"></span>`;
                 }
-                badgesHtml += `<div class="ps-badge tier-${tierClass}">
+                const badgeData = encodeURIComponent(JSON.stringify({
+                    name: b.name, icon: b.icon, tier: b.tier, maxTier: b.maxTier,
+                    tierLabel, nextReq: b.nextReq, tiers: b.tiers
+                }));
+                badgesHtml += `<div class="ps-badge tier-${tierClass}" onclick="showBadgeTip(decodeURIComponent('${badgeData}'))" style="cursor:pointer;">
                     <span class="ps-badge-icon">${b.icon}</span>
                     <span class="ps-badge-name">${b.name}</span>
                     <span class="ps-badge-req">${reqText}</span>
@@ -1536,15 +1595,16 @@ async function loadPersonalStats() {
                 const currentReq = b.tier > 0 && b.tiers[b.tier - 1] ? b.tiers[b.tier - 1].req : '';
                 const nextReq = b.nextReq || '';
                 const reqText = b.tier > 0 ? currentReq : nextReq;
-                const tooltip = b.tier > 0
-                    ? `${b.name} — ${tierLabel}${b.nextReq ? '\nDalší: ' + b.nextReq : ' ✓ MAX'}`
-                    : `${b.name}\nCíl: ${b.nextReq || ''}`;
                 // Tier dots (filled up to current tier)
                 let dotsHtml = '';
                 for (let i = 1; i <= b.maxTier; i++) {
                     dotsHtml += `<span class="tier-dot ${i <= b.tier ? 'filled tier-' + tierColors[i] : ''}"></span>`;
                 }
-                badgesHtml += `<div class="ps-badge tier-${tierClass}" title="${tooltip}">
+                const badgeData = encodeURIComponent(JSON.stringify({
+                    name: b.name, icon: b.icon, tier: b.tier, maxTier: b.maxTier,
+                    tierLabel, nextReq: b.nextReq, tiers: b.tiers
+                }));
+                badgesHtml += `<div class="ps-badge tier-${tierClass}" onclick="showBadgeTip(decodeURIComponent('${badgeData}'))" style="cursor:pointer;">
                     <span class="ps-badge-icon">${b.icon}</span>
                     <span class="ps-badge-name">${b.name}</span>
                     <span class="ps-badge-req">${reqText}</span>
