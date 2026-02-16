@@ -479,11 +479,17 @@ router.get('/leaderboard', async (req, res) => {
     try {
         const period = req.query.period || 'all';
         const mode = req.query.mode || 'vanilla';
+        const registeredOnly = req.query.registeredOnly === 'true';
 
         // Build where clause for time filter and mode
         let whereClause = {
             mode: mode
         };
+
+        // Filter to registered users only
+        if (registeredOnly) {
+            whereClause.userId = { not: null };
+        }
 
         if (period === 'week') {
             const oneWeekAgo = new Date();
