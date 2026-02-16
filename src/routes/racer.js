@@ -584,12 +584,8 @@ router.get('/leaderboard', async (req, res) => {
         const mode = req.query.mode || 'vanilla';
         const registeredOnly = req.query.registeredOnly === 'true';
 
-        // Build where clause for time filter and mode
-        let whereClause = {
-            mode: mode
-        };
+        let whereClause = { mode };
 
-        // Filter to registered users only
         if (registeredOnly) {
             whereClause.userId = { not: null };
         }
@@ -600,37 +596,40 @@ router.get('/leaderboard', async (req, res) => {
             whereClause.createdAt = { gte: oneWeekAgo };
         }
 
-        const leaderboard = await prisma.puzzleRaceResult.findMany({
+        // Fetch more results to ensure we get enough unique players
+        const results = await prisma.puzzleRaceResult.findMany({
             where: whereClause,
-            take: 10,
-            orderBy: {
-                score: 'desc'
-            },
+            take: 50,
+            orderBy: { score: 'desc' },
             include: {
-                user: {
-                    select: {
-                        username: true,
-                        realName: true
-                    }
-                }
+                user: { select: { username: true, realName: true } }
             }
         });
 
-        // Enrich with display info
-        const enriched = leaderboard.map(entry => ({
-            id: entry.id,
-            score: entry.score,
-            playerName: entry.userId && entry.user
-                ? (entry.user.realName || entry.user.username)
-                : entry.playerName,
-            isRegistered: !!entry.userId,
-            createdAt: entry.createdAt,
-            correctCount: entry.correctCount,
-            wrongCount: entry.wrongCount,
-            maxStreak: entry.maxStreak
-        }));
+        // Deduplicate: keep only the best score per player
+        const seen = new Set();
+        const unique = [];
+        for (const entry of results) {
+            const key = entry.userId ? `u:${entry.userId}` : `n:${entry.playerName}`;
+            if (seen.has(key)) continue;
+            seen.add(key);
+            unique.push({
+                id: entry.id,
+                score: entry.score,
+                playerName: entry.userId && entry.user
+                    ? (entry.user.realName || entry.user.username)
+                    : entry.playerName,
+                userId: entry.userId || null,
+                isRegistered: !!entry.userId,
+                createdAt: entry.createdAt,
+                correctCount: entry.correctCount,
+                wrongCount: entry.wrongCount,
+                maxStreak: entry.maxStreak
+            });
+            if (unique.length >= 10) break;
+        }
 
-        res.json(enriched);
+        res.json(unique);
     } catch (error) {
         console.error('Error fetching leaderboard:', error);
         res.status(500).json({ error: 'Failed to fetch leaderboard' });
