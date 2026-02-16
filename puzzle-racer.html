@@ -420,6 +420,121 @@
             color: var(--text-muted);
         }
 
+        /* Secondary stats row (today, week, games, best streak) */
+        .ps-secondary-row {
+            display: flex;
+            gap: 0.5rem;
+            justify-content: center;
+            margin-top: 0.8rem;
+            padding-top: 0.8rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.06);
+        }
+
+        .ps-stat-mini {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.1rem;
+            flex: 1;
+            min-width: 0;
+        }
+
+        .ps-mini-icon {
+            font-size: 0.9rem;
+        }
+
+        .ps-mini-label {
+            font-size: 0.6rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+
+        .ps-mini-value {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--text-main);
+        }
+
+        /* Badges section */
+        .ps-badges-section {
+            margin-top: 0.8rem;
+            padding-top: 0.8rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .ps-badges-title {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 0.6rem;
+        }
+
+        .ps-badges-count {
+            font-weight: 700;
+            color: var(--primary-color);
+        }
+
+        .ps-badges-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.4rem;
+            justify-content: center;
+        }
+
+        .ps-badge {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.1rem;
+            padding: 0.4rem 0.5rem;
+            border-radius: 0.5rem;
+            min-width: 60px;
+            transition: all 0.2s ease;
+            cursor: default;
+            position: relative;
+        }
+
+        .ps-badge.earned {
+            background: rgba(74, 222, 128, 0.1);
+            border: 1px solid rgba(74, 222, 128, 0.25);
+        }
+
+        .ps-badge.earned:hover {
+            background: rgba(74, 222, 128, 0.2);
+            transform: translateY(-2px);
+        }
+
+        .ps-badge.locked {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            opacity: 0.4;
+            filter: grayscale(0.8);
+        }
+
+        .ps-badge.locked:hover {
+            opacity: 0.7;
+            filter: grayscale(0.3);
+        }
+
+        .ps-badge-icon {
+            font-size: 1.3rem;
+        }
+
+        .ps-badge-name {
+            font-size: 0.55rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            text-align: center;
+            line-height: 1.2;
+        }
+
+        .ps-badge.earned .ps-badge-name {
+            color: var(--text-main);
+        }
+
         /* Anonymous CTA */
         .anon-cta {
             background: rgba(59, 130, 246, 0.08);
