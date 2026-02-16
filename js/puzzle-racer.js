@@ -951,8 +951,8 @@ function endGame() {
         }
     }
 
-    // Auto-save for logged-in users (always save the result)
-    if (loggedInUser && score > 0) {
+    // Auto-save for logged-in users (only new personal best)
+    if (loggedInUser && isNewRecord) {
         autoSaveScore();
     } else if (loggedInUser) {
         // Score is 0, no need to save
