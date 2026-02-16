@@ -83,7 +83,8 @@ function navigateToNode(node) {
 }
 
 // Central move handler — called by onDrop, handleSquareClick, completePromotion
-function makeTreeMove(moveObj) {
+// skipAnimation = true when called from drag-and-drop (piece already at target)
+function makeTreeMove(moveObj, skipAnimation) {
     // moveObj = { from, to, promotion }
     // First validate the move
     const testGame = new Chess(game.fen());
@@ -98,7 +99,7 @@ function makeTreeMove(moveObj) {
         // Same move exists — just navigate into it
         game.move(moveObj);
         currentNode = existing;
-        board.position(game.fen());
+        board.position(game.fen(), !skipAnimation);
         updateStatus();
         updateMoveHistory();
         removeHighlights();
@@ -116,10 +117,10 @@ function makeTreeMove(moveObj) {
     }
 
     // No children — just append
-    return appendMoveToTree(moveObj, result);
+    return appendMoveToTree(moveObj, result, skipAnimation);
 }
 
-function appendMoveToTree(moveObj, result) {
+function appendMoveToTree(moveObj, result, skipAnimation) {
     if (!result) {
         result = game.move(moveObj);
         if (!result) return null;
@@ -129,7 +130,7 @@ function appendMoveToTree(moveObj, result) {
     const newNode = createNode(result, game.fen(), currentNode);
     currentNode.children.push(newNode);
     currentNode = newNode;
-    board.position(game.fen());
+    board.position(game.fen(), !skipAnimation);
     updateStatus();
     updateMoveHistory();
     removeHighlights();
@@ -657,8 +658,8 @@ function onDrop(source, target) {
         return 'snapback';
     }
 
-    // Use makeTreeMove
-    const result = makeTreeMove({ from: source, to: target, promotion: 'q' });
+    // Use makeTreeMove — skip animation since piece was dragged
+    const result = makeTreeMove({ from: source, to: target, promotion: 'q' }, true);
 
     if (result === null) {
         removeHighlights();
@@ -675,7 +676,7 @@ function onDrop(source, target) {
 }
 
 function onSnapEnd() {
-    board.position(game.fen());
+    board.position(game.fen(), false);
     if (lastMove) {
         highlightMove(lastMove.source, lastMove.target);
     }
