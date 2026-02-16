@@ -1510,70 +1510,153 @@ function showFormatChoiceModal(range) {
 
 /**
  * Scan entire content and auto-format detected patterns
- * Detects: Results (1-0, 0-1, ½-½) and potential player names (Příjmení, J.)
+ * Uses DOM tree walking to avoid corrupting diagrams, tables, headings, etc.
+ * Detects: Results (1-0, 0-1, ½-½) and potential player names (Firstname Lastname)
  */
 function autoFormatEntireContent() {
     const editor = document.getElementById('articleContent');
     if (!editor) return;
 
-    let html = editor.innerHTML;
     let scoreChanges = 0;
     let nameChanges = 0;
 
-    // 1. Format chess results (only if not already wrapped in a span)
-    // Patterns: 1-0, 0-1, ½-½, 1/2-1/2, remíza
-    const resultPatterns = [
-        /(?<!<span[^>]*>)\b(1-0)\b(?![^<]*<\/span>)/g,
-        /(?<!<span[^>]*>)\b(0-1)\b(?![^<]*<\/span>)/g,
-        /(?<!<span[^>]*>)(½-½|½ - ½)(?![^<]*<\/span>)/g,
-        /(?<!<span[^>]*>)\b(1\/2-1\/2|1\/2 - 1\/2)\b(?![^<]*<\/span>)/g,
-        /(?<!<span[^>]*>)\b(remíza|remis)\b(?![^<]*<\/span>)/gi
+    // Elements to skip entirely — their text should never be auto-formatted
+    const SKIP_SELECTORS = [
+        'table', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'a',
+        '.puzzle-section', '.diagram-book', '[data-diagram-id]',
+        '.highlight-name', '.highlight-score',
+        '.collapsible-header',
+        'code', 'pre'
     ];
 
-    resultPatterns.forEach(pattern => {
-        html = html.replace(pattern, (match) => {
-            scoreChanges++;
-            // Convert 1/2-1/2 to nice ½-½
-            const display = match.includes('1/2') ? '½-½' : match;
-            // Add zero-width space after for cursor positioning
-            return `<span class="highlight-score">${display}</span>\u200B`;
+    /**
+     * Check if a text node should be skipped (is inside a skipped element)
+     */
+    function shouldSkip(node) {
+        let el = node.parentElement;
+        while (el && el !== editor) {
+            for (const sel of SKIP_SELECTORS) {
+                if (el.matches && el.matches(sel)) return true;
+            }
+            el = el.parentElement;
+        }
+        return false;
+    }
+
+    /**
+     * Collect all text nodes in the editor, filtering out ones inside skipped elements
+     */
+    function getTextNodes() {
+        const walker = document.createTreeWalker(editor, NodeFilter.SHOW_TEXT, {
+            acceptNode: (node) => {
+                if (!node.textContent.trim()) return NodeFilter.FILTER_REJECT;
+                if (shouldSkip(node)) return NodeFilter.FILTER_REJECT;
+                return NodeFilter.FILTER_ACCEPT;
+            }
         });
-    });
+        const nodes = [];
+        while (walker.nextNode()) nodes.push(walker.currentNode);
+        return nodes;
+    }
 
-    // 2. Format player names: Two words with first capital letter = name
-    // Examples: "Petr Novák", "Jan Kowalski", "Marie Dvořáková"
-    // Pattern: Word starting with uppercase + space + Word starting with uppercase
-    const namePattern = /(?<!<span[^>]*>)(?<![A-ZÁČĎÉĚÍŇÓŘŠŤÚŮÝŽa-záčďéěíňóřšťúůýž])([A-ZÁČĎÉĚÍŇÓŘŠŤÚŮÝŽ][a-záčďéěíňóřšťúůýž]+)\s+([A-ZÁČĎÉĚÍŇÓŘŠŤÚŮÝŽ][a-záčďéěíňóřšťúůýž]+)(?![A-ZÁČĎÉĚÍŇÓŘŠŤÚŮÝŽa-záčďéěíňóřšťúůýž])(?![^<]*<\/span>)/g;
+    // All patterns to match — ordered by priority (results first, then scores, then names)
+    const patterns = [
+        // Chess results: 1-0, 0-1
+        { regex: /\b(1-0|0-1)\b/g, type: 'score' },
+        // Half results: ½-½, ½ - ½
+        { regex: /(½-½|½\s*-\s*½)/g, type: 'score' },
+        // Fraction results: 1/2-1/2, 1/2 - 1/2
+        { regex: /\b(1\/2\s*-\s*1\/2)\b/g, type: 'score', display: '½-½' },
+        // Remis/remíza
+        { regex: /\b(remíza|remis)\b/gi, type: 'score' },
+        // Team scores with comma decimals: "1,5 - 1,5", "1,5 : 1,5", "5,5 : 2,5"
+        { regex: /\b(\d+[,]\d+)\s*[:\-–]\s*(\d+[,]\d+)\b/g, type: 'score' },
+        // Team scores integer or dot decimal: "4:4", "3.5 : 2.5", "5 - 3"
+        { regex: /\b(\d+[.]?\d*)\s*[:\-–]\s*(\d+[.]?\d*)\b/g, type: 'score' },
+        // Fraction scores: "3/5", "4,5/6"
+        { regex: /\b(\d+[,.]?\d*)\/(\d+[,.]?\d*)\b/g, type: 'score' },
+        // Player names: FirstName LastName (both starting with uppercase, Czech diacritics)
+        { regex: /(?<![A-ZÁČĎÉĚÍŇÓŘŠŤÚŮÝŽa-záčďéěíňóřšťúůýž])([A-ZÁČĎÉĚÍŇÓŘŠŤÚŮÝŽ][a-záčďéěíňóřšťúůýž]+)\s+([A-ZÁČĎÉĚÍŇÓŘŠŤÚŮÝŽ][a-záčďéěíňóřšťúůýž]+)(?![A-ZÁČĎÉĚÍŇÓŘŠŤÚŮÝŽa-záčďéěíňóřšťúůýž])/g, type: 'name' }
+    ];
 
-    html = html.replace(namePattern, (match, firstName, lastName) => {
-        nameChanges++;
-        // Add zero-width space after for cursor positioning
-        return `<span class="highlight-name">${firstName} ${lastName}</span>\u200B`;
-    });
+    /**
+     * Process a single text node: find matches, split, and wrap in highlight spans
+     */
+    function processTextNode(textNode) {
+        const text = textNode.textContent;
+        if (!text.trim()) return;
 
-    // 3. Format team match scores like "5,5 : 2,5" or "4:4"
-    const teamScorePattern = /(?<!<span[^>]*>)\b(\d+[,.]?\d*)\s*:\s*(\d+[,.]?\d*)\b(?![^<]*<\/span>)/g;
+        // Collect all matches across all patterns
+        const matches = [];
+        for (const p of patterns) {
+            // Reset regex lastIndex
+            p.regex.lastIndex = 0;
+            let m;
+            while ((m = p.regex.exec(text)) !== null) {
+                // Check overlap with existing matches
+                const start = m.index;
+                const end = m.index + m[0].length;
+                const overlaps = matches.some(ex => start < ex.end && end > ex.start);
+                if (!overlaps) {
+                    matches.push({
+                        start,
+                        end,
+                        matched: m[0],
+                        display: p.display || m[0],
+                        type: p.type
+                    });
+                }
+            }
+        }
 
-    html = html.replace(teamScorePattern, (match, score1, score2) => {
-        scoreChanges++;
-        // Add zero-width space after for cursor positioning
-        return `<span class="highlight-score">${score1} : ${score2}</span>\u200B`;
-    });
+        if (matches.length === 0) return;
 
-    // 4. Format fraction-style scores like "3/5", "4,5/6", "2.5/5"
-    // This pattern matches: number (with optional decimal) / number
-    const fractionScorePattern = /(?<!<span[^>]*>)\b(\d+[,.]?\d*)\/(\d+[,.]?\d*)\b(?![^<]*<\/span>)/g;
+        // Sort by position
+        matches.sort((a, b) => a.start - b.start);
 
-    html = html.replace(fractionScorePattern, (match, score1, score2) => {
-        scoreChanges++;
-        // Add zero-width space after for cursor positioning
-        return `<span class="highlight-score">${score1}/${score2}</span>\u200B`;
-    });
+        // Build replacement fragment
+        const frag = document.createDocumentFragment();
+        let lastIndex = 0;
+
+        for (const match of matches) {
+            // Text before match
+            if (match.start > lastIndex) {
+                frag.appendChild(document.createTextNode(text.slice(lastIndex, match.start)));
+            }
+
+            // Wrapped span
+            const span = document.createElement('span');
+            span.className = match.type === 'score' ? 'highlight-score' : 'highlight-name';
+            span.textContent = match.display;
+            frag.appendChild(span);
+
+            // Zero-width space for cursor positioning
+            frag.appendChild(document.createTextNode('\u200B'));
+
+            if (match.type === 'score') scoreChanges++;
+            else nameChanges++;
+
+            lastIndex = match.end;
+        }
+
+        // Remaining text after last match
+        if (lastIndex < text.length) {
+            frag.appendChild(document.createTextNode(text.slice(lastIndex)));
+        }
+
+        // Replace the text node with our fragment
+        textNode.parentNode.replaceChild(frag, textNode);
+    }
+
+    // Collect text nodes FIRST (before modifying DOM)
+    const textNodes = getTextNodes();
+
+    // Process each text node
+    textNodes.forEach(processTextNode);
 
     const totalChanges = scoreChanges + nameChanges;
 
     if (totalChanges > 0) {
-        editor.innerHTML = html;
         updatePreview();
 
         const message = [];
