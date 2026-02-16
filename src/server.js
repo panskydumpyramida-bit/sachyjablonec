@@ -112,18 +112,30 @@ app.use(async (req, res, next) => {
     next();
 });
 
-// Static Files Serving
 // Static Files Serving with Cache Policy
+const isProd = process.env.NODE_ENV === 'production' || process.env.RAILWAY_ENVIRONMENT === 'production';
+
 const staticOptions = {
-    maxAge: 0, // Disable cache for development/debugging
+    maxAge: isProd ? '7d' : 0, // CSS/JS: 7 days in production (versioned via ?v=)
+    etag: true
+};
+
+const imageOptions = {
+    maxAge: isProd ? '365d' : 0, // Images: 1 year (immutable assets)
+    immutable: true,
+    etag: true
+};
+
+const uploadOptions = {
+    maxAge: isProd ? '30d' : 0, // User uploads: 30 days
     etag: true
 };
 
 app.use(express.static(path.join(__dirname, '../public'), staticOptions));
 app.use('/js', express.static(path.join(__dirname, '../js'), staticOptions));
 app.use('/css', express.static(path.join(__dirname, '../css'), staticOptions));
-app.use('/uploads', express.static(path.join(__dirname, '../uploads'), staticOptions));
-app.use('/images', express.static(path.join(__dirname, '../images'), staticOptions));
+app.use('/uploads', express.static(path.join(__dirname, '../uploads'), uploadOptions));
+app.use('/images', express.static(path.join(__dirname, '../images'), imageOptions));
 
 // SEO Files - Explicit rules to ensure they are served correctly
 app.get('/robots.txt', (req, res) => res.sendFile(path.join(__dirname, '../robots.txt')));
