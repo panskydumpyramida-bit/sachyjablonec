@@ -1285,6 +1285,54 @@ function toggleAnonymousLeaderboard() {
     loadLeaderboard(currentLeaderboardPeriod);
 }
 
+// Load Hall of Fame — weekly champions
+async function loadHallOfFame() {
+    const container = document.getElementById('hallOfFameBody');
+    if (!container) return;
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const mode = urlParams.get('mode') === 'thematic' ? 'thematic' : 'vanilla';
+
+    try {
+        const res = await fetch(`${API_URL}/racer/hall-of-fame?mode=${mode}`);
+        if (!res.ok) throw new Error('Failed');
+
+        const data = await res.json();
+
+        if (data.length === 0) {
+            container.innerHTML = '<p style="color: var(--text-muted); padding: 1rem;">Zatím žádní šampioni. Hraj každý týden a staň se prvním!</p>';
+            return;
+        }
+
+        const formatDate = (d) => new Date(d).toLocaleDateString('cs-CZ', { day: 'numeric', month: 'short' });
+
+        container.innerHTML = `<div style="display: flex; flex-wrap: wrap; gap: 0.6rem; justify-content: center;">` +
+            data.map((w, i) => {
+                const medal = i === 0 ? '👑' : '⭐';
+                return `<div style="
+                    background: ${i === 0 ? 'linear-gradient(135deg, rgba(251,191,36,0.12), rgba(251,191,36,0.04))' : 'rgba(255,255,255,0.03)'};
+                    border: 1px solid ${i === 0 ? 'rgba(251,191,36,0.3)' : 'rgba(255,255,255,0.08)'};
+                    border-radius: 0.6rem;
+                    padding: 0.5rem 0.8rem;
+                    min-width: 140px;
+                    text-align: center;
+                ">
+                    <div style="font-size: 0.65rem; color: var(--text-muted); margin-bottom: 0.2rem;">
+                        ${formatDate(w.weekStart)} – ${formatDate(w.weekEnd)}
+                    </div>
+                    <div style="font-weight: 700; color: var(--text-main); font-size: 0.85rem;">
+                        ${medal} ${escapeHtml(w.playerName)}
+                    </div>
+                    <div style="color: #4ade80; font-weight: 600; font-size: 0.8rem;">${w.score} bodů</div>
+                </div>`;
+            }).join('') +
+            '</div>';
+    } catch (e) {
+        console.error('Hall of fame error:', e);
+        container.innerHTML = '<p style="color: var(--text-muted);">Nepodařilo se načíst síň slávy.</p>';
+    }
+}
+
 // Detect logged-in user from JWT in localStorage
 function detectLoggedInUser() {
     try {
@@ -1359,34 +1407,39 @@ async function loadPersonalStats() {
                 '</div>';
         }
 
-        // Build badges grid (tiered system - expanded view)
+        // Build badges grid (tiered card system)
         let badgesHtml = '';
         if (stats.badges && stats.badges.length > 0) {
-            const tierColors = { 1: 'bronze', 2: 'silver', 3: 'gold', 4: 'diamond' };
-            const tierLabels = { 1: '🥉', 2: '🥈', 3: '🥇', 4: '💎' };
-            let totalEarned = 0;
-            let totalPossible = 0;
-            stats.badges.forEach(b => { totalEarned += b.tier; totalPossible += b.maxTier; });
+            const tierLabels = { 0: '', 1: 'Bronze', 2: 'Stříbro', 3: 'Zlato', 4: 'Diamant' };
+            const tierColors = { 0: 'locked', 1: 'bronze', 2: 'silver', 3: 'gold', 4: 'diamond' };
+            const totalEarned = stats.badges.reduce((sum, b) => sum + b.tier, 0);
+            const totalPossible = stats.badges.reduce((sum, b) => sum + b.maxTier, 0);
 
             badgesHtml = `<div class="ps-badges-section">
                 <div class="ps-badges-title">🏅 Odznaky <span class="ps-badges-count">${totalEarned}/${totalPossible}</span></div>
-                <div class="ps-badges-list">`;
-
+                <div class="ps-badges-grid">`;
             stats.badges.forEach(b => {
-                // Show each tier individually as a row
-                b.tiers.forEach(t => {
-                    const isEarned = t.earned;
-                    const color = tierColors[t.level] || 'bronze';
-                    const medal = tierLabels[t.level] || '';
-                    badgesHtml += `<div class="ps-badge-row ${isEarned ? 'earned tier-' + color : 'locked'}">
-                        <span class="ps-badge-row-icon">${b.icon}</span>
-                        <span class="ps-badge-row-req">${t.req}</span>
-                        <span class="ps-badge-row-medal">${medal}</span>
-                        ${isEarned ? '<i class="fa-solid fa-check" style="color: #4ade80; font-size: 0.7rem;"></i>' : '<i class="fa-solid fa-lock" style="opacity: 0.3; font-size: 0.6rem;"></i>'}
-                    </div>`;
-                });
+                const tierClass = tierColors[b.tier] || 'locked';
+                const tierLabel = b.tier > 0 ? tierLabels[b.tier] : '';
+                // Show current tier requirement or next target
+                const currentReq = b.tier > 0 && b.tiers[b.tier - 1] ? b.tiers[b.tier - 1].req : '';
+                const nextReq = b.nextReq || '';
+                const reqText = b.tier > 0 ? currentReq : nextReq;
+                const tooltip = b.tier > 0
+                    ? `${b.name} — ${tierLabel}${b.nextReq ? '\nDalší: ' + b.nextReq : ' ✓ MAX'}`
+                    : `${b.name}\nCíl: ${b.nextReq || ''}`;
+                // Tier dots (filled up to current tier)
+                let dotsHtml = '';
+                for (let i = 1; i <= b.maxTier; i++) {
+                    dotsHtml += `<span class="tier-dot ${i <= b.tier ? 'filled tier-' + tierColors[i] : ''}"></span>`;
+                }
+                badgesHtml += `<div class="ps-badge tier-${tierClass}" title="${tooltip}">
+                    <span class="ps-badge-icon">${b.icon}</span>
+                    <span class="ps-badge-name">${b.name}</span>
+                    <span class="ps-badge-req">${reqText}</span>
+                    <div class="ps-badge-dots">${dotsHtml}</div>
+                </div>`;
             });
-
             badgesHtml += '</div></div>';
         }
 
@@ -1460,8 +1513,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // Detect logged-in user
     loggedInUser = detectLoggedInUser();
 
-    // Load leaderboard and player name on init
+    // Load leaderboard, hall of fame, and player name on init
     loadLeaderboard();
+    loadHallOfFame();
 
     // Auto-fill name from user or localStorage
     if (loggedInUser) {

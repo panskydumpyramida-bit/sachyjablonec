@@ -474,6 +474,67 @@ router.get('/my-stats', async (req, res) => {
     }
 });
 
+// GET /api/racer/hall-of-fame?mode=vanilla|thematic
+// Returns the best player for each completed week
+router.get('/hall-of-fame', async (req, res) => {
+    try {
+        const mode = req.query.mode || 'vanilla';
+
+        // Use raw SQL to group by ISO week and find best score per week
+        const weeklyChampions = await prisma.$queryRaw`
+            SELECT
+                DATE_TRUNC('week', created_at)::date AS week_start,
+                DATE_TRUNC('week', created_at)::date + 6 AS week_end,
+                EXTRACT(ISOYEAR FROM created_at)::int AS year,
+                EXTRACT(WEEK FROM created_at)::int AS week_num,
+                MAX(score) AS best_score
+            FROM puzzle_race_results
+            WHERE mode = ${mode}
+              AND user_id IS NOT NULL
+            GROUP BY DATE_TRUNC('week', created_at), EXTRACT(ISOYEAR FROM created_at), EXTRACT(WEEK FROM created_at)
+            HAVING DATE_TRUNC('week', created_at) < DATE_TRUNC('week', NOW())
+            ORDER BY week_start DESC
+            LIMIT 20
+        `;
+
+        // For each week, find the actual player who achieved the best score
+        const enriched = await Promise.all(weeklyChampions.map(async (w) => {
+            const champion = await prisma.puzzleRaceResult.findFirst({
+                where: {
+                    mode,
+                    score: Number(w.best_score),
+                    userId: { not: null },
+                    createdAt: {
+                        gte: new Date(w.week_start),
+                        lt: new Date(new Date(w.week_end).getTime() + 86400000)
+                    }
+                },
+                include: {
+                    user: { select: { username: true, realName: true } }
+                },
+                orderBy: { createdAt: 'asc' }
+            });
+
+            return {
+                weekStart: w.week_start,
+                weekEnd: w.week_end,
+                year: Number(w.year),
+                weekNum: Number(w.week_num),
+                score: Number(w.best_score),
+                playerName: champion?.user
+                    ? (champion.user.realName || champion.user.username)
+                    : (champion?.playerName || 'Neznámý'),
+                userId: champion?.userId
+            };
+        }));
+
+        res.json(enriched);
+    } catch (error) {
+        console.error('Error fetching hall of fame:', error);
+        res.status(500).json({ error: 'Failed to fetch hall of fame' });
+    }
+});
+
 // GET /api/racer/leaderboard?period=week|all&mode=vanilla|thematic
 router.get('/leaderboard', async (req, res) => {
     try {
