@@ -935,34 +935,48 @@ class DiagramViewer {
 
         // Render Arrows
         if (annotations.arrows) {
-            // Get a reference square width for marker sizing
-            const refSq = getSqCenter('e4');
-            this.ensureMarkers(refSq ? refSq.width : 40);
-
             annotations.arrows.forEach(a => {
                 const s = getSqCenter(a.start);
                 const e = getSqCenter(a.end);
                 if (s && e) {
-                    // Shorten the line end so it stops before the arrowhead
-                    const dx = e.x - s.x;
-                    const dy = e.y - s.y;
-                    const len = Math.sqrt(dx * dx + dy * dy);
-                    const arrowSize = Math.max(12, s.width * 0.5);
-                    const shortenBy = arrowSize * 0.6;
-                    const ex = len > 0 ? e.x - (dx / len) * shortenBy : e.x;
-                    const ey = len > 0 ? e.y - (dy / len) * shortenBy : e.y;
+                    const color = VIEWER_COLORS[a.color];
+                    const strokeW = (s.width * 0.15) || 6;
+                    const headLen = Math.max(12, s.width * 0.4);
 
+                    const angle = Math.atan2(e.y - s.y, e.x - s.x);
+
+                    // Shorten line so it doesn't poke through arrowhead
+                    const lineEndX = e.x - (headLen - 3) * Math.cos(angle);
+                    const lineEndY = e.y - (headLen - 3) * Math.sin(angle);
+
+                    const group = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+                    group.setAttribute('opacity', '0.8');
+
+                    // Line shaft
                     const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
                     line.setAttribute('x1', s.x);
                     line.setAttribute('y1', s.y);
-                    line.setAttribute('x2', ex);
-                    line.setAttribute('y2', ey);
-                    line.setAttribute('stroke', VIEWER_COLORS[a.color]);
-                    line.setAttribute('stroke-width', (s.width * 0.15) || 6); // Responsive width
-                    line.setAttribute('stroke-opacity', '0.8');
+                    line.setAttribute('x2', lineEndX);
+                    line.setAttribute('y2', lineEndY);
+                    line.setAttribute('stroke', color);
+                    line.setAttribute('stroke-width', strokeW);
                     line.setAttribute('stroke-linecap', 'round');
-                    line.setAttribute('marker-end', `url(#arrowhead-${a.color})`);
-                    this.overlayEl.appendChild(line);
+                    group.appendChild(line);
+
+                    // Arrowhead triangle at the END (target square)
+                    const p1x = e.x;
+                    const p1y = e.y;
+                    const p2x = e.x - headLen * Math.cos(angle - Math.PI / 6);
+                    const p2y = e.y - headLen * Math.sin(angle - Math.PI / 6);
+                    const p3x = e.x - headLen * Math.cos(angle + Math.PI / 6);
+                    const p3y = e.y - headLen * Math.sin(angle + Math.PI / 6);
+
+                    const polygon = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+                    polygon.setAttribute('points', `${p1x},${p1y} ${p2x},${p2y} ${p3x},${p3y}`);
+                    polygon.setAttribute('fill', color);
+                    group.appendChild(polygon);
+
+                    this.overlayEl.appendChild(group);
                 }
             });
         }
