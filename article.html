@@ -7,6 +7,61 @@
     <title>Článek - Šachový oddíl TJ Bižuterie Jablonec</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+    <link rel="preconnect" href="https://www.tjbizuterie.cz" crossorigin>
+    <!-- Critical CSS: inline base styles so the article renders without waiting for full style.css -->
+    <style>
+        :root {
+            --primary-color: #d4af37;
+            --secondary-color: #1a1a1a;
+            --background-color: #121212;
+            --surface-color: #1e1e1e;
+            --text-color: #e0e0e0;
+            --text-muted: #a0a0a0;
+            --font-main: 'Inter', system-ui, -apple-system, sans-serif;
+            --font-heading: 'Playfair Display', Georgia, serif;
+            --border-radius: 8px;
+            --transition-speed: .3s
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box
+        }
+
+        body {
+            font-family: var(--font-main);
+            background-color: var(--background-color);
+            color: var(--text-color);
+            line-height: 1.6;
+            overflow-x: hidden
+        }
+
+        h1,
+        h2 {
+            font-family: var(--font-heading);
+            color: var(--primary-color);
+            margin-bottom: 1rem
+        }
+
+        header {
+            background-color: rgba(26, 26, 26, .95);
+            backdrop-filter: blur(10px);
+            position: fixed;
+            width: 100%;
+            top: 0;
+            z-index: 1000;
+            border-bottom: 1px solid rgba(212, 175, 55, .2);
+            min-height: 60px
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem
+        }
+    </style>
     <link
         href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@400;700&display=swap"
         rel="stylesheet" media="print" onload="this.media='all'">
@@ -21,7 +76,11 @@
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     </noscript>
     <link rel="stylesheet" href="css/style.css">
-    <link rel="stylesheet" href="css/auth.css?v=7">
+    <!-- auth.css: non-blocking — only needed for admin login UI -->
+    <link rel="stylesheet" href="css/auth.css?v=7" media="print" onload="this.media='all'">
+    <noscript>
+        <link rel="stylesheet" href="css/auth.css?v=7">
+    </noscript>
     <link rel="stylesheet" href="css/comments.css">
     <link rel="stylesheet" href="css/game-viewer2.css?v=10">
     <link rel="stylesheet" href="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.css"
