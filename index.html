@@ -20,7 +20,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
     <link rel="preconnect" href="https://www.tjbizuterie.cz" crossorigin>
-    <!-- Critical CSS: inline hero + base styles so FCP/LCP don't wait for style.css -->
+    <!-- Critical CSS: ALL above-the-fold styles inlined so hero renders instantly without style.css -->
     <style>
         :root {
             --primary-color: #d4af37;
@@ -32,7 +32,8 @@
             --font-main: 'Inter', system-ui, -apple-system, sans-serif;
             --font-heading: 'Playfair Display', Georgia, serif;
             --border-radius: 8px;
-            --transition-speed: .3s
+            --transition-speed: .3s;
+            --shadow: 0 4px 6px rgba(0, 0, 0, .3)
         }
 
         * {
@@ -50,10 +51,36 @@
         }
 
         h1,
-        h2 {
+        h2,
+        h3,
+        h4,
+        h5,
+        h6 {
             font-family: var(--font-heading);
             color: var(--primary-color);
             margin-bottom: 1rem
+        }
+
+        a {
+            text-decoration: none;
+            color: inherit;
+            transition: color var(--transition-speed)
+        }
+
+        ul {
+            list-style: none
+        }
+
+        img {
+            max-width: 100%;
+            display: block;
+            border-radius: var(--border-radius)
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem
         }
 
         header {
@@ -65,6 +92,23 @@
             z-index: 1000;
             border-bottom: 1px solid rgba(212, 175, 55, .2);
             min-height: 60px
+        }
+
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 0
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            font-family: var(--font-heading);
+            color: var(--primary-color);
+            display: flex;
+            align-items: center;
+            gap: .5rem
         }
 
         .hero {
@@ -88,17 +132,120 @@
             }
         }
 
-        .hero h1 {
-            font-size: clamp(1.4rem, 4vw, 2.8rem);
-            color: #fff;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, .5);
-            margin-bottom: .5rem
+        .hero-content {
+            width: 100%;
+            max-width: 1200px;
+            padding: 0 1rem;
+            position: relative;
+            z-index: 2
         }
 
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 0 2rem
+        .hero-content h1 {
+            font-size: 2.5rem;
+            margin-bottom: .5rem;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, .7);
+            font-weight: 700;
+            line-height: 1.2;
+            color: #fff
+        }
+
+        .hero-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 4px;
+            margin: .5rem auto 0;
+            max-width: 280px;
+            background: rgba(0, 0, 0, .4);
+            padding: 4px;
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, .5);
+            backdrop-filter: blur(4px)
+        }
+
+        @media(min-width:768px) {
+            .hero-grid {
+                grid-template-columns: repeat(4, 1fr);
+                max-width: 500px
+            }
+        }
+
+        .hero-grid-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            aspect-ratio: 1;
+            border-radius: 8px;
+            font-family: var(--font-heading);
+            font-weight: 700;
+            font-size: .65rem;
+            letter-spacing: .5px;
+            text-transform: uppercase;
+            gap: 4px;
+            transition: all .3s ease;
+            text-decoration: none;
+            border: 1px solid transparent;
+            padding: .3rem
+        }
+
+        .hero-grid-item i {
+            font-size: 1rem;
+            transition: transform .3s ease
+        }
+
+        .hero-grid-item.light {
+            background: rgba(240, 217, 181, .9);
+            color: #1a1a1a
+        }
+
+        .hero-grid-item.dark {
+            background: rgba(30, 30, 50, .85);
+            color: #e0e0e0;
+            border-color: rgba(212, 175, 55, .15)
+        }
+
+        .section-title {
+            text-align: center;
+            font-size: 2rem;
+            margin: 3rem 0 2rem;
+            position: relative;
+            padding-bottom: .5rem
+        }
+
+        footer {
+            background-color: #000;
+            padding: 3rem 0;
+            margin-top: 3rem;
+            border-top: 1px solid rgba(255, 255, 255, .05);
+            min-height: 450px
+        }
+
+        .card-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            min-height: 700px
+        }
+
+        @media(max-width:768px) {
+            .hero {
+                align-items: flex-start;
+                padding-top: .5rem;
+                min-height: 320px
+            }
+
+            .hero-content h1 {
+                display: block;
+                font-size: .85rem;
+                margin-bottom: .2rem;
+                line-height: 1.2;
+                opacity: .8;
+                letter-spacing: .5px
+            }
+
+            .card-grid {
+                min-height: 400px
+            }
         }
     </style>
     <link
@@ -114,7 +261,10 @@
     <noscript>
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     </noscript>
-    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/style.css" media="print" onload="this.media='all'">
+    <noscript>
+        <link rel="stylesheet" href="css/style.css">
+    </noscript>
     <!-- auth.css: non-blocking — only needed for admin login UI, not initial paint -->
     <link rel="stylesheet" href="css/auth.css?v=7" media="print" onload="this.media='all'">
     <noscript>
