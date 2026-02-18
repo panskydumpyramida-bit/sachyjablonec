@@ -71,36 +71,37 @@ app.get('/health', (req, res) => {
     });
 });
 
-// Maintenance Mode Middleware
+// Maintenance Mode Middleware (with 60s cache to avoid DB hit on every request)
+let maintenanceCached = { value: null, expiresAt: 0 };
+
 app.use(async (req, res, next) => {
     // 1. Health check - always allow
     if (req.path === '/health') return next();
 
     // 2. Static assets - always allow
-    if (req.path.match(/\.(css|js|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot)$/)) {
+    if (req.path.match(/\.(css|js|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot|webp)$/)) {
         return next();
     }
 
     // 3. Admin login/settings needed to disable maintenance
-    // Allow login and settings endpoints so admin can turn it off!
     if (req.path.startsWith('/api/auth') || req.path.startsWith('/api/settings')) {
         return next();
     }
-    // Also allow admin.html main page to load so they can access the panel
     if (req.path === '/admin.html') return next();
-
 
     let maintenance = process.env.MAINTENANCE_MODE === 'true';
 
-    // Check DB
+    // Check DB with caching
     try {
-        const setting = await prisma.systemSetting.findUnique({ where: { key: 'maintenance_mode' } });
-        if (setting && setting.value === 'true') maintenance = true;
-        if (setting && setting.value === 'false') maintenance = false; // DB overrides ENV? Or OR?
-        // Let's say DB overrides if present.
+        const now = Date.now();
+        if (maintenanceCached.expiresAt < now) {
+            const setting = await prisma.systemSetting.findUnique({ where: { key: 'maintenance_mode' } });
+            maintenanceCached = { value: setting ? setting.value : null, expiresAt: now + 60000 };
+        }
+        if (maintenanceCached.value === 'true') maintenance = true;
+        if (maintenanceCached.value === 'false') maintenance = false;
     } catch (e) {
         console.error('Failed to check maintenance settings:', e);
-        // Fallback to env if DB fails
     }
 
     if (maintenance) {
@@ -150,28 +151,30 @@ const APP_VERSION = process.env.RAILWAY_GIT_COMMIT_SHA
 
 console.log(`🚀 Starting server with APP_VERSION: ${APP_VERSION}`);
 
-// Enhanced servePage with Automatic Cache Busting
+// Enhanced servePage with Automatic Cache Busting + In-Memory Caching
+const htmlCache = new Map();
+
 const servePage = (page) => async (req, res) => {
     try {
-        const filePath = path.join(__dirname, `../${page}`);
-        let html = await fs.readFile(filePath, 'utf-8');
+        if (!htmlCache.has(page)) {
+            const filePath = path.join(__dirname, `../${page}`);
+            let html = await fs.readFile(filePath, 'utf-8');
 
-        // Inject APP_VERSION to window for client-side scripts
-        const versionScript = `<script>window.APP_VERSION = '${APP_VERSION}';</script>\n`;
-        html = html.replace('<head>', '<head>\n' + versionScript);
+            // Inject APP_VERSION to window for client-side scripts
+            const versionScript = `<script>window.APP_VERSION = '${APP_VERSION}';</script>\n`;
+            html = html.replace('<head>', '<head>\n' + versionScript);
 
-        // Regex to find local JS and CSS imports
-        // Matches src="..." or href="..." where the value ends in .js or .css (ignoring external links starting with http)
-        // Also captures existing query params if any
-        // Group 1: src=" or href=" without the closing quote
-        // Group 2: The URL path
-        // Group 3: Extension
-        html = html.replace(/(src|href)="((?!http)[^"]+\.(css|js))(\?v=[^"]*)?"/g, (match, attrName, url) => {
-            // Reconstruct with new version
-            return `${attrName}="${url}?v=${APP_VERSION}"`;
-        });
+            // Regex to find local JS and CSS imports
+            html = html.replace(/(src|href)="((?!http)[^"]+\.(css|js))(\?v=[^"]*)?"/g, (match, attrName, url) => {
+                return `${attrName}="${url}?v=${APP_VERSION}"`;
+            });
 
-        res.send(html);
+            htmlCache.set(page, html);
+        }
+
+        // Allow Cloudflare to cache HTML for 5 min, browser for 0 (always revalidate)
+        res.set('Cache-Control', 'public, max-age=0, s-maxage=300');
+        res.send(htmlCache.get(page));
     } catch (err) {
         console.error(`Error serving page ${page}:`, err);
         res.status(500).send('Internal Server Error');
