@@ -600,7 +600,7 @@ router.get('/leaderboard', async (req, res) => {
         const results = await prisma.puzzleRaceResult.findMany({
             where: whereClause,
             take: 50,
-            orderBy: { score: 'desc' },
+            orderBy: [{ score: 'desc' }, { createdAt: 'asc' }],
             include: {
                 user: { select: { username: true, realName: true } }
             }
