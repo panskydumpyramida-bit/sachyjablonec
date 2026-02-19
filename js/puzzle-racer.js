@@ -951,25 +951,21 @@ function endGame() {
         }
     }
 
-    // Auto-save for logged-in users (only new personal best)
-    if (loggedInUser && isNewRecord) {
-        autoSaveScore();
+    // Auto-save for logged-in users (every game with score > 0)
+    if (loggedInUser && score > 0) {
+        autoSaveScore(isNewRecord);
     } else if (loggedInUser) {
-        // Score is 0, no need to save
-        const nameInput = document.getElementById('playerName');
-        if (nameInput) {
-            nameInput.value = loggedInUser.realName || loggedInUser.username;
-            nameInput.readOnly = true;
-            nameInput.style.opacity = '0.7';
-        }
+        // Score is 0, hide save UI completely
+        const nameWrapper = document.getElementById('nameInputWrapper');
+        if (nameWrapper) nameWrapper.classList.add('hidden');
     }
 
     // Render post-solve review
     renderPuzzleReview();
 }
 
-// Auto-save score for logged-in users
-async function autoSaveScore() {
+// Auto-save score for logged-in users (every game, not just records)
+async function autoSaveScore(isNewRecord = false) {
     const playerName = loggedInUser.realName || loggedInUser.username;
 
     // Hide the manual save UI for logged-in users
@@ -999,15 +995,19 @@ async function autoSaveScore() {
         });
 
         if (res.ok) {
+            const savedMsg = isNewRecord
+                ? '<i class="fa-solid fa-trophy" style="color: #fbbf24;"></i> Nový rekord uložen!'
+                : '<i class="fa-solid fa-circle-check"></i> Výsledek uložen';
             if (nameWrapper) {
                 nameWrapper.innerHTML = `
                     <span style="display: flex; align-items: center; gap: 0.5rem; color: #4ade80; font-weight: 600;">
-                        <i class="fa-solid fa-circle-check"></i> Výsledek uložen!
+                        ${savedMsg}
                     </span>
                 `;
             }
-            // Reload leaderboard to show updated results
+            // Reload leaderboard and personal stats to show updated results
             loadLeaderboard(currentLeaderboardPeriod);
+            loadPersonalStats();
         } else {
             if (nameWrapper) {
                 nameWrapper.innerHTML = `
