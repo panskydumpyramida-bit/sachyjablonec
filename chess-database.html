@@ -126,11 +126,9 @@
             }
 
             .tree-panel {
-                display: none !important;
-            }
-
-            .game-panel {
-                grid-row: span 2;
+                grid-column: 1 / -1;
+                max-height: 300px;
+                overflow-y: auto;
             }
         }
 
@@ -178,6 +176,10 @@
             .moves-wrapper {
                 max-height: 120px;
                 overflow-y: auto;
+            }
+
+            .tree-panel {
+                max-height: 250px;
             }
         }
 
