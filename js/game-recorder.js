@@ -799,7 +799,7 @@ async function saveGame() {
     const result = document.getElementById('result').value;
 
     const clubToken = localStorage.getItem('club_auth_token');
-    const userToken = localStorage.getItem('token');
+    const userToken = localStorage.getItem('auth_token') || sessionStorage.getItem('auth_token');
 
     if (!clubToken && !userToken) {
         const status = document.getElementById('saveStatus');
@@ -900,8 +900,14 @@ function extractAnnotationsFromPgn(pgnText) {
             // Skip move numbers
             if (token.match(/^[0-9]+\.$/)) return;
 
-            // Attempt move
-            tempGame.move(token);
+            // Attempt move — with disambiguation fallback for chess.js 0.10.3
+            let result = tempGame.move(token);
+            if (!result && token.length >= 4) {
+                result = tempGame.move(token[0] + token.slice(2));
+            }
+            if (!result) {
+                try { result = tempGame.move(token, { sloppy: true }); } catch(e) {}
+            }
         }
     });
 
@@ -1186,23 +1192,29 @@ function importPgn() {
     // Parse movetext with variations
     const body = pgnText.replace(/\[[^\]]*\]\s*/g, '').trim();
     // Tokenize: move numbers, moves, comments, NAGs, parens
-    const tokenRegex = /(\{[^}]*\})|(\$[0-9]+)|(\()|(\))|([a-zA-Z][a-zA-Z0-9+#=!?-]*)|([0-9]+\.+)/g;
+    const tokenRegex = /(\{[^}]*\})|(\$[0-9]+)|(\()|(\))|([a-zA-Z][a-zA-Z0-9+#=-]*)|([0-9]+\.+)/g;
     const tokens = [];
     let m;
     while ((m = tokenRegex.exec(body)) !== null) {
         tokens.push(m[0]);
     }
 
+    console.group('[PGN Import] Starting import');
+    console.log('[PGN Import] Body text:', body);
+    console.log('[PGN Import] Tokens found:', tokens.length, tokens);
+
     // Build tree
     initTreeFromStartingPos();
     let treeNode = moveTreeRoot;
     let gameStack = []; // Stack for variations { node, fen }
     let tempGame = new Chess(startingFen || undefined);
+    let _importPly = 0;
 
     for (let i = 0; i < tokens.length; i++) {
         const tok = tokens[i];
 
         if (tok === '(') {
+            console.log(`[PGN Import] Token ${i}: ( — entering variation, stack depth=${gameStack.length + 1}`);
             // Save current position and go back to parent
             gameStack.push({ node: treeNode, fen: tempGame.fen() });
             // Go back to parent to branch
@@ -1211,6 +1223,7 @@ function importPgn() {
                 tempGame.load(treeNode.fen);
             }
         } else if (tok === ')') {
+            console.log(`[PGN Import] Token ${i}: ) — leaving variation, stack depth=${gameStack.length - 1}`);
             // Restore position
             if (gameStack.length > 0) {
                 const saved = gameStack.pop();
@@ -1220,11 +1233,13 @@ function importPgn() {
         } else if (tok.startsWith('{')) {
             // Comment — attach to current node
             const comment = tok.replace(/^\{|\}$/g, '').trim();
+            console.log(`[PGN Import] Token ${i}: comment "${comment}"`);
             if (comment && treeNode) {
                 treeNode.comment = comment;
                 moveComments[treeNode.fen] = comment;
             }
         } else if (tok.startsWith('$')) {
+            console.log(`[PGN Import] Token ${i}: NAG ${tok}`);
             // NAG
             if (treeNode) {
                 treeNode.nag = tok;
@@ -1233,17 +1248,45 @@ function importPgn() {
         } else if (tok.match(/^[0-9]+\.+$/)) {
             // Move number — skip
         } else if (tok === '1-0' || tok === '0-1' || tok === '1/2-1/2' || tok === '*') {
+            console.log(`[PGN Import] Token ${i}: result "${tok}" — skip`);
             // Result — skip
         } else {
             // Attempt move
-            const result = tempGame.move(tok);
+            let result = tempGame.move(tok);
+
+            // chess.js 0.10.3 sometimes rejects moves with unnecessary disambiguation
+            // (e.g. "Rfg8" when only one rook can go to g8, or "R5g4" with rank disambiguation).
+            // Fallback: strip the disambiguation character and retry.
+            if (!result && tok.length >= 4) {
+                // Pattern: piece + disambig + target (e.g. "Rfg8" → "Rg8", "R5g4" → "Rg4", "Rcg8" → "Rg8")
+                const stripped = tok[0] + tok.slice(2);
+                result = tempGame.move(stripped);
+                if (result) {
+                    console.log(`[PGN Import] Token ${i}: ⚠️ "${tok}" failed, retried as "${stripped}" — OK`);
+                }
+            }
+
+            // Additional fallback: try with {sloppy: true} flag
+            if (!result) {
+                try { result = tempGame.move(tok, { sloppy: true }); } catch(e) {}
+            }
+
             if (result) {
+                _importPly++;
+                const moveNum = Math.ceil(_importPly / 2);
+                const side = _importPly % 2 === 1 ? '' : '...';
+                console.log(`[PGN Import] Token ${i}: ✅ ${moveNum}.${side} ${tok} → FEN: ${tempGame.fen().split(' ').slice(0, 2).join(' ')}`);
                 const newNode = createNode(result, tempGame.fen(), treeNode);
                 treeNode.children.push(newNode);
                 treeNode = newNode;
+            } else {
+                console.error(`[PGN Import] Token ${i}: ❌ FAILED "${tok}" — FEN was: ${tempGame.fen()}`);
+                console.error(`[PGN Import] Legal moves here:`, tempGame.moves());
             }
         }
     }
+    console.log(`[PGN Import] Finished. Total plies applied: ${_importPly}`);
+    console.groupEnd();
 
     // Navigate to end of main line
     currentNode = moveTreeRoot;

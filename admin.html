@@ -1340,6 +1340,22 @@
             </div>
 
             <div class="changelog-timeline">
+                <!-- 2026-03-26 v36 -->
+                <div class="changelog-entry">
+                    <div class="changelog-date">26. 3. 2026</div>
+                    <div class="changelog-version">v36</div>
+                    <div class="changelog-content">
+                        <h4>♟️ Editor partií – oprava PGN importu</h4>
+                        <ul>
+                            <li><strong>Disambiguace tahů:</strong> Oprava chyby, kdy chess.js 0.10.3 odmítal tahy
+                                s přebytečnou disambiguací souboru/řady (např. <code>Rfg8</code>, <code>R5g4</code>,
+                                <code>Rcg8</code>). Partie s těmito tahy se nyní importují kompletně.</li>
+                            <li><strong>Fallback logika:</strong> Přidán automatický fallback – pokud se tah nepodaří,
+                                odstraní se disambiguační znak a zkusí se znovu. Opraveno v importu i v anotačním
+                                parseru.</li>
+                        </ul>
+                    </div>
+                </div>
                 <!-- 2026-02-19 v35 -->
                 <div class="changelog-entry">
                     <div class="changelog-date">19. 2. 2026</div>
