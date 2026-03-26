@@ -853,6 +853,10 @@ function enableMoveRecording(type) {
     solverState.currentLine = []; // Reset line
     solverState.currentPendingMove = null;
 
+    // Save original board position BEFORE any moves are made
+    // This is used by resetBoardToReadOnly() to restore the correct position
+    solverState.originalFen = diagramBoard ? diagramBoard.fen() : game.fen();
+
     // Show controls
     document.getElementById('recordingControls').style.display = 'flex';
     document.getElementById('recordingStatusLabel').innerText = `Nahrávám: ${getLabelForType(type)}`;
@@ -963,13 +967,18 @@ function cancelRecording() {
 }
 
 function resetBoardToReadOnly() {
-    // Preserve current diagram position instead of resetting to main game
-    const currentPos = diagramBoard ? diagramBoard.fen() : game.fen();
+    // Use the ORIGINAL position saved before recording started,
+    // NOT the current board position (which shows post-move state)
+    const originalPos = solverState.originalFen || (diagramBoard ? diagramBoard.fen() : game.fen());
     diagramBoard = Chessboard('diagramBoard', {
-        position: currentPos,
+        position: originalPos,
         draggable: false,
         pieceTheme: '/img/chesspieces/wikipedia/{piece}.png'
     });
+    solverState.originalFen = null; // Clear after use
+
+    // Sync FEN input field so saveDiagramToCloud() gets the correct FEN
+    updateFenFromBoard();
 }
 
 function saveSolverStep() {
