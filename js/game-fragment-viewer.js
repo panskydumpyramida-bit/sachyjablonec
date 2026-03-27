@@ -124,12 +124,12 @@
         
         const renderMoveSpan = (i, moveObj) => {
             const nagHtml = moveObj.nag ? `<span style="color:#60a5fa;font-weight:bold;margin-left:2px;">${moveObj.nag}</span>` : '';
-            return `<span class="frag-move" data-frag-uid="${uid}" data-move-idx="${i}" style="cursor:pointer;padding:1px 4px;border-radius:3px;font-size:0.8rem;transition:background 0.15s;display:inline-block;flex:1;text-align:left;">${moveObj.san}${nagHtml}</span>`;
+            return `<span class="frag-move" data-frag-uid="${uid}" data-move-idx="${i}" style="cursor:pointer;padding:1px 2px;border-radius:3px;font-size:0.75rem;transition:background 0.15s;display:inline-block;flex:1;text-align:left;white-space:nowrap;">${moveObj.san}${nagHtml}</span>`;
         };
         
         const renderComment = (moveObj) => {
             if (!moveObj || !moveObj.comment) return '';
-            return `<div style="font-size:0.75rem; color:#9ca3af; padding-left:28px; padding-bottom:6px; line-height:1.3; font-style:italic;">${escapeHtml(moveObj.comment)}</div>`;
+            return `<div style="font-size:0.75rem; color:#9ca3af; padding-left:28px; padding-bottom:6px; line-height:1.3; font-style:italic; word-break:break-word;">${escapeHtml(moveObj.comment)}</div>`;
         };
         
         let moveListHtml = '';
@@ -188,7 +188,7 @@
                 </div>
                 <div style="display:flex;gap:0;">
                     <!-- Mini Board Column -->
-                    <div style="flex:0 0 65%; max-width:320px; padding:0.5rem; border-right:1px solid rgba(255,255,255,0.05); display:flex; flex-direction:column;">
+                    <div id="${uid}-left-panel" style="flex:0 0 65%; max-width:320px; transition:flex 0.2s; padding:0.4rem; border-right:1px solid rgba(255,255,255,0.05); display:flex; flex-direction:column;">
                         <div style="display:flex; align-items:stretch;">
                             <div id="${uid}-eval-bar" class="frag-eval-bar">
                                 <div id="${uid}-eval-fill" class="frag-eval-fill" style="height: 50%;"></div>
@@ -211,8 +211,8 @@
                         </div>
                     </div>
                     <!-- Moves Panel -->
-                    <div style="flex:1 1 35%; display:flex;flex-direction:column;justify-content:space-between; overflow:hidden;">
-                        <div id="${uid}-moves" style="padding:0.5rem;line-height:1.7;max-height:240px;overflow-y:auto;word-break:break-word;">
+                    <div id="${uid}-right-panel" style="flex:1 1 35%; transition:flex 0.2s; display:flex;flex-direction:column;justify-content:space-between; overflow:hidden;">
+                        <div id="${uid}-moves" style="padding:0.2rem;line-height:1.7;max-height:240px;overflow-y:auto;overflow-x:hidden;">
                             ${moveListHtml || '<span style="color:var(--text-muted);font-size:0.8rem;">Žádné tahy</span>'}
                         </div>
                     </div>
@@ -298,16 +298,23 @@
         state.engineEnabled = !state.engineEnabled;
         const btn = document.getElementById(`${uid}-engine-btn`);
         const bar = document.getElementById(`${uid}-eval-bar`);
+        const leftPanel = document.getElementById(`${uid}-left-panel`);
+        const rightPanel = document.getElementById(`${uid}-right-panel`);
+        
         if (state.engineEnabled) {
             btn.style.color = '#4ade80';
             bar.classList.add('active');
+            if (leftPanel) leftPanel.style.flex = '0 0 72%';
+            if (rightPanel) rightPanel.style.flex = '1 1 28%';
             // Trigger resize to fix board dimensions now that bar showed up
-            setTimeout(() => state.board.resize(), 10);
+            setTimeout(() => state.board.resize(), 50);
             runFragEngine(uid);
         } else {
             btn.style.color = '#ccc';
             bar.classList.remove('active');
-            setTimeout(() => state.board.resize(), 10);
+            if (leftPanel) leftPanel.style.flex = '0 0 65%';
+            if (rightPanel) rightPanel.style.flex = '1 1 35%';
+            setTimeout(() => state.board.resize(), 50);
         }
     };
 
