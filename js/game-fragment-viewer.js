@@ -27,10 +27,10 @@
     };
 
     async function loadFragment(container, fragmentId) {
-        const apiUrl = (typeof API_URL !== 'undefined') ? API_URL : '';
+        const apiUrl = (typeof window.API_URL !== 'undefined') ? window.API_URL : '/api';
 
         try {
-            const res = await fetch(`${apiUrl}/api/fragments/${fragmentId}`);
+            const res = await fetch(`${apiUrl}/fragments/${fragmentId}`);
             if (!res.ok) {
                 container.innerHTML = `<div style="padding:1rem;color:#f87171;font-size:0.85rem;text-align:center;">
                     <i class="fa-solid fa-triangle-exclamation"></i> Fragment #${fragmentId} nenalezen</div>`;
