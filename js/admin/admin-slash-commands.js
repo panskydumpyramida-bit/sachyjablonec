@@ -594,14 +594,12 @@ function showWinnersModal() {
 
 function showRankingCardsModal() {
     createTemplateModal('Karty pořadí', `
-        <label style="display:block; margin-bottom: 5px; color: #a0a0a0; font-size: 0.9em;">Název levé kategorie:</label>
-        <input type="text" id="cardA" value="Kategorie A" style="width: 100%; box-sizing: border-box; margin-bottom: 15px; padding: 8px; background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.1); color: #fff; border-radius: 4px;">
-        <label style="display:block; margin-bottom: 5px; color: #a0a0a0; font-size: 0.9em;">Název pravé kategorie:</label>
-        <input type="text" id="cardB" value="Kategorie B" style="width: 100%; box-sizing: border-box; padding: 8px; background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.1); color: #fff; border-radius: 4px;">
+        <label style="display:block; margin-bottom: 5px; color: #a0a0a0; font-size: 0.9em;">Počet karet (kategorií):</label>
+        <input type="number" id="cardCount" min="1" max="12" value="2" style="width: 100%; box-sizing: border-box; padding: 8px; background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.1); color: #fff; border-radius: 4px;">
+        <p style="font-size: 0.8em; color: #888; margin-top: 10px;">Karty se automaticky poskládají do responzivní mřížky (vedle sebe nebo pod sebe). Názvy kategorií si poté přepíšete přímo v textu.</p>
     `, (modal) => {
-        const a = modal.querySelector('#cardA').value || 'Kategorie A';
-        const b = modal.querySelector('#cardB').value || 'Kategorie B';
-        insertRankingCards(a, b);
+        const count = parseInt(modal.querySelector('#cardCount').value, 10) || 2;
+        insertRankingCards(count);
     });
 }
 
@@ -657,20 +655,22 @@ function insertWinnersBox(titleText, rowCount) {
     editor.focus();
 }
 
-function insertRankingCards(catA, catB) {
+function insertRankingCards(count) {
     const editor = document.getElementById('articleContent');
     const selection = window.getSelection();
 
     const container = document.createElement('div');
     container.style.cssText = 'display: flex; flex-wrap: wrap; gap: 20px; margin-bottom: 30px;';
-    container.innerHTML = '<div style="flex: 1; min-width: 250px; background: var(--surface-color, #1e1e1e); border: 1px solid rgba(255, 255, 255, 0.05); padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);">' +
-            '<h4 style="margin-top: 0; color: var(--text-muted, #a0a0a0); font-size: 1.1em; border-bottom: 1px solid rgba(255, 255, 255, 0.05); padding-bottom: 10px;">🏆 ' + catA + '</h4>' +
-            '<p style="margin: 0; line-height: 2;">🥇 <strong style="color: #ffffff;">[Výherce]</strong><br>🥈 [Stříbro]<br>🥉 [Bronz]</p>' +
-        '</div>' +
-        '<div style="flex: 1; min-width: 250px; background: var(--surface-color, #1e1e1e); border: 1px solid rgba(255, 255, 255, 0.05); padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);">' +
-            '<h4 style="margin-top: 0; color: var(--text-muted, #a0a0a0); font-size: 1.1em; border-bottom: 1px solid rgba(255, 255, 255, 0.05); padding-bottom: 10px;">🏆 ' + catB + '</h4>' +
+    
+    let html = '';
+    for (let i = 0; i < count; i++) {
+        const titlePlaceholder = count === 1 ? 'Kategorie' : 'Kategorie ' + (i + 1);
+        html += '<div style="flex: 1; min-width: 250px; background: var(--surface-color, #1e1e1e); border: 1px solid rgba(255, 255, 255, 0.05); padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);">' +
+            '<h4 style="margin-top: 0; color: var(--text-muted, #a0a0a0); font-size: 1.1em; border-bottom: 1px solid rgba(255, 255, 255, 0.05); padding-bottom: 10px;">🏆 [' + titlePlaceholder + ']</h4>' +
             '<p style="margin: 0; line-height: 2;">🥇 <strong style="color: #ffffff;">[Výherce]</strong><br>🥈 [Stříbro]<br>🥉 [Bronz]</p>' +
         '</div>';
+    }
+    container.innerHTML = html;
 
     if (selection.rangeCount) {
         const range = selection.getRangeAt(0);
