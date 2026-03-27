@@ -43,6 +43,7 @@ model User {
   forumTopics     ForumTopic[]
   forumPosts      ForumPost[]
   diagrams        Diagram[]
+  fragments       Fragment[]
   
   @@map("users")
 }
@@ -453,4 +454,22 @@ model Diagram {
   user        User?    @relation(fields: [userId], references: [id])
   
   @@map("diagrams")
+}
+
+model Fragment {
+  id           Int      @id @default(autoincrement())
+  title        String
+  pgn          String   @db.Text
+  startFen     String   @map("start_fen")
+  fromMove     Int      @map("from_move")
+  toMove       Int      @map("to_move")
+  sourceGameId Int?     @map("source_game_id")
+  white        String?
+  black        String?
+  userId       Int?     @map("user_id")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  user         User?    @relation(fields: [userId], references: [id])
+
+  @@map("fragments")
 }

@@ -386,6 +386,13 @@ function updateMoveHistory() {
     const html = renderMoveLine(moveTreeRoot, 0, false);
     moveListEl.innerHTML = html;
 
+    // Update move count badge
+    const badge = document.getElementById('moveCountBadge');
+    if (badge) {
+        const mainLine = getMainLine();
+        badge.textContent = Math.ceil(mainLine.length / 2);
+    }
+
     // Attach click handlers via node registry
     moveListEl.querySelectorAll('[data-node-idx]').forEach(el => {
         el.addEventListener('click', () => {
@@ -1612,22 +1619,30 @@ function initRecorderEngine() {
 function toggleRecorderEngine() {
     recEngineActive = !recEngineActive;
 
-    const btn = document.getElementById('recEngineBtn');
+    const btns = [document.getElementById('recEngineBtn'), document.getElementById('recEngineBtnDiag')];
     const evalBar = document.getElementById('recEvalBar');
     const analysisPanel = document.getElementById('recAnalysisInfo');
 
     if (recEngineActive) {
-        btn.style.background = 'rgba(74, 222, 128, 0.2)';
-        btn.style.borderColor = 'rgba(74, 222, 128, 0.5)';
-        btn.style.color = '#4ade80';
+        btns.forEach(btn => {
+            if (btn) {
+                btn.style.background = 'rgba(74, 222, 128, 0.2)';
+                btn.style.borderColor = 'rgba(74, 222, 128, 0.5)';
+                btn.style.color = '#4ade80';
+            }
+        });
         if (evalBar) evalBar.classList.add('active');
         if (analysisPanel) analysisPanel.style.display = 'flex';
         // Analyze current position
         analyzeCurrentPosition();
     } else {
-        btn.style.background = '';
-        btn.style.borderColor = 'rgba(74, 222, 128, 0.3)';
-        btn.style.color = 'rgba(74, 222, 128, 0.7)';
+        btns.forEach(btn => {
+            if (btn) {
+                btn.style.background = '';
+                btn.style.borderColor = 'rgba(74, 222, 128, 0.3)';
+                btn.style.color = 'rgba(74, 222, 128, 0.7)';
+            }
+        });
         if (evalBar) evalBar.classList.remove('active');
         if (analysisPanel) analysisPanel.style.display = 'none';
         if (recAnalyzer) recAnalyzer.stopAnalysis();
@@ -1637,6 +1652,20 @@ window.toggleRecorderEngine = toggleRecorderEngine;
 
 function analyzeCurrentPosition() {
     if (!recEngineActive || !recAnalyzer) return;
+
+    // When diagram or hadanky tab is active, analyze the visual board position
+    const diagramPanel = document.getElementById('panelDiagram');
+    const hadankyPanel = document.getElementById('panelHadanky');
+    if ((diagramPanel && diagramPanel.classList.contains('active')) ||
+        (hadankyPanel && hadankyPanel.classList.contains('active'))) {
+        const boardFen = board.fen();
+        const turn = typeof diagramTurn !== 'undefined' ? diagramTurn : 'w';
+        const castling = typeof getCastlingString === 'function' ? getCastlingString() : 'KQkq';
+        const fen = `${boardFen} ${turn} ${castling} - 0 1`;
+        recAnalyzer.analyze(fen);
+        return;
+    }
+
     const fen = game.fen();
     recAnalyzer.analyze(fen);
 }

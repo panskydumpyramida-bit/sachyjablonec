@@ -286,6 +286,8 @@
                                         class="fa-solid fa-image"></i></button><button type="button"
                                     onclick="insertDiagram()" title="Vložit diagram" style="color: #d4a373;"><i
                                         class="fa-solid fa-chess-board"></i></button><button type="button"
+                                    onclick="insertFragment()" title="Vložit fragment partie" style="color: #60a5fa;"><i
+                                        class="fa-solid fa-scissors"></i></button><button type="button"
                                     onclick="insertCollapsibleBlock()" title="Rozbalovací sekce"
                                     style="color: #8b5cf6;"><i class="fa-solid fa-layer-group"></i></button><button
                                     type="button" onclick="insertColumnBlock()" title="Sloupcový blok (rozložení)"
@@ -732,6 +734,31 @@
                 style="text-align: center; padding: 2rem; color: var(--text-muted); display: none;">
                 Žádné diagramy. <a href="/game-recorder.html" style="color: var(--primary-color);">Vytvořte nový
                     diagram</a>
+            </div>
+        </div>
+
+        <!-- Game Fragments Management -->
+        <div style="margin-top: 3rem; border-top: 1px solid var(--editor-border); padding-top: 2rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <h2 style="margin: 0;"><i class="fa-solid fa-scissors"></i> Fragmenty partií</h2>
+                <button class="btn-secondary" onclick="loadFragments()"><i class="fa-solid fa-sync"></i>
+                    Obnovit</button>
+            </div>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Název</th>
+                        <th>Hráči</th>
+                        <th>Tahy</th>
+                        <th>Vytvořeno</th>
+                        <th>Akce</th>
+                    </tr>
+                </thead>
+                <tbody id="fragmentsTableBody"></tbody>
+            </table>
+            <div id="noFragmentsInfo"
+                style="text-align: center; padding: 2rem; color: var(--text-muted); display: none;">
+                Žádné fragmenty. Vytvořte fragment v <a href="/game-recorder.html" style="color: var(--primary-color);">editoru partií</a>
             </div>
         </div>
     </div>
@@ -1340,6 +1367,21 @@
             </div>
 
             <div class="changelog-timeline">
+                <!-- 2026-03-27 v37 -->
+                <div class="changelog-entry">
+                    <div class="changelog-date">27. 3. 2026</div>
+                    <div class="changelog-version">v37</div>
+                    <div class="changelog-content">
+                        <h4>♟️ Editor partií – 3 taby + export fragmentů</h4>
+                        <ul>
+                            <li><strong>3 taby:</strong> Nové rozložení sidebaru – Partie, Diagramy, Hádanky. Zjednodušený workflow pro práci s pozicemi, anotacemi a hádankami.</li>
+                            <li><strong>Smart engine:</strong> Motor automaticky detekuje aktivní tab a analyzuje správnou pozici (board FEN pro Diagramy/Hádanky, game FEN pro Partie).</li>
+                            <li><strong>Export fragmentů:</strong> Nový panel ✂️ Fragment v Partie tabu – umožňuje vybrat rozsah tahů (od-do), zobrazit náhled a exportovat fragment jako PGN nebo uložit do DB.</li>
+                            <li><strong>Admin:</strong> Nová tabulka "Fragmenty partií" v záložce Partie s přehledem uložených fragmentů.</li>
+                            <li><strong>WYSIWYG:</strong> Nové tlačítko ✂️ pro vložení fragmentu do článku – bude vykresleno jako kompaktní interaktivní prohlížeč.</li>
+                        </ul>
+                    </div>
+                </div>
                 <!-- 2026-03-26 v36 -->
                 <div class="changelog-entry">
                     <div class="changelog-date">26. 3. 2026</div>

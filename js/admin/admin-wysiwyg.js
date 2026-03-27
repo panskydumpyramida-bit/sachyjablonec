@@ -527,6 +527,100 @@ async function insertDiagram() {
     await window.openDiagramSelector(savedRange);
 }
 
+async function insertFragment() {
+    const selection = window.getSelection();
+    let savedRange = null;
+    if (selection.rangeCount > 0) {
+        savedRange = selection.getRangeAt(0).cloneRange();
+    }
+
+    let fragments = [];
+    try {
+        const token = window.authToken ||
+            localStorage.getItem('authToken') ||
+            localStorage.getItem('auth_token') ||
+            localStorage.getItem('token') ||
+            window.auth?.token;
+        const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
+
+        document.body.style.cursor = 'wait';
+        const response = await fetch(`${window.API_URL}/fragments`, { headers });
+        if (!response.ok) throw new Error('Failed to load fragments');
+        fragments = await response.json();
+    } catch (e) {
+        console.error('Error fetching fragments:', e);
+        alert('Nepodařilo se načíst seznam fragmentů.');
+        return;
+    } finally {
+        document.body.style.cursor = '';
+    }
+
+    if (fragments.length === 0) {
+        alert('Zatím nejsou uloženy žádné fragmenty. Vytvořte fragment v editoru partií.');
+        return;
+    }
+
+    // Build modal
+    const overlay = document.createElement('div');
+    overlay.id = 'fragmentSelectorOverlay';
+    overlay.style.cssText = 'position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,0.7);display:flex;align-items:center;justify-content:center;';
+
+    const modal = document.createElement('div');
+    modal.style.cssText = 'background:#1a1a2e;border:1px solid rgba(255,255,255,0.1);border-radius:12px;padding:1.5rem;max-width:500px;width:90%;max-height:80vh;overflow-y:auto;color:#fff;';
+
+    modal.innerHTML = `
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">
+            <h3 style="margin:0;"><i class="fa-solid fa-scissors" style="color:#60a5fa;"></i> Vložit fragment</h3>
+            <button onclick="document.getElementById('fragmentSelectorOverlay').remove()" style="background:none;border:none;color:#fff;font-size:1.2rem;cursor:pointer;">&times;</button>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:0.5rem;">
+            ${fragments.map(f => {
+                const players = [f.white, f.black].filter(Boolean).join(' vs ') || '—';
+                const moveRange = `${f.fromMove}–${f.toMove}`;
+                return `
+                    <div class="fragment-select-item" data-fid="${f.id}" style="padding:0.75rem;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:8px;cursor:pointer;transition:all 0.2s;"
+                         onmouseenter="this.style.borderColor='rgba(96,165,250,0.5)';this.style.background='rgba(96,165,250,0.1)'"
+                         onmouseleave="this.style.borderColor='rgba(255,255,255,0.1)';this.style.background='rgba(255,255,255,0.05)'">
+                        <div style="font-weight:600;font-size:0.9rem;">${f.title || 'Fragment #' + f.id}</div>
+                        <div style="font-size:0.8rem;color:#aaa;margin-top:0.2rem;">${players} · tahy ${moveRange}</div>
+                    </div>
+                `;
+            }).join('')}
+        </div>
+    `;
+
+    overlay.appendChild(modal);
+    document.body.appendChild(overlay);
+
+    // Handle click on fragment items
+    modal.querySelectorAll('.fragment-select-item').forEach(item => {
+        item.addEventListener('click', () => {
+            const fid = item.dataset.fid;
+            const editor = document.getElementById('articleContent') || document.querySelector('[contenteditable]');
+            if (!editor) return;
+
+            // Restore cursor position
+            if (savedRange) {
+                const sel = window.getSelection();
+                sel.removeAllRanges();
+                sel.addRange(savedRange);
+            }
+
+            // Insert fragment placeholder
+            const fragmentHtml = `<div class="game-fragment" data-fragment-id="${fid}" contenteditable="false" style="background:rgba(96,165,250,0.08);border:1px solid rgba(96,165,250,0.3);border-radius:8px;padding:0.75rem;margin:1rem 0;text-align:center;color:#60a5fa;font-size:0.85rem;"><i class="fa-solid fa-scissors"></i> Fragment #${fid} — ${item.querySelector('div:first-child').textContent}</div>`;
+            document.execCommand('insertHTML', false, fragmentHtml);
+
+            overlay.remove();
+        });
+    });
+
+    // Close on overlay click
+    overlay.addEventListener('click', (e) => {
+        if (e.target === overlay) overlay.remove();
+    });
+}
+window.insertFragment = insertFragment;
+
 window.openDiagramSelector = async function (savedRange, initialSelection = []) {
     // Fetch available diagrams from API
     let diagrams = [];
