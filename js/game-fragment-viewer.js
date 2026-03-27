@@ -178,8 +178,9 @@
         titleStr = titleStr.replace(/\s*\(\d+\s*[-–]\s*\d+\)/g, '');
         const rangeStr = `${fragment.fromMove}–${fragment.toMove}. tah`;
 
+        container.removeAttribute('style');
         container.innerHTML = `
-            <div style="background:var(--surface-color, #1e1e1e);border:1px solid rgba(96,165,250,0.2);border-radius:10px;overflow:hidden;margin:1rem 0;">
+            <div style="background:var(--surface-color, #1e1e1e);border:1px solid rgba(96,165,250,0.2);border-radius:10px;overflow:hidden;margin:1.5rem 0;">
                 <div style="display:flex;align-items:center;gap:0.5rem;padding:0.5rem 0.75rem;background:rgba(96,165,250,0.06);border-bottom:1px solid rgba(96,165,250,0.1);">
                     <i class="fa-solid fa-chess" style="color:#60a5fa;font-size:0.8rem;"></i>
                     <span style="font-size:0.85rem;font-weight:600;color:#e0e0e0;flex:1;">${escapeHtml(titleStr)}</span>
