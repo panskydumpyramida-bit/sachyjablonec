@@ -3735,6 +3735,18 @@ function handleAdminShortcuts(e) {
                     insertList('ul');
                     handled = true;
                     break;
+                case '1':
+                    applyHeading('h2');
+                    handled = true;
+                    break;
+                case '2':
+                    applyHeading('h3');
+                    handled = true;
+                    break;
+                case 'e':
+                    if (typeof insertIntroBlock === 'function') insertIntroBlock();
+                    handled = true;
+                    break;
             }
             if (handled) { e.preventDefault(); return; }
         }
