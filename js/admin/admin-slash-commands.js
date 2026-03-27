@@ -643,9 +643,11 @@ function insertWinnersBox(titleText, rowCount) {
     const selection = window.getSelection();
     box.style.cssText = 'background-color: var(--surface-color, #1e1e1e); border: 1px solid rgba(255, 255, 255, 0.05); border-left: 4px solid var(--primary-color, #d4af37); padding: 20px; border-radius: 4px 8px 8px 4px; margin-bottom: 30px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);';
     
+    const pHolder = (txt) => `\u200B<span contenteditable="false" style="user-select:all; border-bottom:1px dashed currentColor; opacity:0.8; cursor:pointer;" title="Kliknutím označte celý prvek">[${txt}]</span>\u200B`;
+    
     let rows = '';
     for(let i = 0; i < rowCount; i++) {
-        rows += '<li style="margin-bottom: ' + (i === rowCount - 1 ? '0' : '10px') + '; color: #cbd5e1;"><strong>[Rok/Skupina]:</strong> 🥇 [Jméno] &nbsp;|&nbsp; 🥈 [Jméno] &nbsp;|&nbsp; 🥉 [Jméno]</li>';
+        rows += '<li style="margin-bottom: ' + (i === rowCount - 1 ? '0' : '10px') + '; color: #cbd5e1;"><strong>' + pHolder('Rok/Skupina') + ':</strong> 🥇 ' + pHolder('Jméno') + ' &nbsp;|&nbsp; 🥈 ' + pHolder('Jméno') + ' &nbsp;|&nbsp; 🥉 ' + pHolder('Jméno') + '</li>';
     }
 
     box.innerHTML = '<h3 style="margin-top: 0; color: var(--primary-color, #d4af37); font-size: 1.2em; display: flex; align-items: center; gap: 8px;">🏆 ' + titleText + '</h3>' +
@@ -680,11 +682,13 @@ function insertRankingCards(count) {
     container.style.cssText = 'display: flex; flex-wrap: wrap; gap: 20px; margin-bottom: 30px;';
     
     let html = '';
+    const pHolder = (txt) => `\u200B<span contenteditable="false" style="user-select:all; border-bottom:1px dashed currentColor; opacity:0.8; cursor:pointer;" title="Kliknutím označte celý prvek">[${txt}]</span>\u200B`;
+
     for (let i = 0; i < count; i++) {
         const titlePlaceholder = count === 1 ? 'Kategorie' : 'Kategorie ' + (i + 1);
         html += '<div style="flex: 1; min-width: 250px; background: var(--surface-color, #1e1e1e); border: 1px solid rgba(255, 255, 255, 0.05); padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);">' +
-            '<h4 style="margin-top: 0; color: var(--text-muted, #a0a0a0); font-size: 1.1em; border-bottom: 1px solid rgba(255, 255, 255, 0.05); padding-bottom: 10px;">🏆 [' + titlePlaceholder + ']</h4>' +
-            '<p style="margin: 0; line-height: 2;">🥇 <strong style="color: #ffffff;">[Výherce]</strong><br>🥈 [Stříbro]<br>🥉 [Bronz]</p>' +
+            '<h4 style="margin-top: 0; color: var(--text-muted, #a0a0a0); font-size: 1.1em; border-bottom: 1px solid rgba(255, 255, 255, 0.05); padding-bottom: 10px;">🏆 ' + pHolder(titlePlaceholder) + '</h4>' +
+            '<p style="margin: 0; line-height: 2;">🥇 <strong style="color: #ffffff;">' + pHolder('Výherce') + '</strong><br>🥈 ' + pHolder('Stříbro') + '<br>🥉 ' + pHolder('Bronz') + '</p>' +
         '</div>';
     }
     container.innerHTML = html;

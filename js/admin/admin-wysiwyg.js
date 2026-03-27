@@ -202,7 +202,7 @@ function insertHighlight(type) {
             const placeholder = type === 'name' ? '[Jméno]' : '[Skóre]';
             const span = document.createElement('span');
             span.className = className;
-            span.innerHTML = '\u200B' + placeholder;
+            span.innerHTML = `\u200B<span contenteditable="false" style="user-select:all; border-bottom:1px dashed currentColor; opacity:0.8; cursor:pointer;" title="Kliknutím označte celý prvek">${placeholder}</span>\u200B`;
             range.insertNode(span);
 
             // Add space after
