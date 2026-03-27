@@ -483,12 +483,12 @@ function insertWinnersBox() {
     box.style.cssText = 'background-color: var(--surface-color, #1e1e1e); border: 1px solid rgba(255, 255, 255, 0.05); border-left: 4px solid var(--primary-color, #d4af37); padding: 20px; border-radius: 4px 8px 8px 4px; margin-bottom: 30px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);';
     box.innerHTML = `
         <h3 style="margin-top: 0; color: var(--primary-color, #d4af37); font-size: 1.25em; display: flex; align-items: center; gap: 8px;">
-            🏆 Přehled minulých vítězů
+            🏆 [Nadpis boxu vítězů, např. Přehled vítězů]
         </h3>
         <ul style="list-style: none; padding-left: 0; margin-bottom: 0;">
-            <li style="margin-bottom: 10px; color: #cbd5e1;"><strong>2023:</strong> 🥇 Jméno &nbsp;|&nbsp; 🥈 Jméno &nbsp;|&nbsp; 🥉 Jméno</li>
-            <li style="margin-bottom: 10px; color: #cbd5e1;"><strong>2024:</strong> 🥇 Jméno &nbsp;|&nbsp; 🥈 Jméno &nbsp;|&nbsp; 🥉 Jméno</li>
-            <li style="margin-bottom: 0; color: #cbd5e1;"><strong>2025:</strong> 🥇 Jméno &nbsp;|&nbsp; 🥈 Jméno &nbsp;|&nbsp; 🥉 Jméno</li>
+            <li style="margin-bottom: 10px; color: #cbd5e1;"><strong>[Rok/Skupina]:</strong> 🥇 [Jméno] &nbsp;|&nbsp; 🥈 [Jméno] &nbsp;|&nbsp; 🥉 [Jméno]</li>
+            <li style="margin-bottom: 10px; color: #cbd5e1;"><strong>[Rok/Skupina]:</strong> 🥇 [Jméno] &nbsp;|&nbsp; 🥈 [Jméno] &nbsp;|&nbsp; 🥉 [Jméno]</li>
+            <li style="margin-bottom: 0; color: #cbd5e1;"><strong>[Rok/Skupina]:</strong> 🥇 [Jméno] &nbsp;|&nbsp; 🥈 [Jméno] &nbsp;|&nbsp; 🥉 [Jméno]</li>
         </ul>
     `;
 
@@ -521,19 +521,19 @@ function insertRankingCards() {
     container.style.cssText = 'display: flex; flex-wrap: wrap; gap: 20px; margin-bottom: 30px;';
     container.innerHTML = `
         <div style="flex: 1; min-width: 250px; background: var(--surface-color, #1e1e1e); border: 1px solid rgba(255, 255, 255, 0.05); padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);">
-            <h4 style="margin-top: 0; color: var(--text-muted, #a0a0a0); font-size: 1.1em; border-bottom: 1px solid rgba(255, 255, 255, 0.05); padding-bottom: 10px;">👦 Skupina 1</h4>
+            <h4 style="margin-top: 0; color: var(--text-muted, #a0a0a0); font-size: 1.1em; border-bottom: 1px solid rgba(255, 255, 255, 0.05); padding-bottom: 10px;">🏆 [Kategorie A]</h4>
             <p style="margin: 0; line-height: 2;">
-                🥇 <strong style="color: #ffffff;">Jméno</strong><br>
-                🥈 Jméno<br>
-                🥉 Jméno
+                🥇 <strong style="color: #ffffff;">[Zlato]</strong><br>
+                🥈 [Stříbro]<br>
+                🥉 [Bronz]
             </p>
         </div>
         <div style="flex: 1; min-width: 250px; background: var(--surface-color, #1e1e1e); border: 1px solid rgba(255, 255, 255, 0.05); padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);">
-            <h4 style="margin-top: 0; color: var(--text-muted, #a0a0a0); font-size: 1.1em; border-bottom: 1px solid rgba(255, 255, 255, 0.05); padding-bottom: 10px;">👨 Skupina 2</h4>
+            <h4 style="margin-top: 0; color: var(--text-muted, #a0a0a0); font-size: 1.1em; border-bottom: 1px solid rgba(255, 255, 255, 0.05); padding-bottom: 10px;">🏆 [Kategorie B]</h4>
             <p style="margin: 0; line-height: 2;">
-                🥇 <strong style="color: #ffffff;">Jméno</strong><br>
-                🥈 Jméno<br>
-                🥉 Jméno
+                🥇 <strong style="color: #ffffff;">[Zlato]</strong><br>
+                🥈 [Stříbro]<br>
+                🥉 [Bronz]
             </p>
         </div>
     `;
@@ -566,12 +566,12 @@ function insertCtaButton() {
     const container = document.createElement('div');
     container.style.cssText = 'text-align: center; margin-top: 50px; margin-bottom: 20px; padding: 30px 20px; background: var(--surface-color, #1e1e1e); border-radius: 12px; border: 1px solid rgba(212, 175, 55, 0.2);';
     container.innerHTML = `
-        <h3 style="margin-top: 0; color: #ffffff; font-size: 1.3em;">📊 Zajímají vás detailní kola a body?</h3>
+        <h3 style="margin-top: 0; color: #ffffff; font-size: 1.3em;">[Zde doplňte poutavý text tlačítka]</h3>
         <a href="#" target="_blank" rel="noopener noreferrer" style="display: inline-block; background-color: var(--primary-color, #d4af37); color: var(--secondary-color, #1a1a1a); padding: 12px 30px; text-decoration: none; border-radius: 50px; font-size: 1.1em; font-weight: 600; margin: 20px 0; box-shadow: 0 4px 12px rgba(212, 175, 55, 0.3); border: none;">
-            🔗 Kompletní výsledky (Odkaz)
+            🔗 [Odkaz na další informace vč. odkazu v poli odkazu článku]
         </a>
         <p style="margin-bottom: 0; color: var(--text-muted, #a0a0a0); font-size: 0.95em;">
-            📸 Fotky z turnaje si můžete prohlédnout v připojené galerii pod článkem.
+            [Zde vložte poznámku pod čarou, např. odkaz na fotogalerii]
         </p>
     `;
 
