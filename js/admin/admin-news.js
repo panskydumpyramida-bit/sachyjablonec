@@ -872,6 +872,23 @@ function openQuickFragmentModal(gameIndex) {
     const game = games[gameIndex];
     if (!game || !game.pgn) return;
 
+    // Calculate max moves by parsing the PGN
+    let maxMove = 40;
+    try {
+        const chess = new Chess();
+        if (chess.load_pgn(game.pgn)) {
+            maxMove = Math.ceil(chess.history().length / 2);
+        } else {
+            let safePgn = game.pgn.replace(/([RNBQ])([a-h1-8])([a-h][1-8])/g, '$1$3');
+            if (chess.load_pgn(safePgn)) {
+                maxMove = Math.ceil(chess.history().length / 2);
+            }
+        }
+    } catch (e) {
+        console.warn("Could not pre-parse PGN for max moves", e);
+    }
+    if (maxMove < 1) maxMove = 1;
+
     const overlay = document.createElement('div');
     overlay.id = 'quickFragmentOverlay';
     overlay.style.cssText = 'position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,0.8);display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px);';
@@ -888,11 +905,11 @@ function openQuickFragmentModal(gameIndex) {
         <div style="display:flex;gap:1rem;margin-bottom:1rem;">
             <div style="flex:1;">
                 <label style="display:block;font-size:0.8rem;color:#888;margin-bottom:0.25rem;">Od tahu č.</label>
-                <input type="number" id="qfFrom" min="1" value="1" style="width:100%;padding:0.5rem;border-radius:6px;border:1px solid rgba(255,255,255,0.1);background:rgba(0,0,0,0.3);color:#fff;">
+                <input type="number" id="qfFrom" min="1" max="${maxMove}" value="1" style="width:100%;padding:0.5rem;border-radius:6px;border:1px solid rgba(255,255,255,0.1);background:rgba(0,0,0,0.3);color:#fff;">
             </div>
             <div style="flex:1;">
-                <label style="display:block;font-size:0.8rem;color:#888;margin-bottom:0.25rem;">Do tahu č.</label>
-                <input type="number" id="qfTo" min="1" value="40" style="width:100%;padding:0.5rem;border-radius:6px;border:1px solid rgba(255,255,255,0.1);background:rgba(0,0,0,0.3);color:#fff;">
+                <label style="display:block;font-size:0.8rem;color:#888;margin-bottom:0.25rem;">Do tahu č. (max ${maxMove})</label>
+                <input type="number" id="qfTo" min="1" max="${maxMove}" value="${maxMove}" style="width:100%;padding:0.5rem;border-radius:6px;border:1px solid rgba(255,255,255,0.1);background:rgba(0,0,0,0.3);color:#fff;">
             </div>
         </div>
         
@@ -905,9 +922,40 @@ function openQuickFragmentModal(gameIndex) {
     overlay.appendChild(modal);
     document.body.appendChild(overlay);
 
+    // Dynamic validation
+    const fromInput = document.getElementById('qfFrom');
+    const toInput = document.getElementById('qfTo');
+    
+    fromInput.addEventListener('input', () => {
+        let fv = parseInt(fromInput.value) || 1;
+        let tv = parseInt(toInput.value) || maxMove;
+        if (fv > maxMove) fromInput.value = maxMove;
+        if (fv < 1) fromInput.value = 1;
+        // If 'from' is pushed past 'to', push 'to' ahead
+        if (parseInt(fromInput.value) > tv) {
+            toInput.value = fromInput.value;
+        }
+    });
+
+    toInput.addEventListener('input', () => {
+        let fv = parseInt(fromInput.value) || 1;
+        let tv = parseInt(toInput.value) || maxMove;
+        if (tv > maxMove) toInput.value = maxMove;
+        if (tv < 1) toInput.value = 1;
+        // If 'to' is pushed behind 'from', push 'from' back
+        if (parseInt(toInput.value) < fv) {
+            fromInput.value = toInput.value;
+        }
+    });
+
     document.getElementById('qfSaveBtn').addEventListener('click', async () => {
         const fromMove = parseInt(document.getElementById('qfFrom').value) || 1;
-        const toMove = parseInt(document.getElementById('qfTo').value) || 99;
+        const toMove = parseInt(document.getElementById('qfTo').value) || maxMove;
+        
+        if (fromMove > toMove) {
+            alert('Chyba: Počáteční tah nemůže být větší než koncový tah.');
+            return;
+        }
         
         const saveBtn = document.getElementById('qfSaveBtn');
         saveBtn.disabled = true;
