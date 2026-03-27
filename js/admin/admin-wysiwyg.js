@@ -2544,19 +2544,25 @@ document.addEventListener('DOMContentLoaded', () => {
         document.execCommand('defaultParagraphSeparator', false, 'p');
 
         // Click-to-select for placeholder spans ([Jméno], [Skóre], etc.)
-        editor.addEventListener('click', (e) => {
+        // Use mousedown + setTimeout so our selection overrides the browser's default caret positioning
+        editor.addEventListener('mousedown', (e) => {
             let target = e.target;
-            // Walk up to find a placeholder span (max 2 levels)
+            // Walk up to find a placeholder span (max 3 levels)
             for (let i = 0; i < 3 && target && target !== editor; i++) {
                 if (target.dataset && target.dataset.placeholder === '1') {
+                    // Prevent default caret positioning
                     e.preventDefault();
-                    const sel = window.getSelection();
-                    const range = document.createRange();
-                    range.selectNodeContents(target);
-                    sel.removeAllRanges();
-                    sel.addRange(range);
-                    // Remove the placeholder flag once user starts editing
-                    target.style.opacity = '1';
+                    e.stopPropagation();
+                    // Use setTimeout to select after the mousedown event cycle completes
+                    const spanToSelect = target;
+                    setTimeout(() => {
+                        const sel = window.getSelection();
+                        const range = document.createRange();
+                        range.selectNodeContents(spanToSelect);
+                        sel.removeAllRanges();
+                        sel.addRange(range);
+                        spanToSelect.style.opacity = '1';
+                    }, 0);
                     return;
                 }
                 target = target.parentNode;
