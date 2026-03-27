@@ -98,7 +98,7 @@
             let currentMoveObj = null;
 
             rawTokens.forEach(token => {
-                if (token.match(/^\d+\.?+$/) || token.match(/^\d+\.\.\.$/)) return;
+                if (token.match(/^\d+\.+$/) || token.match(/^\d+\.\.\.$/)) return;
                 
                 if (token.startsWith('{')) {
                     if (currentMoveObj) {
