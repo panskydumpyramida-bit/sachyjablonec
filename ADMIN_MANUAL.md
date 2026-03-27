@@ -2,7 +2,7 @@
 
 Kompletní průvodce správou webu sachyjablonec.cz.
 
-*Verze: 1.0 | Poslední aktualizace: 22. 12. 2025*
+*Verze: v30 | Poslední aktualizace: 27. 3. 2026*
 
 ---
 
