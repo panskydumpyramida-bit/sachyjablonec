@@ -302,6 +302,112 @@ window.deleteDiagram = deleteDiagram;
 window.previewDiagram = previewDiagram;
 window.closeDiagramPreview = closeDiagramPreview;
 
+// ================================
+// FRAGMENTS CRUD
+// ================================
+
+async function loadFragments() {
+    try {
+        const res = await fetch(`${API_URL}/fragments`, {
+            headers: {
+                'Authorization': `Bearer ${authToken}`
+            }
+        });
+
+        if (!res.ok) throw new Error('Failed to fetch fragments');
+
+        const fragments = await res.json();
+        const tbody = document.getElementById('fragmentsTableBody');
+        const noInfo = document.getElementById('noFragmentsInfo');
+
+        if (!fragments || fragments.length === 0) {
+            tbody.innerHTML = '';
+            noInfo.style.display = 'block';
+            return;
+        }
+
+        noInfo.style.display = 'none';
+
+        tbody.innerHTML = fragments.map(f => {
+            const displayName = f.title || `Fragment #${f.id}`;
+            const players = [f.white, f.black].filter(Boolean).join(' vs ') || '—';
+            const moveRange = `${f.fromMove}–${f.toMove}`;
+            const createdDate = f.createdAt ? new Date(f.createdAt).toLocaleDateString('cs-CZ') : '-';
+
+            return `
+            <tr>
+                <td>${escapeHtml(displayName)}</td>
+                <td style="font-size: 0.85rem; color: var(--text-muted);">${escapeHtml(players)}</td>
+                <td><span style="background: rgba(96,165,250,0.15); color: #60a5fa; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem;">${moveRange}</span></td>
+                <td>${createdDate}</td>
+                <td>
+                    <button class="action-btn btn-edit" onclick="copyFragmentPgn(${f.id})" title="Kopírovat PGN">
+                        <i class="fa-solid fa-copy"></i>
+                    </button>
+                    <button class="action-btn btn-delete" onclick="deleteFragment(${f.id})" title="Smazat">
+                        <i class="fa-solid fa-trash"></i>
+                    </button>
+                </td>
+            </tr>
+        `;
+        }).join('');
+
+    } catch (error) {
+        console.error('Error loading fragments:', error);
+        showAlert('Chyba při načítání fragmentů', 'error');
+    }
+}
+
+async function deleteFragment(id) {
+    if (!confirm('Opravdu chcete smazat tento fragment?')) return;
+
+    try {
+        const res = await fetch(`${API_URL}/fragments/${id}`, {
+            method: 'DELETE',
+            headers: {
+                'Authorization': `Bearer ${authToken}`
+            }
+        });
+
+        if (!res.ok) throw new Error('Failed to delete fragment');
+
+        showAlert('Fragment smazán', 'success');
+        loadFragments();
+
+    } catch (error) {
+        console.error('Error deleting fragment:', error);
+        showAlert('Chyba při mazání fragmentu', 'error');
+    }
+}
+
+async function copyFragmentPgn(id) {
+    try {
+        const res = await fetch(`${API_URL}/fragments/${id}`);
+        if (!res.ok) throw new Error('Failed to fetch fragment');
+        const f = await res.json();
+
+        const header = [
+            `[White "${f.white || '?'}"]`,
+            `[Black "${f.black || '?'}"]`,
+            `[SetUp "1"]`,
+            `[FEN "${f.startFen}"]`,
+            `[Fragment "${f.fromMove}-${f.toMove}"]`,
+            ''
+        ].join('\n');
+
+        const fullPgn = header + '\n' + f.pgn;
+        await navigator.clipboard.writeText(fullPgn);
+        showAlert('Fragment PGN zkopírován', 'success');
+    } catch (error) {
+        console.error('Error copying fragment:', error);
+        showAlert('Chyba při kopírování', 'error');
+    }
+}
+
+window.loadFragments = loadFragments;
+window.deleteFragment = deleteFragment;
+window.copyFragmentPgn = copyFragmentPgn;
+
 // Chess API Depth Setting - now uses database via API
 async function initChessApiDepthSlider() {
     const slider = document.getElementById('chessApiDepthSlider');

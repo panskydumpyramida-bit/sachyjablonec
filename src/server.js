@@ -485,6 +485,73 @@ app.delete('/api/diagrams/:id', authMiddleware, async (req, res) => {
     }
 });
 
+// --- Fragment API ---
+app.get('/api/fragments', async (req, res) => {
+    try {
+        const fragments = await prisma.fragment.findMany({
+            orderBy: { createdAt: 'desc' },
+            take: 100,
+            include: { user: { select: { username: true } } }
+        });
+        res.json(fragments);
+    } catch (error) {
+        console.error('Error fetching fragments:', error);
+        res.status(500).json({ error: 'Failed to fetch fragments' });
+    }
+});
+
+app.get('/api/fragments/:id', async (req, res) => {
+    try {
+        const fragment = await prisma.fragment.findUnique({
+            where: { id: parseInt(req.params.id) },
+            include: { user: { select: { username: true } } }
+        });
+        if (!fragment) return res.status(404).json({ error: 'Fragment not found' });
+        res.json(fragment);
+    } catch (error) {
+        console.error('Error fetching fragment:', error);
+        res.status(500).json({ error: 'Failed to fetch fragment' });
+    }
+});
+
+app.post('/api/fragments', authMiddleware, async (req, res) => {
+    try {
+        const { title, pgn, startFen, fromMove, toMove, sourceGameId, white, black } = req.body;
+
+        if (!pgn || !startFen) return res.status(400).json({ error: 'PGN and startFen are required' });
+
+        const fragment = await prisma.fragment.create({
+            data: {
+                title: title || `Fragment ${new Date().toLocaleString('cs-CZ')}`,
+                pgn,
+                startFen,
+                fromMove: fromMove || 1,
+                toMove: toMove || 99,
+                sourceGameId: sourceGameId || null,
+                white: white || null,
+                black: black || null,
+                userId: req.user.id
+            }
+        });
+        res.json(fragment);
+    } catch (error) {
+        console.error('Error creating fragment:', error);
+        res.status(500).json({ error: 'Failed to create fragment' });
+    }
+});
+
+app.delete('/api/fragments/:id', authMiddleware, async (req, res) => {
+    try {
+        await prisma.fragment.delete({
+            where: { id: parseInt(req.params.id) }
+        });
+        res.json({ success: true });
+    } catch (error) {
+        console.error('Error deleting fragment:', error);
+        res.status(500).json({ error: 'Failed to delete fragment' });
+    }
+});
+
 // --- Forum API ---
 // --- Dashboard Stats API ---
 app.get('/api/dashboard/stats', authMiddleware, async (req, res) => {

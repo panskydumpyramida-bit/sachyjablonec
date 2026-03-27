@@ -252,7 +252,7 @@ function switchTab(tab) {
     else if (tab === 'blicak') loadBlicakRegistrations();
     else if (tab === 'competitions') loadCompetitions();
     else if (tab === 'gallery') loadAdminGallery();
-    else if (tab === 'games') { loadRecordedGames(); if (window.loadDiagrams) loadDiagrams(); }
+    else if (tab === 'games') { loadRecordedGames(); if (window.loadDiagrams) loadDiagrams(); if (window.loadFragments) loadFragments(); }
     else if (tab === 'events' && window.AdminEvents) AdminEvents.init();
     else if (tab === 'puzzleRacer' && window.loadPuzzleRacerSettings) loadPuzzleRacerSettings();
     else if (tab === 'chessdb' && window.loadChessDBStats) loadChessDBStats();

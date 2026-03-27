@@ -246,10 +246,18 @@
 
         .editor-container {
             display: grid;
-            grid-template-columns: 1fr 280px;
-            gap: 2rem;
+            grid-template-columns: 1fr 340px;
+            gap: 1.5rem;
             margin-top: 0.5rem;
             align-items: start;
+        }
+
+        /* Medium screens */
+        @media (max-width: 1100px) {
+            .editor-container {
+                grid-template-columns: 1fr 300px;
+                gap: 1rem;
+            }
         }
 
         /* Mobile Responsive Adjustments */
@@ -701,6 +709,329 @@
             width: 50px;
             height: 50px;
         }
+
+        /* ===== Page-level Tab Bar ===== */
+        .page-tabs {
+            display: flex;
+            gap: 0.25rem;
+            margin-bottom: 0;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.06);
+            padding: 0 0.25rem;
+        }
+
+        .page-tab {
+            padding: 0.55rem 1.5rem;
+            background: transparent;
+            border: none;
+            color: var(--text-muted, rgba(255,255,255,0.5));
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border-bottom: 2.5px solid transparent;
+            margin-bottom: -2px;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.45rem;
+            font-family: inherit;
+            border-radius: 6px 6px 0 0;
+            letter-spacing: 0.02em;
+            white-space: nowrap;
+        }
+
+        .page-tab i {
+            font-size: 0.8rem;
+            opacity: 0.7;
+            transition: opacity 0.2s;
+        }
+
+        .page-tab:hover {
+            color: rgba(255, 255, 255, 0.85);
+            background: rgba(255, 255, 255, 0.04);
+        }
+
+        .page-tab:hover i {
+            opacity: 1;
+        }
+
+        .page-tab.active {
+            color: var(--primary-color, #d4af37);
+            border-bottom-color: var(--primary-color, #d4af37);
+            background: rgba(212, 175, 55, 0.06);
+        }
+
+        .page-tab.active i {
+            opacity: 1;
+        }
+
+        /* ===== Sidebar panels ===== */
+        .sidebar-panel {
+            display: none;
+            flex-direction: column;
+            gap: 0.75rem;
+            flex: 1;
+            min-height: 0;
+        }
+
+        .sidebar-panel.active {
+            display: flex;
+        }
+
+        /* ===== Diagram Editor Toolbar ===== */
+        .editor-toolbar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+            padding: 0.5rem;
+            background: rgba(0, 0, 0, 0.25);
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            align-items: center;
+        }
+
+        .editor-toolbar .tool-btn {
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 6px;
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            color: rgba(255, 255, 255, 0.7);
+            cursor: pointer;
+            transition: all 0.15s;
+            font-size: 0.8rem;
+        }
+
+        .editor-toolbar .tool-btn:hover {
+            background: rgba(255, 255, 255, 0.12);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .editor-toolbar .tool-btn.active {
+            background: rgba(212, 175, 55, 0.2);
+            border-color: var(--primary-color, #d4af37);
+            box-shadow: 0 0 8px rgba(212, 175, 55, 0.15);
+        }
+
+        .editor-toolbar .color-dot {
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+        }
+
+        /* Diagram sub-tabs */
+        .diagram-tabs {
+            display: flex;
+            gap: 0.25rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+            padding-bottom: 0;
+        }
+
+        .diagram-tab {
+            flex: 1;
+            padding: 0.45rem 0.75rem;
+            background: transparent;
+            border: none;
+            color: var(--text-muted, rgba(255,255,255,0.5));
+            font-size: 0.8rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            border-bottom: 2px solid transparent;
+            margin-bottom: -1px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.4rem;
+            font-family: inherit;
+        }
+
+        /* Diagram section containers */
+        .diagram-section {
+            display: flex;
+            flex-direction: column;
+            gap: 0.35rem;
+        }
+
+        .diagram-section-label {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--primary-color, #d4af37);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            padding: 0.2rem 0;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        .diagram-section-label i {
+            font-size: 0.7rem;
+            opacity: 0.8;
+        }
+
+        /* Diagram action buttons row */
+        .diagram-actions {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .diagram-actions .btn-control {
+            flex: 1;
+            min-width: 0;
+            justify-content: center;
+            padding: 0.5rem 0.4rem;
+            font-size: 0.78rem;
+            gap: 0.3rem;
+        }
+
+        /* Castling checks */
+        .castling-check {
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 0.7rem;
+            cursor: pointer;
+        }
+
+        .castling-check input[type="checkbox"] {
+            width: 14px;
+            height: 14px;
+            accent-color: var(--primary-color, #d4af37);
+        }
+
+        /* Piece palette */
+        .palette-piece {
+            width: 28px;
+            height: 28px;
+            cursor: pointer;
+            border-radius: 4px;
+            border: 1px solid transparent;
+            transition: all 0.15s;
+            padding: 1px;
+        }
+
+        .palette-piece:hover {
+            border-color: rgba(255, 255, 255, 0.3);
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .palette-piece.active {
+            border-color: var(--primary-color, #d4af37);
+            background: rgba(212, 175, 55, 0.2);
+            box-shadow: 0 0 6px rgba(212, 175, 55, 0.2);
+        }
+
+        /* ===== Diagram overlay on main board ===== */
+        #boardOverlaySvg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 100;
+            pointer-events: none;
+        }
+
+        #boardOverlaySvg.drawing-active {
+            pointer-events: auto;
+            cursor: crosshair;
+        }
+
+        /* ===== Playback controls polish ===== */
+        .playback-controls {
+            display: flex;
+            justify-content: center;
+            gap: 0.35rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .playback-controls .btn-control {
+            width: 40px;
+            height: 36px;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
+            border-radius: 6px;
+        }
+
+        .playback-controls .btn-control:hover {
+            background: rgba(255, 255, 255, 0.12);
+        }
+
+        /* ===== Bottom controls row ===== */
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.4rem;
+            margin-top: 0.75rem;
+        }
+
+        .controls .btn-control {
+            padding: 0.4rem 0.7rem;
+            font-size: 0.8rem;
+            gap: 0.35rem;
+        }
+
+        /* ===== Responsive ===== */
+        @media (max-width: 900px) {
+            .page-tabs {
+                padding: 0;
+            }
+
+            .page-tab {
+                padding: 0.45rem 1rem;
+                font-size: 0.8rem;
+            }
+
+            .editor-toolbar {
+                padding: 0.35rem;
+                gap: 0.2rem;
+            }
+
+            .editor-toolbar .tool-btn {
+                width: 28px;
+                height: 28px;
+                font-size: 0.7rem;
+            }
+
+            .editor-toolbar .color-dot {
+                width: 12px;
+                height: 12px;
+            }
+
+            .palette-piece {
+                width: 24px;
+                height: 24px;
+            }
+
+            .controls {
+                gap: 0.3rem;
+            }
+
+            .controls .btn-control {
+                padding: 0.35rem 0.5rem;
+                font-size: 0.75rem;
+            }
+
+            .diagram-actions .btn-control {
+                font-size: 0.72rem;
+                padding: 0.4rem 0.3rem;
+            }
+
+            .playback-controls .btn-control {
+                width: 36px;
+                height: 32px;
+                font-size: 0.8rem;
+            }
+        }
     </style>
 </head>
 
@@ -717,13 +1048,26 @@
 
         <section style="padding: 0.5rem 0;">
             <div class="container">
+
+                <!-- Page-level Tab Bar -->
+                <div class="page-tabs">
+                    <button class="page-tab active" onclick="switchPageTab('partie')" data-page-tab="partie">
+                        <i class="fa-solid fa-chess-board"></i> Partie
+                    </button>
+                    <button class="page-tab auth-only" onclick="switchPageTab('diagram')" data-page-tab="diagram">
+                        <i class="fa-solid fa-pen-ruler"></i> Diagramy
+                    </button>
+                    <button class="page-tab auth-only" onclick="switchPageTab('hadanky')" data-page-tab="hadanky">
+                        <i class="fa-solid fa-puzzle-piece"></i> Hádanky
+                    </button>
+                </div>
+
                 <div class="editor-container">
 
                     <!-- Left: Board -->
                     <div>
                         <!-- Playback Controls Above Board -->
-                        <div class="playback-controls"
-                            style="display: flex; justify-content: center; gap: 0.5rem; margin-bottom: 0.5rem;">
+                        <div class="playback-controls">
                             <button class="btn-control" onclick="goToStart()" title="Na začátek">
                                 <i class="fa-solid fa-backward-fast"></i>
                             </button>
@@ -740,11 +1084,7 @@
                             <button class="btn-control" onclick="goToEnd()" title="Na konec">
                                 <i class="fa-solid fa-forward-fast"></i>
                             </button>
-                            <!-- Capture Diagram Button -->
-                            <button class="btn-control" onclick="openDiagramEditor()" title="Vytvořit diagram"
-                                style="border-color: #60a5fa; color: #60a5fa;">
-                                <i class="fa-solid fa-camera"></i>
-                            </button>
+                            <!-- Capture Diagram Button - Removed, using page tab instead -->
                         </div>
                         <div id="recorder-board-overlay" style="
                                 margin-bottom: 10px;
@@ -763,6 +1103,8 @@
                             </div>
                             <div style="position: relative; flex: 1; min-width: 0;">
                                 <div id="board"></div>
+                                <!-- Annotation overlay - shared by diagram editor -->
+                                <svg id="boardOverlaySvg"></svg>
                             </div>
                         </div>
                         <div class="gv2-analysis-info" id="recAnalysisInfo" style="display: none;">
@@ -771,7 +1113,8 @@
                             </div>
                             <div class="gv2-pv-line" id="recPvLine"></div>
                         </div>
-                        <div class="controls" style="margin-top: 1rem;">
+                        <!-- Partie Controls (visible when Partie tab active) -->
+                        <div class="controls controls-partie" style="margin-top: 1rem;">
                             <button class="btn-control" onclick="resetEditor()"><i class="fa-solid fa-rotate-left"></i>
                                 Reset</button>
                             <button class="btn-control" onclick="board.flip()"><i class="fa-solid fa-retweet"></i>
@@ -783,17 +1126,34 @@
                                 style="border-color: rgba(74, 222, 128, 0.3); color: rgba(74, 222, 128, 0.7);">
                                 <i class="fa-solid fa-microchip"></i> <span class="desktop-text">Motor</span>
                             </button>
-                            <!-- Mobile Info Button -->
-                            <!-- Mobile Info Button -->
                             <button class="btn-control mobile-only-btn">
                                 <i class="fa-solid fa-info-circle"></i> Info
                             </button>
-                            <!-- Exit Button -->
                             <a href="/members" class="btn-control"
                                 style="background: rgba(255, 0, 0, 0.2); border-color: rgba(255, 0, 0, 0.3); color: #fca5a5; text-decoration: none; display: inline-flex; align-items: center; justify-content: center;">
                                 <i class="fa-solid fa-right-from-bracket"></i> <span class="desktop-text"
                                     style="margin-left: 0.5rem;">Odejít</span>
                             </a>
+                        </div>
+
+                        <!-- Diagram Controls (visible when Diagram tab active) -->
+                        <div class="controls controls-diagram" style="margin-top: 1rem; display: none;">
+                            <button class="btn-control" onclick="board.flip()"><i class="fa-solid fa-retweet"></i>
+                                Otočit</button>
+                            <button class="btn-control" id="recEngineBtnDiag" onclick="toggleRecorderEngine()"
+                                title="Zapnout/vypnout analýzu enginem"
+                                style="border-color: rgba(74, 222, 128, 0.3); color: rgba(74, 222, 128, 0.7);">
+                                <i class="fa-solid fa-microchip"></i> <span class="desktop-text">Motor</span>
+                            </button>
+                            <button class="btn-control" onclick="loadFenIntoDiagram('start')" title="Základní pozice">
+                                <i class="fa-solid fa-chess-board"></i> <span class="desktop-text">Start</span>
+                            </button>
+                            <button class="btn-control" onclick="loadFenIntoDiagram('8/8/8/8/8/8/8/8 w - - 0 1')" title="Prázdná šachovnice">
+                                <i class="fa-solid fa-border-all"></i> <span class="desktop-text">Prázdná</span>
+                            </button>
+                            <button class="btn-control" onclick="clearDiagram()" title="Vymazat anotace">
+                                <i class="fa-solid fa-eraser"></i> <span class="desktop-text">Vymazat</span>
+                            </button>
                         </div>
                     </div>
 
@@ -804,6 +1164,9 @@
                         <button class="btn-close-modal">
                             <i class="fa-solid fa-times"></i> Zavřít
                         </button>
+
+                        <!-- ========== PANEL 1: PARTIE (Game Recorder) ========== -->
+                        <div id="panelPartie" class="sidebar-panel active">
 
                         <!-- Metadata Form: Compact Grid -->
                         <div style="display: grid; grid-template-columns: 1fr 1fr 80px; gap: 0.5rem; align-items: end;">
@@ -826,68 +1189,303 @@
                             </div>
                         </div>
 
-                        <!-- Move List: Flex Grow to fill space -->
-                        <div style="flex: 1; display: flex; flex-direction: column; min-height: 0;">
-                            <label
-                                style="color:var(--text-muted); display:block; margin-bottom:0.5rem; font-size: 0.9rem;">Průběh
-                                partie</label>
-                            <div id="moveList" class="move-list"
-                                style="height: auto; flex: 1; border: 1px solid rgba(255,255,255,0.05); min-height: 300px;">
-                                <!-- Moves will go here -->
+                        <!-- Move List: Collapsible Toggle -->
+                        <div style="display: flex; flex-direction: column; min-height: 0;">
+                            <!-- Move list toggle header -->
+                            <div onclick="toggleMoveListPanel()" style="display:flex; align-items:center; gap:0.4rem; cursor:pointer; padding:0.4rem 0; margin-bottom: 0.3rem;">
+                                <i class="fa-solid fa-list-ol" style="color: var(--text-muted); font-size: 0.75rem;"></i>
+                                <span style="font-size: 0.8rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.04em;">Průběh partie</span>
+                                <span id="moveCountBadge" style="font-size: 0.65rem; background: rgba(255,255,255,0.08); color: var(--text-muted); padding: 1px 6px; border-radius: 8px; margin-left: 0.2rem;">0</span>
+                                <i class="fa-solid fa-chevron-down" id="moveListToggleIcon" style="font-size: 0.55rem; color: var(--text-muted); margin-left: auto; transition: transform 0.2s;"></i>
+                            </div>
+                            <div id="moveListWrapper" style="display: block;">
+                                <div id="moveList" class="move-list"
+                                    style="height: auto; border: 1px solid rgba(255,255,255,0.05); max-height: 160px; overflow-y: auto;">
+                                    <!-- Moves will go here -->
+                                </div>
                             </div>
 
-                            <!-- NAG Toolbar -->
-                            <div style="display: flex; gap: 0.5rem; margin-top: 1rem; flex-wrap: wrap;">
+                            <!-- NAG + Comment: compact row -->
+                            <div style="display: flex; gap: 0.3rem; margin-top: 0.5rem; flex-wrap: wrap; align-items: center;">
                                 <button class="btn-control" onclick="toggleNag('$1')"
-                                    style="padding: 0.3rem 0.8rem; font-weight: bold; color: #4ade80;"
+                                    style="padding: 0.2rem 0.5rem; font-weight: bold; color: #4ade80; font-size: 0.8rem;"
                                     title="Dobrý tah (!)">!</button>
                                 <button class="btn-control" onclick="toggleNag('$2')"
-                                    style="padding: 0.3rem 0.8rem; font-weight: bold; color: #f87171;"
+                                    style="padding: 0.2rem 0.5rem; font-weight: bold; color: #f87171; font-size: 0.8rem;"
                                     title="Chyba (?)">?</button>
                                 <button class="btn-control" onclick="toggleNag('$3')"
-                                    style="padding: 0.3rem 0.8rem; font-weight: bold; color: #22c55e;"
+                                    style="padding: 0.2rem 0.5rem; font-weight: bold; color: #22c55e; font-size: 0.8rem;"
                                     title="Výborný tah (!!)">!!</button>
                                 <button class="btn-control" onclick="toggleNag('$4')"
-                                    style="padding: 0.3rem 0.8rem; font-weight: bold; color: #ef4444;"
+                                    style="padding: 0.2rem 0.5rem; font-weight: bold; color: #ef4444; font-size: 0.8rem;"
                                     title="Hrubá chyba (??)">??</button>
                                 <button class="btn-control" onclick="toggleNag('$5')"
-                                    style="padding: 0.3rem 0.8rem; font-weight: bold; color: #60a5fa;"
+                                    style="padding: 0.2rem 0.5rem; font-weight: bold; color: #60a5fa; font-size: 0.8rem;"
                                     title="Zajímavý tah (!?)">!?</button>
                                 <button class="btn-control" onclick="toggleNag('$6')"
-                                    style="padding: 0.3rem 0.8rem; font-weight: bold; color: #fbbf24;"
+                                    style="padding: 0.2rem 0.5rem; font-weight: bold; color: #fbbf24; font-size: 0.8rem;"
                                     title="Pochybný tah (?!)">?!</button>
                             </div>
 
-                            <!-- Comment Section -->
-                            <div class="form-group" style="margin-top: 0.5rem; margin-bottom: 0;">
-                                <label style="font-size: 0.9rem; margin-bottom: 0.3rem;"><i
-                                        class="fa-solid fa-comment-dots"></i> Komentář k pozici</label>
-                                <textarea id="moveComment" placeholder="Vložte komentář k aktuálnímu tahu..."
-                                    style="width: 100%; height: 80px; background: rgba(0,0,0,0.3); color: white; border: 1px solid rgba(255,255,255,0.1); padding: 0.5rem; border-radius: 6px; font-family: inherit; resize: vertical; font-size: 0.9rem;"></textarea>
+                            <!-- Comment Section: compact -->
+                            <div style="margin-top: 0.4rem; margin-bottom: 0;">
+                                <textarea id="moveComment" placeholder="Komentář k tahu..."
+                                    style="width: 100%; height: 50px; background: rgba(0,0,0,0.3); color: white; border: 1px solid rgba(255,255,255,0.1); padding: 0.4rem; border-radius: 6px; font-family: inherit; resize: vertical; font-size: 0.8rem; box-sizing: border-box;"></textarea>
                             </div>
 
-                            <!-- PGN Actions -->
-                            <div style="display:flex; gap:0.5rem; margin: 1rem 0; flex-wrap: wrap;">
+                            <!-- PGN Actions: compact -->
+                            <div style="display:flex; gap:0.4rem; margin: 0.5rem 0; flex-wrap: wrap;">
                                 <button class="btn-control" onclick="copyPgn()"
-                                    style="font-size:0.8rem; padding:0.4rem 0.8rem;"><i class="fa-solid fa-copy"></i>
-                                    Kopírovat PGN</button>
+                                    style="font-size:0.75rem; padding:0.3rem 0.6rem;"><i class="fa-solid fa-copy"></i>
+                                    PGN</button>
                                 <button class="btn-control" onclick="downloadPgn()"
-                                    style="font-size:0.8rem; padding:0.4rem 0.8rem;"><i
+                                    style="font-size:0.75rem; padding:0.3rem 0.6rem;"><i
                                         class="fa-solid fa-download"></i> Stáhnout</button>
                                 <button class="btn-control auth-only" onclick="showImportPgnModal()"
-                                    style="font-size:0.8rem; padding:0.4rem 0.8rem; background: rgba(74, 222, 128, 0.1); border-color: rgba(74, 222, 128, 0.3);"><i
-                                        class="fa-solid fa-file-import"></i> Vložit PGN</button>
+                                    style="font-size:0.75rem; padding:0.3rem 0.6rem; background: rgba(74, 222, 128, 0.1); border-color: rgba(74, 222, 128, 0.3);"><i
+                                        class="fa-solid fa-file-import"></i> Import</button>
+                            </div>
+
+                            <!-- Fragment Export: ALWAYS VISIBLE, prominent -->
+                            <div id="fragmentExportSection" class="auth-only"
+                                style="padding: 0.75rem; background: rgba(96,165,250,0.06); border-radius: 8px; border: 1px solid rgba(96,165,250,0.2); margin-bottom: 0.75rem;">
+                                <div style="display: flex; align-items: center; gap: 0.4rem; margin-bottom: 0.5rem;">
+                                    <i class="fa-solid fa-scissors" style="color: #60a5fa; font-size: 0.8rem;"></i>
+                                    <span style="font-size: 0.8rem; font-weight: 600; color: #60a5fa; text-transform: uppercase; letter-spacing: 0.04em;">Export fragmentu</span>
+                                    <span id="fragmentMoveCount" style="font-size: 0.65rem; color: var(--text-muted); margin-left: auto;"></span>
+                                </div>
+                                <!-- Range picker -->
+                                <div style="display: flex; gap: 0.5rem; align-items: center; margin-bottom: 0.4rem;">
+                                    <label style="font-size: 0.75rem; color: var(--text-muted); white-space: nowrap;">Od tahu</label>
+                                    <input type="number" id="fragmentFrom" min="1" value="1"
+                                        style="width: 50px; padding: 0.25rem 0.4rem; background: rgba(0,0,0,0.3); border: 1px solid rgba(96,165,250,0.25); color: #fff; border-radius: 4px; font-size: 0.8rem; text-align: center;"
+                                        onchange="updateFragmentPreview()" oninput="updateFragmentPreview()">
+                                    <label style="font-size: 0.75rem; color: var(--text-muted); white-space: nowrap;">do tahu</label>
+                                    <input type="number" id="fragmentTo" min="1" value="10"
+                                        style="width: 50px; padding: 0.25rem 0.4rem; background: rgba(0,0,0,0.3); border: 1px solid rgba(96,165,250,0.25); color: #fff; border-radius: 4px; font-size: 0.8rem; text-align: center;"
+                                        onchange="updateFragmentPreview()" oninput="updateFragmentPreview()">
+                                </div>
+                                <!-- Preview -->
+                                <div id="fragmentPreview"
+                                    style="font-family: monospace; font-size: 0.72rem; color: #ccc; padding: 0.4rem; background: rgba(0,0,0,0.3); border-radius: 4px; min-height: 1.8rem; max-height: 3.5rem; overflow-y: auto; margin-bottom: 0.4rem; line-height: 1.4; border: 1px solid rgba(96,165,250,0.1);">
+                                    <span style="color: var(--text-muted);">Vyberte rozsah tahů...</span>
+                                </div>
+                                <!-- Title -->
+                                <input type="text" id="fragmentTitle" placeholder="Název fragmentu (volitelné)"
+                                    style="width: 100%; padding: 0.25rem 0.4rem; background: rgba(0,0,0,0.3); border: 1px solid rgba(96,165,250,0.15); color: #fff; border-radius: 4px; font-size: 0.75rem; margin-bottom: 0.4rem; box-sizing: border-box;">
+                                <!-- Actions -->
+                                <div style="display: flex; gap: 0.4rem;">
+                                    <button class="btn-control" onclick="copyFragment()"
+                                        style="flex: 1; font-size: 0.72rem; padding: 0.3rem 0.4rem; justify-content: center; border-color: rgba(96, 165, 250, 0.3); color: #60a5fa;">
+                                        <i class="fa-solid fa-copy"></i> Kopírovat
+                                    </button>
+                                    <button class="btn-control" onclick="saveFragmentToCloud()"
+                                        style="flex: 1; font-size: 0.72rem; padding: 0.3rem 0.4rem; justify-content: center; border-color: rgba(74, 222, 128, 0.3); color: #4ade80;">
+                                        <i class="fa-solid fa-cloud-arrow-up"></i> Uložit
+                                    </button>
+                                </div>
+                                <p id="fragmentStatus" style="text-align: center; margin: 0.2rem 0 0 0; min-height: 0.8rem; font-size: 0.72rem; color: var(--text-muted);"></p>
                             </div>
 
                             <button class="main-btn auth-only" onclick="saveGame()"
-                                style="margin-top: 0; padding: 0.8rem;">
+                                style="margin-top: 0; padding: 0.7rem;">
                                 <i class="fa-solid fa-save"></i> Uložit Partii
                             </button>
                             <p id="saveStatus"
-                                style="text-align: center; margin-top: 0.2rem; min-height: 1.2rem; font-size: 0.9rem; margin-bottom: 0;">
+                                style="text-align: center; margin-top: 0.2rem; min-height: 1rem; font-size: 0.85rem; margin-bottom: 0;">
                             </p>
 
                         </div>
+
+                        </div> <!-- end #panelPartie -->
+
+                        <!-- ========== PANEL 2: DIAGRAMY (Editor — merged) ========== -->
+                        <div id="panelDiagram" class="sidebar-panel auth-only">
+
+                            <!-- SECTION: Pozice (Position Setup) -->
+                            <div class="diagram-section">
+                                <div class="diagram-section-label"><i class="fa-solid fa-chess"></i> Pozice</div>
+                                <!-- Turn + FEN row -->
+                                <div style="display: flex; gap: 0.5rem; align-items: center; background: rgba(0,0,0,0.2); border-radius: 6px; padding: 0.4rem 0.5rem;">
+                                    <div style="display: flex; gap: 0.25rem; flex-shrink: 0;">
+                                        <button id="turnWhiteBtn" class="tool-btn active" onclick="setDiagramTurn('w')" title="Bílý na tahu" style="width:28px; height:28px; font-size:0.85rem;">⬜</button>
+                                        <button id="turnBlackBtn" class="tool-btn" onclick="setDiagramTurn('b')" title="Černý na tahu" style="width:28px; height:28px; font-size:0.85rem;">⬛</button>
+                                    </div>
+                                    <input type="text" id="diagramFenInput" placeholder="FEN..."
+                                        style="flex: 1; padding: 0.25rem 0.4rem; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.15); color: #fff; border-radius: 4px; font-family: monospace; font-size: 0.7rem; min-width: 0;">
+                                    <button class="tool-btn" onclick="loadFenIntoDiagram()" title="Načíst FEN" style="width:28px; height:28px; font-size:0.75rem;">✓</button>
+                                </div>
+                                <!-- Castling -->
+                                <div style="display: flex; gap: 0.5rem; align-items: center; background: rgba(0,0,0,0.15); border-radius: 6px; padding: 0.3rem 0.5rem; flex-wrap: wrap;">
+                                    <span style="font-size: 0.65rem; color: var(--text-muted);">Rošáda:</span>
+                                    <label class="castling-check" title="Bílý krátká"><input type="checkbox" id="castleWK" checked onchange="updateCastlingRights()"><span>⬜K</span></label>
+                                    <label class="castling-check" title="Bílý dlouhá"><input type="checkbox" id="castleWQ" checked onchange="updateCastlingRights()"><span>⬜Q</span></label>
+                                    <label class="castling-check" title="Černý krátká"><input type="checkbox" id="castleBK" checked onchange="updateCastlingRights()"><span>⬛K</span></label>
+                                    <label class="castling-check" title="Černý dlouhá"><input type="checkbox" id="castleBQ" checked onchange="updateCastlingRights()"><span>⬛Q</span></label>
+                                </div>
+                                <!-- Piece Palette -->
+                                <div id="piecePalette" style="display: flex; gap: 0.2rem; align-items: center; flex-wrap: wrap; background: rgba(0,0,0,0.15); border-radius: 6px; padding: 0.35rem 0.4rem;">
+                                    <img src="/img/chesspieces/wikipedia/wK.png" class="palette-piece" data-piece="wK" title="Bílý král" draggable="true">
+                                    <img src="/img/chesspieces/wikipedia/wQ.png" class="palette-piece" data-piece="wQ" title="Bílá dáma" draggable="true">
+                                    <img src="/img/chesspieces/wikipedia/wR.png" class="palette-piece" data-piece="wR" title="Bílá věž" draggable="true">
+                                    <img src="/img/chesspieces/wikipedia/wB.png" class="palette-piece" data-piece="wB" title="Bílý střelec" draggable="true">
+                                    <img src="/img/chesspieces/wikipedia/wN.png" class="palette-piece" data-piece="wN" title="Bílý jezdec" draggable="true">
+                                    <img src="/img/chesspieces/wikipedia/wP.png" class="palette-piece" data-piece="wP" title="Bílý pěšec" draggable="true">
+                                    <div style="width: 1px; height: 24px; background: rgba(255,255,255,0.12); margin: 0 0.1rem;"></div>
+                                    <img src="/img/chesspieces/wikipedia/bK.png" class="palette-piece" data-piece="bK" title="Černý král" draggable="true">
+                                    <img src="/img/chesspieces/wikipedia/bQ.png" class="palette-piece" data-piece="bQ" title="Černá dáma" draggable="true">
+                                    <img src="/img/chesspieces/wikipedia/bR.png" class="palette-piece" data-piece="bR" title="Černá věž" draggable="true">
+                                    <img src="/img/chesspieces/wikipedia/bB.png" class="palette-piece" data-piece="bB" title="Černý střelec" draggable="true">
+                                    <img src="/img/chesspieces/wikipedia/bN.png" class="palette-piece" data-piece="bN" title="Černý jezdec" draggable="true">
+                                    <img src="/img/chesspieces/wikipedia/bP.png" class="palette-piece" data-piece="bP" title="Černý pěšec" draggable="true">
+                                    <div style="width: 1px; height: 24px; background: rgba(255,255,255,0.12); margin: 0 0.1rem;"></div>
+                                    <button class="palette-piece palette-eraser" data-piece="remove" title="Odebrat figurku"
+                                        style="background: rgba(239,68,68,0.2); border: 1px solid rgba(239,68,68,0.4); border-radius: 4px; color: #fca5a5; cursor: pointer; display: flex; align-items: center; justify-content: center;">
+                                        <i class="fa-solid fa-eraser" style="font-size: 0.7rem;"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- SECTION: Anotace (Annotation Tools) -->
+                            <div class="diagram-section">
+                                <div class="diagram-section-label"><i class="fa-solid fa-pen-fancy"></i> Anotace</div>
+                                <div class="editor-toolbar">
+                                    <!-- Arrows -->
+                                    <button class="tool-btn active" onclick="setDiagramTool('arrow-green')" title="Zelená šipka">
+                                        <div class="color-dot" style="background:#22c55e"></div>
+                                    </button>
+                                    <button class="tool-btn" onclick="setDiagramTool('arrow-red')" title="Červená šipka">
+                                        <div class="color-dot" style="background:#ef4444"></div>
+                                    </button>
+                                    <button class="tool-btn" onclick="setDiagramTool('arrow-blue')" title="Modrá šipka">
+                                        <div class="color-dot" style="background:#3b82f6"></div>
+                                    </button>
+                                    <button class="tool-btn" onclick="setDiagramTool('arrow-yellow')" title="Žlutá šipka">
+                                        <div class="color-dot" style="background:#eab308"></div>
+                                    </button>
+                                    <div style="width: 1px; background: rgba(255,255,255,0.08); margin: 0 0.3rem; align-self: stretch;"></div>
+                                    <!-- Squares -->
+                                    <button class="tool-btn" onclick="setDiagramTool('square-green')" title="Zelené pole"><i class="fa-solid fa-square" style="color:#22c55e"></i></button>
+                                    <button class="tool-btn" onclick="setDiagramTool('square-red')" title="Červené pole"><i class="fa-solid fa-square" style="color:#ef4444"></i></button>
+                                    <button class="tool-btn" onclick="setDiagramTool('square-blue')" title="Modré pole"><i class="fa-solid fa-square" style="color:#3b82f6"></i></button>
+                                    <button class="tool-btn" onclick="setDiagramTool('square-yellow')" title="Žluté pole"><i class="fa-solid fa-square" style="color:#eab308"></i></button>
+                                    <div style="width: 1px; background: rgba(255,255,255,0.08); margin: 0 0.3rem; align-self: stretch;"></div>
+                                    <!-- Eraser -->
+                                    <button class="tool-btn" onclick="setDiagramTool('eraser')" title="Guma"><i class="fa-solid fa-eraser"></i></button>
+                                    <div style="width: 1px; background: rgba(255,255,255,0.08); margin: 0 0.3rem; align-self: stretch;"></div>
+                                    <!-- Badges -->
+                                    <button class="tool-btn" onclick="setDiagramTool('badge-!')" title="!"><span style="color:#22c55e; font-weight:bold;">!</span></button>
+                                    <button class="tool-btn" onclick="setDiagramTool('badge-!!')" title="!!"><span style="color:#15803d; font-weight:bold;">!!</span></button>
+                                    <button class="tool-btn" onclick="setDiagramTool('badge-?')" title="?"><span style="color:#eab308; font-weight:bold;">?</span></button>
+                                    <button class="tool-btn" onclick="setDiagramTool('badge-??')" title="??"><span style="color:#ef4444; font-weight:bold;">??</span></button>
+                                    <button class="tool-btn" onclick="setDiagramTool('badge-!?')" title="!?"><span style="color:#3b82f6; font-weight:bold;">!?</span></button>
+                                    <button class="tool-btn" onclick="setDiagramTool('badge-?!')" title="?!"><span style="color:#a855f7; font-weight:bold;">?!</span></button>
+                                    <div style="width: 1px; background: rgba(255,255,255,0.08); margin: 0 0.3rem; align-self: stretch;"></div>
+                                    <button class="tool-btn" onclick="clearDiagram()" title="Vymazat vše"><i class="fa-solid fa-trash"></i></button>
+                                </div>
+                            </div>
+
+                            <!-- SECTION: Actions -->
+                            <div style="margin-top: auto; display: flex; flex-direction: column; gap: 0.5rem; padding-top: 0.5rem; border-top: 1px solid rgba(255, 255, 255, 0.06);">
+                                <button class="main-btn" onclick="analyzeInGameRecorder()"
+                                    style="padding: 0.6rem 1rem; font-size: 0.85rem; display: flex; align-items: center; justify-content: center; gap: 0.5rem; background: rgba(74, 222, 128, 0.15); border: 1px solid rgba(74, 222, 128, 0.4); color: #4ade80;"
+                                    title="Načíst pozici do záznamníku a spustit motor">
+                                    <i class="fa-solid fa-bolt"></i> Analyzovat pozici
+                                </button>
+                                <div class="diagram-actions">
+                                    <button class="btn-control" onclick="saveDiagramToCloud()"
+                                        style="background: rgba(96, 165, 250, 0.15); border-color: rgba(96, 165, 250, 0.3); color: #60a5fa;">
+                                        <i class="fa-solid fa-cloud-arrow-up"></i> Uložit
+                                    </button>
+                                    <button class="btn-control" onclick="exportDiagram()"
+                                        style="background: rgba(255, 255, 255, 0.06); border-color: rgba(255, 255, 255, 0.15); color: rgba(255,255,255,0.7);">
+                                        <i class="fa-solid fa-download"></i> Obrázek
+                                    </button>
+                                </div>
+                            </div>
+
+                        </div> <!-- end #panelDiagram -->
+
+                        <!-- ========== PANEL 3: HÁDANKY (Solver) ========== -->
+                        <div id="panelHadanky" class="sidebar-panel auth-only">
+
+                            <!-- Solver heading -->
+                            <div class="diagram-section-label" style="font-size: 0.95rem;">
+                                <i class="fa-solid fa-puzzle-piece"></i> Interaktivní Řešení
+                            </div>
+
+                            <!-- Side to move indicator -->
+                            <div style="display: flex; gap: 0.5rem; align-items: center; background: rgba(0,0,0,0.2); border-radius: 6px; padding: 0.4rem 0.5rem;">
+                                <span style="font-size: 0.8rem; color: var(--text-muted);">Na tahu:</span>
+                                <div style="display: flex; gap: 0.25rem;">
+                                    <button id="solverTurnWhite" class="tool-btn active" onclick="setDiagramTurn('w')" style="width:28px; height:28px; font-size:0.85rem;">⬜</button>
+                                    <button id="solverTurnBlack" class="tool-btn" onclick="setDiagramTurn('b')" style="width:28px; height:28px; font-size:0.85rem;">⬛</button>
+                                </div>
+                            </div>
+
+                            <!-- Record move type buttons -->
+                            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                                <button id="recordCorrectBtn" class="btn-control" onclick="enableMoveRecording('correct')"
+                                    style="flex: 1; font-size: 0.8rem; padding: 0.5rem 0.6rem; border-color: #22c55e; color: #22c55e; justify-content: center;">
+                                    <i class="fa-solid fa-check"></i> Správný tah
+                                </button>
+                                <button id="recordAltBtn" class="btn-control" onclick="enableMoveRecording('alternative')"
+                                    style="flex: 1; font-size: 0.8rem; padding: 0.5rem 0.6rem; border-color: #3b82f6; color: #3b82f6; justify-content: center;">
+                                    <i class="fa-solid fa-code-branch"></i> Alternativa
+                                </button>
+                                <button id="recordBadBtn" class="btn-control" onclick="enableMoveRecording('mistake')"
+                                    style="flex: 1; font-size: 0.8rem; padding: 0.5rem 0.6rem; border-color: #ef4444; color: #ef4444; justify-content: center;">
+                                    <i class="fa-solid fa-xmark"></i> Chyba
+                                </button>
+                            </div>
+
+                            <!-- Active Recording Controls -->
+                            <div id="recordingControls"
+                                style="display: none; align-items: center; gap: 0.5rem; padding: 0.5rem; background: rgba(34, 197, 94, 0.1); border: 1px solid rgba(34, 197, 94, 0.3); border-radius: 6px;">
+                                <div style="flex:1; font-size: 0.85rem;">
+                                    <span id="recordingStatusLabel">Nahrávám...</span> <br>
+                                    <strong id="recordingMovesPreview" style="font-family: monospace;">-</strong>
+                                </div>
+                                <button onclick="finishRecording()" class="btn-control"
+                                    style="padding: 0.3rem 0.8rem; font-size: 0.8rem; background: #22c55e; color: white; border: none;">
+                                    Dokončit
+                                </button>
+                                <button onclick="cancelRecording()" class="btn-control"
+                                    style="padding: 0.3rem 0.8rem; font-size: 0.8rem; background: rgba(0,0,0,0.3); color: #ccc; border: none;">
+                                    &times;
+                                </button>
+                            </div>
+
+                            <!-- Solution editor -->
+                            <div id="solutionEditor"
+                                style="display: none; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 0.5rem;">
+                                <div style="display: flex; align-items: center; justify-content: space-between;">
+                                    <strong id="activeMoveLabel" style="color: white;">e2-e4</strong>
+                                    <span id="activeMoveType"
+                                        style="font-size: 0.8rem; padding: 2px 6px; border-radius: 4px; background: #22c55e; color: white;">Správný</span>
+                                </div>
+                                <textarea id="solverComment" placeholder="Komentář k tahu (např. 'Výborný tah!')"
+                                    style="width: 100%; height: 60px; margin-top: 0.5rem; background: rgba(0,0,0,0.3); border: 1px dashed rgba(255,255,255,0.2); color: white; padding: 0.5rem; font-size: 0.85rem; border-radius: 4px;"></textarea>
+                                <button onclick="saveSolverStep()" class="btn-control"
+                                    style="width: 100%; margin-top: 0.5rem; justify-content: center;">
+                                    Uložit krok
+                                </button>
+                            </div>
+
+                            <!-- Solution list -->
+                            <div id="solutionList"
+                                style="flex: 1; min-height: 60px; max-height: 200px; overflow-y: auto; font-size: 0.85rem; background: rgba(0,0,0,0.15); border-radius: 6px; padding: 0.5rem;"></div>
+
+                            <!-- Save puzzle button -->
+                            <div style="margin-top: auto; padding-top: 0.5rem; border-top: 1px solid rgba(255, 255, 255, 0.06);">
+                                <button class="main-btn" onclick="saveDiagramToCloud()"
+                                    style="padding: 0.6rem 1rem; font-size: 0.85rem; display: flex; align-items: center; justify-content: center; gap: 0.5rem;">
+                                    <i class="fa-solid fa-cloud-arrow-up"></i> Uložit hádanku
+                                </button>
+                            </div>
+
+                        </div> <!-- end #panelHadanky -->
+
                     </div>
                 </div>
         </section>
@@ -899,7 +1497,8 @@
     <script src="js/layout-loader.js?v=5" defer></script>
     <script src="js/main.js" defer></script>
     <script src="js/game-viewer2.js?v=2" defer></script>
-    <script src="js/game-recorder.js?v=9.0" defer></script>
+    <script src="js/game-recorder.js?v=10.0" defer></script>
+    <script src="js/diagram-editor.js?v=2" defer></script>
     <div id="promotionModal">
         <div class="promotion-content">
             <h3 class="promotion-title">Vyberte figuru pro povýšení</h3>
@@ -951,8 +1550,6 @@
             style="background: var(--surface-color); padding: 1.5rem; border-radius: 12px; max-width: 500px; width: 90%; border: 1px solid var(--primary-color);">
             <h3 style="color: var(--primary-color); margin: 0 0 1rem 0;"><i class="fa-solid fa-file-import"></i> Vložit
                 PGN</h3>
-
-            <!-- File upload option -->
             <div style="margin-bottom: 1rem;">
                 <label
                     style="display: flex; align-items: center; gap: 0.5rem; padding: 0.75rem 1rem; background: rgba(255,255,255,0.05); border: 1px dashed rgba(255,255,255,0.2); border-radius: 6px; cursor: pointer; color: var(--text-muted); transition: all 0.2s;">
@@ -962,10 +1559,8 @@
                         onchange="handlePgnFileSelect(this)">
                 </label>
             </div>
-
             <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 0.5rem; text-align: center;">nebo
                 vložte text:</p>
-
             <textarea id="importPgnInput" placeholder="1. e4 e5 2. Nf3 Nc6 ..."
                 style="width: 100%; height: 120px; background: rgba(0,0,0,0.3); color: white; border: 1px solid rgba(255,255,255,0.2); padding: 0.75rem; border-radius: 6px; font-family: monospace; font-size: 0.9rem; resize: vertical;"></textarea>
             <div style="display: flex; gap: 0.75rem; margin-top: 1rem; justify-content: flex-end;">
@@ -978,478 +1573,288 @@
         </div>
     </div>
 
-    <!-- Diagram Editor Modal -->
-    <div id="diagramEditorModal">
-        <div class="editor-content">
-            <h3 style="margin: 0; color: var(--primary-color); display: flex; align-items: center; gap: 0.5rem;">
-                <i class="fa-solid fa-camera"></i> Editor Diagramu
-            </h3>
+    <script>
+        // Page-level tab switching (Partie / Diagram)
+        let currentPageTab = 'partie';
 
-            <!-- Tab Headers -->
-            <div class="diagram-tabs">
-                <button class="diagram-tab active" onclick="switchDiagramTab('annotate')" data-tab="annotate">
-                    <i class="fa-solid fa-pen-fancy"></i> Anotace
-                </button>
-                <button class="diagram-tab" onclick="switchDiagramTab('position')" data-tab="position">
-                    <i class="fa-solid fa-chess"></i> Pozice
-                </button>
-            </div>
+        function switchPageTab(tabName) {
+            currentPageTab = tabName;
 
-            <!-- TAB 1: Anotace (Annotations) -->
-            <div id="diagramTabAnnotate" class="diagram-tab-content active">
-                <div class="editor-toolbar">
-                    <button class="tool-btn active" onclick="setDiagramTool('arrow-green')" title="Zelená šipka">
-                        <div class="color-dot" style="background:#22c55e"></div>
-                    </button>
-                    <button class="tool-btn" onclick="setDiagramTool('arrow-red')" title="Červená šipka">
-                        <div class="color-dot" style="background:#ef4444"></div>
-                    </button>
-                    <button class="tool-btn" onclick="setDiagramTool('arrow-blue')" title="Modrá šipka">
-                        <div class="color-dot" style="background:#3b82f6"></div>
-                    </button>
-                    <button class="tool-btn" onclick="setDiagramTool('arrow-yellow')" title="Žlutá šipka">
-                        <div class="color-dot" style="background:#eab308"></div>
-                    </button>
+            // Update tab buttons
+            document.querySelectorAll('.page-tab').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.pageTab === tabName);
+            });
 
-                    <div style="width: 1px; background: rgba(255,255,255,0.1); margin: 0 0.5rem;"></div>
+            // Update sidebar panels
+            document.getElementById('panelPartie').classList.toggle('active', tabName === 'partie');
+            document.getElementById('panelDiagram').classList.toggle('active', tabName === 'diagram');
+            const panelHadanky = document.getElementById('panelHadanky');
+            if (panelHadanky) panelHadanky.classList.toggle('active', tabName === 'hadanky');
 
-                    <button class="tool-btn" onclick="setDiagramTool('square-green')" title="Zelené pole"><i
-                            class="fa-solid fa-square" style="color:#22c55e"></i></button>
-                    <button class="tool-btn" onclick="setDiagramTool('square-red')" title="Červené pole"><i
-                            class="fa-solid fa-square" style="color:#ef4444"></i></button>
-                    <button class="tool-btn" onclick="setDiagramTool('square-blue')" title="Modré pole"><i
-                            class="fa-solid fa-square" style="color:#3b82f6"></i></button>
-                    <button class="tool-btn" onclick="setDiagramTool('square-yellow')" title="Žluté pole"><i
-                            class="fa-solid fa-square" style="color:#eab308"></i></button>
+            // Toggle overlay SVG interactivity (active for both diagram and hadanky)
+            const overlay = document.getElementById('boardOverlaySvg');
+            if (overlay) {
+                overlay.classList.toggle('drawing-active', tabName === 'diagram');
+            }
 
-                    <div style="width: 1px; background: rgba(255,255,255,0.1); margin: 0 0.5rem;"></div>
+            // Show/hide playback controls (only for Partie)
+            const playbackControls = document.querySelector('.playback-controls');
+            if (playbackControls) {
+                playbackControls.style.display = tabName === 'partie' ? 'flex' : 'none';
+            }
 
-                    <button class="tool-btn" onclick="setDiagramTool('eraser')" title="Guma"><i
-                            class="fa-solid fa-eraser"></i></button>
+            // Toggle bottom control bars
+            const partieControls = document.querySelector('.controls-partie');
+            const diagramControls = document.querySelector('.controls-diagram');
+            if (partieControls) partieControls.style.display = tabName === 'partie' ? 'flex' : 'none';
+            if (diagramControls) diagramControls.style.display = (tabName === 'diagram' || tabName === 'hadanky') ? 'flex' : 'none';
 
-                    <div style="width: 1px; background: rgba(255,255,255,0.1); margin: 0 0.5rem;"></div>
+            // Sync engine button states
+            if (typeof recEngineActive !== 'undefined' && recEngineActive) {
+                const btns = [document.getElementById('recEngineBtn'), document.getElementById('recEngineBtnDiag')];
+                btns.forEach(btn => {
+                    if (btn) {
+                        btn.style.background = 'rgba(74, 222, 128, 0.2)';
+                        btn.style.borderColor = 'rgba(74, 222, 128, 0.5)';
+                        btn.style.color = '#4ade80';
+                    }
+                });
+            }
 
-                    <button class="tool-btn" onclick="setDiagramTool('badge-!')" title="Dobrý tah (!)"><span
-                            style="color:#22c55e; font-weight:bold;">!</span></button>
-                    <button class="tool-btn" onclick="setDiagramTool('badge-!!')" title="Výborný tah (!!)"><span
-                            style="color:#15803d; font-weight:bold;">!!</span></button>
-                    <button class="tool-btn" onclick="setDiagramTool('badge-?')" title="Chyba (?)"><span
-                            style="color:#eab308; font-weight:bold;">?</span></button>
-                    <button class="tool-btn" onclick="setDiagramTool('badge-??')" title="Hrubá chyba (??)"><span
-                            style="color:#ef4444; font-weight:bold;">??</span></button>
-                    <button class="tool-btn" onclick="setDiagramTool('badge-!?')" title="Zajímavý tah (!?)"><span
-                            style="color:#3b82f6; font-weight:bold;">!?</span></button>
-                    <button class="tool-btn" onclick="setDiagramTool('badge-?!')" title="Pochybný tah (?!)"><span
-                            style="color:#a855f7; font-weight:bold;">?!</span></button>
+            // When entering diagram/hadanky tab, initialize board state
+            if (tabName === 'diagram' || tabName === 'hadanky') {
+                if (typeof initDiagramFromBoard === 'function') {
+                    initDiagramFromBoard();
+                }
+            }
 
-                    <div style="width: 1px; background: rgba(255,255,255,0.1); margin: 0 0.5rem;"></div>
+            // Re-trigger engine analysis for the new context
+            if (typeof analyzeCurrentPosition === 'function') {
+                analyzeCurrentPosition();
+            }
+        }
 
-                    <button class="tool-btn" onclick="clearDiagram()" title="Vymazat vše"><i
-                            class="fa-solid fa-trash"></i></button>
-                </div>
+        // ========================================
+        // FRAGMENT EXPORT
+        // ========================================
 
-                <!-- Solver Admin UI -->
-                <div id="solverTools"
-                    style="margin: 0.5rem 0 0 0; padding: 1rem; background: rgba(0,0,0,0.3); border-radius: 8px; border: 1px solid rgba(255,255,255,0.1);">
-                    <h4 style="margin: 0 0 0.5rem 0; color: var(--text-muted); font-size: 0.9rem;">Interaktivní Řešení
-                        (Admin)</h4>
+        function toggleMoveListPanel() {
+            const wrapper = document.getElementById('moveListWrapper');
+            const icon = document.getElementById('moveListToggleIcon');
+            if (!wrapper) return;
+            const isHidden = wrapper.style.display === 'none';
+            wrapper.style.display = isHidden ? 'block' : 'none';
+            if (icon) icon.style.transform = isHidden ? '' : 'rotate(-90deg)';
+        }
 
-                    <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 0.5rem;">
-                        <!-- Interactive Move Input -->
-                        <button id="recordCorrectBtn" class="btn-control" onclick="enableMoveRecording('correct')"
-                            style="font-size: 0.8rem; padding: 0.4rem 0.8rem; border-color: #22c55e; color: #22c55e;">
-                            <i class="fa-solid fa-check"></i> Správný tah
-                        </button>
-                        <button id="recordAltBtn" class="btn-control" onclick="enableMoveRecording('alternative')"
-                            style="font-size: 0.8rem; padding: 0.4rem 0.8rem; border-color: #3b82f6; color: #3b82f6;">
-                            <i class="fa-solid fa-code-branch"></i> Alternativa
-                        </button>
-                        <button id="recordBadBtn" class="btn-control" onclick="enableMoveRecording('mistake')"
-                            style="font-size: 0.8rem; padding: 0.4rem 0.8rem; border-color: #ef4444; color: #ef4444;">
-                            <i class="fa-solid fa-xmark"></i> Chyba
-                        </button>
-                    </div>
+        // Legacy — fragment panel is always visible now
+        function toggleFragmentPanel() {}
 
-                    <!-- Active Recording Controls (Hidden by default) -->
-                    <div id="recordingControls"
-                        style="display: none; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem; padding: 0.5rem; background: rgba(34, 197, 94, 0.1); border: 1px solid rgba(34, 197, 94, 0.3); border-radius: 4px;">
-                        <div style="flex:1; font-size: 0.85rem;">
-                            <span id="recordingStatusLabel">Nahrávám...</span> <br>
-                            <strong id="recordingMovesPreview" style="font-family: monospace;">-</strong>
-                        </div>
-                        <button onclick="finishRecording()" class="btn-control"
-                            style="padding: 0.3rem 0.8rem; font-size: 0.8rem; background: #22c55e; color: white; border: none;">
-                            Dokončit
-                        </button>
-                        <button onclick="cancelRecording()" class="btn-control"
-                            style="padding: 0.3rem 0.8rem; font-size: 0.8rem; background: rgba(0,0,0,0.3); color: #ccc; border: none;">
-                            &times;
-                        </button>
-                    </div>
+        /**
+         * Extract a fragment (subset of moves) from the main line.
+         * @param {number} fromMove - Starting move number (1-based, full moves)
+         * @param {number} toMove - Ending move number (1-based, full moves)
+         * @returns {{ pgn: string, startFen: string, moves: string[], totalMoves: number }}
+         */
+        function extractFragment(fromMove, toMove) {
+            const mainLine = getMainLine();
+            const totalMoves = Math.ceil(mainLine.length / 2);
 
-                    <!-- Input for currently selected move properties -->
-                    <div id="solutionEditor"
-                        style="display: none; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 0.5rem;">
-                        <div style="display: flex; align-items: center; justify-content: space-between;">
-                            <strong id="activeMoveLabel" style="color: white;">e2-e4</strong>
-                            <span id="activeMoveType"
-                                style="font-size: 0.8rem; padding: 2px 6px; border-radius: 4px; background: #22c55e; color: white;">Správný</span>
-                        </div>
-                        <textarea id="solverComment" placeholder="Komentář k tahu (např. 'Výborný tah!')"
-                            style="width: 100%; height: 60px; margin-top: 0.5rem; background: rgba(0,0,0,0.3); border: 1px dashed rgba(255,255,255,0.2); color: white; padding: 0.5rem; font-size: 0.85rem; border-radius: 4px;"></textarea>
+            if (mainLine.length === 0) {
+                return { pgn: '', startFen: '', moves: [], totalMoves: 0 };
+            }
 
-                        <button onclick="saveSolverStep()" class="btn-control"
-                            style="width: 100%; margin-top: 0.5rem; justify-content: center;">
-                            Uložit krok
-                        </button>
-                    </div>
+            // Clamp values
+            fromMove = Math.max(1, Math.min(fromMove, totalMoves));
+            toMove = Math.max(fromMove, Math.min(toMove, totalMoves));
 
-                    <!-- List of defined solutions -->
-                    <div id="solutionList"
-                        style="margin-top: 0.5rem; max-height: 100px; overflow-y: auto; font-size: 0.85rem;"></div>
-                </div>
-            </div>
+            // Convert move numbers to ply range (1-based)
+            const fromPly = (fromMove - 1) * 2; // ply index in mainLine array (0-based)
+            const toPly = toMove * 2;            // exclusive end
 
-            <!-- TAB 2: Pozice (Position Setup) -->
-            <div id="diagramTabPosition" class="diagram-tab-content" style="display: none;">
-                <!-- Turn + FEN Input -->
-                <div
-                    style="display: flex; gap: 0.5rem; align-items: center; background: rgba(0,0,0,0.2); border-radius: 6px; padding: 0.4rem 0.5rem;">
-                    <div style="display: flex; gap: 0.25rem; flex-shrink: 0;">
-                        <button id="turnWhiteBtn" class="tool-btn active" onclick="setDiagramTurn('w')"
-                            title="Bílý na tahu" style="width:30px; height:30px; font-size:0.9rem;">⬜</button>
-                        <button id="turnBlackBtn" class="tool-btn" onclick="setDiagramTurn('b')" title="Černý na tahu"
-                            style="width:30px; height:30px; font-size:0.9rem;">⬛</button>
-                    </div>
-                    <input type="text" id="diagramFenInput" placeholder="Vložte FEN..."
-                        style="flex: 1; padding: 0.3rem 0.5rem; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.15); color: #fff; border-radius: 4px; font-family: monospace; font-size: 0.75rem; min-width: 0;">
-                    <button class="tool-btn" onclick="loadFenIntoDiagram()" title="Načíst FEN"
-                        style="width:30px; height:30px; font-size:0.8rem;">✓</button>
-                    <button class="tool-btn" onclick="loadFenIntoDiagram('start')" title="Startovní pozice"
-                        style="width:auto; height:30px; font-size:0.7rem; padding: 0 0.4rem;">Start</button>
-                    <button class="tool-btn" onclick="loadFenIntoDiagram('8/8/8/8/8/8/8/8 w - - 0 1')"
-                        title="Prázdná šachovnice"
-                        style="width:auto; height:30px; font-size:0.7rem; padding: 0 0.4rem;">∅</button>
-                </div>
+            // Get the FEN before the first move in the range
+            // If fromMove == 1, it's the starting position (moveTreeRoot.fen)
+            let startFen;
+            if (fromPly === 0) {
+                startFen = moveTreeRoot.fen;
+            } else {
+                startFen = mainLine[fromPly - 1].fen;
+            }
 
-                <!-- Castling Rights -->
-                <div
-                    style="display: flex; gap: 0.75rem; align-items: center; background: rgba(0,0,0,0.2); border-radius: 6px; padding: 0.4rem 0.5rem; flex-wrap: wrap;">
-                    <span style="font-size: 0.7rem; color: var(--text-muted);">Rošáda:</span>
-                    <label class="castling-check" title="Bílý krátká (O-O)">
-                        <input type="checkbox" id="castleWK" checked onchange="updateCastlingRights()">
-                        <span>⬜ 0-0</span>
-                    </label>
-                    <label class="castling-check" title="Bílý dlouhá (O-O-O)">
-                        <input type="checkbox" id="castleWQ" checked onchange="updateCastlingRights()">
-                        <span>⬜ 0-0-0</span>
-                    </label>
-                    <label class="castling-check" title="Černý krátká (O-O)">
-                        <input type="checkbox" id="castleBK" checked onchange="updateCastlingRights()">
-                        <span>⬛ 0-0</span>
-                    </label>
-                    <label class="castling-check" title="Černý dlouhá (O-O-O)">
-                        <input type="checkbox" id="castleBQ" checked onchange="updateCastlingRights()">
-                        <span>⬛ 0-0-0</span>
-                    </label>
-                </div>
+            // Extract the moves in range
+            const selectedNodes = mainLine.slice(fromPly, Math.min(toPly, mainLine.length));
 
-                <!-- Piece Palette for drag & drop -->
-                <div id="piecePalette"
-                    style="display: flex; gap: 0.25rem; align-items: center; flex-wrap: wrap; background: rgba(0,0,0,0.2); border-radius: 6px; padding: 0.4rem 0.5rem;">
-                    <span style="font-size: 0.7rem; color: var(--text-muted); margin-right: 0.25rem;">Figurky:</span>
-                    <img src="/img/chesspieces/wikipedia/wK.png" class="palette-piece" data-piece="wK" title="Bílý král"
-                        draggable="true">
-                    <img src="/img/chesspieces/wikipedia/wQ.png" class="palette-piece" data-piece="wQ" title="Bílá dáma"
-                        draggable="true">
-                    <img src="/img/chesspieces/wikipedia/wR.png" class="palette-piece" data-piece="wR" title="Bílá věž"
-                        draggable="true">
-                    <img src="/img/chesspieces/wikipedia/wB.png" class="palette-piece" data-piece="wB"
-                        title="Bílý střelec" draggable="true">
-                    <img src="/img/chesspieces/wikipedia/wN.png" class="palette-piece" data-piece="wN"
-                        title="Bílý jezdec" draggable="true">
-                    <img src="/img/chesspieces/wikipedia/wP.png" class="palette-piece" data-piece="wP"
-                        title="Bílý pěšec" draggable="true">
-                    <div style="width: 1px; height: 28px; background: rgba(255,255,255,0.15); margin: 0 0.15rem;"></div>
-                    <img src="/img/chesspieces/wikipedia/bK.png" class="palette-piece" data-piece="bK"
-                        title="Černý král" draggable="true">
-                    <img src="/img/chesspieces/wikipedia/bQ.png" class="palette-piece" data-piece="bQ"
-                        title="Černá dáma" draggable="true">
-                    <img src="/img/chesspieces/wikipedia/bR.png" class="palette-piece" data-piece="bR" title="Černá věž"
-                        draggable="true">
-                    <img src="/img/chesspieces/wikipedia/bB.png" class="palette-piece" data-piece="bB"
-                        title="Černý střelec" draggable="true">
-                    <img src="/img/chesspieces/wikipedia/bN.png" class="palette-piece" data-piece="bN"
-                        title="Černý jezdec" draggable="true">
-                    <img src="/img/chesspieces/wikipedia/bP.png" class="palette-piece" data-piece="bP"
-                        title="Černý pěšec" draggable="true">
-                    <div style="width: 1px; height: 28px; background: rgba(255,255,255,0.15); margin: 0 0.15rem;"></div>
-                    <button class="palette-piece palette-eraser" data-piece="remove" title="Odebrat figurku"
-                        style="background: rgba(239,68,68,0.2); border: 1px solid rgba(239,68,68,0.4); border-radius: 4px; color: #fca5a5; cursor: pointer; display: flex; align-items: center; justify-content: center;">
-                        <i class="fa-solid fa-eraser" style="font-size: 0.8rem;"></i>
-                    </button>
-                </div>
-            </div>
+            // Build PGN text with move numbers
+            let pgn = '';
+            let pgnLines = [];
+            for (let i = 0; i < selectedNodes.length; i++) {
+                const node = selectedNodes[i];
+                const globalPly = fromPly + i + 1; // 1-based ply
+                const moveNum = Math.ceil(globalPly / 2);
+                const isWhite = (globalPly % 2 === 1);
 
-            <div id="diagramBoardWrapper">
-                <div id="diagramBoard" style="width: 100%;"></div>
-                <svg id="diagramOverlay"
-                    style="position:absolute; top:0; left:0; width:100%; height:100%; z-index: 13000;"></svg>
-            </div>
+                if (isWhite) {
+                    pgnLines.push(`${moveNum}. ${node.san}`);
+                } else {
+                    if (i === 0) {
+                        // First move is black → show dots
+                        pgnLines.push(`${moveNum}... ${node.san}`);
+                    } else {
+                        pgnLines.push(node.san);
+                    }
+                }
 
-            <div style="display: flex; gap: 1rem; justify-content: flex-end; margin-top: 0.5rem; flex-wrap: wrap;">
-                <button class="btn-control" onclick="closeDiagramEditor()">Zavřít</button>
-                <button class="btn-control" onclick="analyzeInGameRecorder()"
-                    style="background: rgba(255, 255, 255, 0.08); border-color: rgba(255, 255, 255, 0.2); color: #fff;"
-                    title="Načíst pozici do záznamníku partií pro analýzu">
-                    <i class="fa-solid fa-magnifying-glass-chart"></i> Analyzovat
-                </button>
-                <button class="btn-control" onclick="saveDiagramToCloud()"
-                    style="background: rgba(96, 165, 250, 0.2); border-color: rgba(96, 165, 250, 0.4); color: #60a5fa;">
-                    <i class="fa-solid fa-cloud-arrow-up"></i> Uložit do cloudu
-                </button>
-                <button class="btn-control" onclick="exportDiagram()"
-                    style="background: rgba(74, 222, 128, 0.2); border-color: rgba(74, 222, 128, 0.4); color: #4ade80;">
-                    <i class="fa-solid fa-download"></i> Uložit obrázek
-                </button>
-            </div>
-        </div>
-    </div>
-</body>
+                // Add NAG/comment
+                if (node.nag) pgnLines.push(node.nag);
+                if (moveNags[node.fen]) pgnLines.push(moveNags[node.fen]);
+                if (node.comment) pgnLines.push(`{${node.comment}}`);
+                if (moveComments[node.fen]) pgnLines.push(`{${moveComments[node.fen]}}`);
+            }
 
-</html>
+            pgn = pgnLines.join(' ');
 
+            return {
+                pgn,
+                startFen,
+                moves: selectedNodes.map(n => n.san),
+                totalMoves,
+                fromMove,
+                toMove
+            };
+        }
 
-</style>
-</head>
+        function updateFragmentPreview() {
+            const fromInput = document.getElementById('fragmentFrom');
+            const toInput = document.getElementById('fragmentTo');
+            const preview = document.getElementById('fragmentPreview');
+            const countSpan = document.getElementById('fragmentMoveCount');
 
-<body>
-    <header id="global-header"></header>
+            if (!fromInput || !toInput || !preview) return;
 
-    <main>
-        <!-- Reduced top margin and padding to fit board on screen -->
-        <section class="hero-small" style="text-align: center; padding: 0.5rem 0; margin-top: 100px;">
-            <div class="container">
-                <h1 style="font-size: 1.8rem; margin: 0;"><i class="fa-solid fa-chess-board"></i> Editor Partií</h1>
-            </div>
-        </section>
+            const mainLine = getMainLine();
+            const totalMoves = Math.ceil(mainLine.length / 2);
 
-        <section style="padding: 0.5rem 0;">
-            <div class="container">
-                <div class="editor-container">
+            // Update max
+            fromInput.max = totalMoves || 1;
+            toInput.max = totalMoves || 1;
 
-                    <!-- Left: Board -->
-                    <div>
-                        <!-- Playback Controls Above Board -->
-                        <div class="playback-controls"
-                            style="display: flex; justify-content: center; gap: 0.5rem; margin-bottom: 0.5rem;">
-                            <button class="btn-control" onclick="goToStart()" title="Na začátek">
-                                <i class="fa-solid fa-backward-fast"></i>
-                            </button>
-                            <button class="btn-control" onclick="goBack()" title="Předchozí tah">
-                                <i class="fa-solid fa-backward-step"></i>
-                            </button>
-                            <button class="btn-control" id="autoplayBtn" onclick="toggleAutoplay()"
-                                title="Přehrát partii">
-                                <i class="fa-solid fa-play"></i>
-                            </button>
-                            <button class="btn-control" onclick="goForward()" title="Další tah">
-                                <i class="fa-solid fa-forward-step"></i>
-                            </button>
-                            <button class="btn-control" onclick="goToEnd()" title="Na konec">
-                                <i class="fa-solid fa-forward-fast"></i>
-                            </button>
-                        </div>
-                        <div id="recorder-board-overlay" style="
-                                margin-bottom: 10px;
-                                background: rgba(0, 0, 0, 0.6);
-                                color: #fff;
-                                padding: 0.8rem;
-                                border-radius: 6px;
-                                font-size: 0.95em;
-                                display: none;
-                                border-left: 4px solid #4ade80;
-                            "></div>
-                        <div style="position: relative;">
-                            <div id="board"></div>
-                        </div>
-                        <div class="controls" style="margin-top: 1rem;">
-                            <button class="btn-control" onclick="resetEditor()"><i class="fa-solid fa-rotate-left"></i>
-                                Reset</button>
-                            <button class="btn-control" onclick="board.flip()"><i class="fa-solid fa-retweet"></i>
-                                Otočit</button>
-                            <button class="btn-control" onclick="undoMove()"><i class="fa-solid fa-arrow-left"></i>
-                                Zpět</button>
-                            <!-- Mobile Info Button -->
-                            <!-- Mobile Info Button -->
-                            <button class="btn-control mobile-only-btn">
-                                <i class="fa-solid fa-info-circle"></i> Info
-                            </button>
-                            <!-- Exit Button -->
-                            <a href="/members" class="btn-control"
-                                style="background: rgba(255, 0, 0, 0.2); border-color: rgba(255, 0, 0, 0.3); color: #fca5a5; text-decoration: none; display: inline-flex; align-items: center; justify-content: center;">
-                                <i class="fa-solid fa-right-from-bracket"></i> <span class="desktop-text"
-                                    style="margin-left: 0.5rem;">Odejít</span>
-                            </a>
-                        </div>
-                    </div>
+            if (mainLine.length === 0) {
+                preview.innerHTML = '<span style="color: var(--text-muted);">Partie je prázdná</span>';
+                if (countSpan) countSpan.textContent = '';
+                return;
+            }
 
-                    <!-- Right: Info & Moves (Desktop Sidebar / Mobile Modal Content) -->
-                    <div id="gameSidebar" class="sidebar">
+            const from = parseInt(fromInput.value) || 1;
+            const to = parseInt(toInput.value) || totalMoves;
 
-                        <!-- Close button for mobile modal -->
-                        <button class="btn-close-modal">
-                            <i class="fa-solid fa-times"></i> Zavřít
-                        </button>
+            const fragment = extractFragment(from, to);
 
-                        <!-- Metadata Form: Compact Grid -->
-                        <div style="display: grid; grid-template-columns: 1fr 1fr 80px; gap: 0.5rem; align-items: end;">
-                            <div class="form-group" style="margin-bottom: 0;">
-                                <label style="font-size: 0.8rem; margin-bottom: 0.2rem;">Bílý</label>
-                                <input type="text" id="whitePlayer" placeholder="Jméno" style="padding: 0.5rem;">
-                            </div>
-                            <div class="form-group" style="margin-bottom: 0;">
-                                <label style="font-size: 0.8rem; margin-bottom: 0.2rem;">Černý</label>
-                                <input type="text" id="blackPlayer" placeholder="Jméno" style="padding: 0.5rem;">
-                            </div>
-                            <div class="form-group" style="margin-bottom: 0;">
-                                <label style="font-size: 0.8rem; margin-bottom: 0.2rem;">Výsledek</label>
-                                <select id="result" style="padding: 0.5rem;">
-                                    <option value="*">*</option>
-                                    <option value="1-0">1-0</option>
-                                    <option value="0-1">0-1</option>
-                                    <option value="1/2-1/2">½-½</option>
-                                </select>
-                            </div>
-                        </div>
+            if (fragment.pgn) {
+                preview.textContent = fragment.pgn;
+                if (countSpan) countSpan.textContent = `(${fragment.moves.length} půltahů)`;
+            } else {
+                preview.innerHTML = '<span style="color: var(--text-muted);">Žádné tahy v rozsahu</span>';
+                if (countSpan) countSpan.textContent = '';
+            }
+        }
 
-                        <!-- Move List: Flex Grow to fill space -->
-                        <div style="flex: 1; display: flex; flex-direction: column; min-height: 0;">
-                            <label
-                                style="color:var(--text-muted); display:block; margin-bottom:0.5rem; font-size: 0.9rem;">Průběh
-                                partie</label>
-                            <div id="moveList" class="move-list"
-                                style="height: auto; flex: 1; border: 1px solid rgba(255,255,255,0.05); min-height: 100px;">
-                                <!-- Moves will go here -->
-                            </div>
+        function copyFragment() {
+            const fromInput = document.getElementById('fragmentFrom');
+            const toInput = document.getElementById('fragmentTo');
+            const status = document.getElementById('fragmentStatus');
 
-                            <!-- NAG Toolbar -->
-                            <div style="display: flex; gap: 0.5rem; margin-top: 1rem; flex-wrap: wrap;">
-                                <button class="btn-control" onclick="toggleNag('$1')"
-                                    style="padding: 0.3rem 0.8rem; font-weight: bold; color: #4ade80;"
-                                    title="Dobrý tah (!)">!</button>
-                                <button class="btn-control" onclick="toggleNag('$2')"
-                                    style="padding: 0.3rem 0.8rem; font-weight: bold; color: #f87171;"
-                                    title="Chyba (?)">?</button>
-                                <button class="btn-control" onclick="toggleNag('$3')"
-                                    style="padding: 0.3rem 0.8rem; font-weight: bold; color: #22c55e;"
-                                    title="Výborný tah (!!)">!!</button>
-                                <button class="btn-control" onclick="toggleNag('$4')"
-                                    style="padding: 0.3rem 0.8rem; font-weight: bold; color: #ef4444;"
-                                    title="Hrubá chyba (??)">??</button>
-                                <button class="btn-control" onclick="toggleNag('$5')"
-                                    style="padding: 0.3rem 0.8rem; font-weight: bold; color: #60a5fa;"
-                                    title="Zajímavý tah (!?)">!?</button>
-                                <button class="btn-control" onclick="toggleNag('$6')"
-                                    style="padding: 0.3rem 0.8rem; font-weight: bold; color: #fbbf24;"
-                                    title="Pochybný tah (?!)">?!</button>
-                            </div>
+            const from = parseInt(fromInput.value) || 1;
+            const to = parseInt(toInput.value) || 99;
+            const fragment = extractFragment(from, to);
 
-                            <!-- Comment Section -->
-                            <div class="form-group" style="margin-top: 0.5rem; margin-bottom: 0;">
-                                <label style="font-size: 0.9rem; margin-bottom: 0.3rem;"><i
-                                        class="fa-solid fa-comment-dots"></i> Komentář k pozici</label>
-                                <textarea id="moveComment" placeholder="Vložte komentář k aktuálnímu tahu..."
-                                    style="width: 100%; height: 80px; background: rgba(0,0,0,0.3); color: white; border: 1px solid rgba(255,255,255,0.1); padding: 0.5rem; border-radius: 6px; font-family: inherit; resize: vertical; font-size: 0.9rem;"></textarea>
-                            </div>
+            if (!fragment.pgn) {
+                if (status) { status.style.color = '#f87171'; status.textContent = 'Žádné tahy k exportu'; }
+                return;
+            }
 
-                            <!-- PGN Actions -->
-                            <div style="display:flex; gap:0.5rem; margin: 1rem 0; flex-wrap: wrap;">
-                                <button class="btn-control" onclick="copyPgn()"
-                                    style="font-size:0.8rem; padding:0.4rem 0.8rem;"><i class="fa-solid fa-copy"></i>
-                                    Kopírovat PGN</button>
-                                <button class="btn-control" onclick="downloadPgn()"
-                                    style="font-size:0.8rem; padding:0.4rem 0.8rem;"><i
-                                        class="fa-solid fa-download"></i> Stáhnout</button>
-                                <button class="btn-control auth-only" onclick="showImportPgnModal()"
-                                    style="font-size:0.8rem; padding:0.4rem 0.8rem; background: rgba(74, 222, 128, 0.1); border-color: rgba(74, 222, 128, 0.3);"><i
-                                        class="fa-solid fa-file-import"></i> Vložit PGN</button>
-                            </div>
+            // Build full PGN with headers
+            const white = document.getElementById('whitePlayer')?.value || '?';
+            const black = document.getElementById('blackPlayer')?.value || '?';
+            const title = document.getElementById('fragmentTitle')?.value || '';
+            const header = [
+                `[White "${white}"]`,
+                `[Black "${black}"]`,
+                `[SetUp "1"]`,
+                `[FEN "${fragment.startFen}"]`,
+                title ? `[Title "${title}"]` : '',
+                `[Fragment "${fragment.fromMove}-${fragment.toMove}"]`,
+                ''
+            ].filter(Boolean).join('\n');
 
-                            <button class="main-btn auth-only" onclick="saveGame()"
-                                style="margin-top: 0; padding: 0.8rem;">
-                                <i class="fa-solid fa-save"></i> Uložit Partii
-                            </button>
-                            <p id="saveStatus"
-                                style="text-align: center; margin-top: 0.2rem; min-height: 1.2rem; font-size: 0.9rem; margin-bottom: 0;">
-                            </p>
+            const fullPgn = header + '\n' + fragment.pgn;
 
-                        </div>
-                    </div>
-                </div>
-        </section>
-    </main>
+            navigator.clipboard.writeText(fullPgn).then(() => {
+                if (status) { status.style.color = '#4ade80'; status.textContent = '✓ Fragment zkopírován!'; }
+                setTimeout(() => { if (status) status.textContent = ''; }, 3000);
+            }).catch(() => {
+                if (status) { status.style.color = '#f87171'; status.textContent = 'Kopírování selhalo'; }
+            });
+        }
 
-    <footer id="global-footer"></footer>
+        async function saveFragmentToCloud() {
+            const fromInput = document.getElementById('fragmentFrom');
+            const toInput = document.getElementById('fragmentTo');
+            const status = document.getElementById('fragmentStatus');
 
-    <script src="js/config.js?v=4" defer></script>
-    <script src="js/layout-loader.js?v=5" defer></script>
-    <script src="js/main.js" defer></script>
-    <script src="js/game-recorder.js" defer?v=7.0"></script>
-    <div id="promotionModal">
-        <div class="promotion-content">
-            <h3 class="promotion-title">Vyberte figuru pro povýšení</h3>
-            <div class="promotion-options">
-                <div class="promotion-piece" onclick="completePromotion('q')">
-                    <img src="https://chessboardjs.com/img/chesspieces/wikipedia/wQ.png" data-piece="q" alt="Dáma">
-                </div>
-                <div class="promotion-piece" onclick="completePromotion('r')">
-                    <img src="https://chessboardjs.com/img/chesspieces/wikipedia/wR.png" data-piece="r" alt="Věž">
-                </div>
-                <div class="promotion-piece" onclick="completePromotion('b')">
-                    <img src="https://chessboardjs.com/img/chesspieces/wikipedia/wB.png" data-piece="b" alt="Střelec">
-                </div>
-                <div class="promotion-piece" onclick="completePromotion('n')">
-                    <img src="https://chessboardjs.com/img/chesspieces/wikipedia/wN.png" data-piece="n" alt="Jezdec">
-                </div>
-            </div>
-        </div>
-    </div>
+            const from = parseInt(fromInput.value) || 1;
+            const to = parseInt(toInput.value) || 99;
+            const fragment = extractFragment(from, to);
 
-    <!-- Import PGN Modal -->
-    <div id="importPgnModal"
-        style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 10000; justify-content: center; align-items: center;">
-        <div
-            style="background: var(--surface-color); padding: 1.5rem; border-radius: 12px; max-width: 500px; width: 90%; border: 1px solid var(--primary-color);">
-            <h3 style="color: var(--primary-color); margin: 0 0 1rem 0;"><i class="fa-solid fa-file-import"></i>
-                Vložit
-                PGN</h3>
+            if (!fragment.pgn) {
+                if (status) { status.style.color = '#f87171'; status.textContent = 'Žádné tahy k exportu'; }
+                return;
+            }
 
-            <!-- File upload option -->
-            <div style="margin-bottom: 1rem;">
-                <label
-                    style="display: flex; align-items: center; gap: 0.5rem; padding: 0.75rem 1rem; background: rgba(255,255,255,0.05); border: 1px dashed rgba(255,255,255,0.2); border-radius: 6px; cursor: pointer; color: var(--text-muted); transition: all 0.2s;">
-                    <i class="fa-solid fa-file-arrow-up"></i>
-                    <span id="fileUploadLabel">Vybrat soubor .pgn</span>
-                    <input type="file" id="pgnFileInput" accept=".pgn,.txt" style="display: none;"
-                        onchange="handlePgnFileSelect(this)">
-                </label>
-            </div>
+            const title = document.getElementById('fragmentTitle')?.value || '';
+            const white = document.getElementById('whitePlayer')?.value || '?';
+            const black = document.getElementById('blackPlayer')?.value || '?';
 
-            <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 0.5rem; text-align: center;">nebo
-                vložte text:</p>
+            const token = localStorage.getItem('auth_token') || sessionStorage.getItem('auth_token');
+            if (!token) {
+                if (status) { status.style.color = '#f87171'; status.textContent = 'Pro uložení se musíte přihlásit'; }
+                return;
+            }
 
-            <textarea id="importPgnInput" placeholder="1. e4 e5 2. Nf3 Nc6 ..."
-                style="width: 100%; height: 120px; background: rgba(0,0,0,0.3); color: white; border: 1px solid rgba(255,255,255,0.2); padding: 0.75rem; border-radius: 6px; font-family: monospace; font-size: 0.9rem; resize: vertical;"></textarea>
-            <div style="display: flex; gap: 0.75rem; margin-top: 1rem; justify-content: flex-end;">
-                <button class="btn-control" onclick="closeImportPgnModal()"
-                    style="padding: 0.5rem 1rem;">Zrušit</button>
-                <button class="btn-control" onclick="importPgn()"
-                    style="padding: 0.5rem 1rem; background: rgba(74, 222, 128, 0.2); border-color: rgba(74, 222, 128, 0.4); color: #4ade80;"><i
-                        class="fa-solid fa-check"></i> Načíst</button>
-            </div>
-        </div>
-    </div>
+            try {
+                if (status) { status.style.color = '#60a5fa'; status.textContent = 'Ukládám...'; }
+
+                const res = await fetch(`${API_URL}/fragments`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        title: title || `${white} vs ${black} (${from}-${to})`,
+                        pgn: fragment.pgn,
+                        startFen: fragment.startFen,
+                        fromMove: fragment.fromMove,
+                        toMove: fragment.toMove,
+                        sourceGameId: currentGameId,
+                        white, black
+                    })
+                });
+
+                if (res.ok) {
+                    const data = await res.json();
+                    if (status) { status.style.color = '#4ade80'; status.textContent = `✓ Fragment #${data.id} uložen!`; }
+                    setTimeout(() => { if (status) status.textContent = ''; }, 4000);
+                } else {
+                    throw new Error(`HTTP ${res.status}`);
+                }
+            } catch (e) {
+                console.error('Fragment save error:', e);
+                if (status) { status.style.color = '#f87171'; status.textContent = 'API zatím není dostupná — Fragment zkopírován do schránky'; }
+                // Fallback: copy to clipboard
+                copyFragment();
+            }
+        }
+    </script>
 
     <style>
         .auth-only {
@@ -1458,6 +1863,15 @@
 
         .auth-only.auth-visible {
             display: inline-flex !important;
+        }
+
+        /* Fix for sidebar panels to inherit flex from auth-visible */
+        .sidebar-panel.auth-only.auth-visible {
+            display: flex !important;
+        }
+
+        .sidebar-panel.auth-only.auth-visible:not(.active) {
+            display: none !important;
         }
     </style>
     <script>
