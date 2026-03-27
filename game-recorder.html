@@ -298,6 +298,7 @@
             height: auto;
             max-height: 85vh;
             overflow-y: auto;
+            overflow-x: hidden;
         }
 
         .move-list {
@@ -771,6 +772,8 @@
             gap: 0.75rem;
             flex: 1;
             min-height: 0;
+            overflow: hidden;
+            min-width: 0;
         }
 
         .sidebar-panel.active {
@@ -1248,43 +1251,44 @@
 
                             <!-- Fragment Export: ALWAYS VISIBLE, prominent -->
                             <div id="fragmentExportSection" class="auth-only"
-                                style="padding: 0.75rem; background: rgba(96,165,250,0.06); border-radius: 8px; border: 1px solid rgba(96,165,250,0.2); margin-bottom: 0.75rem;">
-                                <div style="display: flex; align-items: center; gap: 0.4rem; margin-bottom: 0.5rem;">
-                                    <i class="fa-solid fa-scissors" style="color: #60a5fa; font-size: 0.8rem;"></i>
-                                    <span style="font-size: 0.8rem; font-weight: 600; color: #60a5fa; text-transform: uppercase; letter-spacing: 0.04em;">Export fragmentu</span>
+                                style="padding: 0.6rem; background: rgba(96,165,250,0.06); border-radius: 8px; border: 1px solid rgba(96,165,250,0.2); margin-bottom: 0.75rem; overflow: hidden; box-sizing: border-box; max-width: 100%; min-width: 0;">
+                                <div style="display: flex; align-items: center; gap: 0.4rem; margin-bottom: 0.5rem; flex-wrap: wrap;">
+                                    <i class="fa-solid fa-scissors" style="color: #60a5fa; font-size: 0.75rem;"></i>
+                                    <span style="font-size: 0.75rem; font-weight: 600; color: #60a5fa; text-transform: uppercase; letter-spacing: 0.04em;">Fragment</span>
                                     <span id="fragmentMoveCount" style="font-size: 0.65rem; color: var(--text-muted); margin-left: auto;"></span>
                                 </div>
                                 <!-- Range picker -->
-                                <div style="display: flex; gap: 0.5rem; align-items: center; margin-bottom: 0.4rem;">
-                                    <label style="font-size: 0.75rem; color: var(--text-muted); white-space: nowrap;">Od tahu</label>
+                                <div style="display: flex; gap: 0.4rem; align-items: center; margin-bottom: 0.4rem; flex-wrap: wrap;">
+                                    <label style="font-size: 0.72rem; color: var(--text-muted); white-space: nowrap;">Od</label>
                                     <input type="number" id="fragmentFrom" min="1" value="1"
-                                        style="width: 50px; padding: 0.25rem 0.4rem; background: rgba(0,0,0,0.3); border: 1px solid rgba(96,165,250,0.25); color: #fff; border-radius: 4px; font-size: 0.8rem; text-align: center;"
+                                        style="width: 44px; padding: 0.2rem 0.3rem; background: rgba(0,0,0,0.3); border: 1px solid rgba(96,165,250,0.25); color: #fff; border-radius: 4px; font-size: 0.75rem; text-align: center; box-sizing: border-box;"
                                         onchange="updateFragmentPreview()" oninput="updateFragmentPreview()">
-                                    <label style="font-size: 0.75rem; color: var(--text-muted); white-space: nowrap;">do tahu</label>
+                                    <label style="font-size: 0.72rem; color: var(--text-muted); white-space: nowrap;">do</label>
                                     <input type="number" id="fragmentTo" min="1" value="10"
-                                        style="width: 50px; padding: 0.25rem 0.4rem; background: rgba(0,0,0,0.3); border: 1px solid rgba(96,165,250,0.25); color: #fff; border-radius: 4px; font-size: 0.8rem; text-align: center;"
+                                        style="width: 44px; padding: 0.2rem 0.3rem; background: rgba(0,0,0,0.3); border: 1px solid rgba(96,165,250,0.25); color: #fff; border-radius: 4px; font-size: 0.75rem; text-align: center; box-sizing: border-box;"
                                         onchange="updateFragmentPreview()" oninput="updateFragmentPreview()">
+                                    <span style="font-size: 0.65rem; color: var(--text-muted);">tahu</span>
                                 </div>
                                 <!-- Preview -->
                                 <div id="fragmentPreview"
-                                    style="font-family: monospace; font-size: 0.72rem; color: #ccc; padding: 0.4rem; background: rgba(0,0,0,0.3); border-radius: 4px; min-height: 1.8rem; max-height: 3.5rem; overflow-y: auto; margin-bottom: 0.4rem; line-height: 1.4; border: 1px solid rgba(96,165,250,0.1);">
+                                    style="font-family: monospace; font-size: 0.7rem; color: #ccc; padding: 0.35rem; background: rgba(0,0,0,0.3); border-radius: 4px; min-height: 1.5rem; max-height: 3rem; overflow-y: auto; overflow-x: hidden; margin-bottom: 0.4rem; line-height: 1.3; border: 1px solid rgba(96,165,250,0.1); word-break: break-word;">
                                     <span style="color: var(--text-muted);">Vyberte rozsah tahů...</span>
                                 </div>
                                 <!-- Title -->
-                                <input type="text" id="fragmentTitle" placeholder="Název fragmentu (volitelné)"
-                                    style="width: 100%; padding: 0.25rem 0.4rem; background: rgba(0,0,0,0.3); border: 1px solid rgba(96,165,250,0.15); color: #fff; border-radius: 4px; font-size: 0.75rem; margin-bottom: 0.4rem; box-sizing: border-box;">
+                                <input type="text" id="fragmentTitle" placeholder="Název (volitelné)"
+                                    style="width: 100%; padding: 0.2rem 0.35rem; background: rgba(0,0,0,0.3); border: 1px solid rgba(96,165,250,0.15); color: #fff; border-radius: 4px; font-size: 0.72rem; margin-bottom: 0.4rem; box-sizing: border-box;">
                                 <!-- Actions -->
-                                <div style="display: flex; gap: 0.4rem;">
+                                <div style="display: flex; gap: 0.3rem; flex-wrap: wrap;">
                                     <button class="btn-control" onclick="copyFragment()"
-                                        style="flex: 1; font-size: 0.72rem; padding: 0.3rem 0.4rem; justify-content: center; border-color: rgba(96, 165, 250, 0.3); color: #60a5fa;">
+                                        style="flex: 1; min-width: 0; font-size: 0.7rem; padding: 0.25rem 0.3rem; justify-content: center; border-color: rgba(96, 165, 250, 0.3); color: #60a5fa; white-space: nowrap;">
                                         <i class="fa-solid fa-copy"></i> Kopírovat
                                     </button>
                                     <button class="btn-control" onclick="saveFragmentToCloud()"
-                                        style="flex: 1; font-size: 0.72rem; padding: 0.3rem 0.4rem; justify-content: center; border-color: rgba(74, 222, 128, 0.3); color: #4ade80;">
+                                        style="flex: 1; min-width: 0; font-size: 0.7rem; padding: 0.25rem 0.3rem; justify-content: center; border-color: rgba(74, 222, 128, 0.3); color: #4ade80; white-space: nowrap;">
                                         <i class="fa-solid fa-cloud-arrow-up"></i> Uložit
                                     </button>
                                 </div>
-                                <p id="fragmentStatus" style="text-align: center; margin: 0.2rem 0 0 0; min-height: 0.8rem; font-size: 0.72rem; color: var(--text-muted);"></p>
+                                <p id="fragmentStatus" style="text-align: center; margin: 0.2rem 0 0 0; min-height: 0.8rem; font-size: 0.7rem; color: var(--text-muted);"></p>
                             </div>
 
                             <button class="main-btn auth-only" onclick="saveGame()"
@@ -1626,6 +1630,19 @@
                 if (typeof initDiagramFromBoard === 'function') {
                     initDiagramFromBoard();
                 }
+            }
+
+            // When leaving diagram/hadanky → disable drawing mode, restore move interaction
+            if (tabName === 'partie') {
+                if (typeof window.activePieceTool !== 'undefined') window.activePieceTool = null;
+                if (typeof window.isDrawing !== 'undefined') window.isDrawing = false;
+                // Remove pointer-events from SVG overlay so chessboard gets clicks
+                const svgOvl = document.getElementById('boardOverlaySvg');
+                if (svgOvl) svgOvl.style.pointerEvents = 'none';
+            } else {
+                // In diagram/hadanky, SVG overlay needs pointer events for drawing
+                const svgOvl = document.getElementById('boardOverlaySvg');
+                if (svgOvl) svgOvl.style.pointerEvents = '';
             }
 
             // Re-trigger engine analysis for the new context
