@@ -553,6 +553,13 @@ if (document.readyState === 'loading') {
 // ================================
 
 function createTemplateModal(title, htmlContent, onConfirm) {
+    // Uložíme aktuální pozici kurzoru v editoru před zobrazením modálu
+    let savedRange = null;
+    const selection = window.getSelection();
+    if (selection.rangeCount > 0) {
+        savedRange = selection.getRangeAt(0).cloneRange();
+    }
+
     const modal = document.createElement('div');
     modal.className = 'template-modal';
     modal.style.cssText = 'position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.85); z-index: 12000; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(4px);';
@@ -572,8 +579,18 @@ function createTemplateModal(title, htmlContent, onConfirm) {
 
     document.body.appendChild(modal);
 
-    modal.querySelector('.btn-cancel').onclick = () => modal.remove();
+    modal.querySelector('.btn-cancel').onclick = () => {
+        if (savedRange) {
+            selection.removeAllRanges();
+            selection.addRange(savedRange);
+        }
+        modal.remove();
+    };
     modal.querySelector('.btn-confirm').onclick = () => {
+        if (savedRange) {
+            selection.removeAllRanges();
+            selection.addRange(savedRange);
+        }
         onConfirm(modal);
         modal.remove();
     };

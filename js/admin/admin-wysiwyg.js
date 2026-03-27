@@ -489,7 +489,7 @@ function insertIntroBlock() {
 
     // Insert a clean infobox without placeholder text
     const introHtml = `<div class="puzzle-section">
-<p style="font-size: 1.1rem; margin-bottom: 0;"></p>
+<p style="font-size: 1.1rem; margin-bottom: 0;"><br></p>
 </div><p><br></p>`;
     document.execCommand('insertHTML', false, introHtml);
 
@@ -2897,10 +2897,10 @@ function doInsertColumns(layout) {
     }
 
     const html = `<p><br></p>
-<div class="content-columns" data-layout="${layout}" contenteditable="false" style="
+<div class="content-columns" data-layout="${layout}" style="
     display: flex; gap: 1.5rem; margin: 1.5rem 0;
 ">
-    <div class="content-col" contenteditable="true" style="
+    <div class="content-col" style="
         flex: ${layout === '67-33' ? '2' : '1'};
         min-height: 60px;
         padding: 0.75rem;
@@ -2908,7 +2908,7 @@ function doInsertColumns(layout) {
         border-radius: 8px;
         background: rgba(255,255,255,0.02);
     "><p><br></p></div>
-    <div class="content-col" contenteditable="true" style="
+    <div class="content-col" style="
         flex: ${layout === '33-67' ? '2' : '1'};
         min-height: 60px;
         padding: 0.75rem;

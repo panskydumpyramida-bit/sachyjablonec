@@ -287,6 +287,7 @@
                                         class="fa-solid fa-chess-board"></i></button><button type="button"
                                     onclick="insertFragment()" title="Vložit fragment partie" style="color: #60a5fa;"><i
                                         class="fa-solid fa-scissors"></i></button>
+                                <button type="button" onclick="insertColumnBlock()" title="Rozložení sloupců" style="color: #38bdf8;"><i class="fa-solid fa-table-columns"></i></button>
                                 <!-- Templates Dropdown -->
                                 <div style="position: relative; display: inline-block;" onmouseleave="this.querySelector('.dropdown-content').style.display='none'">
                                     <button type="button" onclick="const el = this.nextElementSibling; el.style.display = el.style.display === 'flex' ? 'none' : 'flex'; event.stopPropagation();" title="Šablony a bloky do článku" style="color: #cbd5e1;"><i class="fa-solid fa-puzzle-piece"></i> Bloky ▾</button>
@@ -295,7 +296,6 @@
                                         <button type="button" onclick="window.showWinnersModal && window.showWinnersModal(); this.parentElement.style.display='none'" title="Zlatý box vítězů" style="text-align: left; justify-content: flex-start; width: 100%; color: #d4af37;"><i class="fa-solid fa-trophy" style="margin-right:8px; width: 16px; text-align: center;"></i>Zlatý box vítězů</button>
                                         <button type="button" onclick="window.showRankingCardsModal && window.showRankingCardsModal(); this.parentElement.style.display='none'" title="Karty pořadí" style="text-align: left; justify-content: flex-start; width: 100%; color: #cbd5e1;"><i class="fa-solid fa-medal" style="margin-right:8px; width: 16px; text-align: center;"></i>Karty pořadí</button>
                                         <button type="button" onclick="window.showCtaModal && window.showCtaModal(); this.parentElement.style.display='none'" title="Závěrečné tlačítko (CTA)" style="text-align: left; justify-content: flex-start; width: 100%; color: #fca5a5;"><i class="fa-solid fa-bullhorn" style="margin-right:8px; width: 16px; text-align: center;"></i>Závěrečné tlačítko</button>
-                                        <button type="button" onclick="insertColumnBlock(); this.parentElement.style.display='none'" title="Sloupcový blok (rozložení)" style="text-align: left; justify-content: flex-start; width: 100%; color: #38bdf8;"><i class="fa-solid fa-columns" style="margin-right:8px; width: 16px; text-align: center;"></i>Rozložení sloupců</button>
                                         <button type="button" onclick="insertCollapsibleBlock(); this.parentElement.style.display='none'" title="Rozbalovací sekce" style="text-align: left; justify-content: flex-start; width: 100%; color: #8b5cf6;"><i class="fa-solid fa-layer-group" style="margin-right:8px; width: 16px; text-align: center;"></i>Rozbalovací sekce</button>
                                     </div>
                                 </div>
@@ -311,7 +311,7 @@
                                         class="fa-solid fa-table"></i></button>
                                 <button type="button" onclick="showMatchTableModal()"
                                     title="Vložit tabulku zápasu (Soutěže družstev)" style="color: #f59e0b;"><i
-                                        class="fa-solid fa-people-group"></i></button>
+                                        class="fa-solid fa-users"></i></button>
                                 <div class="divider"></div>
                                 <button type="button" onclick="showShortcutsModal()"
                                     title="Klávesové zkratky a nápověda (?)"><i
