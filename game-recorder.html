@@ -1251,47 +1251,44 @@
 
                             <!-- Fragment Export -->
                             <div id="fragmentExportSection" class="auth-only"
-                                style="display:block; padding:0.5rem 0.6rem; background:rgba(96,165,250,0.06); border-radius:8px; border:1px solid rgba(96,165,250,0.2); margin-bottom:0.5rem;">
-                                <div style="margin-bottom:0.35rem;">
-                                    <i class="fa-solid fa-scissors" style="color:#60a5fa; font-size:0.7rem; vertical-align:middle;"></i>
-                                    <span style="font-size:0.72rem; font-weight:600; color:#60a5fa; text-transform:uppercase; letter-spacing:0.03em; vertical-align:middle;">Fragment</span>
+                                style="padding:0.5rem 0.6rem; background:rgba(96,165,250,0.06); border-radius:8px; border:1px solid rgba(96,165,250,0.2); margin-bottom:0.5rem;">
+                                <div style="display:block; margin-bottom:0.3rem;">
+                                    <i class="fa-solid fa-scissors" style="color:#60a5fa; font-size:0.7rem;"></i>
+                                    <span style="font-size:0.72rem; font-weight:600; color:#60a5fa; text-transform:uppercase; letter-spacing:0.03em;">Fragment</span>
                                     <span id="fragmentMoveCount" style="font-size:0.6rem; color:var(--text-muted); float:right; line-height:1.6;"></span>
                                 </div>
-                                <!-- Range: Od -->
-                                <div style="display:block; margin-bottom:2px;">
-                                    <label style="display:inline-block; width:22px; font-size:0.68rem; color:var(--text-muted); vertical-align:middle;">Od</label>
-                                    <input type="range" id="fragmentFrom" min="1" max="50" value="1"
-                                        style="width:calc(100% - 60px); vertical-align:middle; accent-color:#60a5fa; height:14px; cursor:pointer;"
-                                        oninput="document.getElementById('fragmentFromVal').textContent=this.value; updateFragmentPreview()">
-                                    <span id="fragmentFromVal" style="display:inline-block; width:28px; text-align:right; font-size:0.72rem; color:#60a5fa; font-weight:600; vertical-align:middle;">1</span>
-                                </div>
-                                <!-- Range: Do -->
-                                <div style="display:block; margin-bottom:0.35rem;">
-                                    <label style="display:inline-block; width:22px; font-size:0.68rem; color:var(--text-muted); vertical-align:middle;">Do</label>
-                                    <input type="range" id="fragmentTo" min="1" max="50" value="10"
-                                        style="width:calc(100% - 60px); vertical-align:middle; accent-color:#60a5fa; height:14px; cursor:pointer;"
-                                        oninput="document.getElementById('fragmentToVal').textContent=this.value; updateFragmentPreview()">
-                                    <span id="fragmentToVal" style="display:inline-block; width:28px; text-align:right; font-size:0.72rem; color:#60a5fa; font-weight:600; vertical-align:middle;">10</span>
+                                <!-- Range picker: single compact row -->
+                                <div style="display:block; margin-bottom:0.3rem;">
+                                    <span style="font-size:0.7rem; color:var(--text-muted);">Od</span>
+                                    <input type="number" id="fragmentFrom" min="1" value="1"
+                                        style="width:40px; padding:2px; background:rgba(0,0,0,0.3); border:1px solid rgba(96,165,250,0.25); color:#60a5fa; border-radius:4px; font-size:0.75rem; text-align:center; font-weight:600;"
+                                        onchange="updateFragmentPreview()" oninput="updateFragmentPreview()">
+                                    <span style="font-size:0.7rem; color:var(--text-muted); margin-left:4px;">do</span>
+                                    <input type="number" id="fragmentTo" min="1" value="10"
+                                        style="width:40px; padding:2px; background:rgba(0,0,0,0.3); border:1px solid rgba(96,165,250,0.25); color:#60a5fa; border-radius:4px; font-size:0.75rem; text-align:center; font-weight:600;"
+                                        onchange="updateFragmentPreview()" oninput="updateFragmentPreview()">
+                                    <span style="font-size:0.65rem; color:var(--text-muted); margin-left:2px;">tahu</span>
                                 </div>
                                 <!-- Preview -->
                                 <div id="fragmentPreview"
-                                    style="display:block; font-family:monospace; font-size:0.68rem; color:#aaa; padding:0.25rem 0.3rem; background:rgba(0,0,0,0.3); border-radius:4px; max-height:2rem; overflow:hidden; margin-bottom:0.3rem; line-height:1.25; border:1px solid rgba(96,165,250,0.08); white-space:nowrap; text-overflow:ellipsis;">
+                                    style="display:block; font-family:monospace; font-size:0.68rem; color:#aaa; padding:4px; background:rgba(0,0,0,0.3); border-radius:4px; max-height:2rem; overflow:hidden; margin-bottom:0.3rem; line-height:1.25; border:1px solid rgba(96,165,250,0.08); white-space:nowrap; text-overflow:ellipsis;">
                                     <span style="color:var(--text-muted);">Nahraj partii...</span>
                                 </div>
-                                <!-- Title + Buttons: single row -->
-                                <div style="display:block; margin-bottom:0.2rem;">
-                                    <input type="text" id="fragmentTitle" placeholder="Název fragmentu"
-                                        style="display:block; width:100%; padding:3px 6px; background:rgba(0,0,0,0.25); border:1px solid rgba(96,165,250,0.12); color:#fff; border-radius:4px; font-size:0.7rem; margin-bottom:0.3rem; box-sizing:border-box;">
+                                <!-- Title -->
+                                <input type="text" id="fragmentTitle" placeholder="Název fragmentu"
+                                    style="display:block; width:100%; padding:3px 6px; background:rgba(0,0,0,0.25); border:1px solid rgba(96,165,250,0.12); color:#fff; border-radius:4px; font-size:0.7rem; margin-bottom:0.3rem; box-sizing:border-box;">
+                                <!-- Buttons -->
+                                <div style="display:block;">
                                     <button onclick="copyFragment()"
-                                        style="display:inline-block; font-size:0.68rem; padding:3px 8px; background:rgba(96,165,250,0.08); border:1px solid rgba(96,165,250,0.25); color:#60a5fa; border-radius:5px; cursor:pointer; margin-right:3px; vertical-align:middle;">
+                                        style="font-size:0.68rem; padding:3px 8px; background:rgba(96,165,250,0.08); border:1px solid rgba(96,165,250,0.25); color:#60a5fa; border-radius:5px; cursor:pointer; margin-right:3px;">
                                         <i class="fa-solid fa-copy"></i> Kopírovat
                                     </button>
                                     <button onclick="saveFragmentToCloud()"
-                                        style="display:inline-block; font-size:0.68rem; padding:3px 8px; background:rgba(74,222,128,0.08); border:1px solid rgba(74,222,128,0.25); color:#4ade80; border-radius:5px; cursor:pointer; vertical-align:middle;">
+                                        style="font-size:0.68rem; padding:3px 8px; background:rgba(74,222,128,0.08); border:1px solid rgba(74,222,128,0.25); color:#4ade80; border-radius:5px; cursor:pointer;">
                                         <i class="fa-solid fa-cloud-arrow-up"></i> Uložit
                                     </button>
                                 </div>
-                                <p id="fragmentStatus" style="text-align:center; margin:0; min-height:0.5rem; font-size:0.65rem; color:var(--text-muted);"></p>
+                                <p id="fragmentStatus" style="text-align:center; margin:0; min-height:0; font-size:0.65rem; color:var(--text-muted);"></p>
                             </div>
 
                             <button class="main-btn auth-only" onclick="saveGame()"
@@ -1889,6 +1886,12 @@
 
         .auth-only.auth-visible {
             display: inline-flex !important;
+        }
+
+        /* Block-level auth-only elements must stay block */
+        #fragmentExportSection.auth-visible,
+        .main-btn.auth-visible {
+            display: block !important;
         }
 
         /* Fix for sidebar panels to inherit flex from auth-visible */
