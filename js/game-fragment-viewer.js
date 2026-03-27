@@ -188,7 +188,7 @@
                 </div>
                 <div style="display:flex;gap:0;">
                     <!-- Mini Board Column -->
-                    <div style="flex:0 0 55%; max-width:280px; padding:0.5rem; border-right:1px solid rgba(255,255,255,0.05); display:flex; flex-direction:column;">
+                    <div style="flex:0 0 65%; max-width:320px; padding:0.5rem; border-right:1px solid rgba(255,255,255,0.05); display:flex; flex-direction:column;">
                         <div style="display:flex; align-items:stretch;">
                             <div id="${uid}-eval-bar" class="frag-eval-bar">
                                 <div id="${uid}-eval-fill" class="frag-eval-fill" style="height: 50%;"></div>
@@ -211,11 +211,10 @@
                         </div>
                     </div>
                     <!-- Moves Panel -->
-                    <div style="flex:1 1 45%; display:flex;flex-direction:column;justify-content:space-between; overflow:hidden;">
+                    <div style="flex:1 1 35%; display:flex;flex-direction:column;justify-content:space-between; overflow:hidden;">
                         <div id="${uid}-moves" style="padding:0.5rem;line-height:1.7;max-height:240px;overflow-y:auto;word-break:break-word;">
                             ${moveListHtml || '<span style="color:var(--text-muted);font-size:0.8rem;">Žádné tahy</span>'}
                         </div>
-                        <div id="${uid}-pv" style="display:none; padding: 0.5rem 0.75rem; font-size: 0.70rem; color: #9ca3af; background: rgba(0,0,0,0.2); border-top: 1px solid rgba(255,255,255,0.05); text-align: left; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; height: 32px;" title=""></div>
                         <div style="display:flex;justify-content:flex-end;align-items:center;padding:0.5rem 0.75rem;background:rgba(0,0,0,0.15);border-top:1px solid rgba(255,255,255,0.05);">
                             <span id="${uid}-pos" style="font-size:0.65rem;color:var(--text-muted,#a0a0a0);">0/${moves.length}</span>
                         </div>
@@ -302,21 +301,15 @@
         state.engineEnabled = !state.engineEnabled;
         const btn = document.getElementById(`${uid}-engine-btn`);
         const bar = document.getElementById(`${uid}-eval-bar`);
-        const pvBox = document.getElementById(`${uid}-pv`);
         if (state.engineEnabled) {
             btn.style.color = '#4ade80';
             bar.classList.add('active');
-            if (pvBox) pvBox.style.display = 'block';
             // Trigger resize to fix board dimensions now that bar showed up
             setTimeout(() => state.board.resize(), 10);
             runFragEngine(uid);
         } else {
             btn.style.color = '#ccc';
             bar.classList.remove('active');
-            if (pvBox) {
-                pvBox.style.display = 'none';
-                pvBox.textContent = '';
-            }
             setTimeout(() => state.board.resize(), 10);
         }
     };
@@ -330,12 +323,10 @@
         const fillEl = document.getElementById(`${uid}-eval-fill`);
         const textTop = document.getElementById(`${uid}-eval-text-top`);
         const textBot = document.getElementById(`${uid}-eval-text-bottom`);
-        const pvBox = document.getElementById(`${uid}-pv`);
         if(!fillEl) return;
         
         textTop.textContent = '';
         textBot.textContent = '...';
-        if (pvBox) pvBox.textContent = 'Načítám motor...';
         fillEl.classList.remove('mate');
 
         if (engineTimers[uid]) clearTimeout(engineTimers[uid]);
@@ -346,13 +337,12 @@
                 if (res.ok) {
                     const data = await res.json();
                     if (data.pvs && data.pvs[0]) {
-                        updateEngineUI(fillEl, textTop, textBot, pvBox, data.pvs[0], 'lichess');
+                        updateEngineUI(fillEl, textTop, textBot, data.pvs[0], 'lichess');
                         return;
                     }
                 }
                 
                 // 2. Fallback to chess-api.com
-                if (pvBox) pvBox.textContent = 'Počítám tahy (Stockfish)...';
                 const fRes = await fetch('https://chess-api.com/v1', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -362,7 +352,7 @@
                 if (fRes.ok) {
                     const fData = await fRes.json();
                     if (!fData.error) {
-                         updateEngineUI(fillEl, textTop, textBot, pvBox, fData, 'chess-api');
+                         updateEngineUI(fillEl, textTop, textBot, fData, 'chess-api');
                          return;
                     }
                 }
@@ -370,19 +360,16 @@
                 // fallback if both fail
                 textBot.textContent = '0.0';
                 fillEl.style.height = '50%';
-                if (pvBox) pvBox.textContent = 'Motor nedostupný';
             } catch(e) {
                 textBot.textContent = 'Err';
                 fillEl.style.height = '50%';
-                if (pvBox) pvBox.textContent = 'Chyba spojení';
             }
         }, 400);
     }
     
-    function updateEngineUI(fillEl, textTop, textBot, pvBox, data, source) {
+    function updateEngineUI(fillEl, textTop, textBot, data, source) {
         let valStr = '';
         let percentage = 50;
-        let pvLine = '';
 
         if (source === 'lichess') {
             if (data.mate) {
@@ -394,7 +381,6 @@
                 valStr = (val > 0 ? '+' : '') + val.toFixed(1);
                 percentage = 50 + 50 * Math.tanh(val / 4);
             }
-            pvLine = data.moves || '';
         } else if (source === 'chess-api') {
             if (data.mate) {
                 valStr = `M${Math.abs(data.mate)}`;
@@ -405,7 +391,6 @@
                 valStr = (val > 0 ? '+' : '') + val.toFixed(1);
                 percentage = data.winChance || (50 + 50 * Math.tanh(val / 4));
             }
-            pvLine = (data.continuationArr || []).join(' ');
         }
         
         fillEl.style.height = `${percentage}%`;
@@ -416,11 +401,6 @@
         } else {
             textTop.textContent = '';
             textBot.textContent = valStr;
-        }
-        
-        if (pvBox) {
-            pvBox.textContent = pvLine;
-            pvBox.title = pvLine;
         }
     }
 
