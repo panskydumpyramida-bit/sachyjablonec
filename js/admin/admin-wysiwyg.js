@@ -3159,13 +3159,26 @@ function initDiagramToolbar() {
             }
         });
 
-        // Double-click to edit diagrams in the book
+        // Double-click to edit diagrams or interactive components
         editor.addEventListener('dblclick', (e) => {
             const book = e.target.closest('.diagram-book');
             if (book) {
                 e.preventDefault();
                 e.stopPropagation();
                 openDiagramBookEditor(book);
+                return;
+            }
+
+            const ctaBtn = e.target.closest('.cta-button');
+            if (ctaBtn) {
+                e.preventDefault();
+                e.stopPropagation();
+                const newUrl = prompt('Zadejte cílový odkaz pro toto tlačítko:', ctaBtn.href || 'https://');
+                if (newUrl !== null) {
+                    ctaBtn.href = newUrl;
+                    updatePreview();
+                }
+                return;
             }
         });
     }
