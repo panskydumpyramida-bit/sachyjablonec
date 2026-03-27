@@ -643,7 +643,7 @@ function insertWinnersBox(titleText, rowCount) {
     const selection = window.getSelection();
     box.style.cssText = 'background-color: var(--surface-color, #1e1e1e); border: 1px solid rgba(255, 255, 255, 0.05); border-left: 4px solid var(--primary-color, #d4af37); padding: 20px; border-radius: 4px 8px 8px 4px; margin-bottom: 30px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);';
     
-    const pHolder = (txt) => `<span style="user-select:all; cursor:pointer; opacity:0.7;" title="Klikněte a začněte psát">[${txt}]</span>`;
+    const pHolder = (txt) => `<span data-placeholder="1" style="cursor:pointer; opacity:0.7;" title="Klikněte a začněte psát">[${txt}]</span>`;
     
     let rows = '';
     for(let i = 0; i < rowCount; i++) {
@@ -682,7 +682,7 @@ function insertRankingCards(count) {
     container.style.cssText = 'display: flex; flex-wrap: wrap; gap: 20px; margin-bottom: 30px;';
     
     let html = '';
-    const pHolder = (txt) => `<span style="user-select:all; cursor:pointer; opacity:0.7;" title="Klikněte a začněte psát">[${txt}]</span>`;
+    const pHolder = (txt) => `<span data-placeholder="1" style="cursor:pointer; opacity:0.7;" title="Klikněte a začněte psát">[${txt}]</span>`;
 
     for (let i = 0; i < count; i++) {
         const titlePlaceholder = count === 1 ? 'Kategorie' : 'Kategorie ' + (i + 1);

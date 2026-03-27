@@ -202,8 +202,9 @@ function insertHighlight(type) {
             const placeholder = type === 'name' ? '[Jméno]' : '[Skóre]';
             const span = document.createElement('span');
             span.className = className;
-            span.style.userSelect = 'all';
+            span.dataset.placeholder = '1';
             span.style.cursor = 'pointer';
+            span.style.opacity = '0.7';
             span.textContent = placeholder;
             span.title = 'Klikněte a začněte psát pro nahrazení';
             range.insertNode(span);
@@ -2541,6 +2542,26 @@ document.addEventListener('DOMContentLoaded', () => {
     if (editor) {
         // Ensure paragraphs are used for new lines
         document.execCommand('defaultParagraphSeparator', false, 'p');
+
+        // Click-to-select for placeholder spans ([Jméno], [Skóre], etc.)
+        editor.addEventListener('click', (e) => {
+            let target = e.target;
+            // Walk up to find a placeholder span (max 2 levels)
+            for (let i = 0; i < 3 && target && target !== editor; i++) {
+                if (target.dataset && target.dataset.placeholder === '1') {
+                    e.preventDefault();
+                    const sel = window.getSelection();
+                    const range = document.createRange();
+                    range.selectNodeContents(target);
+                    sel.removeAllRanges();
+                    sel.addRange(range);
+                    // Remove the placeholder flag once user starts editing
+                    target.style.opacity = '1';
+                    return;
+                }
+                target = target.parentNode;
+            }
+        });
 
         editor.addEventListener('keydown', (e) => {
             if (e.key === 'Enter') {
