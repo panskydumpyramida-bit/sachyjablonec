@@ -6,8 +6,80 @@
  */
 
 // ================================
-// SLASH COMMANDS CONFIGURATION
+// CONFIGURATION & STYLES
 // ================================
+
+const SLASH_MENU_STYLES = `
+    .slash-menu {
+        position: absolute;
+        background: var(--surface-color, #1a1a2e);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 8px;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+        min-width: 250px;
+        z-index: 10000;
+        display: none;
+        flex-direction: column;
+        overflow: hidden;
+    }
+    .slash-menu.visible {
+        display: flex;
+    }
+    .slash-menu-header {
+        padding: 10px 15px;
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        color: var(--text-muted, #94a3b8);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        background: rgba(0, 0, 0, 0.2);
+    }
+    .slash-menu-list {
+        max-height: 300px;
+        overflow-y: auto;
+    }
+    .slash-menu-item {
+        padding: 10px 15px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        cursor: pointer;
+        transition: background-color 0.2s;
+    }
+    .slash-menu-item:hover, .slash-menu-item.selected {
+        background: rgba(96, 165, 250, 0.15);
+    }
+    .slash-menu-icon {
+        width: 24px;
+        height: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 4px;
+        color: var(--primary-color, #60a5fa);
+    }
+    .slash-menu-content {
+        display: flex;
+        flex-direction: column;
+    }
+    .slash-menu-label {
+        color: #fff;
+        font-size: 0.95rem;
+        font-weight: 500;
+    }
+    .slash-menu-desc {
+        color: var(--text-muted, #94a3b8);
+        font-size: 0.8rem;
+    }
+`;
+
+function injectSlashStyles() {
+    if (document.getElementById('slash-menu-styles')) return;
+    const style = document.createElement('style');
+    style.id = 'slash-menu-styles';
+    style.textContent = SLASH_MENU_STYLES;
+    document.head.appendChild(style);
+}
 
 const SLASH_COMMANDS = [
     {
@@ -443,6 +515,8 @@ function insertResultTemplate() {
 // ================================
 
 function initSlashCommands() {
+    injectSlashStyles();
+    
     const editor = document.getElementById('articleContent');
     if (!editor) {
         console.warn('[slash-commands] Editor not found');
@@ -465,11 +539,14 @@ function initSlashCommands() {
     console.log('[slash-commands] Initialized with', SLASH_COMMANDS.length, 'commands');
 }
 
-// Auto-init on DOM ready
-document.addEventListener('DOMContentLoaded', () => {
-    // Delay to ensure editor exists
+// Auto-init on DOM ready or immediate if already loaded
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => {
+        setTimeout(initSlashCommands, 500);
+    });
+} else {
     setTimeout(initSlashCommands, 500);
-});
+}
 
 // ================================
 // RICH HTML SNIPPETS (Added via Slash commands)
