@@ -186,9 +186,9 @@
                     <span style="font-size:0.85rem;font-weight:600;color:#e0e0e0;flex:1;">${escapeHtml(titleStr)}</span>
                     <span style="font-size:0.7rem;color:var(--text-muted,#a0a0a0);">${rangeStr}</span>
                 </div>
-                <div style="display:flex;gap:0;flex-wrap:wrap;">
+                <div style="display:flex;gap:0;">
                     <!-- Mini Board Column -->
-                    <div style="width:230px;min-width:200px;flex-shrink:0;padding:0.75rem;border-right:1px solid rgba(255,255,255,0.05);">
+                    <div style="flex:0 0 55%; max-width:280px; padding:0.5rem; border-right:1px solid rgba(255,255,255,0.05); display:flex; flex-direction:column;">
                         <div style="display:flex; align-items:stretch;">
                             <div id="${uid}-eval-bar" class="frag-eval-bar">
                                 <div id="${uid}-eval-fill" class="frag-eval-fill" style="height: 50%;"></div>
@@ -199,7 +199,7 @@
                         </div>
                         
                         <!-- Nav Controls Bottom (Icons Only) -->
-                        <div style="display:flex;justify-content:center;align-items:center;margin-top:0.6rem;">
+                        <div style="display:flex;justify-content:center;align-items:center;margin-top:0.5rem;">
                             <div style="display:flex;gap:0.2rem;">
                                 <button onclick="toggleFragAutoplay('${uid}')" id="${uid}-autoplay-btn" style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);color:#ccc;border-radius:4px;padding:4px 8px;cursor:pointer;font-size:0.75rem;" title="Autoplay"><i id="${uid}-autoplay-icon" class="fa-solid fa-play"></i></button>
                                 <button onclick="fragNav('${uid}','start')" style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);color:#ccc;border-radius:4px;padding:4px 8px;cursor:pointer;font-size:0.75rem;" title="Začátek"><i class="fa-solid fa-backward-fast"></i></button>
@@ -211,8 +211,8 @@
                         </div>
                     </div>
                     <!-- Moves Panel -->
-                    <div style="flex:1;min-width:150px;display:flex;flex-direction:column;justify-content:space-between;">
-                        <div id="${uid}-moves" style="padding:0.75rem;line-height:1.7;max-height:220px;overflow-y:auto;word-break:break-word;">
+                    <div style="flex:1 1 45%; display:flex;flex-direction:column;justify-content:space-between; overflow:hidden;">
+                        <div id="${uid}-moves" style="padding:0.5rem;line-height:1.7;max-height:240px;overflow-y:auto;word-break:break-word;">
                             ${moveListHtml || '<span style="color:var(--text-muted);font-size:0.8rem;">Žádné tahy</span>'}
                         </div>
                         <div id="${uid}-pv" style="display:none; padding: 0.5rem 0.75rem; font-size: 0.70rem; color: #9ca3af; background: rgba(0,0,0,0.2); border-top: 1px solid rgba(255,255,255,0.05); text-align: left; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; height: 32px;" title=""></div>
