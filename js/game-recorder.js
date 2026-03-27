@@ -1520,8 +1520,22 @@ document.addEventListener('DOMContentLoaded', () => {
     const urlParams = new URLSearchParams(window.location.search);
     const gameId = urlParams.get('id');
     const diagramId = urlParams.get('diagramId');
+    const importLocal = urlParams.get('import');
 
-    if (gameId) {
+    if (importLocal === 'local') {
+        const pgnData = localStorage.getItem('import_pgn');
+        if (pgnData) {
+            localStorage.removeItem('import_pgn');
+            const pgnInput = document.getElementById('importPgnInput');
+            if (pgnInput) {
+                pgnInput.value = pgnData;
+                setTimeout(() => {
+                    importPgn();
+                    showNotification('Partie přenesena k úpravám. Změny se do článku samy nepropíší, tvoříte lokální kopii/fragment.', 'info');
+                }, 300); // Give UI time to initialize
+            }
+        }
+    } else if (gameId) {
         loadGameById(gameId);
     } else if (diagramId) {
         // We need to wait for diagram-editor.js to be ready if we use it

@@ -306,7 +306,9 @@ const allowedHtmlFiles = [
 
 app.get('/api/registration/blicak', async (req, res) => {
     try {
+        const tournamentId = req.query.tournament || 'velikonocni-2026';
         const registrations = await prisma.blicakRegistration.findMany({
+            where: { tournamentId },
             orderBy: { createdAt: 'desc' }
         });
         res.json(registrations);
@@ -318,7 +320,7 @@ app.get('/api/registration/blicak', async (req, res) => {
 
 app.post('/api/registration/blicak', async (req, res) => {
     try {
-        const { name, club, lok, year } = req.body;
+        const { name, club, lok, year, tournamentId } = req.body;
 
         if (!name || !year) {
             return res.status(400).json({ error: 'Name and year are required' });
@@ -330,6 +332,7 @@ app.post('/api/registration/blicak', async (req, res) => {
                 club: club || '',
                 lok: lok ? String(lok) : '',
                 birthYear: parseInt(year),
+                tournamentId: tournamentId || 'velikonocni-2026',
                 eventDate: new Date() // Sets to current time, effectively registering for "now"
             }
         });

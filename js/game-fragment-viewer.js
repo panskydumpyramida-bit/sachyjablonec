@@ -94,18 +94,41 @@
 
         const startFen = fragment.startFen || 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1';
 
+        const startFenTurn = startFen.split(' ')[1] || 'w';
+        const renderMoveSpan = (i, san) => `<span class="frag-move" data-frag-uid="${uid}" data-move-idx="${i}" style="cursor:pointer;padding:1px 4px;border-radius:3px;font-size:0.8rem;transition:background 0.15s;display:inline-block;flex:1;text-align:left;">${san}</span>`;
+        
         let moveListHtml = '';
-        for (let i = 0; i < moves.length; i++) {
-            const isWhite = i % 2 === 0;
-            const moveNum = Math.floor(i / 2) + fragment.fromMove;
-            if (isWhite) moveListHtml += `<span style="color:var(--text-muted);font-size:0.75rem;margin-left:0.1rem;">${moveNum}.</span>`;
-            moveListHtml += `<span class="frag-move" data-frag-uid="${uid}" data-move-idx="${i}" style="cursor:pointer;padding:1px 3px;border-radius:3px;font-size:0.8rem;transition:background 0.15s;display:inline-block;margin:0 1px;">${moves[i].san}</span>`;
+        let mIdx = 0;
+        let pgnMoveNum = fragment.fromMove;
+        
+        while (mIdx < moves.length) {
+            moveListHtml += `<div style="display:flex; gap:0.3rem; margin-bottom:0.1rem; align-items:center;">`;
+            if (mIdx === 0 && startFenTurn === 'b') {
+                moveListHtml += `<span style="color:var(--text-muted);font-size:0.75rem;width:24px;text-align:right;">${pgnMoveNum}...</span>`;
+                moveListHtml += `<span style="flex:1;"></span>`; // empty space for white
+                moveListHtml += renderMoveSpan(mIdx, moves[mIdx].san);
+                mIdx++;
+                pgnMoveNum++;
+            } else {
+                moveListHtml += `<span style="color:var(--text-muted);font-size:0.75rem;width:24px;text-align:right;">${pgnMoveNum}.</span>`;
+                moveListHtml += renderMoveSpan(mIdx, moves[mIdx].san);
+                mIdx++;
+                if (mIdx < moves.length) {
+                    moveListHtml += renderMoveSpan(mIdx, moves[mIdx].san);
+                    mIdx++;
+                }
+                pgnMoveNum++;
+            }
+            moveListHtml += `</div>`;
         }
 
+        let cleanWhite = fragment.white ? fragment.white.replace(/\s*\(\d+\s*[-–]\s*\d+\)/g, '') : '';
+        let cleanBlack = fragment.black ? fragment.black.replace(/\s*\(\d+\s*[-–]\s*\d+\)/g, '') : '';
         const titleParts = [];
-        if (fragment.white) titleParts.push(fragment.white);
-        if (fragment.black) titleParts.push(fragment.black);
-        const titleStr = fragment.title || (titleParts.length === 2 ? `${titleParts[0]} vs ${titleParts[1]}` : `Fragment #${fragment.id}`);
+        if (cleanWhite) titleParts.push(cleanWhite);
+        if (cleanBlack) titleParts.push(cleanBlack);
+        let titleStr = fragment.title || (titleParts.length === 2 ? `${titleParts[0]} vs ${titleParts[1]}` : `Fragment #${fragment.id}`);
+        titleStr = titleStr.replace(/\s*\(\d+\s*[-–]\s*\d+\)/g, '');
         const rangeStr = `${fragment.fromMove}–${fragment.toMove}. tah`;
 
         container.innerHTML = `

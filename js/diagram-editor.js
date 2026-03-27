@@ -3,7 +3,8 @@
  * Handles the modal, chessboard, and drawing tools (arrows/squares)
  */
 
-let diagramBoard = null;
+// diagramBoard is now an alias for the main board from game-recorder.js
+function getDiagramBoard() { return typeof board !== 'undefined' ? board : null; }
 let currentTool = 'arrow-green'; // Default tool
 let isDrawing = false;
 let startSquare = null;
@@ -78,7 +79,7 @@ function switchDiagramTab(tab) {
     }
 
     // Always ensure overlay pointer events are enabled
-    const overlay = document.getElementById('diagramOverlay');
+    const overlay = document.getElementById('boardOverlaySvg');
     if (overlay) overlay.style.pointerEvents = 'auto';
 
     currentDiagramTab = tab;
@@ -157,7 +158,7 @@ function loadFenIntoDiagram(fen) {
 
     // Load position into diagram board
     try {
-        diagramBoard.position(fenParts[0]); // chessboard.js only needs piece placement
+        getDiagramBoard().position(fenParts[0]); // chessboard.js only needs piece placement
     } catch (e) {
         alert('Neplatný FEN řetězec.');
         return;
@@ -200,39 +201,30 @@ function loadFenIntoDiagram(fen) {
 window.loadFenIntoDiagram = loadFenIntoDiagram;
 
 /**
- * Open the diagram editor with the current game position
+ * Open the diagram editor - switches to the Diagram tab
  */
 function openDiagramEditor() {
-    const modal = document.getElementById('diagramEditorModal');
-    modal.classList.add('active');
-    document.body.style.overflow = 'hidden'; // Lock scroll
-
-    // Prevent touchmove scroll on mobile
-    const preventScroll = (e) => {
-        // Allow scrolling inside specific containers if needed, but block body scroll
-        e.preventDefault();
-    };
-    modal.addEventListener('touchmove', preventScroll, { passive: false });
-    modal._preventScroll = preventScroll; // Store reference for cleanup
-
-    // Initialize board if not already done
-    if (!diagramBoard) {
-        diagramBoard = Chessboard('diagramBoard', {
-            position: game.fen(),
-            draggable: false, // Read only
-            showNotation: true,
-            pieceTheme: '/img/chesspieces/wikipedia/{piece}.png'
-        });
-
-        // Setup event listeners on overlay
-        setupOverlayEvents();
-    } else {
-        diagramBoard.position(game.fen());
+    // Switch to diagram tab via page-level tab switching
+    if (typeof switchPageTab === 'function') {
+        switchPageTab('diagram');
     }
+}
 
-
+/**
+ * Initialize diagram editor from the current board state
+ * Called when switching to the Diagram tab
+ */
+function initDiagramFromBoard() {
     // Clear previous annotations
-    clearDiagram(); currentDiagramId = null; currentDiagramName = "";
+    clearDiagram();
+    currentDiagramId = null;
+    currentDiagramName = "";
+
+    // Setup event listeners on overlay (once)
+    if (!window._diagramOverlayInitialized) {
+        setupOverlayEvents();
+        window._diagramOverlayInitialized = true;
+    }
 
     // Reset piece palette selection
     selectedPalettePiece = null;
@@ -252,33 +244,28 @@ function openDiagramEditor() {
     initPiecePalette();
 
     // Sync turn from game state
-    setDiagramTurn(game.turn());
+    if (typeof game !== 'undefined') {
+        setDiagramTurn(game.turn());
 
-    // Populate FEN input with current position
-    const fenInput = document.getElementById('diagramFenInput');
-    if (fenInput) fenInput.value = game.fen();
-
-    // Resize to be sure
-    setTimeout(() => diagramBoard.resize(), 200);
+        // Populate FEN input with current position
+        const fenInput = document.getElementById('diagramFenInput');
+        if (fenInput) fenInput.value = game.fen();
+    }
 }
+window.initDiagramFromBoard = initDiagramFromBoard;
 
 /**
- * Close the editor
+ * Close the editor - switches back to Partie tab
  */
 function closeDiagramEditor() {
-    const modal = document.getElementById('diagramEditorModal');
-    modal.classList.remove('active');
-    document.body.style.overflow = ''; // Unlock scroll
-
-    // Remove touchmove scroll prevention
-    if (modal._preventScroll) {
-        modal.removeEventListener('touchmove', modal._preventScroll);
-        modal._preventScroll = null;
-    }
-
     // Disable solver recording if active
     if (solverState.isRecording) {
-        saveSolverStep(); // or cancel
+        saveSolverStep();
+    }
+
+    // Switch back to partie tab
+    if (typeof switchPageTab === 'function') {
+        switchPageTab('partie');
     }
 }
 
@@ -319,7 +306,7 @@ function clearDiagram() {
  * Setup mouse/touch events on the SVG overlay
  */
 function setupOverlayEvents() {
-    const overlay = document.getElementById('diagramOverlay');
+    const overlay = document.getElementById('boardOverlaySvg');
 
     overlay.addEventListener('mousedown', handleInputStart);
     overlay.addEventListener('touchstart', handleInputStart, { passive: false });
@@ -333,7 +320,7 @@ function setupOverlayEvents() {
 
 // Convert screen coordinates to square (e.g., 'e4')
 function getSquareFromCoords(x, y) {
-    const wrapper = document.getElementById('diagramBoardWrapper');
+    const wrapper = document.getElementById('board').parentElement;
     const rect = wrapper.getBoundingClientRect();
 
     const relX = x - rect.left;
@@ -350,7 +337,7 @@ function getSquareFromCoords(x, y) {
     const ranks = ['1', '2', '3', '4', '5', '6', '7', '8'];
 
     // Handle board flip if needed
-    const orientation = diagramBoard.orientation();
+    const orientation = getDiagramBoard().orientation();
 
     if (orientation === 'white') {
         return files[fileIdx] + ranks[rankIdx];
@@ -479,7 +466,7 @@ function addArrow(start, end, color) {
 }
 
 function renderAnnotations() {
-    const overlay = document.getElementById('diagramOverlay');
+    const overlay = document.getElementById('boardOverlaySvg');
     overlay.innerHTML = ''; // Clear SVG
 
     // 1. Render Squares
@@ -487,7 +474,7 @@ function renderAnnotations() {
         const coords = getSquareCenter(sq.square);
         if (!coords) return;
 
-        const squareSize = document.getElementById('diagramBoardWrapper').clientWidth / 8;
+        const squareSize = document.getElementById('board').parentElement.clientWidth / 8;
 
         const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
         rect.setAttribute('x', coords.x - squareSize / 2);
@@ -524,7 +511,7 @@ function renderAnnotations() {
             const coords = getSquareCenter(bg.square);
             if (!coords) return;
 
-            const squareSize = document.getElementById('diagramBoardWrapper').clientWidth / 8;
+            const squareSize = document.getElementById('board').parentElement.clientWidth / 8;
 
             const group = document.createElementNS('http://www.w3.org/2000/svg', 'g');
             // Position: Top Right corner
@@ -603,7 +590,7 @@ function toggleBadge(square, type) {
 function renderPreview(start, end) {
     renderAnnotations();
 
-    const overlay = document.getElementById('diagramOverlay');
+    const overlay = document.getElementById('boardOverlaySvg');
     const type = currentTool.split('-')[0];
     const color = TOOL_COLORS[currentTool.split('-')[1]];
 
@@ -676,11 +663,11 @@ function getSquareCenter(square) {
 
     if (file < 0 || file > 7 || rank < 0 || rank > 7) return null;
 
-    const wrapper = document.getElementById('diagramBoardWrapper');
+    const wrapper = document.getElementById('board').parentElement;
     const size = wrapper.clientWidth;
     const sqSize = size / 8;
 
-    const orientation = diagramBoard.orientation();
+    const orientation = getDiagramBoard().orientation();
     let x, y;
 
     if (orientation === 'white') {
@@ -695,7 +682,7 @@ function getSquareCenter(square) {
 }
 
 function exportDiagram() {
-    const element = document.getElementById('diagramBoardWrapper');
+    const element = document.getElementById('board').parentElement;
     const originalStyle = element.style.cssText; // Save original styles
 
     // Get who is on turn
@@ -799,12 +786,12 @@ function exportDiagram() {
  * Closes the diagram editor and sets the position on the main board.
  */
 function analyzeInGameRecorder() {
-    if (!diagramBoard) return;
+    if (!getDiagramBoard()) return;
 
-    const boardFen = diagramBoard.fen();
+    const boardFen = getDiagramBoard().fen();
     const fullFen = `${boardFen} ${diagramTurn} ${getCastlingString()} - 0 1`;
 
-    // Close the diagram editor
+    // Close the diagram editor (switch to Partie tab)
     closeDiagramEditor();
 
     // Load the FEN into the game recorder's Chess.js instance and board
@@ -839,6 +826,15 @@ function analyzeInGameRecorder() {
             overlay.style.display = 'block';
             overlay.style.borderLeftColor = '#60a5fa';
         }
+
+        // Auto-start engine for instant analysis
+        if (typeof recEngineActive !== 'undefined' && !recEngineActive) {
+            if (typeof toggleRecorderEngine === 'function') {
+                toggleRecorderEngine();
+            }
+        } else if (typeof analyzeCurrentPosition === 'function') {
+            analyzeCurrentPosition();
+        }
     }
 }
 window.analyzeInGameRecorder = analyzeInGameRecorder;
@@ -855,7 +851,7 @@ function enableMoveRecording(type) {
 
     // Save original board position BEFORE any moves are made
     // This is used by resetBoardToReadOnly() to restore the correct position
-    solverState.originalFen = diagramBoard ? diagramBoard.fen() : game.fen();
+    solverState.originalFen = getDiagramBoard() ? getDiagramBoard().fen() : game.fen();
 
     // Show controls
     document.getElementById('recordingControls').style.display = 'flex';
@@ -866,7 +862,7 @@ function enableMoveRecording(type) {
     document.querySelectorAll('#solverTools > div:first-child').forEach(div => div.style.display = 'none');
 
     // Disable drawing canvas momentarily to allow board interaction
-    document.getElementById('diagramOverlay').style.pointerEvents = 'none';
+    document.getElementById('boardOverlaySvg').style.pointerEvents = 'none';
 
     // Determine who is on turn based on GAME state + moves already made?
     // Actually, for the start of recording, it is based on game.turn()
@@ -879,7 +875,7 @@ function enableMoveRecording(type) {
 }
 
 function initDraggableBoardForRecording() {
-    diagramBoard = Chessboard('diagramBoard', {
+    board = Chessboard('board', {
         position: solverState.recordingGame.fen(),
         draggable: true,
         onDragStart: function (source, piece) {
@@ -924,7 +920,7 @@ function handleSolverDrop(source, target) {
 
     // Do NOT show editor yet. Wait for "Finish".
     // Board updates automatically by drop, but let's confirm position
-    // diagramBoard.position(solverState.recordingGame.fen()); // optional, drop does it nicely mostly
+    // getDiagramBoard().position(solverState.recordingGame.fen()); // optional, drop does it nicely mostly
 }
 
 function finishRecording() {
@@ -963,14 +959,14 @@ function cancelRecording() {
 
     // Reset board to initial Position
     resetBoardToReadOnly();
-    document.getElementById('diagramOverlay').style.pointerEvents = 'auto'; // Enable drawing
+    document.getElementById('boardOverlaySvg').style.pointerEvents = 'auto'; // Enable drawing
 }
 
 function resetBoardToReadOnly() {
     // Use the ORIGINAL position saved before recording started,
     // NOT the current board position (which shows post-move state)
-    const originalPos = solverState.originalFen || (diagramBoard ? diagramBoard.fen() : game.fen());
-    diagramBoard = Chessboard('diagramBoard', {
+    const originalPos = solverState.originalFen || (getDiagramBoard() ? getDiagramBoard().fen() : game.fen());
+    board = Chessboard('board', {
         position: originalPos,
         draggable: false,
         pieceTheme: '/img/chesspieces/wikipedia/{piece}.png'
@@ -1048,9 +1044,9 @@ function getColorForType(type) {
  * Returns array of error messages (empty = valid)
  */
 function validatePosition() {
-    if (!diagramBoard) return ['Šachovnice není inicializována.'];
+    if (!getDiagramBoard()) return ['Šachovnice není inicializována.'];
 
-    const pos = diagramBoard.position();
+    const pos = getDiagramBoard().position();
     const errors = [];
 
     // Count pieces
@@ -1127,8 +1123,8 @@ async function saveDiagramToCloud() {
     if (!name) return;
 
     // Build FEN from diagram board position + turn
-    // diagramBoard.fen() returns only piece placement (no turn/castling)
-    const boardFen = diagramBoard.fen();
+    // getDiagramBoard().fen() returns only piece placement (no turn/castling)
+    const boardFen = getDiagramBoard().fen();
     const fullFen = `${boardFen} ${diagramTurn} ${getCastlingString()} - 0 1`;
 
     const selectedTurn = diagramTurn;
@@ -1194,11 +1190,11 @@ window.selectPalettePiece = selectPalettePiece;
  * Place a piece on a given square using chessboard.js position API
  */
 function placePieceOnSquare(square, piece) {
-    if (!diagramBoard) return;
+    if (!getDiagramBoard()) return;
 
-    const pos = diagramBoard.position();
+    const pos = getDiagramBoard().position();
     pos[square] = piece; // e.g. pos['e4'] = 'wQ'
-    diagramBoard.position(pos, false); // false = no animation
+    getDiagramBoard().position(pos, false); // false = no animation
 
     updateFenFromBoard();
 }
@@ -1207,11 +1203,11 @@ function placePieceOnSquare(square, piece) {
  * Remove a piece from a given square
  */
 function removePieceFromSquare(square) {
-    if (!diagramBoard) return;
+    if (!getDiagramBoard()) return;
 
-    const pos = diagramBoard.position();
+    const pos = getDiagramBoard().position();
     delete pos[square];
-    diagramBoard.position(pos, false);
+    getDiagramBoard().position(pos, false);
 
     updateFenFromBoard();
 }
@@ -1221,9 +1217,9 @@ function removePieceFromSquare(square) {
  * Castling is impossible if kings are not on their starting squares.
  */
 function syncCastlingWithBoard() {
-    if (!diagramBoard) return;
+    if (!getDiagramBoard()) return;
 
-    const pos = diagramBoard.position();
+    const pos = getDiagramBoard().position();
     const whiteKingOnE1 = pos['e1'] === 'wK';
     const blackKingOnE8 = pos['e8'] === 'bK';
 
@@ -1256,11 +1252,11 @@ function syncCastlingWithBoard() {
  * Sync the FEN input field with the current board position
  */
 function updateFenFromBoard() {
-    if (!diagramBoard) return;
+    if (!getDiagramBoard()) return;
 
     syncCastlingWithBoard();
 
-    const boardFen = diagramBoard.fen();
+    const boardFen = getDiagramBoard().fen();
     const fullFen = `${boardFen} ${diagramTurn} ${getCastlingString()} - 0 1`;
     const input = document.getElementById('diagramFenInput');
     if (input) input.value = fullFen;
@@ -1292,7 +1288,7 @@ function initPiecePalette() {
     });
 
     // Drop handler on the SVG overlay (sits on top of the board, z-index 13000)
-    const overlay = document.getElementById('diagramOverlay');
+    const overlay = document.getElementById('boardOverlaySvg');
     if (overlay) {
         overlay.addEventListener('dragover', (e) => {
             e.preventDefault();

@@ -571,9 +571,27 @@
                                 <i class="fa-solid fa-download"></i>
                             </button>
                         </div>
-                    ` : ''}
+                    ` : `
+                        <div class="game-actions" onclick="event.stopPropagation()">
+                            ${auth.isAdmin() ? (
+                                game.pgn 
+                                ? `<button class="action-btn-mini" onclick="editArticleGame(${i})" title="Vytvořit fragment nebo upravit partii v editoru" style="color: #60a5fa; border-color: rgba(96,165,250,0.3);"><i class="fa-solid fa-scissors"></i></button>`
+                                : `<button class="action-btn-mini" disabled title="Tato partie je z chess.com (nemá PGN pro editor)" style="color: rgba(255,255,255,0.2); border-color: transparent; cursor: not-allowed;"><i class="fa-solid fa-scissors"></i></button>`
+                            ) : ''}
+                        </div>
+                    `}
                 </div>
             `).join('');
+        }
+
+        function editArticleGame(index) {
+            const game = allGames[index];
+            if (game && game.pgn) {
+                localStorage.setItem('import_pgn', game.pgn);
+                window.open('/game-recorder?import=local', '_blank');
+            } else {
+                alert('Tato partie nemá uloženou PGN notaci.');
+            }
         }
 
         function selectGame(index) {
@@ -705,7 +723,9 @@
 
             let savedCount = 0;
 
-            const token = localStorage.getItem('club_auth_token');
+            const clubToken = localStorage.getItem('club_auth_token');
+            const userToken = localStorage.getItem('auth_token') || sessionStorage.getItem('auth_token');
+            const token = clubToken || userToken;
             if (!token) {
                 showStatus(statusDiv, 'error', 'Pro uložení se musíte přihlásit v členské sekci.');
                 btn.disabled = false;
@@ -715,12 +735,13 @@
 
             for (const game of games) {
                 try {
+                    const headers = { 'Content-Type': 'application/json' };
+                    if (clubToken) headers['X-Club-Password'] = clubToken;
+                    else headers['Authorization'] = `Bearer ${userToken}`;
+
                     const res = await fetch(`${API_URL}/games`, {
                         method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-Club-Password': token
-                        },
+                        headers: headers,
                         body: JSON.stringify(game)
                     });
                     if (res.ok) savedCount++;

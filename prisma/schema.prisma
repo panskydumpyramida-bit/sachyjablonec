@@ -223,15 +223,17 @@ model Standing {
 }
 
 model BlicakRegistration {
-  id        Int      @id @default(autoincrement())
-  name      String
-  club      String?
-  lok       String?
-  birthYear Int?     @map("birth_year")
-  eventDate DateTime @default(now()) @map("event_date")
-  createdAt DateTime @default(now()) @map("created_at")
-  
+  id           Int      @id @default(autoincrement())
+  name         String
+  club         String?
+  lok          String?
+  birthYear    Int?     @map("birth_year")
+  eventDate    DateTime @default(now()) @map("event_date")
+  createdAt    DateTime @default(now()) @map("created_at")
+  tournamentId String   @default("vanocni-2025") @map("tournament_id")
+
   @@map("blicak_registrations")
+  @@index([tournamentId])
 }
 
 
