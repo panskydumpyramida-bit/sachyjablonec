@@ -4,8 +4,9 @@
 
 ### 📝 Editor Článků (WYSIWYG)
 - **Bohaté HTML šablony:** Přidána podpora pro tři nové hotové bloky do článků: Zlatý box vítězů (`/vitezove`), Karty medailistů (`/karty`) a Závěrečné tlačítko s odkazem na výsledky (`/cta`).
-- **Slash příkazy:** Zprovozněn systém rychlého vkládání bloků přes lomítko přímo v editoru (`admin-slash-commands.js`).
-- **Nová tlačítka v liště:** Šablony lze vkládat i manuálně pomocí nových tlačítek (Pohárek, Medaile, Odkaz) v panelu nástrojů editoru.
+- **Slash příkazy s modály:** Zefektivněn systém rychlého vkládání bloků přes lomítko. Šablony nyní otevírají konfigurační modály pro pohodlnější zadání obsahu (např. nadpisů, počtu řádků). Opravena logika spouštění (lomítko funguje pouze na novém řádku nebo po mezeře).
+- **Nová tlačítka v liště:** Šablony lze vkládat i manuálně z nového rozbalovacího menu "Šablony" v panelu nástrojů editoru. Tlačítka dostala nové relevantní ikony.
+- **Admin Manuál:** Aktualizován a doplněn `ADMIN_MANUAL.md` i webový `admin-manual.html` o nové funkce. Proklik na manuál přidán do hlavního navigačního menu administrace.
 
 ### ♟️ Zobrazování šachových partií
 - **Zarovnání vložených fragmentů:** Opraven `margin` u inline fragmentů partií. Odstraněno nesymetrické horní odsazení, horní okraj šachovnice nyní perfektně navazuje na výšku okolního textu.
