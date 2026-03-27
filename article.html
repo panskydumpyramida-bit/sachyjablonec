@@ -216,6 +216,7 @@
     <script src="js/game-viewer2.js?v=12" defer></script>
     <script src="js/diagram-viewer.js?v=5" defer></script>
     <script src="js/diagram-book.js?v=8" defer></script>
+    <script src="js/game-fragment-viewer.js?v=1" defer></script>
     <script>
         // Article Loader
         document.addEventListener('DOMContentLoaded', async () => {
@@ -316,6 +317,13 @@
             if (typeof window.initDiagramBooks === 'function') {
                 requestAnimationFrame(() => {
                     window.initDiagramBooks();
+                });
+            }
+
+            // Initialize inline game fragments (embedded in article content)
+            if (typeof window.initGameFragments === 'function') {
+                requestAnimationFrame(() => {
+                    window.initGameFragments();
                 });
             }
 
