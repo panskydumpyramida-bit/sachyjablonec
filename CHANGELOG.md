@@ -1,5 +1,16 @@
 # 📋 Changelog
 
+## 27. března 2026
+
+### 📝 Editor Článků (WYSIWYG)
+- **Bohaté HTML šablony:** Přidána podpora pro tři nové hotové bloky do článků: Zlatý box vítězů (`/vitezove`), Karty medailistů (`/karty`) a Závěrečné tlačítko s odkazem na výsledky (`/cta`).
+- **Slash příkazy:** Zprovozněn systém rychlého vkládání bloků přes lomítko přímo v editoru (`admin-slash-commands.js`).
+- **Nová tlačítka v liště:** Šablony lze vkládat i manuálně pomocí nových tlačítek (Pohárek, Medaile, Odkaz) v panelu nástrojů editoru.
+
+### ♟️ Zobrazování šachových partií
+- **Zarovnání vložených fragmentů:** Opraven `margin` u inline fragmentů partií. Odstraněno nesymetrické horní odsazení, horní okraj šachovnice nyní perfektně navazuje na výšku okolního textu.
+
+
 ## 14. února 2026 (v16)
 
 ### 🎮 Game Viewer 2 – Oprava variant
