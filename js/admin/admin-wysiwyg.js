@@ -607,7 +607,7 @@ async function insertFragment() {
             }
 
             // Insert fragment placeholder
-            const fragmentHtml = `<div class="game-fragment" data-fragment-id="${fid}" contenteditable="false" style="background:rgba(96,165,250,0.08);border:1px solid rgba(96,165,250,0.3);border-radius:8px;padding:0.75rem;margin:0 0 1rem 0;text-align:center;color:#60a5fa;font-size:0.85rem;"><i class="fa-solid fa-scissors"></i> Fragment #${fid} — ${item.querySelector('div:first-child').textContent}</div>`;
+            const fragmentHtml = `<div class="game-fragment" data-fragment-id="${fid}" contenteditable="false" style="background:rgba(96,165,250,0.08);border:1px solid rgba(96,165,250,0.3);border-radius:8px;padding:0.75rem;margin:0.5rem 0;text-align:center;color:#60a5fa;font-size:0.85rem;"><i class="fa-solid fa-scissors"></i> Fragment #${fid} — ${item.querySelector('div:first-child').textContent}</div>`;
             document.execCommand('insertHTML', false, fragmentHtml);
 
             overlay.remove();
