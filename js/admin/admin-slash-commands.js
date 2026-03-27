@@ -559,12 +559,10 @@ function insertWinnersBox() {
     const box = document.createElement('div');
     box.style.cssText = 'background-color: var(--surface-color, #1e1e1e); border: 1px solid rgba(255, 255, 255, 0.05); border-left: 4px solid var(--primary-color, #d4af37); padding: 20px; border-radius: 4px 8px 8px 4px; margin-bottom: 30px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);';
     box.innerHTML = `
-        <h3 style="margin-top: 0; color: var(--primary-color, #d4af37); font-size: 1.25em; display: flex; align-items: center; gap: 8px;">
-            🏆 [Nadpis boxu vítězů, např. Přehled vítězů]
+        <h3 style="margin-top: 0; color: var(--primary-color, #d4af37); font-size: 1.2em; display: flex; align-items: center; gap: 8px;">
+            🏆 [Nadpis boxu]
         </h3>
         <ul style="list-style: none; padding-left: 0; margin-bottom: 0;">
-            <li style="margin-bottom: 10px; color: #cbd5e1;"><strong>[Rok/Skupina]:</strong> 🥇 [Jméno] &nbsp;|&nbsp; 🥈 [Jméno] &nbsp;|&nbsp; 🥉 [Jméno]</li>
-            <li style="margin-bottom: 10px; color: #cbd5e1;"><strong>[Rok/Skupina]:</strong> 🥇 [Jméno] &nbsp;|&nbsp; 🥈 [Jméno] &nbsp;|&nbsp; 🥉 [Jméno]</li>
             <li style="margin-bottom: 0; color: #cbd5e1;"><strong>[Rok/Skupina]:</strong> 🥇 [Jméno] &nbsp;|&nbsp; 🥈 [Jméno] &nbsp;|&nbsp; 🥉 [Jméno]</li>
         </ul>
     `;
@@ -643,12 +641,12 @@ function insertCtaButton() {
     const container = document.createElement('div');
     container.style.cssText = 'text-align: center; margin-top: 50px; margin-bottom: 20px; padding: 30px 20px; background: var(--surface-color, #1e1e1e); border-radius: 12px; border: 1px solid rgba(212, 175, 55, 0.2);';
     container.innerHTML = `
-        <h3 style="margin-top: 0; color: #ffffff; font-size: 1.3em;">[Zde doplňte poutavý text tlačítka]</h3>
-        <a href="#" target="_blank" rel="noopener noreferrer" style="display: inline-block; background-color: var(--primary-color, #d4af37); color: var(--secondary-color, #1a1a1a); padding: 12px 30px; text-decoration: none; border-radius: 50px; font-size: 1.1em; font-weight: 600; margin: 20px 0; box-shadow: 0 4px 12px rgba(212, 175, 55, 0.3); border: none;">
-            🔗 [Odkaz na další informace vč. odkazu v poli odkazu článku]
+        <h3 style="margin-top: 0; color: #ffffff; font-size: 1.3em;">[Nadpis sekce]</h3>
+        <a href="https://" class="cta-button" target="_blank" rel="noopener noreferrer" style="display: inline-block; background-color: var(--primary-color, #d4af37); color: var(--secondary-color, #1a1a1a); padding: 12px 30px; text-decoration: none; border-radius: 50px; font-size: 1.1em; font-weight: 600; margin: 20px 0; box-shadow: 0 4px 12px rgba(212, 175, 55, 0.3); border: none;">
+            🔗 [Text tlačítka - dvojklik pro úpravu odkazu]
         </a>
         <p style="margin-bottom: 0; color: var(--text-muted, #a0a0a0); font-size: 0.95em;">
-            [Zde vložte poznámku pod čarou, např. odkaz na fotogalerii]
+            [Doplňující podtitulek nebo smažte]
         </p>
     `;
 
