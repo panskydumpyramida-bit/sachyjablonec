@@ -33,8 +33,9 @@ flowchart LR
 | [2️⃣ Editor novinek](#2️⃣-editor-novinek) | Psaní článků |
 | [3️⃣ Šachové diagramy](#3️⃣-šachové-diagramy) | Hádanky a pozice |
 | [4️⃣ Kniha diagramů](#4️⃣-kniha-diagramů) | Více diagramů v článku |
-| [5️⃣ Správa událostí](#5️⃣-správa-událostí) | Turnaje a tréninky |
-| [6️⃣ Galerie](#6️⃣-galerie) | Fotografie |
+| [5️⃣ Šachové fragmenty](#5️⃣-šachové-fragmenty) | Výřezy partií s enginem |
+| [6️⃣ Správa událostí](#6️⃣-správa-událostí) | Turnaje a tréninky |
+| [7️⃣ Galerie](#7️⃣-galerie) | Fotografie |
 
 ---
 
@@ -235,7 +236,32 @@ Diagramy s řešením mají zlatý odznak:
 
 ---
 
-## 5️⃣ Správa událostí
+## 5️⃣ Šachové fragmenty
+
+### Co je fragment?
+
+Fragment je interaktivní výřez z partie (např. od 15. do 25. tahu), který obsahuje šachovnici s přehrávačem, vestavěným analytickým enginem (Lichess) a teploměrem hodnocení. Hodí se k detailnímu rozboru taktických momentů.
+
+### Jak vytvořit fragment
+
+1. Otevřete **Partie** (Game Recorder)
+2. Přes PGN vložte celou partii nebo ji naklikejte.
+3. V panelu nástrojů klikněte na záložku **✂️ Fragment**.
+4. Spusťte přehrávání do pozice, od které chcete začít (Kliněte na Nastavit zaškrtávátko u "Od tahu").
+5. Spusťte do pozice, kde chcete skončit a stiskněte zaškrtávátko u "Do tahu".
+6. Klikněte na **Zobrazit náhled**, abyste si ověřili výřez.
+7. V případě spokojenosti fragment uložte kliknutím na **Uložit fragment**.
+
+### Jak vložit fragment do článku
+
+1. V editoru článku klikněte v nástrojové liště na ikonu **✂️ (Fragment)**.
+2. Ze seznamu vyberte vámi uložený fragment.
+3. Do editoru se vloží zástupný text `[frag:123]`. Ten neupravujte.
+4. Po uložení a náhledu novinky se vygeneruje překrásný interaktivní widget!
+
+---
+
+## 6️⃣ Správa událostí
 
 ### Typy událostí
 
@@ -260,7 +286,7 @@ Diagramy s řešením mají zlatý odznak:
 
 ---
 
-## 6️⃣ Galerie
+## 7️⃣ Galerie
 
 ### Nahrávání fotek
 

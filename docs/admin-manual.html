@@ -544,22 +544,29 @@
                     <div class="toc-desc">Více diagramů v článku</div>
                 </div>
             </a>
+            <a href="#fragments" class="toc-item">
+                <div class="toc-num" style="background: rgba(14,165,233,0.1); color: #0ea5e9;">5</div>
+                <div>
+                    <div class="toc-text">Šachové fragmenty</div>
+                    <div class="toc-desc">Výřezy partií s enginem</div>
+                </div>
+            </a>
             <a href="#events" class="toc-item">
-                <div class="toc-num" style="background: rgba(236,72,153,0.1); color: var(--pink);">5</div>
+                <div class="toc-num" style="background: rgba(236,72,153,0.1); color: var(--pink);">6</div>
                 <div>
                     <div class="toc-text">Správa událostí</div>
                     <div class="toc-desc">Turnaje a tréninky</div>
                 </div>
             </a>
             <a href="#gallery" class="toc-item">
-                <div class="toc-num" style="background: rgba(212,175,55,0.1); color: var(--gold);">6</div>
+                <div class="toc-num" style="background: rgba(212,175,55,0.1); color: var(--gold);">7</div>
                 <div>
                     <div class="toc-text">Galerie</div>
                     <div class="toc-desc">Fotografie</div>
                 </div>
             </a>
             <a href="#columns" class="toc-item">
-                <div class="toc-num" style="background: rgba(99,102,241,0.1); color: #818cf8;">7</div>
+                <div class="toc-num" style="background: rgba(99,102,241,0.1); color: #818cf8;">8</div>
                 <div>
                     <div class="toc-text">Sloupcové bloky</div>
                     <div class="toc-desc">Rozložení obsahu do sloupců</div>
@@ -855,11 +862,43 @@
             </div>
         </div>
 
-        <!-- 5. Správa událostí -->
+        <!-- 5. Šachové fragmenty -->
+        <div class="section" id="fragments">
+            <div class="section-header">
+                <i class="fa-solid fa-scissors" style="background: rgba(14,165,233,0.1); color: #0ea5e9;"></i>
+                <h2>Šachové fragmenty</h2>
+            </div>
+            <div class="card">
+                <h3>Co je fragment?</h3>
+                <p>Fragment je interaktivní výřez z partie (např. od 15. do 25. tahu), který obsahuje šachovnici s přehrávačem, vestavěným analytickým enginem (Lichess) a teploměrem hodnocení. Hodí se k detailnímu rozboru taktických momentů.</p>
+            </div>
+            <div class="card">
+                <h3>Jak vytvořit fragment</h3>
+                <ol>
+                    <li>Otevřete <strong>Partie</strong> (Game Recorder) a vložte celou partii.</li>
+                    <li>V panelu nástrojů klikněte na záložku <strong>✂️ Fragment</strong>.</li>
+                    <li>Spusťte přehrávání do pozice, od které chcete začít (Kliněte na Nastavit u "Od tahu").</li>
+                    <li>Spusťte do pozice, kde chcete skončit a stiskněte zaškrtávátko u "Do tahu".</li>
+                    <li>Klikněte na <strong>Zobrazit náhled</strong>, abyste si ověřili výřez.</li>
+                    <li>V případě spokojenosti fragment uložte kliknutím na <strong>Uložit fragment</strong>.</li>
+                </ol>
+            </div>
+            <div class="card">
+                <h3>Jak vložit fragment do článku</h3>
+                <ol>
+                    <li>V editoru článku klikněte v nástrojové liště na ikonu <strong>✂️ (Fragment)</strong>.</li>
+                    <li>Ze seznamu vyberte vámi uložený fragment.</li>
+                    <li>Do editoru se vloží zástupný text <code>[frag:123]</code>. Ten neupravujte.</li>
+                    <li>Po uložení a náhledu novinky se vygeneruje překrásný interaktivní widget!</li>
+                </ol>
+            </div>
+        </div>
+
+        <!-- 6. Správa událostí -->
         <div class="section" id="events">
             <div class="section-header">
                 <i class="fa-solid fa-calendar-days" style="background: rgba(236,72,153,0.1); color: var(--pink);"></i>
-                <h2>Správa událostí</h2>
+                <h2>6. Správa událostí</h2>
             </div>
 
             <div class="card">

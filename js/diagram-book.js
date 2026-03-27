@@ -374,14 +374,16 @@
                 background: rgba(255,255,255,0.1) !important;
                 border: 1px solid rgba(255,255,255,0.1) !important;
                 border-radius: 50%;
-                width: 36px;
-                height: 36px;
+                width: 28px;
+                height: 28px;
                 display: flex;
                 align-items: center;
                 justify-content: center;
                 transition: all 0.25s ease;
                 color: rgba(255,255,255,0.6);
                 cursor: pointer;
+                font-size: 0.75rem;
+                flex-shrink: 0;
             }
             .book-reset-btn:hover {
                 background: rgba(212, 175, 55, 0.2) !important;
@@ -400,12 +402,12 @@
             @media (max-width: 600px) {
                 .diagram-book {
                     max-width: none !important;
-                    width: 100% !important; 
-                    margin: 1.5rem 0 !important; /* Reset margin */
-                    border-radius: 8px !important; /* Restore slight rounding */
+                    width: calc(100% + 1rem) !important; 
+                    margin: 1.5rem -0.5rem !important;
+                    border-radius: 8px !important;
                     border-left: 1px solid rgba(255,255,255,0.08) !important;
                     border-right: 1px solid rgba(255,255,255,0.08) !important;
-                    padding: 1.5rem 0.5rem !important; /* Small side padding */
+                    padding: 1rem 0.5rem !important;
                     float: none !important;
                     clear: none !important;
                 }
@@ -415,10 +417,33 @@
                 }
                 .diagram-board-wrapper {
                     width: 100% !important;
+                    min-width: 0 !important;
                 }
                 .book-caption {
                     font-size: 0.9rem;
                     padding: 0 0.5rem;
+                }
+                /* Smaller type badge on mobile */
+                .diagram-book .diagram-type-badge {
+                    width: 24px !important;
+                    height: 24px !important;
+                    font-size: 0.7rem !important;
+                    top: -8px !important;
+                    right: -12px !important;
+                }
+                /* Compact meta row on mobile */
+                .book-meta-row-standalone {
+                    padding: 0.25rem 0.5rem !important;
+                    gap: 0.35rem !important;
+                    margin-top: 0.35rem !important;
+                }
+                .book-meta-row-standalone .book-to-move-standalone {
+                    font-size: 0.7rem !important;
+                }
+                .book-reset-btn {
+                    width: 24px !important;
+                    height: 24px !important;
+                    font-size: 0.65rem !important;
                 }
             }
         `;
