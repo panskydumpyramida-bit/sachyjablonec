@@ -134,9 +134,14 @@
    HERO SECTION OVERRIDE
    ============================================ */
 
+/* Zrušíme globální 0.7 černý ::after překryv ze style.css */
+.hero.small-hero.blicak-hero::after {
+    display: none;
+}
+
 @media (min-width: 769px) {
-    .hero.small-hero {
-        background-position: center 15% !important;
+    .hero.small-hero.blicak-hero {
+        background-position: center bottom !important;
     }
 }
 
