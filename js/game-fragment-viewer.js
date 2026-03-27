@@ -167,6 +167,7 @@
                         <div id="${uid}-moves" style="padding:0.75rem;line-height:1.7;max-height:220px;overflow-y:auto;word-break:break-word;">
                             ${moveListHtml || '<span style="color:var(--text-muted);font-size:0.8rem;">Žádné tahy</span>'}
                         </div>
+                        <div id="${uid}-pv" style="display:none; padding: 0.5rem 0.75rem; font-size: 0.70rem; color: #9ca3af; background: rgba(0,0,0,0.2); border-top: 1px solid rgba(255,255,255,0.05); text-align: left; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; height: 32px;" title=""></div>
                         <div style="display:flex;justify-content:flex-end;align-items:center;padding:0.5rem 0.75rem;background:rgba(0,0,0,0.15);border-top:1px solid rgba(255,255,255,0.05);">
                             <span id="${uid}-pos" style="font-size:0.65rem;color:var(--text-muted,#a0a0a0);">0/${moves.length}</span>
                         </div>
@@ -253,15 +254,21 @@
         state.engineEnabled = !state.engineEnabled;
         const btn = document.getElementById(`${uid}-engine-btn`);
         const bar = document.getElementById(`${uid}-eval-bar`);
+        const pvBox = document.getElementById(`${uid}-pv`);
         if (state.engineEnabled) {
             btn.style.color = '#4ade80';
             bar.classList.add('active');
+            if (pvBox) pvBox.style.display = 'block';
             // Trigger resize to fix board dimensions now that bar showed up
             setTimeout(() => state.board.resize(), 10);
             runFragEngine(uid);
         } else {
             btn.style.color = '#ccc';
             bar.classList.remove('active');
+            if (pvBox) {
+                pvBox.style.display = 'none';
+                pvBox.textContent = '';
+            }
             setTimeout(() => state.board.resize(), 10);
         }
     };
@@ -275,56 +282,98 @@
         const fillEl = document.getElementById(`${uid}-eval-fill`);
         const textTop = document.getElementById(`${uid}-eval-text-top`);
         const textBot = document.getElementById(`${uid}-eval-text-bottom`);
+        const pvBox = document.getElementById(`${uid}-pv`);
         if(!fillEl) return;
         
         textTop.textContent = '';
         textBot.textContent = '...';
+        if (pvBox) pvBox.textContent = 'Načítám motor...';
         fillEl.classList.remove('mate');
 
         if (engineTimers[uid]) clearTimeout(engineTimers[uid]);
         engineTimers[uid] = setTimeout(async () => {
             try {
+                // 1. Try Lichess Cloud Eval
                 const res = await fetch(`https://lichess.org/api/cloud-eval?fen=${encodeURIComponent(fen)}`);
                 if (res.ok) {
                     const data = await res.json();
                     if (data.pvs && data.pvs[0]) {
-                        const pv = data.pvs[0];
-                        let valStr = '';
-                        let percentage = 50;
-
-                        if (pv.mate) {
-                            valStr = `M${Math.abs(pv.mate)}`;
-                            percentage = pv.mate > 0 ? 100 : 0;
-                            fillEl.classList.add('mate');
-                        } else {
-                            const val = pv.cp / 100;
-                            valStr = (val > 0 ? '+' : '') + val.toFixed(1);
-                            // Sigmoid curve for height
-                            percentage = 50 + 50 * (2 / (1 + Math.exp(-0.4 * val)) - 1);
-                        }
-                        
-                        // Update bar height
-                        fillEl.style.height = `${percentage}%`;
-                        
-                        // Smart text placement: put text where there's room, or top if white is winning
-                        if (percentage > 50) {
-                            textTop.textContent = valStr;
-                            textBot.textContent = '';
-                        } else {
-                            textTop.textContent = '';
-                            textBot.textContent = valStr;
-                        }
-                        return; // success
+                        updateEngineUI(fillEl, textTop, textBot, pvBox, data.pvs[0], 'lichess');
+                        return;
                     }
                 }
-                // fallback
+                
+                // 2. Fallback to chess-api.com
+                if (pvBox) pvBox.textContent = 'Počítám tahy (Stockfish)...';
+                const fRes = await fetch('https://chess-api.com/v1', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ fen: fen, depth: 12 })
+                });
+                
+                if (fRes.ok) {
+                    const fData = await fRes.json();
+                    if (!fData.error) {
+                         updateEngineUI(fillEl, textTop, textBot, pvBox, fData, 'chess-api');
+                         return;
+                    }
+                }
+                
+                // fallback if both fail
                 textBot.textContent = '0.0';
                 fillEl.style.height = '50%';
+                if (pvBox) pvBox.textContent = 'Motor nedostupný';
             } catch(e) {
                 textBot.textContent = 'Err';
                 fillEl.style.height = '50%';
+                if (pvBox) pvBox.textContent = 'Chyba spojení';
             }
-        }, 300);
+        }, 400);
+    }
+    
+    function updateEngineUI(fillEl, textTop, textBot, pvBox, data, source) {
+        let valStr = '';
+        let percentage = 50;
+        let pvLine = '';
+
+        if (source === 'lichess') {
+            if (data.mate) {
+                valStr = `M${Math.abs(data.mate)}`;
+                percentage = data.mate > 0 ? 100 : 0;
+                fillEl.classList.add('mate');
+            } else {
+                const val = data.cp / 100;
+                valStr = (val > 0 ? '+' : '') + val.toFixed(1);
+                percentage = 50 + 50 * Math.tanh(val / 4);
+            }
+            pvLine = data.moves || '';
+        } else if (source === 'chess-api') {
+            if (data.mate) {
+                valStr = `M${Math.abs(data.mate)}`;
+                percentage = data.mate > 0 ? 100 : 0;
+                fillEl.classList.add('mate');
+            } else {
+                const val = data.eval;
+                valStr = (val > 0 ? '+' : '') + val.toFixed(1);
+                percentage = data.winChance || (50 + 50 * Math.tanh(val / 4));
+            }
+            pvLine = (data.continuationArr || []).join(' ');
+        }
+        
+        fillEl.style.height = `${percentage}%`;
+        
+        if (percentage > 50) {
+            textTop.textContent = valStr;
+            textBot.textContent = '';
+        } else {
+            textTop.textContent = '';
+            textBot.textContent = valStr;
+        }
+        
+        if (pvBox) {
+            pvBox.textContent = pvLine;
+            pvBox.title = pvLine;
+        }
     }
 
     function escapeHtml(s) {
