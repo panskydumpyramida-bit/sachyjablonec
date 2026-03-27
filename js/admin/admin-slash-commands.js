@@ -190,24 +190,24 @@ const SLASH_COMMANDS = [
     },
     {
         id: 'vitezove',
-        label: 'Box vítězů',
+        label: 'Historie vítězů',
         icon: 'fa-trophy',
-        description: 'Zlatý blok pro historii vítězů',
-        action: insertWinnersBox
+        description: 'Blok s přehledem vítězů se zlatým okrajem',
+        action: () => showWinnersModal()
     },
     {
         id: 'karty',
         label: 'Karty pořadí',
         icon: 'fa-medal',
         description: 'Dvousloupcový blok medailistů',
-        action: insertRankingCards
+        action: () => showRankingCardsModal()
     },
     {
         id: 'cta',
         label: 'Tlačítko výsledků (CTA)',
-        icon: 'fa-arrow-pointer',
+        icon: 'fa-bullhorn',
         description: 'Závěrečný box s odkazem a galerií',
-        action: insertCtaButton
+        action: () => showCtaModal()
     }
 ];
 
@@ -380,9 +380,9 @@ function handleSlashInput(e) {
     const text = node.textContent;
     const cursorPos = range.startOffset;
 
-    // Look for "/" pattern
+    // Look for "/" pattern, but require it to be at the start or preceded by a space
     const textBeforeCursor = text.substring(0, cursorPos);
-    const slashMatch = textBeforeCursor.match(/\/([a-zA-Z0-9áčďéěíňóřšťúůýžÁČĎÉĚÍŇÓŘŠŤÚŮÝŽ]*)$/);
+    const slashMatch = textBeforeCursor.match(/(?:^|\s)\/([a-zA-Z0-9áčďéěíňóřšťúůýžÁČĎÉĚÍŇÓŘŠŤÚŮÝŽ]*)$/);
 
     if (slashMatch) {
         const filter = slashMatch[1] || '';
@@ -552,20 +552,89 @@ if (document.readyState === 'loading') {
 // RICH HTML SNIPPETS (Added via Slash commands)
 // ================================
 
-function insertWinnersBox() {
-    const editor = document.getElementById('articleContent');
-    const selection = window.getSelection();
-
-    const box = document.createElement('div');
-    box.style.cssText = 'background-color: var(--surface-color, #1e1e1e); border: 1px solid rgba(255, 255, 255, 0.05); border-left: 4px solid var(--primary-color, #d4af37); padding: 20px; border-radius: 4px 8px 8px 4px; margin-bottom: 30px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);';
-    box.innerHTML = `
-        <h3 style="margin-top: 0; color: var(--primary-color, #d4af37); font-size: 1.2em; display: flex; align-items: center; gap: 8px;">
-            🏆 [Nadpis boxu]
-        </h3>
-        <ul style="list-style: none; padding-left: 0; margin-bottom: 0;">
-            <li style="margin-bottom: 0; color: #cbd5e1;"><strong>[Rok/Skupina]:</strong> 🥇 [Jméno] &nbsp;|&nbsp; 🥈 [Jméno] &nbsp;|&nbsp; 🥉 [Jméno]</li>
-        </ul>
+function createTemplateModal(title, htmlContent, onConfirm) {
+    const modal = document.createElement('div');
+    modal.className = 'template-modal';
+    modal.style.cssText = 'position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.85); z-index: 12000; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(4px);';
+    
+    modal.innerHTML = `
+        <div class="modal-content" style="width: 400px; max-width: 90%; background: #1a1a2e; border: 1px solid rgba(255,255,255,0.1); padding: 20px; border-radius: 8px;">
+            <h3 style="margin-top: 0; margin-bottom: 20px; color: #fff;">${title}</h3>
+            <div class="modal-body" style="margin-bottom: 20px;">
+                ${htmlContent}
+            </div>
+            <div style="display: flex; justify-content: flex-end; gap: 10px;">
+                <button type="button" class="btn-cancel" style="padding: 8px 16px; background: transparent; border: 1px solid rgba(255,255,255,0.2); color: #fff; border-radius: 4px; cursor: pointer;">Zrušit</button>
+                <button type="button" class="btn-confirm" style="padding: 8px 16px; background: var(--primary-color, #60a5fa); border: none; color: #000; font-weight: bold; border-radius: 4px; cursor: pointer;">Vložit</button>
+            </div>
+        </div>
     `;
+
+    document.body.appendChild(modal);
+
+    modal.querySelector('.btn-cancel').onclick = () => modal.remove();
+    modal.querySelector('.btn-confirm').onclick = () => {
+        onConfirm(modal);
+        modal.remove();
+    };
+}
+
+function showWinnersModal() {
+    createTemplateModal('Zlatý box vítězů', `
+        <label style="display:block; margin-bottom: 5px; color: #a0a0a0; font-size: 0.9em;">Nadpis boxu:</label>
+        <input type="text" id="winTitle" value="🏆 Přehled vítězů" style="width: 100%; box-sizing: border-box; margin-bottom: 15px; padding: 8px; background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.1); color: #fff; border-radius: 4px;">
+        <label style="display:block; margin-bottom: 5px; color: #a0a0a0; font-size: 0.9em;">Počet řádků (ročníků/skupin):</label>
+        <input type="number" id="winCount" value="1" min="1" max="10" style="width: 100%; box-sizing: border-box; padding: 8px; background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.1); color: #fff; border-radius: 4px;">
+    `, (modal) => {
+        const title = modal.querySelector('#winTitle').value || '🏆 Přehled vítězů';
+        const count = parseInt(modal.querySelector('#winCount').value, 10) || 1;
+        insertWinnersBox(title, count);
+    });
+}
+
+function showRankingCardsModal() {
+    createTemplateModal('Karty pořadí', `
+        <label style="display:block; margin-bottom: 5px; color: #a0a0a0; font-size: 0.9em;">Název levé kategorie:</label>
+        <input type="text" id="cardA" value="Kategorie A" style="width: 100%; box-sizing: border-box; margin-bottom: 15px; padding: 8px; background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.1); color: #fff; border-radius: 4px;">
+        <label style="display:block; margin-bottom: 5px; color: #a0a0a0; font-size: 0.9em;">Název pravé kategorie:</label>
+        <input type="text" id="cardB" value="Kategorie B" style="width: 100%; box-sizing: border-box; padding: 8px; background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.1); color: #fff; border-radius: 4px;">
+    `, (modal) => {
+        const a = modal.querySelector('#cardA').value || 'Kategorie A';
+        const b = modal.querySelector('#cardB').value || 'Kategorie B';
+        insertRankingCards(a, b);
+    });
+}
+
+function showCtaModal() {
+    createTemplateModal('Závěrečné tlačítko (CTA)', `
+        <label style="display:block; margin-bottom: 5px; color: #a0a0a0; font-size: 0.9em;">Nadpis boxu:</label>
+        <input type="text" id="ctaTitle" value="Zajímají vás detailní kola a body?" style="width: 100%; box-sizing: border-box; margin-bottom: 15px; padding: 8px; background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.1); color: #fff; border-radius: 4px;">
+        <label style="display:block; margin-bottom: 5px; color: #a0a0a0; font-size: 0.9em;">Text tlačítka:</label>
+        <input type="text" id="ctaBtn" value="Kompletní výsledky" style="width: 100%; box-sizing: border-box; margin-bottom: 15px; padding: 8px; background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.1); color: #fff; border-radius: 4px;">
+        <label style="display:block; margin-bottom: 5px; color: #a0a0a0; font-size: 0.9em;">Cílový Odkaz (URL):</label>
+        <input type="url" id="ctaUrl" placeholder="https://" value="https://" style="width: 100%; box-sizing: border-box; padding: 8px; background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.1); color: #fff; border-radius: 4px;">
+    `, (modal) => {
+        const title = modal.querySelector('#ctaTitle').value || 'Zajímají vás detaily?';
+        const btnText = modal.querySelector('#ctaBtn').value || 'Kompletní výsledky';
+        const url = modal.querySelector('#ctaUrl').value || '#';
+        insertCtaButton(title, btnText, url);
+    });
+}
+
+
+function insertWinnersBox(titleText, rowCount) {
+    const editor = document.getElementById('articleContent');
+    const box = document.createElement('div');
+    const selection = window.getSelection();
+    box.style.cssText = 'background-color: var(--surface-color, #1e1e1e); border: 1px solid rgba(255, 255, 255, 0.05); border-left: 4px solid var(--primary-color, #d4af37); padding: 20px; border-radius: 4px 8px 8px 4px; margin-bottom: 30px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);';
+    
+    let rows = '';
+    for(let i = 0; i < rowCount; i++) {
+        rows += '<li style="margin-bottom: ' + (i === rowCount - 1 ? '0' : '10px') + '; color: #cbd5e1;"><strong>[Rok/Skupina]:</strong> 🥇 [Jméno] &nbsp;|&nbsp; 🥈 [Jméno] &nbsp;|&nbsp; 🥉 [Jméno]</li>';
+    }
+
+    box.innerHTML = '<h3 style="margin-top: 0; color: var(--primary-color, #d4af37); font-size: 1.2em; display: flex; align-items: center; gap: 8px;">🏆 ' + titleText + '</h3>' +
+                    '<ul style="list-style: none; padding-left: 0; margin-bottom: 0;">' + rows + '</ul>';
 
     if (selection.rangeCount) {
         const range = selection.getRangeAt(0);
@@ -588,30 +657,20 @@ function insertWinnersBox() {
     editor.focus();
 }
 
-function insertRankingCards() {
+function insertRankingCards(catA, catB) {
     const editor = document.getElementById('articleContent');
     const selection = window.getSelection();
 
     const container = document.createElement('div');
     container.style.cssText = 'display: flex; flex-wrap: wrap; gap: 20px; margin-bottom: 30px;';
-    container.innerHTML = `
-        <div style="flex: 1; min-width: 250px; background: var(--surface-color, #1e1e1e); border: 1px solid rgba(255, 255, 255, 0.05); padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);">
-            <h4 style="margin-top: 0; color: var(--text-muted, #a0a0a0); font-size: 1.1em; border-bottom: 1px solid rgba(255, 255, 255, 0.05); padding-bottom: 10px;">🏆 [Kategorie A]</h4>
-            <p style="margin: 0; line-height: 2;">
-                🥇 <strong style="color: #ffffff;">[Zlato]</strong><br>
-                🥈 [Stříbro]<br>
-                🥉 [Bronz]
-            </p>
-        </div>
-        <div style="flex: 1; min-width: 250px; background: var(--surface-color, #1e1e1e); border: 1px solid rgba(255, 255, 255, 0.05); padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);">
-            <h4 style="margin-top: 0; color: var(--text-muted, #a0a0a0); font-size: 1.1em; border-bottom: 1px solid rgba(255, 255, 255, 0.05); padding-bottom: 10px;">🏆 [Kategorie B]</h4>
-            <p style="margin: 0; line-height: 2;">
-                🥇 <strong style="color: #ffffff;">[Zlato]</strong><br>
-                🥈 [Stříbro]<br>
-                🥉 [Bronz]
-            </p>
-        </div>
-    `;
+    container.innerHTML = '<div style="flex: 1; min-width: 250px; background: var(--surface-color, #1e1e1e); border: 1px solid rgba(255, 255, 255, 0.05); padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);">' +
+            '<h4 style="margin-top: 0; color: var(--text-muted, #a0a0a0); font-size: 1.1em; border-bottom: 1px solid rgba(255, 255, 255, 0.05); padding-bottom: 10px;">🏆 ' + catA + '</h4>' +
+            '<p style="margin: 0; line-height: 2;">🥇 <strong style="color: #ffffff;">[Výherce]</strong><br>🥈 [Stříbro]<br>🥉 [Bronz]</p>' +
+        '</div>' +
+        '<div style="flex: 1; min-width: 250px; background: var(--surface-color, #1e1e1e); border: 1px solid rgba(255, 255, 255, 0.05); padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);">' +
+            '<h4 style="margin-top: 0; color: var(--text-muted, #a0a0a0); font-size: 1.1em; border-bottom: 1px solid rgba(255, 255, 255, 0.05); padding-bottom: 10px;">🏆 ' + catB + '</h4>' +
+            '<p style="margin: 0; line-height: 2;">🥇 <strong style="color: #ffffff;">[Výherce]</strong><br>🥈 [Stříbro]<br>🥉 [Bronz]</p>' +
+        '</div>';
 
     if (selection.rangeCount) {
         const range = selection.getRangeAt(0);
@@ -624,7 +683,6 @@ function insertRankingCards() {
         container.parentNode.insertBefore(p, container.nextSibling);
     }
 
-    // Move cursor to new paragraph
     const newRange = document.createRange();
     newRange.setStart(p, 0);
     newRange.collapse(true);
@@ -634,21 +692,15 @@ function insertRankingCards() {
     editor.focus();
 }
 
-function insertCtaButton() {
+function insertCtaButton(titleText, btnText, urlTarget) {
     const editor = document.getElementById('articleContent');
     const selection = window.getSelection();
 
     const container = document.createElement('div');
     container.style.cssText = 'text-align: center; margin-top: 50px; margin-bottom: 20px; padding: 30px 20px; background: var(--surface-color, #1e1e1e); border-radius: 12px; border: 1px solid rgba(212, 175, 55, 0.2);';
-    container.innerHTML = `
-        <h3 style="margin-top: 0; color: #ffffff; font-size: 1.3em;">[Nadpis sekce]</h3>
-        <a href="https://" class="cta-button" target="_blank" rel="noopener noreferrer" style="display: inline-block; background-color: var(--primary-color, #d4af37); color: var(--secondary-color, #1a1a1a); padding: 12px 30px; text-decoration: none; border-radius: 50px; font-size: 1.1em; font-weight: 600; margin: 20px 0; box-shadow: 0 4px 12px rgba(212, 175, 55, 0.3); border: none;">
-            🔗 [Text tlačítka - dvojklik pro úpravu odkazu]
-        </a>
-        <p style="margin-bottom: 0; color: var(--text-muted, #a0a0a0); font-size: 0.95em;">
-            [Doplňující podtitulek nebo smažte]
-        </p>
-    `;
+    container.innerHTML = '<h3 style="margin-top: 0; color: #ffffff; font-size: 1.3em;">' + titleText + '</h3>' +
+        '<a href="' + urlTarget + '" class="cta-button" target="_blank" rel="noopener noreferrer" style="display: inline-block; background-color: var(--primary-color, #d4af37); color: var(--secondary-color, #1a1a1a); padding: 12px 30px; text-decoration: none; border-radius: 50px; font-size: 1.1em; font-weight: 600; margin: 20px 0; box-shadow: 0 4px 12px rgba(212, 175, 55, 0.3); border: none;">🔗 ' + btnText + '</a>' +
+        '<p style="margin-bottom: 0; color: var(--text-muted, #a0a0a0); font-size: 0.95em;">[Doplňující text, např. odkaz na fotogalerii níže, nebo smažte]</p>';
 
     if (selection.rangeCount) {
         const range = selection.getRangeAt(0);
@@ -661,7 +713,6 @@ function insertCtaButton() {
         container.parentNode.insertBefore(p, container.nextSibling);
     }
 
-    // Move cursor to new paragraph
     const newRange = document.createRange();
     newRange.setStart(p, 0);
     newRange.collapse(true);
@@ -679,3 +730,6 @@ window.hideSlashMenu = hideSlashMenu;
 window.insertWinnersBox = insertWinnersBox;
 window.insertRankingCards = insertRankingCards;
 window.insertCtaButton = insertCtaButton;
+window.showWinnersModal = showWinnersModal;
+window.showRankingCardsModal = showRankingCardsModal;
+window.showCtaModal = showCtaModal;

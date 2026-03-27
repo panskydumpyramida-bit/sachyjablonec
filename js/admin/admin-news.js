@@ -854,6 +854,7 @@ function renderGames() {
                 ${idSection}
             </div>
             <div class="game-actions">
+                ${isPgnGame ? `<button class="action-btn" onclick="openQuickFragmentModal(${index})" title="Vytvořit fragment ✂️" style="color: #60a5fa;"><i class="fa-solid fa-scissors"></i></button>` : ''}
                 <label title="Komentovaná" style="cursor:pointer; display: flex; align-items: center; gap: 0.25rem; font-size: 0.75rem; color: var(--text-muted);">
                     <input type="checkbox" ${game.commented ? 'checked' : ''} onchange="toggleGameCommented(${index}, this.checked)">
                     <i class="fa-regular fa-comment-dots"></i>
@@ -865,6 +866,135 @@ function renderGames() {
 
     list.innerHTML = items;
     initDragAndDrop();
+}
+
+function openQuickFragmentModal(gameIndex) {
+    const game = games[gameIndex];
+    if (!game || !game.pgn) return;
+
+    const overlay = document.createElement('div');
+    overlay.id = 'quickFragmentOverlay';
+    overlay.style.cssText = 'position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,0.8);display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px);';
+
+    const modal = document.createElement('div');
+    modal.style.cssText = 'background:#1e1e1e;border:1px solid rgba(96,165,250,0.3);border-radius:12px;padding:1.5rem;max-width:350px;width:90%;color:#fff;box-shadow:0 10px 30px rgba(0,0,0,0.5);';
+
+    modal.innerHTML = `
+        <h3 style="margin:0 0 1rem 0;color:#60a5fa;display:flex;align-items:center;gap:0.5rem;">
+            <i class="fa-solid fa-scissors"></i> Rychlý fragment
+        </h3>
+        <p style="font-size:0.85rem;color:#aaa;margin-bottom:1rem;">Tato akce vyřízne část partie <strong>${escapeHtml(game.title)}</strong> a uloží ji do databáze jako fragment pro použití v článcích.</p>
+        
+        <div style="display:flex;gap:1rem;margin-bottom:1rem;">
+            <div style="flex:1;">
+                <label style="display:block;font-size:0.8rem;color:#888;margin-bottom:0.25rem;">Od tahu č.</label>
+                <input type="number" id="qfFrom" min="1" value="1" style="width:100%;padding:0.5rem;border-radius:6px;border:1px solid rgba(255,255,255,0.1);background:rgba(0,0,0,0.3);color:#fff;">
+            </div>
+            <div style="flex:1;">
+                <label style="display:block;font-size:0.8rem;color:#888;margin-bottom:0.25rem;">Do tahu č.</label>
+                <input type="number" id="qfTo" min="1" value="40" style="width:100%;padding:0.5rem;border-radius:6px;border:1px solid rgba(255,255,255,0.1);background:rgba(0,0,0,0.3);color:#fff;">
+            </div>
+        </div>
+        
+        <div style="display:flex;justify-content:flex-end;gap:0.5rem;margin-top:1.5rem;">
+            <button class="btn-secondary" onclick="document.getElementById('quickFragmentOverlay').remove()">Zrušit</button>
+            <button class="btn-primary" id="qfSaveBtn" style="background:#60a5fa;color:#000;border:none;">Vytvořit fragment</button>
+        </div>
+    `;
+
+    overlay.appendChild(modal);
+    document.body.appendChild(overlay);
+
+    document.getElementById('qfSaveBtn').addEventListener('click', async () => {
+        const fromMove = parseInt(document.getElementById('qfFrom').value) || 1;
+        const toMove = parseInt(document.getElementById('qfTo').value) || 99;
+        
+        const saveBtn = document.getElementById('qfSaveBtn');
+        saveBtn.disabled = true;
+        saveBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Ukládám...';
+
+        try {
+            // Parse PGN and extract fragment
+            const chess = new Chess();
+            if (!chess.load_pgn(game.pgn)) {
+                // Fallback stripping disambiguation if normal load fails
+                let safePgn = game.pgn.replace(/([RNBQ])([a-h1-8])([a-h][1-8])/g, '$1$3');
+                if (!chess.load_pgn(safePgn)) throw new Error('Nepodařilo se naparsovat PGN partie.');
+            }
+            
+            const history = chess.history({ verbose: true });
+            if (history.length === 0) throw new Error('Partie neobsahuje žádné tahy.');
+            
+            const startPly = Math.max(0, (fromMove - 1) * 2);
+            const endPly = Math.min(history.length, toMove * 2);
+            
+            if (startPly >= history.length) throw new Error('Zadaný počáteční tah je mimo rozsah partie.');
+
+            let startFen = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1';
+            let replay = new Chess();
+            for (let i = 0; i < startPly; i++) {
+                replay.move(history[i]);
+            }
+            startFen = replay.fen();
+            
+            let fragmentPgn = '';
+            for (let i = startPly; i < endPly; i++) {
+                const move = history[i];
+                const moveNum = Math.floor(i / 2) + 1;
+                if (i % 2 === 0) {
+                    fragmentPgn += `${moveNum}. ${move.san} `;
+                } else {
+                    if (i === startPly) fragmentPgn += `${moveNum}... ${move.san} `;
+                    else fragmentPgn += `${move.san} `;
+                }
+            }
+            fragmentPgn = fragmentPgn.trim();
+
+            if (!fragmentPgn) throw new Error('Fragment po vyříznutí neobsahuje žádné tahy.');
+
+            // Extract players from title "White vs Black"
+            let white = 'Bílý', black = 'Černý';
+            if (game.title && game.title.includes('vs')) {
+                const parts = game.title.split('vs');
+                white = parts[0].trim();
+                black = parts[1].trim();
+            }
+
+            const token = window.authToken || localStorage.getItem('authToken') || localStorage.getItem('auth_token');
+            const res = await fetch(`${window.API_URL || ''}/fragments`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({
+                    title: `[Výřez článkové partie] ${game.title}`,
+                    pgn: fragmentPgn,
+                    startFen,
+                    fromMove,
+                    toMove,
+                    white,
+                    black
+                })
+            });
+
+            if (!res.ok) throw new Error('Chyba serveru při ukládání.');
+
+            const data = await res.json();
+            alert(`✅ Fragment #${data.id} byl úspěšně vytvořen! Můžete si ho do textu vložit přes ikonu Nůžek na horním panelu.`);
+            
+            overlay.remove();
+        } catch (e) {
+            console.error(e);
+            alert(`Chyba: ${e.message}`);
+            saveBtn.disabled = false;
+            saveBtn.innerHTML = 'Vytvořit fragment';
+        }
+    });
+
+    overlay.addEventListener('click', (e) => {
+        if (e.target === overlay) overlay.remove();
+    });
 }
 
 function addGame() {
@@ -1279,5 +1409,7 @@ window.setupGalleryDropzone = setupGalleryDropzone;
 
 // Modal exports moved to js/admin/admin-news-modals.js
 // (showRecordedGamesModal, showNewsGamePgnModal, showHeaderModal, etc.)
+
+window.openQuickFragmentModal = openQuickFragmentModal;
 
 console.log('[admin-news] Module loaded successfully');

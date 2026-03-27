@@ -108,6 +108,19 @@ Editor podporuje základní HTML:
 <ul><li>Odrážky</li></ul>
 ```
 
+### Lomítkové šablony (Slash commands)
+
+Při úpravě nebo psaní nového článku můžete na nový řádek (nebo za mezeru) napsat lomítko `/` pro otevření rychlého menu se šablonami:
+- **/vitezove** – Zlatý box vítězů pro aktuality i archivy turnajů.
+- **/karty** – Dvousloupcové karty pro zvýraznění stupňů vítězů ve dvou kategoriích.
+- **/cta** – Závěrečné tlačítko (Call To Action) s odkazem (např. na výsledky na Chess-Results).
+
+Po výběru šablony se otevře vyskakovací okno, kde vyplníte požadované údaje (nadpis, počty atd.). Šablona se poté automaticky vloží do textu. Pokud například u CTA tlačítka chcete později upravit URL adresu, stačí na tlačítko v editoru **dvakrát kliknout**.
+
+### Automatický převod textu na tabulku
+
+V editoru najdete tlačítko 📊 (Tabulka). Pokud označíte surová data (například výsledky turnaje překopírované z Wordu či webu) a kliknete na tlačítko tabulky, systém se pokusí (pomocí AI) převést text na reprezentativní a responzivní tabulku.
+
 ### Přidání partií do článku
 
 #### Způsob 1: PGN formát
