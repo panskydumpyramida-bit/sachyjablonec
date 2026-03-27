@@ -3641,6 +3641,7 @@ function showShortcutsModal() {
                     <div>🖼️ <strong>Drag & Drop</strong> – Přetáhněte obrázek přímo do editoru</div>
                     <div>📋 <strong>Shift+Paste</strong> – Vloží text bez formátování</div>
                     <div>🎨 <strong>Paleta</strong> – Klikněte na ikonu palety pro barvy textu</div>
+                    <div>⚡ <strong>Slash příkazy</strong> – Na prázdném řádku napište <kbd style="background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 4px; font-family: monospace; border: 1px solid rgba(255,255,255,0.2);">/</kbd> a uvidíte menu šablon. Rychlé kódy: <strong>/vitezove</strong>, <strong>/karty</strong>, <strong>/cta</strong>.</div>
                 </div>
             </div>
 
