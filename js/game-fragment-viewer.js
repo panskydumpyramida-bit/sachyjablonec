@@ -84,18 +84,53 @@
         const chess = new Chess(fragment.startFen || undefined);
         const moves = [];
         if (fragment.pgn) {
-            const pgnClean = fragment.pgn.replace(/\[.*?\]\s*/g, '').replace(/\b(1-0|0-1|1\/2-1\/2|\*)\s*$/, '').trim();
-            const tokens = pgnClean.split(/\s+/).filter(t => t && !t.match(/^\d+\.+$/));
-            tokens.forEach(san => {
-                const move = chess.move(san);
-                if (move) moves.push({ san: move.san, fen: chess.fen() });
+            let pgnClean = fragment.pgn.replace(/\[.*?\]\s*/g, '').replace(/\b(1-0|0-1|1\/2-1\/2|\*)\s*$/, '').trim();
+            let pgnNoVars = pgnClean;
+            let lastLen;
+            do {
+                lastLen = pgnNoVars.length;
+                pgnNoVars = pgnNoVars.replace(/\([^()]*\)/g, '');
+            } while (pgnNoVars.length < lastLen);
+
+            const regex = /{[^}]*}|\$\d+|[!?]+|[a-zA-Z0-9\-+=#]+/g;
+            const rawTokens = pgnNoVars.match(regex) || [];
+            
+            let currentMoveObj = null;
+
+            rawTokens.forEach(token => {
+                if (token.match(/^\d+\.?+$/) || token.match(/^\d+\.\.\.$/)) return;
+                
+                if (token.startsWith('{')) {
+                    if (currentMoveObj) {
+                        currentMoveObj.comment = token.substring(1, token.length - 1).trim();
+                    }
+                } else if (token.startsWith('$')) {
+                    const nagMap = { '$1': '!', '$2': '?', '$3': '!!', '$4': '??', '$5': '!?', '$6': '?!' };
+                    if (currentMoveObj && nagMap[token]) currentMoveObj.nag = nagMap[token];
+                } else if (token.match(/^[!?]+$/)) {
+                    if (currentMoveObj) currentMoveObj.nag = token;
+                } else {
+                    const move = chess.move(token);
+                    if (move) {
+                        currentMoveObj = { san: move.san, fen: chess.fen(), comment: '', nag: '' };
+                        moves.push(currentMoveObj);
+                    }
+                }
             });
         }
 
         const startFen = fragment.startFen || 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1';
-
         const startFenTurn = startFen.split(' ')[1] || 'w';
-        const renderMoveSpan = (i, san) => `<span class="frag-move" data-frag-uid="${uid}" data-move-idx="${i}" style="cursor:pointer;padding:1px 4px;border-radius:3px;font-size:0.8rem;transition:background 0.15s;display:inline-block;flex:1;text-align:left;">${san}</span>`;
+        
+        const renderMoveSpan = (i, moveObj) => {
+            const nagHtml = moveObj.nag ? `<span style="color:#60a5fa;font-weight:bold;margin-left:2px;">${moveObj.nag}</span>` : '';
+            return `<span class="frag-move" data-frag-uid="${uid}" data-move-idx="${i}" style="cursor:pointer;padding:1px 4px;border-radius:3px;font-size:0.8rem;transition:background 0.15s;display:inline-block;flex:1;text-align:left;">${moveObj.san}${nagHtml}</span>`;
+        };
+        
+        const renderComment = (moveObj) => {
+            if (!moveObj || !moveObj.comment) return '';
+            return `<div style="font-size:0.75rem; color:#9ca3af; padding-left:28px; padding-bottom:6px; line-height:1.3; font-style:italic;">${escapeHtml(moveObj.comment)}</div>`;
+        };
         
         let moveListHtml = '';
         let mIdx = 0;
@@ -103,23 +138,35 @@
         
         while (mIdx < moves.length) {
             moveListHtml += `<div style="display:flex; gap:0.3rem; margin-bottom:0.1rem; align-items:center;">`;
+            let wIdx = -1, bIdx = -1;
+            
             if (mIdx === 0 && startFenTurn === 'b') {
                 moveListHtml += `<span style="color:var(--text-muted);font-size:0.75rem;width:24px;text-align:right;">${pgnMoveNum}...</span>`;
-                moveListHtml += `<span style="flex:1;"></span>`; // empty space for white
-                moveListHtml += renderMoveSpan(mIdx, moves[mIdx].san);
+                moveListHtml += `<span style="flex:1;"></span>`;
+                moveListHtml += renderMoveSpan(mIdx, moves[mIdx]);
+                bIdx = mIdx;
                 mIdx++;
                 pgnMoveNum++;
             } else {
                 moveListHtml += `<span style="color:var(--text-muted);font-size:0.75rem;width:24px;text-align:right;">${pgnMoveNum}.</span>`;
-                moveListHtml += renderMoveSpan(mIdx, moves[mIdx].san);
+                moveListHtml += renderMoveSpan(mIdx, moves[mIdx]);
+                wIdx = mIdx;
                 mIdx++;
                 if (mIdx < moves.length) {
-                    moveListHtml += renderMoveSpan(mIdx, moves[mIdx].san);
+                    moveListHtml += renderMoveSpan(mIdx, moves[mIdx]);
+                    bIdx = mIdx;
                     mIdx++;
                 }
                 pgnMoveNum++;
             }
             moveListHtml += `</div>`;
+            
+            if (wIdx !== -1 && moves[wIdx].comment) {
+                moveListHtml += renderComment(moves[wIdx]);
+            }
+            if (bIdx !== -1 && moves[bIdx].comment) {
+                moveListHtml += renderComment(moves[bIdx]);
+            }
         }
 
         let cleanWhite = fragment.white ? fragment.white.replace(/\s*\(\d+\s*[-–]\s*\d+\)/g, '') : '';
