@@ -215,9 +215,6 @@
                         <div id="${uid}-moves" style="padding:0.5rem;line-height:1.7;max-height:240px;overflow-y:auto;word-break:break-word;">
                             ${moveListHtml || '<span style="color:var(--text-muted);font-size:0.8rem;">Žádné tahy</span>'}
                         </div>
-                        <div style="display:flex;justify-content:flex-end;align-items:center;padding:0.5rem 0.75rem;background:rgba(0,0,0,0.15);border-top:1px solid rgba(255,255,255,0.05);">
-                            <span id="${uid}-pos" style="font-size:0.65rem;color:var(--text-muted,#a0a0a0);">0/${moves.length}</span>
-                        </div>
                     </div>
                 </div>
             </div>`;
