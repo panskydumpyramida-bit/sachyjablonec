@@ -2574,35 +2574,21 @@ function openAtomicBlockEditModal(block) {
     let fieldsHtml = '';
 
     if (isDiagram) {
-        const headerEl = block.querySelector('.book-header .book-caption');
         const descEl = block.querySelector('.book-description');
-        const headerText = headerEl ? headerEl.textContent.trim() : '';
         const descText = descEl ? descEl.textContent.replace(/\s*·\s*(Bílý|Černý) na tahu\s*$/, '').trim() : '';
-        const diagrams = JSON.parse(block.dataset.diagrams || '[]');
-        const isPuzzle = diagrams.some(d => d.isPuzzle || d.type === 'puzzle');
 
         fieldsHtml = `
             <div style="margin-bottom: 0.75rem;">
-                <label style="font-size: 0.75rem; color: rgba(255,255,255,0.5); display: block; margin-bottom: 4px;">Nadpis</label>
-                <input id="abeTitle" type="text" value="${headerText.replace(/"/g, '&quot;')}" 
-                    style="width: 100%; padding: 0.5rem 0.65rem; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15);
-                    border-radius: 6px; color: #fff; font-size: 0.85rem; outline: none;"
-                    placeholder="Diagram">
-            </div>
-            <div style="margin-bottom: 0.75rem;">
-                <label style="font-size: 0.75rem; color: rgba(255,255,255,0.5); display: block; margin-bottom: 4px;">Popisek</label>
+                <label style="font-size: 0.75rem; color: rgba(255,255,255,0.5); display: block; margin-bottom: 4px;">Popisek diagramu</label>
                 <input id="abeDesc" type="text" value="${descText.replace(/"/g, '&quot;')}" 
                     style="width: 100%; padding: 0.5rem 0.65rem; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15);
                     border-radius: 6px; color: #fff; font-size: 0.85rem; outline: none;"
-                    placeholder="Popisek diagramu">
+                    placeholder="Např. Pozice po 15. tahu">
             </div>
-            <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.85rem; color: rgba(255,255,255,0.7); margin-bottom: 0.75rem; cursor: pointer;">
-                <input id="abePuzzle" type="checkbox" ${isPuzzle ? 'checked' : ''} style="accent-color: #60a5fa;">
-                <i class="fa-solid fa-puzzle-piece" style="color: #d4af37;"></i> Označit jako hádanku
-            </label>
         `;
     } else if (isFragment) {
-        const titleEl = block.querySelector('.fragment-header span, .fragment-title');
+        // Find the title element in the fragment placeholder
+        const titleEl = block.querySelector('span[style*="font-weight"]') || block.querySelector('.fragment-header span');
         const titleText = titleEl ? titleEl.textContent.trim() : '';
 
         fieldsHtml = `
@@ -2635,6 +2621,25 @@ function openAtomicBlockEditModal(block) {
                 </button>
             </div>
             ${fieldsHtml}
+            ${isDiagram ? `
+            <div style="display: flex; gap: 6px; margin-bottom: 0.75rem; flex-wrap: wrap;">
+                <button id="abeEditSource" style="
+                    flex: 1; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12);
+                    color: rgba(255,255,255,0.7); padding: 0.45rem 0.6rem; border-radius: 6px; cursor: pointer;
+                    font-size: 0.78rem; transition: all 0.2s; display: flex; align-items: center; gap: 5px;
+                "><i class="fa-solid fa-pen"></i> Upravit zdroj</button>
+                <button id="abeRefresh" style="
+                    flex: 1; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12);
+                    color: rgba(255,255,255,0.7); padding: 0.45rem 0.6rem; border-radius: 6px; cursor: pointer;
+                    font-size: 0.78rem; transition: all 0.2s; display: flex; align-items: center; gap: 5px;
+                "><i class="fa-solid fa-rotate"></i> Obnovit data</button>
+                <button id="abeChangeDiagrams" style="
+                    flex: 1; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12);
+                    color: rgba(255,255,255,0.7); padding: 0.45rem 0.6rem; border-radius: 6px; cursor: pointer;
+                    font-size: 0.78rem; transition: all 0.2s; display: flex; align-items: center; gap: 5px;
+                "><i class="fa-solid fa-images"></i> Změnit diagramy</button>
+            </div>
+            ` : ''}
             <div style="display: flex; gap: 8px; justify-content: flex-end;">
                 <button id="abeDelete" style="
                     background: rgba(239,68,68,0.15); border: 1px solid rgba(239,68,68,0.3);
@@ -2658,6 +2663,17 @@ function openAtomicBlockEditModal(block) {
         if (firstInput) firstInput.focus();
     }, 50);
 
+    // Live preview: update fragment title in editor as user types
+    if (isFragment) {
+        const titleInput = modal.querySelector('#abeTitle');
+        const titleEl = block.querySelector('span[style*="font-weight"]') || block.querySelector('.fragment-header span');
+        if (titleInput && titleEl) {
+            titleInput.addEventListener('input', () => {
+                titleEl.textContent = titleInput.value || 'Fragment';
+            });
+        }
+    }
+
     // Close modal
     const closeModal = () => { modal.remove(); };
     modal.querySelector('#abeClose').onclick = closeModal;
@@ -2673,44 +2689,73 @@ function openAtomicBlockEditModal(block) {
         }
     };
 
+    // Diagram-specific action buttons
+    if (isDiagram) {
+        const diagrams = JSON.parse(block.dataset.diagrams || '[]');
+        const currentIdx = parseInt(block.dataset.current || '0');
+        const currentDiagram = diagrams[currentIdx];
+
+        // Edit Source - open in game-recorder
+        const editBtn = modal.querySelector('#abeEditSource');
+        if (editBtn) {
+            editBtn.onclick = () => {
+                if (currentDiagram && currentDiagram.id) {
+                    closeModal();
+                    window.open('game-recorder.html?diagramId=' + currentDiagram.id, '_blank');
+                } else {
+                    showToast('⚠️ Tento diagram nemá ID, nelze upravit zdroj.', 'warning');
+                }
+            };
+        }
+
+        // Refresh data from server
+        const refreshBtn = modal.querySelector('#abeRefresh');
+        if (refreshBtn) {
+            refreshBtn.onclick = async () => {
+                if (currentDiagram && currentDiagram.id) {
+                    const icon = refreshBtn.querySelector('i');
+                    icon.classList.add('fa-spin');
+                    try {
+                        const token = window.authToken || localStorage.getItem('auth_token');
+                        const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
+                        const response = await fetch(`/api/diagrams/${currentDiagram.id}`, { headers });
+                        if (!response.ok) throw new Error('Chyba ' + response.status);
+                        const updatedData = await response.json();
+                        diagrams[currentIdx] = { ...currentDiagram, ...updatedData };
+                        block.dataset.diagrams = JSON.stringify(diagrams);
+                        if (typeof window.initDiagramBooks === 'function') window.initDiagramBooks();
+                        icon.classList.remove('fa-spin');
+                        closeModal();
+                        showToast('✅ Diagram aktualizován', 'success');
+                        updatePreview();
+                    } catch (e) {
+                        icon.classList.remove('fa-spin');
+                        showToast('❌ ' + e.message, 'error');
+                    }
+                } else {
+                    showToast('⚠️ Tento diagram nemá ID, nelze obnovit.', 'warning');
+                }
+            };
+        }
+
+        // Change diagrams - re-open selector
+        const changeBtn = modal.querySelector('#abeChangeDiagrams');
+        if (changeBtn) {
+            changeBtn.onclick = () => {
+                closeModal();
+                openDiagramBookEditor(block);
+            };
+        }
+    }
+
     // Save changes
     modal.querySelector('#abeSave').onclick = () => {
         if (isDiagram) {
-            const newTitle = modal.querySelector('#abeTitle').value.trim();
             const newDesc = modal.querySelector('#abeDesc').value.trim();
-            const newPuzzle = modal.querySelector('#abePuzzle').checked;
-
-            // Update header title
-            const headerEl = block.querySelector('.book-header .book-caption');
-            if (headerEl) headerEl.textContent = newTitle || 'Diagram';
-
-            // Update description
             const descEl = block.querySelector('.book-description');
             if (descEl) descEl.textContent = newDesc;
-
-            // Update puzzle badge
-            const diagrams = JSON.parse(block.dataset.diagrams || '[]');
-            diagrams.forEach(d => { d.isPuzzle = newPuzzle; d.type = newPuzzle ? 'puzzle' : 'diagram'; });
-            block.dataset.diagrams = JSON.stringify(diagrams);
-
-            // Update/add/remove puzzle badge
-            let badge = block.querySelector('.diagram-type-badge');
-            if (newPuzzle && !badge) {
-                const boardContainer = block.querySelector('.book-board-container');
-                if (boardContainer) {
-                    badge = document.createElement('div');
-                    badge.className = 'diagram-type-badge';
-                    badge.innerHTML = '<i class="fa-solid fa-puzzle-piece"></i>';
-                    badge.style.cssText = 'position:absolute;top:-8px;right:-8px;z-index:5;width:28px;height:28px;background:rgba(15,23,42,0.95);border:1px solid rgba(212,175,55,0.4);border-radius:8px;padding:5px 10px;font-size:0.8rem;color:#d4af37;pointer-events:none;box-shadow:0 4px 12px rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;';
-                    boardContainer.appendChild(badge);
-                }
-            } else if (!newPuzzle && badge) {
-                badge.remove();
-            }
         } else if (isFragment) {
-            const newTitle = modal.querySelector('#abeTitle').value.trim();
-            const titleEl = block.querySelector('.fragment-header span, .fragment-title');
-            if (titleEl) titleEl.textContent = newTitle;
+            // Title already updated via live preview
         }
 
         closeModal();
