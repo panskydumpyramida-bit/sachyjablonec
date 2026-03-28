@@ -1201,10 +1201,8 @@ function insertDiagramBookToEditor(diagrams, savedRange) {
 
     const html = `<p><br></p>
         <div class="diagram-book" id="${bookId}" data-diagrams='${diagramsJson}' data-current="0" contenteditable="false" style="
-            float: right;
-            clear: right;
-            max-width: 360px;
-            margin: 0.75rem 0 0.75rem 1rem;
+            max-width: 320px;
+            margin: 0.75rem auto;
             overflow: visible;
         ">
             <!-- Board Container -->
