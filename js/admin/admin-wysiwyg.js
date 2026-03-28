@@ -2982,29 +2982,35 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 block.addEventListener('dragstart', (e) => {
                     draggedAtomicBlock = block;
-                    block.style.opacity = '0.4';
                     e.dataTransfer.effectAllowed = 'move';
                     e.dataTransfer.setData('text/plain', 'atomic-block');
+                    // Hide original during drag so elementFromPoint finds what's underneath
+                    setTimeout(() => {
+                        block.style.opacity = '0.3';
+                        block.style.pointerEvents = 'none';
+                    }, 0);
                     // Create drop indicator
                     if (!dropIndicator) {
                         dropIndicator = document.createElement('div');
                         dropIndicator.style.cssText = `
                             height: 3px; background: #60a5fa; border-radius: 2px;
-                            margin: 2px 0; pointer-events: none; transition: opacity 0.15s;
-                            box-shadow: 0 0 8px rgba(96,165,250,0.5);
+                            margin: 4px 0; pointer-events: none;
+                            box-shadow: 0 0 12px rgba(96,165,250,0.6);
                         `;
                     }
                 });
 
                 block.addEventListener('dragend', () => {
                     block.style.opacity = '1';
+                    block.style.pointerEvents = '';
                     draggedAtomicBlock = null;
                     if (dropIndicator && dropIndicator.parentNode) {
                         dropIndicator.remove();
                     }
-                    // Clean up any remaining drag-over styles
-                    editor.querySelectorAll('.content-col').forEach(col => {
-                        col.style.outline = '';
+                    // Clean up all highlights
+                    editor.querySelectorAll('.content-col, .content-columns').forEach(el => {
+                        el.style.outline = '';
+                        el.style.background = '';
                     });
                 });
             });
@@ -3052,11 +3058,28 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 }
 
-                // Highlight content-col on hover
+                // Highlight drop target container
                 const hoveredCol = target.closest('.content-col');
+                const hoveredColBlock = target.closest('.content-columns');
                 editor.querySelectorAll('.content-col').forEach(col => {
-                    col.style.outline = col === hoveredCol ? '2px dashed rgba(96,165,250,0.4)' : '';
+                    if (col === hoveredCol) {
+                        col.style.outline = '2px dashed rgba(96,165,250,0.5)';
+                        col.style.background = 'rgba(96,165,250,0.08)';
+                    } else {
+                        col.style.outline = '';
+                        col.style.background = '';
+                    }
                 });
+                // Also highlight the content-columns wrapper subtly
+                editor.querySelectorAll('.content-columns').forEach(cw => {
+                    cw.style.outline = cw === hoveredColBlock ? '1px solid rgba(96,165,250,0.2)' : '';
+                });
+                // Highlight editor itself if not inside a column
+                if (!hoveredCol) {
+                    editor.style.outline = '2px dashed rgba(96,165,250,0.3)';
+                } else {
+                    editor.style.outline = '';
+                }
 
                 return;
             }
@@ -3070,11 +3093,13 @@ document.addEventListener('DOMContentLoaded', () => {
             e.preventDefault();
             e.stopPropagation();
             editor.classList.remove('drag-over');
-            // Clean up column highlights
+            // Clean up all highlights
             if (draggedAtomicBlock) {
-                editor.querySelectorAll('.content-col').forEach(col => {
-                    col.style.outline = '';
+                editor.querySelectorAll('.content-col, .content-columns').forEach(el => {
+                    el.style.outline = '';
+                    el.style.background = '';
                 });
+                editor.style.outline = '';
             }
         });
 
@@ -3088,6 +3113,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 dropIndicator.parentNode.insertBefore(draggedAtomicBlock, dropIndicator);
                 dropIndicator.remove();
                 draggedAtomicBlock.style.opacity = '1';
+                draggedAtomicBlock.style.pointerEvents = '';
 
                 // Ensure paragraphs exist around the moved block
                 if (!draggedAtomicBlock.previousElementSibling || 
@@ -3104,9 +3130,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
 
                 draggedAtomicBlock = null;
-                editor.querySelectorAll('.content-col').forEach(col => {
-                    col.style.outline = '';
+                editor.querySelectorAll('.content-col, .content-columns').forEach(el => {
+                    el.style.outline = '';
+                    el.style.background = '';
                 });
+                editor.style.outline = '';
                 updatePreview();
                 showToast('✅ Blok přesunut', 'success');
                 return;
