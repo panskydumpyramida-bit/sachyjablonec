@@ -889,18 +889,32 @@ function openQuickFragmentModal(gameIndex) {
     }
     if (maxMove < 1) maxMove = 1;
 
+    // Pre-parse all moves for preview
+    let allMoves = [];
+    try {
+        const previewChess = new Chess();
+        let pgnText = game.pgn;
+        if (!previewChess.load_pgn(pgnText)) {
+            pgnText = pgnText.replace(/([RNBQ])([a-h1-8])([a-h][1-8])/g, '$1$3');
+            previewChess.load_pgn(pgnText);
+        }
+        allMoves = previewChess.history({ verbose: true });
+    } catch (e) { console.warn('Preview parse failed', e); }
+
+    const boardId = 'qfPreviewBoard';
+
     const overlay = document.createElement('div');
     overlay.id = 'quickFragmentOverlay';
     overlay.style.cssText = 'position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,0.8);display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px);';
 
     const modal = document.createElement('div');
-    modal.style.cssText = 'background:#1e1e1e;border:1px solid rgba(96,165,250,0.3);border-radius:12px;padding:1.5rem;max-width:350px;width:90%;color:#fff;box-shadow:0 10px 30px rgba(0,0,0,0.5);';
+    modal.style.cssText = 'background:#1e1e1e;border:1px solid rgba(96,165,250,0.3);border-radius:12px;padding:1.5rem;max-width:480px;width:90%;color:#fff;box-shadow:0 10px 30px rgba(0,0,0,0.5);';
 
     modal.innerHTML = `
         <h3 style="margin:0 0 1rem 0;color:#60a5fa;display:flex;align-items:center;gap:0.5rem;">
             <i class="fa-solid fa-scissors"></i> Rychlý fragment
         </h3>
-        <p style="font-size:0.85rem;color:#aaa;margin-bottom:1rem;">Tato akce vyřízne část partie <strong>${escapeHtml(game.title)}</strong> a uloží ji do databáze jako fragment pro použití v článcích.</p>
+        <p style="font-size:0.85rem;color:#aaa;margin-bottom:1rem;">Vyřízne tahy z partie <strong>${escapeHtml(game.title)}</strong>.</p>
         
         <div style="display:flex;gap:1rem;margin-bottom:1rem;">
             <div style="flex:1;">
@@ -912,8 +926,17 @@ function openQuickFragmentModal(gameIndex) {
                 <input type="number" id="qfTo" min="1" max="${maxMove}" value="${maxMove}" style="width:100%;padding:0.5rem;border-radius:6px;border:1px solid rgba(255,255,255,0.1);background:rgba(0,0,0,0.3);color:#fff;">
             </div>
         </div>
+
+        <!-- Mini board preview -->
+        <div style="display:flex;gap:0.75rem;background:rgba(0,0,0,0.25);border-radius:8px;padding:0.75rem;border:1px solid rgba(255,255,255,0.05);margin-bottom:1rem;">
+            <div id="${boardId}" style="width:160px;height:160px;flex-shrink:0;border-radius:4px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.3);"></div>
+            <div style="flex:1;overflow:hidden;">
+                <div style="font-size:0.7rem;color:#888;margin-bottom:0.3rem;text-transform:uppercase;letter-spacing:0.05em;">Náhled tahů</div>
+                <div id="qfMoveList" style="font-size:0.75rem;color:#ccc;line-height:1.6;max-height:130px;overflow-y:auto;font-family:monospace;"></div>
+            </div>
+        </div>
         
-        <div style="display:flex;justify-content:flex-end;gap:0.5rem;margin-top:1.5rem;">
+        <div style="display:flex;justify-content:flex-end;gap:0.5rem;margin-top:0.5rem;">
             <button class="btn-secondary" onclick="document.getElementById('quickFragmentOverlay').remove()">Zrušit</button>
             <button class="btn-primary" id="qfSaveBtn" style="background:#60a5fa;color:#000;border:none;">Vytvořit fragment</button>
         </div>
@@ -922,7 +945,53 @@ function openQuickFragmentModal(gameIndex) {
     overlay.appendChild(modal);
     document.body.appendChild(overlay);
 
-    // Dynamic validation
+    // Init mini board
+    const PIECE_THEME = '/img/chesspieces/wikipedia/{piece}.png';
+    let previewBoard = null;
+    requestAnimationFrame(() => {
+        previewBoard = Chessboard(boardId, {
+            position: 'start',
+            pieceTheme: PIECE_THEME,
+            draggable: false,
+            showNotation: false
+        });
+        setTimeout(() => previewBoard.resize(), 50);
+        updatePreviewBoard();
+    });
+
+    function updatePreviewBoard() {
+        const from = parseInt(document.getElementById('qfFrom').value) || 1;
+        const to = parseInt(document.getElementById('qfTo').value) || maxMove;
+        const startPly = Math.max(0, (from - 1) * 2);
+        const endPly = Math.min(allMoves.length, to * 2);
+
+        // Build FEN at the end of the selected range
+        const replay = new Chess();
+        for (let i = 0; i < Math.min(endPly, allMoves.length); i++) {
+            replay.move(allMoves[i]);
+        }
+        if (previewBoard) {
+            previewBoard.position(replay.fen(), true);
+        }
+
+        // Build move list text
+        let moveHtml = '';
+        for (let i = startPly; i < endPly && i < allMoves.length; i++) {
+            const moveNum = Math.floor(i / 2) + 1;
+            if (i % 2 === 0) {
+                moveHtml += `<span style="color:#888;">${moveNum}.</span> <strong>${allMoves[i].san}</strong> `;
+            } else {
+                if (i === startPly) moveHtml += `<span style="color:#888;">${moveNum}...</span> `;
+                moveHtml += `${allMoves[i].san} `;
+            }
+        }
+        const moveListEl = document.getElementById('qfMoveList');
+        if (moveListEl) {
+            moveListEl.innerHTML = moveHtml || '<span style="color:#666;">Žádné tahy</span>';
+        }
+    }
+
+    // Dynamic validation + preview update
     const fromInput = document.getElementById('qfFrom');
     const toInput = document.getElementById('qfTo');
     
@@ -931,10 +1000,10 @@ function openQuickFragmentModal(gameIndex) {
         let tv = parseInt(toInput.value) || maxMove;
         if (fv > maxMove) fromInput.value = maxMove;
         if (fv < 1) fromInput.value = 1;
-        // If 'from' is pushed past 'to', push 'to' ahead
         if (parseInt(fromInput.value) > tv) {
             toInput.value = fromInput.value;
         }
+        updatePreviewBoard();
     });
 
     toInput.addEventListener('input', () => {
@@ -942,10 +1011,10 @@ function openQuickFragmentModal(gameIndex) {
         let tv = parseInt(toInput.value) || maxMove;
         if (tv > maxMove) toInput.value = maxMove;
         if (tv < 1) toInput.value = 1;
-        // If 'to' is pushed behind 'from', push 'from' back
         if (parseInt(toInput.value) < fv) {
             fromInput.value = toInput.value;
         }
+        updatePreviewBoard();
     });
 
     document.getElementById('qfSaveBtn').addEventListener('click', async () => {
