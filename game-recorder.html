@@ -2252,12 +2252,11 @@
                 const controlsEl = (tab !== 'partie')
                     ? document.querySelector('.controls-diagram')
                     : document.querySelector('.controls-partie');
-                const controlsH = controlsEl ? controlsEl.offsetHeight : 36;
-                const isEditorMode = (tab === 'diagram' || tab === 'hadanky');
-                const paletteH = isEditorMode ? 110 : 0;
-                const playbackH = isEditorMode ? 0 : 36;
-                const puzzlePanelH = (tab === 'hadanky') ? 36 : 0;
-                const boardMaxH = vh - headerH - tabsH - paletteH - playbackH - controlsH - puzzlePanelH - 12;
+                const controlsH = controlsEl ? controlsEl.offsetHeight : 40;
+                const paletteH = (tab === 'diagram') ? 110 : 0;  // palettes only in diagram
+                const playbackH = (tab === 'partie') ? 36 : 0;
+                const puzzlePanelH = (tab === 'hadanky') ? 40 : 0;
+                const boardMaxH = vh - headerH - tabsH - paletteH - playbackH - controlsH - puzzlePanelH - 16;
 
                 const boardEl = document.getElementById('board');
                 if (boardEl) {
@@ -2271,43 +2270,44 @@
                     }
                 }
 
-                // Context: palettes only in diagram/hadanky mode
-                const showPalettes = (tab === 'diagram' || tab === 'hadanky');
+                // === CONTEXT VISIBILITY ===
+
+                // Palettes: only in 'diagram' mode (NOT hadanky)
+                const showPalettes = (tab === 'diagram');
                 ['mobilePaletteBlack', 'mobilePaletteWhite', 'mobileAnnotTools'].forEach(id => {
                     const el = document.getElementById(id);
                     if (el) el.style.display = showPalettes ? 'flex' : 'none';
                 });
 
-                // Context: playback only in partie mode
+                // Playback controls: only in 'partie' mode
                 const playbackEl = document.querySelector('.playback-controls');
                 if (playbackEl) playbackEl.style.display = (tab === 'partie') ? 'flex' : 'none';
 
-                // Context: correct controls bar per tab
+                // Controls bar: partie has its own, diagram/hadanky share diagram controls
                 const partieCtrl = document.querySelector('.controls-partie');
                 const diagramCtrl = document.querySelector('.controls-diagram');
                 if (partieCtrl) partieCtrl.style.display = (tab === 'partie') ? 'flex' : 'none';
                 if (diagramCtrl) diagramCtrl.style.display = (tab === 'diagram' || tab === 'hadanky') ? 'flex' : 'none';
 
-                // Context: mobile puzzle panel (for hádanky)
+                // Puzzle panel: only in 'hadanky' mode
                 let puzzlePanel = document.getElementById('mobilePuzzlePanel');
                 if (tab === 'hadanky') {
                     if (!puzzlePanel) {
                         puzzlePanel = document.createElement('div');
                         puzzlePanel.id = 'mobilePuzzlePanel';
-                        puzzlePanel.className = 'mobile-tool-strip';
-                        puzzlePanel.style.cssText = 'display:flex;flex-wrap:wrap;gap:0.25rem;justify-content:center;padding:0.2rem;background:rgba(0,0,0,0.25);border-radius:4px;';
+                        puzzlePanel.style.cssText = 'display:flex;flex-wrap:wrap;gap:0.25rem;justify-content:center;padding:0.25rem 0.3rem;background:rgba(0,0,0,0.3);border-radius:4px;';
                         puzzlePanel.innerHTML = `
-                            <button class="btn-control" onclick="enableMoveRecording('correct')" style="padding:0.25rem 0.5rem;font-size:0.65rem;border-color:#22c55e;color:#22c55e;">
-                                <i class="fa-solid fa-check"></i> Správný
+                            <button class="btn-control" onclick="enableMoveRecording('correct')" style="flex:1;padding:0.3rem 0.5rem;font-size:0.7rem;border-color:#22c55e;color:#22c55e;justify-content:center;">
+                                <i class="fa-solid fa-check"></i> Správný tah
                             </button>
-                            <button class="btn-control" onclick="enableMoveRecording('alternative')" style="padding:0.25rem 0.5rem;font-size:0.65rem;border-color:#3b82f6;color:#3b82f6;">
-                                <i class="fa-solid fa-code-branch"></i> Alt
+                            <button class="btn-control" onclick="enableMoveRecording('alternative')" style="flex:1;padding:0.3rem 0.5rem;font-size:0.7rem;border-color:#3b82f6;color:#3b82f6;justify-content:center;">
+                                <i class="fa-solid fa-code-branch"></i> Alternativa
                             </button>
-                            <button class="btn-control" onclick="enableMoveRecording('mistake')" style="padding:0.25rem 0.5rem;font-size:0.65rem;border-color:#ef4444;color:#ef4444;">
+                            <button class="btn-control" onclick="enableMoveRecording('mistake')" style="flex:1;padding:0.3rem 0.5rem;font-size:0.7rem;border-color:#ef4444;color:#ef4444;justify-content:center;">
                                 <i class="fa-solid fa-xmark"></i> Chyba
                             </button>
                         `;
-                        // Insert after board
+                        // Insert after white palette / annotation tools
                         const annotEl = document.getElementById('mobileAnnotTools');
                         if (annotEl) annotEl.parentNode.insertBefore(puzzlePanel, annotEl.nextSibling);
                     }
