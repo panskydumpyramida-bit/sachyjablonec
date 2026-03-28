@@ -1372,6 +1372,23 @@
             </div>
 
             <div class="changelog-timeline">
+                <!-- 2026-03-28 v39 -->
+                <div class="changelog-entry">
+                    <div class="changelog-date">28. 3. 2026</div>
+                    <div class="changelog-version">v39</div>
+                    <div class="changelog-content">
+                        <h4>🛡️ Atomické bloky – ochrana, drag & drop, edit modal</h4>
+                        <ul>
+                            <li><strong>Atomické bloky:</strong> Diagramy a fragmenty se chovají jako chráněné objekty – nelze do nich psát ani je omylem smazat. Kliknutí otevře edit modal, Backspace/Delete maže celý blok najednou.</li>
+                            <li><strong>Drag & drop:</strong> Diagramy a fragmenty lze přetahovat myší – uvnitř editoru i mezi sloupci. Modrý indikátor ukazuje cílovou pozici, sloupce se vizuálně zvýrazní při najetí.</li>
+                            <li><strong>Edit modal – diagram:</strong> Klik na diagram otevře modal s popiskem + 3 akční tlačítka: Upravit zdroj (otevře game-recorder), Obnovit data (fetch ze serveru), Změnit diagramy (otevře selektor).</li>
+                            <li><strong>Edit modal – fragment:</strong> Klik na fragment otevře modal s názvem fragmentu – změny se v editoru projeví v reálném čase.</li>
+                            <li><strong>Rozvržení 3 sloupců:</strong> Nový layout 1/3 + 1/3 + 1/3 pro kompaktní rozmístění diagramů vedle sebe. Diagramy mají max-width 240px v třetinových sloupcích.</li>
+                            <li><strong>Reset tlačítko:</strong> Přesunuto z neviditelného board overlaye do viditelného tlačítka vedle popisku diagramu. Vždy viditelné, zvýrazní se při hoveru.</li>
+                            <li><strong>Varování:</strong> Při vložení fragmentu do 1/3 sloupce se zobrazí toast upozornění, že se fragment nevejde a je lepší použít širší layout.</li>
+                        </ul>
+                    </div>
+                </div>
                 <!-- 2026-03-27 v38 -->
                 <div class="changelog-entry">
                     <div class="changelog-date">27. 3. 2026</div>
