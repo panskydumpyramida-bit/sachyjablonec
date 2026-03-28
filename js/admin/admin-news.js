@@ -1013,7 +1013,7 @@ function openQuickFragmentModal(gameIndex) {
     fromInput.addEventListener('focus', () => { focusedField = 'start'; updatePreviewBoard(); });
     toInput.addEventListener('focus', () => { focusedField = 'end'; updatePreviewBoard(); });
     
-    fromInput.addEventListener('input', () => {
+    const handleFrom = () => {
         let fv = parseInt(fromInput.value) || 1;
         let tv = parseInt(toInput.value) || maxMove;
         if (fv > maxMove) fromInput.value = maxMove;
@@ -1022,9 +1022,8 @@ function openQuickFragmentModal(gameIndex) {
             toInput.value = fromInput.value;
         }
         updatePreviewBoard();
-    });
-
-    toInput.addEventListener('input', () => {
+    };
+    const handleTo = () => {
         let fv = parseInt(fromInput.value) || 1;
         let tv = parseInt(toInput.value) || maxMove;
         if (tv > maxMove) toInput.value = maxMove;
@@ -1033,7 +1032,12 @@ function openQuickFragmentModal(gameIndex) {
             fromInput.value = toInput.value;
         }
         updatePreviewBoard();
-    });
+    };
+
+    fromInput.addEventListener('input', handleFrom);
+    fromInput.addEventListener('change', handleFrom);
+    toInput.addEventListener('input', handleTo);
+    toInput.addEventListener('change', handleTo);
 
     document.getElementById('qfSaveBtn').addEventListener('click', async () => {
         const fromMove = parseInt(document.getElementById('qfFrom').value) || 1;
