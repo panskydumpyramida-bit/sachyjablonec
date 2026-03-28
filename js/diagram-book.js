@@ -181,28 +181,40 @@
                 display: flex;
                 flex-direction: column;
                 align-items: center;
-                background: linear-gradient(145deg, rgba(30, 41, 59, 0.95), rgba(15, 23, 42, 0.98));
-                border-radius: 16px;
-                padding: 1.25rem;
-                box-shadow: 0 10px 40px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.05);
-                border: 1px solid rgba(255,255,255,0.08);
-                max-width: 400px;
-                margin: 1rem 0 1rem 1.5rem;
+                background: var(--surface-color, #1e1e1e);
+                border-radius: 10px;
+                padding: 0;
+                box-shadow: 0 2px 12px rgba(0,0,0,0.25);
+                border: 1px solid rgba(96,165,250,0.15);
+                max-width: 360px;
+                margin: 0.75rem 0 0.75rem 1rem;
                 float: right;
                 clear: right;
+                overflow: hidden;
+            }
+            /* Header bar like fragment */
+            .diagram-book .book-header {
+                display: flex;
+                align-items: center;
+                gap: 0.5rem;
+                padding: 0.4rem 0.65rem;
+                background: rgba(96,165,250,0.06);
+                border-bottom: 1px solid rgba(96,165,250,0.1);
+                width: 100%;
             }
             .book-meta-row {
                 display: flex;
                 align-items: center;
                 justify-content: center;
-                gap: 0.75rem;
+                gap: 0.5rem;
                 width: 100%;
-                margin-top: 0.75rem;
-                padding: 0.5rem 0;
+                margin: 0;
+                padding: 0.3rem 0.5rem;
+                background: rgba(255,255,255,0.03);
             }
             .book-to-move {
-                font-size: 0.9rem;
-                color: rgba(255,255,255,0.7);
+                font-size: 0.8rem;
+                color: rgba(255,255,255,0.6);
                 font-weight: 500;
             }
             .mini-board-wrapper {
@@ -225,64 +237,58 @@
                 margin: 0 !important;
             }
             .book-dot {
-                width: 8px;
-                height: 8px;
+                width: 6px;
+                height: 6px;
                 border-radius: 50%;
                 background: rgba(255,255,255,0.2);
                 cursor: pointer;
                 transition: all 0.2s;
             }
             .book-dot.active {
-                background: #d4af37;
-                transform: scale(1.2);
+                background: #60a5fa;
+                transform: scale(1.3);
             }
             .book-dot:hover {
-                background: rgba(212, 175, 55, 0.6);
+                background: rgba(96, 165, 250, 0.5);
             }
             .book-nav-row {
                 display: flex;
                 justify-content: space-between;
                 width: 100%;
-                margin-top: 0.35rem;
-                padding: 0.4rem 0;
+                margin: 0;
+                padding: 0.25rem 0.4rem;
+                border-top: 1px solid rgba(255,255,255,0.05);
             }
             .book-nav {
                 justify-content: space-between !important;
                 width: 100% !important;
-                margin-top: 0.35rem !important;
-                padding: 0.4rem 0 !important;
+                margin: 0 !important;
+                padding: 0.25rem 0.4rem !important;
+                border-top: 1px solid rgba(255,255,255,0.05) !important;
             }
             .book-prev, .book-next {
-                background: rgba(255,255,255,0.08) !important;
-                border: 1px solid rgba(255,255,255,0.1) !important;
-                border-radius: 8px !important;
-                width: 36px !important;
-                height: 36px !important;
+                background: rgba(255,255,255,0.06) !important;
+                border: 1px solid rgba(255,255,255,0.08) !important;
+                border-radius: 6px !important;
+                width: 28px !important;
+                height: 28px !important;
                 padding: 0 !important;
-                color: rgba(255,255,255,0.7) !important;
+                color: rgba(255,255,255,0.6) !important;
                 cursor: pointer;
                 transition: all 0.2s ease !important;
                 display: flex !important;
                 align-items: center !important;
                 justify-content: center !important;
+                font-size: 0.75rem !important;
             }
             .book-prev:hover, .book-next:hover {
-                background: rgba(212, 175, 55, 0.2) !important;
-                color: #d4af37 !important;
-                border-color: rgba(212, 175, 55, 0.3) !important;
-            }
-            .book-meta-row {
-                display: flex;
-                align-items: center;
-                gap: 0.5rem;
-                padding: 0.35rem 0.75rem;
-                background: rgba(255,255,255,0.05);
-                border-radius: 8px;
-                border: 1px solid rgba(255,255,255,0.08);
+                background: rgba(96, 165, 250, 0.15) !important;
+                color: #60a5fa !important;
+                border-color: rgba(96, 165, 250, 0.25) !important;
             }
             .book-counter {
-                font-size: 0.8rem;
-                color: rgba(255,255,255,0.5);
+                font-size: 0.7rem;
+                color: rgba(255,255,255,0.4);
             }
             .book-board-container {
                 transition: transform 0.15s ease, opacity 0.15s ease;
@@ -292,9 +298,8 @@
                 align-self: center !important;
                 height: auto !important;
                 transform-origin: center center;
-                border-radius: 8px;
                 overflow: hidden;
-                box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+                padding: 0.35rem;
             }
             .book-board-container.flip-right {
                 transform: perspective(400px) rotateY(-15deg);
@@ -311,10 +316,11 @@
             .book-caption {
                 user-select: none;
                 cursor: default;
-                font-size: 0.85rem;
-                color: rgba(255,255,255,0.6);
+                font-size: 0.75rem;
+                color: rgba(255,255,255,0.5);
                 text-align: center;
-                margin-top: 0.5rem;
+                margin: 0;
+                padding: 0.2rem 0.5rem;
             }
             /* Fix for DiagramViewer inside book */
             .diagram-viewer-container {
@@ -327,87 +333,83 @@
                 width: 100% !important;
                 min-width: 200px !important;
                 aspect-ratio: 1 !important;
-                border-radius: 8px !important;
+                border-radius: 4px !important;
                 overflow: hidden !important;
             }
             /* Feedback panel styling */
             .diagram-viewer-container .diagram-feedback {
-                border-radius: 8px !important;
-                margin-top: 0.75rem !important;
-                font-size: 0.9rem !important;
+                border-radius: 6px !important;
+                margin-top: 0.5rem !important;
+                font-size: 0.85rem !important;
             }
-            /* Type badge styling - elegant puzzle indicator */
+            /* Type badge styling */
             .diagram-book .diagram-type-badge {
                 position: absolute !important;
-                top: -12px !important;
-                right: -20px !important;
+                top: -8px !important;
+                right: -12px !important;
                 background: linear-gradient(135deg, rgba(30,30,30,0.95), rgba(50,50,50,0.9)) !important;
                 backdrop-filter: blur(12px) !important;
-                border: 1px solid rgba(212, 175, 55, 0.4) !important;
-                border-radius: 8px !important;
-                width: 32px !important;
-                height: 32px !important;
+                border: 1px solid rgba(96, 165, 250, 0.3) !important;
+                border-radius: 6px !important;
+                width: 26px !important;
+                height: 26px !important;
                 padding: 0 !important;
                 display: flex !important;
                 align-items: center !important;
                 justify-content: center !important;
-                font-size: 0.9rem !important; /* Slightly larger icon */
-                color: #d4af37 !important;
+                font-size: 0.75rem !important;
+                color: #60a5fa !important;
                 z-index: 100 !important;
                 pointer-events: none !important;
-                box-shadow: 0 4px 12px rgba(0,0,0,0.5), 0 0 20px rgba(212, 175, 55, 0.15) !important;
-                text-shadow: 0 1px 2px rgba(0,0,0,0.3) !important;
+                box-shadow: 0 2px 8px rgba(0,0,0,0.4) !important;
                 letter-spacing: normal !important;
             }
-            /* Allow badge to overflow - multiple levels needed */
+            /* Allow badge to overflow */
             .diagram-book .diagram-board-wrapper,
             .diagram-book .diagram-viewer-container,
             .diagram-book .book-board-container,
             .diagram-book {
                 overflow: visible !important;
             }
-            /* Hide internal reset button in book mode - use book-reset-btn instead */
+            /* Hide internal reset button in book mode */
             .diagram-book .diagram-reset-btn {
                 display: none !important;
             }
             .book-reset-btn {
-                background: rgba(255,255,255,0.1) !important;
-                border: 1px solid rgba(255,255,255,0.1) !important;
+                background: rgba(255,255,255,0.06) !important;
+                border: 1px solid rgba(255,255,255,0.08) !important;
                 border-radius: 50%;
-                width: 28px;
-                height: 28px;
+                width: 24px;
+                height: 24px;
                 display: flex;
                 align-items: center;
                 justify-content: center;
                 transition: all 0.25s ease;
-                color: rgba(255,255,255,0.6);
+                color: rgba(255,255,255,0.5);
                 cursor: pointer;
-                font-size: 0.75rem;
+                font-size: 0.65rem;
                 flex-shrink: 0;
             }
             .book-reset-btn:hover {
-                background: rgba(212, 175, 55, 0.2) !important;
-                border-color: rgba(212, 175, 55, 0.3) !important;
+                background: rgba(96, 165, 250, 0.15) !important;
+                border-color: rgba(96, 165, 250, 0.25) !important;
                 transform: rotate(-180deg);
-                color: #d4af37 !important;
+                color: #60a5fa !important;
             }
-            /* Diagram inside column blocks - constrain width */
+            /* Diagram inside column blocks */
             .content-columns .diagram-book {
                 max-width: 100% !important;
                 float: none !important;
                 margin: 0 auto !important;
                 overflow: hidden;
             }
-            /* Mobile: full-width diagram but with small margins */
+            /* Mobile */
             @media (max-width: 600px) {
                 .diagram-book {
                     max-width: none !important;
-                    width: calc(100% + 1rem) !important; 
-                    margin: 1.5rem -0.5rem !important;
+                    width: 100% !important;
+                    margin: 0.75rem 0 !important;
                     border-radius: 8px !important;
-                    border-left: 1px solid rgba(255,255,255,0.08) !important;
-                    border-right: 1px solid rgba(255,255,255,0.08) !important;
-                    padding: 1rem 0.5rem !important;
                     float: none !important;
                     clear: none !important;
                 }
@@ -420,30 +422,28 @@
                     min-width: 0 !important;
                 }
                 .book-caption {
-                    font-size: 0.9rem;
+                    font-size: 0.75rem;
                     padding: 0 0.5rem;
                 }
-                /* Smaller type badge on mobile */
                 .diagram-book .diagram-type-badge {
-                    width: 24px !important;
-                    height: 24px !important;
-                    font-size: 0.7rem !important;
-                    top: -8px !important;
-                    right: -12px !important;
+                    width: 22px !important;
+                    height: 22px !important;
+                    font-size: 0.65rem !important;
+                    top: -6px !important;
+                    right: -8px !important;
                 }
-                /* Compact meta row on mobile */
                 .book-meta-row-standalone {
-                    padding: 0.25rem 0.5rem !important;
-                    gap: 0.35rem !important;
-                    margin-top: 0.35rem !important;
+                    padding: 0.2rem 0.4rem !important;
+                    gap: 0.3rem !important;
+                    margin-top: 0 !important;
                 }
                 .book-meta-row-standalone .book-to-move-standalone {
                     font-size: 0.7rem !important;
                 }
                 .book-reset-btn {
-                    width: 24px !important;
-                    height: 24px !important;
-                    font-size: 0.65rem !important;
+                    width: 22px !important;
+                    height: 22px !important;
+                    font-size: 0.6rem !important;
                 }
             }
         `;
