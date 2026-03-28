@@ -567,124 +567,137 @@ async function insertFragment() {
     const modal = document.createElement('div');
     modal.style.cssText = 'background:#1a1a2e;border:1px solid rgba(255,255,255,0.1);border-radius:12px;padding:1.5rem;max-width:500px;width:90%;max-height:80vh;overflow-y:auto;color:#fff;';
 
+    const buildFragmentList = (frags) => frags.map(f => {
+        const players = [f.white, f.black].filter(Boolean).join(' vs ') || '—';
+        const moveRange = `${f.fromMove}–${f.toMove}`;
+        const author = f.user?.username ? `<span style="color:#d4af37;font-size:0.7rem;">👤 ${f.user.username}</span>` : '';
+        return `
+            <div class="fragment-select-item" data-fid="${f.id}" style="padding:0.75rem;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:8px;cursor:pointer;transition:all 0.2s;"
+                 onmouseenter="this.style.borderColor='rgba(96,165,250,0.5)';this.style.background='rgba(96,165,250,0.1)'"
+                 onmouseleave="this.style.borderColor='rgba(255,255,255,0.1)';this.style.background='rgba(255,255,255,0.05)'">
+                <div style="display:flex;justify-content:space-between;align-items:center;">
+                    <span style="font-weight:600;font-size:0.9rem;">${f.title || 'Fragment #' + f.id}</span>
+                    ${author}
+                </div>
+                <div style="font-size:0.8rem;color:#aaa;margin-top:0.2rem;">${players} · tahy ${moveRange}</div>
+            </div>
+        `;
+    }).join('');
+
     modal.innerHTML = `
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">
             <h3 style="margin:0;"><i class="fa-solid fa-scissors" style="color:#60a5fa;"></i> Vložit fragment</h3>
-            <button onclick="document.getElementById('fragmentSelectorOverlay').remove()" style="background:none;border:none;color:#fff;font-size:1.2rem;cursor:pointer;">&times;</button>
+            <div style="display:flex;align-items:center;gap:0.75rem;">
+                <label style="display:flex;align-items:center;gap:0.4rem;cursor:pointer;font-size:0.82rem;color:#aaa;padding:0.3rem 0.5rem;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:6px;" title="Zobrazit jen moje fragmenty">
+                    <input type="checkbox" id="fragmentMineFilter" style="width:auto;accent-color:#d4af37;">
+                    <i class="fa-solid fa-user"></i> Moje
+                </label>
+                <button onclick="document.getElementById('fragmentSelectorOverlay').remove()" style="background:none;border:none;color:#fff;font-size:1.2rem;cursor:pointer;">&times;</button>
+            </div>
         </div>
-        <div style="display:flex;flex-direction:column;gap:0.5rem;">
-            ${fragments.map(f => {
-                const players = [f.white, f.black].filter(Boolean).join(' vs ') || '—';
-                const moveRange = `${f.fromMove}–${f.toMove}`;
-                return `
-                    <div class="fragment-select-item" data-fid="${f.id}" style="padding:0.75rem;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:8px;cursor:pointer;transition:all 0.2s;"
-                         onmouseenter="this.style.borderColor='rgba(96,165,250,0.5)';this.style.background='rgba(96,165,250,0.1)'"
-                         onmouseleave="this.style.borderColor='rgba(255,255,255,0.1)';this.style.background='rgba(255,255,255,0.05)'">
-                        <div style="font-weight:600;font-size:0.9rem;">${f.title || 'Fragment #' + f.id}</div>
-                        <div style="font-size:0.8rem;color:#aaa;margin-top:0.2rem;">${players} · tahy ${moveRange}</div>
-                    </div>
-                `;
-            }).join('')}
+        <div id="fragmentListContainer" style="display:flex;flex-direction:column;gap:0.5rem;">
+            ${buildFragmentList(fragments)}
         </div>
     `;
 
     overlay.appendChild(modal);
     document.body.appendChild(overlay);
+    // Bind click handlers to fragment items (reusable for re-renders)
+    const bindFragmentClickHandlers = () => {
+        modal.querySelectorAll('.fragment-select-item').forEach(item => {
+            item.addEventListener('click', () => {
+                const fid = item.dataset.fid;
+                const editor = document.getElementById('articleContent') || document.querySelector('[contenteditable]');
+                if (!editor) return;
 
-    // Handle click on fragment items
-    modal.querySelectorAll('.fragment-select-item').forEach(item => {
-        item.addEventListener('click', () => {
-            const fid = item.dataset.fid;
-            const editor = document.getElementById('articleContent') || document.querySelector('[contenteditable]');
-            if (!editor) return;
-
-            // Restore cursor position
-            if (savedRange) {
-                const sel = window.getSelection();
-                sel.removeAllRanges();
-                sel.addRange(savedRange);
-            }
-
-            // Insert fragment placeholder with realistic dimensions
-            const fragTitle = item.querySelector('div:first-child').textContent;
-            const fragDetail = item.querySelector('div:last-child')?.textContent || '';
-
-            // Warn about narrow columns
-            const sel2 = window.getSelection();
-            if (sel2.rangeCount > 0) {
-                const colParent = sel2.getRangeAt(0).commonAncestorContainer.nodeType === 1 
-                    ? sel2.getRangeAt(0).commonAncestorContainer.closest('.content-col')
-                    : sel2.getRangeAt(0).commonAncestorContainer.parentElement?.closest('.content-col');
-                if (colParent) {
-                    const colBlock = colParent.closest('.content-columns');
-                    const layout = colBlock?.dataset?.layout || '';
-                    const isNarrow = layout === '33-33-33' || 
-                        (layout === '33-67' && colParent === colBlock.querySelector('.content-col:first-child')) ||
-                        (layout === '67-33' && colParent === colBlock.querySelector('.content-col:last-child'));
-                    if (isNarrow) {
-                        showToast('⚠️ Fragment se do 1/3 sloupce nevejde – použij raději diagram nebo širší layout', 'warning');
-                    }
-                }
-            }
-
-            const fragmentHtml = `<div class="game-fragment" data-fragment-id="${fid}" contenteditable="false" style="background:var(--surface-color, #1e1e1e);border:1px solid rgba(96,165,250,0.2);border-radius:10px;overflow:hidden;margin:0.5rem 0;width:50%;min-width:320px;max-width:100%;">
-                <div style="display:flex;align-items:center;gap:0.5rem;padding:0.5rem 0.75rem;background:rgba(96,165,250,0.06);border-bottom:1px solid rgba(96,165,250,0.1);">
-                    <i class="fa-solid fa-chess" style="color:#60a5fa;font-size:0.8rem;"></i>
-                    <span style="font-size:0.85rem;font-weight:600;color:#e0e0e0;flex:1;">${fragTitle}</span>
-                    <span style="font-size:0.7rem;color:#a0a0a0;">${fragDetail}</span>
-                </div>
-                <div style="display:flex;gap:0;min-height:200px;">
-                    <div style="flex:0 0 60%;max-width:280px;padding:0.5rem;display:flex;align-items:center;justify-content:center;background:rgba(96,165,250,0.03);border-right:1px solid rgba(255,255,255,0.05);">
-                        <div style="width:180px;height:180px;background:repeating-conic-gradient(#b58863 0% 25%, #f0d9b5 0% 50%) 50%/25% 25%;border-radius:4px;opacity:0.6;"></div>
-                    </div>
-                    <div style="flex:1;padding:0.5rem;display:flex;align-items:center;justify-content:center;color:#60a5fa;font-size:0.8rem;opacity:0.7;"><i class="fa-solid fa-list" style="margin-right:6px;"></i> Tahy se zobrazí na webu</div>
-                </div>
-            </div>`;
-            document.execCommand('insertHTML', false, fragmentHtml);
-
-            // Ensure there's an editable paragraph after the fragment for typing
-            const fragEditor = document.getElementById('articleContent') || document.querySelector('[contenteditable]');
-            const fragEl = fragEditor.querySelector(`.game-fragment[data-fragment-id="${fid}"]`);
-            if (fragEl) {
-                // Add paragraph after if none exists
-                if (!fragEl.nextElementSibling || fragEl.nextElementSibling.classList.contains('game-fragment')) {
-                    const p = document.createElement('p');
-                    p.innerHTML = '<br>';
-                    fragEl.parentNode.insertBefore(p, fragEl.nextSibling);
-                }
-                // Add paragraph before if none exists
-                if (!fragEl.previousElementSibling || fragEl.previousElementSibling.classList.contains('game-fragment')) {
-                    const p = document.createElement('p');
-                    p.innerHTML = '<br>';
-                    fragEl.parentNode.insertBefore(p, fragEl);
-                }
-                // Click on fragment = place cursor in the paragraph after it
-                fragEl.addEventListener('click', () => {
-                    const afterP = fragEl.nextElementSibling;
-                    if (afterP) {
-                        const sel = window.getSelection();
-                        const range = document.createRange();
-                        range.setStart(afterP, 0);
-                        range.collapse(true);
-                        sel.removeAllRanges();
-                        sel.addRange(range);
-                    }
-                });
-                // Place cursor in the paragraph after the fragment
-                const afterP = fragEl.nextElementSibling;
-                if (afterP) {
+                if (savedRange) {
                     const sel = window.getSelection();
-                    const range = document.createRange();
-                    range.setStart(afterP, 0);
-                    range.collapse(true);
                     sel.removeAllRanges();
-                    sel.addRange(range);
+                    sel.addRange(savedRange);
                 }
-            }
 
-            overlay.remove();
+                const fragTitle = item.querySelector('span:first-child')?.textContent || item.querySelector('div:first-child')?.textContent || '';
+                const fragDetail = item.querySelector('div:last-child')?.textContent || '';
+
+                // Warn about narrow columns
+                const sel2 = window.getSelection();
+                if (sel2.rangeCount > 0) {
+                    const colParent = sel2.getRangeAt(0).commonAncestorContainer.nodeType === 1 
+                        ? sel2.getRangeAt(0).commonAncestorContainer.closest('.content-col')
+                        : sel2.getRangeAt(0).commonAncestorContainer.parentElement?.closest('.content-col');
+                    if (colParent) {
+                        const colBlock = colParent.closest('.content-columns');
+                        const layout = colBlock?.dataset?.layout || '';
+                        const isNarrow = layout === '33-33-33' || 
+                            (layout === '33-67' && colParent === colBlock.querySelector('.content-col:first-child')) ||
+                            (layout === '67-33' && colParent === colBlock.querySelector('.content-col:last-child'));
+                        if (isNarrow) {
+                            showToast('⚠️ Fragment se do 1/3 sloupce nevejde – použij raději diagram nebo širší layout', 'warning');
+                        }
+                    }
+                }
+
+                const fragmentHtml = `<div class="game-fragment" data-fragment-id="${fid}" contenteditable="false" style="background:var(--surface-color, #1e1e1e);border:1px solid rgba(96,165,250,0.2);border-radius:10px;overflow:hidden;margin:0.5rem 0;width:50%;min-width:320px;max-width:100%;">
+                    <div style="display:flex;align-items:center;gap:0.5rem;padding:0.5rem 0.75rem;background:rgba(96,165,250,0.06);border-bottom:1px solid rgba(96,165,250,0.1);">
+                        <i class="fa-solid fa-chess" style="color:#60a5fa;font-size:0.8rem;"></i>
+                        <span style="font-size:0.85rem;font-weight:600;color:#e0e0e0;flex:1;">${fragTitle}</span>
+                        <span style="font-size:0.7rem;color:#a0a0a0;">${fragDetail}</span>
+                    </div>
+                    <div style="display:flex;gap:0;min-height:200px;">
+                        <div style="flex:0 0 60%;max-width:280px;padding:0.5rem;display:flex;align-items:center;justify-content:center;background:rgba(96,165,250,0.03);border-right:1px solid rgba(255,255,255,0.05);">
+                            <div style="width:180px;height:180px;background:repeating-conic-gradient(#b58863 0% 25%, #f0d9b5 0% 50%) 50%/25% 25%;border-radius:4px;opacity:0.6;"></div>
+                        </div>
+                        <div style="flex:1;padding:0.5rem;display:flex;align-items:center;justify-content:center;color:#60a5fa;font-size:0.8rem;opacity:0.7;"><i class="fa-solid fa-list" style="margin-right:6px;"></i> Tahy se zobrazí na webu</div>
+                    </div>
+                </div>`;
+                document.execCommand('insertHTML', false, fragmentHtml);
+
+                const fragEditor = document.getElementById('articleContent') || document.querySelector('[contenteditable]');
+                const fragEl = fragEditor.querySelector(`.game-fragment[data-fragment-id="${fid}"]`);
+                if (fragEl) {
+                    if (!fragEl.nextElementSibling || fragEl.nextElementSibling.classList.contains('game-fragment')) {
+                        const p = document.createElement('p');
+                        p.innerHTML = '<br>';
+                        fragEl.parentNode.insertBefore(p, fragEl.nextSibling);
+                    }
+                    if (!fragEl.previousElementSibling || fragEl.previousElementSibling.classList.contains('game-fragment')) {
+                        const p = document.createElement('p');
+                        p.innerHTML = '<br>';
+                        fragEl.parentNode.insertBefore(p, fragEl);
+                    }
+                }
+
+                overlay.remove();
+            });
         });
-    });
+    };
+    bindFragmentClickHandlers();
+
+    // "Moje" filter for fragments
+    const fragMineFilter = modal.querySelector('#fragmentMineFilter');
+    if (fragMineFilter) {
+        fragMineFilter.onchange = async () => {
+            const token = window.authToken || localStorage.getItem('authToken') || localStorage.getItem('auth_token') || localStorage.getItem('token') || window.auth?.token;
+            const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
+            const url = fragMineFilter.checked ? `${window.API_URL}/fragments?mine=true` : `${window.API_URL}/fragments`;
+            try {
+                const response = await fetch(url, { headers });
+                if (!response.ok) throw new Error('Fetch failed');
+                const newFragments = await response.json();
+                const container = modal.querySelector('#fragmentListContainer');
+                if (container) {
+                    container.innerHTML = newFragments.length > 0 
+                        ? buildFragmentList(newFragments)
+                        : '<div style="text-align:center;padding:2rem;color:#888;">Žádné fragmenty nenalezeny.</div>';
+                    bindFragmentClickHandlers();
+                }
+                showToast(fragMineFilter.checked ? `Zobrazuji ${newFragments.length} mých fragmentů` : `Zobrazuji všechny fragmenty (${newFragments.length})`, 'info');
+            } catch (e) {
+                console.error(e);
+                showToast('Nepodařilo se načíst fragmenty', 'error');
+            }
+        };
+    }
 
     // Close on overlay click
     overlay.addEventListener('click', (e) => {
@@ -845,8 +858,12 @@ function showDiagramSelectorModal(diagrams, savedRange, initialSelection = []) {
             </h3>
             
             
-            <div style="display: flex; gap: 1rem; margin-bottom: 1rem; align-items: center;">
-                <input type="text" class="diagram-search" id="diagramSearch" placeholder="Hledat..." style="flex: 1;" autofocus>
+            <div style="display: flex; gap: 1rem; margin-bottom: 1rem; align-items: center; flex-wrap: wrap;">
+                <input type="text" class="diagram-search" id="diagramSearch" placeholder="Hledat..." style="flex: 1; min-width: 120px;" autofocus>
+                <label style="display: flex; align-items: center; gap: 0.4rem; cursor: pointer; font-size: 0.82rem; color: #aaa; white-space: nowrap; padding: 0.4rem 0.6rem; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; transition: all 0.2s;" title="Zobrazit jen moje diagramy">
+                    <input type="checkbox" id="diagramMineFilter" style="width: auto; accent-color: #d4af37;">
+                    <i class="fa-solid fa-user"></i> Moje
+                </label>
                 <a href="/game-recorder.html" target="_blank" style="display: flex; align-items: center; gap: 0.4rem; padding: 0.5rem 0.8rem; background: rgba(74, 222, 128, 0.15); border: 1px solid rgba(74, 222, 128, 0.4); border-radius: 6px; color: #4ade80; font-size: 0.85rem; text-decoration: none; white-space: nowrap; transition: all 0.2s;" onmouseover="this.style.background='rgba(74,222,128,0.25)'" onmouseout="this.style.background='rgba(74,222,128,0.15)'">
                     <i class="fa-solid fa-plus"></i> Nový diagram
                 </a>
@@ -1094,7 +1111,7 @@ function showDiagramSelectorModal(diagrams, savedRange, initialSelection = []) {
                 ${checkbox}
                 ${miniPreview}
                 <div class="diagram-name" title="${displayName}">${displayName} ${typeBadge} ${annotBadge}</div>
-                <div class="diagram-meta">${d.toMove === 'w' ? '⬜ Bílý' : '⬛ Černý'}</div>
+                <div class="diagram-meta">${d.toMove === 'w' ? '⬜ Bílý' : '⬛ Černý'}${d.user?.username ? ` · <span style="color:#d4af37;">👤 ${d.user.username}</span>` : ''}</div>
             `;
             el.style.position = 'relative';
 
@@ -1150,6 +1167,29 @@ function showDiagramSelectorModal(diagrams, savedRange, initialSelection = []) {
     }
     renderList();
     searchInput.oninput = (e) => renderList(e.target.value);
+
+    // "Moje" filter - re-fetch from API with ?mine=true
+    const mineFilter = modalEl.querySelector('#diagramMineFilter');
+    if (mineFilter) {
+        mineFilter.onchange = async () => {
+            const token = window.authToken || localStorage.getItem('authToken') || localStorage.getItem('auth_token') || localStorage.getItem('token') || window.auth?.token;
+            const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
+            const url = mineFilter.checked ? `${window.API_URL}/diagrams?mine=true` : `${window.API_URL}/diagrams`;
+            try {
+                document.body.style.cursor = 'wait';
+                const response = await fetch(url, { headers });
+                if (!response.ok) throw new Error('Fetch failed');
+                diagrams = await response.json();
+                renderList(searchInput.value);
+                showToast(mineFilter.checked ? `Zobrazuji ${diagrams.length} mých diagramů` : `Zobrazuji všechny diagramy (${diagrams.length})`, 'info');
+            } catch (e) {
+                console.error(e);
+                showToast('Nepodařilo se načíst diagramy', 'error');
+            } finally {
+                document.body.style.cursor = '';
+            }
+        };
+    }
 
     document.addEventListener('keydown', function escHandler(e) {
         if (e.key === 'Escape' && document.getElementById('diagramSelectorModal')) {
