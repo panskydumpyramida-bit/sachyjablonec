@@ -575,9 +575,31 @@
         /* Mobile Modal Styles & Layout Fixes */
         @media (max-width: 900px) {
 
-            #global-footer,
-            #global-header {
+            #global-footer {
                 display: none !important;
+            }
+
+            /* Compact header on mobile */
+            #global-header {
+                position: relative !important;
+            }
+
+            #global-header nav {
+                padding: 0.3rem 0.5rem !important;
+                min-height: auto !important;
+            }
+
+            #global-header .logo {
+                font-size: 0.85rem !important;
+            }
+
+            #global-header .nav-links,
+            #global-header #auth-container {
+                display: none !important;
+            }
+
+            #global-header .menu-toggle {
+                display: flex !important;
             }
 
             /* Kill all scrolling - everything fits on screen */
@@ -728,29 +750,30 @@
 
             /* Mobile inline palette strips (appear alongside board for diagram tab) */
             .mobile-palette-strip {
-                display: flex !important;
-                gap: 0.15rem;
+                display: none;
+                gap: 0.2rem;
                 justify-content: center;
                 align-items: center;
-                padding: 0.15rem 0;
+                padding: 0.2rem 0;
                 background: rgba(0,0,0,0.3);
                 border-radius: 4px;
             }
 
             .mobile-palette-strip .palette-piece {
-                width: 26px !important;
-                height: 26px !important;
+                width: 32px !important;
+                height: 32px !important;
                 padding: 1px !important;
+                cursor: pointer;
             }
 
             .mobile-palette-strip .palette-piece.palette-eraser {
-                width: 26px !important;
-                height: 26px !important;
+                width: 32px !important;
+                height: 32px !important;
             }
 
             /* Mobile tool strip for annotations */
             .mobile-tool-strip {
-                display: flex !important;
+                display: none;
                 gap: 0.15rem;
                 justify-content: center;
                 align-items: center;
@@ -760,14 +783,14 @@
             }
 
             .mobile-tool-strip .tool-btn {
-                width: 26px !important;
-                height: 26px !important;
-                font-size: 0.65rem !important;
+                width: 30px !important;
+                height: 30px !important;
+                font-size: 0.7rem !important;
             }
 
             .mobile-tool-strip .color-dot {
-                width: 10px !important;
-                height: 10px !important;
+                width: 12px !important;
+                height: 12px !important;
             }
 
             /* Mobile action bar at bottom */
@@ -1777,7 +1800,7 @@
 
     <script>
         // Page-level tab switching (Partie / Diagram)
-        let currentPageTab = 'partie';
+        var currentPageTab = 'partie';
 
         function switchPageTab(tabName) {
             currentPageTab = tabName;
@@ -1848,13 +1871,22 @@
                 analyzeCurrentPosition();
             }
 
-            // Toggle mobile inline palette strips (visible only in diagram mode)
+            // Toggle mobile inline palette strips (visible only in diagram mode on mobile)
             const isDiagramMode = (tabName === 'diagram' || tabName === 'hadanky');
-            const mobileElements = ['mobilePaletteBlack', 'mobilePaletteWhite', 'mobileAnnotTools'];
-            mobileElements.forEach(id => {
-                const el = document.getElementById(id);
-                if (el) el.style.display = isDiagramMode ? '' : 'none';
-            });
+            if (window.innerWidth <= 900) {
+                ['mobilePaletteBlack', 'mobilePaletteWhite', 'mobileAnnotTools'].forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el) el.style.display = isDiagramMode ? 'flex' : 'none';
+                });
+                // Also toggle playback controls on mobile
+                const playbackEl = document.querySelector('.playback-controls');
+                if (playbackEl) playbackEl.style.display = isDiagramMode ? 'none' : 'flex';
+            }
+
+            // Trigger mobile layout recalc
+            if (typeof window.setupMobileLayout === 'function') {
+                setTimeout(window.setupMobileLayout, 50);
+            }
         }
 
         // ========================================
@@ -2171,8 +2203,7 @@
                     document.body.style.overflow = '';
                     document.documentElement.style.overflow = '';
                     const boardEl = document.getElementById('board');
-                    if (boardEl) boardEl.style.maxWidth = '';
-                    // Hide mobile elements on desktop
+                    if (boardEl) { boardEl.style.maxWidth = ''; boardEl.style.maxHeight = ''; }
                     ['mobilePaletteBlack', 'mobilePaletteWhite', 'mobileAnnotTools'].forEach(id => {
                         const el = document.getElementById(id);
                         if (el) el.style.display = 'none';
@@ -2180,71 +2211,110 @@
                     return;
                 }
 
-                // Mobile mode: hide hero, prevent scroll
+                // Mobile mode
                 const hero = document.querySelector('.hero-small');
                 if (hero) hero.style.display = 'none';
                 document.body.style.overflow = 'hidden';
                 document.documentElement.style.overflow = 'hidden';
 
-                // Calculate available height for the board
+                // Determine context
+                const tab = (typeof currentPageTab !== 'undefined') ? currentPageTab : 'partie';
+                const isDiagram = (tab === 'diagram' || tab === 'hadanky');
+
+                // Calculate available height
                 const vh = window.innerHeight;
+                const headerEl = document.getElementById('global-header');
+                const headerH = headerEl ? headerEl.offsetHeight : 0;
                 const tabsEl = document.querySelector('.page-tabs');
                 const tabsH = tabsEl ? tabsEl.offsetHeight : 30;
-                const controlsEl = document.querySelector('.controls-diagram') || document.querySelector('.controls-partie');
-                const controlsH = controlsEl ? controlsEl.offsetHeight : 40;
-
-                // Budget: tabs + palettes(2x30) + annotations(30) + controls + padding
-                const isDiagram = currentPageTab === 'diagram' || currentPageTab === 'hadanky';
-                const extraH = isDiagram ? 90 : 10; // palettes + annotation strip
-                const boardMaxH = vh - tabsH - controlsH - extraH - 16;
+                const controlsEl = isDiagram
+                    ? document.querySelector('.controls-diagram')
+                    : document.querySelector('.controls-partie');
+                const controlsH = controlsEl ? controlsEl.offsetHeight : 36;
+                const paletteH = isDiagram ? 110 : 0;
+                const playbackH = isDiagram ? 0 : 36;
+                const boardMaxH = vh - headerH - tabsH - paletteH - playbackH - controlsH - 12;
 
                 const boardEl = document.getElementById('board');
                 if (boardEl) {
-                    const maxSize = Math.min(boardMaxH, window.innerWidth - 10);
+                    const maxSize = Math.min(boardMaxH, window.innerWidth - 6);
                     boardEl.style.maxWidth = maxSize + 'px';
                     boardEl.style.maxHeight = maxSize + 'px';
-                    // Resize chessboard if it exists
-                    if (typeof board !== 'undefined' && board.resize) {
-                        setTimeout(() => board.resize(), 50);
-                    }
+                    if (typeof board !== 'undefined' && board.resize) setTimeout(() => board.resize(), 50);
                     if (typeof getDiagramBoard === 'function') {
                         const db = getDiagramBoard();
                         if (db && db.resize) setTimeout(() => db.resize(), 50);
                     }
                 }
 
-                // Show/hide mobile palettes based on active tab
-                const showPalettes = isDiagram;
+                // Context: palettes only in diagram mode
                 ['mobilePaletteBlack', 'mobilePaletteWhite', 'mobileAnnotTools'].forEach(id => {
                     const el = document.getElementById(id);
-                    if (el) el.style.display = showPalettes ? 'flex' : 'none';
+                    if (el) el.style.display = isDiagram ? 'flex' : 'none';
+                });
+
+                // Context: playback only in partie mode
+                const playbackEl = document.querySelector('.playback-controls');
+                if (playbackEl) playbackEl.style.display = isDiagram ? 'none' : 'flex';
+            }
+
+            // Initialize mobile palette pieces (click-to-select and drag)
+            function initMobilePalettes() {
+                document.querySelectorAll('.mobile-palette-strip .palette-piece').forEach(el => {
+                    if (el._mobileInit) return;
+                    el._mobileInit = true;
+
+                    el.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        const piece = el.dataset.piece;
+                        if (!piece) return;
+                        // Use the diagram-editor's selectPalettePiece for proper sync
+                        if (typeof selectPalettePiece === 'function') {
+                            selectPalettePiece(piece);
+                        } else {
+                            window.activePieceTool = piece;
+                            document.querySelectorAll('.palette-piece').forEach(p => p.classList.remove('active'));
+                            document.querySelectorAll('.palette-piece[data-piece="' + piece + '"]').forEach(p => p.classList.add('active'));
+                        }
+                    });
+
+                    // HTML5 Drag support
+                    if (el.dataset.piece && el.dataset.piece !== 'remove') {
+                        el.setAttribute('draggable', 'true');
+                        el.addEventListener('dragstart', (e) => {
+                            e.dataTransfer.setData('text/plain', el.dataset.piece);
+                            e.dataTransfer.effectAllowed = 'copy';
+                        });
+                    }
                 });
             }
 
-            // Run on load, resize, and tab switch
-            window.addEventListener('load', () => setTimeout(setupMobileLayout, 100));
+            // Expose globally so diagram-editor auto-switch can trigger it
+            window.setupMobileLayout = setupMobileLayout;
+
+            document.addEventListener('DOMContentLoaded', () => {
+                setTimeout(setupMobileLayout, 50);
+                setTimeout(initMobilePalettes, 100);
+            });
+            window.addEventListener('load', () => {
+                setTimeout(setupMobileLayout, 100);
+                setTimeout(initMobilePalettes, 200);
+            });
             window.addEventListener('resize', setupMobileLayout);
 
-            // Patch switchPageTab to also run mobile layout
-            const origSwitchPageTab = window.switchPageTab;
-            if (origSwitchPageTab) {
-                window.switchPageTab = function(tabName) {
-                    origSwitchPageTab(tabName);
-                    setTimeout(setupMobileLayout, 50);
-                };
-            } else {
-                // Wait for it
-                const checkInterval = setInterval(() => {
-                    if (typeof window.switchPageTab === 'function' && window.switchPageTab !== setupMobileLayout) {
-                        const orig = window.switchPageTab;
-                        window.switchPageTab = function(tabName) {
-                            orig(tabName);
-                            setTimeout(setupMobileLayout, 50);
-                        };
-                        clearInterval(checkInterval);
-                    }
-                }, 200);
-            }
+            // Patch switchPageTab
+            const checkInterval = setInterval(() => {
+                if (typeof window.switchPageTab === 'function' && !window._mobilePatched) {
+                    window._mobilePatched = true;
+                    const orig = window.switchPageTab;
+                    window.switchPageTab = function(tabName) {
+                        orig(tabName);
+                        setTimeout(setupMobileLayout, 50);
+                    };
+                    clearInterval(checkInterval);
+                }
+            }, 200);
         })();
     </script>
 
