@@ -2875,6 +2875,7 @@ function insertColumnBlock() {
         { value: '50-50', label: '1/2 + 1/2', bars: [1, 1] },
         { value: '33-67', label: '1/3 + 2/3', bars: [1, 2] },
         { value: '67-33', label: '2/3 + 1/3', bars: [2, 1] },
+        { value: '33-33-33', label: '1/3 + 1/3 + 1/3', bars: [1, 1, 1] },
     ];
 
     layouts.forEach(l => {
@@ -2941,26 +2942,27 @@ function doInsertColumns(layout) {
         sel.addRange(range);
     }
 
+    // Build columns dynamically based on layout
+    const colStyle = `min-height: 60px; padding: 0.75rem; border: 1px dashed rgba(255,255,255,0.15); border-radius: 8px; background: rgba(255,255,255,0.02);`;
+    let colsHtml = '';
+
+    if (layout === '33-33-33') {
+        colsHtml = `
+    <div class="content-col" style="flex: 1; ${colStyle}"><p><br></p></div>
+    <div class="content-col" style="flex: 1; ${colStyle}"><p><br></p></div>
+    <div class="content-col" style="flex: 1; ${colStyle}"><p><br></p></div>`;
+    } else {
+        const flex1 = layout === '67-33' ? '2' : '1';
+        const flex2 = layout === '33-67' ? '2' : '1';
+        colsHtml = `
+    <div class="content-col" style="flex: ${flex1}; ${colStyle}"><p><br></p></div>
+    <div class="content-col" style="flex: ${flex2}; ${colStyle}"><p><br></p></div>`;
+    }
+
     const html = `<p><br></p>
 <div class="content-columns" data-layout="${layout}" style="
     display: flex; gap: 1.5rem; margin: 1.5rem 0;
-">
-    <div class="content-col" style="
-        flex: ${layout === '67-33' ? '2' : '1'};
-        min-height: 60px;
-        padding: 0.75rem;
-        border: 1px dashed rgba(255,255,255,0.15);
-        border-radius: 8px;
-        background: rgba(255,255,255,0.02);
-    "><p><br></p></div>
-    <div class="content-col" style="
-        flex: ${layout === '33-67' ? '2' : '1'};
-        min-height: 60px;
-        padding: 0.75rem;
-        border: 1px dashed rgba(255,255,255,0.15);
-        border-radius: 8px;
-        background: rgba(255,255,255,0.02);
-    "><p><br></p></div>
+">${colsHtml}
 </div>
 <p><br></p>`;
 

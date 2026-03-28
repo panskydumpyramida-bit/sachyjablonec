@@ -1749,6 +1749,10 @@ footer {
     flex: 1;
 }
 
+.content-columns[data-layout="33-33-33"] .content-col {
+    flex: 1;
+}
+
 /* Mobile: stack vertically */
 @media (max-width: 768px) {
     .content-columns {
@@ -1760,12 +1764,17 @@ footer {
     }
 }
 
-/* Diagram inside column blocks */
+/* Diagram inside column blocks - compact, centered */
 .content-columns .diagram-book {
-    max-width: 100% !important;
+    max-width: 280px !important;
+    width: 100% !important;
     float: none !important;
-    margin: 0 auto !important;
+    margin: 0.5rem auto !important;
     overflow: hidden;
+}
+
+.content-columns[data-layout="33-33-33"] .diagram-book {
+    max-width: 240px !important;
 }
 
 /* Description field - read-only on frontend */
