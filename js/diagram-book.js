@@ -492,53 +492,54 @@
             if (titleEl) titleEl.textContent = d.title || 'Diagram';
             if (counterEl) counterEl.textContent = `${current + 1} / ${diagrams.length}`;
 
-            // Create tiny overlay reset button on the board
-            let resetOverlay = book.querySelector('.book-reset-overlay');
-            if (!resetOverlay) {
-                const boardContainer = book.querySelector('.book-board-container');
-                if (boardContainer) {
-                    boardContainer.style.position = 'relative';
+            // Remove old overlay reset if exists (cleanup from previous version)
+            const oldOverlay = book.querySelector('.book-reset-overlay');
+            if (oldOverlay) oldOverlay.remove();
 
-                    resetOverlay = document.createElement('button');
-                    resetOverlay.className = 'book-reset-overlay';
-                    resetOverlay.innerHTML = '<i class="fa-solid fa-rotate-left"></i>';
-                    resetOverlay.title = 'Resetovat pozici';
-                    resetOverlay.style.cssText = `
-                        position: absolute; bottom: 6px; left: 6px; z-index: 10;
-                        width: 22px; height: 22px; border-radius: 4px;
-                        background: rgba(0,0,0,0.6); border: 1px solid rgba(255,255,255,0.15);
-                        color: rgba(255,255,255,0.5); cursor: pointer;
-                        display: flex; align-items: center; justify-content: center;
-                        font-size: 0.6rem; transition: all 0.2s; opacity: 0;
-                        backdrop-filter: blur(4px);
+            // Remove old standalone meta-row if it exists (cleanup)
+            const oldMeta = book.querySelector('.book-meta-row-standalone');
+            if (oldMeta) oldMeta.remove();
+
+            // Update description area with to-move text + reset button
+            const descEl = book.querySelector('.book-description');
+            if (descEl) {
+                const existingText = descEl.textContent.replace(/\s*[•·]\s*(Bílý|Černý) na tahu\s*$/, '').trim();
+                const toMoveText = getToMoveText(d);
+                const descText = existingText ? `${existingText} · ${toMoveText}` : toMoveText;
+
+                // Make description a flex container with text + reset button
+                descEl.style.display = 'flex';
+                descEl.style.alignItems = 'center';
+                descEl.style.justifyContent = 'space-between';
+                descEl.style.gap = '0.4rem';
+
+                // Only rebuild if needed
+                if (!descEl.querySelector('.book-reset-inline')) {
+                    descEl.innerHTML = `
+                        <span class="book-desc-text" style="flex: 1; text-align: center;">${descText}</span>
+                        <button class="book-reset-inline" title="Resetovat pozici" style="
+                            background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.12);
+                            color: rgba(255,255,255,0.5); cursor: pointer;
+                            width: 24px; height: 24px; border-radius: 4px; flex-shrink: 0;
+                            display: flex; align-items: center; justify-content: center;
+                            font-size: 0.65rem; transition: all 0.2s;
+                        "><i class="fa-solid fa-rotate-left"></i></button>
                     `;
-                    resetOverlay.onmouseenter = () => { resetOverlay.style.opacity = '1'; resetOverlay.style.color = '#60a5fa'; };
-                    resetOverlay.onmouseleave = () => { resetOverlay.style.opacity = '0'; };
-                    resetOverlay.onclick = (e) => {
+                    const resetBtn = descEl.querySelector('.book-reset-inline');
+                    resetBtn.onmouseenter = () => { resetBtn.style.color = '#60a5fa'; resetBtn.style.background = 'rgba(96,165,250,0.15)'; };
+                    resetBtn.onmouseleave = () => { resetBtn.style.color = 'rgba(255,255,255,0.5)'; resetBtn.style.background = 'rgba(255,255,255,0.08)'; };
+                    resetBtn.onclick = (e) => {
                         e.stopPropagation();
                         if (book._viewer && typeof book._viewer.reset === 'function') {
                             book._viewer.reset();
                         }
                     };
-                    boardContainer.appendChild(resetOverlay);
-
-                    // Show on board hover
-                    boardContainer.addEventListener('mouseenter', () => { resetOverlay.style.opacity = '0.7'; });
-                    boardContainer.addEventListener('mouseleave', () => { resetOverlay.style.opacity = '0'; });
+                } else {
+                    // Update just the text
+                    const textSpan = descEl.querySelector('.book-desc-text');
+                    if (textSpan) textSpan.textContent = descText;
                 }
             }
-
-            // Show to-move text in the description area
-            const descEl = book.querySelector('.book-description');
-            if (descEl) {
-                const existingText = descEl.textContent.replace(/\s*[•·]\s*(Bílý|Černý) na tahu\s*$/, '').trim();
-                const toMoveText = getToMoveText(d);
-                descEl.textContent = existingText ? `${existingText} · ${toMoveText}` : toMoveText;
-            }
-
-            // Remove old standalone meta-row if it exists (cleanup)
-            const oldMeta = book.querySelector('.book-meta-row-standalone');
-            if (oldMeta) oldMeta.remove();
 
 
         });
