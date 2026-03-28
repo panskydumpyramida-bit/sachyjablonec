@@ -186,10 +186,8 @@
                 padding: 0;
                 box-shadow: 0 2px 12px rgba(0,0,0,0.25);
                 border: 1px solid rgba(96,165,250,0.15);
-                max-width: 360px;
-                margin: 0.75rem 0 0.75rem 1rem;
-                float: right;
-                clear: right;
+                max-width: 320px;
+                margin: 0.75rem auto;
                 overflow: hidden;
             }
             /* Header bar like fragment */
@@ -415,8 +413,6 @@
                     width: 100% !important;
                     margin: 0.75rem 0 !important;
                     border-radius: 8px !important;
-                    float: none !important;
-                    clear: none !important;
                 }
                 .diagram-viewer-container {
                     max-width: 100% !important;
