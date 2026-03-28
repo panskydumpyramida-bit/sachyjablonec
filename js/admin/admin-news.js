@@ -929,7 +929,10 @@ function openQuickFragmentModal(gameIndex) {
 
         <!-- Mini board preview -->
         <div style="display:flex;gap:0.75rem;background:rgba(0,0,0,0.25);border-radius:8px;padding:0.75rem;border:1px solid rgba(255,255,255,0.05);margin-bottom:1rem;">
-            <div id="${boardId}" style="width:160px;height:160px;flex-shrink:0;border-radius:4px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.3);"></div>
+            <div style="flex-shrink:0;">
+                <div id="qfBoardLabel" style="font-size:0.7rem;color:#60a5fa;margin-bottom:0.3rem;text-align:center;">Pozice po tahu ${maxMove}</div>
+                <div id="${boardId}" style="width:160px;height:160px;border-radius:4px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.3);"></div>
+            </div>
             <div style="flex:1;overflow:hidden;">
                 <div style="font-size:0.7rem;color:#888;margin-bottom:0.3rem;text-transform:uppercase;letter-spacing:0.05em;">Náhled tahů</div>
                 <div id="qfMoveList" style="font-size:0.75rem;color:#ccc;line-height:1.6;max-height:130px;overflow-y:auto;font-family:monospace;"></div>
@@ -959,19 +962,31 @@ function openQuickFragmentModal(gameIndex) {
         updatePreviewBoard();
     });
 
+    let focusedField = 'end'; // default: show ending position
+
     function updatePreviewBoard() {
         const from = parseInt(document.getElementById('qfFrom').value) || 1;
         const to = parseInt(document.getElementById('qfTo').value) || maxMove;
         const startPly = Math.max(0, (from - 1) * 2);
         const endPly = Math.min(allMoves.length, to * 2);
 
-        // Build FEN at the end of the selected range
+        // Show start or end position based on which field is focused
+        const targetPly = focusedField === 'start' ? startPly : endPly;
+
         const replay = new Chess();
-        for (let i = 0; i < Math.min(endPly, allMoves.length); i++) {
+        for (let i = 0; i < Math.min(targetPly, allMoves.length); i++) {
             replay.move(allMoves[i]);
         }
         if (previewBoard) {
             previewBoard.position(replay.fen(), true);
+        }
+
+        // Label above the board
+        const labelEl = document.getElementById('qfBoardLabel');
+        if (labelEl) {
+            labelEl.textContent = focusedField === 'start'
+                ? `Pozice po tahu ${Math.max(1, from - 1)}`
+                : `Pozice po tahu ${to}`;
         }
 
         // Build move list text
@@ -994,6 +1009,9 @@ function openQuickFragmentModal(gameIndex) {
     // Dynamic validation + preview update
     const fromInput = document.getElementById('qfFrom');
     const toInput = document.getElementById('qfTo');
+
+    fromInput.addEventListener('focus', () => { focusedField = 'start'; updatePreviewBoard(); });
+    toInput.addEventListener('focus', () => { focusedField = 'end'; updatePreviewBoard(); });
     
     fromInput.addEventListener('input', () => {
         let fv = parseInt(fromInput.value) || 1;
