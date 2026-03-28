@@ -4,10 +4,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Editor Partií - Šachový oddíl TJ Bižuterie Jablonec</title>
+    <title>Editor - Šachový oddíl TJ Bižuterie Jablonec</title>
     <meta name="description"
         content="Editor šachových partií. Nahrávejte a analyzujte své partie s diagramy a anotacemi.">
-    <meta property="og:title" content="Editor Partií - Šachový oddíl TJ Bižuterie Jablonec">
+    <meta property="og:title" content="Editor - Šachový oddíl TJ Bižuterie Jablonec">
     <meta property="og:description" content="Editor šachových partií s diagramy a anotacemi.">
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://sachyjablonec.cz/game-recorder.html">
@@ -565,7 +565,10 @@
 
         /* Hide mobile-only elements on desktop by default */
         .mobile-only-btn,
-        .btn-close-modal {
+        .btn-close-modal,
+        .mobile-palette-strip,
+        .mobile-tool-strip,
+        .mobile-action-bar {
             display: none;
         }
 
@@ -577,27 +580,108 @@
                 display: none !important;
             }
 
+            /* Kill all scrolling - everything fits on screen */
             body,
             html {
                 height: 100%;
-                overflow: auto;
+                overflow: hidden;
             }
 
             main {
-                min-height: calc(100vh - 140px);
-                height: auto;
-                display: block;
-                padding: 1rem 0 !important;
+                height: 100vh;
+                height: 100dvh;
+                display: flex;
+                flex-direction: column;
+                padding: 0 !important;
+                margin: 0 !important;
+            }
+
+            /* Hide the big hero header on mobile entirely */
+            .hero-small {
+                display: none !important;
             }
 
             section {
-                padding: 1rem 0 !important;
+                padding: 0 !important;
+                flex: 1;
+                display: flex;
+                flex-direction: column;
+                min-height: 0;
+            }
+
+            section > .container {
+                flex: 1;
+                display: flex;
+                flex-direction: column;
+                min-height: 0;
+            }
+
+            /* Compact page tabs */
+            .page-tabs {
+                padding: 0 0.5rem !important;
+            }
+
+            .page-tab {
+                padding: 0.3rem 0.6rem !important;
+                font-size: 0.72rem !important;
+            }
+
+            /* Board fills available space */
+            .editor-container {
+                flex: 1;
+                display: flex;
+                flex-direction: column;
+                min-height: 0;
+                padding: 0 0.3rem;
+            }
+
+            /* Board area inside editor container */
+            .editor-container > div:first-child {
+                flex: 1;
+                display: flex;
+                flex-direction: column;
+                min-height: 0;
+            }
+
+            .gv2-board-area {
+                flex: 1;
+                min-height: 0;
+                max-width: 100% !important;
+            }
+
+            #board {
+                max-width: 100% !important;
+                max-height: 100% !important;
+                margin: 0 auto;
+            }
+
+            /* Playback controls compact */
+            .playback-controls {
+                margin-bottom: 0.2rem !important;
+                gap: 0.2rem !important;
+            }
+
+            .playback-controls .btn-control {
+                width: 32px !important;
+                height: 28px !important;
+                font-size: 0.75rem !important;
+            }
+
+            /* Board area takes remaining space */
+            .gv2-board-area {
+                max-width: 100% !important;
             }
 
             .controls {
-                margin-top: 1rem;
-                gap: 0.5rem;
-                padding-bottom: 2rem;
+                margin-top: 0.3rem !important;
+                gap: 0.3rem !important;
+                padding-bottom: 0.3rem !important;
+                flex-wrap: nowrap !important;
+            }
+
+            .controls .btn-control {
+                padding: 0.3rem 0.5rem !important;
+                font-size: 0.7rem !important;
             }
 
             .mobile-only-btn {
@@ -642,9 +726,63 @@
                 cursor: pointer;
             }
 
-            #board {
-                max-width: 88vw !important;
-                margin: 0 auto;
+            /* Mobile inline palette strips (appear alongside board for diagram tab) */
+            .mobile-palette-strip {
+                display: flex !important;
+                gap: 0.15rem;
+                justify-content: center;
+                align-items: center;
+                padding: 0.15rem 0;
+                background: rgba(0,0,0,0.3);
+                border-radius: 4px;
+            }
+
+            .mobile-palette-strip .palette-piece {
+                width: 26px !important;
+                height: 26px !important;
+                padding: 1px !important;
+            }
+
+            .mobile-palette-strip .palette-piece.palette-eraser {
+                width: 26px !important;
+                height: 26px !important;
+            }
+
+            /* Mobile tool strip for annotations */
+            .mobile-tool-strip {
+                display: flex !important;
+                gap: 0.15rem;
+                justify-content: center;
+                align-items: center;
+                padding: 0.15rem 0.3rem;
+                background: rgba(0,0,0,0.25);
+                border-radius: 4px;
+            }
+
+            .mobile-tool-strip .tool-btn {
+                width: 26px !important;
+                height: 26px !important;
+                font-size: 0.65rem !important;
+            }
+
+            .mobile-tool-strip .color-dot {
+                width: 10px !important;
+                height: 10px !important;
+            }
+
+            /* Mobile action bar at bottom */
+            .mobile-action-bar {
+                display: flex !important;
+                gap: 0.3rem;
+                padding: 0.3rem 0.5rem;
+                justify-content: center;
+            }
+
+            .mobile-action-bar .btn-control {
+                padding: 0.3rem 0.6rem !important;
+                font-size: 0.7rem !important;
+                flex: 1;
+                justify-content: center;
             }
         }
 
@@ -1011,8 +1149,8 @@
             }
 
             .palette-piece {
-                width: 24px;
-                height: 24px;
+                width: 28px !important;
+                height: 28px !important;
             }
 
             .controls {
@@ -1045,7 +1183,7 @@
         <!-- Reduced top margin and padding to fit board on screen -->
         <section class="hero-small" style="text-align: center; padding: 0.5rem 0; margin-top: 100px;">
             <div class="container">
-                <h1 style="font-size: 1.8rem; margin: 0;"><i class="fa-solid fa-chess-board"></i> Editor Partií</h1>
+                <h1 style="font-size: 1.8rem; margin: 0;"><i class="fa-solid fa-chess-board"></i> Editor</h1>
             </div>
         </section>
 
@@ -1104,10 +1242,48 @@
                                 <div class="gv2-eval-fill" id="recEvalFill" style="height: 50%;"></div>
                                 <div class="gv2-eval-text" id="recEvalText">0.0</div>
                             </div>
-                            <div style="position: relative; flex: 1; min-width: 0;">
-                                <div id="board"></div>
-                                <!-- Annotation overlay - shared by diagram editor -->
-                                <svg id="boardOverlaySvg"></svg>
+                            <div style="flex: 1; min-width: 0;">
+                                <!-- Mobile: Black pieces palette above board -->
+                                <div class="mobile-palette-strip" id="mobilePaletteBlack">
+                                    <img src="/img/chesspieces/wikipedia/bK.png" class="palette-piece" data-piece="bK" title="Černý král">
+                                    <img src="/img/chesspieces/wikipedia/bQ.png" class="palette-piece" data-piece="bQ" title="Černá dáma">
+                                    <img src="/img/chesspieces/wikipedia/bR.png" class="palette-piece" data-piece="bR" title="Černá věž">
+                                    <img src="/img/chesspieces/wikipedia/bB.png" class="palette-piece" data-piece="bB" title="Černý střelec">
+                                    <img src="/img/chesspieces/wikipedia/bN.png" class="palette-piece" data-piece="bN" title="Černý jezdec">
+                                    <img src="/img/chesspieces/wikipedia/bP.png" class="palette-piece" data-piece="bP" title="Černý pěšec">
+                                    <button class="palette-piece palette-eraser" data-piece="remove" title="Odebrat"
+                                        style="background:rgba(239,68,68,0.25);border:1px solid rgba(239,68,68,0.5);border-radius:3px;color:#fca5a5;cursor:pointer;display:flex;align-items:center;justify-content:center;">
+                                        <i class="fa-solid fa-eraser" style="font-size:0.6rem;"></i>
+                                    </button>
+                                </div>
+                                <!-- Board + overlay wrapper -->
+                                <div style="position: relative;">
+                                    <div id="board"></div>
+                                    <svg id="boardOverlaySvg"></svg>
+                                </div>
+                                <!-- Mobile: White pieces palette below board -->
+                                <div class="mobile-palette-strip" id="mobilePaletteWhite">
+                                    <img src="/img/chesspieces/wikipedia/wK.png" class="palette-piece" data-piece="wK" title="Bílý král">
+                                    <img src="/img/chesspieces/wikipedia/wQ.png" class="palette-piece" data-piece="wQ" title="Bílá dáma">
+                                    <img src="/img/chesspieces/wikipedia/wR.png" class="palette-piece" data-piece="wR" title="Bílá věž">
+                                    <img src="/img/chesspieces/wikipedia/wB.png" class="palette-piece" data-piece="wB" title="Bílý střelec">
+                                    <img src="/img/chesspieces/wikipedia/wN.png" class="palette-piece" data-piece="wN" title="Bílý jezdec">
+                                    <img src="/img/chesspieces/wikipedia/wP.png" class="palette-piece" data-piece="wP" title="Bílý pěšec">
+                                    <button id="turnToggleMobile" class="tool-btn" onclick="setDiagramTurn(diagramTurn === 'w' ? 'b' : 'w')" title="Přepnout tah"
+                                        style="width:26px;height:26px;font-size:0.75rem;margin-left:auto;">⬜</button>
+                                </div>
+                                <!-- Mobile: Annotation tool strip -->
+                                <div class="mobile-tool-strip" id="mobileAnnotTools">
+                                    <button class="tool-btn active" onclick="setDiagramTool('arrow-green')" title="Zelená šipka"><div class="color-dot" style="background:#22c55e"></div></button>
+                                    <button class="tool-btn" onclick="setDiagramTool('arrow-red')" title="Červená šipka"><div class="color-dot" style="background:#ef4444"></div></button>
+                                    <button class="tool-btn" onclick="setDiagramTool('arrow-blue')" title="Modrá šipka"><div class="color-dot" style="background:#3b82f6"></div></button>
+                                    <button class="tool-btn" onclick="setDiagramTool('square-green')" title="Zelené pole"><i class="fa-solid fa-square" style="color:#22c55e;font-size:0.55rem;"></i></button>
+                                    <button class="tool-btn" onclick="setDiagramTool('square-red')" title="Červené pole"><i class="fa-solid fa-square" style="color:#ef4444;font-size:0.55rem;"></i></button>
+                                    <button class="tool-btn" onclick="setDiagramTool('eraser')" title="Guma"><i class="fa-solid fa-eraser"></i></button>
+                                    <button class="tool-btn" onclick="clearDiagram()" title="Vymazat"><i class="fa-solid fa-trash"></i></button>
+                                    <div style="width:1px;height:16px;background:rgba(255,255,255,0.12);margin:0 0.1rem;"></div>
+                                    <button class="btn-control" onclick="saveDiagramToCloud()" style="padding:0.2rem 0.5rem !important;font-size:0.65rem !important;background:rgba(96,165,250,0.15);border-color:rgba(96,165,250,0.3);color:#60a5fa;"><i class="fa-solid fa-cloud-arrow-up"></i></button>
+                                </div>
                             </div>
                         </div>
                         <div class="gv2-analysis-info" id="recAnalysisInfo" style="display: none;">
@@ -1306,9 +1482,39 @@
                         <!-- ========== PANEL 2: DIAGRAMY (Editor — merged) ========== -->
                         <div id="panelDiagram" class="sidebar-panel auth-only">
 
-                            <!-- SECTION: Pozice (Position Setup) -->
+                            <!-- SECTION: Figurky (Piece Palette - primary tool, at top) -->
                             <div class="diagram-section">
-                                <div class="diagram-section-label"><i class="fa-solid fa-chess"></i> Pozice</div>
+                                <div class="diagram-section-label"><i class="fa-solid fa-chess"></i> Figurky</div>
+                                <div id="piecePalette" style="display: flex; flex-direction: column; gap: 0.35rem; background: rgba(0,0,0,0.15); border-radius: 6px; padding: 0.5rem;">
+                                    <!-- White pieces row -->
+                                    <div style="display: flex; gap: 0.3rem; align-items: center;">
+                                        <img src="/img/chesspieces/wikipedia/wK.png" class="palette-piece" data-piece="wK" title="Bílý král" draggable="true" style="width:36px;height:36px;">
+                                        <img src="/img/chesspieces/wikipedia/wQ.png" class="palette-piece" data-piece="wQ" title="Bílá dáma" draggable="true" style="width:36px;height:36px;">
+                                        <img src="/img/chesspieces/wikipedia/wR.png" class="palette-piece" data-piece="wR" title="Bílá věž" draggable="true" style="width:36px;height:36px;">
+                                        <img src="/img/chesspieces/wikipedia/wB.png" class="palette-piece" data-piece="wB" title="Bílý střelec" draggable="true" style="width:36px;height:36px;">
+                                        <img src="/img/chesspieces/wikipedia/wN.png" class="palette-piece" data-piece="wN" title="Bílý jezdec" draggable="true" style="width:36px;height:36px;">
+                                        <img src="/img/chesspieces/wikipedia/wP.png" class="palette-piece" data-piece="wP" title="Bílý pěšec" draggable="true" style="width:36px;height:36px;">
+                                    </div>
+                                    <!-- Black pieces row -->
+                                    <div style="display: flex; gap: 0.3rem; align-items: center;">
+                                        <img src="/img/chesspieces/wikipedia/bK.png" class="palette-piece" data-piece="bK" title="Černý král" draggable="true" style="width:36px;height:36px;">
+                                        <img src="/img/chesspieces/wikipedia/bQ.png" class="palette-piece" data-piece="bQ" title="Černá dáma" draggable="true" style="width:36px;height:36px;">
+                                        <img src="/img/chesspieces/wikipedia/bR.png" class="palette-piece" data-piece="bR" title="Černá věž" draggable="true" style="width:36px;height:36px;">
+                                        <img src="/img/chesspieces/wikipedia/bB.png" class="palette-piece" data-piece="bB" title="Černý střelec" draggable="true" style="width:36px;height:36px;">
+                                        <img src="/img/chesspieces/wikipedia/bN.png" class="palette-piece" data-piece="bN" title="Černý jezdec" draggable="true" style="width:36px;height:36px;">
+                                        <img src="/img/chesspieces/wikipedia/bP.png" class="palette-piece" data-piece="bP" title="Černý pěšec" draggable="true" style="width:36px;height:36px;">
+                                        <div style="flex: 1;"></div>
+                                        <button class="palette-piece palette-eraser" data-piece="remove" title="Odebrat figurku"
+                                            style="width:36px;height:36px;background: rgba(239,68,68,0.2); border: 1px solid rgba(239,68,68,0.4); border-radius: 4px; color: #fca5a5; cursor: pointer; display: flex; align-items: center; justify-content: center;">
+                                            <i class="fa-solid fa-eraser" style="font-size: 0.85rem;"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- SECTION: Pozice (Turn + FEN) -->
+                            <div class="diagram-section">
+                                <div class="diagram-section-label"><i class="fa-solid fa-crosshairs"></i> Pozice</div>
                                 <!-- Turn + FEN row -->
                                 <div style="display: flex; gap: 0.5rem; align-items: center; background: rgba(0,0,0,0.2); border-radius: 6px; padding: 0.4rem 0.5rem;">
                                     <div style="display: flex; gap: 0.25rem; flex-shrink: 0;">
@@ -1319,74 +1525,66 @@
                                         style="flex: 1; padding: 0.25rem 0.4rem; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.15); color: #fff; border-radius: 4px; font-family: monospace; font-size: 0.7rem; min-width: 0;">
                                     <button class="tool-btn" onclick="loadFenIntoDiagram()" title="Načíst FEN" style="width:28px; height:28px; font-size:0.75rem;">✓</button>
                                 </div>
-                                <!-- Castling -->
-                                <div style="display: flex; gap: 0.5rem; align-items: center; background: rgba(0,0,0,0.15); border-radius: 6px; padding: 0.3rem 0.5rem; flex-wrap: wrap;">
-                                    <span style="font-size: 0.65rem; color: var(--text-muted);">Rošáda:</span>
-                                    <label class="castling-check" title="Bílý krátká"><input type="checkbox" id="castleWK" checked onchange="updateCastlingRights()"><span>⬜K</span></label>
-                                    <label class="castling-check" title="Bílý dlouhá"><input type="checkbox" id="castleWQ" checked onchange="updateCastlingRights()"><span>⬜Q</span></label>
-                                    <label class="castling-check" title="Černý krátká"><input type="checkbox" id="castleBK" checked onchange="updateCastlingRights()"><span>⬛K</span></label>
-                                    <label class="castling-check" title="Černý dlouhá"><input type="checkbox" id="castleBQ" checked onchange="updateCastlingRights()"><span>⬛Q</span></label>
-                                </div>
-                                <!-- Piece Palette -->
-                                <div id="piecePalette" style="display: flex; gap: 0.2rem; align-items: center; flex-wrap: wrap; background: rgba(0,0,0,0.15); border-radius: 6px; padding: 0.35rem 0.4rem;">
-                                    <img src="/img/chesspieces/wikipedia/wK.png" class="palette-piece" data-piece="wK" title="Bílý král" draggable="true">
-                                    <img src="/img/chesspieces/wikipedia/wQ.png" class="palette-piece" data-piece="wQ" title="Bílá dáma" draggable="true">
-                                    <img src="/img/chesspieces/wikipedia/wR.png" class="palette-piece" data-piece="wR" title="Bílá věž" draggable="true">
-                                    <img src="/img/chesspieces/wikipedia/wB.png" class="palette-piece" data-piece="wB" title="Bílý střelec" draggable="true">
-                                    <img src="/img/chesspieces/wikipedia/wN.png" class="palette-piece" data-piece="wN" title="Bílý jezdec" draggable="true">
-                                    <img src="/img/chesspieces/wikipedia/wP.png" class="palette-piece" data-piece="wP" title="Bílý pěšec" draggable="true">
-                                    <div style="width: 1px; height: 24px; background: rgba(255,255,255,0.12); margin: 0 0.1rem;"></div>
-                                    <img src="/img/chesspieces/wikipedia/bK.png" class="palette-piece" data-piece="bK" title="Černý král" draggable="true">
-                                    <img src="/img/chesspieces/wikipedia/bQ.png" class="palette-piece" data-piece="bQ" title="Černá dáma" draggable="true">
-                                    <img src="/img/chesspieces/wikipedia/bR.png" class="palette-piece" data-piece="bR" title="Černá věž" draggable="true">
-                                    <img src="/img/chesspieces/wikipedia/bB.png" class="palette-piece" data-piece="bB" title="Černý střelec" draggable="true">
-                                    <img src="/img/chesspieces/wikipedia/bN.png" class="palette-piece" data-piece="bN" title="Černý jezdec" draggable="true">
-                                    <img src="/img/chesspieces/wikipedia/bP.png" class="palette-piece" data-piece="bP" title="Černý pěšec" draggable="true">
-                                    <div style="width: 1px; height: 24px; background: rgba(255,255,255,0.12); margin: 0 0.1rem;"></div>
-                                    <button class="palette-piece palette-eraser" data-piece="remove" title="Odebrat figurku"
-                                        style="background: rgba(239,68,68,0.2); border: 1px solid rgba(239,68,68,0.4); border-radius: 4px; color: #fca5a5; cursor: pointer; display: flex; align-items: center; justify-content: center;">
-                                        <i class="fa-solid fa-eraser" style="font-size: 0.7rem;"></i>
-                                    </button>
-                                </div>
                             </div>
 
                             <!-- SECTION: Anotace (Annotation Tools) -->
                             <div class="diagram-section">
                                 <div class="diagram-section-label"><i class="fa-solid fa-pen-fancy"></i> Anotace</div>
-                                <div class="editor-toolbar">
-                                    <!-- Arrows -->
-                                    <button class="tool-btn active" onclick="setDiagramTool('arrow-green')" title="Zelená šipka">
-                                        <div class="color-dot" style="background:#22c55e"></div>
-                                    </button>
-                                    <button class="tool-btn" onclick="setDiagramTool('arrow-red')" title="Červená šipka">
-                                        <div class="color-dot" style="background:#ef4444"></div>
-                                    </button>
-                                    <button class="tool-btn" onclick="setDiagramTool('arrow-blue')" title="Modrá šipka">
-                                        <div class="color-dot" style="background:#3b82f6"></div>
-                                    </button>
-                                    <button class="tool-btn" onclick="setDiagramTool('arrow-yellow')" title="Žlutá šipka">
-                                        <div class="color-dot" style="background:#eab308"></div>
-                                    </button>
-                                    <div style="width: 1px; background: rgba(255,255,255,0.08); margin: 0 0.3rem; align-self: stretch;"></div>
-                                    <!-- Squares -->
-                                    <button class="tool-btn" onclick="setDiagramTool('square-green')" title="Zelené pole"><i class="fa-solid fa-square" style="color:#22c55e"></i></button>
-                                    <button class="tool-btn" onclick="setDiagramTool('square-red')" title="Červené pole"><i class="fa-solid fa-square" style="color:#ef4444"></i></button>
-                                    <button class="tool-btn" onclick="setDiagramTool('square-blue')" title="Modré pole"><i class="fa-solid fa-square" style="color:#3b82f6"></i></button>
-                                    <button class="tool-btn" onclick="setDiagramTool('square-yellow')" title="Žluté pole"><i class="fa-solid fa-square" style="color:#eab308"></i></button>
-                                    <div style="width: 1px; background: rgba(255,255,255,0.08); margin: 0 0.3rem; align-self: stretch;"></div>
-                                    <!-- Eraser -->
-                                    <button class="tool-btn" onclick="setDiagramTool('eraser')" title="Guma"><i class="fa-solid fa-eraser"></i></button>
-                                    <div style="width: 1px; background: rgba(255,255,255,0.08); margin: 0 0.3rem; align-self: stretch;"></div>
-                                    <!-- Badges -->
-                                    <button class="tool-btn" onclick="setDiagramTool('badge-!')" title="!"><span style="color:#22c55e; font-weight:bold;">!</span></button>
-                                    <button class="tool-btn" onclick="setDiagramTool('badge-!!')" title="!!"><span style="color:#15803d; font-weight:bold;">!!</span></button>
-                                    <button class="tool-btn" onclick="setDiagramTool('badge-?')" title="?"><span style="color:#eab308; font-weight:bold;">?</span></button>
-                                    <button class="tool-btn" onclick="setDiagramTool('badge-??')" title="??"><span style="color:#ef4444; font-weight:bold;">??</span></button>
-                                    <button class="tool-btn" onclick="setDiagramTool('badge-!?')" title="!?"><span style="color:#3b82f6; font-weight:bold;">!?</span></button>
-                                    <button class="tool-btn" onclick="setDiagramTool('badge-?!')" title="?!"><span style="color:#a855f7; font-weight:bold;">?!</span></button>
-                                    <div style="width: 1px; background: rgba(255,255,255,0.08); margin: 0 0.3rem; align-self: stretch;"></div>
-                                    <button class="tool-btn" onclick="clearDiagram()" title="Vymazat vše"><i class="fa-solid fa-trash"></i></button>
+                                <div style="display: flex; flex-direction: column; gap: 0.3rem; background: rgba(0,0,0,0.25); border-radius: 8px; border: 1px solid rgba(255,255,255,0.06); padding: 0.4rem;">
+                                    <!-- Arrows row -->
+                                    <div style="display: flex; gap: 0.25rem; align-items: center;">
+                                        <button class="tool-btn active" onclick="setDiagramTool('arrow-green')" title="Zelená šipka">
+                                            <div class="color-dot" style="background:#22c55e"></div>
+                                        </button>
+                                        <button class="tool-btn" onclick="setDiagramTool('arrow-red')" title="Červená šipka">
+                                            <div class="color-dot" style="background:#ef4444"></div>
+                                        </button>
+                                        <button class="tool-btn" onclick="setDiagramTool('arrow-blue')" title="Modrá šipka">
+                                            <div class="color-dot" style="background:#3b82f6"></div>
+                                        </button>
+                                        <button class="tool-btn" onclick="setDiagramTool('arrow-yellow')" title="Žlutá šipka">
+                                            <div class="color-dot" style="background:#eab308"></div>
+                                        </button>
+                                        <div style="flex: 1;"></div>
+                                        <button class="tool-btn" onclick="setDiagramTool('eraser')" title="Guma"><i class="fa-solid fa-eraser"></i></button>
+                                    </div>
+                                    <!-- Squares row -->
+                                    <div style="display: flex; gap: 0.25rem; align-items: center;">
+                                        <button class="tool-btn" onclick="setDiagramTool('square-green')" title="Zelené pole"><i class="fa-solid fa-square" style="color:#22c55e"></i></button>
+                                        <button class="tool-btn" onclick="setDiagramTool('square-red')" title="Červené pole"><i class="fa-solid fa-square" style="color:#ef4444"></i></button>
+                                        <button class="tool-btn" onclick="setDiagramTool('square-blue')" title="Modré pole"><i class="fa-solid fa-square" style="color:#3b82f6"></i></button>
+                                        <button class="tool-btn" onclick="setDiagramTool('square-yellow')" title="Žluté pole"><i class="fa-solid fa-square" style="color:#eab308"></i></button>
+                                        <div style="flex: 1;"></div>
+                                        <button class="tool-btn" onclick="clearDiagram()" title="Vymazat vše"><i class="fa-solid fa-trash"></i></button>
+                                    </div>
+                                    <!-- Badges row -->
+                                    <div style="display: flex; gap: 0.25rem; align-items: center;">
+                                        <button class="tool-btn" onclick="setDiagramTool('badge-!')" title="!"><span style="color:#22c55e; font-weight:bold;">!</span></button>
+                                        <button class="tool-btn" onclick="setDiagramTool('badge-!!')" title="!!"><span style="color:#15803d; font-weight:bold;">!!</span></button>
+                                        <button class="tool-btn" onclick="setDiagramTool('badge-?')" title="?"><span style="color:#eab308; font-weight:bold;">?</span></button>
+                                        <button class="tool-btn" onclick="setDiagramTool('badge-??')" title="??"><span style="color:#ef4444; font-weight:bold;">??</span></button>
+                                        <button class="tool-btn" onclick="setDiagramTool('badge-!?')" title="!?"><span style="color:#3b82f6; font-weight:bold;">!?</span></button>
+                                        <button class="tool-btn" onclick="setDiagramTool('badge-?!')" title="?!"><span style="color:#a855f7; font-weight:bold;">?!</span></button>
+                                    </div>
                                 </div>
+                            </div>
+
+                            <!-- SECTION: Rošáda (Castling - secondary, lower) -->
+                            <div class="diagram-section">
+                                <div style="display: flex; gap: 0.4rem; align-items: center; background: rgba(0,0,0,0.12); border-radius: 6px; padding: 0.35rem 0.5rem; flex-wrap: wrap;">
+                                    <span style="font-size: 0.65rem; color: var(--text-muted); margin-right: 0.2rem;">Rošáda:</span>
+                                    <label class="castling-check" title="Bílý krátká (0-0)"><input type="checkbox" id="castleWK" checked onchange="updateCastlingRights()"><span style="color:#f0d9b5;">0-0</span></label>
+                                    <label class="castling-check" title="Bílý dlouhá (0-0-0)"><input type="checkbox" id="castleWQ" checked onchange="updateCastlingRights()"><span style="color:#f0d9b5;">0-0-0</span></label>
+                                    <div style="width: 1px; height: 14px; background: rgba(255,255,255,0.12);"></div>
+                                    <label class="castling-check" title="Černý krátká (0-0)"><input type="checkbox" id="castleBK" checked onchange="updateCastlingRights()"><span style="color:#666;">0-0</span></label>
+                                    <label class="castling-check" title="Černý dlouhá (0-0-0)"><input type="checkbox" id="castleBQ" checked onchange="updateCastlingRights()"><span style="color:#666;">0-0-0</span></label>
+                                </div>
+                            </div>
+
+                            <!-- Position legality warning (updated dynamically) -->
+                            <div id="positionWarning" style="display: none; padding: 0.4rem 0.6rem; background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3); border-radius: 6px; font-size: 0.72rem; color: #fca5a5;">
+                                <i class="fa-solid fa-triangle-exclamation" style="color:#ef4444; margin-right: 0.3rem;"></i>
+                                <span id="positionWarningText"></span>
                             </div>
 
                             <!-- SECTION: Actions -->
@@ -1649,6 +1847,14 @@
             if (typeof analyzeCurrentPosition === 'function') {
                 analyzeCurrentPosition();
             }
+
+            // Toggle mobile inline palette strips (visible only in diagram mode)
+            const isDiagramMode = (tabName === 'diagram' || tabName === 'hadanky');
+            const mobileElements = ['mobilePaletteBlack', 'mobilePaletteWhite', 'mobileAnnotTools'];
+            mobileElements.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.style.display = isDiagramMode ? '' : 'none';
+            });
         }
 
         // ========================================
@@ -1948,6 +2154,96 @@
                 document.addEventListener('DOMContentLoaded', waitForAuth);
             } else {
                 waitForAuth();
+            }
+        })();
+    </script>
+
+    <!-- Mobile layout manager -->
+    <script>
+        (function() {
+            function isMobile() { return window.innerWidth <= 900; }
+
+            function setupMobileLayout() {
+                if (!isMobile()) {
+                    // Restore desktop defaults
+                    const hero = document.querySelector('.hero-small');
+                    if (hero) hero.style.display = '';
+                    document.body.style.overflow = '';
+                    document.documentElement.style.overflow = '';
+                    const boardEl = document.getElementById('board');
+                    if (boardEl) boardEl.style.maxWidth = '';
+                    // Hide mobile elements on desktop
+                    ['mobilePaletteBlack', 'mobilePaletteWhite', 'mobileAnnotTools'].forEach(id => {
+                        const el = document.getElementById(id);
+                        if (el) el.style.display = 'none';
+                    });
+                    return;
+                }
+
+                // Mobile mode: hide hero, prevent scroll
+                const hero = document.querySelector('.hero-small');
+                if (hero) hero.style.display = 'none';
+                document.body.style.overflow = 'hidden';
+                document.documentElement.style.overflow = 'hidden';
+
+                // Calculate available height for the board
+                const vh = window.innerHeight;
+                const tabsEl = document.querySelector('.page-tabs');
+                const tabsH = tabsEl ? tabsEl.offsetHeight : 30;
+                const controlsEl = document.querySelector('.controls-diagram') || document.querySelector('.controls-partie');
+                const controlsH = controlsEl ? controlsEl.offsetHeight : 40;
+
+                // Budget: tabs + palettes(2x30) + annotations(30) + controls + padding
+                const isDiagram = currentPageTab === 'diagram' || currentPageTab === 'hadanky';
+                const extraH = isDiagram ? 90 : 10; // palettes + annotation strip
+                const boardMaxH = vh - tabsH - controlsH - extraH - 16;
+
+                const boardEl = document.getElementById('board');
+                if (boardEl) {
+                    const maxSize = Math.min(boardMaxH, window.innerWidth - 10);
+                    boardEl.style.maxWidth = maxSize + 'px';
+                    boardEl.style.maxHeight = maxSize + 'px';
+                    // Resize chessboard if it exists
+                    if (typeof board !== 'undefined' && board.resize) {
+                        setTimeout(() => board.resize(), 50);
+                    }
+                    if (typeof getDiagramBoard === 'function') {
+                        const db = getDiagramBoard();
+                        if (db && db.resize) setTimeout(() => db.resize(), 50);
+                    }
+                }
+
+                // Show/hide mobile palettes based on active tab
+                const showPalettes = isDiagram;
+                ['mobilePaletteBlack', 'mobilePaletteWhite', 'mobileAnnotTools'].forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el) el.style.display = showPalettes ? 'flex' : 'none';
+                });
+            }
+
+            // Run on load, resize, and tab switch
+            window.addEventListener('load', () => setTimeout(setupMobileLayout, 100));
+            window.addEventListener('resize', setupMobileLayout);
+
+            // Patch switchPageTab to also run mobile layout
+            const origSwitchPageTab = window.switchPageTab;
+            if (origSwitchPageTab) {
+                window.switchPageTab = function(tabName) {
+                    origSwitchPageTab(tabName);
+                    setTimeout(setupMobileLayout, 50);
+                };
+            } else {
+                // Wait for it
+                const checkInterval = setInterval(() => {
+                    if (typeof window.switchPageTab === 'function' && window.switchPageTab !== setupMobileLayout) {
+                        const orig = window.switchPageTab;
+                        window.switchPageTab = function(tabName) {
+                            orig(tabName);
+                            setTimeout(setupMobileLayout, 50);
+                        };
+                        clearInterval(checkInterval);
+                    }
+                }, 200);
             }
         })();
     </script>

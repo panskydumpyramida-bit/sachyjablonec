@@ -398,7 +398,12 @@ app.get('/api/health', (req, res) => {
 // --- Diagram API ---
 app.get('/api/diagrams', authMiddleware, async (req, res) => {
     try {
+        const where = {};
+        if (req.query.mine === 'true' && req.user) {
+            where.userId = req.user.id;
+        }
         const diagrams = await prisma.diagram.findMany({
+            where,
             orderBy: { createdAt: 'desc' },
             take: 50,
             include: { user: { select: { username: true } } }
@@ -491,7 +496,21 @@ app.delete('/api/diagrams/:id', authMiddleware, async (req, res) => {
 // --- Fragment API ---
 app.get('/api/fragments', async (req, res) => {
     try {
+        const where = {};
+        if (req.query.mine === 'true') {
+            // Need to extract user from token for filtering
+            try {
+                const authHeader = req.headers.authorization;
+                if (authHeader) {
+                    const token = authHeader.replace('Bearer ', '');
+                    const jwt = await import('jsonwebtoken');
+                    const decoded = jwt.default.verify(token, process.env.JWT_SECRET);
+                    where.userId = decoded.id;
+                }
+            } catch (e) { /* ignore auth errors for filtering */ }
+        }
         const fragments = await prisma.fragment.findMany({
+            where,
             orderBy: { createdAt: 'desc' },
             take: 100,
             include: { user: { select: { username: true } } }

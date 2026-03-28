@@ -4,14 +4,14 @@
 <div align="center">
 
 ![Chess](https://img.shields.io/badge/♟️_Šachy-Jablonec-gold?style=for-the-badge)
-![Version](https://img.shields.io/badge/Verze-v23-blue?style=for-the-badge)
-![Updated](https://img.shields.io/badge/Aktualizace-Leden_2026-green?style=for-the-badge)
+![Version](https://img.shields.io/badge/Verze-v39-blue?style=for-the-badge)
+![Updated](https://img.shields.io/badge/Aktualizace-Březen_2026-green?style=for-the-badge)
 
 </div>
 
 ---
 
-## � Rychlý start
+## 🚀 Rychlý start
 
 ```mermaid
 flowchart LR
@@ -34,8 +34,9 @@ flowchart LR
 | [3️⃣ Šachové diagramy](#3️⃣-šachové-diagramy) | Hádanky a pozice |
 | [4️⃣ Kniha diagramů](#4️⃣-kniha-diagramů) | Více diagramů v článku |
 | [5️⃣ Šachové fragmenty](#5️⃣-šachové-fragmenty) | Výřezy partií s enginem |
-| [6️⃣ Správa událostí](#6️⃣-správa-událostí) | Turnaje a tréninky |
-| [7️⃣ Galerie](#7️⃣-galerie) | Fotografie |
+| [6️⃣ Atomické bloky v editoru](#6️⃣-atomické-bloky-v-editoru) | Ochrana, drag & drop, editace |
+| [7️⃣ Správa událostí](#7️⃣-správa-událostí) | Turnaje a tréninky |
+| [8️⃣ Galerie](#8️⃣-galerie) | Fotografie |
 
 ---
 
@@ -77,18 +78,20 @@ Dashboard je váš hlavní přehled - vidíte zde všechny články a rychlé ak
 ### WYSIWYG Panel nástrojů
 
 | Ikona | Název | Co dělá |
-|:-----:|-------|---------|
+|:-----:|-------|---------| 
 | **B** | Tučně | Zvýrazní vybraný text tučně |
 | _I_ | Kurzíva | Nakloní text |
 | H2 | Nadpis 2 | Velký nadpis sekce |
 | H3 | Nadpis 3 | Menší podnadpis |
-| � | Odkaz | Vloží hypertextový odkaz |
+| 🔗 | Odkaz | Vloží hypertextový odkaz |
 | 📋 | Seznam | Odrážkový seznam |
 | 📦 | Sbalitelný | Blok co se dá rozbalit/sbalit |
 | 💡 | Info box | Zvýrazněný box s pozadím |
 | 🧩 | Diagram | Vloží šachový diagram |
-| �️ | Obrázek | Vloží fotku do textu |
+| ✂️ | Fragment | Vloží fragment partie |
+| 🖼️ | Obrázek | Vloží fotku do textu |
 | 📊 | Tabulka | Vloží tabulku |
+| ▤ | Sloupce | Vloží layout 50/50, 33/67, 67/33 nebo 33/33/33 |
 
 ### Zvýraznění textu
 
@@ -106,6 +109,23 @@ Jak na to:
 > **Zvýraznění se hodí pro:**
 > - Jména hráčů → zlatá barva
 > - Výsledky a skóre → zelená barva
+
+### Sloupcové rozvržení
+
+Editor podporuje 4 varianty sloupcového rozvržení:
+
+| Layout | Použití |
+|--------|---------|
+| 50/50 | Dva stejné sloupce |
+| 33/67 | Třetina + dvě třetiny |
+| 67/33 | Dvě třetiny + třetina |
+| 33/33/33 | Tři stejné sloupce (ideální pro 3 diagramy vedle sebe) |
+
+> [!TIP]
+> **3 diagramy vedle sebe:** Použijte layout 33/33/33 a do každého sloupce vložte diagram. Diagramy se automaticky přizpůsobí šířce 240px.
+
+> [!WARNING]
+> **Fragmenty do 1/3 sloupce nedávejte** – editor vás varuje toastem. Fragmenty potřebují minimálně 1/2 nebo celou šířku.
 
 ### Stavy publikace
 
@@ -151,6 +171,9 @@ Diagram je interaktivní šachovnice, kde návštěvník může:
 └──────────────────────────────────────────────┘
 ```
 
+> [!NOTE]
+> Každý diagram automaticky ukládá ID tvůrce. V selektoru diagramů se zobrazuje jméno autora (👤) vedle každého diagramu.
+
 ### Formát řešení
 
 ```
@@ -180,10 +203,8 @@ Kniha = více diagramů v jednom bloku s navigačními šipkami. Ideální pro:
      │   ♟ Šachovnice  │  ← zobrazuje i šipky a anotace
      │                 │
      │  ◀  ● ○ ○  ▶   │  ← navigace mezi diagramy
-     │   Bílý na tahu  │
+     │  Popisek... ↺   │  ← popisek + reset tlačítko
      │  "1 / 3"        │
-     │                 │
-     │  "Popisek..."   │  ← volitelný popisek
      └─────────────────┘
 ```
 
@@ -197,6 +218,9 @@ Kniha = více diagramů v jednom bloku s navigačními šipkami. Ideální pro:
 6. Klik **Vložit jako knihu**
 
 > [!TIP]
+> **Filtr „Moje":** Zaškrtněte checkbox 👤 **Moje** v selektoru a uvidíte jen vlastní diagramy. Užitečné když je jich hodně.
+
+> [!TIP]
 > **Popisky** se zobrazují pod šachovnicí a mění se podle aktuálního diagramu.
 > Např.: "Bílý na tahu vyhraje" nebo "Po tahu 15. Jg5?"
 
@@ -204,21 +228,13 @@ Kniha = více diagramů v jednom bloku s navigačními šipkami. Ideální pro:
 
 | Akce | Jak |
 |------|-----|
-| **Otevřít editor** | Dvojklik na knihu v článku |
-| Přidat/odebrat diagramy | V modalu zaškrtni/odškrtni |
-| Změnit pořadí | Šipky ↑↓ u každého diagramu |
-| Změnit popisek | Pole "Popisek" u diagramu |
-| Pozice v textu | Tlačítka ⬅️ ⬜ ➡️ v toolbaru |
-| Smazat | Tlačítko 🗑️ v toolbaru |
-
-> [!IMPORTANT]
-> **Po aktualizaci editoru** (např. po nasazení oprav) může být nutné knihu znovu otevřít a uložit, aby se projevily nové funkce.
-
-### Grafické anotace
-
-Šipky a značky (!, ?, ☆) vytvořené v Game Recorderu se zobrazují:
-- ✅ V náhledu v editoru (po vložení/listování)
-- ✅ Na webu (pokud jsou načteny skripty)
+| **Otevřít edit modal** | Klikni na diagram v editoru |
+| Upravit popisek | V edit modalu pole "Popisek" |
+| Upravit zdroj | Tlačítko ✏️ **Upravit zdroj** v modalu |
+| Obnovit data ze serveru | Tlačítko 🔄 **Obnovit data** v modalu |
+| Změnit diagramy | Tlačítko 🖼️ **Změnit diagramy** v modalu |
+| Přesunout | Chytni a přetáhni (drag & drop) |
+| Smazat | Tlačítko 🗑️ v edit modalu |
 
 ### Puzzle Badge
 
@@ -233,6 +249,10 @@ Diagramy s řešením mají zlatý odznak:
     │  │                 │
     └──┴─────────────────┘
 ```
+
+### Reset tlačítko
+
+Vedle popisku diagramu je malé tlačítko ↺ pro resetování pozice. Je vždy viditelné a zvýrazní se modře při najetí myší.
 
 ---
 
@@ -252,21 +272,88 @@ Fragment je interaktivní výřez z partie (např. od 15. do 25. tahu), který o
 6. Klikněte na **Zobrazit náhled**, abyste si ověřili výřez.
 7. V případě spokojenosti fragment uložte kliknutím na **Uložit fragment**.
 
+> [!NOTE]
+> Fragment se automaticky přiřadí k vašemu účtu. V selektoru fragmentů se zobrazuje jméno autora (👤) vedle každého fragmentu.
+
 ### Jak vložit fragment do článku
 
 1. V editoru článku klikněte v nástrojové liště na ikonu **✂️ (Fragment)**.
 2. Ze seznamu vyberte vámi uložený fragment.
-3. Do editoru se vloží zástupný text `[frag:123]`. Ten neupravujte.
-4. Po uložení a náhledu novinky se vygeneruje překrásný interaktivní widget!
+3. **Nově:** Zaškrtněte 👤 **Moje** pro filtrování jen vlastních fragmentů.
+4. Do editoru se vloží chráněný zástupný blok. Ten neupravujte ručně – použijte edit modal (klik na blok).
+5. Po uložení a náhledu novinky se vygeneruje překrásný interaktivní widget!
 
 ---
 
-## 6️⃣ Správa událostí
+## 6️⃣ Atomické bloky v editoru
+
+### Co jsou atomické bloky?
+
+Diagramy a fragmenty se v editoru chovají jako **chráněné objekty** (atomické bloky). To znamená:
+
+- ✅ Nelze do nich omylem psát text
+- ✅ Backspace/Delete maže celý blok najednou (ne po částech)
+- ✅ Kliknutí otevře edit modal
+- ✅ Lze je přetahovat myší (drag & drop)
+
+### Edit modal – Diagram
+
+Po kliknutí na diagram v editoru se otevře modal s:
+
+| Pole / Tlačítko | Co dělá |
+|-----------------|---------|
+| **Popisek** | Textové pole pro popis pod diagramem |
+| ✏️ **Upravit zdroj** | Otevře Game Recorder v novém okně s daným diagramem |
+| 🔄 **Obnovit data** | Stáhne aktuální verzi diagramu ze serveru |
+| 🖼️ **Změnit diagramy** | Otevře selektor pro výměnu/přidání diagramů |
+| 🗑️ **Smazat** | Odstraní celý blok |
+| ✅ **Uložit** | Uloží změny popisku |
+
+### Edit modal – Fragment
+
+Po kliknutí na fragment v editoru se otevře modal s:
+
+| Pole / Tlačítko | Co dělá |
+|-----------------|---------|
+| **Název fragmentu** | Textové pole – změny se projeví ihned v editoru |
+| 🗑️ **Smazat** | Odstraní celý blok |
+| ✅ **Uložit** | Uloží změny |
+
+### Drag & Drop
+
+Přetahování funguje takto:
+
+1. **Chyť** diagram nebo fragment myší (podržením)
+2. **Přetáhni** na nové místo – cílové sloupce se zvýrazní modře
+3. **Pusť** – blok se vloží na nové místo
+
+```
+  ┌──────────────────────────────┐
+  │     📋 Sloupec A             │
+  │  ┌─────────────────────┐    │
+  │  │  🧩 Diagram (drag)  │ ─→ │
+  │  └─────────────────────┘    │
+  └──────────────────────────────┘
+              ↓ přetáhni
+  ┌──────────────────────────────┐
+  │     📋 Sloupec B             │  ← modrý highlight
+  │  ┌─ ─ ─ ─ ─ ─ ─ ─ ─ ─┐    │
+  │  │  cílová pozice      │    │  ← modrá čárkovaná
+  │  └─ ─ ─ ─ ─ ─ ─ ─ ─ ─┘    │
+  └──────────────────────────────┘
+```
+
+> [!TIP]
+> Přetahovat lze mezi sloupci, z bloku ven i dovnitř.
+
+---
+
+## 7️⃣ Správa událostí
 
 ### Typy událostí
 
 | Typ | Ikona | Příklad |
-|-----|:-----:|---------|
+|-----|:-----:|---------| 
 | Turnaj | 🏆 | Josefův Důl Open |
 | Trénink | 📚 | Oddílový trénink |
 | Soustředění | ⛺ | Letní soustředění |
@@ -286,7 +373,7 @@ Fragment je interaktivní výřez z partie (např. od 15. do 25. tahu), který o
 
 ---
 
-## 7️⃣ Galerie
+## 8️⃣ Galerie
 
 ### Nahrávání fotek
 
@@ -364,6 +451,16 @@ Problém: Uložil jsem ale na webu nic
   3. ✓ Podívej se do changelogu
 ```
 
+### Diagram/Fragment se nedá upravit
+
+```
+Problém: Klikám na blok v editoru ale nic se neděje
+Řešení:
+  1. ✓ Klikni přímo na blok (ne vedle)
+  2. ✓ Otevře se edit modal s akcemi
+  3. ✓ Pro přesun chyť a drž myší (drag)
+```
+
 ---
 
 <div align="center">
@@ -372,6 +469,6 @@ Problém: Uložil jsem ale na webu nic
 
 ---
 
-*Manuál verze 1.0 | Aktualizováno: 22. ledna 2026*
+*Manuál verze 2.0 | Aktualizováno: 28. března 2026*
 
 </div>

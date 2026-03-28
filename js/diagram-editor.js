@@ -1260,6 +1260,27 @@ function updateFenFromBoard() {
     const fullFen = `${boardFen} ${diagramTurn} ${getCastlingString()} - 0 1`;
     const input = document.getElementById('diagramFenInput');
     if (input) input.value = fullFen;
+
+    // Live position legality check
+    updatePositionWarning();
+}
+
+/**
+ * Update the position warning indicator in the sidebar
+ */
+function updatePositionWarning() {
+    const warningEl = document.getElementById('positionWarning');
+    const warningText = document.getElementById('positionWarningText');
+    if (!warningEl || !warningText) return;
+
+    const errors = validatePosition();
+    if (errors.length > 0) {
+        warningEl.style.display = 'block';
+        warningText.innerHTML = errors.join('<br>');
+    } else {
+        warningEl.style.display = 'none';
+        warningText.innerHTML = '';
+    }
 }
 
 /**
