@@ -2752,11 +2752,94 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         // ================================
-        // DRAG & DROP IMAGE UPLOAD
+        // DRAG & DROP IMAGE UPLOAD + ATOMIC BLOCK REORDERING
         // ================================
+        let draggedAtomicBlock = null;
+        let dropIndicator = null;
+
+        // Make all atomic blocks draggable
+        function makeAtomicBlocksDraggable() {
+            const blocks = editor.querySelectorAll('.diagram-book, .game-fragment');
+            blocks.forEach(block => {
+                if (block.dataset.draggableInit) return;
+                block.dataset.draggableInit = '1';
+                block.setAttribute('draggable', 'true');
+                block.style.cursor = 'grab';
+
+                block.addEventListener('dragstart', (e) => {
+                    draggedAtomicBlock = block;
+                    block.style.opacity = '0.4';
+                    e.dataTransfer.effectAllowed = 'move';
+                    e.dataTransfer.setData('text/plain', 'atomic-block');
+                    // Create drop indicator
+                    if (!dropIndicator) {
+                        dropIndicator = document.createElement('div');
+                        dropIndicator.style.cssText = `
+                            height: 3px; background: #60a5fa; border-radius: 2px;
+                            margin: 2px 0; pointer-events: none; transition: opacity 0.15s;
+                            box-shadow: 0 0 8px rgba(96,165,250,0.5);
+                        `;
+                    }
+                });
+
+                block.addEventListener('dragend', () => {
+                    block.style.opacity = '1';
+                    draggedAtomicBlock = null;
+                    if (dropIndicator && dropIndicator.parentNode) {
+                        dropIndicator.remove();
+                    }
+                    // Clean up any remaining drag-over styles
+                    editor.querySelectorAll('.content-col').forEach(col => {
+                        col.style.outline = '';
+                    });
+                });
+            });
+        }
+
+        // Run on init and observe for new blocks
+        makeAtomicBlocksDraggable();
+        const atomicObserver = new MutationObserver(() => makeAtomicBlocksDraggable());
+        atomicObserver.observe(editor, { childList: true, subtree: true });
+
         editor.addEventListener('dragover', (e) => {
             e.preventDefault();
             e.stopPropagation();
+
+            if (draggedAtomicBlock) {
+                e.dataTransfer.dropEffect = 'move';
+
+                // Find drop target: nearest block-level element
+                let target = document.elementFromPoint(e.clientX, e.clientY);
+                if (!target || !editor.contains(target)) return;
+
+                // Walk up to find a direct child of editor or content-col
+                let dropParent = target;
+                while (dropParent && dropParent.parentNode !== editor && 
+                       !(dropParent.parentNode && dropParent.parentNode.classList && dropParent.parentNode.classList.contains('content-col'))) {
+                    dropParent = dropParent.parentNode;
+                }
+
+                if (dropParent && dropParent !== draggedAtomicBlock && dropParent !== dropIndicator) {
+                    const rect = dropParent.getBoundingClientRect();
+                    const midY = rect.top + rect.height / 2;
+                    const insertBefore = e.clientY < midY;
+
+                    if (insertBefore) {
+                        dropParent.parentNode.insertBefore(dropIndicator, dropParent);
+                    } else {
+                        dropParent.parentNode.insertBefore(dropIndicator, dropParent.nextSibling);
+                    }
+                }
+
+                // Highlight content-col on hover
+                const hoveredCol = target.closest('.content-col');
+                editor.querySelectorAll('.content-col').forEach(col => {
+                    col.style.outline = col === hoveredCol ? '2px dashed rgba(96,165,250,0.4)' : '';
+                });
+
+                return;
+            }
+
             if (!editor.classList.contains('drag-over')) {
                 editor.classList.add('drag-over');
             }
@@ -2766,6 +2849,12 @@ document.addEventListener('DOMContentLoaded', () => {
             e.preventDefault();
             e.stopPropagation();
             editor.classList.remove('drag-over');
+            // Clean up column highlights
+            if (draggedAtomicBlock) {
+                editor.querySelectorAll('.content-col').forEach(col => {
+                    col.style.outline = '';
+                });
+            }
         });
 
         editor.addEventListener('drop', async (e) => {
@@ -2773,6 +2862,36 @@ document.addEventListener('DOMContentLoaded', () => {
             e.stopPropagation();
             editor.classList.remove('drag-over');
 
+            // Handle atomic block drop
+            if (draggedAtomicBlock && dropIndicator && dropIndicator.parentNode) {
+                dropIndicator.parentNode.insertBefore(draggedAtomicBlock, dropIndicator);
+                dropIndicator.remove();
+                draggedAtomicBlock.style.opacity = '1';
+
+                // Ensure paragraphs exist around the moved block
+                if (!draggedAtomicBlock.previousElementSibling || 
+                    draggedAtomicBlock.previousElementSibling.matches('.diagram-book, .game-fragment')) {
+                    const p = document.createElement('p');
+                    p.innerHTML = '<br>';
+                    draggedAtomicBlock.parentNode.insertBefore(p, draggedAtomicBlock);
+                }
+                if (!draggedAtomicBlock.nextElementSibling || 
+                    draggedAtomicBlock.nextElementSibling.matches('.diagram-book, .game-fragment')) {
+                    const p = document.createElement('p');
+                    p.innerHTML = '<br>';
+                    draggedAtomicBlock.parentNode.insertBefore(p, draggedAtomicBlock.nextSibling);
+                }
+
+                draggedAtomicBlock = null;
+                editor.querySelectorAll('.content-col').forEach(col => {
+                    col.style.outline = '';
+                });
+                updatePreview();
+                showToast('✅ Blok přesunut', 'success');
+                return;
+            }
+
+            // Handle image file drop (existing functionality)
             const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/'));
             if (files.length === 0) return;
 
