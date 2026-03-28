@@ -1107,7 +1107,7 @@ function openQuickFragmentModal(gameIndex) {
                     'Authorization': `Bearer ${token}`
                 },
                 body: JSON.stringify({
-                    title: `[Výřez článkové partie] ${game.title}`,
+                    title: game.title,
                     pgn: fragmentPgn,
                     startFen,
                     fromMove,
