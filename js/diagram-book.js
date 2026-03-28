@@ -396,12 +396,17 @@
                 transform: rotate(-180deg);
                 color: #60a5fa !important;
             }
-            /* Diagram inside column blocks */
+            /* Diagram inside column blocks - compact, centered */
             .content-columns .diagram-book {
-                max-width: 100% !important;
+                max-width: 280px !important;
+                width: 100% !important;
                 float: none !important;
-                margin: 0 auto !important;
+                margin: 0.5rem auto !important;
                 overflow: hidden;
+            }
+            /* Inside 3-col layouts, even smaller */
+            .content-columns[data-layout="33-33-33"] .diagram-book {
+                max-width: 240px !important;
             }
             /* Mobile */
             @media (max-width: 600px) {
