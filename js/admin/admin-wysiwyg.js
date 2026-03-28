@@ -2567,6 +2567,32 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
                 target = target.parentNode;
             }
+
+            // Atomic block click protection: redirect cursor out of diagram-book / game-fragment
+            let clickedBlock = e.target;
+            while (clickedBlock && clickedBlock !== editor) {
+                if (clickedBlock.nodeType === 1 && clickedBlock.matches && 
+                    (clickedBlock.matches('.diagram-book') || clickedBlock.matches('.game-fragment'))) {
+                    e.preventDefault();
+                    const block = clickedBlock;
+                    setTimeout(() => {
+                        let afterEl = block.nextElementSibling;
+                        if (!afterEl || (afterEl.matches('.diagram-book') || afterEl.matches('.game-fragment'))) {
+                            afterEl = document.createElement('p');
+                            afterEl.innerHTML = '<br>';
+                            block.parentNode.insertBefore(afterEl, block.nextSibling);
+                        }
+                        const sel = window.getSelection();
+                        const range = document.createRange();
+                        range.setStart(afterEl, 0);
+                        range.collapse(true);
+                        sel.removeAllRanges();
+                        sel.addRange(range);
+                    }, 0);
+                    return;
+                }
+                clickedBlock = clickedBlock.parentNode;
+            }
         });
 
         editor.addEventListener('keydown', (e) => {
@@ -2591,7 +2617,120 @@ document.addEventListener('DOMContentLoaded', () => {
                             newNode.innerHTML = newNode.innerHTML.replace(/\u200B/g, '');
                         }
                     }
-                    if (typeof checkToolbarState === 'function') checkToolbarState();
+            if (typeof checkToolbarState === 'function') checkToolbarState();
+                }
+            }
+        });
+
+        // ================================
+        // ATOMIC BLOCK PROTECTION
+        // Prevent partial deletion of diagram-book and game-fragment blocks
+        // ================================
+        const ATOMIC_SELECTORS = ['.diagram-book', '.game-fragment'];
+
+        editor.addEventListener('keydown', (e) => {
+            const sel = window.getSelection();
+            if (!sel.rangeCount) return;
+
+            // Check if selection spans across an atomic block
+            const range = sel.getRangeAt(0);
+            
+            function findAtomicParent(node) {
+                while (node && node !== editor) {
+                    if (node.nodeType === 1) {
+                        for (const s of ATOMIC_SELECTORS) {
+                            if (node.matches && node.matches(s)) return node;
+                        }
+                    }
+                    node = node.parentNode;
+                }
+                return null;
+            }
+
+            const startAtomic = findAtomicParent(range.startContainer);
+            const endAtomic = findAtomicParent(range.endContainer);
+
+            // If cursor/selection is inside an atomic block
+            if (startAtomic || endAtomic) {
+                // Allow only: Arrow keys, Escape, Tab
+                if (['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Escape','Tab'].includes(e.key)) {
+                    return;
+                }
+
+                // Delete/Backspace: delete the entire block
+                if (e.key === 'Backspace' || e.key === 'Delete') {
+                    e.preventDefault();
+                    const block = startAtomic || endAtomic;
+                    // Place cursor in sibling paragraph
+                    const nextEl = block.nextElementSibling;
+                    const prevEl = block.previousElementSibling;
+                    block.remove();
+                    const target = nextEl || prevEl;
+                    if (target) {
+                        const newRange = document.createRange();
+                        newRange.setStart(target, 0);
+                        newRange.collapse(true);
+                        sel.removeAllRanges();
+                        sel.addRange(newRange);
+                    }
+                    updatePreview();
+                    return;
+                }
+
+                // Any other key (typing): move cursor after the block instead
+                e.preventDefault();
+                const block = startAtomic || endAtomic;
+                let afterEl = block.nextElementSibling;
+                if (!afterEl || afterEl.matches(ATOMIC_SELECTORS.join(','))) {
+                    afterEl = document.createElement('p');
+                    afterEl.innerHTML = '<br>';
+                    block.parentNode.insertBefore(afterEl, block.nextSibling);
+                }
+                const newRange = document.createRange();
+                newRange.setStart(afterEl, 0);
+                newRange.collapse(true);
+                sel.removeAllRanges();
+                sel.addRange(newRange);
+                return;
+            }
+
+            // Check if Backspace/Delete would merge into an atomic block
+            if (e.key === 'Backspace' && range.collapsed) {
+                let node = range.startContainer;
+                if (node.nodeType === 3 && range.startOffset === 0) {
+                    node = node.parentNode;
+                }
+                if (node.nodeType === 1 && range.startOffset === 0) {
+                    // Check if previous sibling is an atomic block
+                    let prev = node.previousElementSibling;
+                    if (!prev && node.parentNode !== editor) prev = node.parentNode.previousElementSibling;
+                    if (prev) {
+                        for (const s of ATOMIC_SELECTORS) {
+                            if (prev.matches && prev.matches(s)) {
+                                e.preventDefault();
+                                return;
+                            }
+                        }
+                    }
+                }
+            }
+
+            if (e.key === 'Delete' && range.collapsed) {
+                let node = range.startContainer;
+                const atEnd = (node.nodeType === 3 && range.startOffset === node.length) ||
+                              (node.nodeType === 1 && range.startOffset === node.childNodes.length);
+                if (atEnd) {
+                    if (node.nodeType === 3) node = node.parentNode;
+                    let next = node.nextElementSibling;
+                    if (!next && node.parentNode !== editor) next = node.parentNode.nextElementSibling;
+                    if (next) {
+                        for (const s of ATOMIC_SELECTORS) {
+                            if (next.matches && next.matches(s)) {
+                                e.preventDefault();
+                                return;
+                            }
+                        }
+                    }
                 }
             }
         });
