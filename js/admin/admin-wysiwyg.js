@@ -1200,16 +1200,11 @@ function insertDiagramBookToEditor(diagrams, savedRange) {
         : '';
 
     const html = `<p><br></p>
-        <div class="diagram-book" id="${bookId}" data-diagrams='${diagramsJson}' data-current="0" style="
+        <div class="diagram-book" id="${bookId}" data-diagrams='${diagramsJson}' data-current="0" contenteditable="false" style="
             float: right;
             clear: right;
-            background: linear-gradient(145deg, rgba(30, 41, 59, 0.95), rgba(15, 23, 42, 0.98));
-            border-radius: 16px;
-            padding: 1.25rem;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.05);
-            border: 1px solid rgba(255,255,255,0.08);
-            max-width: 400px;
-            margin: 1rem 0 1rem 1.5rem;
+            max-width: 360px;
+            margin: 0.75rem 0 0.75rem 1rem;
             overflow: visible;
         ">
             <!-- Board Container -->
@@ -1219,60 +1214,31 @@ function insertDiagramBookToEditor(diagrams, savedRange) {
             </div>
 
             <!-- Navigation -->
-            <div class="book-nav" style="display: ${diagrams.length > 1 ? 'flex' : 'none'}; justify-content: space-between; align-items: center; width: 100%; margin-top: 0.35rem; padding: 0.4rem 0;">
-                <button class="book-prev" onclick="bookNav('${bookId}', -1)" style="
-                    background: rgba(255,255,255,0.08);
-                    border: 1px solid rgba(255,255,255,0.1);
-                    color: rgba(255,255,255,0.7);
-                    width: 36px;
-                    height: 36px;
-                    border-radius: 8px;
-                    cursor: pointer;
-                    transition: all 0.2s;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                "><i class="fa-solid fa-chevron-left"></i></button>
+            <div class="book-nav" style="display: ${diagrams.length > 1 ? 'flex' : 'none'}; justify-content: space-between; align-items: center; width: 100%; padding: 0.25rem 0.4rem; border-top: 1px solid rgba(255,255,255,0.05);">
+                <button class="book-prev" onclick="bookNav('${bookId}', -1)"><i class="fa-solid fa-chevron-left"></i></button>
                 <div class="book-meta-row" style="
                     display: flex;
                     align-items: center;
                     gap: 0.5rem;
-                    padding: 0.35rem 0.75rem;
-                    background: rgba(255,255,255,0.05);
-                    border-radius: 8px;
-                    border: 1px solid rgba(255,255,255,0.08);
+                    padding: 0.3rem 0.5rem;
                 ">
-                    <span class="book-to-move" style="font-size: 0.8rem; color: rgba(255,255,255,0.7);">${(diagrams[0].toMove || (diagrams[0].fen ? diagrams[0].fen.split(' ')[1] : 'w')).startsWith('w') ? 'Bílý na tahu' : 'Černý na tahu'}</span>
-                    <span style="opacity:0.3; font-size: 0.75rem;">|</span>
-                    <span class="book-counter" style="font-size: 0.8rem; color: rgba(255,255,255,0.5);">1 / ${diagrams.length}</span>
+                    <span class="book-to-move" style="font-size: 0.8rem; color: rgba(255,255,255,0.6);">${(diagrams[0].toMove || (diagrams[0].fen ? diagrams[0].fen.split(' ')[1] : 'w')).startsWith('w') ? 'Bílý na tahu' : 'Černý na tahu'}</span>
+                    <span style="opacity:0.3; font-size: 0.7rem;">|</span>
+                    <span class="book-counter" style="font-size: 0.7rem; color: rgba(255,255,255,0.4);">1 / ${diagrams.length}</span>
                 </div>
-                <button class="book-next" onclick="bookNav('${bookId}', 1)" style="
-                    background: rgba(255,255,255,0.08);
-                    border: 1px solid rgba(255,255,255,0.1);
-                    color: rgba(255,255,255,0.7);
-                    width: 36px;
-                    height: 36px;
-                    border-radius: 8px;
-                    cursor: pointer;
-                    transition: all 0.2s;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                "><i class="fa-solid fa-chevron-right"></i></button>
+                <button class="book-next" onclick="bookNav('${bookId}', 1)"><i class="fa-solid fa-chevron-right"></i></button>
             </div>
             
-            <!-- Description Panel (below navigation) -->
+            <!-- Description Panel -->
             <div class="book-description" style="
-                font-size: 0.9rem;
+                font-size: 0.8rem;
                 color: #e2e8f0;
-                margin-top: 0.75rem;
-                padding: 0.75rem 1rem;
-                background: rgba(0,0,0,0.3);
-                border-radius: 8px;
-                border: 1px solid rgba(255,255,255,0.05);
+                padding: 0.4rem 0.65rem;
+                background: rgba(96,165,250,0.06);
+                border-top: 1px solid rgba(96,165,250,0.1);
                 text-align: center;
-                min-height: 1.5em;
-                line-height: 1.4;
+                min-height: 1.2em;
+                line-height: 1.3;
             ">${diagrams[0].description || diagrams[0].name || ''}</div>
         </div><p><br></p>`;
 
