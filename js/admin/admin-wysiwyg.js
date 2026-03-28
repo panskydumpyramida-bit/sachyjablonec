@@ -121,6 +121,20 @@ function insertHighlight(type) {
     if (!selection.rangeCount) return;
 
     const range = selection.getRangeAt(0);
+
+    // GUARD: Ensure the selection is actually inside the editor, not the toolbar
+    if (!editor.contains(range.commonAncestorContainer)) {
+        // Focus the editor and place cursor at the end
+        editor.focus();
+        const newRange = document.createRange();
+        newRange.selectNodeContents(editor);
+        newRange.collapse(false);
+        selection.removeAllRanges();
+        selection.addRange(newRange);
+        // Now re-read the range
+        return insertHighlight(type);
+    }
+
     const className = type === 'name' ? 'highlight-name' : 'highlight-score';
     let parentSpan = null;
 
@@ -138,49 +152,31 @@ function insertHighlight(type) {
 
     if (parentSpan) {
         // We are inside a span.
-        // If it is the SAME type -> Exit (Toggle Off)
         if (parentSpan.classList.contains(className)) {
-            // SAME TYPE: Move cursor OUT via a neutral buffer
-            // Check if there is already a neutral node after
-            let nextNode = parentSpan.nextSibling;
-            if (nextNode && nextNode.nodeType === 1 && nextNode.tagName === 'SPAN' && !nextNode.className) {
-                // Already have a buffer span, just move into it
-                const newRange = document.createRange();
-                newRange.selectNodeContents(nextNode);
-                newRange.collapse(false); // End of span
-                selection.removeAllRanges();
-                selection.addRange(newRange);
-            } else if (nextNode && nextNode.nodeType === 3) {
-                // Text node exists, move to start of it
-                const newRange = document.createRange();
-                newRange.setStart(nextNode, 0);
-                newRange.collapse(true);
-                selection.removeAllRanges();
-                selection.addRange(newRange);
-            } else {
-                // Create neutral span buffer
-                const neutralSpan = document.createElement('span');
-                neutralSpan.innerHTML = '&nbsp;'; // Visible space
-
+            // SAME TYPE pressed again → ESCAPE: move cursor after the span with clean formatting
+            // Ensure there's a plain text node after the span to land in
+            let landing = parentSpan.nextSibling;
+            if (!landing || landing.nodeType !== 3) {
+                landing = document.createTextNode('\u00A0');
                 if (parentSpan.nextSibling) {
-                    parentSpan.parentNode.insertBefore(neutralSpan, parentSpan.nextSibling);
+                    parentSpan.parentNode.insertBefore(landing, parentSpan.nextSibling);
                 } else {
-                    parentSpan.parentNode.appendChild(neutralSpan);
+                    parentSpan.parentNode.appendChild(landing);
                 }
-
-                const newRange = document.createRange();
-                newRange.setStart(neutralSpan.firstChild, 1); // After the &nbsp;
-                newRange.collapse(true);
-                selection.removeAllRanges();
-                selection.addRange(newRange);
             }
+            // Position cursor at the start of the landing text node (after the span)
+            const newRange = document.createRange();
+            newRange.setStart(landing, landing.nodeType === 3 ? Math.min(1, landing.length) : 0);
+            newRange.collapse(true);
+            selection.removeAllRanges();
+            selection.addRange(newRange);
             editor.focus();
         } else {
-            // If DIFFERENT type -> Switch type
+            // DIFFERENT type → Switch type
             parentSpan.className = className;
         }
     } else {
-        // Not inside a span -> Create new highlight
+        // Not inside a span → Create new highlight
         if (!selection.isCollapsed) {
             // Text selected: wrap it
             const span = document.createElement('span');
@@ -190,7 +186,7 @@ function insertHighlight(type) {
                 span.appendChild(contents);
                 range.insertNode(span);
 
-                // FIX: Place cursor at the end of the new span
+                // Place cursor at the end of the new span
                 const newRange = document.createRange();
                 newRange.selectNodeContents(span);
                 newRange.collapse(false);
