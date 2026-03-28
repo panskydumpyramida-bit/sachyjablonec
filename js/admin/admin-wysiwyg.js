@@ -608,6 +608,25 @@ async function insertFragment() {
             // Insert fragment placeholder with realistic dimensions
             const fragTitle = item.querySelector('div:first-child').textContent;
             const fragDetail = item.querySelector('div:last-child')?.textContent || '';
+
+            // Warn about narrow columns
+            const sel2 = window.getSelection();
+            if (sel2.rangeCount > 0) {
+                const colParent = sel2.getRangeAt(0).commonAncestorContainer.nodeType === 1 
+                    ? sel2.getRangeAt(0).commonAncestorContainer.closest('.content-col')
+                    : sel2.getRangeAt(0).commonAncestorContainer.parentElement?.closest('.content-col');
+                if (colParent) {
+                    const colBlock = colParent.closest('.content-columns');
+                    const layout = colBlock?.dataset?.layout || '';
+                    const isNarrow = layout === '33-33-33' || 
+                        (layout === '33-67' && colParent === colBlock.querySelector('.content-col:first-child')) ||
+                        (layout === '67-33' && colParent === colBlock.querySelector('.content-col:last-child'));
+                    if (isNarrow) {
+                        showToast('⚠️ Fragment se do 1/3 sloupce nevejde – použij raději diagram nebo širší layout', 'warning');
+                    }
+                }
+            }
+
             const fragmentHtml = `<div class="game-fragment" data-fragment-id="${fid}" contenteditable="false" style="background:var(--surface-color, #1e1e1e);border:1px solid rgba(96,165,250,0.2);border-radius:10px;overflow:hidden;margin:0.5rem 0;width:50%;min-width:320px;max-width:100%;">
                 <div style="display:flex;align-items:center;gap:0.5rem;padding:0.5rem 0.75rem;background:rgba(96,165,250,0.06);border-bottom:1px solid rgba(96,165,250,0.1);">
                     <i class="fa-solid fa-chess" style="color:#60a5fa;font-size:0.8rem;"></i>
@@ -2533,6 +2552,179 @@ function updateTableToolsPosition() {
     }
 }
 
+// ================================
+// ATOMIC BLOCK EDIT MODAL
+// ================================
+function openAtomicBlockEditModal(block) {
+    // Remove any existing modal
+    const existing = document.getElementById('atomicBlockEditModal');
+    if (existing) existing.remove();
+
+    const isDiagram = block.classList.contains('diagram-book');
+    const isFragment = block.classList.contains('game-fragment');
+
+    const modal = document.createElement('div');
+    modal.id = 'atomicBlockEditModal';
+    modal.style.cssText = `
+        position: fixed; inset: 0; z-index: 10500;
+        display: flex; align-items: center; justify-content: center;
+        background: rgba(0,0,0,0.6); backdrop-filter: blur(4px);
+    `;
+
+    let fieldsHtml = '';
+
+    if (isDiagram) {
+        const headerEl = block.querySelector('.book-header .book-caption');
+        const descEl = block.querySelector('.book-description');
+        const headerText = headerEl ? headerEl.textContent.trim() : '';
+        const descText = descEl ? descEl.textContent.replace(/\s*·\s*(Bílý|Černý) na tahu\s*$/, '').trim() : '';
+        const diagrams = JSON.parse(block.dataset.diagrams || '[]');
+        const isPuzzle = diagrams.some(d => d.isPuzzle || d.type === 'puzzle');
+
+        fieldsHtml = `
+            <div style="margin-bottom: 0.75rem;">
+                <label style="font-size: 0.75rem; color: rgba(255,255,255,0.5); display: block; margin-bottom: 4px;">Nadpis</label>
+                <input id="abeTitle" type="text" value="${headerText.replace(/"/g, '&quot;')}" 
+                    style="width: 100%; padding: 0.5rem 0.65rem; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15);
+                    border-radius: 6px; color: #fff; font-size: 0.85rem; outline: none;"
+                    placeholder="Diagram">
+            </div>
+            <div style="margin-bottom: 0.75rem;">
+                <label style="font-size: 0.75rem; color: rgba(255,255,255,0.5); display: block; margin-bottom: 4px;">Popisek</label>
+                <input id="abeDesc" type="text" value="${descText.replace(/"/g, '&quot;')}" 
+                    style="width: 100%; padding: 0.5rem 0.65rem; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15);
+                    border-radius: 6px; color: #fff; font-size: 0.85rem; outline: none;"
+                    placeholder="Popisek diagramu">
+            </div>
+            <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.85rem; color: rgba(255,255,255,0.7); margin-bottom: 0.75rem; cursor: pointer;">
+                <input id="abePuzzle" type="checkbox" ${isPuzzle ? 'checked' : ''} style="accent-color: #60a5fa;">
+                <i class="fa-solid fa-puzzle-piece" style="color: #d4af37;"></i> Označit jako hádanku
+            </label>
+        `;
+    } else if (isFragment) {
+        const titleEl = block.querySelector('.fragment-header span, .fragment-title');
+        const titleText = titleEl ? titleEl.textContent.trim() : '';
+
+        fieldsHtml = `
+            <div style="margin-bottom: 0.75rem;">
+                <label style="font-size: 0.75rem; color: rgba(255,255,255,0.5); display: block; margin-bottom: 4px;">Název fragmentu</label>
+                <input id="abeTitle" type="text" value="${titleText.replace(/"/g, '&quot;')}" 
+                    style="width: 100%; padding: 0.5rem 0.65rem; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15);
+                    border-radius: 6px; color: #fff; font-size: 0.85rem; outline: none;"
+                    placeholder="Název fragmentu">
+            </div>
+        `;
+    }
+
+    modal.innerHTML = `
+        <div style="
+            background: linear-gradient(135deg, #1e293b, #0f172a);
+            border: 1px solid rgba(255,255,255,0.12);
+            border-radius: 12px;
+            padding: 1.25rem;
+            min-width: 320px; max-width: 400px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+        ">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem;">
+                <span style="font-weight: 600; color: #fff; font-size: 0.95rem;">
+                    <i class="fa-solid ${isDiagram ? 'fa-chess-board' : 'fa-scissors'}" style="color: #60a5fa; margin-right: 6px;"></i>
+                    ${isDiagram ? 'Upravit diagram' : 'Upravit fragment'}
+                </span>
+                <button id="abeClose" style="background: none; border: none; color: rgba(255,255,255,0.4); cursor: pointer; font-size: 1.1rem;">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            ${fieldsHtml}
+            <div style="display: flex; gap: 8px; justify-content: flex-end;">
+                <button id="abeDelete" style="
+                    background: rgba(239,68,68,0.15); border: 1px solid rgba(239,68,68,0.3);
+                    color: #ef4444; padding: 0.4rem 0.8rem; border-radius: 6px; cursor: pointer;
+                    font-size: 0.8rem; transition: all 0.2s; margin-right: auto;
+                "><i class="fa-solid fa-trash-can"></i> Smazat</button>
+                <button id="abeSave" style="
+                    background: rgba(96,165,250,0.2); border: 1px solid rgba(96,165,250,0.4);
+                    color: #60a5fa; padding: 0.4rem 1rem; border-radius: 6px; cursor: pointer;
+                    font-size: 0.8rem; font-weight: 600; transition: all 0.2s;
+                "><i class="fa-solid fa-check"></i> Uložit</button>
+            </div>
+        </div>
+    `;
+
+    document.body.appendChild(modal);
+
+    // Focus first input
+    setTimeout(() => {
+        const firstInput = modal.querySelector('input[type="text"]');
+        if (firstInput) firstInput.focus();
+    }, 50);
+
+    // Close modal
+    const closeModal = () => { modal.remove(); };
+    modal.querySelector('#abeClose').onclick = closeModal;
+    modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
+
+    // Delete block
+    modal.querySelector('#abeDelete').onclick = () => {
+        if (confirm('Opravdu smazat tento blok?')) {
+            block.remove();
+            closeModal();
+            updatePreview();
+            showToast('🗑️ Blok smazán', 'info');
+        }
+    };
+
+    // Save changes
+    modal.querySelector('#abeSave').onclick = () => {
+        if (isDiagram) {
+            const newTitle = modal.querySelector('#abeTitle').value.trim();
+            const newDesc = modal.querySelector('#abeDesc').value.trim();
+            const newPuzzle = modal.querySelector('#abePuzzle').checked;
+
+            // Update header title
+            const headerEl = block.querySelector('.book-header .book-caption');
+            if (headerEl) headerEl.textContent = newTitle || 'Diagram';
+
+            // Update description
+            const descEl = block.querySelector('.book-description');
+            if (descEl) descEl.textContent = newDesc;
+
+            // Update puzzle badge
+            const diagrams = JSON.parse(block.dataset.diagrams || '[]');
+            diagrams.forEach(d => { d.isPuzzle = newPuzzle; d.type = newPuzzle ? 'puzzle' : 'diagram'; });
+            block.dataset.diagrams = JSON.stringify(diagrams);
+
+            // Update/add/remove puzzle badge
+            let badge = block.querySelector('.diagram-type-badge');
+            if (newPuzzle && !badge) {
+                const boardContainer = block.querySelector('.book-board-container');
+                if (boardContainer) {
+                    badge = document.createElement('div');
+                    badge.className = 'diagram-type-badge';
+                    badge.innerHTML = '<i class="fa-solid fa-puzzle-piece"></i>';
+                    badge.style.cssText = 'position:absolute;top:-8px;right:-8px;z-index:5;width:28px;height:28px;background:rgba(15,23,42,0.95);border:1px solid rgba(212,175,55,0.4);border-radius:8px;padding:5px 10px;font-size:0.8rem;color:#d4af37;pointer-events:none;box-shadow:0 4px 12px rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;';
+                    boardContainer.appendChild(badge);
+                }
+            } else if (!newPuzzle && badge) {
+                badge.remove();
+            }
+        } else if (isFragment) {
+            const newTitle = modal.querySelector('#abeTitle').value.trim();
+            const titleEl = block.querySelector('.fragment-header span, .fragment-title');
+            if (titleEl) titleEl.textContent = newTitle;
+        }
+
+        closeModal();
+        updatePreview();
+        showToast('✅ Změny uloženy', 'success');
+    };
+
+    // Enter to save
+    modal.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') { modal.querySelector('#abeSave').click(); }
+        if (e.key === 'Escape') { closeModal(); }
+    });
+}
+
 // Auto-init table tools
 document.addEventListener('DOMContentLoaded', () => {
     setTimeout(initTableTools, 500);
@@ -2568,31 +2760,53 @@ document.addEventListener('DOMContentLoaded', () => {
                 target = target.parentNode;
             }
 
-            // Atomic block click protection: redirect cursor out of diagram-book / game-fragment
-            let clickedBlock = e.target;
-            while (clickedBlock && clickedBlock !== editor) {
-                if (clickedBlock.nodeType === 1 && clickedBlock.matches && 
-                    (clickedBlock.matches('.diagram-book') || clickedBlock.matches('.game-fragment'))) {
-                    e.preventDefault();
-                    const block = clickedBlock;
-                    setTimeout(() => {
-                        let afterEl = block.nextElementSibling;
-                        if (!afterEl || (afterEl.matches('.diagram-book') || afterEl.matches('.game-fragment'))) {
-                            afterEl = document.createElement('p');
-                            afterEl.innerHTML = '<br>';
-                            block.parentNode.insertBefore(afterEl, block.nextSibling);
-                        }
-                        const sel = window.getSelection();
-                        const range = document.createRange();
-                        range.setStart(afterEl, 0);
-                        range.collapse(true);
-                        sel.removeAllRanges();
-                        sel.addRange(range);
-                    }, 0);
+            // Track mousedown position for atomic block click vs drag detection
+            let clickedAtomicBlock = e.target;
+            while (clickedAtomicBlock && clickedAtomicBlock !== editor) {
+                if (clickedAtomicBlock.nodeType === 1 && clickedAtomicBlock.matches && 
+                    (clickedAtomicBlock.matches('.diagram-book') || clickedAtomicBlock.matches('.game-fragment'))) {
+                    // DON'T preventDefault – allow drag to start!
+                    // Store the block and position for mouseup comparison
+                    editor._atomicMousedownBlock = clickedAtomicBlock;
+                    editor._atomicMousedownPos = { x: e.clientX, y: e.clientY };
                     return;
                 }
-                clickedBlock = clickedBlock.parentNode;
+                clickedAtomicBlock = clickedAtomicBlock.parentNode;
             }
+        });
+
+        // Atomic block click detection via mouseup (only if no drag occurred)
+        editor.addEventListener('mouseup', (e) => {
+            if (!editor._atomicMousedownBlock) return;
+            
+            const block = editor._atomicMousedownBlock;
+            const startPos = editor._atomicMousedownPos;
+            editor._atomicMousedownBlock = null;
+            editor._atomicMousedownPos = null;
+
+            // Check if this was a click (not a drag) - allow 5px tolerance
+            const dx = Math.abs(e.clientX - startPos.x);
+            const dy = Math.abs(e.clientY - startPos.y);
+            if (dx > 5 || dy > 5) return; // Was a drag, don't open modal
+
+            // Move cursor after block
+            setTimeout(() => {
+                let afterEl = block.nextElementSibling;
+                if (!afterEl || (afterEl.matches && (afterEl.matches('.diagram-book') || afterEl.matches('.game-fragment')))) {
+                    afterEl = document.createElement('p');
+                    afterEl.innerHTML = '<br>';
+                    block.parentNode.insertBefore(afterEl, block.nextSibling);
+                }
+                const sel = window.getSelection();
+                const range = document.createRange();
+                range.setStart(afterEl, 0);
+                range.collapse(true);
+                sel.removeAllRanges();
+                sel.addRange(range);
+            }, 0);
+
+            // Open edit modal
+            openAtomicBlockEditModal(block);
         });
 
         editor.addEventListener('keydown', (e) => {
@@ -2808,23 +3022,30 @@ document.addEventListener('DOMContentLoaded', () => {
             if (draggedAtomicBlock) {
                 e.dataTransfer.dropEffect = 'move';
 
-                // Find drop target: nearest block-level element
+                // Find the best drop container and position
                 let target = document.elementFromPoint(e.clientX, e.clientY);
                 if (!target || !editor.contains(target)) return;
 
-                // Walk up to find a direct child of editor or content-col
+                // Determine the drop container (editor or content-col)
+                let dropContainer = target.closest('.content-col') || editor;
+                
+                // Find the child element closest to the cursor within the drop container
                 let dropParent = target;
-                while (dropParent && dropParent.parentNode !== editor && 
-                       !(dropParent.parentNode && dropParent.parentNode.classList && dropParent.parentNode.classList.contains('content-col'))) {
+                while (dropParent && dropParent.parentNode !== dropContainer) {
+                    if (dropParent === dropContainer || dropParent === editor) break;
                     dropParent = dropParent.parentNode;
                 }
 
-                if (dropParent && dropParent !== draggedAtomicBlock && dropParent !== dropIndicator) {
+                // If we landed on the container itself (empty area), append at end
+                if (dropParent === dropContainer || !dropParent || dropParent === editor) {
+                    if (dropContainer.lastElementChild !== dropIndicator) {
+                        dropContainer.appendChild(dropIndicator);
+                    }
+                } else if (dropParent !== draggedAtomicBlock && dropParent !== dropIndicator) {
                     const rect = dropParent.getBoundingClientRect();
                     const midY = rect.top + rect.height / 2;
-                    const insertBefore = e.clientY < midY;
 
-                    if (insertBefore) {
+                    if (e.clientY < midY) {
                         dropParent.parentNode.insertBefore(dropIndicator, dropParent);
                     } else {
                         dropParent.parentNode.insertBefore(dropIndicator, dropParent.nextSibling);
