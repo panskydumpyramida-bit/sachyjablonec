@@ -623,6 +623,46 @@ async function insertFragment() {
             </div>`;
             document.execCommand('insertHTML', false, fragmentHtml);
 
+            // Ensure there's an editable paragraph after the fragment for typing
+            const fragEditor = document.getElementById('articleContent') || document.querySelector('[contenteditable]');
+            const fragEl = fragEditor.querySelector(`.game-fragment[data-fragment-id="${fid}"]`);
+            if (fragEl) {
+                // Add paragraph after if none exists
+                if (!fragEl.nextElementSibling || fragEl.nextElementSibling.classList.contains('game-fragment')) {
+                    const p = document.createElement('p');
+                    p.innerHTML = '<br>';
+                    fragEl.parentNode.insertBefore(p, fragEl.nextSibling);
+                }
+                // Add paragraph before if none exists
+                if (!fragEl.previousElementSibling || fragEl.previousElementSibling.classList.contains('game-fragment')) {
+                    const p = document.createElement('p');
+                    p.innerHTML = '<br>';
+                    fragEl.parentNode.insertBefore(p, fragEl);
+                }
+                // Click on fragment = place cursor in the paragraph after it
+                fragEl.addEventListener('click', () => {
+                    const afterP = fragEl.nextElementSibling;
+                    if (afterP) {
+                        const sel = window.getSelection();
+                        const range = document.createRange();
+                        range.setStart(afterP, 0);
+                        range.collapse(true);
+                        sel.removeAllRanges();
+                        sel.addRange(range);
+                    }
+                });
+                // Place cursor in the paragraph after the fragment
+                const afterP = fragEl.nextElementSibling;
+                if (afterP) {
+                    const sel = window.getSelection();
+                    const range = document.createRange();
+                    range.setStart(afterP, 0);
+                    range.collapse(true);
+                    sel.removeAllRanges();
+                    sel.addRange(range);
+                }
+            }
+
             overlay.remove();
         });
     });
