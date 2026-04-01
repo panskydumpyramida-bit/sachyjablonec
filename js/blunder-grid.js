@@ -68,7 +68,7 @@ async function handleSearch(query) {
 
     const token = getToken();
     try {
-        const response = await fetch(`/api/players?q=${encodeURIComponent(query)}&limit=8`, {
+        const response = await fetch(`/api/chess/players?q=${encodeURIComponent(query)}&limit=8`, {
             headers: { 'Authorization': token ? `Bearer ${token}` : '' }
         });
         if (!response.ok) throw new Error('Search failed');
@@ -535,10 +535,24 @@ function showStatusEffect(index, type) {
 window.showHint = function(index) {
     const data = puzzleData[index];
     const evalEl = document.getElementById(`eval-${index}`);
-    if (data.hint) {
-        evalEl.innerHTML = `<strong>Hint:</strong> ${data.hint}`;
-    } else {
-        evalEl.innerHTML = `<strong>Nápověda:</strong> Jde o figurku na poli ${data.bestMoveLAN.substring(0,2)}`;
+    
+    // Tady jsme dřív vraceli jen text.
+    // Přidáme vizuální highlight políčka, odkud se má táhnout:
+    const fromSquare = data.bestMoveLAN.substring(0,2);
+    
+    // Zvýrazníme žlutě přes jQuery (chessboard.js framework to umožňuje takto)
+    const boardId = `board-${index}`;
+    $(`#${boardId} .square-${fromSquare}`).css('box-shadow', 'inset 0 0 10px 3px rgba(255, 255, 0, 0.7)');
+    
+    let pieceName = "figurku"; // Lze vylepšit detekcí, např. podle FENu
+    
+    evalEl.innerHTML = `<strong>Nápověda:</strong> Zkus pohnout figurkou na poli <strong style="color:var(--primary-color)">${fromSquare.toUpperCase()}</strong>.`;
+    
+    // Malý vizuální efekt na kartu
+    const card = document.querySelector(`.blunder-card[data-index="${index}"]`);
+    if(card) {
+        card.style.borderColor = 'rgba(255, 255, 0, 0.5)';
+        setTimeout(() => card.style.borderColor = 'rgba(255, 255, 255, 0.05)', 1500);
     }
 }
 
