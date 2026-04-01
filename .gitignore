@@ -42,3 +42,7 @@ test-*.js
 data/SSCR_2003_2025.pgn
 debug_output.txt
 generated_table.html
+
+# Jednorázové stránky a reportáže
+jednorazove_stranky/
+
