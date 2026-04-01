@@ -404,6 +404,14 @@ POST /api/comments       - Přidat komentář (auth)
 V případě problémů kontaktujte technickou správu webu.
 info@sachyjablonec.cz
 
+### Lokální vývoj a Dockerizace
+Pro naprosto přesné zrcadlení produkčního prostředí (včetně izolované databáze) využijte Docker:
+```bash
+# Spuštění kompletního stacku (Postgres DB + Node.js nodemon hot-reload)
+docker compose up
+```
+*Tento příkaz nabootuje izolovanou lokalní databázi a připojí vaši aktuální složku do pracovního běhu. Odstraní se tak riziko selhání ignorovaných souborů (Fáze 2: Zvýšení efektivity)*
+
 ---
 
 *Tento manuál je součástí dokumentace projektu Šachy Jablonec.*

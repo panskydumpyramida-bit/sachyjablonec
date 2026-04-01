@@ -30,6 +30,7 @@ import announcementRoutes from './routes/api-announcements.js';
 import documentRoutes from './routes/api-documents.js';
 import travelReportRoutes from './routes/api-travel-reports.js';
 import forumRoutes from './routes/api-forum.js';
+import diagramsRoutes from './routes/api-diagrams.js';
 import passport from './config/passport.js';
 import { PrismaClient } from '@prisma/client';
 
@@ -267,6 +268,7 @@ app.use('/api/announcements', announcementRoutes);
 app.use('/api/documents', documentRoutes);
 app.use('/api/travel-reports', travelReportRoutes);
 app.use('/api/forum', forumRoutes);
+app.use('/api', diagramsRoutes);
 
 // Import helpers from utils
 import { clean, isElo, simplify, isMatch, fetchWithHeaders } from './utils/helpers.js';
@@ -395,186 +397,7 @@ app.get('/api/health', (req, res) => {
     res.json({ status: 'ok', message: 'Server is running' });
 });
 
-// --- Diagram API ---
-app.get('/api/diagrams', authMiddleware, async (req, res) => {
-    try {
-        const where = {};
-        if (req.query.mine === 'true' && req.user) {
-            where.userId = req.user.id;
-        }
-        const diagrams = await prisma.diagram.findMany({
-            where,
-            orderBy: { createdAt: 'desc' },
-            take: 50,
-            include: { user: { select: { username: true } } }
-        });
-        res.json(diagrams);
-    } catch (error) {
-        console.error('Error fetching diagrams:', error);
-        res.status(500).json({ error: 'Failed to fetch diagrams' });
-    }
-});
 
-app.get('/api/diagrams/:id', authMiddleware, async (req, res) => {
-    try {
-        const diagram = await prisma.diagram.findUnique({
-            where: { id: parseInt(req.params.id) },
-            include: { user: { select: { username: true } } }
-        });
-        if (!diagram) return res.status(404).json({ error: 'Diagram not found' });
-        res.json(diagram);
-    } catch (error) {
-        console.error('Error fetching diagram:', error);
-        res.status(500).json({ error: 'Failed to fetch diagram' });
-    }
-});
-
-app.post('/api/diagrams', authMiddleware, async (req, res) => {
-    try {
-        const { fen, annotations, solution, name, description } = req.body;
-
-        if (!fen) return res.status(400).json({ error: 'FEN string is required' });
-
-        const diagram = await prisma.diagram.create({
-            data: {
-                fen,
-                annotations: annotations || {},
-                solution: solution || {}, // Interactive solver data
-                name: name || `Diagram ${new Date().toLocaleString('cs-CZ')}`,
-                description,
-                userId: req.user.id
-            }
-        });
-        res.json(diagram);
-    } catch (error) {
-        console.error('Error creating diagram:', error);
-        res.status(500).json({ error: 'Failed to create diagram' });
-    }
-});
-
-app.put('/api/diagrams/:id', authMiddleware, async (req, res) => {
-    try {
-        const { fen, annotations, solution, name, description } = req.body;
-        const id = parseInt(req.params.id);
-
-        // Verify ownership or check if diagram exists
-        const existing = await prisma.diagram.findUnique({ where: { id } });
-        if (!existing) return res.status(404).json({ error: 'Diagram not found' });
-
-        const diagram = await prisma.diagram.update({
-            where: { id },
-            data: {
-                fen,
-                annotations: annotations || {},
-                solution: solution || {},
-                name,
-                description,
-                // Optional: update userId if we want to track last editor? 
-                // Currently keeping original creator is usually safer, or maybe track UpdatedBy
-            }
-        });
-        res.json(diagram);
-    } catch (error) {
-        console.error('Error updating diagram:', error);
-        res.status(500).json({ error: 'Failed to update diagram' });
-    }
-});
-
-app.delete('/api/diagrams/:id', authMiddleware, async (req, res) => {
-    try {
-        // Optional: Check ownership?
-        await prisma.diagram.delete({
-            where: { id: parseInt(req.params.id) }
-        });
-        res.json({ success: true });
-    } catch (error) {
-        console.error('Error deleting diagram:', error);
-        res.status(500).json({ error: 'Failed to delete diagram' });
-    }
-});
-
-// --- Fragment API ---
-app.get('/api/fragments', async (req, res) => {
-    try {
-        const where = {};
-        if (req.query.mine === 'true') {
-            // Need to extract user from token for filtering
-            try {
-                const authHeader = req.headers.authorization;
-                if (authHeader) {
-                    const token = authHeader.replace('Bearer ', '');
-                    const jwt = await import('jsonwebtoken');
-                    const decoded = jwt.default.verify(token, process.env.JWT_SECRET);
-                    where.userId = decoded.id;
-                }
-            } catch (e) { /* ignore auth errors for filtering */ }
-        }
-        const fragments = await prisma.fragment.findMany({
-            where,
-            orderBy: { createdAt: 'desc' },
-            take: 100,
-            include: { user: { select: { username: true } } }
-        });
-        res.json(fragments);
-    } catch (error) {
-        console.error('Error fetching fragments:', error);
-        res.status(500).json({ error: 'Failed to fetch fragments' });
-    }
-});
-
-app.get('/api/fragments/:id', async (req, res) => {
-    try {
-        const fragment = await prisma.fragment.findUnique({
-            where: { id: parseInt(req.params.id) },
-            include: { user: { select: { username: true } } }
-        });
-        if (!fragment) return res.status(404).json({ error: 'Fragment not found' });
-        res.json(fragment);
-    } catch (error) {
-        console.error('Error fetching fragment:', error);
-        res.status(500).json({ error: 'Failed to fetch fragment' });
-    }
-});
-
-app.post('/api/fragments', authMiddleware, async (req, res) => {
-    try {
-        const { title, pgn, startFen, fromMove, toMove, sourceGameId, white, black } = req.body;
-
-        if (!pgn || !startFen) return res.status(400).json({ error: 'PGN and startFen are required' });
-
-        const fragment = await prisma.fragment.create({
-            data: {
-                title: title || `Fragment ${new Date().toLocaleString('cs-CZ')}`,
-                pgn,
-                startFen,
-                fromMove: fromMove || 1,
-                toMove: toMove || 99,
-                sourceGameId: sourceGameId || null,
-                white: white || null,
-                black: black || null,
-                userId: req.user.id
-            }
-        });
-        res.json(fragment);
-    } catch (error) {
-        console.error('Error creating fragment:', error);
-        res.status(500).json({ error: 'Failed to create fragment' });
-    }
-});
-
-app.delete('/api/fragments/:id', authMiddleware, async (req, res) => {
-    try {
-        await prisma.fragment.delete({
-            where: { id: parseInt(req.params.id) }
-        });
-        res.json({ success: true });
-    } catch (error) {
-        console.error('Error deleting fragment:', error);
-        res.status(500).json({ error: 'Failed to delete fragment' });
-    }
-});
-
-// --- Forum API ---
 // --- Dashboard Stats API ---
 app.get('/api/dashboard/stats', authMiddleware, async (req, res) => {
     try {
