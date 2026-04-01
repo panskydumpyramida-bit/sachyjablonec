@@ -6,14 +6,28 @@ let games = {};
 let currentMode = 'training';
 let currentThreshold = 12;
 
+let currentPlayer = null;
+let debounceTimer = null;
+
+// Lichess formula to convert CP to Win Probability (0 to 100)
+function getWinProbability(evalObj) {
+    if (!evalObj) return 50;
+    if (evalObj.mate !== undefined && evalObj.mate !== null) {
+        return evalObj.mate > 0 ? 100 : 0;
+    }
+    const cp = evalObj.cp;
+    if (cp === undefined || cp === null) return 50;
+    const expValue = Math.exp(-0.00368208 * cp);
+    return 50 + 50 * (2 / (1 + expValue) - 1);
+}
+
 document.addEventListener('DOMContentLoaded', async () => {
-    const statusMsg = document.getElementById('status-message');
-    
     // UI Eventy
     const modeSelect = document.getElementById('mode-select');
     const thresholdInput = document.getElementById('threshold-input');
     const thresholdVal = document.getElementById('threshold-val');
     const filterBtn = document.getElementById('filter-btn');
+    const searchInput = document.getElementById('playerSearch');
 
     let renderTimeouts = [];
 
@@ -22,38 +36,321 @@ document.addEventListener('DOMContentLoaded', async () => {
         renderGrid();
     });
 
-    // Změna procenta už jen updatuje číslo vizuálně, nepřekresluje grid!
     thresholdInput.addEventListener('input', (e) => {
         currentThreshold = parseInt(e.target.value);
         thresholdVal.textContent = currentThreshold;
     });
     
-    // Teprve tlačítko aktivuje tvrdý přepočet 
     filterBtn.addEventListener('click', () => {
         renderGrid();
     });
-    
+
+    // -------- Vyhledávání hráčů --------
+    searchInput.addEventListener('input', () => {
+        clearTimeout(debounceTimer);
+        debounceTimer = setTimeout(() => handleSearch(searchInput.value), 300);
+    });
+
+    document.addEventListener('click', (e) => {
+        if (!e.target.closest('.search-wrapper')) {
+            document.getElementById('autocompleteResults').style.display = 'none';
+        }
+    });
+});
+
+function getToken() {
+    return localStorage.getItem('auth_token') || sessionStorage.getItem('auth_token');
+}
+
+async function handleSearch(query) {
+    const resultsDiv = document.getElementById('autocompleteResults');
+    if (query.length < 2) { resultsDiv.style.display = 'none'; return; }
+
+    const token = getToken();
     try {
-        statusMsg.style.display = 'block';
+        const response = await fetch(`/api/players?q=${encodeURIComponent(query)}&limit=8`, {
+            headers: { 'Authorization': token ? `Bearer ${token}` : '' }
+        });
+        if (!response.ok) throw new Error('Search failed');
+        const players = await response.json();
+
+        if (players.length === 0) {
+            resultsDiv.innerHTML = '<div class="autocomplete-item"><span style="color: #777;">Žádný hráč</span></div>';
+        } else {
+            resultsDiv.innerHTML = players.map(p => `
+                <div class="autocomplete-item" onclick="selectPlayer('${p.name.replace(/'/g, "\\'")}')">
+                    <span>${p.name}</span>
+                    <span style="color: #777;">${p.totalGames}</span>
+                </div>
+            `).join('');
+        }
+        resultsDiv.style.display = 'block';
+    } catch (e) { console.error('Search error:', e); }
+}
+
+async function selectPlayer(name) {
+    currentPlayer = name;
+    document.getElementById('playerSearch').value = name;
+    document.getElementById('autocompleteResults').style.display = 'none';
+    
+    // Spustit skenování chyb
+    startBlunderScan(name);
+}
+
+// Pomocná API Request funkce pro Eval (Lichess Cloud -> Chess-API)
+async function getPositionEval(fen) {
+    // Zabalení timeoutů
+    const fetchWithTimeout = async (resource, options = {}) => {
+        const { timeout = 8000 } = options;
+        const controller = new AbortController();
+        const id = setTimeout(() => controller.abort(), timeout);
+        const response = await fetch(resource, { ...options, signal: controller.signal });
+        clearTimeout(id);
+        return response;
+    };
+
+    // 1. Zkusit Lichess Cloud databázi (zdarma a bleskové)
+    try {
+        const url = `https://lichess.org/api/cloud-eval?fen=${encodeURIComponent(fen)}&multiPv=1`;
+        const response = await fetchWithTimeout(url, { timeout: 3000 });
+        if (response.ok) {
+            const data = await response.json();
+            if (data && data.pvs && data.pvs[0]) {
+                return {
+                    cp: data.pvs[0].cp,
+                    mate: data.pvs[0].mate,
+                    bestMove: data.pvs[0].moves.split(' ')[0],
+                    source: 'lichess'
+                };
+            }
+        }
+    } catch (e) { /* ignore */ }
+
+    // 2. Fallback Stockfish přes Chess-API.com
+    try {
+        const chessApiRes = await fetchWithTimeout('https://chess-api.com/v1', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ fen: fen, depth: 11 }), // Nízká hloubka pro web-client rychlost
+            timeout: 5000
+        });
         
-        const response = await fetch('/data/duda-blunders.json');
-        if (!response.ok) throw new Error('Failed to load JSON');
+        if (chessApiRes.ok) {
+            const data = await chessApiRes.json();
+            if (data && data.eval !== undefined) {
+                return {
+                    cp: Math.round(data.eval * 100), // chess-api uses floats like 1.5, lichess uses 150
+                    mate: data.mate,
+                    bestMove: data.move,
+                    source: 'chess-api'
+                };
+            }
+        }
+    } catch (e) { console.warn("Chess-API error:", e); }
+    
+    return null;
+}
+
+async function startBlunderScan(playerName) {
+    const statusMsg = document.getElementById('status-message');
+    const statusText = document.getElementById('status-text');
+    const progContainer = document.getElementById('progress-container');
+    const progBar = document.getElementById('progress-bar');
+    const gridEl = document.getElementById('blunder-grid');
+
+    // Reset UI
+    gridEl.innerHTML = '';
+    puzzleData = [];
+    filteredData = [];
+    statusMsg.style.display = 'block';
+    progContainer.style.display = 'block';
+    progBar.style.width = '0%';
+    
+    statusText.innerHTML = `Stahuji posledních 5 partií hráče <strong style="color:var(--primary-color)">${escapeHtml(playerName)}</strong>...`;
+
+    try {
+        const token = getToken();
+        // Získáme posledních 5 nejnovějších partií tohoto hráče
+        const API_URL = '/api/chess'; 
+        const params = new URLSearchParams({
+            player: playerName,
+            color: 'both',
+            sort: 'date_desc',
+            limit: 5,
+            offset: 0
+        });
+
+        const resp = await fetch(`${API_URL}/games?${params}`, {
+            headers: { 'Authorization': token ? `Bearer ${token}` : '' }
+        });
         
-        puzzleData = await response.json();
+        if (!resp.ok) throw new Error("Chyba při stahování partií");
         
-        if (puzzleData.length === 0) {
-            statusMsg.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> Nebyly nalezeny žádné blundery.';
+        const data = await resp.json();
+        const gamesList = data.games || [];
+        
+        if (gamesList.length === 0) {
+            statusText.innerHTML = `Nebyly nalezeny žádné partie hráče ${escapeHtml(playerName)}.`;
+            progContainer.style.display = 'none';
             return;
         }
-        
+
+        // ====== Hlavní Skenovací Jádro ======
+        for (let gIndex = 0; gIndex < gamesList.length; gIndex++) {
+            const gameData = gamesList[gIndex];
+            
+            statusText.innerHTML = `Analyzuji partii <strong>${gIndex + 1}/${gamesList.length}</strong>: ${escapeHtml(gameData.whitePlayer)} - ${escapeHtml(gameData.blackPlayer)}...`;
+            progBar.style.width = `${((gIndex) / gamesList.length) * 100}%`;
+
+            const chess = new Chess();
+            const movesArr = gameData.moves.split(' ').filter(m => m);
+            // Validace přes temporary chess.js
+            for (let m of movesArr) {
+                try { chess.move(m); } catch (e) { break; }
+            }
+
+            const history = chess.history({ verbose: true });
+            const tempChess = new Chess();
+            
+            let evals = [];
+            
+            // Tah po tahu - Střílíme asynchronní API požadavky
+            // Optimalizace: Batche nebo ne? Radši přímo abychom neriskovali RateLimit 429
+            for (let i = 0; i <= history.length; i++) {
+                
+                // UX Progress Update každých 5 tahů
+                if (i % 5 === 0) {
+                    const partialPct = ((gIndex) / gamesList.length) * 100 + ((i / history.length) * (100 / gamesList.length));
+                    progBar.style.width = `${Math.min(partialPct, 99)}%`;
+                    statusText.innerHTML = `Analýza tahů (${i}/${history.length}). Partii ${gIndex + 1} z ${gamesList.length}`;
+                }
+
+                // Oprava E.P. FENu pro API
+                const fenParts = tempChess.fen().split(' ');
+                if (fenParts.length >= 4 && fenParts[3] !== '-') fenParts[3] = '-';
+                const safeFen = fenParts.join(' ');
+                
+                let ev = await getPositionEval(safeFen);
+                evals.push(ev);
+                
+                if (i < history.length) {
+                    tempChess.move(history[i]);
+                }
+
+                // Přidání drobného zpoždění pro rate limit
+                if (ev && ev.source === 'chess-api') {
+                    await new Promise(r => setTimeout(r, 400));
+                } else {
+                    await new Promise(r => setTimeout(r, 40)); 
+                }
+            }
+
+            // Vyhledání propadů v Evaluations (Win Probabilities)
+            for (let i = 0; i < history.length; i++) {
+                const move = history[i];
+                const isWhiteToMove = (i % 2 === 0);
+                const activePlayer = isWhiteToMove ? gameData.whitePlayer : gameData.blackPlayer;
+                const isTargetPlayerMove = activePlayer.toLowerCase().includes(playerName.toLowerCase());
+                
+                const currentEval = evals[i];
+                const nextEval = evals[i+1];
+                
+                if (!currentEval || !nextEval) continue;
+
+                const probWBefore = getWinProbability(currentEval);
+                const probWAfter = getWinProbability(nextEval);
+                
+                const probBefore = isWhiteToMove ? probWBefore : (100 - probWBefore);
+                const probAfter = isWhiteToMove ? probWAfter : (100 - probWAfter);
+                
+                const probDrop = probBefore - probAfter;
+                const MISS_THRESHOLD = 12; // Z generátoru
+                const BLUNDER_THRESHOLD = 12;
+
+                // 1. BLUNDER
+                if (isTargetPlayerMove && probDrop >= BLUNDER_THRESHOLD) {
+                    // PUSH do hlavního pole!
+                    if (currentEval.bestMove && currentEval.bestMove !== move.lan) {
+                         puzzleData.push({
+                            type: "blunder",
+                            gameId: gameData.id,
+                            white: gameData.whitePlayer,
+                            black: gameData.blackPlayer,
+                            result: gameData.result,
+                            fenBefore: tempChess.fen(), // We need fen from history
+                            blunderMoveSAN: move.san,
+                            blunderMoveLAN: move.lan,
+                            bestMoveLAN: currentEval.bestMove,
+                            evalBefore: currentEval.cp !== undefined ? currentEval.cp / 100.0 : null,
+                            evalAfter: nextEval.cp !== undefined ? nextEval.cp / 100.0 : null,
+                            winProbDrop: probDrop.toFixed(1),
+                            playerColor: isWhiteToMove ? 'white' : 'black',
+                            ply: i + 1,
+                            hint: "Hrubá chyba! Pokus se najít tah, který zachrání partii."
+                        });
+                        
+                        // Fix history fen, we didn't save history fen!
+                        let t = new Chess();
+                        for(let h=0; h<i; h++) t.move(history[h]);
+                        puzzleData[puzzleData.length-1].fenBefore = t.fen();
+                    }
+                }
+                
+                // 2. MISS (Soupeř předtím chyboval, my jsme to nenašli a výhoda spadla dolu)
+                if (isTargetPlayerMove && i >= 1) {
+                    const prevEval = evals[i-1];
+                    if (!prevEval) continue;
+                    
+                    const probW_Prev = getWinProbability(prevEval);
+                    const probTarget_Prev = isWhiteToMove ? probW_Prev : (100 - probW_Prev);
+                    
+                    if (probBefore - probTarget_Prev >= MISS_THRESHOLD) {
+                        if (probBefore - probAfter >= MISS_THRESHOLD) {
+                            puzzleData.push({
+                                type: "miss",
+                                gameId: gameData.id,
+                                white: gameData.whitePlayer,
+                                black: gameData.blackPlayer,
+                                result: gameData.result,
+                                fenBefore: "", // Bude fixnuto níže
+                                blunderMoveSAN: move.san,
+                                blunderMoveLAN: move.lan,
+                                bestMoveLAN: currentEval.bestMove,
+                                evalBefore: currentEval.cp !== undefined ? currentEval.cp / 100.0 : null,
+                                evalAfter: nextEval.cp !== undefined ? nextEval.cp / 100.0 : null,
+                                winProbDrop: probDrop.toFixed(1),
+                                playerColor: isWhiteToMove ? 'white' : 'black',
+                                ply: i + 1,
+                                hint: "Promarněná šance! Soupeř udělal hrubku, ale tvůj tah ho nepotrestal."
+                            });
+                            
+                            let t = new Chess();
+                            for(let h=0; h<i; h++) t.move(history[h]);
+                            puzzleData[puzzleData.length-1].fenBefore = t.fen();
+                        }
+                    }
+                }
+            }
+        } // Konec loopu partií
+
+        // Vše hotovo
+        progBar.style.width = '100%';
         statusMsg.style.display = 'none';
-        renderGrid();
         
+        if (puzzleData.length === 0) {
+            statusMsg.style.display = 'block';
+            statusText.innerHTML = `V posledních 5 partiích (od ${escapeHtml(playerName)}) se nenašly žádné hrubé chyby (>12% evalu). Skvělá práce!`;
+            progContainer.style.display = 'none';
+            return;
+        }
+
+        renderGrid();
+
     } catch (err) {
-        console.error(err);
-        statusMsg.innerHTML = `<i class="fa-solid fa-circle-exclamation"></i> Nelze načíst data chyb (<a href="/scripts/generate-blunders.js" target="_blank">Vygenerovali jste json?</a>)`;
+        console.error("Critical error in blunder check:", err);
+        statusMsg.innerHTML = `<i class="fa-solid fa-circle-exclamation"></i> Skenování spadlo. Podívej se do konzole.`;
     }
-});
+}
 
 function renderGrid() {
     // Zrušíme staré plánované rendery při rychlém scrollování
