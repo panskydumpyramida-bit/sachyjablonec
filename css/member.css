@@ -156,15 +156,27 @@
 }
 
 .tile-scanner {
-    background: linear-gradient(135deg, rgba(20, 184, 166, 0.15), rgba(13, 148, 136, 0.25));
-    border: 1px solid rgba(20, 184, 166, 0.3);
+    background: linear-gradient(145deg, #0f766e, #115e59);
     color: #5eead4;
+    border: none;
 }
 
 .tile-scanner:hover {
-    border-color: #5eead4;
-    background: linear-gradient(135deg, rgba(20, 184, 166, 0.25), rgba(13, 148, 136, 0.35));
-    transform: translateY(-5px);
+    background: linear-gradient(145deg, #115e59, #134e4a);
+    transform: scale(1.02);
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
+}
+
+.tile-blundercheck {
+    background: linear-gradient(145deg, #b91c1c, #991b1b);
+    color: #fca5a5;
+    border: none;
+}
+
+.tile-blundercheck:hover {
+    background: linear-gradient(145deg, #991b1b, #7f1d1d);
+    transform: scale(1.02);
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
 }
 
 /* Section Views */
