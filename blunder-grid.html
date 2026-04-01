@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blunder Grid - TJ Bižuterie Jablonec</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.css" crossorigin="anonymous">
+    
+    <link rel="stylesheet" href="css/style.css">
+    
+    <style>
+        body {
+            background-color: #0f1012; /* Darker theme like Qchess */
+            color: #ececec;
+        }
+
+        .hub-nav {
+            background: rgba(20, 20, 25, 0.9);
+            padding: 1rem 2rem;
+            display: flex;
+            align-items: center;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            margin-bottom: 2rem;
+        }
+        
+        .hub-back-btn {
+            color: var(--accent-color);
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+
+        .hub-back-btn:hover {
+            color: var(--accent-light);
+            transform: translateX(-5px);
+        }
+
+        .blunder-header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .blunder-header h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+            color: #fff;
+        }
+
+        .blunder-header p {
+            color: #aaa;
+            font-size: 1.1rem;
+        }
+
+        .blunder-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 1.5rem 4rem;
+        }
+
+        .blunder-card {
+            background: linear-gradient(to bottom, #2a2d33, #1e2024);
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+            display: flex;
+            flex-direction: column;
+            transition: transform 0.2s ease;
+        }
+
+        .blunder-card:hover {
+            transform: translateY(-5px);
+            border-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .blunder-card-header {
+            padding: 1rem;
+            text-align: center;
+            border-bottom: 1px solid rgba(0,0,0,0.3);
+            position: relative;
+        }
+
+
+        .blunder-players {
+            font-weight: 600;
+            font-size: 0.95rem;
+            margin-top: 0.5rem;
+            color: #dfdfdf;
+        }
+
+        .board-container {
+            width: 100%;
+            aspect-ratio: 1;
+            background: #111;
+        }
+
+        .card-controls {
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .card-btn {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            color: #ccc;
+            padding: 0.6rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 500;
+            font-size: 0.85rem;
+            transition: all 0.2s;
+            text-align: center;
+        }
+
+        .card-btn:hover {
+            background: rgba(255,255,255,0.1);
+            color: #fff;
+        }
+
+        .card-btn.show-best {
+            border-color: rgba(76, 175, 80, 0.3);
+            color: #81c784;
+        }
+
+        .card-btn.show-best:hover {
+            background: rgba(76, 175, 80, 0.1);
+        }
+
+        .card-btn.show-game {
+            border-color: rgba(244, 67, 54, 0.3);
+            color: #e57373;
+        }
+
+        .card-btn.show-game:hover {
+            background: rgba(244, 67, 54, 0.1);
+        }
+
+        .card-footer {
+            padding: 0 1rem 1rem;
+            text-align: center;
+            font-size: 0.75rem;
+            color: #777;
+        }
+
+        .card-footer a {
+            color: var(--accent-color);
+            text-decoration: none;
+        }
+
+        .card-footer a:hover {
+            text-decoration: underline;
+        }
+
+        /* Chessboard custom tweaks for dark theme */
+        .white-1e1d7 { background-color: #f0d9b5; }
+        .black-3c85d { background-color: #b58863; }
+        
+        .status-banner {
+            background: rgba(30,30,35,0.9);
+            padding: 1rem;
+            text-align: center;
+            border-radius: 8px;
+            margin: 0 1.5rem 2rem;
+            display: none;
+        }
+
+        .blunder-tag {
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: #d32f2f;
+            color: white;
+            padding: 0.2rem 0.8rem;
+            font-size: 0.75rem;
+            font-weight: 700;
+            border-radius: 4px;
+            text-transform: uppercase;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+        }
+
+        .blunder-tag.miss {
+            background: #f57c00;
+        }
+
+        .controls-bar {
+            max-width: 1200px; 
+            margin: 0 auto 2rem; 
+            padding: 1.5rem; 
+            background: rgba(30,30,35,0.5); 
+            border-radius: 8px; 
+            display: flex; 
+            flex-wrap: wrap; 
+            gap: 2rem; 
+            justify-content: space-between; 
+            align-items: center;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .controls-bar label {
+            color: #aaa; 
+            margin-right: 1rem;
+            font-weight: 500;
+        }
+
+        .styled-select {
+            background: #2a2d33; 
+            color: white; 
+            border: 1px solid rgba(255,255,255,0.2); 
+            padding: 0.5rem 1rem; 
+            border-radius: 4px;
+            font-family: inherit;
+            cursor: pointer;
+        }
+
+        .filter-btn {
+            background: rgba(229, 115, 115, 0.2);
+            border: 1px solid rgba(229, 115, 115, 0.5);
+            color: #e57373;
+            padding: 0.4rem 1rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            margin-left: 1rem;
+        }
+
+        .filter-btn:hover {
+            background: rgba(229, 115, 115, 0.4);
+            color: #fff;
+        }
+
+        .badge-overlay {
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 25px;
+            height: 25px;
+            background: #d32f2f;
+            color: white;
+            font-weight: bold;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 13px;
+            transform: translate(30%, -30%);
+            z-index: 10;
+            pointer-events: none;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.5);
+            font-family: sans-serif;
+        }
+
+    </style>
+</head>
+<body>
+
+    <nav class="hub-nav">
+        <a href="members.html" class="hub-back-btn">
+            <i class="fa-solid fa-arrow-left"></i> Zpět do členské sekce
+        </a>
+    </nav>
+
+    <div class="blunder-header">
+        <h1>Blunder Grid</h1>
+        <p>Najdi správný tah, který tys (nebo soupeř) přehlédl ve vlastní partii.</p>
+    </div>
+
+    <div class="controls-bar">
+        <div class="mode-toggle">
+            <label for="mode-select">Režim zobrazení:</label>
+            <select id="mode-select" class="styled-select">
+                <option value="training">Trénink (Hádej tah)</option>
+                <option value="gallery">Galerie (Prohlížení chyb)</option>
+            </select>
+        </div>
+        
+        <div class="threshold-slider" style="display: flex; align-items: center;">
+            <label for="threshold-input">Filtr: Propásnutá šance &ge; <span id="threshold-val" style="color: #fff; font-weight: bold;">12</span>%</label>
+            <input type="range" id="threshold-input" min="5" max="50" value="12" step="1" style="vertical-align: middle; accent-color: var(--accent-light);">
+            <button id="filter-btn" class="filter-btn"><i class="fa-solid fa-filter"></i> Aplikovat filtr</button>
+        </div>
+    </div>
+
+    <div id="status-message" class="status-banner">
+        Načítám data...
+    </div>
+
+    <div id="blunder-grid" class="blunder-grid">
+        <!-- Cards generated by JS -->
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js" crossorigin="anonymous"></script>
+    <script src="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.js" defer></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js" defer></script>
+    <script type="module" src="js/blunder-grid.js"></script>
+
+</body>
+</html>
