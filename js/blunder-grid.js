@@ -9,6 +9,40 @@ let currentThreshold = 12;
 let currentPlayer = null;
 let debounceTimer = null;
 
+// === CACHE ===
+const CACHE_KEY_PREFIX = 'blundergrid_';
+const CACHE_EXPIRY_MS = 7 * 24 * 60 * 60 * 1000; // 7 dní
+
+function getCachedResults(playerName) {
+    try {
+        const key = CACHE_KEY_PREFIX + playerName.toLowerCase().replace(/\s/g, '_');
+        const raw = localStorage.getItem(key);
+        if (!raw) return null;
+        const cached = JSON.parse(raw);
+        if (Date.now() - cached.timestamp > CACHE_EXPIRY_MS) {
+            localStorage.removeItem(key);
+            return null;
+        }
+        return cached.data;
+    } catch (e) { return null; }
+}
+
+function saveCachedResults(playerName, data) {
+    try {
+        const key = CACHE_KEY_PREFIX + playerName.toLowerCase().replace(/\s/g, '_');
+        localStorage.setItem(key, JSON.stringify({
+            timestamp: Date.now(),
+            data: data
+        }));
+    } catch (e) { console.warn('Cache save failed:', e); }
+}
+
+// === HELPER: Konstruuj LAN z chess.js move objektu (kompatibilita 0.10.3) ===
+function getMoveLAN(moveObj) {
+    if (moveObj.lan) return moveObj.lan; // chess.js 1.x
+    return moveObj.from + moveObj.to + (moveObj.promotion || '');
+}
+
 // Lichess formula to convert CP to Win Probability (0 to 100)
 function getWinProbability(evalObj) {
     if (!evalObj) return 50;
@@ -51,6 +85,30 @@ document.addEventListener('DOMContentLoaded', async () => {
         debounceTimer = setTimeout(() => handleSearch(searchInput.value), 300);
     });
 
+    // Klik na lupu spustí vyhledávání
+    const searchIcon = document.querySelector('.search-icon');
+    if (searchIcon) {
+        searchIcon.style.cursor = 'pointer';
+        searchIcon.addEventListener('click', () => {
+            const val = searchInput.value.trim();
+            if (val.length >= 2) {
+                selectPlayer(val);
+            } else {
+                handleSearch(val);
+            }
+        });
+    }
+
+    // Enter spustí vyhledávání
+    searchInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+            const val = searchInput.value.trim();
+            if (val.length >= 2) {
+                selectPlayer(val);
+            }
+        }
+    });
+
     document.addEventListener('click', (e) => {
         if (!e.target.closest('.search-wrapper')) {
             document.getElementById('autocompleteResults').style.display = 'none';
@@ -66,11 +124,8 @@ async function handleSearch(query) {
     const resultsDiv = document.getElementById('autocompleteResults');
     if (query.length < 2) { resultsDiv.style.display = 'none'; return; }
 
-    const token = getToken();
     try {
-        const response = await fetch(`/api/chess/players?q=${encodeURIComponent(query)}&limit=8`, {
-            headers: { 'Authorization': token ? `Bearer ${token}` : '' }
-        });
+        const response = await fetch(`/api/chess/players?q=${encodeURIComponent(query)}&limit=8`);
         if (!response.ok) throw new Error('Search failed');
         const players = await response.json();
 
@@ -93,13 +148,33 @@ async function selectPlayer(name) {
     document.getElementById('playerSearch').value = name;
     document.getElementById('autocompleteResults').style.display = 'none';
     
-    // Spustit skenování chyb
+    // Zkontrolovat cache
+    const cached = getCachedResults(name);
+    if (cached && cached.length > 0) {
+        puzzleData = cached;
+        filteredData = [];
+        
+        const statusMsg = document.getElementById('status-message');
+        const statusText = document.getElementById('status-text');
+        statusMsg.style.display = 'block';
+        statusText.innerHTML = `<i class="fa-solid fa-bolt" style="color: gold;"></i> Načteno z cache (${cached.length} situací). <button onclick="forceRescan('${name.replace(/'/g, "\\'")}')" class="card-btn" style="display:inline-block; padding: 0.2rem 0.6rem; margin-left:0.5rem; font-size:0.8rem;"><i class="fa-solid fa-rotate"></i> Přeskenovat</button>`;
+        document.getElementById('progress-container').style.display = 'none';
+        
+        renderGrid();
+        return;
+    }
+    
+    startBlunderScan(name);
+}
+
+window.forceRescan = function(name) {
+    const key = CACHE_KEY_PREFIX + name.toLowerCase().replace(/\s/g, '_');
+    localStorage.removeItem(key);
     startBlunderScan(name);
 }
 
 // Pomocná API Request funkce pro Eval (Lichess Cloud -> Chess-API)
 async function getPositionEval(fen) {
-    // Zabalení timeoutů
     const fetchWithTimeout = async (resource, options = {}) => {
         const { timeout = 8000 } = options;
         const controller = new AbortController();
@@ -131,17 +206,28 @@ async function getPositionEval(fen) {
         const chessApiRes = await fetchWithTimeout('https://chess-api.com/v1', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ fen: fen, depth: 11 }), // Nízká hloubka pro web-client rychlost
-            timeout: 5000
+            body: JSON.stringify({ fen: fen, depth: 14 }), // Vyšší hloubka pro přesnější analýzu
+            timeout: 8000
         });
         
         if (chessApiRes.ok) {
             const data = await chessApiRes.json();
-            if (data && data.eval !== undefined) {
+            
+            // chess-api.com vrací: eval v pěšcích (float), centipawns jako string, move jako UCI
+            if (data && !data.error) {
+                let cpVal;
+                if (data.centipawns !== undefined) {
+                    cpVal = parseInt(data.centipawns); // Přímo centipawny
+                } else if (data.eval !== undefined) {
+                    cpVal = Math.round(data.eval * 100); // Převod z pěšců
+                } else {
+                    return null;
+                }
+                
                 return {
-                    cp: Math.round(data.eval * 100), // chess-api uses floats like 1.5, lichess uses 150
-                    mate: data.mate,
-                    bestMove: data.move,
+                    cp: cpVal,
+                    mate: data.mate || null,
+                    bestMove: data.move, // UCI formát
                     source: 'chess-api'
                 };
             }
@@ -169,7 +255,6 @@ async function startBlunderScan(playerName) {
     statusText.innerHTML = `Stahuji posledních 5 partií hráče <strong style="color:var(--primary-color)">${escapeHtml(playerName)}</strong>...`;
 
     try {
-        // Získáme posledních 5 nejnovějších partií tohoto hráče
         const API_URL = '/api/chess'; 
         const params = new URLSearchParams({
             player: playerName,
@@ -211,6 +296,9 @@ async function startBlunderScan(playerName) {
         }
 
         // ====== Hlavní Skenovací Jádro ======
+        let totalEvalsFetched = 0;
+        let totalEvalsNull = 0;
+
         for (let gIndex = 0; gIndex < gamesList.length; gIndex++) {
             const gameData = gamesList[gIndex];
             
@@ -221,7 +309,7 @@ async function startBlunderScan(playerName) {
 
             const chess = new Chess();
             const movesArr = gameData.moves.split(' ').filter(m => m);
-            // Validace přes temporary chess.js
+            // Validace přes chess.js
             for (let m of movesArr) {
                 try { chess.move(m); } catch (e) { break; }
             }
@@ -231,8 +319,7 @@ async function startBlunderScan(playerName) {
             
             let evals = [];
             
-            // Tah po tahu - Střílíme asynchronní API požadavky
-            // Optimalizace: Batche nebo ne? Radši přímo abychom neriskovali RateLimit 429
+            // Tah po tahu - API požadavky
             for (let i = 0; i <= history.length; i++) {
                 
                 // UX Progress Update každých 5 tahů
@@ -240,31 +327,45 @@ async function startBlunderScan(playerName) {
                     const partialPct = ((gIndex) / gamesList.length) * 100 + ((i / history.length) * (100 / gamesList.length));
                     progBar.style.width = `${Math.min(partialPct, 99)}%`;
                     statusText.innerHTML = `Analýza tahů (${i}/${history.length}). Partii ${gIndex + 1} z ${gamesList.length}`;
+                    // Yield k UI
+                    await new Promise(r => setTimeout(r, 0));
                 }
 
-                // Oprava E.P. FENu pro API
-                const fenParts = tempChess.fen().split(' ');
+                // FEN pro API
+                const fen = tempChess.fen();
+                // Fix: API rejects FEN s EP square pokud EP není možný
+                const fenParts = fen.split(' ');
                 if (fenParts.length >= 4 && fenParts[3] !== '-') fenParts[3] = '-';
                 const safeFen = fenParts.join(' ');
                 
                 let ev = await getPositionEval(safeFen);
                 evals.push(ev);
+                totalEvalsFetched++;
+                if (!ev) totalEvalsNull++;
                 
                 if (i < history.length) {
                     tempChess.move(history[i]);
                 }
 
-                // Přidání drobného zpoždění pro rate limit
+                // Rate limit delay
                 if (ev && ev.source === 'chess-api') {
-                    await new Promise(r => setTimeout(r, 400));
+                    await new Promise(r => setTimeout(r, 350));
+                } else if (ev && ev.source === 'lichess') {
+                    await new Promise(r => setTimeout(r, 30)); 
                 } else {
-                    await new Promise(r => setTimeout(r, 40)); 
+                    await new Promise(r => setTimeout(r, 100)); // null response
                 }
             }
 
+            console.log(`Game ${gIndex+1}: ${history.length} moves, ${evals.filter(e=>e).length} evals received, ${evals.filter(e=>!e).length} null`);
+
             // Vyhledání propadů v Evaluations (Win Probabilities)
+            const BLUNDER_THRESHOLD = 12;
+            const MISS_THRESHOLD = 12;
+
             for (let i = 0; i < history.length; i++) {
                 const move = history[i];
+                const moveLAN = getMoveLAN(move); // OPRAVENO: kompatibilita chess.js 0.10.3
                 const isWhiteToMove = (i % 2 === 0);
                 const activePlayer = isWhiteToMove ? gameData.whitePlayer : gameData.blackPlayer;
                 const isTargetPlayerMove = activePlayer.toLowerCase().includes(playerName.toLowerCase());
@@ -281,39 +382,43 @@ async function startBlunderScan(playerName) {
                 const probAfter = isWhiteToMove ? probWAfter : (100 - probWAfter);
                 
                 const probDrop = probBefore - probAfter;
-                const MISS_THRESHOLD = 12; // Z generátoru
-                const BLUNDER_THRESHOLD = 12;
 
-                // 1. BLUNDER
+                // Fen PŘED tahem
+                let fenBefore;
+                {
+                    let t = new Chess();
+                    for(let h=0; h<i; h++) t.move(history[h]);
+                    fenBefore = t.fen();
+                }
+
+                // 1. BLUNDER — hráč zahrál tah, který mu zhoršil pozici
                 if (isTargetPlayerMove && probDrop >= BLUNDER_THRESHOLD) {
-                    // PUSH do hlavního pole!
-                    if (currentEval.bestMove && currentEval.bestMove !== move.lan) {
+                    // Zkontroluj, že bestMove existuje a je JINÝ než hraný tah
+                    if (currentEval.bestMove && currentEval.bestMove !== moveLAN) {
                          puzzleData.push({
                             type: "blunder",
                             gameId: gameData.id,
                             white: gameData.whitePlayer,
                             black: gameData.blackPlayer,
                             result: gameData.result,
-                            fenBefore: tempChess.fen(), // We need fen from history
+                            fenBefore: fenBefore,
                             blunderMoveSAN: move.san,
-                            blunderMoveLAN: move.lan,
+                            blunderMoveLAN: moveLAN,
                             bestMoveLAN: currentEval.bestMove,
                             evalBefore: currentEval.cp !== undefined ? currentEval.cp / 100.0 : null,
                             evalAfter: nextEval.cp !== undefined ? nextEval.cp / 100.0 : null,
                             winProbDrop: probDrop.toFixed(1),
                             playerColor: isWhiteToMove ? 'white' : 'black',
                             ply: i + 1,
+                            moveNumber: Math.ceil((i+1)/2),
                             hint: "Hrubá chyba! Pokus se najít tah, který zachrání partii."
                         });
-                        
-                        // Fix history fen, we didn't save history fen!
-                        let t = new Chess();
-                        for(let h=0; h<i; h++) t.move(history[h]);
-                        puzzleData[puzzleData.length-1].fenBefore = t.fen();
+                        console.log(`🚨 Blunder: ${move.san} (tah ${Math.ceil((i+1)/2)}), propad ${probDrop.toFixed(1)}%, best: ${currentEval.bestMove}, played: ${moveLAN}`);
                     }
+                    continue; // Nezkoumej miss pro stejný tah
                 }
                 
-                // 2. MISS (Soupeř předtím chyboval, my jsme to nenašli a výhoda spadla dolu)
+                // 2. MISS (Soupeř předtím chyboval, my jsme to nenašli)
                 if (isTargetPlayerMove && i >= 1) {
                     const prevEval = evals[i-1];
                     if (!prevEval) continue;
@@ -321,61 +426,67 @@ async function startBlunderScan(playerName) {
                     const probW_Prev = getWinProbability(prevEval);
                     const probTarget_Prev = isWhiteToMove ? probW_Prev : (100 - probW_Prev);
                     
+                    // Soupeř chyboval? (naše šance vyrostla o >= threshold)
                     if (probBefore - probTarget_Prev >= MISS_THRESHOLD) {
-                        if (probBefore - probAfter >= MISS_THRESHOLD) {
-                            puzzleData.push({
-                                type: "miss",
-                                gameId: gameData.id,
-                                white: gameData.whitePlayer,
-                                black: gameData.blackPlayer,
-                                result: gameData.result,
-                                fenBefore: "", // Bude fixnuto níže
-                                blunderMoveSAN: move.san,
-                                blunderMoveLAN: move.lan,
-                                bestMoveLAN: currentEval.bestMove,
-                                evalBefore: currentEval.cp !== undefined ? currentEval.cp / 100.0 : null,
-                                evalAfter: nextEval.cp !== undefined ? nextEval.cp / 100.0 : null,
-                                winProbDrop: probDrop.toFixed(1),
-                                playerColor: isWhiteToMove ? 'white' : 'black',
-                                ply: i + 1,
-                                hint: "Promarněná šance! Soupeř udělal hrubku, ale tvůj tah ho nepotrestal."
-                            });
-                            
-                            let t = new Chess();
-                            for(let h=0; h<i; h++) t.move(history[h]);
-                            puzzleData[puzzleData.length-1].fenBefore = t.fen();
+                        // My jsme to nevyužili? (naše šance zase spadla)
+                        if (probDrop >= MISS_THRESHOLD) {
+                            if (currentEval.bestMove && currentEval.bestMove !== moveLAN) {
+                                puzzleData.push({
+                                    type: "miss",
+                                    gameId: gameData.id,
+                                    white: gameData.whitePlayer,
+                                    black: gameData.blackPlayer,
+                                    result: gameData.result,
+                                    fenBefore: fenBefore,
+                                    blunderMoveSAN: move.san,
+                                    blunderMoveLAN: moveLAN,
+                                    bestMoveLAN: currentEval.bestMove,
+                                    evalBefore: currentEval.cp !== undefined ? currentEval.cp / 100.0 : null,
+                                    evalAfter: nextEval.cp !== undefined ? nextEval.cp / 100.0 : null,
+                                    winProbDrop: probDrop.toFixed(1),
+                                    playerColor: isWhiteToMove ? 'white' : 'black',
+                                    ply: i + 1,
+                                    moveNumber: Math.ceil((i+1)/2),
+                                    hint: "Promarněná šance! Soupeř udělal hrubku, ale tvůj tah ho nepotrestal."
+                                });
+                                console.log(`❌ Miss: ${move.san} (tah ${Math.ceil((i+1)/2)}), propad ${probDrop.toFixed(1)}%`);
+                            }
                         }
                     }
                 }
             }
         } // Konec loopu partií
 
+        console.log(`Scan complete: ${totalEvalsFetched} evals fetched, ${totalEvalsNull} null, ${puzzleData.length} puzzles found`);
+
+        // Uložit do cache
+        if (puzzleData.length > 0) {
+            saveCachedResults(playerName, puzzleData);
+        }
+
         // Vše hotovo
         progBar.style.width = '100%';
-        statusMsg.style.display = 'none';
         
         if (puzzleData.length === 0) {
             statusMsg.style.display = 'block';
-            statusText.innerHTML = `V posledních 5 partiích (od ${escapeHtml(playerName)}) se nenašly žádné hrubé chyby (>12% evalu). Skvělá práce!`;
+            statusText.innerHTML = `V posledních 5 partiích (od ${escapeHtml(playerName)}) se nenašly žádné hrubé chyby (>12% evalu). Skvělá práce! <br><small style="color:#777;">(${totalEvalsFetched} pozic analyzováno, ${totalEvalsNull} bez evaluace)</small>`;
             progContainer.style.display = 'none';
             return;
         }
+
+        statusMsg.style.display = 'block';
+        statusText.innerHTML = `<i class="fa-solid fa-check-circle" style="color: #81c784;"></i> Nalezeno <strong>${puzzleData.length}</strong> situací. Výsledky uloženy do cache.`;
+        progContainer.style.display = 'none';
 
         renderGrid();
 
     } catch (err) {
         console.error("Critical error in blunder check:", err);
-        statusMsg.innerHTML = `<i class="fa-solid fa-circle-exclamation"></i> Skenování spadlo. Podívej se do konzole.`;
+        statusText.innerHTML = `<i class="fa-solid fa-circle-exclamation" style="color:#e57373;"></i> Skenování spadlo: ${err.message}. Podívej se do konzole.`;
     }
 }
 
 function renderGrid() {
-    // Zrušíme staré plánované rendery při rychlém scrollování
-    if (typeof renderTimeouts !== 'undefined') {
-        renderTimeouts.forEach(t => clearTimeout(t));
-        renderTimeouts = [];
-    }
-
     const gridEl = document.getElementById('blunder-grid');
     gridEl.innerHTML = '';
     
@@ -389,12 +500,13 @@ function renderGrid() {
     
     filteredData.forEach((puzzle, filtIndex) => {
         const id = `board-${filtIndex}`;
-        const realIndex = puzzleData.indexOf(puzzle); // Původní index pro navázání logiky
+        const realIndex = puzzleData.indexOf(puzzle);
         
         const isMiss = puzzle.type === 'miss';
         const tagClass = isMiss ? 'blunder-tag miss' : 'blunder-tag';
         const tagText = isMiss ? `Promarněná šance` : `Blunder`;
-        const dropText = puzzle.winProbDrop ? `(-${puzzle.winProbDrop} % Výhra)` : `(${puzzle.evalAfter})`;
+        const dropText = puzzle.winProbDrop ? `(-${puzzle.winProbDrop}%)` : `(${puzzle.evalAfter})`;
+        const moveInfo = puzzle.moveNumber ? `tah ${puzzle.moveNumber}` : '';
 
         let cardHtml = '';
 
@@ -418,12 +530,12 @@ function renderGrid() {
                         </button>
                     </div>
                     <div class="card-footer" title="Ztráta pravděpodobnosti výhry">
-                        Eval: <span id="eval-${realIndex}">${puzzle.evalBefore > 0 ? '+' : ''}${puzzle.evalBefore} ${dropText}</span>
+                        Eval: <span id="eval-${realIndex}">${puzzle.evalBefore > 0 ? '+' : ''}${puzzle.evalBefore} ${dropText} ${moveInfo}</span>
                     </div>
                 </div>
             `;
         } else {
-            // Galerie
+            // Galerie — zobrazí chybný tah + ?? badge
             cardHtml = `
                 <div class="blunder-card" data-index="${realIndex}">
                     <div class="blunder-card-header">
@@ -432,7 +544,9 @@ function renderGrid() {
                     </div>
                     <div class="board-container" id="${id}"></div>
                     <div class="card-controls">
-                        <div style="color: #bbb; font-size: 0.9rem; margin-bottom: 0.5rem; text-align: center;">V partii se stalo: <strong>${puzzle.blunderMoveSAN}</strong></div>
+                        <div style="color: #bbb; font-size: 0.9rem; margin-bottom: 0.5rem; text-align: center;">
+                            V partii se stalo (${moveInfo}): <strong style="color: #e57373;">${puzzle.blunderMoveSAN} ${isMiss ? '?!' : '??'}</strong>
+                        </div>
                         <button class="card-btn show-best" onclick="toggleComparison(${realIndex}, this)">
                             <i class="fa-solid fa-exchange"></i> Ukázat, jak to mělo být
                         </button>
@@ -449,10 +563,6 @@ function renderGrid() {
         const tId = setTimeout(() => {
             initBoard(realIndex, id, puzzle);
         }, 50 * filtIndex);
-        
-        if (typeof renderTimeouts !== 'undefined') {
-            renderTimeouts.push(tId);
-        }
     });
 }
 
@@ -472,8 +582,8 @@ function initBoard(realIndex, elementId, data) {
         };
         boards[realIndex] = Chessboard(elementId, config);
     } else {
-        // Galerie
-        game.move(data.blunderMoveSAN); // aplikuj ihned osudný tah
+        // Galerie — aplikuj chybný tah a ukaž badge
+        game.move(data.blunderMoveSAN);
         const config = {
             draggable: false,
             position: game.fen(),
@@ -482,14 +592,14 @@ function initBoard(realIndex, elementId, data) {
         };
         boards[realIndex] = Chessboard(elementId, config);
 
-        // Znázornění "??" odznaku v cílovém políčku osudného tahu
+        // ?? badge na cílové pole
         setTimeout(() => {
+            if (!data.blunderMoveLAN || data.blunderMoveLAN.length < 4) return;
             const targetSquare = data.blunderMoveLAN.substring(2,4); 
             const squareEl = document.querySelector(`#${elementId} .square-${targetSquare}`);
             if (squareEl) {
                 squareEl.style.boxShadow = "inset 0 0 0 4px rgba(244, 67, 54, 0.8)";
                 squareEl.style.position = "relative";
-                // Kontrola jestli badge už není
                 if(!squareEl.querySelector('.badge-overlay')) {
                     const badge = document.createElement('div');
                     badge.className = 'badge-overlay';
@@ -497,7 +607,7 @@ function initBoard(realIndex, elementId, data) {
                     squareEl.appendChild(badge);
                 }
             }
-        }, 300); // 300ms prodleva pro jistotu že DOM šachovnice existuje
+        }, 300);
     }
 }
 
@@ -519,11 +629,13 @@ function onDrop(index, source, target) {
     
     if (move === null) return 'snapback';
     
-    const isCorrect = (move.to === data.bestMoveLAN.substring(2,4) && move.from === data.bestMoveLAN.substring(0,2));
+    const bestFrom = data.bestMoveLAN.substring(0,2);
+    const bestTo = data.bestMoveLAN.substring(2,4);
+    const isCorrect = (move.from === bestFrom && move.to === bestTo);
     
     if (isCorrect) {
         showStatusEffect(index, 'success');
-        document.getElementById(`eval-${index}`).textContent = `Správně!`;
+        document.getElementById(`eval-${index}`).textContent = `Správně! ✓`;
         document.getElementById(`eval-${index}`).style.color = '#81c784';
     } else {
         showStatusEffect(index, 'error');
@@ -553,19 +665,17 @@ window.showHint = function(index) {
     const data = puzzleData[index];
     const evalEl = document.getElementById(`eval-${index}`);
     
-    // Tady jsme dřív vraceli jen text.
-    // Přidáme vizuální highlight políčka, odkud se má táhnout:
     const fromSquare = data.bestMoveLAN.substring(0,2);
     
-    // Zvýrazníme žlutě přes jQuery (chessboard.js framework to umožňuje takto)
-    const boardId = `board-${index}`;
-    $(`#${boardId} .square-${fromSquare}`).css('box-shadow', 'inset 0 0 10px 3px rgba(255, 255, 0, 0.7)');
-    
-    let pieceName = "figurku"; // Lze vylepšit detekcí, např. podle FENu
+    // Zvýrazníme žlutě přes jQuery
+    const boardEl = document.querySelector(`.blunder-card[data-index="${index}"] .board-container`);
+    if (boardEl) {
+        const sq = boardEl.querySelector(`.square-${fromSquare}`);
+        if (sq) sq.style.boxShadow = 'inset 0 0 10px 3px rgba(255, 255, 0, 0.7)';
+    }
     
     evalEl.innerHTML = `<strong>Nápověda:</strong> Zkus pohnout figurkou na poli <strong style="color:var(--primary-color)">${fromSquare.toUpperCase()}</strong>.`;
     
-    // Malý vizuální efekt na kartu
     const card = document.querySelector(`.blunder-card[data-index="${index}"]`);
     if(card) {
         card.style.borderColor = 'rgba(255, 255, 0, 0.5)';
@@ -581,7 +691,7 @@ window.showGameMove = function(index) {
     game.move(data.blunderMoveSAN);
     boards[index].position(game.fen());
     
-    document.getElementById(`eval-${index}`).textContent = `Chyba v partii (${data.evalAfter})`;
+    document.getElementById(`eval-${index}`).textContent = `Chyba v partii: ${data.blunderMoveSAN} (${data.evalAfter})`;
     document.getElementById(`eval-${index}`).style.color = '#e57373';
 }
 
@@ -610,36 +720,38 @@ window.toggleComparison = function(index, btnEl) {
 
     // Výmaz odznaků
     const boardEl = document.querySelector(`.blunder-card[data-index="${index}"] .board-container`);
-    const squares = boardEl.querySelectorAll('[class^="square-"]');
-    squares.forEach(s => s.style.boxShadow = 'none');
     boardEl.querySelectorAll('.badge-overlay').forEach(b => b.remove());
+    // Reset box-shadow na všech políčkách
+    boardEl.querySelectorAll('[class*="square-"]').forEach(s => s.style.boxShadow = 'none');
 
     game.load(data.fenBefore);
 
     if (showsBest) {
-        // Switch back to blunder
+        // Zpět na blunder
         game.move(data.blunderMoveSAN);
         btnEl.setAttribute('data-shown-best', 'false');
         btnEl.innerHTML = `<i class="fa-solid fa-exchange"></i> Ukázat, jak to mělo být`;
         btnEl.style.color = '';
         btnEl.style.borderColor = '';
         
-        // Obnov badge blunderu
-        const targetSquare = data.blunderMoveLAN.substring(2,4); 
-        setTimeout(() => {
-            const squareEl = boardEl.querySelector('.square-' + targetSquare);
-            if (squareEl) {
-                squareEl.style.boxShadow = "inset 0 0 0 4px rgba(244, 67, 54, 0.8)";
-                squareEl.style.position = "relative";
-                const badge = document.createElement('div');
-                badge.className = 'badge-overlay';
-                badge.innerText = data.type === 'miss' ? '?!' : '??';
-                squareEl.appendChild(badge);
-            }
-        }, 150);
+        // Obnov ?? badge
+        if (data.blunderMoveLAN && data.blunderMoveLAN.length >= 4) {
+            const targetSquare = data.blunderMoveLAN.substring(2,4); 
+            setTimeout(() => {
+                const squareEl = boardEl.querySelector('.square-' + targetSquare);
+                if (squareEl) {
+                    squareEl.style.boxShadow = "inset 0 0 0 4px rgba(244, 67, 54, 0.8)";
+                    squareEl.style.position = "relative";
+                    const badge = document.createElement('div');
+                    badge.className = 'badge-overlay';
+                    badge.innerText = data.type === 'miss' ? '?!' : '??';
+                    squareEl.appendChild(badge);
+                }
+            }, 150);
+        }
         
     } else {
-        // Show correct move
+        // Ukázat správný tah
         game.move({
             from: data.bestMoveLAN.substring(0,2), 
             to: data.bestMoveLAN.substring(2,4), 
