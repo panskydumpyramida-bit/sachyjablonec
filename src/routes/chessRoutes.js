@@ -18,23 +18,15 @@ import {
 
 const router = express.Router();
 
-// All chess database routes require MEMBER role
-router.use(requireRole('MEMBER'));
-
-// Player search
+// === PUBLIC routes (no auth required — used by Blunder Grid & public search) ===
 router.get('/players', searchPlayers);
-
-// Player statistics
 router.get('/players/:name/stats', getPlayerStats);
-
-// Games list with filtering
 router.get('/games', getGames);
-
-// Single game
 router.get('/games/:id', getGameById);
-
-// Opening tree
 router.get('/tree', getOpeningTree);
+
+// === PROTECTED routes (require MEMBER role) ===
+router.use(requireRole('MEMBER'));
 
 // Import games (ADMIN only - bypasses MEMBER check internally)
 router.post('/import', importGames);

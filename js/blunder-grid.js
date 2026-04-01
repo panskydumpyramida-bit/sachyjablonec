@@ -169,7 +169,6 @@ async function startBlunderScan(playerName) {
     statusText.innerHTML = `Stahuji posledních 5 partií hráče <strong style="color:var(--primary-color)">${escapeHtml(playerName)}</strong>...`;
 
     try {
-        const token = getToken();
         // Získáme posledních 5 nejnovějších partií tohoto hráče
         const API_URL = '/api/chess'; 
         const params = new URLSearchParams({
@@ -180,17 +179,33 @@ async function startBlunderScan(playerName) {
             offset: 0
         });
 
-        const resp = await fetch(`${API_URL}/games?${params}`, {
-            headers: { 'Authorization': token ? `Bearer ${token}` : '' }
-        });
+        const resp = await fetch(`${API_URL}/games?${params}`);
         
         if (!resp.ok) throw new Error("Chyba při stahování partií");
         
         const data = await resp.json();
-        const gamesList = data.games || [];
+        const gamesListRaw = data.games || [];
         
-        if (gamesList.length === 0) {
+        if (gamesListRaw.length === 0) {
             statusText.innerHTML = `Nebyly nalezeny žádné partie hráče ${escapeHtml(playerName)}.`;
+            progContainer.style.display = 'none';
+            return;
+        }
+
+        // Stáhnout detaily partií (s tahy) pro každou hru
+        statusText.innerHTML = `Načítám tahy pro ${gamesListRaw.length} partií...`;
+        const gamesList = [];
+        for (const g of gamesListRaw) {
+            try {
+                const detailResp = await fetch(`${API_URL}/games/${g.id}`);
+                if (detailResp.ok) {
+                    gamesList.push(await detailResp.json());
+                }
+            } catch (e) { console.warn('Failed to load game', g.id, e); }
+        }
+
+        if (gamesList.length === 0) {
+            statusText.innerHTML = `Nepodařilo se načíst tahy partií.`;
             progContainer.style.display = 'none';
             return;
         }
@@ -201,6 +216,8 @@ async function startBlunderScan(playerName) {
             
             statusText.innerHTML = `Analyzuji partii <strong>${gIndex + 1}/${gamesList.length}</strong>: ${escapeHtml(gameData.whitePlayer)} - ${escapeHtml(gameData.blackPlayer)}...`;
             progBar.style.width = `${((gIndex) / gamesList.length) * 100}%`;
+
+            if (!gameData.moves) { console.warn('No moves for game', gameData.id); continue; }
 
             const chess = new Chess();
             const movesArr = gameData.moves.split(' ').filter(m => m);
