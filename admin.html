@@ -20,7 +20,7 @@
     <div id="loginPage" class="hidden">
         <div class="login-container">
             <h1 style="text-align: center; margin-bottom: 2rem;"><i class="fa-solid fa-chess-knight"
-                    style="color: var(--primary-color);"></i><br>Admin Panel v2026.03.27</h1>
+                    style="color: var(--primary-color);"></i><br>Admin Panel v2026.04.01</h1>
             <div id="loginError"></div>
             <form id="loginForm">
                 <div class="form-group"><label>Uživatelské jméno</label><input type="text" id="username" required>
@@ -137,6 +137,10 @@
                                 <button class="quick-action-btn" onclick="dashboardQuickAction('refresh-standings')">
                                     <i class="fa-solid fa-sync"></i>
                                     <span>Aktualizovat tabulky</span>
+                                </button>
+                                <button class="quick-action-btn" onclick="window.open('form-scanner.html', '_blank')">
+                                    <i class="fa-solid fa-file-pdf"></i>
+                                    <span>Skenovat přihlášky</span>
                                 </button>
                                 <button class="quick-action-btn" onclick="window.open('/', '_blank')">
                                     <i class="fa-solid fa-eye"></i>

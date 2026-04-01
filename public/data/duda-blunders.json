@@ -1,0 +1,53 @@
+[
+  {
+    "type": "blunder",
+    "gameId": 1,
+    "white": "Duda Antonin",
+    "black": "Hacha Ales",
+    "result": "*",
+    "fenBefore": "r3k2r/1p2q3/p3N3/3ppQ1p/2nP3P/2P5/P7/R3K2R w kq - 0 27",
+    "blunderMoveSAN": "Rb1",
+    "blunderMoveLAN": "a1b1",
+    "bestMoveLAN": "h1f1",
+    "evalBefore": -0.01,
+    "evalAfter": -1.93,
+    "winProbDrop": "17.0",
+    "playerColor": "white",
+    "ply": 53,
+    "hint": "Hrubá chyba! Zkus najít tah, který neprohrává partii."
+  },
+  {
+    "type": "blunder",
+    "gameId": 1,
+    "white": "Duda Antonin",
+    "black": "Hacha Ales",
+    "result": "*",
+    "fenBefore": "r3k3/1p6/p3N2r/3ppQ1p/2nP3q/2P5/P7/1R2K1R1 w q - 0 29",
+    "blunderMoveSAN": "Qf2",
+    "blunderMoveLAN": "f5f2",
+    "bestMoveLAN": "e1e2",
+    "evalBefore": -2.15,
+    "evalAfter": -6.28,
+    "winProbDrop": "22.2",
+    "playerColor": "white",
+    "ply": 57,
+    "hint": "Hrubá chyba! Zkus najít tah, který neprohrává partii."
+  },
+  {
+    "type": "miss",
+    "gameId": 102,
+    "white": "Novák Jan",
+    "black": "Duda Antonín",
+    "result": "1/2-1/2",
+    "fenBefore": "r1bqk2r/pppp1ppp/2n2n2/2b1p3/2B1P3/2PP1N2/PP3PPP/RNBQK2R b KQkq - 0 5",
+    "blunderMoveSAN": "d6",
+    "blunderMoveLAN": "d7d6",
+    "bestMoveLAN": "e8g8",
+    "evalBefore": 0.3,
+    "evalAfter": 1.2,
+    "winProbDrop": 22.4,
+    "playerColor": "black",
+    "ply": 10,
+    "hint": "Ukázka propásnuté příležitosti (demo)! Král je v bezpečí, ale rošáda byla ještě lepší tah."
+  }
+]

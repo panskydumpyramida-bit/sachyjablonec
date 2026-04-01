@@ -1,6 +1,15 @@
 # 📋 Changelog
 
-## 27. března 2026
+## 1. dubna 2026 (v31)
+
+### 🎯 Členská sekce: Blunder Grid
+- **Nový tréninkový nástroj:** V členské sekci spuštěn **Blunder Grid**, inspirovaný funkcemi známými z Chess.com a Lichess. Jde o personalizovanou galerii hrubek (blunder) a promarněných šancí (miss) pocházejících přímo ze zápasů členů v lokální databázi.
+- **Pokročilá evaluace:** Systém přešel ze zaměření na centipěšce na sledování **Pravděpodobnosti výhry (Win %)**, což efektivněji filtruje nevýznamné chyby v totálně prohraných/vyhraných pozicích a soustředí trénink jen na zlomy v partii.
+- **Trénink vs. Galerie:** Dva režimy prohlížení. Trénink („Hádej tah“) pro aktivní řešení vlastních přehlédnutí s plnou kontrolou figur, nebo Galerie („Prohlížení chyb“) pro rychlou vizuální rekapitulaci osudných momentů před spaním s obřím ??.
+- **Slider Threshold:** Možnost naživo posuvníkem odfiltrovat drobné chyby podle požadovaného prahu ztráty šance na výhru (např. >20%).
+- **API Fallback:** Analytický backend v `generate-blunders.js` nyní používá jak cloudové statistiky Lichessu, tak bezchybný fallback na lokální Stockfish 17 (přes chess-api) s ohledem na API rate-limity.
+
+## 27. března 2026 (v30)
 
 ### 📝 Editor Článků (WYSIWYG)
 - **Bohaté HTML šablony:** Přidána podpora pro tři nové hotové bloky do článků: Zlatý box vítězů (`/vitezove`), Karty medailistů (`/karty`) a Závěrečné tlačítko s odkazem na výsledky (`/cta`).

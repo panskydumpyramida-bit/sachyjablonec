@@ -325,12 +325,25 @@ Dostupná pouze pro role MEMBER, ADMIN, SUPERADMIN.
 
 ### Funkce
 
-| Funkce | Popis |
+| Oprávnění |
 |--------|-------|
 | **Galerie** | Nahrávání a prohlížení fotek |
 | **Puzzle Racer** | Trénink taktiky |
+| **Blunder Grid** | Trénink na vlastních chybách a přehledech |
 | **Záznamník partií** | Záznam vlastních partií |
 | **Zprávy** | Interní komunikace |
+
+### Blunder Grid (Trénink chyb)
+
+Členové si mohou procházet hrubky z lokálně uložených partií nebo turnajů ("Guess the move" koncept) a učit se z vlastních (či týmových) chyb.
+
+**Jak generovat a aktualizovat data pro Blunder Grid (Admin):**
+1. Otevřete terminál na doménovém serveru nebo localhostu v kořenovém adresáři.
+2. Spusťte příkaz: `npm run generate-blunders` (interně to spouští backendový skript `scripts/generate-blunders.js`).
+3. Tento proces zanalyzuje posledních několik neuložených partií z lokální databáze `GameRecorded` (využívá hybridní stažení posudků přes Lichess API nebo lokální chess-api jako fallback). Tím zjistí propady v šanci na výhru (Win Probability drop).
+4. Data jsou bezpečně zapsána do statického souboru `public/data/duda-blunders.json`.
+5. Frontend si z něj žije sám a členové si přes interaktivní UI nebo Galerii mohou filtrovat a hádat správné tahy.
+6. Tip: Tento krok je vhodné jednorázově spustit po každém víkendovém návalu nových nahraných partií od dětí!
 
 ---
 

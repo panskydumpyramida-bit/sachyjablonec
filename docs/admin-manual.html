@@ -579,6 +579,13 @@
                     <div class="toc-desc">Rychlé bloky přes /</div>
                 </div>
             </a>
+            <a href="#blundergrid" class="toc-item">
+                <div class="toc-num" style="background: rgba(234,179,8,0.1); color: #eab308;">10</div>
+                <div>
+                    <div class="toc-text">Blunder Grid</div>
+                    <div class="toc-desc">Správa tréninku hrubek</div>
+                </div>
+            </a>
         </div>
 
         <!-- 1. Dashboard -->
@@ -1106,6 +1113,30 @@
                 <div class="callout callout-tip">
                     <span class="callout-icon">💡</span>
                     <span><strong>TIP:</strong> Tlačítko (CTA) můžete kdykoliv upravit – stačí na něj v editoru <strong>dvakrát kliknout</strong> a zadat nový odkaz URL.</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 11. Blunder Grid -->
+        <div class="section" id="blundergrid">
+            <div class="section-header">
+                <i class="fa-solid fa-triangle-exclamation" style="background: rgba(234,179,8,0.1); color: #eab308;"></i>
+                <h2>Blunder Grid</h2>
+            </div>
+            <div class="card">
+                <h3>Trénink na vlastních chybách</h3>
+                <p>Členové oddílu si mohou v Členské sekci procházet interaktivní mřížku se svými chybami z reálných partií. Mřížka využívá pokročilou analytiku změny Pravděpodobnosti výhry (Win %). Níže je popsáno jak tyto statistiky manuálně zaktualizovat.</p>
+                
+                <h3 style="margin-top:1.5rem;">Jak vygenerovat data</h3>
+                <ol>
+                    <li>Otevřete terminál na doménovém serveru nebo localhostu v kořenovém adresáři.</li>
+                    <li>Spusťte příkaz <code>npm run generate-blunders</code>.</li>
+                    <li>Tento proces zanalyzuje posledních několik neuložených partií z lokální databáze (s využitím hybridního fallbacku na lokálního Stockfish engina, pokud API limituje requesty). Zjistí "Misses" (nepotrestané soupeřovy chyby) a "Blunders" (vlastní omyly).</li>
+                    <li>Data se bezpečně zapíší do lokálního souboru a od té doby si z nich členská sekce automaticky žije.</li>
+                </ol>
+                <div class="callout callout-info">
+                    <span class="callout-icon">ℹ️</span>
+                    <span><strong>Tip:</strong> Skript stačí zavolat jednorázově na serveru například po odehrání celého víkendového soustředění dětí, jakmile naskenujete a obohatíte databázi. Není to live-endpoint.</span>
                 </div>
             </div>
         </div>
