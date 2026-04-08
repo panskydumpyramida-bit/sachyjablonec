@@ -142,8 +142,8 @@
                         <strong>Prezence na místě:</strong> končí v 17:15
                     </p>
                     <p style="font-size: 0.9em; margin-top: 0.5rem;">
-                        <strong>Kapacita sálů:</strong> Máme k dispozici <strong>2 sály</strong>, maximální kapacita je
-                        proto navýšena na <strong>44 hráčů</strong>. Kdo dřív přijde (nebo se dřív přihlásí), ten hraje!
+                        <strong>Kapacita:</strong> Maximální kapacita turnaje je
+                        <strong>32 hráčů</strong>. Kdo dřív přijde (nebo se dřív přihlásí), ten hraje!
                     </p>
                     <p style="font-size: 0.9em; margin-top: 0.5rem; color: var(--text-muted);">
                         <i class="fa-solid fa-chess-board"></i> Hrací materiál zajistí pořadatel.
@@ -294,7 +294,7 @@
                 if (!res.ok) throw new Error('Failed to fetch registrations');
                 const registrations = await res.json();
 
-                const capacity = 44;
+                const capacity = 32;
                 const count = registrations.length;
 
                 // Update Participants List
