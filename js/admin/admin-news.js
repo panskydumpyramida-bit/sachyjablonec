@@ -1300,6 +1300,26 @@ function toggleGalleryUrlInput() {
 function addGalleryFromUrl() {
     const url = document.getElementById('galleryImageUrl').value.trim();
     if (url) {
+        // Kontrola jestli jde o pole JSON
+        if (url.startsWith('[') && url.endsWith(']')) {
+            try {
+                const arr = JSON.parse(url);
+                arr.forEach(item => {
+                    if (typeof item === 'string') {
+                        galleryImages.push({ url: item, caption: '' });
+                    } else if (item.url) {
+                        galleryImages.push(item);
+                    }
+                });
+                renderGallery();
+                document.getElementById('galleryImageUrl').value = '';
+                showToast('JSON galerie úspěšně importována', 'success');
+                return;
+            } catch (e) {
+                console.error("Failed to parse gallery JSON", e);
+            }
+        }
+        
         galleryImages.push({ url, caption: '' });
         renderGallery();
         document.getElementById('galleryImageUrl').value = '';
