@@ -41,7 +41,42 @@
 
         <section class="container" style="padding-top: 3rem;">
 
-            <div style="text-align: center; margin-bottom: 3rem;">
+            <!-- Tournament Completed Banner -->
+            <div style="max-width: 600px; margin: 0 auto 2rem; text-align: center; padding: 2rem; background: rgba(212,175,55,0.08); border-radius: 12px; border: 1px solid rgba(212,175,55,0.25);">
+                <i class="fa-solid fa-flag-checkered" style="font-size: 2.5rem; color: var(--primary-color); margin-bottom: 1rem;"></i>
+                <h3 style="color: var(--primary-color); margin-bottom: 0.5rem;">Turnaj proběhl!</h3>
+                <p style="color: var(--text-muted);">Děkujeme všem 33 účastníkům za skvělou atmosféru.</p>
+            </div>
+
+            <!-- Results Section (dynamically populated) -->
+            <div id="topResultsPlaceholder"></div>
+
+            <!-- Chess-Results Standings (collapsible) -->
+            <div style="max-width: 800px; margin: 2rem auto;">
+                <details id="crDetails"
+                    style="background: rgba(255, 255, 255, 0.03); border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.1); overflow: hidden;">
+                    <summary
+                        style="padding: 1rem; cursor: pointer; font-weight: 600; list-style: none; display: flex; align-items: center; justify-content: space-between; user-select: none;">
+                        <span><i class="fa-solid fa-list-ol"
+                                style="color: var(--primary-color); margin-right: 0.5rem;"></i>
+                            Konečné pořadí <span id="crCountBadge"
+                                style="font-size: 0.8em; background: rgba(255,255,255,0.1); padding: 2px 8px; border-radius: 12px; margin-left: 0.5rem;">0</span></span>
+                        <i class="fa-solid fa-chevron-down" style="font-size: 0.8em; transition: transform 0.3s;"></i>
+                    </summary>
+                    <div id="crList" style="padding: 0 1rem 1rem 1rem; max-height: 500px; overflow-y: auto;">
+                        <p style="text-align: center; color: var(--text-muted); padding: 1rem;">Načítám výsledky...</p>
+                    </div>
+                </details>
+            </div>
+
+            <!-- Gallery Section -->
+            <div id="gallerySection" style="display: none; margin-top: 3rem; margin-bottom: 3rem;">
+                <h2 class="section-title" style="left: auto; transform: none; margin-bottom: 2rem;"><i class="fa-solid fa-images" style="margin-right: 0.5rem;"></i> Fotogalerie</h2>
+                <div id="galleryGrid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 1rem;"></div>
+            </div>
+
+            <!-- Propozice (under results) -->
+            <div style="text-align: center; margin-bottom: 3rem; margin-top: 3rem;">
                 <h2 class="section-title" style="left: auto; transform: none;">Propozice turnaje</h2>
                 <div style="font-size: 1.2rem; color: var(--primary-color); font-weight: bold; margin-bottom: 1rem;">
                     9. 4. 2026 od 17:30
@@ -149,40 +184,6 @@
                         <i class="fa-solid fa-chess-board"></i> Hrací materiál zajistí pořadatel.
                     </p>
                 </div>
-            </div>
-
-            <!-- Tournament Completed Banner -->
-            <div style="max-width: 600px; margin: 2rem auto; text-align: center; padding: 2rem; background: rgba(212,175,55,0.08); border-radius: 12px; border: 1px solid rgba(212,175,55,0.25);">
-                <i class="fa-solid fa-flag-checkered" style="font-size: 2.5rem; color: var(--primary-color); margin-bottom: 1rem;"></i>
-                <h3 style="color: var(--primary-color); margin-bottom: 0.5rem;">Turnaj proběhl!</h3>
-                <p style="color: var(--text-muted);">Děkujeme všem 33 účastníkům za skvělou atmosféru. Výsledky a fotogalerie níže.</p>
-            </div>
-
-            <!-- Results Section (dynamically populated) -->
-            <div id="topResultsPlaceholder"></div>
-
-            <!-- Chess-Results Standings (collapsible) -->
-            <div style="max-width: 800px; margin: 2rem auto;">
-                <details id="crDetails"
-                    style="background: rgba(255, 255, 255, 0.03); border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.1); overflow: hidden;">
-                    <summary
-                        style="padding: 1rem; cursor: pointer; font-weight: 600; list-style: none; display: flex; align-items: center; justify-content: space-between; user-select: none;">
-                        <span><i class="fa-solid fa-list-ol"
-                                style="color: var(--primary-color); margin-right: 0.5rem;"></i>
-                            Konečné pořadí <span id="crCountBadge"
-                                style="font-size: 0.8em; background: rgba(255,255,255,0.1); padding: 2px 8px; border-radius: 12px; margin-left: 0.5rem;">0</span></span>
-                        <i class="fa-solid fa-chevron-down" style="font-size: 0.8em; transition: transform 0.3s;"></i>
-                    </summary>
-                    <div id="crList" style="padding: 0 1rem 1rem 1rem; max-height: 500px; overflow-y: auto;">
-                        <p style="text-align: center; color: var(--text-muted); padding: 1rem;">Načítám výsledky...</p>
-                    </div>
-                </details>
-            </div>
-
-            <!-- Gallery Section -->
-            <div id="gallerySection" style="display: none; margin-top: 3rem; margin-bottom: 3rem;">
-                <h2 class="section-title" style="left: auto; transform: none; margin-bottom: 2rem;"><i class="fa-solid fa-images" style="margin-right: 0.5rem;"></i> Fotogalerie</h2>
-                <div id="galleryGrid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 1rem;"></div>
             </div>
 
             <div style="text-align: center; margin-top: 3rem; margin-bottom: 3rem;">
