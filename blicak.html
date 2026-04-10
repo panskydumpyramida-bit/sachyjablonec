@@ -51,24 +51,6 @@
             <!-- Results Section (dynamically populated) -->
             <div id="topResultsPlaceholder"></div>
 
-            <!-- Chess-Results Standings (collapsible) -->
-            <div style="max-width: 800px; margin: 2rem auto;">
-                <details id="crDetails"
-                    style="background: rgba(255, 255, 255, 0.03); border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.1); overflow: hidden;">
-                    <summary
-                        style="padding: 1rem; cursor: pointer; font-weight: 600; list-style: none; display: flex; align-items: center; justify-content: space-between; user-select: none;">
-                        <span><i class="fa-solid fa-list-ol"
-                                style="color: var(--primary-color); margin-right: 0.5rem;"></i>
-                            Konečné pořadí <span id="crCountBadge"
-                                style="font-size: 0.8em; background: rgba(255,255,255,0.1); padding: 2px 8px; border-radius: 12px; margin-left: 0.5rem;">0</span></span>
-                        <i class="fa-solid fa-chevron-down" style="font-size: 0.8em; transition: transform 0.3s;"></i>
-                    </summary>
-                    <div id="crList" style="padding: 0 1rem 1rem 1rem; max-height: 500px; overflow-y: auto;">
-                        <p style="text-align: center; color: var(--text-muted); padding: 1rem;">Načítám výsledky...</p>
-                    </div>
-                </details>
-            </div>
-
             <!-- Gallery Section -->
             <div id="gallerySection" style="display: none; margin-top: 3rem; margin-bottom: 3rem;">
                 <h2 class="section-title" style="left: auto; transform: none; margin-bottom: 2rem;"><i class="fa-solid fa-images" style="margin-right: 0.5rem;"></i> Fotogalerie</h2>
@@ -214,88 +196,21 @@
         }
 
         async function loadChessResults() {
-            const listEl = document.getElementById('crList');
-            const badgeEl = document.getElementById('crCountBadge');
-            const resultsContainer = document.getElementById('resultsContainer');
-            // Element for detail summary title
-            const crDetailsSummary = document.querySelector('#crDetails summary span');
-
-            // Results URL (art=1 for standings)
             const resultsUrl = 'https://chess-results.com/tnr1389644.aspx?lan=5&art=1&rd=10';
-            // Start List URL (fallback/secondary)
             const startListUrl = 'https://chess-results.com/tnr1389644.aspx?lan=5&art=0';
 
             try {
-                // Try loading results
-                // We ask our scraper to fetch the Results URL
                 const res = await fetch(`${API_URL}/scraping/chess-results?url=${encodeURIComponent(resultsUrl)}`);
                 if (!res.ok) throw new Error('Failed to load results');
                 const data = await res.json();
 
-                // Check if we got results (scraper now auto-detects 'results' if points are found)
                 if ((data.type === 'results' || data.players.some(p => p.isResult)) && data.players.length > 0) {
-
-                    // 1. Render Top 3 Podium
                     renderResultsTop(data.players, startListUrl);
-
-                    // 2. Update the "Details" List to show Full Standings
-                    badgeEl.textContent = data.count || 0;
-
-                    // Update header text in details
-                    if (crDetailsSummary) {
-                        crDetailsSummary.innerHTML = `<i class="fa-solid fa-list-ol" style="color: var(--primary-color); margin-right: 0.5rem;"></i> Konečné pořadí <span id="crCountBadge" style="font-size: 0.8em; background: rgba(255,255,255,0.1); padding: 2px 8px; border-radius: 12px; margin-left: 0.5rem;">${data.count}</span>`;
-                    }
-
-                    listEl.innerHTML = data.players.map(p => `
-                        <div class="participant-item" style="display: grid; grid-template-columns: 35px 1fr auto 50px; gap: 10px; align-items: center;">
-                            <span style="color: var(--text-muted); font-size: 0.9em;">${p.rank}.</span>
-                            <div style="min-width: 0;">
-                                <div style="font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${p.name}</div>
-                                <div style="font-size: 0.8em; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${p.club}</div>
-                            </div>
-                            <div style="text-align: right; font-family: monospace; color: var(--text-muted); font-size: 0.85em;">${p.elo || ''}</div>
-                            <div style="text-align: right; font-weight: bold; color: var(--primary-color);">${p.points}</div>
-                        </div>
-                    `).join('');
-
                 } else {
-                    // Fallback to start list logic if no results parsing succeeded
-                    console.log('Results parsing returned no points, trying startlist fallback.');
-                    loadStartList(startListUrl);
-                }
-
-            } catch (e) {
-                console.error(e);
-                // Fallback
-                loadStartList(startListUrl);
-            }
-        }
-
-        async function loadStartList(url) {
-            const listEl = document.getElementById('crList');
-            const badgeEl = document.getElementById('crCountBadge');
-
-            try {
-                const res = await fetch(`${API_URL}/scraping/chess-results?url=${encodeURIComponent(url)}`);
-                const data = await res.json();
-                badgeEl.textContent = data.count || 0;
-
-                if (data.players && data.players.length > 0) {
-                    listEl.innerHTML = data.players.map(p => `
-                        <div class="participant-item" style="display: grid; grid-template-columns: 30px 1fr 60px; gap: 10px; align-items: center;">
-                            <span style="color: var(--text-muted); font-size: 0.9em;">${p.rank}.</span>
-                            <div>
-                                <div style="font-weight: 500;">${p.name}</div>
-                                <div style="font-size: 0.8em; color: var(--text-muted);">${p.club}</div>
-                            </div>
-                            <div style="text-align: right; font-family: monospace; color: var(--primary-color);">${p.elo}</div>
-                        </div>
-                    `).join('');
-                } else {
-                    listEl.innerHTML = '<p style="text-align: center; color: var(--text-muted); padding: 1rem;">Žádní hráči nenalezeni.</p>';
+                    console.log('No results found from Chess-Results.');
                 }
             } catch (e) {
-                listEl.innerHTML = '<p style="text-align: center; color: #ef4444; padding: 1rem;">Nepodařilo se načíst data.</p>';
+                console.error('Chess-Results load failed:', e);
             }
         }
 
