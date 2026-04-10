@@ -151,75 +151,42 @@
                 </div>
             </div>
 
-            <div class="registration-form" id="regFormContainer">
-                <div id="capacityStatus"
-                    style="text-align: center; margin-bottom: 2rem; padding: 1rem; background: rgba(0,0,0,0.3); border-radius: 8px; border: 1px solid rgba(255,255,255,0.1);">
-                    <i class="fa-solid fa-spinner fa-spin"></i> Načítám volná místa...
-                </div>
-
-                <h2 style="text-align: center; margin-bottom: 1.5rem;">Online Přihláška</h2>
-                <form id="blicakForm">
-                    <div class="form-group">
-                        <label for="name">Jméno a Příjmení *</label>
-                        <input type="text" id="name" name="name" required placeholder="Jan Novák">
-                    </div>
-
-                    <div class="form-group">
-                        <label for="club">Oddíl (nepovinné)</label>
-                        <input type="text" id="club" name="club" placeholder="např. TJ Bižuterie Jablonec">
-                    </div>
-
-                    <div class="form-group">
-                        <label for="lok">Číslo LOK (registrace ŠSČR)</label>
-                        <input type="number" id="lok" name="lok" placeholder="např. 12345">
-                        <small style="color: var(--text-muted); display: block; margin-top: 0.25rem;">Naleznete na <a
-                                href="https://www.chess.cz/hraci-vyhledavani/" target="_blank"
-                                style="color: var(--primary-color);">chess.cz</a></small>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="year">Ročník narození *</label>
-                        <input type="number" id="year" name="year" required placeholder="např. 2010" min="1900"
-                            max="2025">
-                    </div>
-
-                    <button type="submit" class="submit-btn" id="submitBtn">Odeslat přihlášku</button>
-                    <p id="formMessage" style="margin-top: 1rem; text-align: center; display: none;"></p>
-
-                    <p
-                        style="font-size: 0.75em; color: var(--text-muted); margin-top: 1.5rem; line-height: 1.5; text-align: justify;">
-                        <i class="fa-solid fa-shield-halved" style="margin-right: 0.3rem;"></i>
-                        <strong>GDPR:</strong> Přihlášením do turnaje účastník, popřípadě zákonný zástupce účastníka,
-                        dává souhlas
-                        se zpracováním osobních údajů nutných pro zápočet turnajů na LOK a další prezentaci výsledků.
-                        Taktéž dává souhlas s pořízením jeho fotografií, jejich uchováním a prezentací pro potřeby
-                        pořadatelů a sponzorů.
-                    </p>
-                </form>
+            <!-- Tournament Completed Banner -->
+            <div style="max-width: 600px; margin: 2rem auto; text-align: center; padding: 2rem; background: rgba(212,175,55,0.08); border-radius: 12px; border: 1px solid rgba(212,175,55,0.25);">
+                <i class="fa-solid fa-flag-checkered" style="font-size: 2.5rem; color: var(--primary-color); margin-bottom: 1rem;"></i>
+                <h3 style="color: var(--primary-color); margin-bottom: 0.5rem;">Turnaj proběhl!</h3>
+                <p style="color: var(--text-muted);">Děkujeme všem 33 účastníkům za skvělou atmosféru. Výsledky a fotogalerie níže.</p>
             </div>
 
-            <!-- List of Participants -->
-            <div style="max-width: 600px; margin: 2rem auto;">
-                <details id="participantsDetails"
+            <!-- Results Section (dynamically populated) -->
+            <div id="topResultsPlaceholder"></div>
+
+            <!-- Chess-Results Standings (collapsible) -->
+            <div style="max-width: 800px; margin: 2rem auto;">
+                <details id="crDetails"
                     style="background: rgba(255, 255, 255, 0.03); border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.1); overflow: hidden;">
                     <summary
                         style="padding: 1rem; cursor: pointer; font-weight: 600; list-style: none; display: flex; align-items: center; justify-content: space-between; user-select: none;">
-                        <span><i class="fa-solid fa-users"
+                        <span><i class="fa-solid fa-list-ol"
                                 style="color: var(--primary-color); margin-right: 0.5rem;"></i>
-                            Seznam přihlášených <span id="countBadge"
+                            Konečné pořadí <span id="crCountBadge"
                                 style="font-size: 0.8em; background: rgba(255,255,255,0.1); padding: 2px 8px; border-radius: 12px; margin-left: 0.5rem;">0</span></span>
                         <i class="fa-solid fa-chevron-down" style="font-size: 0.8em; transition: transform 0.3s;"></i>
                     </summary>
-                    <div id="participantsList" style="padding: 0 1rem 1rem 1rem; max-height: 400px; overflow-y: auto;">
-                        <p style="text-align: center; color: var(--text-muted); padding: 1rem;">Načítám seznam...</p>
+                    <div id="crList" style="padding: 0 1rem 1rem 1rem; max-height: 500px; overflow-y: auto;">
+                        <p style="text-align: center; color: var(--text-muted); padding: 1rem;">Načítám výsledky...</p>
                     </div>
                 </details>
             </div>
 
-
+            <!-- Gallery Section -->
+            <div id="gallerySection" style="display: none; margin-top: 3rem; margin-bottom: 3rem;">
+                <h2 class="section-title" style="left: auto; transform: none; margin-bottom: 2rem;"><i class="fa-solid fa-images" style="margin-right: 0.5rem;"></i> Fotogalerie</h2>
+                <div id="galleryGrid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 1rem;"></div>
+            </div>
 
             <div style="text-align: center; margin-top: 3rem; margin-bottom: 3rem;">
-                <h3>Těšíme se na Vaši účast!</h3>
+                <h3>Děkujeme za účast!</h3>
                 <p style="font-size: 1.5rem; font-weight: bold; color: var(--text-color);">ŠACHU ZDAR!</p>
             </div>
 
@@ -233,150 +200,14 @@
     <script src="js/lightbox.js" defer></script>
     <script src="js/main.js" defer></script>
     <script>
-        document.getElementById('blicakForm').addEventListener('submit', async function (e) {
-            e.preventDefault();
-            const btn = document.getElementById('submitBtn');
-            const msg = document.getElementById('formMessage');
-
-            btn.disabled = true;
-            btn.textContent = 'Odesílám...';
-
-            const formData = {
-                name: document.getElementById('name').value,
-                club: document.getElementById('club').value,
-                lok: document.getElementById('lok').value,
-                year: document.getElementById('year').value,
-                tournamentId: 'velikonocni-2026'
-            };
-
-            try {
-                const response = await fetch(`${API_URL}/registration/blicak`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(formData)
-                });
-
-                if (response.ok) {
-                    msg.style.display = 'block';
-                    msg.style.color = '#4ade80'; // green
-                    msg.textContent = 'Přihláška byla úspěšně odeslána. Děkujeme!';
-                    this.reset();
-                    // Update capacity and participants list BEFORE replacing the form
-                    await checkCapacity();
-                    // Now replace the form with success message
-                    document.getElementById('regFormContainer').innerHTML = `
-                        <div style="text-align:center; padding: 2rem;">
-                            <i class="fa-solid fa-check-circle" style="font-size: 3rem; color: #4ade80; margin-bottom: 1rem;"></i>
-                            <h3>Přihlášeno!</h3>
-                            <p>Těšíme se na vás na turnaji.</p>
-                        </div>
-                    `;
-                } else {
-                    throw new Error('Chyba při odesílání');
-                }
-            } catch (error) {
-                console.error(error);
-                msg.style.display = 'block';
-                msg.style.color = '#ef4444'; // red
-                msg.textContent = 'Něco se pokazilo. Zkuste to prosím později nebo napište email.';
-                btn.disabled = false;
-                btn.textContent = 'Odeslat přihlášku';
-            }
-        });
-
-        // Check Capacity Function
-        async function checkCapacity() {
-            const statusEl = document.getElementById('capacityStatus');
-            if (!statusEl) return;
-
-            try {
-                const res = await fetch(`${API_URL}/registration/blicak?tournament=velikonocni-2026`);
-                if (!res.ok) throw new Error('Failed to fetch registrations');
-                const registrations = await res.json();
-
-                const capacity = 32;
-                const count = registrations.length;
-
-                // Update Participants List
-                const listEl = document.getElementById('participantsList');
-                const badgeEl = document.getElementById('countBadge');
-                if (listEl && badgeEl) {
-                    badgeEl.textContent = count;
-
-                    if (count === 0) {
-                        listEl.innerHTML = '<p style="text-align: center; color: var(--text-muted); padding: 0.5rem;">Zatím nikdo, buď první!</p>';
-                    } else {
-                        // Sort alphabetically by name
-                        registrations.sort((a, b) => a.name.localeCompare(b.name, 'cs'));
-
-                        listEl.innerHTML = registrations.map(reg => {
-                            const isVip = reg.name.includes('Antonín Duda') || reg.name.includes('Tonda Duda') || reg.name.includes('Duda Antonín') || reg.name.includes('Předseda Tonda');
-                            const highlightClass = isVip ? 'gold-highlight' : '';
-
-                            let nameIcons = '';
-                            if (isVip) nameIcons += '<i class="fa-solid fa-crown" style="margin-right:0.3rem; font-size:0.8em;"></i>';
-
-                            let ageIcons = '';
-                            const year = parseInt(reg.birthYear);
-                            // Rok 2026: 15 let = 2011, 60 let = 1966
-                            if (year >= 2011) {
-                                ageIcons += '<span title="Mládež (≤15 let)" style="margin-right:0.3rem; font-size:0.9em;">🧒</span>';
-                            } else if (year <= 1966) {
-                                ageIcons += '<span title="Senior (60+)" style="margin-right:0.3rem; font-size:0.9em;">👴</span>';
-                            }
-
-                            return `
-                                <div class="participant-item ${highlightClass}">
-                                    <span>${nameIcons}${reg.name}</span>
-                                    <span class="p-year">${ageIcons}${reg.birthYear}</span>
-                                </div>
-                            `;
-                        }).join('');
-                    }
-                }
-                const remaining = Math.max(0, capacity - count);
-
-                // Color coding
-                let color = '#4ade80'; // green
-                if (remaining < 10) color = '#fbbf24'; // orange
-                if (remaining < 5) color = '#f87171'; // red
-
-                statusEl.innerHTML = `
-                    <div style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 0.2rem;">Volná místa</div>
-                    <div style="font-size: 2rem; font-weight: bold; color: ${color};">
-                        ${remaining} <span style="font-size: 1rem; color: var(--text-muted); font-weight: normal;">/ ${capacity}</span>
-                    </div>
-                    ${remaining === 0 ? '<div style="color: #f87171; font-weight: bold; margin-top: 0.5rem;">Turnaj je plně obsazen!</div>' : ''}
-                `;
-
-                // If full, disable form (optional, but good UX)
-                if (remaining === 0) {
-                    const btn = document.getElementById('submitBtn');
-                    if (btn) {
-                        btn.disabled = true;
-                        btn.textContent = 'Turnaj je obsazen';
-                        btn.style.background = '#4b5563';
-                        btn.style.cursor = 'not-allowed';
-                    }
-                }
-
-            } catch (e) {
-                console.error('Error checking capacity:', e);
-                statusEl.innerHTML = '<span style="color: var(--text-muted);">Informace o kapacitě nedostupné</span>';
-            }
-        }
-
-
 
         // Run on load
         if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', () => {
-                checkCapacity();
                 loadChessResults();
                 loadGallery();
             });
         } else {
-            checkCapacity();
             loadChessResults();
             loadGallery();
         }
@@ -389,9 +220,9 @@
             const crDetailsSummary = document.querySelector('#crDetails summary span');
 
             // Results URL (art=1 for standings)
-            const resultsUrl = 'https://chess-results.com/tnr1317368.aspx?lan=5&art=1&rd=10';
+            const resultsUrl = 'https://chess-results.com/tnr1389644.aspx?lan=5&art=1&rd=10';
             // Start List URL (fallback/secondary)
-            const startListUrl = 'https://chess-results.com/tnr1317368.aspx?lan=5&art=0';
+            const startListUrl = 'https://chess-results.com/tnr1389644.aspx?lan=5&art=0';
 
             try {
                 // Try loading results
@@ -595,15 +426,14 @@
 
             let allImages = [];
 
-            // 1. Load from Article 54 (official DB)
+            // Load from Article 18 (Velikonoční vejce 2026)
             try {
-                const res = await fetch(`${API_URL}/news/54`);
+                const res = await fetch(`${API_URL}/news/18`);
                 if (res.ok) {
                     const article = await res.json();
                     if (article.galleryJson) {
                         try {
                             const dbImages = JSON.parse(article.galleryJson);
-                            // Ensure objects
                             const normalizedDbImages = dbImages.map(img => {
                                 if (typeof img === 'string') return { url: img, caption: '', altText: '' };
                                 return img;
@@ -616,23 +446,6 @@
                 }
             } catch (e) {
                 console.warn('Gallery load from DB failed/skipped', e);
-            }
-
-            // 2. Load from David Safarik JSON (local static file)
-            try {
-                const res = await fetch('images/blicak/2024-safarik/gallery.json');
-                if (res.ok) {
-                    const safarikImages = await res.json();
-                    // Add credit metadata to these images
-                    const mappedSafarik = safarikImages.map(url => ({
-                        url: url,
-                        caption: 'Foto: David Šafařík',
-                        altText: 'Vánoční blicák 2024 - Foto: David Šafařík'
-                    }));
-                    allImages = allImages.concat(mappedSafarik);
-                }
-            } catch (e) {
-                console.warn('Gallery load from JSON failed', e);
             }
 
             // Store globally for lightbox
