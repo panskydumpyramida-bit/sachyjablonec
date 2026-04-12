@@ -1847,6 +1847,8 @@ input:checked+.slider:before {
     border-radius: 12px;
     padding: 1.25rem;
     border: 1px solid var(--editor-border);
+    overflow: hidden;
+    min-width: 0;
 }
 
 .activity-title {
@@ -1955,6 +1957,15 @@ input:checked+.slider:before {
     font-size: 0.75rem;
     color: var(--text-muted);
     margin-top: 0.35rem;
+    flex-wrap: wrap;
+    overflow: hidden;
+}
+
+.activity-meta a,
+.activity-meta span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .activity-news {
@@ -2705,10 +2716,13 @@ textarea.auto-resize {
         min-width: 0;
     }
 
-    .activity-item span,
-    .activity-item div {
-        overflow-wrap: break-word;
-        word-break: break-word;
+    .activity-text {
+        white-space: normal !important;
+    }
+
+    .activity-meta {
+        flex-direction: column;
+        gap: 0.25rem;
     }
 
     /* Site settings: stack on mobile */
