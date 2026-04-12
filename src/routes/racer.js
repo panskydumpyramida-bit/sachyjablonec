@@ -316,9 +316,13 @@ router.get('/my-stats', async (req, res) => {
         });
         const bestToday = bestTodayResult._max.score || null;
 
-        // --- Best This Week ---
-        const weekStart = new Date();
-        weekStart.setDate(weekStart.getDate() - 7);
+        // --- Best This Week (Monday-Sunday ISO week) ---
+        const now = new Date();
+        const dayOfWeek = now.getDay();
+        const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+        const weekStart = new Date(now);
+        weekStart.setDate(now.getDate() + mondayOffset);
+        weekStart.setHours(0, 0, 0, 0);
         const bestWeekResult = await prisma.puzzleRaceResult.aggregate({
             where: { userId, mode, createdAt: { gte: weekStart } },
             _max: { score: true }
@@ -591,9 +595,14 @@ router.get('/leaderboard', async (req, res) => {
         }
 
         if (period === 'week') {
-            const oneWeekAgo = new Date();
-            oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
-            whereClause.createdAt = { gte: oneWeekAgo };
+            // Start from Monday 00:00 of current ISO week
+            const now = new Date();
+            const dayOfWeek = now.getDay(); // 0=Sun, 1=Mon, ...
+            const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+            const monday = new Date(now);
+            monday.setDate(now.getDate() + mondayOffset);
+            monday.setHours(0, 0, 0, 0);
+            whereClause.createdAt = { gte: monday };
         }
 
         // Fetch more results to ensure we get enough unique players
