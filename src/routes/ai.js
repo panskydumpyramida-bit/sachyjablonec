@@ -144,6 +144,78 @@ Odpověz POUZE HTML kódem tabulky, bez vysvětlení.`
 });
 
 /**
+ * POST /api/ai/annotate
+ * Generate Czech verbal annotation for a chess position/move
+ * Translates engine evaluation into child-friendly explanation
+ */
+router.post('/annotate', async (req, res) => {
+    if (!OPENAI_ENABLED) {
+        return res.status(503).json({ error: 'AI není nakonfigurováno' });
+    }
+
+    try {
+        const { fen, movePlayed, bestMove, evalBefore, evalAfter, moveNumber, color } = req.body;
+
+        if (!fen) {
+            return res.status(400).json({ error: 'FEN je povinný' });
+        }
+
+        const evalDiff = evalAfter !== undefined && evalBefore !== undefined
+            ? Math.abs(evalAfter - evalBefore)
+            : null;
+
+        const prompt = `Jsi šachový trenér dětí (8-15 let) v českém šachovém klubu. Popiš stručně česky co se stalo v této pozici.
+
+Pozice (FEN): ${fen}
+Tah č. ${moveNumber || '?'} (${color === 'w' ? 'bílý' : 'černý'}): ${movePlayed || '?'}
+${bestMove ? `Nejlepší tah podle enginu: ${bestMove}` : ''}
+${evalBefore !== undefined ? `Hodnocení před tahem: ${evalBefore > 0 ? '+' : ''}${evalBefore}` : ''}
+${evalAfter !== undefined ? `Hodnocení po tahu: ${evalAfter > 0 ? '+' : ''}${evalAfter}` : ''}
+${evalDiff !== null && evalDiff > 0.5 ? `Ztráta: ${evalDiff.toFixed(1)} pěšce` : ''}
+
+Pravidla:
+- Piš 1-2 věty česky, srozumitelně pro děti
+- Pokud je tah chybný, vysvětli PROČ je špatný a co bylo lepší (ale nepiš notaci, piš slovně: "lépe bylo vyvinout jezdce" apod.)
+- Pokud je tah dobrý, pochval ho stručně
+- Pokud je tah neutrální, popiš strategickou myšlenku
+- Nepoužívej hodnocení v centipěšcích — piš lidsky
+- Odpověz POUZE komentářem, bez uvozovek a bez prefixu`;
+
+        const response = await fetch('https://api.openai.com/v1/chat/completions', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${OPENAI_API_KEY}`
+            },
+            body: JSON.stringify({
+                model: 'gpt-4o-mini',
+                messages: [
+                    { role: 'system', content: 'Jsi stručný šachový komentátor pro děti. Odpovídáš vždy 1-2 větami česky.' },
+                    { role: 'user', content: prompt }
+                ],
+                temperature: 0.7,
+                max_tokens: 200
+            })
+        });
+
+        if (!response.ok) {
+            const error = await response.json();
+            console.error('[AI] Annotate error:', error);
+            return res.status(500).json({ error: 'Chyba při volání AI' });
+        }
+
+        const data = await response.json();
+        const annotation = data.choices[0]?.message?.content?.trim() || '';
+
+        res.json({ annotation });
+
+    } catch (error) {
+        console.error('[AI] Annotate error:', error);
+        res.status(500).json({ error: 'Interní chyba serveru' });
+    }
+});
+
+/**
  * GET /api/ai/status
  * Check if AI is configured
  */
