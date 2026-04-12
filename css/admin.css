@@ -2645,7 +2645,52 @@ textarea.auto-resize {
 
     /* Stack stat cards vertically on mobile */
     .dashboard-stats {
-        grid-template-columns: 1fr !important;
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 0.5rem;
+    }
+
+    .stat-card {
+        padding: 0.75rem !important;
+    }
+
+    .stat-card-value {
+        font-size: 1.25rem !important;
+    }
+
+    .stat-card::after {
+        display: none;
+    }
+
+    /* Quick actions: horizontal wrap on mobile */
+    .quick-actions-grid {
+        flex-direction: row;
+        flex-wrap: wrap;
+    }
+
+    .quick-action-btn {
+        flex: 1 1 calc(50% - 0.2rem);
+        min-width: 0;
+        font-size: 0.7rem;
+        padding: 0.5rem 0.6rem;
+    }
+
+    .quick-action-btn:first-child {
+        flex: 1 1 100%;
+    }
+
+    /* Timeline: reduce padding on mobile */
+    .activity-panel .activity-list-wrapper {
+        padding-left: 1rem;
+    }
+
+    .activity-item::before {
+        left: -1rem;
+        width: 6px;
+        height: 6px;
+    }
+
+    .activity-panel .activity-list-wrapper::before {
+        left: 0.35rem;
     }
 
     /* Hide nav text labels on mobile header */
@@ -2653,4 +2698,14 @@ textarea.auto-resize {
         display: none;
     }
 
+}
+
+@media (max-width: 480px) {
+    .dashboard-stats {
+        grid-template-columns: 1fr !important;
+    }
+
+    .quick-action-btn {
+        flex: 1 1 100%;
+    }
 }
