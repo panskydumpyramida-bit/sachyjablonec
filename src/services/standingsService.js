@@ -309,23 +309,21 @@ export async function updateStandings(competitions = null) {
                     where: { competitionId: competitionResult.competitionId }
                 });
 
-                for (const s of competitionResult.standings) {
-                    await tx.standing.create({
-                        data: {
-                            competitionId: competitionResult.competitionId,
-                            team: s.team,
-                            rank: parseInt(s.rank) || 0,
-                            snr: s.snr ? parseInt(s.snr) : null,
-                            games: s.games,
-                            wins: s.wins,
-                            draws: s.draws,
-                            losses: s.losses,
-                            points: s.points,
-                            score: s.score,
-                            scheduleJson: JSON.stringify(s.schedule || [])
-                        }
-                    });
-                }
+                await tx.standing.createMany({
+                    data: competitionResult.standings.map(s => ({
+                        competitionId: competitionResult.competitionId,
+                        team: s.team,
+                        rank: parseInt(s.rank) || 0,
+                        snr: s.snr ? parseInt(s.snr) : null,
+                        games: s.games,
+                        wins: s.wins,
+                        draws: s.draws,
+                        losses: s.losses,
+                        points: s.points,
+                        score: s.score,
+                        scheduleJson: JSON.stringify(s.schedule || [])
+                    }))
+                });
             }, {
                 timeout: 20000
             });

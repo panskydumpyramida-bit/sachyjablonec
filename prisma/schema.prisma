@@ -64,7 +64,10 @@ model Comment {
   author    User     @relation(fields: [authorId], references: [id])
   parent    Comment? @relation("CommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
   replies   Comment[] @relation("CommentReplies")
-  
+
+  @@index([newsId])
+  @@index([authorId])
+  @@index([parentId])
   @@map("comments")
 }
 
@@ -112,7 +115,9 @@ model News {
   viewCount     Int       @default(0) @map("view_count")
   
   images        Image[]
-  
+
+  @@index([isPublished, publishedDate])
+  @@index([category])
   @@map("news")
 }
 
@@ -439,7 +444,8 @@ model ForumPost {
   
   topic     ForumTopic @relation(fields: [topicId], references: [id], onDelete: Cascade)
   author    User       @relation(fields: [authorId], references: [id])
-  
+
+  @@index([topicId])
   @@map("forum_posts")
 }
 

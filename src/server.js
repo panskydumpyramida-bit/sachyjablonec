@@ -1,6 +1,8 @@
 // Main server file
 import express from 'express';
 import cors from 'cors';
+import helmet from 'helmet';
+import rateLimit from 'express-rate-limit';
 import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -59,8 +61,44 @@ app.use((req, res, next) => {
     next();
 });
 
-// Basic Middleware
-app.use(cors());
+// Security headers
+app.use(helmet({
+    contentSecurityPolicy: {
+        directives: {
+            defaultSrc: ["'self'"],
+            scriptSrc: ["'self'", "'unsafe-inline'", "https://code.jquery.com", "https://cdnjs.cloudflare.com", "https://www.googletagmanager.com", "https://www.google-analytics.com", "https://unpkg.com"],
+            styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com", "https://cdnjs.cloudflare.com"],
+            imgSrc: ["'self'", "data:", "https:", "blob:"],
+            fontSrc: ["'self'", "https://fonts.gstatic.com", "https://cdnjs.cloudflare.com"],
+            connectSrc: ["'self'", "https://lichess.org", "https://www.googleapis.com", "https://chess-results.com", "https://www.google-analytics.com"],
+            frameSrc: ["'self'", "https://lichess.org"],
+            objectSrc: ["'none'"],
+            upgradeInsecureRequests: [],
+        },
+    },
+    crossOriginEmbedderPolicy: false,
+    crossOriginResourcePolicy: { policy: 'cross-origin' },
+}));
+
+// CORS
+const allowedOrigins = process.env.ALLOWED_ORIGINS
+    ? process.env.ALLOWED_ORIGINS.split(',').map(o => o.trim())
+    : ['http://localhost:3000', 'http://localhost:5500', 'http://127.0.0.1:5500'];
+
+app.use(cors({
+    origin: (origin, callback) => {
+        if (!origin || allowedOrigins.includes(origin)) {
+            callback(null, true);
+        } else {
+            callback(null, false);
+        }
+    },
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Club-Password']
+}));
+
+// Body parsing
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
@@ -247,6 +285,16 @@ app.get('/index.html', servePage('index.html'));
 // Initialize Passport for OAuth
 app.use(passport.initialize());
 
+// Global API rate limiter (auth routes have their own stricter limiter)
+const apiLimiter = rateLimit({
+    windowMs: 60 * 1000,
+    max: 100,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { error: 'Too many requests, please try again later' },
+});
+app.use('/api', apiLimiter);
+
 // API Routes - MUST be before static catch-all
 app.use('/api/auth', authRoutes);
 app.use('/api/auth', oauthRoutes);  // OAuth routes (Google login)
@@ -279,15 +327,6 @@ import { updateStandings } from "./services/standingsService.js";
 import { seedDatabase, seedCompetitions } from "./utils/seed.js";
 
 
-// Middleware
-app.use(cors({
-    origin: true, // Allow all origins
-    credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'X-Club-Password']
-}));
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
 
 // Serve specific static directories
 // (Redundant block removed - already handled at top of file)

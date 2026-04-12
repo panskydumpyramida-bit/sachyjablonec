@@ -1,5 +1,6 @@
 import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcrypt';
+import crypto from 'crypto';
 
 const prisma = new PrismaClient();
 
@@ -31,7 +32,12 @@ async function main() {
     }
 
     // Create other admins if they don't exist
-    const commonPasswordHash = await bcrypt.hash('sachy2025', 10);
+    const seedPassword = process.env.SEED_PASSWORD || crypto.randomBytes(16).toString('hex');
+    if (!process.env.SEED_PASSWORD) {
+        console.log(`⚠️  No SEED_PASSWORD env var set. Generated random password for seed users: ${seedPassword}`);
+        console.log('   Set SEED_PASSWORD in .env to use a specific password.');
+    }
+    const commonPasswordHash = await bcrypt.hash(seedPassword, 10);
 
     const existingFilip = await prisma.user.findUnique({ where: { username: 'filip' } });
     const filip = await prisma.user.upsert({

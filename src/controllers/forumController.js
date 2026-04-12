@@ -1,4 +1,5 @@
 import { PrismaClient } from '@prisma/client';
+import { sanitizeUserContent } from '../utils/sanitize.js';
 
 const prisma = new PrismaClient();
 
@@ -72,8 +73,8 @@ export const createTopic = async (req, res) => {
 
         const topic = await prisma.forumTopic.create({
             data: {
-                title: title.trim(),
-                content: content.trim(),
+                title: sanitizeUserContent(title.trim()),
+                content: sanitizeUserContent(content.trim()),
                 authorId: req.user.id
             },
             include: {
@@ -115,7 +116,7 @@ export const createPost = async (req, res) => {
 
         const post = await prisma.forumPost.create({
             data: {
-                content: content.trim(),
+                content: sanitizeUserContent(content.trim()),
                 topicId: parseInt(topicId),
                 authorId: req.user.id
             },

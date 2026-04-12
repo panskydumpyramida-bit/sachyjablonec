@@ -309,7 +309,7 @@ async function loadNews(options = {}) {
                             ${item.viewCount !== undefined ? `<span title="Počet zobrazení"><i class="fa-regular fa-eye" style="font-size: 0.8em;"></i> ${item.viewCount}</span>` : ''}
                         </div>
 
-                        <p class="card-excerpt">${item.excerpt}</p>
+                        <p class="card-excerpt">${escapeHtml(item.excerpt)}</p>
                         ${getCommentsIndicator(item)}
                         <a href="${getArticleUrl(item)}" class="read-more" onclick="event.stopPropagation()">
                             Číst více <i class="fa-solid fa-arrow-right"></i>
@@ -329,7 +329,7 @@ async function loadNews(options = {}) {
                                 
                                 <div style="line-height: 1.6; color: var(--text-light); margin-bottom: 1.5rem;">
                                     ${displayMode === 'full'
-                    ? (item.content || `<p>${escapeHtml(item.excerpt || '')}</p>`)
+                    ? (typeof sanitizeHtml === 'function' ? sanitizeHtml(item.content || '') : escapeHtml(item.content || '')) || `<p>${escapeHtml(item.excerpt || '')}</p>`
                     : `<p>${escapeHtml(item.excerpt || '')}</p>`
                 }
                                 </div>

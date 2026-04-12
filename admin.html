@@ -1352,10 +1352,40 @@
             </div>
 
             <div class="changelog-timeline">
+                <!-- 2026-04-12 v32 -->
+                <div class="changelog-entry">
+                    <div class="changelog-date">12. 4. 2026</div>
+                    <div class="changelog-version" style="background:var(--primary-color);color:#000;">v32</div>
+                    <div class="changelog-content">
+                        <h4>🔒 Bezpečnostní audit & Kvalita kódu</h4>
+                        <ul>
+                            <li><strong>Helmet:</strong> Přidány bezpečnostní HTTP hlavičky — CSP, X-Frame-Options, HSTS, X-Content-Type-Options s whitelistem CDN zdrojů.</li>
+                            <li><strong>CORS:</strong> Odstraněna duplicitní konfigurace, <code>origin: true</code> nahrazeno <code>ALLOWED_ORIGINS</code> z env vars.</li>
+                            <li><strong>Sanitace vstupů:</strong> Nový <code>sanitize-html</code> na backendu pro komentáře, forum a zprávy. Na frontendu nová <code>sanitizeHtml()</code> utility pro zobrazení článků.</li>
+                            <li><strong>Hardcoded hesla:</strong> Odstraněno plaintext heslo ze <code>seed.js</code> — nyní z env var nebo náhodně generované.</li>
+                            <li><strong>Rate limiting:</strong> Globální API limiter 100 req/min.</li>
+                        </ul>
+                        <h4>🧪 Testy & Linting</h4>
+                        <ul>
+                            <li><strong>Vitest:</strong> 33 unit testů pro auth middleware, RBAC hierarchii a sanitizační funkce.</li>
+                            <li><strong>ESLint + Prettier:</strong> Přidána konfigurace pro backend i frontend.</li>
+                            <li><strong>Race condition fix:</strong> Auth inicializace přepsána z <code>3× setTimeout</code> na <code>CustomEvent('auth:ready')</code>.</li>
+                        </ul>
+                        <h4>⚡ Performance & A11y</h4>
+                        <ul>
+                            <li><strong>DB indexy:</strong> Comment (newsId, authorId), News (isPublished+date), ForumPost (topicId).</li>
+                            <li><strong>Batch standings:</strong> <code>createMany</code> místo cyklu <code>create</code>.</li>
+                            <li><strong>Keyboard dropdown:</strong> Enter/Space/ArrowDown/Escape + <code>aria-haspopup</code>, <code>:focus-within</code>.</li>
+                            <li><strong>WCAG AA kontrast:</strong> <code>--text-muted</code> #a0a0a0 → #b0b0b0 (5.57:1).</li>
+                            <li><strong>Smooth scroll:</strong> <code>scroll-behavior: smooth</code> + <code>scroll-padding-top</code>.</li>
+                            <li><strong>Optimalizace obrázků:</strong> Nový skript <code>optimize-images.mjs</code> (sharp) — PNG→WebP + komprese.</li>
+                        </ul>
+                    </div>
+                </div>
                 <!-- 2026-04-01 v31 -->
                 <div class="changelog-entry">
                     <div class="changelog-date">1. 4. 2026</div>
-                    <div class="changelog-version" style="background:var(--primary-color);color:#000;">v31</div>
+                    <div class="changelog-version">v31</div>
                     <div class="changelog-content">
                         <h4>🎯 Členská sekce: Blunder Grid & Sken přihlášek</h4>
                         <ul>

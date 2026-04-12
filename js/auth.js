@@ -32,6 +32,9 @@ if (typeof AuthManager === 'undefined') {
                 // For guests, still update UI to show login/register buttons
                 this.updateUI();
             }
+
+            // Signal that auth is ready for other components (e.g. layout-loader)
+            document.dispatchEvent(new CustomEvent('auth:ready'));
         }
 
         // Subscribe to auth state changes
