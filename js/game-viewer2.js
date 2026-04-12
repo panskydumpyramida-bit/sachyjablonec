@@ -2720,7 +2720,7 @@ class GameViewer2 {
             const moveNumber = Math.ceil(history.length / 2);
             const evalData = this.lastAnalysisData || {};
 
-            const res = await fetch(`${window.API_URL || ''}/api/ai/annotate`, {
+            const res = await fetch(`${window.API_URL || '/api'}/ai/annotate`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
