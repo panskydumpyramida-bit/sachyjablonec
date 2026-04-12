@@ -2188,17 +2188,7 @@ textarea.auto-resize {
     scroll-behavior: smooth;
 }
 
-.admin-nav::after {
-    content: '';
-    position: sticky;
-    right: 0;
-    top: 0;
-    bottom: 0;
-    width: 40px;
-    background: linear-gradient(to left, #0f172a 30%, transparent);
-    pointer-events: none;
-    flex-shrink: 0;
-}
+/* Scroll fade indicator removed — was blocking clicks on tabs */
 
 /* Nav tab: subtle glow on active */
 .nav-tab.active {
@@ -2467,12 +2457,12 @@ textarea.auto-resize {
     display: block;
 }
 
-/* --- Tooltip (global) --- */
-[data-tooltip] {
+/* --- Tooltip (admin buttons only) --- */
+.admin-container [data-tooltip] {
     position: relative;
 }
 
-[data-tooltip]:hover::after {
+.admin-container [data-tooltip]:hover::after {
     content: attr(data-tooltip);
     position: absolute;
     bottom: calc(100% + 6px);
@@ -2539,9 +2529,6 @@ textarea.auto-resize {
         border-color: var(--primary-color);
     }
 
-    .admin-nav::after {
-        width: 30px;
-    }
 }
 
 @media (max-width: 768px) {
