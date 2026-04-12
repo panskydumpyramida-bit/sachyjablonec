@@ -1,5 +1,6 @@
 import { PrismaClient } from '@prisma/client';
 import { sendEmail } from '../utils/mailer.js';
+import { sanitizeUserContent } from '../utils/sanitize.js';
 
 const prisma = new PrismaClient();
 
@@ -103,7 +104,7 @@ export const createComment = async (req, res) => {
 
         const comment = await prisma.comment.create({
             data: {
-                content: content.trim(),
+                content: sanitizeUserContent(content.trim()),
                 newsId: parseInt(newsId),
                 authorId: req.user.id,
                 parentId: parentId ? parseInt(parentId) : null
@@ -170,7 +171,7 @@ export const updateComment = async (req, res) => {
 
         const updated = await prisma.comment.update({
             where: { id: parseInt(id) },
-            data: { content: content.trim() },
+            data: { content: sanitizeUserContent(content.trim()) },
             include: {
                 author: {
                     select: { id: true, username: true, realName: true, useRealName: true, role: true }

@@ -1,5 +1,6 @@
 import jwt from 'jsonwebtoken';
 import { PrismaClient } from '@prisma/client';
+import { sanitizeUserContent } from '../utils/sanitize.js';
 
 const prisma = new PrismaClient();
 const CLUB_PASSWORD = process.env.CLUB_PASSWORD || 'gambitjbc';
@@ -52,7 +53,7 @@ export const createMessage = async (req, res) => {
         }
 
         const message = await prisma.message.create({
-            data: { author, content, type }
+            data: { author: sanitizeUserContent(author), content: sanitizeUserContent(content), type }
         });
         res.status(201).json(message);
     } catch (error) {

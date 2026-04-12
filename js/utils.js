@@ -168,7 +168,73 @@ function formatRelativeTime(date) {
     return d.toLocaleDateString('cs-CZ');
 }
 
+/**
+ * Sanitize HTML content — strips dangerous tags/attributes while keeping safe formatting.
+ * Use for server-rendered HTML (articles, etc). For user text input, use escapeHtml() instead.
+ * @param {string} html - HTML string to sanitize
+ * @returns {string} Sanitized HTML
+ */
+function sanitizeHtml(html) {
+    if (!html) return '';
+
+    const ALLOWED_TAGS = new Set([
+        'p', 'br', 'strong', 'b', 'em', 'i', 'u', 'a', 'img', 'span', 'div',
+        'ul', 'ol', 'li', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
+        'table', 'thead', 'tbody', 'tr', 'td', 'th', 'caption',
+        'code', 'pre', 'blockquote', 'figure', 'figcaption',
+        'details', 'summary', 'hr', 'sup', 'sub', 'del', 'ins', 'mark',
+        'picture', 'source', 'video', 'iframe'
+    ]);
+
+    const ALLOWED_ATTRS = new Set([
+        'href', 'src', 'alt', 'title', 'class', 'id', 'style',
+        'target', 'rel', 'width', 'height', 'loading', 'decoding',
+        'colspan', 'rowspan', 'srcset', 'media', 'type',
+        'allowfullscreen', 'frameborder', 'allow'
+    ]);
+
+    const DANGEROUS_URI_PATTERN = /^\s*(javascript|data\s*:(?!image\/))/i;
+
+    const doc = new DOMParser().parseFromString(html, 'text/html');
+
+    function cleanNode(node) {
+        const children = Array.from(node.childNodes);
+        for (const child of children) {
+            if (child.nodeType === Node.ELEMENT_NODE) {
+                const tag = child.tagName.toLowerCase();
+                if (!ALLOWED_TAGS.has(tag)) {
+                    // Replace disallowed element with its children (keep text)
+                    while (child.firstChild) {
+                        node.insertBefore(child.firstChild, child);
+                    }
+                    node.removeChild(child);
+                    continue;
+                }
+                // Remove disallowed attributes and event handlers
+                const attrs = Array.from(child.attributes);
+                for (const attr of attrs) {
+                    const name = attr.name.toLowerCase();
+                    if (name.startsWith('on') || !ALLOWED_ATTRS.has(name)) {
+                        child.removeAttribute(attr.name);
+                    } else if ((name === 'href' || name === 'src') && DANGEROUS_URI_PATTERN.test(attr.value)) {
+                        child.removeAttribute(attr.name);
+                    }
+                }
+                // Force safe link attributes
+                if (tag === 'a') {
+                    child.setAttribute('rel', 'noopener noreferrer');
+                }
+                cleanNode(child);
+            }
+        }
+    }
+
+    cleanNode(doc.body);
+    return doc.body.innerHTML;
+}
+
 // Export to global scope for non-module scripts
+window.sanitizeHtml = sanitizeHtml;
 window.escapeHtml = escapeHtml;
 window.formatDate = formatDate;
 window.formatDateTime = formatDateTime;

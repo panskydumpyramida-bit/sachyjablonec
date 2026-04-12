@@ -11,7 +11,8 @@ async function loadComponent(id, file) {
 
             if (file === 'header.html') {
                 setActiveLink();
-                initMobileMenu(); // Re-init mobile menu after loading header
+                initMobileMenu();
+                initDropdownKeyboard();
 
                 // Inject auth.css if not already present
                 if (!document.querySelector('link[href*="auth.css"]')) {
@@ -22,11 +23,9 @@ async function loadComponent(id, file) {
                 }
 
                 // Initialize auth UI after header is loaded
-                // Handle race condition: auth may or may not be initialized yet
                 const initAuthUI = () => {
                     if (typeof auth !== 'undefined') {
                         if (!auth.initialized && auth.init) {
-                            console.log('LayoutLoader: Calling auth.init() explicitely');
                             auth.init();
                         } else if (auth.updateUI) {
                             auth.updateUI();
@@ -34,12 +33,11 @@ async function loadComponent(id, file) {
                     }
                 };
 
-                // Try immediately
+                // Try immediately (auth may already be initialized)
                 initAuthUI();
 
-                // Also retry after a short delay in case auth.js hasn't initialized yet
-                setTimeout(initAuthUI, 100);
-                setTimeout(initAuthUI, 500);
+                // Listen for auth:ready event in case auth initializes later
+                document.addEventListener('auth:ready', initAuthUI, { once: true });
             }
         }
     } catch (e) {
@@ -135,6 +133,50 @@ function initMobileMenu() {
     }
 }
 
+
+function initDropdownKeyboard() {
+    const dropdowns = document.querySelectorAll('.dropdown > a[aria-haspopup]');
+    dropdowns.forEach(trigger => {
+        trigger.addEventListener('keydown', (e) => {
+            const menu = trigger.nextElementSibling;
+            if (!menu) return;
+            const items = menu.querySelectorAll('a');
+
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                const isOpen = trigger.getAttribute('aria-expanded') === 'true';
+                trigger.setAttribute('aria-expanded', !isOpen);
+                if (!isOpen && items.length) items[0].focus();
+            } else if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                trigger.setAttribute('aria-expanded', 'true');
+                if (items.length) items[0].focus();
+            } else if (e.key === 'Escape') {
+                trigger.setAttribute('aria-expanded', 'false');
+                trigger.focus();
+            }
+        });
+
+        const menu = trigger.nextElementSibling;
+        if (!menu) return;
+        menu.addEventListener('keydown', (e) => {
+            const items = Array.from(menu.querySelectorAll('a'));
+            const idx = items.indexOf(document.activeElement);
+
+            if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                if (idx < items.length - 1) items[idx + 1].focus();
+            } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                if (idx > 0) items[idx - 1].focus();
+                else trigger.focus();
+            } else if (e.key === 'Escape') {
+                trigger.setAttribute('aria-expanded', 'false');
+                trigger.focus();
+            }
+        });
+    });
+}
 
 document.addEventListener('DOMContentLoaded', () => {
     const version = window.APP_VERSION || Date.now();

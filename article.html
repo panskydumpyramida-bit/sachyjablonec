@@ -206,6 +206,7 @@
 
     <footer id="global-footer"></footer>
 
+    <script src="js/utils.js?v=2" defer></script>
     <script src="js/config.js?v=4" defer></script>
     <script src="js/layout-loader.js?v=5" defer></script>
     <script src="js/main.js?v=2" defer></script>
@@ -294,7 +295,7 @@
             }
 
             if (authorName) {
-                authorMeta.innerHTML = `<i class="fa-solid fa-user-pen"></i> ${authorName}`;
+                authorMeta.innerHTML = `<i class="fa-solid fa-user-pen"></i> ${escapeHtml(authorName)}`;
                 // Insert after category
                 document.getElementById('articleCategory').parentNode.appendChild(authorMeta);
             }
@@ -310,7 +311,7 @@
                 document.getElementById('articleCategory').parentNode.appendChild(viewMeta);
             }
 
-            document.getElementById('articleBody').innerHTML = article.content || '';
+            document.getElementById('articleBody').innerHTML = typeof sanitizeHtml === 'function' ? sanitizeHtml(article.content || '') : (article.content || '');
 
             // Initialize diagram books after content is loaded (they load async after DOMContentLoaded)
             // Use requestAnimationFrame to ensure browser has completed reflow before chessboard.js calculates dimensions

@@ -1,5 +1,30 @@
 # 📋 Changelog
 
+## 12. dubna 2026 (v32)
+
+### 🔒 Bezpečnostní zpevnění
+- **Helmet middleware:** Přidány bezpečnostní HTTP hlavičky (CSP, X-Frame-Options, HSTS, X-Content-Type-Options) s whitelistem povolených CDN zdrojů.
+- **Oprava CORS:** Odstraněna duplicitní konfigurace CORS (`origin: true` nahrazeno `ALLOWED_ORIGINS` z env vars). Odstraněny duplicitní `express.json()` a `express.urlencoded()` middleware.
+- **Sanitace vstupů (backend):** Nový `sanitize-html` modul. Komentáře, forum posty a zprávy se nyní sanitizují při ukládání do DB (`sanitizeUserContent()`).
+- **Sanitace HTML (frontend):** Nová `sanitizeHtml()` utility v `utils.js` (DOMParser + whitelist tagů/atributů). Aplikováno na zobrazení článků (`article.html`, `news-loader.js`). Opravena chybějící escape na `item.excerpt`.
+- **Hardcoded hesla:** Odstraněno plaintext heslo `sachy2025` ze `seed.js` — nahrazeno `process.env.SEED_PASSWORD` s fallbackem na náhodně generované heslo.
+- **Rate limiting:** Globální API limiter (100 req/min) pro všechny `/api` endpointy.
+
+### 🧪 Kvalita kódu
+- **Testy:** Přidán Vitest + Supertest. 33 unit testů pro auth middleware, RBAC hierarchii a sanitizační funkce.
+- **Linting:** Přidán ESLint (flat config) + Prettier pro backend i frontend. Scripty `lint`, `lint:fix`, `format`.
+- **Race condition fix:** Auth inicializace přepsána z `3x setTimeout` na `CustomEvent('auth:ready')` — eliminuje blikání UI.
+
+### ⚡ Performance
+- **DB indexy:** Přidány chybějící indexy na `Comment` (newsId, authorId, parentId), `News` (isPublished+publishedDate, category) a `ForumPost` (topicId).
+- **Batch zápis standings:** `standing.create` v cyklu nahrazen za `standing.createMany` — jedno SQL místo N.
+- **Optimalizace obrázků:** Nový skript `scripts/optimize-images.mjs` (sharp) pro konverzi PNG→WebP + kompresi. Dry run: 30+ souborů, odhadovaná úspora ~70%.
+
+### ♿ Přístupnost (A11y)
+- **Keyboard navigace dropdown:** Menu nyní funguje s klávesnicí — Enter/Space otevře, ArrowDown/Up naviguje, Escape zavře. Přidány `aria-haspopup`, `aria-expanded` atributy. CSS `:focus-within` na `.dropdown`.
+- **Kontrast textu:** `--text-muted` zvýšen z `#a0a0a0` (4.26:1) na `#b0b0b0` (5.57:1) — splňuje WCAG AA.
+- **Smooth scroll:** Přidán `scroll-behavior: smooth` a `scroll-padding-top: 80px`.
+
 ## 1. dubna 2026 (v31)
 
 ### 🎯 Členská sekce: Blunder Grid
