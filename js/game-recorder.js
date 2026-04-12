@@ -9,6 +9,8 @@ let currentGameId = null;
 let moveComments = {};
 let moveNags = {};
 let startingFen = null;
+let articleEditMode = false;
+let articleEditGameIndex = null;
 
 // ========================================
 // Move Tree Data Structure
@@ -805,6 +807,28 @@ async function saveGame() {
     const black = document.getElementById('blackPlayer').value;
     const result = document.getElementById('result').value;
 
+    // Article edit mode — send PGN back to admin editor
+    if (articleEditMode) {
+        let fenHeader = '';
+        if (startingFen) {
+            fenHeader = `[SetUp "1"]\n[FEN "${startingFen}"]\n`;
+        }
+        const pgnHeader = `[White "${white}"]\n[Black "${black}"]\n[Result "${result}"]\n${fenHeader}\n`;
+        const fullPgn = pgnHeader + generateAnnotatedPgn();
+
+        // Try postMessage to opener (admin editor)
+        const payload = { type: 'pgn-edited', gameIndex: articleEditGameIndex, pgn: fullPgn, white, black };
+        if (window.opener) {
+            window.opener.postMessage(payload, '*');
+        }
+        // Also save to localStorage as fallback
+        localStorage.setItem('edited_pgn_result', JSON.stringify(payload));
+
+        showNotification('PGN uloženo do článku!', 'success');
+        setTimeout(() => window.close(), 1000);
+        return;
+    }
+
     const clubToken = localStorage.getItem('club_auth_token');
     const userToken = localStorage.getItem('auth_token') || sessionStorage.getItem('auth_token');
 
@@ -1522,7 +1546,43 @@ document.addEventListener('DOMContentLoaded', () => {
     const diagramId = urlParams.get('diagramId');
     const importLocal = urlParams.get('import');
 
-    if (importLocal === 'local') {
+    if (importLocal === 'article') {
+        // Article edit mode — load PGN from article editor, save back via postMessage
+        const rawData = localStorage.getItem('article_edit_pgn');
+        if (rawData) {
+            try {
+                const data = JSON.parse(rawData);
+                localStorage.removeItem('article_edit_pgn');
+                articleEditMode = true;
+                articleEditGameIndex = data.gameIndex;
+
+                // Fill player inputs
+                const whiteInput = document.getElementById('whitePlayer');
+                const blackInput = document.getElementById('blackPlayer');
+                if (whiteInput && data.white) whiteInput.value = data.white;
+                if (blackInput && data.black) blackInput.value = data.black;
+
+                // Import PGN
+                const pgnInput = document.getElementById('importPgnInput');
+                if (pgnInput && data.pgn) {
+                    pgnInput.value = data.pgn;
+                    setTimeout(() => {
+                        importPgn();
+                        showNotification('Partie načtena z článku. Po úpravách klikněte "Uložit do článku".', 'info');
+                    }, 300);
+                }
+
+                // Change save button text
+                const saveBtn = document.querySelector('.main-btn');
+                if (saveBtn) {
+                    saveBtn.innerHTML = '<i class="fa-solid fa-file-import"></i> Uložit do článku';
+                    saveBtn.title = 'Uloží komentované PGN zpět do editoru článku';
+                }
+            } catch (e) {
+                console.error('Failed to parse article_edit_pgn', e);
+            }
+        }
+    } else if (importLocal === 'local') {
         const pgnData = localStorage.getItem('import_pgn');
         if (pgnData) {
             localStorage.removeItem('import_pgn');
@@ -1532,7 +1592,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 setTimeout(() => {
                     importPgn();
                     showNotification('Partie přenesena k úpravám. Změny se do článku samy nepropíší, tvoříte lokální kopii/fragment.', 'info');
-                }, 300); // Give UI time to initialize
+                }, 300);
             }
         }
     } else if (gameId) {
