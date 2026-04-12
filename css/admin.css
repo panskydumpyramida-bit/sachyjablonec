@@ -2737,7 +2737,7 @@ textarea.auto-resize {
     }
 }
 
-@media (max-width: 480px) {
+@media (max-width: 600px) {
     .dashboard-stats {
         grid-template-columns: 1fr !important;
     }
@@ -2747,6 +2747,17 @@ textarea.auto-resize {
     }
 
     .quick-action-btn {
-        flex: 1 1 100%;
+        flex: 1 1 100% !important;
+    }
+
+    /* Site settings - ensure single column */
+    .site-settings-panel label {
+        min-width: unset !important;
+    }
+}
+
+@media (max-width: 480px) {
+    .stat-card-value {
+        font-size: 1.1rem !important;
     }
 }
