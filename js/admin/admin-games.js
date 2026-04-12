@@ -5,6 +5,27 @@
  * @requires js/utils.js (escapeHtml)
  */
 
+// Switch between recorded/article games sub-tabs
+function switchGamesSubtab(tab) {
+    const recorded = document.getElementById('recordedGamesPanel');
+    const article = document.getElementById('articleGamesPanel');
+    if (!recorded || !article) return;
+
+    document.querySelectorAll('.games-subtab').forEach(b => b.classList.remove('active'));
+
+    if (tab === 'article') {
+        recorded.style.display = 'none';
+        article.style.display = 'block';
+        document.getElementById('subtabArticle')?.classList.add('active');
+        loadArticleGames();
+    } else {
+        recorded.style.display = 'block';
+        article.style.display = 'none';
+        document.getElementById('subtabRecorded')?.classList.add('active');
+    }
+}
+window.switchGamesSubtab = switchGamesSubtab;
+
 // Load all recorded games
 async function loadRecordedGames() {
     try {
@@ -39,9 +60,12 @@ async function loadRecordedGames() {
                     <button class="action-btn btn-edit" onclick="previewGamePgn(${game.id})" title="Náhled">
                         <i class="fa-solid fa-eye"></i>
                     </button>
-                    <a href="/game-recorder?id=${game.id}" target="_blank" class="action-btn btn-edit" title="Upravit">
+                    <a href="/game-recorder?id=${game.id}" target="_blank" class="action-btn btn-edit" title="Upravit / Komentovat">
                         <i class="fa-solid fa-edit"></i>
                     </a>
+                    <button class="action-btn" onclick="copyGamePgnToClipboard(${game.id})" title="Kopírovat PGN" style="color: #60a5fa;">
+                        <i class="fa-solid fa-copy"></i>
+                    </button>
                     <a href="${API_URL}/games/${game.id}/pgn" download class="action-btn btn-edit" title="Stáhnout PGN">
                         <i class="fa-solid fa-download"></i>
                     </a>
@@ -145,12 +169,86 @@ function copyToClipboard(text) {
     });
 }
 
+// Load games from articles (News.gamesJson)
+async function loadArticleGames() {
+    try {
+        const categories = ['Soutěže družstev', 'Oddílový přebor', 'Mládež', 'turnaje', 'O nás'];
+        let allGames = [];
+
+        for (const cat of categories) {
+            const res = await fetch(`${API_URL}/viewer-games?category=${encodeURIComponent(cat)}`);
+            if (res.ok) {
+                const games = await res.json();
+                allGames = allGames.concat(games);
+            }
+        }
+
+        const tbody = document.getElementById('articleGamesTableBody');
+        if (!tbody) return;
+
+        if (allGames.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: var(--text-muted); padding: 2rem;">Žádné partie v článcích</td></tr>';
+            return;
+        }
+
+        tbody.innerHTML = allGames.map(game => {
+            const hasPgn = !!game.pgn;
+            const badge = hasPgn
+                ? '<span style="background:#3b82f6;color:white;padding:2px 6px;border-radius:3px;font-size:0.7rem;">PGN</span>'
+                : '<span style="background:#81b64c;color:white;padding:2px 6px;border-radius:3px;font-size:0.7rem;">CC</span>';
+            const commented = game.isCommented || game.commented
+                ? ' <i class="fa-solid fa-comment-dots" style="color: #f59e0b; font-size: 0.75rem;" title="Komentovaná"></i>'
+                : '';
+
+            return `
+            <tr>
+                <td>${new Date(game.date).toLocaleDateString('cs-CZ')}</td>
+                <td>${escapeHtml(game.white || '?')} - ${escapeHtml(game.black || '?')} ${badge}${commented}</td>
+                <td>${escapeHtml(game.team || '')}</td>
+                <td style="font-size: 0.8rem; color: var(--text-muted);">${escapeHtml(game.newsTitle || '')}</td>
+                <td>
+                    ${hasPgn ? `<button class="action-btn" onclick="openArticleGameInEditor('${escapeHtml(game.pgn?.replace(/'/g, "\\'").replace(/\n/g, "\\n") || '')}', '${escapeHtml(game.white || '')}', '${escapeHtml(game.black || '')}')" title="Otevřít v editoru" style="color: #f59e0b;"><i class="fa-solid fa-comment-dots"></i></button>` : ''}
+                    ${game.chessComId ? `<a href="https://www.chess.com/analysis/game/live/${game.chessComId}" target="_blank" class="action-btn btn-edit" title="Chess.com"><i class="fa-solid fa-external-link-alt"></i></a>` : ''}
+                </td>
+            </tr>`;
+        }).join('');
+
+    } catch (error) {
+        console.error('Error loading article games:', error);
+    }
+}
+
+// Open article game PGN in game-recorder for commenting
+function openArticleGameInEditor(pgn, white, black) {
+    localStorage.setItem('import_pgn', pgn.replace(/\\n/g, '\n'));
+    window.open('game-recorder.html?import=local', '_blank');
+}
+
+// Copy game PGN to clipboard (for pasting into article editor)
+async function copyGamePgnToClipboard(id) {
+    try {
+        const res = await fetch(`${API_URL}/games/${id}`, {
+            headers: { 'Authorization': `Bearer ${authToken}` }
+        });
+        if (!res.ok) throw new Error('Failed to fetch game');
+        const game = await res.json();
+        await navigator.clipboard.writeText(game.pgn || '');
+        showAlert('PGN zkopírováno — vložte ho do článku přes "Přidat PGN partii"', 'success');
+    } catch (e) {
+        console.error('Copy failed:', e);
+        showAlert('Chyba při kopírování PGN', 'error');
+    }
+}
+
 // Export for global access
 window.loadRecordedGames = loadRecordedGames;
 window.deleteRecordedGame = deleteRecordedGame;
 window.previewGamePgn = previewGamePgn;
 window.closePgnPreview = closePgnPreview;
 window.copyToClipboard = copyToClipboard;
+window.copyGamePgnToClipboard = copyGamePgnToClipboard;
+window.loadArticleGames = loadArticleGames;
+window.openArticleGameInEditor = openArticleGameInEditor;
 
 // ================================
 // DIAGRAMS CRUD
