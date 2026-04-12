@@ -71,7 +71,7 @@ app.use(helmet({
             styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com", "https://cdnjs.cloudflare.com", "https://unpkg.com"],
             imgSrc: ["'self'", "data:", "https:", "blob:", "https://chessboardjs.com"],
             fontSrc: ["'self'", "https://fonts.gstatic.com", "https://cdnjs.cloudflare.com"],
-            connectSrc: ["'self'", "https://lichess.org", "https://www.googleapis.com", "https://chess-results.com", "https://www.google-analytics.com"],
+            connectSrc: ["'self'", "https://lichess.org", "https://chess-api.com", "https://www.googleapis.com", "https://chess-results.com", "https://www.google-analytics.com"],
             frameSrc: ["'self'", "https://lichess.org", "https://mapy.cz"],
             objectSrc: ["'none'"],
             upgradeInsecureRequests: [],
