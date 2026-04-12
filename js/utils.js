@@ -203,7 +203,6 @@ function sanitizeHtml(html) {
             if (child.nodeType === Node.ELEMENT_NODE) {
                 const tag = child.tagName.toLowerCase();
                 if (!ALLOWED_TAGS.has(tag)) {
-                    // Replace disallowed element with its children (keep text)
                     while (child.firstChild) {
                         node.insertBefore(child.firstChild, child);
                     }
@@ -214,7 +213,10 @@ function sanitizeHtml(html) {
                 const attrs = Array.from(child.attributes);
                 for (const attr of attrs) {
                     const name = attr.name.toLowerCase();
-                    if (name.startsWith('on') || !ALLOWED_ATTRS.has(name)) {
+                    // Allow data-* attributes (used by fragments, diagrams, etc.)
+                    if (name.startsWith('on')) {
+                        child.removeAttribute(attr.name);
+                    } else if (!ALLOWED_ATTRS.has(name) && !name.startsWith('data-')) {
                         child.removeAttribute(attr.name);
                     } else if ((name === 'href' || name === 'src') && DANGEROUS_URI_PATTERN.test(attr.value)) {
                         child.removeAttribute(attr.name);
