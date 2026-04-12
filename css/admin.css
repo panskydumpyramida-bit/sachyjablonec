@@ -23,10 +23,16 @@
 .login-container {
     max-width: 400px;
     margin: 150px auto;
-    padding: 2rem;
+    padding: 2.5rem;
     background: var(--surface-color);
-    border-radius: var(--border-radius);
+    border-radius: 12px;
     border: 1px solid var(--editor-border);
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+    animation: adminSlideUp 0.3s ease;
+}
+
+.login-container input::placeholder {
+    color: rgba(255, 255, 255, 0.2);
 }
 
 .admin-header {
@@ -2170,4 +2176,391 @@ textarea.auto-resize {
     width: 1px;
     background: rgba(255, 255, 255, 0.1);
     margin: 0 0.2rem;
+}
+
+/* =========================================
+   v32 UI POLISH — Admin Panel Improvements
+   ========================================= */
+
+/* --- Nav: scroll fade indicators --- */
+.admin-nav {
+    position: relative;
+    scroll-behavior: smooth;
+}
+
+.admin-nav::after {
+    content: '';
+    position: sticky;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    width: 40px;
+    background: linear-gradient(to left, #0f172a 30%, transparent);
+    pointer-events: none;
+    flex-shrink: 0;
+}
+
+/* Nav tab: subtle glow on active */
+.nav-tab.active {
+    box-shadow: 0 2px 8px rgba(212, 175, 55, 0.25);
+}
+
+.nav-tab {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.nav-tab i {
+    font-size: 0.85em;
+    opacity: 0.8;
+}
+
+/* --- Dashboard stat cards: glass effect + better gradients --- */
+.stat-card {
+    position: relative;
+    overflow: hidden;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+}
+
+.stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: var(--accent-color, var(--primary-color));
+    opacity: 0.8;
+}
+
+.stat-card-value {
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.025em;
+}
+
+/* --- Data tables: zebra striping + better rows --- */
+.data-table tbody tr:nth-child(even) {
+    background: rgba(255, 255, 255, 0.015);
+}
+
+.data-table tbody tr {
+    transition: background 0.15s ease;
+}
+
+.data-table tbody tr:hover {
+    background: rgba(212, 175, 55, 0.06);
+}
+
+.data-table th {
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+}
+
+/* Table row actions: appear on hover */
+.data-table .row-actions {
+    opacity: 0.5;
+    transition: opacity 0.15s;
+}
+
+.data-table tr:hover .row-actions {
+    opacity: 1;
+}
+
+/* --- Status badges: pill style + subtle glow --- */
+.status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+}
+
+.status-published {
+    box-shadow: 0 0 8px rgba(34, 197, 94, 0.15);
+}
+
+.status-draft {
+    border: 1px solid rgba(148, 163, 184, 0.2);
+}
+
+/* --- Buttons: better hierarchy + ripple hint --- */
+.btn-primary {
+    position: relative;
+    overflow: hidden;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+}
+
+.btn-primary:active {
+    transform: translateY(0) scale(0.98);
+}
+
+.btn-edit:hover {
+    background: rgba(96, 165, 250, 0.2);
+    color: #93c5fd;
+}
+
+.btn-delete:hover {
+    background: rgba(220, 38, 38, 0.3);
+    color: #fca5a5;
+}
+
+.btn-publish:hover {
+    background: rgba(34, 197, 94, 0.3);
+    color: #86efac;
+}
+
+/* --- Forms: focus ring + validation states --- */
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+    box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.15);
+}
+
+.form-group input:invalid:not(:placeholder-shown) {
+    border-color: rgba(239, 68, 68, 0.5);
+}
+
+.form-group input:valid:not(:placeholder-shown):not([type="text"]) {
+    border-color: rgba(34, 197, 94, 0.3);
+}
+
+/* --- Loading spinner --- */
+@keyframes adminSpin {
+    to { transform: rotate(360deg); }
+}
+
+.admin-loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 3rem;
+    color: var(--text-muted);
+    gap: 0.75rem;
+}
+
+.admin-loading i {
+    animation: adminSpin 1s linear infinite;
+}
+
+/* --- Card component polish --- */
+.card {
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    transition: border-color 0.2s ease;
+}
+
+.card:hover {
+    border-color: rgba(255, 255, 255, 0.12);
+}
+
+/* --- Activity feed items --- */
+.activity-item {
+    transition: background 0.15s ease;
+    border-radius: 6px;
+}
+
+.activity-item:hover {
+    background: rgba(255, 255, 255, 0.04);
+}
+
+/* --- Quick actions: better grid + hover --- */
+.quick-action-btn {
+    transition: all 0.2s ease;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.quick-action-btn:hover {
+    border-color: rgba(212, 175, 55, 0.3);
+    box-shadow: 0 4px 12px rgba(212, 175, 55, 0.1);
+}
+
+.quick-action-btn:active {
+    transform: scale(0.97);
+}
+
+/* --- Editor improvements --- */
+.wysiwyg-toolbar {
+    border-bottom: 2px solid rgba(212, 175, 55, 0.15);
+}
+
+.wysiwyg-content {
+    transition: border-color 0.2s;
+}
+
+.wysiwyg-content:focus {
+    box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.1);
+}
+
+/* --- Modal polish --- */
+.admin-modal-overlay {
+    animation: adminFadeIn 0.15s ease;
+}
+
+.admin-modal-box {
+    animation: adminSlideUp 0.2s ease;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+}
+
+@keyframes adminFadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes adminSlideUp {
+    from { opacity: 0; transform: translateY(20px) scale(0.98); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* --- Changelog entry hover --- */
+.changelog-entry {
+    transition: background 0.15s ease;
+    padding: 0.75rem;
+    border-radius: 8px;
+    margin-bottom: 0.5rem;
+}
+
+.changelog-entry:hover {
+    background: rgba(255, 255, 255, 0.02);
+}
+
+/* --- Scrollbar styling for admin --- */
+#adminPanel ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+#adminPanel ::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+#adminPanel ::-webkit-scrollbar-thumb {
+    background: rgba(212, 175, 55, 0.3);
+    border-radius: 3px;
+}
+
+#adminPanel ::-webkit-scrollbar-thumb:hover {
+    background: rgba(212, 175, 55, 0.5);
+}
+
+/* --- Empty state --- */
+.admin-empty-state {
+    text-align: center;
+    padding: 4rem 2rem;
+    color: var(--text-muted);
+}
+
+.admin-empty-state i {
+    font-size: 3rem;
+    opacity: 0.3;
+    margin-bottom: 1rem;
+    display: block;
+}
+
+/* --- Tooltip (global) --- */
+[data-tooltip] {
+    position: relative;
+}
+
+[data-tooltip]:hover::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: calc(100% + 6px);
+    left: 50%;
+    transform: translateX(-50%);
+    background: #1e293b;
+    color: #e2e8f0;
+    padding: 0.4rem 0.75rem;
+    border-radius: 6px;
+    font-size: 0.78rem;
+    white-space: nowrap;
+    z-index: 1000;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    animation: adminFadeIn 0.1s ease;
+}
+
+/* --- Image upload area: better drag state --- */
+.image-upload {
+    transition: all 0.2s ease;
+}
+
+.image-upload:hover {
+    transform: scale(1.01);
+}
+
+.image-upload.dragging-over {
+    border-color: var(--primary-color);
+    background: rgba(212, 175, 55, 0.1);
+    transform: scale(1.02);
+}
+
+/* --- Panel section: collapsible headers --- */
+.panel-header label {
+    cursor: pointer;
+    user-select: none;
+}
+
+/* --- Gallery grid: better thumbnails --- */
+.gallery-thumb {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.gallery-thumb:hover {
+    transform: scale(1.03);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+}
+
+.gallery-thumb.selected {
+    outline: 3px solid var(--primary-color);
+    outline-offset: 2px;
+}
+
+/* --- Mobile nav: horizontal pill style --- */
+@media (max-width: 992px) {
+    .nav-tab {
+        border-radius: 20px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .nav-tab.active {
+        border-color: var(--primary-color);
+    }
+
+    .admin-nav::after {
+        width: 30px;
+    }
+}
+
+@media (max-width: 768px) {
+    .nav-tab {
+        border-radius: 16px;
+    }
+
+    /* Stack stat cards vertically on mobile */
+    .dashboard-stats {
+        grid-template-columns: 1fr !important;
+    }
+
+    /* Hide nav text labels on mobile header */
+    .nav-label {
+        display: none;
+    }
+
+    /* Quick actions: 2-col on mobile */
+    .quick-actions-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+    }
 }

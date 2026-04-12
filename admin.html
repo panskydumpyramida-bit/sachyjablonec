@@ -10,7 +10,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="css/style.css?v=ux12">
-    <link rel="stylesheet" href="css/admin.css?v=ux12">
+    <link rel="stylesheet" href="css/admin.css?v=ux13">
     <script src="js/version.js?v=ux12"></script>
     <script src="js/modal-manager.js?v=ux12"></script>
 </head>
@@ -18,19 +18,28 @@
 <body>
     <!-- LOGIN -->
     <div id="loginPage" class="hidden">
-        <div class="login-container">
-            <h1 style="text-align: center; margin-bottom: 2rem;"><i class="fa-solid fa-chess-knight"
-                    style="color: var(--primary-color);"></i><br>Admin Panel v2026.04.01</h1>
+        <div class="login-container" style="border-top: 3px solid var(--primary-color);">
+            <div style="text-align: center; margin-bottom: 2rem;">
+                <i class="fa-solid fa-chess-knight" style="font-size: 2.5rem; color: var(--primary-color); margin-bottom: 0.75rem; display: block;"></i>
+                <h1 style="font-size: 1.4rem; margin: 0; color: var(--text-color);">Administrace</h1>
+                <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 0.35rem;">TJ Bižuterie Jablonec</p>
+            </div>
             <div id="loginError"></div>
             <form id="loginForm">
-                <div class="form-group"><label>Uživatelské jméno</label><input type="text" id="username" required>
+                <div class="form-group">
+                    <label><i class="fa-solid fa-user" style="margin-right: 0.35rem; opacity: 0.6;"></i>Uživatelské jméno</label>
+                    <input type="text" id="username" required placeholder="Zadejte jméno" autocomplete="username">
                 </div>
-                <div class="form-group"><label>Heslo</label>
-                    <div style="position: relative;"><input type="password" id="password" required
-                            style="padding-right: 40px;"><i class="fa-solid fa-eye" id="togglePassword"
-                            style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); cursor: pointer; color: var(--text-muted);"></i>
+                <div class="form-group">
+                    <label><i class="fa-solid fa-lock" style="margin-right: 0.35rem; opacity: 0.6;"></i>Heslo</label>
+                    <div style="position: relative;">
+                        <input type="password" id="password" required style="padding-right: 40px;" placeholder="Zadejte heslo" autocomplete="current-password">
+                        <i class="fa-solid fa-eye" id="togglePassword" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); cursor: pointer; color: var(--text-muted);"></i>
                     </div>
-                </div><button type="submit" class="btn-primary" style="width: 100%">Přihlásit se</button>
+                </div>
+                <button type="submit" class="btn-primary" style="width: 100%; margin-top: 0.5rem; padding: 0.85rem;">
+                    <i class="fa-solid fa-sign-in-alt" style="margin-right: 0.5rem;"></i>Přihlásit se
+                </button>
             </form>
         </div>
     </div>
@@ -38,13 +47,12 @@
     <div id="adminPanel" class="hidden">
         <header>
             <div class="container">
-                <nav><a href="/" class="logo"><i class="fa-solid fa-chess-knight"></i>TJ Bižuterie -
-                        Admin</a>
+                <nav><a href="/" class="logo"><i class="fa-solid fa-chess-knight"></i>Administrace</a>
                     <ul class="nav-links">
-                        <li><a href="docs/admin-manual.html" target="_blank" style="color: #fbbf24;"><i class="fa-solid fa-book"></i>Manuál</a></li>
-                        <li><a href="/" target="_blank"><i class="fa-solid fa-home"></i>Web</a></li>
-                        <li><a href="#" onclick="logout()" style="color: #fca5a5;"><i
-                                    class="fa-solid fa-sign-out-alt"></i>Odhlásit</a></li>
+                        <li><a href="docs/admin-manual.html" target="_blank" data-tooltip="Dokumentace" style="color: #fbbf24;"><i class="fa-solid fa-book"></i><span class="nav-label">Manuál</span></a></li>
+                        <li><a href="/" target="_blank" data-tooltip="Otevřít web"><i class="fa-solid fa-external-link-alt"></i><span class="nav-label">Web</span></a></li>
+                        <li><a href="#" onclick="logout()" data-tooltip="Odhlásit se" style="color: #fca5a5;"><i
+                                    class="fa-solid fa-sign-out-alt"></i><span class="nav-label">Odhlásit</span></a></li>
                     </ul>
                 </nav>
             </div>
