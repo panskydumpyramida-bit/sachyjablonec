@@ -47,7 +47,7 @@
     `;
     document.head.appendChild(style);
 
-    const PIECE_THEME = '/img/chesspieces/wikipedia/{piece}.png';
+    const PIECE_THEME = 'https://chessboardjs.com/img/chesspieces/wikipedia/{piece}.png';
     let fragmentCounter = 0;
 
     window.initGameFragments = function () {
