@@ -722,6 +722,9 @@ class GameViewer2 {
                             <button class="gv2-btn gv2-btn-analysis" id="gv2-analysis-btn" onclick="gameViewer2.toggleAnalysis()" title="Analýza Stockfish">
                                 <i class="fa-solid fa-microchip" id="gv2-analysis-icon"></i>
                             </button>
+                            <button class="gv2-btn" id="gv2-ai-btn" onclick="gameViewer2.aiExplain()" title="AI vysvětlení tahu (beta)" style="color: #a78bfa; display: none;">
+                                <i class="fa-solid fa-wand-magic-sparkles" id="gv2-ai-icon"></i>
+                            </button>
                         </div>
                     </div>
                     <div class="gv2-info-panel">
@@ -1907,10 +1910,13 @@ class GameViewer2 {
         const evalBar = document.getElementById('gv2-eval-bar');
         const analysisInfo = document.getElementById('gv2-analysis-info');
 
+        const aiBtn = document.getElementById('gv2-ai-btn');
+
         if (this.analysisEnabled) {
             btn.classList.add('active');
             evalBar.classList.add('active');
             analysisInfo.style.display = 'flex';
+            if (aiBtn) aiBtn.style.display = '';
 
             // Connect and start analysis
             this.analyzer.connect().then(() => {
@@ -1926,6 +1932,7 @@ class GameViewer2 {
             btn.classList.remove('active');
             evalBar.classList.remove('active');
             analysisInfo.style.display = 'none';
+            if (aiBtn) aiBtn.style.display = 'none';
             this.analyzer.stopAnalysis();
         }
     }
@@ -1970,6 +1977,9 @@ class GameViewer2 {
                 return;
             }
         }
+
+        // Cache for AI explain
+        this.lastAnalysisData = data;
 
         // Update eval bar
         this.updateEvalBar(data.eval, data.mate, data.winChance);
@@ -2690,6 +2700,52 @@ class GameViewer2 {
                 icon.classList.remove('fa-chevron-down');
                 icon.classList.add('fa-chevron-up');
             }
+        }
+    }
+    // --- AI Explain (beta) ---
+    async aiExplain() {
+        const btn = document.getElementById('gv2-ai-btn');
+        const icon = document.getElementById('gv2-ai-icon');
+        if (!this.currentPly || this.currentPly <= 0) return;
+
+        if (btn) btn.disabled = true;
+        if (icon) { icon.classList.remove('fa-wand-magic-sparkles'); icon.classList.add('fa-spinner', 'fa-spin'); }
+
+        try {
+            const fen = this.game.fen();
+            const history = this.game.history({ verbose: true });
+            const lastMove = history.length > 0 ? history[history.length - 1] : null;
+            if (!lastMove) throw new Error('Žádný tah');
+
+            const moveNumber = Math.ceil(history.length / 2);
+            const evalData = this.lastAnalysisData || {};
+
+            const res = await fetch(`${window.API_URL || ''}/api/ai/annotate`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    fen,
+                    movePlayed: lastMove.san,
+                    bestMove: evalData.bestMove || evalData.text || null,
+                    evalBefore: null,
+                    evalAfter: evalData.eval ?? null,
+                    moveNumber,
+                    color: lastMove.color
+                })
+            });
+
+            if (!res.ok) throw new Error('AI nedostupné');
+            const { annotation } = await res.json();
+
+            if (annotation) {
+                this.showBubble(annotation, null, 8000);
+            }
+        } catch (e) {
+            console.error('[AI Explain]', e);
+            this.showBubble(e.message || 'Chyba AI', null, 3000);
+        } finally {
+            if (btn) btn.disabled = false;
+            if (icon) { icon.classList.remove('fa-spinner', 'fa-spin'); icon.classList.add('fa-wand-magic-sparkles'); }
         }
     }
 }
