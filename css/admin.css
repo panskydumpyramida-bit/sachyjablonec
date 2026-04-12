@@ -2651,10 +2651,25 @@ textarea.auto-resize {
 
     .stat-card {
         padding: 0.75rem !important;
+        overflow: hidden;
+    }
+
+    .stat-card-icon {
+        width: 36px !important;
+        height: 36px !important;
+        min-width: 36px;
+        font-size: 0.9rem !important;
     }
 
     .stat-card-value {
         font-size: 1.25rem !important;
+    }
+
+    .stat-card-label {
+        font-size: 0.7rem !important;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
     }
 
     .stat-card::after {
@@ -2672,10 +2687,33 @@ textarea.auto-resize {
         min-width: 0;
         font-size: 0.7rem;
         padding: 0.5rem 0.6rem;
+        overflow: hidden;
+        text-overflow: ellipsis;
     }
 
     .quick-action-btn:first-child {
         flex: 1 1 100%;
+    }
+
+    /* Activity feed: prevent text overflow */
+    .activity-item {
+        overflow: hidden;
+    }
+
+    .activity-item > div {
+        overflow: hidden;
+        min-width: 0;
+    }
+
+    .activity-item span,
+    .activity-item div {
+        overflow-wrap: break-word;
+        word-break: break-word;
+    }
+
+    /* Site settings: stack on mobile */
+    .site-settings-panel > div[style*="flex-wrap"] {
+        flex-direction: column !important;
     }
 
     /* Timeline: reduce padding on mobile */
@@ -2697,12 +2735,15 @@ textarea.auto-resize {
     .nav-label {
         display: none;
     }
-
 }
 
 @media (max-width: 480px) {
     .dashboard-stats {
         grid-template-columns: 1fr !important;
+    }
+
+    .stat-card-label {
+        white-space: normal !important;
     }
 
     .quick-action-btn {
