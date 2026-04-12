@@ -51,16 +51,6 @@
     overflow: hidden;
 }
 
-.admin-header::after {
-    content: '';
-    position: absolute;
-    top: 0;
-    right: 0;
-    width: 200px;
-    height: 100%;
-    background: radial-gradient(circle at right, rgba(212, 175, 55, 0.05), transparent 70%);
-    pointer-events: none;
-}
 
 /* Explicit Header Navigation Styles */
 #adminPanel header {
@@ -683,7 +673,6 @@
     margin-bottom: 1.5rem;
     border-bottom: 1px solid var(--editor-border);
     padding-bottom: 1rem;
-    flex-wrap: wrap;
 }
 
 .nav-tab {
