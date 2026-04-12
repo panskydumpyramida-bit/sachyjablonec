@@ -854,6 +854,7 @@ function renderGames() {
                 ${idSection}
             </div>
             <div class="game-actions">
+                <button class="action-btn" onclick="openPgnEditor(${index})" title="Komentovat v editoru" style="color: #f59e0b;"><i class="fa-solid fa-comment-dots"></i></button>
                 ${isPgnGame ? `<button class="action-btn" onclick="openQuickFragmentModal(${index})" title="Vytvořit fragment ✂️" style="color: #60a5fa;"><i class="fa-solid fa-scissors"></i></button>` : ''}
                 <label title="Komentovaná" style="cursor:pointer; display: flex; align-items: center; gap: 0.25rem; font-size: 0.75rem; color: var(--text-muted);">
                     <input type="checkbox" ${game.commented ? 'checked' : ''} onchange="toggleGameCommented(${index}, this.checked)">
@@ -867,6 +868,67 @@ function renderGames() {
     list.innerHTML = items;
     initDragAndDrop();
 }
+
+// Open game-recorder for PGN commenting (article edit mode)
+function openPgnEditor(gameIndex) {
+    const game = games[gameIndex];
+    if (!game) return;
+
+    // If no PGN yet, create a minimal one from Chess.com ID
+    let pgn = game.pgn || '';
+    if (!pgn && game.gameId) {
+        showToast('Tato partie nemá PGN — nejdřív ji stáhněte z Chess.com', 'warning');
+        return;
+    }
+    if (!pgn) {
+        // Empty PGN — start fresh in editor
+        pgn = `[White "${game.white || game.title || '?'}"]\n[Black "${game.black || '?'}"]\n[Result "*"]\n\n*`;
+    }
+
+    localStorage.setItem('article_edit_pgn', JSON.stringify({
+        pgn,
+        gameIndex,
+        white: game.white || '',
+        black: game.black || '',
+        title: game.title || ''
+    }));
+
+    window.open('game-recorder.html?import=article', '_blank');
+}
+
+// Listen for edited PGN from game-recorder
+window.addEventListener('message', (e) => {
+    if (e.data?.type === 'pgn-edited') {
+        const { gameIndex, pgn, white, black } = e.data;
+        if (gameIndex >= 0 && gameIndex < games.length) {
+            games[gameIndex].pgn = pgn;
+            if (white) games[gameIndex].white = white;
+            if (black) games[gameIndex].black = black;
+            games[gameIndex].commented = true;
+            renderGames();
+            showToast('PGN partie aktualizováno z editoru');
+        }
+    }
+});
+
+// Fallback: check localStorage when window gets focus (in case postMessage failed)
+window.addEventListener('focus', () => {
+    const result = localStorage.getItem('edited_pgn_result');
+    if (result) {
+        try {
+            const { gameIndex, pgn, white, black } = JSON.parse(result);
+            localStorage.removeItem('edited_pgn_result');
+            if (gameIndex >= 0 && gameIndex < games.length) {
+                games[gameIndex].pgn = pgn;
+                if (white) games[gameIndex].white = white;
+                if (black) games[gameIndex].black = black;
+                games[gameIndex].commented = true;
+                renderGames();
+                showToast('PGN partie aktualizováno z editoru');
+            }
+        } catch (e) { /* ignore */ }
+    }
+});
 
 function openQuickFragmentModal(gameIndex) {
     const game = games[gameIndex];
