@@ -58,5 +58,9 @@
     "prisma": "^5.7.0",
     "supertest": "^7.2.2",
     "vitest": "^4.1.4"
+  },
+  "optionalDependencies": {
+    "@emnapi/core": "1.9.2",
+    "@emnapi/runtime": "1.9.2"
   }
 }
