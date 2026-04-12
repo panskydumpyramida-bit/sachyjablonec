@@ -672,30 +672,56 @@
     <!-- Games Management View -->
     <div id="gamesView" class="hidden">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-            <h2 style="margin: 0;"><i class="fa-solid fa-chess-board"></i>Nahrané partie</h2>
+            <h2 style="margin: 0;"><i class="fa-solid fa-chess-board"></i> Partie</h2>
             <div style="display: flex; gap: 0.5rem;">
-                <a href="/game-recorder" target="_blank" class="btn-primary"><i class="fa-solid fa-plus"></i>Nová
-                    partie</a>
-                <button class="btn-secondary" onclick="loadRecordedGames()"><i
-                        class="fa-solid fa-sync"></i>Obnovit</button>
+                <a href="/game-recorder" target="_blank" class="btn-primary"><i class="fa-solid fa-plus"></i> Nová partie</a>
             </div>
         </div>
-        <table class="data-table">
-            <thead>
-                <tr>
-                    <th>Datum</th>
-                    <th>Bílý</th>
-                    <th>Černý</th>
-                    <th>Výsledek</th>
-                    <th>Událost</th>
-                    <th>Akce</th>
-                </tr>
-            </thead>
-            <tbody id="gamesTableBody"></tbody>
-        </table>
-        <div id="noGamesInfo" style="text-align: center; padding: 2rem; color: var(--text-muted); display: none;">
-            Žádné nahrané partie. <a href="/game-recorder" style="color: var(--primary-color);">Přidejte novou
-                partii</a>
+
+        <!-- Sub-tabs: Nahrané / Z článků -->
+        <div style="display: flex; gap: 0.5rem; margin-bottom: 1rem; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 0.75rem;">
+            <button class="btn-secondary games-subtab active" onclick="switchGamesSubtab('recorded')" style="padding: 0.4rem 1rem; font-size: 0.85rem;" id="subtabRecorded">
+                <i class="fa-solid fa-save"></i> Nahrané
+            </button>
+            <button class="btn-secondary games-subtab" onclick="switchGamesSubtab('article')" style="padding: 0.4rem 1rem; font-size: 0.85rem;" id="subtabArticle">
+                <i class="fa-solid fa-newspaper"></i> Z článků
+            </button>
+        </div>
+
+        <!-- Recorded games -->
+        <div id="recordedGamesPanel">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Datum</th>
+                        <th>Bílý</th>
+                        <th>Černý</th>
+                        <th>Výsledek</th>
+                        <th>Událost</th>
+                        <th>Akce</th>
+                    </tr>
+                </thead>
+                <tbody id="gamesTableBody"></tbody>
+            </table>
+            <div id="noGamesInfo" style="text-align: center; padding: 2rem; color: var(--text-muted); display: none;">
+                Žádné nahrané partie. <a href="/game-recorder" style="color: var(--primary-color);">Přidejte novou partii</a>
+            </div>
+        </div>
+
+        <!-- Article games -->
+        <div id="articleGamesPanel" style="display: none;">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Datum</th>
+                        <th>Hráči</th>
+                        <th>Tým</th>
+                        <th>Článek</th>
+                        <th>Akce</th>
+                    </tr>
+                </thead>
+                <tbody id="articleGamesTableBody"></tbody>
+            </table>
         </div>
 
         <!-- Analysis Settings -->

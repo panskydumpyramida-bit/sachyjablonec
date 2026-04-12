@@ -2476,6 +2476,13 @@ textarea.auto-resize {
     display: block;
 }
 
+/* --- Games sub-tab active state --- */
+.games-subtab.active {
+    background: rgba(212, 175, 55, 0.2) !important;
+    border-color: var(--primary-color) !important;
+    color: var(--primary-color) !important;
+}
+
 /* --- Tooltip (admin buttons only) --- */
 .admin-container [data-tooltip] {
     position: relative;
