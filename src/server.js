@@ -72,7 +72,7 @@ app.use(helmet({
             imgSrc: ["'self'", "data:", "https:", "blob:"],
             fontSrc: ["'self'", "https://fonts.gstatic.com", "https://cdnjs.cloudflare.com"],
             connectSrc: ["'self'", "https://lichess.org", "https://www.googleapis.com", "https://chess-results.com", "https://www.google-analytics.com"],
-            frameSrc: ["'self'", "https://lichess.org"],
+            frameSrc: ["'self'", "https://lichess.org", "https://mapy.cz"],
             objectSrc: ["'none'"],
             upgradeInsecureRequests: [],
         },
@@ -798,13 +798,12 @@ app.post('/api/seed', async (req, res) => {
     }
 });
 
-// Serve index.html for any other route (SPA fallback, though mostly static here)
+// 404 for unknown routes
 app.get('*', (req, res) => {
-    // Exclude API routes from fallback to avoid confusion
     if (req.path.startsWith('/api')) {
         return res.status(404).json({ error: 'API endpoint not found' });
     }
-    res.sendFile(path.join(__dirname, '../index.html'));
+    res.status(404).sendFile(path.join(__dirname, '../404.html'));
 });
 
 // Error handling middleware

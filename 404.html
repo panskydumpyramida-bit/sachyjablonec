@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>404 - Stránka nenalezena</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="icon" type="image/png" href="images/favicon.png">
+    <style>
+        .error-page {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 80vh;
+            text-align: center;
+            padding: 2rem;
+        }
+        .error-icon {
+            font-size: 6rem;
+            margin-bottom: 1.5rem;
+            opacity: 0.3;
+        }
+        .error-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 2.5rem;
+            color: var(--primary-color);
+            margin-bottom: 0.5rem;
+        }
+        .error-text {
+            color: var(--text-muted);
+            font-size: 1.1rem;
+            margin-bottom: 2rem;
+            max-width: 400px;
+        }
+        .error-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.85rem 2rem;
+            background: var(--primary-color);
+            color: var(--secondary-color);
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .error-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(212, 175, 55, 0.3);
+        }
+    </style>
+</head>
+<body>
+    <header id="global-header"></header>
+    <main class="error-page">
+        <div class="error-icon">&#9822;</div>
+        <h1 class="error-title">404</h1>
+        <p class="error-text">Tato stránka neexistuje. Možná byla přesunuta nebo smazána.</p>
+        <a href="/" class="error-btn">
+            <i class="fa-solid fa-home"></i> Zpět na hlavní stránku
+        </a>
+    </main>
+    <footer id="global-footer"></footer>
+    <script src="js/config.js" defer></script>
+    <script src="js/layout-loader.js" defer></script>
+</body>
+</html>
