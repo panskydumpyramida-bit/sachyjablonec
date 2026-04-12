@@ -2,7 +2,7 @@
 
 Kompletní průvodce správou webu sachyjablonec.cz.
 
-*Verze: v30 | Poslední aktualizace: 27. 3. 2026*
+*Verze: v32 | Poslední aktualizace: 12. 4. 2026*
 
 ---
 
@@ -18,6 +18,11 @@ Kompletní průvodce správou webu sachyjablonec.cz.
 8. [Puzzle Racer nastavení](#puzzle-racer)
 9. [Členská sekce](#clenska-sekce)
 10. [Blicák turnaj](#blicak-turnaj)
+11. [Události / Kalendář](#udalosti)
+12. [Šachová databáze](#sach-databaze)
+13. [Diagramy a fragmenty](#diagramy)
+14. [Komentování partií](#komentovani-partii)
+15. [API Reference](#api-reference)
 
 ---
 
@@ -366,6 +371,235 @@ Výsledky se automaticky stahují z Chess-Results URL nastaveného v databázi.
 
 1. Nahrajte fotky do galerie s kategorií **"Blicák"**
 2. Automaticky se zobrazí na stránce Blicák
+
+---
+
+## 📅 Události / Kalendář {#udalosti}
+
+Správa kalendáře akcí a turnajů. Tab **Události** v admin panelu.
+
+### Vytvoření události
+
+1. Klikněte na **Události** tab
+2. Vyplňte formulář:
+   - **Název** — povinný
+   - **Datum začátku/konce** — datetime picker
+   - **Místo** — s autocomplete (Nominatim geocoding)
+   - **Kategorie** — turnaj, trénink, kemp, schůzka, jiné
+   - **Věková skupina** — mládež, dospělí, open
+   - **Typ** — individuální / týmový
+   - **Tempo** — blitz, rapid, classical
+   - **Přihlášky do** — deadline pro registraci
+   - **Startovné, Kontakt, URL** — volitelné
+3. **Interní události** — viditelné pouze členům (MEMBER+)
+4. **iCal export** — události lze exportovat do kalendáře (`/api/events/ical`)
+
+### API endpointy
+
+| Metoda | Cesta | Popis | Auth |
+|--------|-------|-------|------|
+| GET | `/api/events` | Veřejné události | Ne |
+| GET | `/api/events/internal` | Interní (členské) události | MEMBER+ |
+| GET | `/api/events/ical` | iCal export | Ne |
+| POST | `/api/events` | Vytvoření události | ADMIN+ |
+| PUT | `/api/events/:id` | Editace události | ADMIN+ |
+| DELETE | `/api/events/:id` | Smazání události | ADMIN+ |
+
+---
+
+## 🗄️ Šachová databáze {#sach-databaze}
+
+Tab **Databáze** v admin panelu. Správa historické databáze partií (ŠSČR 2003-2025).
+
+### Funkce
+
+- **Import PGN** — hromadný import partií ze souboru PGN
+- **Statistiky** — počet her, hráčů, otevření (ECO kódy)
+- **Detekce duplikátů** — při importu se přeskočí existující partie
+- **Vyhledávání** — podle hráče, ECO kódu, data
+
+### API endpointy
+
+| Metoda | Cesta | Popis | Auth |
+|--------|-------|-------|------|
+| GET | `/api/chess/games` | Vyhledávání partií | Ne |
+| GET | `/api/chess/games/:id` | Detail partie | Ne |
+| POST | `/api/chess/import` | Import PGN souboru | ADMIN+ |
+| GET | `/api/chess/players` | Seznam hráčů | Ne |
+| GET | `/api/chess/stats` | Statistiky databáze | Ne |
+
+---
+
+## 📐 Diagramy a fragmenty {#diagramy}
+
+Správa šachových diagramů a fragmentů partií. Tab **Partie** → sub-tab **Diagramy** / **Fragmenty**.
+
+### Diagramy
+
+Šachové pozice s anotacemi (šipky, zvýrazněná pole). Mohou obsahovat **řešení** (interaktivní hádanka).
+
+- **Vytvoření** — přes Game Recorder (`/game-recorder?mode=diagram`)
+- **Vkládání do článků** — v WYSIWYG editoru přes tlačítko "Diagramy"
+- **Kniha diagramů** — seskupení více diagramů do interaktivní série
+
+### Fragmenty
+
+Výstřižky z partií (rozsah tahů od-do) s vlastním PGN.
+
+- **Vytvoření** — v editoru článku, tlačítko ✂️ u partie
+- **Vkládání do článků** — přes tlačítko "Fragmenty" v WYSIWYG
+
+### API endpointy
+
+| Metoda | Cesta | Popis | Auth |
+|--------|-------|-------|------|
+| GET | `/api/diagrams` | Seznam diagramů | Ne |
+| POST | `/api/diagrams` | Vytvoření diagramu | MEMBER+ |
+| PUT | `/api/diagrams/:id` | Editace | MEMBER+ |
+| DELETE | `/api/diagrams/:id` | Smazání | MEMBER+ |
+| GET | `/api/fragments` | Seznam fragmentů | Ne |
+| POST | `/api/fragments` | Vytvoření fragmentu | MEMBER+ |
+| DELETE | `/api/fragments/:id` | Smazání | MEMBER+ |
+
+---
+
+## 💬 Komentování partií {#komentovani-partii}
+
+**Nové ve v32.** Partie v článcích lze nyní komentovat — přidat verbální komentáře k tahům, varianty a anotace.
+
+### Postup
+
+1. V editoru článku najděte partii v seznamu her
+2. Klikněte na tlačítko 💬 **Komentovat** u partie
+3. Otevře se **Game Recorder** s načteným PGN
+4. Přidejte komentáře k tahům (klikněte na tah → napište komentář)
+5. Přidejte varianty, NAG značky ($1, $2 atd.)
+6. Klikněte **"Uložit do článku"**
+7. PGN s komentáři se automaticky vrátí do editoru článku
+8. Uložte článek — komentáře se zobrazí v GameViewer2
+
+### Sub-taby v sekci Partie
+
+Tab **Partie** v admin panelu má dva sub-taby:
+
+- **Nahrané** — partie nahrané přes Game Recorder (tabulka `GameRecorded`)
+- **Z článků** — partie vložené do článků (z `News.gamesJson`)
+
+---
+
+## 📡 API Reference {#api-reference}
+
+Kompletní seznam API endpointů. Všechny endpointy jsou na `/api/...`.
+
+### Autentizace
+
+| Metoda | Cesta | Popis |
+|--------|-------|-------|
+| POST | `/api/auth/register` | Registrace nového uživatele |
+| POST | `/api/auth/login` | Přihlášení (vrací JWT token) |
+| GET | `/api/auth/me` | Info o přihlášeném uživateli |
+| POST | `/api/auth/google` | Google OAuth přihlášení |
+
+### Články (News)
+
+| Metoda | Cesta | Popis | Auth |
+|--------|-------|-------|------|
+| GET | `/api/news` | Seznam článků (filtry: `published`, `category`, `page`, `limit`) | Ne |
+| GET | `/api/news/:id` | Detail článku | Ne |
+| POST | `/api/news` | Vytvoření článku | ADMIN+ |
+| PUT | `/api/news/:id` | Editace článku | ADMIN+ |
+| DELETE | `/api/news/:id` | Smazání článku | ADMIN+ |
+
+### Komentáře
+
+| Metoda | Cesta | Popis | Auth |
+|--------|-------|-------|------|
+| GET | `/api/comments/:newsId` | Komentáře k článku | Ne |
+| GET | `/api/comments/latest` | Poslední komentář (homepage) | Ne |
+| POST | `/api/comments` | Přidání komentáře | USER+ |
+| PUT | `/api/comments/:id` | Editace komentáře | Autor/ADMIN |
+| DELETE | `/api/comments/:id` | Smazání komentáře | Autor/ADMIN |
+| PUT | `/api/comments/:id/hide` | Skrytí komentáře | ADMIN+ |
+
+### Partie
+
+| Metoda | Cesta | Popis | Auth |
+|--------|-------|-------|------|
+| GET | `/api/games` | Nahrané partie | Ne |
+| GET | `/api/games/:id` | Detail partie | Ne |
+| POST | `/api/games` | Nahrání partie | MEMBER+ |
+| PUT | `/api/games/:id` | Editace partie | MEMBER+ |
+| DELETE | `/api/games/:id` | Smazání partie | MEMBER+ |
+| GET | `/api/viewer-games?category=X` | Partie z článků podle kategorie | Ne |
+
+### Obrázky a galerie
+
+| Metoda | Cesta | Popis | Auth |
+|--------|-------|-------|------|
+| GET | `/api/images` | Seznam obrázků | Ne |
+| POST | `/api/images/upload` | Upload obrázku | ADMIN+ |
+| DELETE | `/api/images/:id` | Smazání obrázku | ADMIN+ |
+
+### Uživatelé
+
+| Metoda | Cesta | Popis | Auth |
+|--------|-------|-------|------|
+| GET | `/api/users` | Seznam uživatelů | ADMIN+ |
+| PUT | `/api/users/:id/role` | Změna role | SUPERADMIN |
+
+### Členská sekce
+
+| Metoda | Cesta | Popis | Auth |
+|--------|-------|-------|------|
+| GET | `/api/announcements` | Oznámení | MEMBER+ |
+| POST | `/api/announcements` | Vytvoření oznámení | ADMIN+ |
+| GET | `/api/documents` | Dokumenty pro členy | MEMBER+ |
+| POST | `/api/documents` | Upload dokumentu | ADMIN+ |
+| GET | `/api/messages` | Klubové zprávy | Club password |
+| POST | `/api/messages` | Odeslání zprávy | Club password |
+| GET | `/api/travel-reports/my` | Moje cestovné | MEMBER+ |
+| POST | `/api/travel-reports` | Nový cestovný report | MEMBER+ |
+
+### Fórum
+
+| Metoda | Cesta | Popis | Auth |
+|--------|-------|-------|------|
+| GET | `/api/forum` | Seznam témat | MEMBER+ |
+| GET | `/api/forum/:id` | Detail tématu s příspěvky | MEMBER+ |
+| POST | `/api/forum` | Nové téma | MEMBER+ |
+| POST | `/api/forum/:id/posts` | Odpověď v tématu | MEMBER+ |
+| PUT | `/api/forum/:id/pin` | Připnout téma | ADMIN+ |
+| PUT | `/api/forum/:id/lock` | Zamknout téma | ADMIN+ |
+| DELETE | `/api/forum/:id` | Smazat téma | ADMIN+ |
+
+### AI nástroje
+
+| Metoda | Cesta | Popis | Auth |
+|--------|-------|-------|------|
+| POST | `/api/ai/spellcheck` | Kontrola pravopisu textu | ADMIN+ |
+| POST | `/api/ai/text-to-table` | Konverze textu na HTML tabulku | ADMIN+ |
+
+### Soutěže
+
+| Metoda | Cesta | Popis | Auth |
+|--------|-------|-------|------|
+| GET | `/api/scraping/standings` | Aktuální tabulky soutěží | Ne |
+| POST | `/api/scraping/refresh` | Aktualizace tabulek z chess-results.com | ADMIN+ |
+
+### Puzzle Racer
+
+| Metoda | Cesta | Popis | Auth |
+|--------|-------|-------|------|
+| GET | `/api/racer/puzzles` | Série hádanek | Ne |
+| POST | `/api/racer/result` | Odeslání výsledku | USER+ |
+| GET | `/api/racer/leaderboard` | Žebříček | Ne |
+
+### Systém
+
+| Metoda | Cesta | Popis | Auth |
+|--------|-------|-------|------|
+| GET | `/health` | Healthcheck | Ne |
+| GET/POST | `/api/settings` | Systémová nastavení | ADMIN+ |
 
 ---
 
