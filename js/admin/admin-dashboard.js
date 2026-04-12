@@ -91,7 +91,7 @@ function renderRecentActivity(activity) {
         return;
     }
 
-    container.innerHTML = activity.map(item => `
+    container.innerHTML = '<div class="activity-list-wrapper">' + activity.map(item => `
         <div class="activity-item" onclick="window.open('article.html?id=${item.newsId}', '_blank')">
             <div class="activity-icon">
                 <i class="fa-solid fa-comment"></i>
@@ -105,7 +105,7 @@ function renderRecentActivity(activity) {
                 </div>
             </div>
         </div>
-    `).join('');
+    `).join('') + '</div>';
 }
 
 // ================================
