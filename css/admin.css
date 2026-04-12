@@ -36,16 +36,30 @@
 }
 
 .admin-header {
-    background: linear-gradient(135deg, #1f2937, #111827);
+    background: linear-gradient(135deg, #1a1f2e 0%, #111827 50%, #0f172a 100%);
     padding: 1.5rem 2rem;
-    border-radius: var(--border-radius);
+    border-radius: 12px;
     margin-bottom: 2rem;
     color: var(--primary-color);
     display: flex;
     justify-content: space-between;
     align-items: center;
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(212, 175, 55, 0.15);
     border-left: 4px solid var(--primary-color);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+    position: relative;
+    overflow: hidden;
+}
+
+.admin-header::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 200px;
+    height: 100%;
+    background: radial-gradient(circle at right, rgba(212, 175, 55, 0.05), transparent 70%);
+    pointer-events: none;
 }
 
 /* Explicit Header Navigation Styles */
@@ -150,12 +164,15 @@
 
 .action-btn {
     padding: 0.4rem 0.8rem;
-    border-radius: 4px;
+    border-radius: 6px;
     border: none;
     cursor: pointer;
-    font-size: 0.85rem;
+    font-size: 0.8rem;
     margin-right: 0.25rem;
     transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
 }
 
 .btn-edit {
@@ -184,9 +201,13 @@
 .editor-main,
 .editor-sidebar {
     background: var(--surface-color);
-    border-radius: var(--border-radius);
+    border-radius: 12px;
     border: 1px solid var(--editor-border);
     padding: 1.25rem;
+}
+
+.editor-sidebar {
+    background: linear-gradient(180deg, var(--surface-color), rgba(15, 23, 42, 0.95));
 }
 
 /* Sticky Side Panel logic */
@@ -662,6 +683,7 @@
     margin-bottom: 1.5rem;
     border-bottom: 1px solid var(--editor-border);
     padding-bottom: 1rem;
+    flex-wrap: wrap;
 }
 
 .nav-tab {
@@ -1531,10 +1553,16 @@ input:checked+.slider:before {
 }
 
 .changelog-version {
-    font-size: 0.75rem;
+    display: inline-block;
+    font-size: 0.7rem;
     color: var(--text-muted);
     margin-bottom: 0.75rem;
-    font-family: monospace;
+    font-family: 'JetBrains Mono', monospace;
+    padding: 0.15rem 0.6rem;
+    border-radius: 4px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.03);
+    letter-spacing: 0.05em;
 }
 
 .changelog-content h4 {
@@ -1743,7 +1771,7 @@ input:checked+.slider:before {
 
 .quick-actions-grid {
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
     gap: 0.75rem;
 }
 
@@ -1804,13 +1832,16 @@ input:checked+.slider:before {
     background: rgba(255, 255, 255, 0.02);
     border-radius: 8px;
     cursor: pointer;
-    transition: all 0.2s;
+    transition: all 0.15s ease;
     border: 1px solid transparent;
+    border-left: 3px solid transparent;
 }
 
 .activity-item:hover {
     background: rgba(255, 255, 255, 0.05);
     border-color: rgba(255, 255, 255, 0.1);
+    border-left-color: var(--primary-color);
+    transform: translateX(2px);
 }
 
 .activity-icon {
