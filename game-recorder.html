@@ -1466,8 +1466,16 @@
 
                             <!-- Comment Section: compact -->
                             <div style="margin-top: 0.4rem; margin-bottom: 0;">
-                                <textarea id="moveComment" placeholder="Komentář k tahu..."
-                                    style="width: 100%; height: 50px; background: rgba(0,0,0,0.3); color: white; border: 1px solid rgba(255,255,255,0.1); padding: 0.4rem; border-radius: 6px; font-family: inherit; resize: vertical; font-size: 0.8rem; box-sizing: border-box;"></textarea>
+                                <div style="display: flex; gap: 0.3rem; align-items: flex-start;">
+                                    <textarea id="moveComment" placeholder="Komentář k tahu..."
+                                        style="flex: 1; height: 50px; background: rgba(0,0,0,0.3); color: white; border: 1px solid rgba(255,255,255,0.1); padding: 0.4rem; border-radius: 6px; font-family: inherit; resize: vertical; font-size: 0.8rem; box-sizing: border-box;"></textarea>
+                                    <button id="aiAnnotateBtn" onclick="aiAnnotateCurrentMove()"
+                                        title="AI komentář — vygeneruje slovní hodnocení tahu pro děti"
+                                        style="background: linear-gradient(135deg, #8b5cf6, #6d28d9); border: none; color: white; padding: 0.4rem 0.6rem; border-radius: 6px; cursor: pointer; font-size: 0.85rem; height: 50px; display: flex; align-items: center; transition: opacity 0.2s;"
+                                        onmouseenter="this.style.opacity='0.8'" onmouseleave="this.style.opacity='1'">
+                                        <i class="fa-solid fa-wand-magic-sparkles"></i>
+                                    </button>
+                                </div>
                             </div>
 
                             <!-- PGN Actions: compact -->

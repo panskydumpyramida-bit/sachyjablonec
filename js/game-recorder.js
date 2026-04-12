@@ -1801,3 +1801,99 @@ updateStatus = function () {
 
 // Sync eval bar height on resize
 window.addEventListener('resize', syncRecEvalBarHeight);
+
+// ========================================
+// AI Annotation (OpenAI verbal comments)
+// ========================================
+
+let lastAnalysisData = null;
+
+// Cache analysis data for AI annotation
+const _origHandleRec = handleRecAnalysisUpdate;
+handleRecAnalysisUpdate = function (data) {
+    lastAnalysisData = data;
+    _origHandleRec(data);
+};
+
+async function aiAnnotateCurrentMove() {
+    const fen = game.fen();
+    const history = game.history({ verbose: true });
+    const lastMoveObj = history.length > 0 ? history[history.length - 1] : null;
+
+    if (!lastMoveObj) {
+        if (typeof showNotification === 'function') showNotification('Nejdřív proveďte tah', 'warning');
+        return;
+    }
+
+    const btn = document.getElementById('aiAnnotateBtn');
+    if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
+    }
+
+    try {
+        // Get eval before this move (parent position)
+        const parentFen = moveTreeCurrent?.parent?.fen;
+        let evalBefore = null;
+        let evalAfter = lastAnalysisData?.eval ?? null;
+        let bestMove = lastAnalysisData?.bestMove || lastAnalysisData?.text || null;
+
+        // Try to get parent eval from analyzer
+        if (parentFen && recAnalyzer) {
+            try {
+                const parentData = await new Promise((resolve) => {
+                    const tempCb = recAnalyzer.onUpdate;
+                    recAnalyzer.onUpdate = (d) => { resolve(d); recAnalyzer.onUpdate = tempCb; };
+                    recAnalyzer.analyze(parentFen);
+                    setTimeout(() => resolve(null), 3000);
+                });
+                if (parentData) evalBefore = parentData.eval;
+            } catch { /* ignore */ }
+        }
+
+        const moveNumber = Math.ceil(history.length / 2);
+        const color = lastMoveObj.color;
+
+        const res = await fetch(`${API_URL}/ai/annotate`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('auth_token') || sessionStorage.getItem('auth_token')}`
+            },
+            body: JSON.stringify({
+                fen,
+                movePlayed: lastMoveObj.san,
+                bestMove,
+                evalBefore,
+                evalAfter,
+                moveNumber,
+                color
+            })
+        });
+
+        if (!res.ok) {
+            const err = await res.json();
+            throw new Error(err.error || 'AI chyba');
+        }
+
+        const { annotation } = await res.json();
+
+        if (annotation) {
+            // Set as comment for current position
+            moveComments[fen] = annotation;
+            const commentBox = document.getElementById('moveComment');
+            if (commentBox) commentBox.value = annotation;
+
+            if (typeof showNotification === 'function') showNotification('AI komentář přidán', 'success');
+        }
+    } catch (e) {
+        console.error('[AI Annotate]', e);
+        if (typeof showNotification === 'function') showNotification(e.message || 'Chyba AI anotace', 'error');
+    } finally {
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fa-solid fa-wand-magic-sparkles"></i>';
+        }
+    }
+}
+window.aiAnnotateCurrentMove = aiAnnotateCurrentMove;
