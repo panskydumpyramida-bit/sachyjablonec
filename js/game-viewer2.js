@@ -2713,11 +2713,15 @@ class GameViewer2 {
 
         try {
             const fen = this.game.fen();
-            const history = this.game.history({ verbose: true });
-            const lastMove = history.length > 0 ? history[history.length - 1] : null;
-            if (!lastMove) throw new Error('Žádný tah');
+            // Use mainLinePlies for current move data instead of chess.js history
+            const currentData = this.mainLinePlies?.[this.currentPly];
+            const moveSan = currentData?.move?.san;
+            if (!moveSan || this.currentPly <= 0) throw new Error('Žádný tah');
 
-            const moveNumber = Math.ceil(history.length / 2);
+            const fenParts = fen.split(' ');
+            const turnAfter = fenParts[1] || 'w';
+            const color = turnAfter === 'w' ? 'b' : 'w';
+            const moveNumber = parseInt(fenParts[5]) || 1;
             const evalData = this.lastAnalysisData || {};
 
             const res = await fetch(`${window.API_URL || '/api'}/ai/annotate`, {
@@ -2725,12 +2729,11 @@ class GameViewer2 {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     fen,
-                    movePlayed: lastMove.san,
+                    movePlayed: moveSan,
                     bestMove: evalData.bestMove || evalData.text || null,
-                    evalBefore: null,
                     evalAfter: evalData.eval ?? null,
                     moveNumber,
-                    color: lastMove.color
+                    color
                 })
             });
 

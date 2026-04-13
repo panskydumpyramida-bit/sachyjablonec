@@ -1817,13 +1817,14 @@ handleRecAnalysisUpdate = function (data) {
 
 async function aiAnnotateCurrentMove() {
     const fen = game.fen();
-    const history = game.history({ verbose: true });
-    const lastMoveObj = history.length > 0 ? history[history.length - 1] : null;
 
-    if (!lastMoveObj) {
+    // Use move tree (currentNode) instead of chess.js history
+    // currentNode tracks position in the move tree including variants
+    if (!currentNode || !currentNode.san) {
         if (typeof showNotification === 'function') showNotification('Nejdřív proveďte tah', 'warning');
         return;
     }
+    const lastMoveObj = currentNode;
 
     const btn = document.getElementById('aiAnnotateBtn');
     if (btn) {
@@ -1832,27 +1833,13 @@ async function aiAnnotateCurrentMove() {
     }
 
     try {
-        // Get eval before this move (parent position)
-        const parentFen = moveTreeCurrent?.parent?.fen;
-        let evalBefore = null;
-        let evalAfter = lastAnalysisData?.eval ?? null;
-        let bestMove = lastAnalysisData?.bestMove || lastAnalysisData?.text || null;
-
-        // Try to get parent eval from analyzer
-        if (parentFen && recAnalyzer) {
-            try {
-                const parentData = await new Promise((resolve) => {
-                    const tempCb = recAnalyzer.onUpdate;
-                    recAnalyzer.onUpdate = (d) => { resolve(d); recAnalyzer.onUpdate = tempCb; };
-                    recAnalyzer.analyze(parentFen);
-                    setTimeout(() => resolve(null), 3000);
-                });
-                if (parentData) evalBefore = parentData.eval;
-            } catch { /* ignore */ }
-        }
-
-        const moveNumber = Math.ceil(history.length / 2);
-        const color = lastMoveObj.color;
+        const evalAfter = lastAnalysisData?.eval ?? null;
+        const bestMove = lastAnalysisData?.bestMove || lastAnalysisData?.text || null;
+        // Determine move number and color from FEN (whose turn it is AFTER the move)
+        const fenParts = fen.split(' ');
+        const turnAfter = fenParts[1] || 'w'; // who moves NEXT
+        const color = turnAfter === 'w' ? 'b' : 'w'; // who just moved
+        const moveNumber = parseInt(fenParts[5]) || 1;
 
         const res = await fetch(`${API_URL}/ai/annotate`, {
             method: 'POST',
@@ -1864,7 +1851,6 @@ async function aiAnnotateCurrentMove() {
                 fen,
                 movePlayed: lastMoveObj.san,
                 bestMove,
-                evalBefore,
                 evalAfter,
                 moveNumber,
                 color
