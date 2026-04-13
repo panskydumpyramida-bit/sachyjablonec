@@ -10,6 +10,7 @@ import { Chess } from 'chess.js';
 const prisma = new PrismaClient();
 
 const DAILY_SCAN_LIMIT = 10; // max new games per player per day
+const BATCH_SIZE = 2; // games per single request (Cloudflare 100s timeout)
 const BLUNDER_THRESHOLD = 12; // Win% drop
 const MISS_THRESHOLD = 12;
 
@@ -268,16 +269,15 @@ export async function scanPlayerGames(playerName, specificGameIds = null) {
     const totalGames = allGames.length;
 
     let toScan;
+    const maxThisBatch = Math.min(remaining, BATCH_SIZE);
     if (specificGameIds && specificGameIds.length > 0) {
-        // Scan specific games (user-selected), filtered by daily limit
         toScan = specificGameIds
             .filter(id => !scannedGameIds.has(id))
-            .slice(0, remaining)
+            .slice(0, maxThisBatch)
             .map(id => ({ id }));
     } else {
-        // Auto-select next unscanned batch
         const unscannedGames = allGames.filter(g => !scannedGameIds.has(g.id));
-        toScan = unscannedGames.slice(0, remaining);
+        toScan = unscannedGames.slice(0, maxThisBatch);
     }
 
     if (toScan.length === 0) {

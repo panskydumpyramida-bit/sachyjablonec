@@ -211,35 +211,70 @@ async function selectPlayer(name) {
 }
 
 // Trigger backend scan (max 10 games/day)
-async function triggerBackendScan(name) {
+async function triggerBackendScan(name, gameIds = null) {
     const statusText = document.getElementById('status-text');
     const progContainer = document.getElementById('progress-container');
     const progBar = document.getElementById('progress-bar');
 
-    statusText.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Analyzuji partie hráče <strong>${escapeHtml(name)}</strong> na serveru...`;
     progContainer.style.display = 'block';
-    progBar.style.width = '30%';
+    progBar.style.width = '0%';
 
-    try {
-        const res = await fetch(`/api/blunder/${encodeURIComponent(name)}/scan`, { method: 'POST' });
-        const result = await res.json();
+    let totalScanned = 0;
+    let totalBlunders = 0;
+    let done = false;
+    let batchNum = 0;
 
-        progBar.style.width = '100%';
+    // Loop: server scans 2 games at a time, we call repeatedly until done or limit
+    while (!done && batchNum < 5) {
+        batchNum++;
+        statusText.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Analyzuji dávku ${batchNum}... (${totalScanned} partií hotovo)`;
+        progBar.style.width = `${Math.min(batchNum * 20, 90)}%`;
 
-        if (result.error === 'daily_limit') {
-            statusText.innerHTML = `<i class="fa-solid fa-clock" style="color: #f59e0b;"></i> ${result.message}`;
-        } else {
-            statusText.innerHTML = `<i class="fa-solid fa-check" style="color: #4ade80;"></i> Analyzováno ${result.scanned} partií, nalezeno ${result.newBlunders} nových situací. Zbývá dnes: ${result.remainingToday}`;
+        try {
+            const body = gameIds ? JSON.stringify({ gameIds }) : '{}';
+            const res = await fetch(`/api/blunder/${encodeURIComponent(name)}/scan`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body
+            });
 
-            // Reload data from DB
-            setTimeout(() => selectPlayer(name), 500);
+            if (!res.ok) {
+                if (res.status === 429) {
+                    const err = await res.json();
+                    statusText.innerHTML = `<i class="fa-solid fa-clock" style="color: #f59e0b;"></i> ${err.message} (analyzováno ${totalScanned} partií, ${totalBlunders} situací)`;
+                    break;
+                }
+                throw new Error(`HTTP ${res.status}`);
+            }
+
+            const result = await res.json();
+            totalScanned += result.scanned || 0;
+            totalBlunders += result.newBlunders || 0;
+            done = result.done || result.scanned === 0;
+
+            if (result.error === 'daily_limit') {
+                statusText.innerHTML = `<i class="fa-solid fa-clock" style="color: #f59e0b;"></i> ${result.message} (analyzováno ${totalScanned} partií)`;
+                break;
+            }
+        } catch (e) {
+            console.error('Backend scan error:', e);
+            statusText.innerHTML = `<i class="fa-solid fa-triangle-exclamation" style="color: #f87171;"></i> Timeout/chyba serveru. Analyzováno ${totalScanned} partií, ${totalBlunders} situací. Zkuste znovu pro další dávku.`;
+            break;
         }
-    } catch (e) {
-        console.error('Backend scan error:', e);
-        statusText.innerHTML = `<i class="fa-solid fa-triangle-exclamation" style="color: #f87171;"></i> Chyba při analýze. Zkuste to znovu.`;
-    } finally {
-        setTimeout(() => { progContainer.style.display = 'none'; }, 2000);
     }
+
+    progBar.style.width = '100%';
+
+    if (done || totalScanned > 0) {
+        if (done) {
+            statusText.innerHTML = `<i class="fa-solid fa-check" style="color: #4ade80;"></i> Hotovo! Analyzováno ${totalScanned} partií, nalezeno ${totalBlunders} situací.`;
+        } else if (!statusText.innerHTML.includes('fa-clock') && !statusText.innerHTML.includes('fa-triangle')) {
+            statusText.innerHTML = `<i class="fa-solid fa-check" style="color: #4ade80;"></i> Analyzováno ${totalScanned} partií, nalezeno ${totalBlunders} situací. Klikněte znovu pro další.`;
+        }
+        setTimeout(() => selectPlayer(name), 500);
+    }
+
+    setTimeout(() => { progContainer.style.display = 'none'; }, 3000);
 }
 window.triggerBackendScan = triggerBackendScan;
 
@@ -1071,33 +1106,11 @@ function updateScanSelectedBtn() {
 
 async function scanSelectedGames() {
     if (!currentPlayer || selectedGameIds.size === 0) return;
-    const statusText = document.getElementById('status-text');
-    const statusMsg = document.getElementById('status-message');
-    statusMsg.style.display = 'block';
-    statusText.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Analyzuji ${selectedGameIds.size} vybraných partií...`;
-
-    try {
-        const res = await fetch(`/api/blunder/${encodeURIComponent(currentPlayer)}/scan`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ gameIds: Array.from(selectedGameIds) })
-        });
-        const result = await res.json();
-
-        if (result.error === 'daily_limit') {
-            statusText.innerHTML = `<i class="fa-solid fa-clock" style="color:#f59e0b;"></i> ${result.message}`;
-        } else {
-            statusText.innerHTML = `<i class="fa-solid fa-check" style="color:#4ade80;"></i> Analyzováno ${result.scanned} partií, nalezeno ${result.newBlunders} situací.`;
-            selectedGameIds.clear();
-            // Reload
-            setTimeout(() => {
-                loadGamesList(currentPlayer);
-                selectPlayer(currentPlayer);
-            }, 500);
-        }
-    } catch (e) {
-        statusText.innerHTML = `<i class="fa-solid fa-triangle-exclamation" style="color:#f87171;"></i> Chyba při analýze.`;
-    }
+    document.getElementById('status-message').style.display = 'block';
+    await triggerBackendScan(currentPlayer, Array.from(selectedGameIds));
+    selectedGameIds.clear();
+    updateScanSelectedBtn();
+    loadGamesList(currentPlayer);
 }
 window.scanSelectedGames = scanSelectedGames;
 
