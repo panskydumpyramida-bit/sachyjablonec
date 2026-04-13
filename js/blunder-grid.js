@@ -146,30 +146,96 @@ async function selectPlayer(name) {
     currentPlayer = name;
     document.getElementById('playerSearch').value = name;
     document.getElementById('autocompleteResults').style.display = 'none';
-    
-    // Zkontrolovat cache
-    const cached = getCachedResults(name);
-    if (cached && cached.length > 0) {
-        puzzleData = cached;
+
+    const statusMsg = document.getElementById('status-message');
+    const statusText = document.getElementById('status-text');
+    const progContainer = document.getElementById('progress-container');
+    const gridEl = document.getElementById('blunder-grid');
+
+    statusMsg.style.display = 'block';
+    progContainer.style.display = 'none';
+    statusText.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Načítám data pro <strong>${escapeHtml(name)}</strong>...`;
+
+    try {
+        // 1. Load cached results from DB
+        const [blundersRes, statusRes] = await Promise.all([
+            fetch(`/api/blunder/${encodeURIComponent(name)}?threshold=${currentThreshold}`),
+            fetch(`/api/blunder/${encodeURIComponent(name)}/status`)
+        ]);
+
+        const blunders = blundersRes.ok ? await blundersRes.json() : [];
+        const status = statusRes.ok ? await statusRes.json() : { totalGames: 0, gamesScanned: 0, canScanMore: true };
+
+        // 2. Display results
+        puzzleData = blunders;
         filteredData = [];
-        
-        const statusMsg = document.getElementById('status-message');
-        const statusText = document.getElementById('status-text');
-        statusMsg.style.display = 'block';
-        statusText.innerHTML = `<i class="fa-solid fa-bolt" style="color: gold;"></i> Načteno z cache (${cached.length} situací). <button onclick="forceRescan('${name.replace(/'/g, "\\'")}')" class="card-btn" style="display:inline-block; padding: 0.2rem 0.6rem; margin-left:0.5rem; font-size:0.8rem;"><i class="fa-solid fa-rotate"></i> Přeskenovat</button>`;
-        document.getElementById('progress-container').style.display = 'none';
-        
+
+        // 3. Status bar with scan info
+        const pct = status.totalGames > 0 ? Math.round(status.gamesScanned / status.totalGames * 100) : 0;
+        const scanBtn = status.canScanMore
+            ? `<button onclick="triggerBackendScan('${escapeHtml(name).replace(/'/g, "&#39;")}')" class="card-btn" style="display:inline-block; padding: 0.3rem 0.8rem; margin-left:0.75rem; font-size:0.8rem; background: var(--primary-color); color: #000; font-weight: 600;"><i class="fa-solid fa-magnifying-glass-plus"></i> Analyzovat další</button>`
+            : `<span style="margin-left:0.75rem; font-size:0.8rem; color: #f59e0b;"><i class="fa-solid fa-clock"></i> Denní limit vyčerpán</span>`;
+
+        if (blunders.length > 0) {
+            statusText.innerHTML = `<i class="fa-solid fa-database" style="color: #60a5fa;"></i> <strong>${blunders.length}</strong> situací z DB (${status.gamesScanned}/${status.totalGames} partií, ${pct}%) ${scanBtn}`;
+        } else if (status.gamesScanned > 0) {
+            statusText.innerHTML = `<i class="fa-solid fa-check" style="color: #4ade80;"></i> Žádné chyby nad ${currentThreshold}% v ${status.gamesScanned} partiích. ${scanBtn}`;
+        } else {
+            statusText.innerHTML = `<i class="fa-solid fa-info-circle" style="color: #60a5fa;"></i> Zatím neanalyzováno. ${status.totalGames} partií k dispozici. ${scanBtn}`;
+        }
+
         renderGrid();
-        return;
+
+    } catch (e) {
+        console.error('selectPlayer error:', e);
+        // Fallback: use old localStorage cache
+        const cached = getCachedResults(name);
+        if (cached && cached.length > 0) {
+            puzzleData = cached;
+            filteredData = [];
+            statusText.innerHTML = `<i class="fa-solid fa-bolt" style="color: gold;"></i> Načteno z lokální cache (${cached.length} situací). <button onclick="triggerBackendScan('${escapeHtml(name).replace(/'/g, "&#39;")}')" class="card-btn" style="display:inline-block; padding: 0.2rem 0.6rem; margin-left:0.5rem; font-size:0.8rem;"><i class="fa-solid fa-rotate"></i> Skenovat</button>`;
+            renderGrid();
+        } else {
+            statusText.innerHTML = `<i class="fa-solid fa-triangle-exclamation" style="color: #f87171;"></i> Nepodařilo se načíst data. <button onclick="startBlunderScan('${escapeHtml(name).replace(/'/g, "&#39;")}')" class="card-btn" style="display:inline-block; padding: 0.2rem 0.6rem; margin-left:0.5rem; font-size:0.8rem;"><i class="fa-solid fa-rotate"></i> Skenovat lokálně</button>`;
+        }
     }
-    
-    startBlunderScan(name);
 }
 
+// Trigger backend scan (max 10 games/day)
+async function triggerBackendScan(name) {
+    const statusText = document.getElementById('status-text');
+    const progContainer = document.getElementById('progress-container');
+    const progBar = document.getElementById('progress-bar');
+
+    statusText.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Analyzuji partie hráče <strong>${escapeHtml(name)}</strong> na serveru...`;
+    progContainer.style.display = 'block';
+    progBar.style.width = '30%';
+
+    try {
+        const res = await fetch(`/api/blunder/${encodeURIComponent(name)}/scan`, { method: 'POST' });
+        const result = await res.json();
+
+        progBar.style.width = '100%';
+
+        if (result.error === 'daily_limit') {
+            statusText.innerHTML = `<i class="fa-solid fa-clock" style="color: #f59e0b;"></i> ${result.message}`;
+        } else {
+            statusText.innerHTML = `<i class="fa-solid fa-check" style="color: #4ade80;"></i> Analyzováno ${result.scanned} partií, nalezeno ${result.newBlunders} nových situací. Zbývá dnes: ${result.remainingToday}`;
+
+            // Reload data from DB
+            setTimeout(() => selectPlayer(name), 500);
+        }
+    } catch (e) {
+        console.error('Backend scan error:', e);
+        statusText.innerHTML = `<i class="fa-solid fa-triangle-exclamation" style="color: #f87171;"></i> Chyba při analýze. Zkuste to znovu.`;
+    } finally {
+        setTimeout(() => { progContainer.style.display = 'none'; }, 2000);
+    }
+}
+window.triggerBackendScan = triggerBackendScan;
+
 window.forceRescan = function(name) {
-    const key = CACHE_KEY_PREFIX + name.toLowerCase().replace(/\s/g, '_');
-    localStorage.removeItem(key);
-    startBlunderScan(name);
+    triggerBackendScan(name);
 }
 
 // === HEURISTIC PRE-FILTER ===
