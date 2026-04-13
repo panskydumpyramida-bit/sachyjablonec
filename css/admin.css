@@ -841,16 +841,32 @@
 
 /* Mobile */
 @media (max-width: 768px) {
-    header nav {
+    #adminPanel header nav {
         flex-direction: column;
         gap: 0.5rem;
+        padding: 0.5rem 1rem;
     }
 
-    header .nav-links {
-        gap: 1rem;
+    #adminPanel .nav-links {
+        gap: 0.5rem;
         flex-direction: row;
         justify-content: center;
         flex-wrap: wrap;
+    }
+
+    #adminPanel .nav-links a {
+        font-size: 0.75rem;
+    }
+
+    .admin-nav {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        flex-wrap: nowrap;
+        scrollbar-width: none;
+    }
+
+    .admin-nav::-webkit-scrollbar {
+        display: none;
     }
 
     .admin-header {
