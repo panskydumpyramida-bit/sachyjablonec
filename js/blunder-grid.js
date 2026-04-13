@@ -845,20 +845,31 @@ function initBoard(realIndex, elementId, data) {
         };
         boards[realIndex] = Chessboard(elementId, config);
 
-        // ?? badge na cílové pole
+        // Arrow + badge on target square
         setTimeout(() => {
             if (!data.blunderMoveLAN || data.blunderMoveLAN.length < 4) return;
-            const targetSquare = data.blunderMoveLAN.substring(2,4); 
-            const squareEl = document.querySelector(`#${elementId} .square-${targetSquare}`);
-            if (squareEl) {
-                squareEl.style.boxShadow = "inset 0 0 0 4px rgba(244, 67, 54, 0.8)";
-                squareEl.style.position = "relative";
-                if(!squareEl.querySelector('.badge-overlay')) {
+            const fromSq = data.blunderMoveLAN.substring(0, 2);
+            const toSq = data.blunderMoveLAN.substring(2, 4);
+
+            drawMoveArrow(elementId, fromSq, toSq, data.type === 'miss' ? '#f59e0b' : '#ef4444');
+
+            // ?? badge on target
+            const targetEl = document.querySelector(`#${elementId} .square-${toSq}`);
+            if (targetEl) {
+                targetEl.style.boxShadow = "inset 0 0 0 4px rgba(244, 67, 54, 0.8)";
+                targetEl.style.position = "relative";
+                if (!targetEl.querySelector('.badge-overlay')) {
                     const badge = document.createElement('div');
                     badge.className = 'badge-overlay';
                     badge.innerText = data.type === 'miss' ? '?!' : '??';
-                    squareEl.appendChild(badge);
+                    targetEl.appendChild(badge);
                 }
+            }
+
+            // Highlight source square
+            const fromEl = document.querySelector(`#${elementId} .square-${fromSq}`);
+            if (fromEl) {
+                fromEl.style.boxShadow = "inset 0 0 0 3px rgba(244, 67, 54, 0.4)";
             }
         }, 300);
     }
@@ -959,7 +970,15 @@ window.showBestMove = function(index) {
         promotion: data.bestMoveLAN.substring(4,5) || 'q'
     });
     boards[index].position(game.fen());
-    
+
+    // Green arrow for best move
+    const elementId = `board-${filteredData.indexOf(data) !== -1 ? filteredData.indexOf(data) : index}`;
+    setTimeout(() => {
+        if (data.bestMoveLAN && data.bestMoveLAN.length >= 4) {
+            drawMoveArrow(elementId, data.bestMoveLAN.substring(0, 2), data.bestMoveLAN.substring(2, 4), '#4ade80');
+        }
+    }, 100);
+
     showStatusEffect(index, 'success');
     document.getElementById(`eval-${index}`).textContent = `Motor doporučuje`;
     document.getElementById(`eval-${index}`).style.color = '#81c784';
@@ -971,10 +990,10 @@ window.toggleComparison = function(index, btnEl) {
     const game = games[index];
     const showsBest = btnEl.getAttribute('data-shown-best') === 'true';
 
-    // Výmaz odznaků
+    // Výmaz odznaků a šipek
     const boardEl = document.querySelector(`.blunder-card[data-index="${index}"] .board-container`);
     boardEl.querySelectorAll('.badge-overlay').forEach(b => b.remove());
-    // Reset box-shadow na všech políčkách
+    boardEl.querySelectorAll('.blunder-arrow-svg').forEach(s => s.remove());
     boardEl.querySelectorAll('[class*="square-"]').forEach(s => s.style.boxShadow = 'none');
 
     game.load(data.fenBefore);
@@ -987,10 +1006,12 @@ window.toggleComparison = function(index, btnEl) {
         btnEl.style.color = '';
         btnEl.style.borderColor = '';
         
-        // Obnov ?? badge
+        // Obnov šipku + badge
         if (data.blunderMoveLAN && data.blunderMoveLAN.length >= 4) {
-            const targetSquare = data.blunderMoveLAN.substring(2,4); 
+            const fromSq = data.blunderMoveLAN.substring(0, 2);
+            const targetSquare = data.blunderMoveLAN.substring(2, 4);
             setTimeout(() => {
+                drawMoveArrow(boardEl.id, fromSq, targetSquare, data.type === 'miss' ? '#f59e0b' : '#ef4444');
                 const squareEl = boardEl.querySelector('.square-' + targetSquare);
                 if (squareEl) {
                     squareEl.style.boxShadow = "inset 0 0 0 4px rgba(244, 67, 54, 0.8)";
@@ -1015,17 +1036,82 @@ window.toggleComparison = function(index, btnEl) {
         btnEl.style.color = '#81c784';
         btnEl.style.borderColor = 'rgba(76, 175, 80, 0.3)';
         
-        // Zelený rámeček na správný tah
-        const targetSquare = data.bestMoveLAN.substring(2,4); 
-        setTimeout(() => {
-            const squareEl = boardEl.querySelector('.square-' + targetSquare);
-            if (squareEl) {
-                squareEl.style.boxShadow = "inset 0 0 0 4px rgba(76, 175, 80, 0.8)";
-            }
-        }, 150);
+        // Zelená šipka + rámeček na správný tah
+        if (data.bestMoveLAN && data.bestMoveLAN.length >= 4) {
+            const fromSq = data.bestMoveLAN.substring(0, 2);
+            const targetSquare = data.bestMoveLAN.substring(2, 4);
+            setTimeout(() => {
+                drawMoveArrow(boardEl.id, fromSq, targetSquare, '#4ade80');
+                const squareEl = boardEl.querySelector('.square-' + targetSquare);
+                if (squareEl) {
+                    squareEl.style.boxShadow = "inset 0 0 0 4px rgba(76, 175, 80, 0.8)";
+                }
+            }, 150);
+        }
     }
     
     boards[index].position(game.fen());
+}
+
+// === DRAW ARROW ON CHESSBOARD ===
+function drawMoveArrow(boardElementId, fromSquare, toSquare, color = '#ef4444') {
+    const boardEl = document.getElementById(boardElementId);
+    if (!boardEl) return;
+
+    const fromEl = boardEl.querySelector(`.square-${fromSquare}`);
+    const toEl = boardEl.querySelector(`.square-${toSquare}`);
+    if (!fromEl || !toEl) return;
+
+    const boardRect = boardEl.getBoundingClientRect();
+    const fromRect = fromEl.getBoundingClientRect();
+    const toRect = toEl.getBoundingClientRect();
+
+    const x1 = fromRect.left - boardRect.left + fromRect.width / 2;
+    const y1 = fromRect.top - boardRect.top + fromRect.height / 2;
+    const x2 = toRect.left - boardRect.left + toRect.width / 2;
+    const y2 = toRect.top - boardRect.top + toRect.height / 2;
+
+    // Remove existing arrow
+    boardEl.querySelector('.blunder-arrow-svg')?.remove();
+
+    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    svg.classList.add('blunder-arrow-svg');
+    svg.setAttribute('width', boardRect.width);
+    svg.setAttribute('height', boardRect.height);
+    svg.style.cssText = `position:absolute;top:0;left:0;pointer-events:none;z-index:50;`;
+
+    // Arrow marker
+    const defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
+    const marker = document.createElementNS('http://www.w3.org/2000/svg', 'marker');
+    marker.setAttribute('id', `arrowhead-${boardElementId}`);
+    marker.setAttribute('markerWidth', '10');
+    marker.setAttribute('markerHeight', '7');
+    marker.setAttribute('refX', '9');
+    marker.setAttribute('refY', '3.5');
+    marker.setAttribute('orient', 'auto');
+    const polygon = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+    polygon.setAttribute('points', '0 0, 10 3.5, 0 7');
+    polygon.setAttribute('fill', color);
+    marker.appendChild(polygon);
+    defs.appendChild(marker);
+    svg.appendChild(defs);
+
+    // Line
+    const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+    line.setAttribute('x1', x1);
+    line.setAttribute('y1', y1);
+    line.setAttribute('x2', x2);
+    line.setAttribute('y2', y2);
+    line.setAttribute('stroke', color);
+    line.setAttribute('stroke-width', '5');
+    line.setAttribute('stroke-opacity', '0.7');
+    line.setAttribute('stroke-linecap', 'round');
+    line.setAttribute('marker-end', `url(#arrowhead-${boardElementId})`);
+    svg.appendChild(line);
+
+    // Make board container relative for overlay
+    boardEl.style.position = 'relative';
+    boardEl.appendChild(svg);
 }
 
 function escapeHtml(unsafe) {
