@@ -351,11 +351,9 @@
                 <div id="autocompleteResults" class="autocomplete-results"></div>
             </div>
 
-            <div class="mode-toggle">
-                <select id="mode-select" class="search-input" style="padding: 0.45rem 0.8rem; cursor: pointer; color: #e2e8f0;">
-                    <option value="training">Trénink (Hádej tah)</option>
-                    <option value="gallery">Galerie (Prohlížení)</option>
-                </select>
+            <div class="mode-toggle" style="display: flex; background: rgba(0,0,0,0.3); border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); overflow: hidden;">
+                <button id="mode-btn-training" onclick="setMode('training')" style="padding: 0.45rem 1rem; border: none; background: rgba(212,175,55,0.2); color: #d4af37; cursor: pointer; font-size: 0.8rem; font-weight: 600; transition: all 0.2s;"><i class="fa-solid fa-dumbbell"></i> Trénink</button>
+                <button id="mode-btn-gallery" onclick="setMode('gallery')" style="padding: 0.45rem 1rem; border: none; background: transparent; color: #94a3b8; cursor: pointer; font-size: 0.8rem; font-weight: 600; transition: all 0.2s;"><i class="fa-solid fa-images"></i> Galerie</button>
             </div>
             
             <div class="threshold-slider" style="display: flex; align-items: center; gap: 0.5rem; background: rgba(0,0,0,0.2); padding: 0.4rem 0.6rem; border-radius: 6px; border: 1px solid rgba(255,255,255,0.05);">
