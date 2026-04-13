@@ -757,30 +757,35 @@ function renderGrid() {
             ? `<button data-featured-id="${puzzle.id}" onclick="event.stopPropagation();toggleFeatured(${puzzle.id})" style="background:none;border:none;cursor:pointer;font-size:1rem;padding:0.2rem;transition:transform 0.15s;" onmouseenter="this.style.transform='scale(1.2)'" onmouseleave="this.style.transform='scale(1)'" title="Oblíbené">${starIcon}</button>`
             : '';
 
+        // Zkraceni jmen pro kompaktni zobrazeni (jen prijmeni max)
+        const wName = escapeHtml(puzzle.white).split(' ').pop();
+        const bName = escapeHtml(puzzle.black).split(' ').pop();
+
         if (currentMode === 'training') {
             cardHtml = `
                 <div class="blunder-card" data-index="${realIndex}">
                     <div class="blunder-card-header">
-                        <div style="display:flex;justify-content:space-between;align-items:center;">
-                            <div class="${tagClass}">${tagText}</div>
-                            ${starBtn}
-                        </div>
-                        <div class="blunder-players">${escapeHtml(puzzle.white)} vs ${escapeHtml(puzzle.black)} ${puzzle.result}</div>
+                        <div class="${tagClass}">${isMiss ? 'Miss' : 'Blunder'}</div>
+                        <div class="blunder-players" title="${escapeHtml(puzzle.white)} vs ${escapeHtml(puzzle.black)}">${wName} v ${bName}</div>
+                        ${starBtn}
                     </div>
                     <div class="board-container" id="${id}"></div>
                     <div class="card-controls">
-                        <button class="card-btn eval-btn" onclick="showHint(${realIndex})">
-                            <i class="fa-solid fa-lightbulb"></i> Ukaž nápovědu
-                        </button>
+                        <div class="eval-btn-wrapper">
+                            <button class="card-btn eval-btn" onclick="showHint(${realIndex})">
+                                <i class="fa-solid fa-lightbulb"></i> Nápověda
+                            </button>
+                        </div>
                         <button class="card-btn show-game" onclick="showGameMove(${realIndex})">
-                            <i class="fa-solid fa-xmark"></i> ${isMiss ? 'Promarněný tah' : 'Původní chyba'}
+                            <i class="fa-solid fa-xmark"></i> Hráno
                         </button>
                         <button class="card-btn show-best" onclick="showBestMove(${realIndex})">
-                            <i class="fa-solid fa-check"></i> Správný tah
+                            <i class="fa-solid fa-check"></i> Řešení
                         </button>
                     </div>
                     <div class="card-footer" title="Ztráta pravděpodobnosti výhry">
-                        Eval: <span id="eval-${realIndex}">${puzzle.evalBefore > 0 ? '+' : ''}${puzzle.evalBefore} ${dropText} ${moveInfo}</span>
+                        <span class="card-footer-eval" id="eval-${realIndex}">${puzzle.evalBefore > 0 ? '+' : ''}${puzzle.evalBefore} ${dropText}</span>
+                        <span>${moveInfo}</span>
                     </div>
                 </div>
             `;
@@ -789,23 +794,22 @@ function renderGrid() {
             cardHtml = `
                 <div class="blunder-card" data-index="${realIndex}">
                     <div class="blunder-card-header">
-                        <div style="display:flex;justify-content:space-between;align-items:center;">
-                            <div class="${tagClass}">${tagText}</div>
-                            ${starBtn}
-                        </div>
-                        <div class="blunder-players">${escapeHtml(puzzle.white)} vs ${escapeHtml(puzzle.black)} ${puzzle.result}</div>
+                        <div class="${tagClass}">${isMiss ? 'Miss' : 'Blunder'}</div>
+                        <div class="blunder-players" title="${escapeHtml(puzzle.white)} vs ${escapeHtml(puzzle.black)}">${wName} v ${bName}</div>
+                        ${starBtn}
                     </div>
                     <div class="board-container" id="${id}"></div>
                     <div class="card-controls">
-                        <div style="color: #bbb; font-size: 0.9rem; margin-bottom: 0.5rem; text-align: center;">
-                            V partii se stalo (${moveInfo}): <strong style="color: #e57373;">${puzzle.blunderMoveSAN} ${isMiss ? '?!' : '??'}</strong>
+                        <div class="eval-btn-wrapper" style="text-align: center; font-size: 0.75rem; color: #cbd5e1; padding: 0.2rem 0;">
+                            Tah: <strong style="color: #e57373;">${puzzle.blunderMoveSAN} ${isMiss ? '?!' : '??'}</strong>
                         </div>
-                        <button class="card-btn show-best" onclick="toggleComparison(${realIndex}, this)">
+                        <button class="card-btn show-best eval-btn-wrapper" onclick="toggleComparison(${realIndex}, this)">
                             <i class="fa-solid fa-exchange"></i> Ukázat, jak to mělo být
                         </button>
                     </div>
                     <div class="card-footer" title="Ztráta pravděpodobnosti výhry">
-                        Ztráta šance: <span id="eval-${realIndex}" style="color: #e57373; font-weight: bold;">${dropText}</span>
+                        <span class="card-footer-eval" id="eval-${realIndex}" style="color: #e57373;">${dropText}</span>
+                        <span>${moveInfo}</span>
                     </div>
                 </div>
             `;
