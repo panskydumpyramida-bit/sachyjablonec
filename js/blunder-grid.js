@@ -175,7 +175,12 @@ async function selectPlayer(name) {
         // Update tab badges
         document.getElementById('games-count-badge').textContent = `${status.gamesScanned}/${status.totalGames}`;
 
-        // 2. Display results
+        // 2. Normalize DB field names to frontend names
+        blunders.forEach(p => {
+            if (p.movePlayed) p.blunderMoveSAN = p.movePlayed;
+            if (p.movePlayedLAN) p.blunderMoveLAN = p.movePlayedLAN;
+            if (p.probDrop) p.winProbDrop = String(p.probDrop);
+        });
         puzzleData = blunders;
         filteredData = [];
 
