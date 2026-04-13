@@ -256,7 +256,10 @@ async function triggerBackendScan(name, gameIds = null) {
         progBar.style.width = `${Math.min(batchNum * 20, 90)}%`;
 
         try {
-            const body = gameIds ? JSON.stringify({ gameIds }) : '{}';
+            const bodyObj = gameIds ? { gameIds } : {};
+            if (window.godMode) bodyObj.override = true;
+            const body = JSON.stringify(bodyObj);
+
             const res = await fetch(`/api/blunder/${encodeURIComponent(name)}/scan`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
