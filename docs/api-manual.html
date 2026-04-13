@@ -1,0 +1,729 @@
+<!DOCTYPE html>
+<html lang="cs">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Reference | ŠO TJ Bižuterie</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0a0e1a;
+            --bg-card: #111827;
+            --bg-card-hover: #1a2035;
+            --border: rgba(255, 255, 255, 0.06);
+            --border-accent: rgba(212, 175, 55, 0.2);
+            --text: #e2e8f0;
+            --text-muted: #94a3b8;
+            --text-dim: #64748b;
+            --gold: #d4af37;
+            --gold-glow: rgba(212, 175, 55, 0.15);
+            --blue: #3b82f6;
+            --green: #22c55e;
+            --red: #ef4444;
+            --purple: #a855f7;
+            --orange: #f59e0b;
+            --pink: #ec4899;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text);
+            line-height: 1.7;
+            min-height: 100vh;
+        }
+
+        /* Animated gradient bg */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background:
+                radial-gradient(ellipse at 20% 0%, rgba(59, 130, 246, 0.08) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 100%, rgba(212, 175, 55, 0.06) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 2rem 1.5rem 4rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Back button */
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 0.85rem;
+            margin-bottom: 2rem;
+            padding: 0.4rem 0.8rem;
+            border-radius: 6px;
+            transition: all 0.2s;
+        }
+
+        .back-link:hover {
+            color: var(--gold);
+            background: var(--gold-glow);
+        }
+
+        /* Header */
+        .hero-header {
+            text-align: center;
+            padding: 3rem 2rem;
+            margin-bottom: 3rem;
+            background: linear-gradient(135deg, rgba(17, 24, 39, 0.8), rgba(30, 41, 59, 0.5));
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero-header::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, rgba(212, 175, 55, 0.04), transparent 60%);
+            pointer-events: none;
+        }
+
+        .hero-header h1 {
+            font-size: 2.2rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #fff, var(--gold));
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.5rem;
+        }
+
+        .hero-header p {
+            color: var(--text-muted);
+            font-size: 1rem;
+        }
+
+        .hero-badges {
+            display: flex;
+            justify-content: center;
+            gap: 0.75rem;
+            margin-top: 1.25rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.3rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+
+        .badge-gold {
+            background: var(--gold-glow);
+            color: var(--gold);
+            border: 1px solid rgba(212, 175, 55, 0.25);
+        }
+
+        .badge-blue {
+            background: rgba(59, 130, 246, 0.1);
+            color: var(--blue);
+            border: 1px solid rgba(59, 130, 246, 0.2);
+        }
+
+        .badge-green {
+            background: rgba(34, 197, 94, 0.1);
+            color: var(--green);
+            border: 1px solid rgba(34, 197, 94, 0.2);
+        }
+
+        /* Quick Start Flow */
+        .quick-start {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0;
+            margin: 2rem 0 3rem;
+            flex-wrap: wrap;
+        }
+
+        .qs-step {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.6rem 1rem;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            white-space: nowrap;
+        }
+
+        .qs-step i {
+            font-size: 1rem;
+        }
+
+        .qs-arrow {
+            color: var(--text-dim);
+            padding: 0 0.4rem;
+            font-size: 0.9rem;
+        }
+
+        /* Table of Contents */
+        .toc {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 0.75rem;
+            margin-bottom: 3rem;
+        }
+
+        .toc-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.9rem 1.1rem;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            text-decoration: none;
+            color: var(--text);
+            transition: all 0.25s;
+        }
+
+        .toc-item:hover {
+            background: var(--bg-card-hover);
+            border-color: var(--border-accent);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+        }
+
+        .toc-num {
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            flex-shrink: 0;
+        }
+
+        .toc-text {
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        .toc-desc {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        /* Section Cards */
+        .section {
+            margin-bottom: 2.5rem;
+            scroll-margin-top: 2rem;
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 1.25rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .section-header i {
+            font-size: 1.4rem;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 10px;
+            flex-shrink: 0;
+        }
+
+        .section-header h2 {
+            font-size: 1.4rem;
+            font-weight: 700;
+        }
+
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .card h3 {
+            font-size: 1.05rem;
+            font-weight: 600;
+            margin-bottom: 0.75rem;
+            color: #f1f5f9;
+        }
+
+        .card p,
+        .card li {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        .card ul,
+        .card ol {
+            padding-left: 1.5rem;
+            margin: 0.5rem 0;
+        }
+
+        .card li {
+            margin-bottom: 0.4rem;
+        }
+
+        /* Tables */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 0.75rem 0;
+            font-size: 0.85rem;
+        }
+
+        th {
+            text-align: left;
+            padding: 0.6rem 0.8rem;
+            background: rgba(255, 255, 255, 0.03);
+            color: var(--text-muted);
+            font-weight: 600;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        td {
+            padding: 0.55rem 0.8rem;
+            border-bottom: 1px solid var(--border);
+            color: var(--text-muted);
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        tr:hover td {
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        /* Callout boxes */
+        .callout {
+            padding: 1rem 1.25rem;
+            border-radius: 10px;
+            margin: 1rem 0;
+            display: flex;
+            gap: 0.75rem;
+            font-size: 0.88rem;
+        }
+
+        .callout-icon {
+            font-size: 1.1rem;
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+
+        .callout-tip {
+            background: rgba(34, 197, 94, 0.06);
+            border: 1px solid rgba(34, 197, 94, 0.15);
+            color: var(--green);
+        }
+
+        .callout-info {
+            background: rgba(59, 130, 246, 0.06);
+            border: 1px solid rgba(59, 130, 246, 0.15);
+            color: var(--blue);
+        }
+
+        .callout-warn {
+            background: rgba(245, 158, 11, 0.06);
+            border: 1px solid rgba(245, 158, 11, 0.15);
+            color: var(--orange);
+        }
+
+        /* Keyboard shortcut badges */
+        kbd {
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 5px;
+            padding: 2px 7px;
+            font-family: 'SF Mono', 'Fira Code', monospace;
+            font-size: 0.78rem;
+            color: #f1f5f9;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+            white-space: nowrap;
+        }
+
+        /* Highlight examples */
+        .highlight-demo {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem 1.25rem;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 10px;
+            margin: 0.5rem 0;
+            font-size: 0.95rem;
+        }
+
+        .hl-name {
+            color: var(--gold);
+            font-weight: 600;
+        }
+
+        .hl-score {
+            color: var(--green);
+            font-weight: 600;
+        }
+
+        /* Status flow */
+        .status-flow {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0;
+            margin: 1rem 0;
+            flex-wrap: wrap;
+        }
+
+        .status-box {
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        /* Troubleshooting */
+        .trouble-item {
+            padding: 1rem 1.25rem;
+            background: rgba(239, 68, 68, 0.04);
+            border: 1px solid rgba(239, 68, 68, 0.1);
+            border-radius: 10px;
+            margin-bottom: 0.75rem;
+        }
+
+        .trouble-item h4 {
+            color: var(--red);
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .trouble-item .solution {
+            color: var(--green);
+            font-size: 0.85rem;
+        }
+
+        .trouble-item .solution li {
+            margin-bottom: 0.25rem;
+        }
+
+        /* Footer */
+        .manual-footer {
+            text-align: center;
+            padding: 2rem;
+            color: var(--text-dim);
+            font-size: 0.8rem;
+            border-top: 1px solid var(--border);
+            margin-top: 3rem;
+        }
+
+        /* Responsive */
+        @media (max-width: 640px) {
+            .container {
+                padding: 1rem;
+            }
+
+            .hero-header {
+                padding: 2rem 1.25rem;
+            }
+
+            .hero-header h1 {
+                font-size: 1.6rem;
+            }
+
+            .toc {
+                grid-template-columns: 1fr;
+            }
+
+            .quick-start {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+
+            .qs-arrow {
+                transform: rotate(90deg);
+            }
+        }
+        /* API manual extras */
+        .api-table { width: 100%; border-collapse: collapse; margin: 1rem 0; font-size: 0.85rem; }
+        .api-table th { background: rgba(212,175,55,0.1); color: var(--gold); text-align: left; padding: 0.6rem 0.75rem; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 2px solid var(--border-accent); }
+        .api-table td { padding: 0.5rem 0.75rem; border-bottom: 1px solid var(--border); }
+        .api-table tr:hover { background: rgba(255,255,255,0.02); }
+        .method { display: inline-block; padding: 0.15rem 0.5rem; border-radius: 4px; font-size: 0.7rem; font-weight: 700; font-family: monospace; letter-spacing: 0.02em; }
+        .method-get { background: rgba(34,197,94,0.15); color: #4ade80; }
+        .method-post { background: rgba(59,130,246,0.15); color: #60a5fa; }
+        .method-put { background: rgba(251,191,36,0.15); color: #fbbf24; }
+        .method-delete { background: rgba(239,68,68,0.15); color: #fca5a5; }
+        .endpoint { font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; color: #e2e8f0; }
+        .auth-badge { display: inline-block; padding: 0.1rem 0.4rem; border-radius: 3px; font-size: 0.65rem; font-weight: 600; }
+        .auth-none { background: rgba(34,197,94,0.1); color: #4ade80; }
+        .auth-user { background: rgba(59,130,246,0.1); color: #60a5fa; }
+        .auth-member { background: rgba(168,85,247,0.1); color: #c084fc; }
+        .auth-admin { background: rgba(251,191,36,0.1); color: #fbbf24; }
+        .auth-super { background: rgba(239,68,68,0.1); color: #fca5a5; }
+        code { background: rgba(255,255,255,0.06); padding: 0.15rem 0.4rem; border-radius: 4px; font-size: 0.82rem; font-family: 'JetBrains Mono', monospace; }
+        pre { background: #0a0e1a; border: 1px solid var(--border); border-radius: 8px; padding: 1rem; overflow-x: auto; font-size: 0.8rem; line-height: 1.5; margin: 1rem 0; }
+        pre code { background: none; padding: 0; }
+    </style>
+</head>
+
+<body>
+<div class="container">
+
+    <a href="/admin.html" class="back-link">
+        <i class="fa-solid fa-arrow-left"></i> Zpět do admin panelu
+    </a>
+
+    <div class="hero-header">
+        <h1><i class="fa-solid fa-code"></i> API Reference</h1>
+        <p style="color: var(--text-muted); margin-top: 0.5rem;">Kompletní dokumentace REST API pro sachyjablonec.cz</p>
+        <p style="color: var(--text-dim); font-size: 0.8rem; margin-top: 0.5rem;">v32 | Base URL: <code>https://www.sachyjablonec.cz/api</code></p>
+    </div>
+
+    <!-- Auth Info -->
+    <div class="section-card">
+        <div class="section-icon" style="background: var(--gold-glow);"><i class="fa-solid fa-key" style="color: var(--gold);"></i></div>
+        <h2>Autentizace</h2>
+        <p style="color: var(--text-muted); margin-bottom: 1rem;">API používá JWT tokeny. Token získáte přes <code>POST /api/auth/login</code> a posíláte v hlavičce:</p>
+        <pre><code>Authorization: Bearer &lt;token&gt;</code></pre>
+        <p style="color: var(--text-muted); margin-top: 1rem;">Role: <span class="auth-badge auth-none">Veřejné</span> <span class="auth-badge auth-user">USER+</span> <span class="auth-badge auth-member">MEMBER+</span> <span class="auth-badge auth-admin">ADMIN+</span> <span class="auth-badge auth-super">SUPERADMIN</span></p>
+    </div>
+
+    <!-- Auth endpoints -->
+    <div class="section-card">
+        <div class="section-icon" style="background: rgba(59,130,246,0.1);"><i class="fa-solid fa-user-shield" style="color: #60a5fa;"></i></div>
+        <h2>Autentizace & Uživatelé</h2>
+        <table class="api-table">
+            <thead><tr><th>Metoda</th><th>Endpoint</th><th>Popis</th><th>Auth</th></tr></thead>
+            <tbody>
+                <tr><td><span class="method method-post">POST</span></td><td class="endpoint">/auth/register</td><td>Registrace nového uživatele</td><td><span class="auth-badge auth-none">Veřejné</span></td></tr>
+                <tr><td><span class="method method-post">POST</span></td><td class="endpoint">/auth/login</td><td>Přihlášení (vrací JWT)</td><td><span class="auth-badge auth-none">Veřejné</span></td></tr>
+                <tr><td><span class="method method-get">GET</span></td><td class="endpoint">/auth/me</td><td>Info o přihlášeném uživateli</td><td><span class="auth-badge auth-user">USER+</span></td></tr>
+                <tr><td><span class="method method-post">POST</span></td><td class="endpoint">/auth/google</td><td>Google OAuth přihlášení</td><td><span class="auth-badge auth-none">Veřejné</span></td></tr>
+                <tr><td><span class="method method-get">GET</span></td><td class="endpoint">/users</td><td>Seznam uživatelů</td><td><span class="auth-badge auth-admin">ADMIN+</span></td></tr>
+                <tr><td><span class="method method-put">PUT</span></td><td class="endpoint">/users/:id/role</td><td>Změna role uživatele</td><td><span class="auth-badge auth-super">SUPERADMIN</span></td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- News -->
+    <div class="section-card">
+        <div class="section-icon" style="background: rgba(34,197,94,0.1);"><i class="fa-solid fa-newspaper" style="color: #4ade80;"></i></div>
+        <h2>Články (News)</h2>
+        <table class="api-table">
+            <thead><tr><th>Metoda</th><th>Endpoint</th><th>Popis</th><th>Auth</th></tr></thead>
+            <tbody>
+                <tr><td><span class="method method-get">GET</span></td><td class="endpoint">/news</td><td>Seznam článků. Query: <code>published</code>, <code>category</code>, <code>page</code>, <code>limit</code></td><td><span class="auth-badge auth-none">Veřejné</span></td></tr>
+                <tr><td><span class="method method-get">GET</span></td><td class="endpoint">/news/:id</td><td>Detail článku</td><td><span class="auth-badge auth-none">Veřejné</span></td></tr>
+                <tr><td><span class="method method-post">POST</span></td><td class="endpoint">/news</td><td>Vytvoření článku</td><td><span class="auth-badge auth-admin">ADMIN+</span></td></tr>
+                <tr><td><span class="method method-put">PUT</span></td><td class="endpoint">/news/:id</td><td>Editace článku</td><td><span class="auth-badge auth-admin">ADMIN+</span></td></tr>
+                <tr><td><span class="method method-delete">DELETE</span></td><td class="endpoint">/news/:id</td><td>Smazání článku</td><td><span class="auth-badge auth-admin">ADMIN+</span></td></tr>
+            </tbody>
+        </table>
+        <p style="color: var(--text-dim); font-size: 0.8rem; margin-top: 0.75rem;"><i class="fa-solid fa-info-circle"></i> Příklad: <code>GET /api/news?published=true&category=turnaje&page=1&limit=10</code></p>
+    </div>
+
+    <!-- Comments -->
+    <div class="section-card">
+        <div class="section-icon" style="background: rgba(251,191,36,0.1);"><i class="fa-solid fa-comments" style="color: #fbbf24;"></i></div>
+        <h2>Komentáře</h2>
+        <table class="api-table">
+            <thead><tr><th>Metoda</th><th>Endpoint</th><th>Popis</th><th>Auth</th></tr></thead>
+            <tbody>
+                <tr><td><span class="method method-get">GET</span></td><td class="endpoint">/comments/:newsId</td><td>Komentáře k článku</td><td><span class="auth-badge auth-none">Veřejné</span></td></tr>
+                <tr><td><span class="method method-get">GET</span></td><td class="endpoint">/comments/latest</td><td>Poslední komentář (homepage)</td><td><span class="auth-badge auth-none">Veřejné</span></td></tr>
+                <tr><td><span class="method method-post">POST</span></td><td class="endpoint">/comments</td><td>Přidání komentáře. Body: <code>newsId</code>, <code>content</code>, <code>parentId?</code></td><td><span class="auth-badge auth-user">USER+</span></td></tr>
+                <tr><td><span class="method method-put">PUT</span></td><td class="endpoint">/comments/:id</td><td>Editace komentáře</td><td><span class="auth-badge auth-user">Autor/ADMIN</span></td></tr>
+                <tr><td><span class="method method-delete">DELETE</span></td><td class="endpoint">/comments/:id</td><td>Soft delete komentáře</td><td><span class="auth-badge auth-user">Autor/ADMIN</span></td></tr>
+                <tr><td><span class="method method-put">PUT</span></td><td class="endpoint">/comments/:id/hide</td><td>Skrytí komentáře (moderace)</td><td><span class="auth-badge auth-admin">ADMIN+</span></td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Games -->
+    <div class="section-card">
+        <div class="section-icon" style="background: rgba(168,85,247,0.1);"><i class="fa-solid fa-chess" style="color: #c084fc;"></i></div>
+        <h2>Partie</h2>
+        <table class="api-table">
+            <thead><tr><th>Metoda</th><th>Endpoint</th><th>Popis</th><th>Auth</th></tr></thead>
+            <tbody>
+                <tr><td><span class="method method-get">GET</span></td><td class="endpoint">/games</td><td>Nahrané partie (GameRecorded)</td><td><span class="auth-badge auth-none">Veřejné</span></td></tr>
+                <tr><td><span class="method method-get">GET</span></td><td class="endpoint">/games/:id</td><td>Detail partie s PGN</td><td><span class="auth-badge auth-none">Veřejné</span></td></tr>
+                <tr><td><span class="method method-get">GET</span></td><td class="endpoint">/games/:id/pgn</td><td>Stažení PGN souboru</td><td><span class="auth-badge auth-none">Veřejné</span></td></tr>
+                <tr><td><span class="method method-post">POST</span></td><td class="endpoint">/games</td><td>Nahrání nové partie</td><td><span class="auth-badge auth-member">MEMBER+</span></td></tr>
+                <tr><td><span class="method method-put">PUT</span></td><td class="endpoint">/games/:id</td><td>Editace partie</td><td><span class="auth-badge auth-member">MEMBER+</span></td></tr>
+                <tr><td><span class="method method-delete">DELETE</span></td><td class="endpoint">/games/:id</td><td>Smazání partie</td><td><span class="auth-badge auth-member">MEMBER+</span></td></tr>
+                <tr><td><span class="method method-get">GET</span></td><td class="endpoint">/viewer-games?category=X</td><td>Partie z článků podle kategorie</td><td><span class="auth-badge auth-none">Veřejné</span></td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Events -->
+    <div class="section-card">
+        <div class="section-icon" style="background: rgba(236,72,153,0.1);"><i class="fa-solid fa-calendar" style="color: #ec4899;"></i></div>
+        <h2>Události</h2>
+        <table class="api-table">
+            <thead><tr><th>Metoda</th><th>Endpoint</th><th>Popis</th><th>Auth</th></tr></thead>
+            <tbody>
+                <tr><td><span class="method method-get">GET</span></td><td class="endpoint">/events</td><td>Veřejné události</td><td><span class="auth-badge auth-none">Veřejné</span></td></tr>
+                <tr><td><span class="method method-get">GET</span></td><td class="endpoint">/events/internal</td><td>Interní (členské) události</td><td><span class="auth-badge auth-member">MEMBER+</span></td></tr>
+                <tr><td><span class="method method-get">GET</span></td><td class="endpoint">/events/ical</td><td>iCal export</td><td><span class="auth-badge auth-none">Veřejné</span></td></tr>
+                <tr><td><span class="method method-post">POST</span></td><td class="endpoint">/events</td><td>Vytvoření události</td><td><span class="auth-badge auth-admin">ADMIN+</span></td></tr>
+                <tr><td><span class="method method-put">PUT</span></td><td class="endpoint">/events/:id</td><td>Editace události</td><td><span class="auth-badge auth-admin">ADMIN+</span></td></tr>
+                <tr><td><span class="method method-delete">DELETE</span></td><td class="endpoint">/events/:id</td><td>Smazání události</td><td><span class="auth-badge auth-admin">ADMIN+</span></td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Diagrams & Fragments -->
+    <div class="section-card">
+        <div class="section-icon" style="background: rgba(59,130,246,0.1);"><i class="fa-solid fa-chess-board" style="color: #60a5fa;"></i></div>
+        <h2>Diagramy & Fragmenty</h2>
+        <table class="api-table">
+            <thead><tr><th>Metoda</th><th>Endpoint</th><th>Popis</th><th>Auth</th></tr></thead>
+            <tbody>
+                <tr><td><span class="method method-get">GET</span></td><td class="endpoint">/diagrams</td><td>Seznam diagramů</td><td><span class="auth-badge auth-none">Veřejné</span></td></tr>
+                <tr><td><span class="method method-get">GET</span></td><td class="endpoint">/diagrams/:id</td><td>Detail diagramu (FEN, anotace, řešení)</td><td><span class="auth-badge auth-none">Veřejné</span></td></tr>
+                <tr><td><span class="method method-post">POST</span></td><td class="endpoint">/diagrams</td><td>Vytvoření diagramu</td><td><span class="auth-badge auth-member">MEMBER+</span></td></tr>
+                <tr><td><span class="method method-put">PUT</span></td><td class="endpoint">/diagrams/:id</td><td>Editace diagramu</td><td><span class="auth-badge auth-member">MEMBER+</span></td></tr>
+                <tr><td><span class="method method-delete">DELETE</span></td><td class="endpoint">/diagrams/:id</td><td>Smazání diagramu</td><td><span class="auth-badge auth-member">MEMBER+</span></td></tr>
+                <tr><td><span class="method method-get">GET</span></td><td class="endpoint">/fragments</td><td>Seznam fragmentů</td><td><span class="auth-badge auth-none">Veřejné</span></td></tr>
+                <tr><td><span class="method method-get">GET</span></td><td class="endpoint">/fragments/:id</td><td>Detail fragmentu (PGN, FEN, rozsah tahů)</td><td><span class="auth-badge auth-none">Veřejné</span></td></tr>
+                <tr><td><span class="method method-post">POST</span></td><td class="endpoint">/fragments</td><td>Vytvoření fragmentu</td><td><span class="auth-badge auth-member">MEMBER+</span></td></tr>
+                <tr><td><span class="method method-delete">DELETE</span></td><td class="endpoint">/fragments/:id</td><td>Smazání fragmentu</td><td><span class="auth-badge auth-member">MEMBER+</span></td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Chess DB -->
+    <div class="section-card">
+        <div class="section-icon" style="background: rgba(34,197,94,0.1);"><i class="fa-solid fa-database" style="color: #4ade80;"></i></div>
+        <h2>Šachová databáze</h2>
+        <table class="api-table">
+            <thead><tr><th>Metoda</th><th>Endpoint</th><th>Popis</th><th>Auth</th></tr></thead>
+            <tbody>
+                <tr><td><span class="method method-get">GET</span></td><td class="endpoint">/chess/games</td><td>Vyhledávání partií. Query: <code>player</code>, <code>eco</code>, <code>limit</code></td><td><span class="auth-badge auth-none">Veřejné</span></td></tr>
+                <tr><td><span class="method method-get">GET</span></td><td class="endpoint">/chess/games/:id</td><td>Detail partie (tahy, ELO)</td><td><span class="auth-badge auth-none">Veřejné</span></td></tr>
+                <tr><td><span class="method method-post">POST</span></td><td class="endpoint">/chess/import</td><td>Hromadný import PGN souboru</td><td><span class="auth-badge auth-admin">ADMIN+</span></td></tr>
+                <tr><td><span class="method method-get">GET</span></td><td class="endpoint">/chess/players</td><td>Seznam hráčů v databázi</td><td><span class="auth-badge auth-none">Veřejné</span></td></tr>
+                <tr><td><span class="method method-get">GET</span></td><td class="endpoint">/chess/stats</td><td>Statistiky (počet her, hráčů)</td><td><span class="auth-badge auth-none">Veřejné</span></td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- AI -->
+    <div class="section-card">
+        <div class="section-icon" style="background: rgba(168,85,247,0.1);"><i class="fa-solid fa-wand-magic-sparkles" style="color: #a855f7;"></i></div>
+        <h2>AI Nástroje</h2>
+        <p style="color: var(--text-muted); margin-bottom: 1rem;">Vyžaduje <code>OPENAI_API_KEY</code> v env. Model: gpt-4o-mini.</p>
+        <table class="api-table">
+            <thead><tr><th>Metoda</th><th>Endpoint</th><th>Popis</th><th>Auth</th></tr></thead>
+            <tbody>
+                <tr><td><span class="method method-post">POST</span></td><td class="endpoint">/ai/spellcheck</td><td>Korekce českého textu (zachová HTML)</td><td><span class="auth-badge auth-admin">ADMIN+</span></td></tr>
+                <tr><td><span class="method method-post">POST</span></td><td class="endpoint">/ai/text-to-table</td><td>Konverze textu na HTML tabulku</td><td><span class="auth-badge auth-admin">ADMIN+</span></td></tr>
+                <tr><td><span class="method method-post">POST</span></td><td class="endpoint">/ai/annotate</td><td>Slovní komentář k šachovému tahu (česky, pro děti)</td><td><span class="auth-badge auth-none">Veřejné</span></td></tr>
+                <tr><td><span class="method method-get">GET</span></td><td class="endpoint">/ai/status</td><td>Stav AI konfigurace</td><td><span class="auth-badge auth-none">Veřejné</span></td></tr>
+            </tbody>
+        </table>
+        <p style="color: var(--text-dim); font-size: 0.8rem; margin-top: 0.75rem;"><i class="fa-solid fa-info-circle"></i> <code>/ai/annotate</code> body: <code>{ fen, movePlayed, bestMove?, evalAfter?, moveNumber, color }</code></p>
+    </div>
+
+    <!-- Forum -->
+    <div class="section-card">
+        <div class="section-icon" style="background: rgba(236,72,153,0.1);"><i class="fa-solid fa-message" style="color: #ec4899;"></i></div>
+        <h2>Fórum & Členská sekce</h2>
+        <table class="api-table">
+            <thead><tr><th>Metoda</th><th>Endpoint</th><th>Popis</th><th>Auth</th></tr></thead>
+            <tbody>
+                <tr><td><span class="method method-get">GET</span></td><td class="endpoint">/forum</td><td>Seznam témat</td><td><span class="auth-badge auth-member">MEMBER+</span></td></tr>
+                <tr><td><span class="method method-get">GET</span></td><td class="endpoint">/forum/:id</td><td>Téma s příspěvky</td><td><span class="auth-badge auth-member">MEMBER+</span></td></tr>
+                <tr><td><span class="method method-post">POST</span></td><td class="endpoint">/forum</td><td>Nové téma</td><td><span class="auth-badge auth-member">MEMBER+</span></td></tr>
+                <tr><td><span class="method method-post">POST</span></td><td class="endpoint">/forum/:id/posts</td><td>Odpověď v tématu</td><td><span class="auth-badge auth-member">MEMBER+</span></td></tr>
+                <tr><td><span class="method method-put">PUT</span></td><td class="endpoint">/forum/:id/pin</td><td>Připnout téma</td><td><span class="auth-badge auth-admin">ADMIN+</span></td></tr>
+                <tr><td><span class="method method-delete">DELETE</span></td><td class="endpoint">/forum/:id</td><td>Smazat téma</td><td><span class="auth-badge auth-admin">ADMIN+</span></td></tr>
+                <tr><td><span class="method method-get">GET</span></td><td class="endpoint">/announcements</td><td>Klubová oznámení</td><td><span class="auth-badge auth-member">MEMBER+</span></td></tr>
+                <tr><td><span class="method method-get">GET</span></td><td class="endpoint">/documents</td><td>Dokumenty pro členy</td><td><span class="auth-badge auth-member">MEMBER+</span></td></tr>
+                <tr><td><span class="method method-get">GET</span></td><td class="endpoint">/messages</td><td>Klubové zprávy</td><td><span class="auth-badge auth-none">Club password</span></td></tr>
+                <tr><td><span class="method method-get">GET</span></td><td class="endpoint">/travel-reports/my</td><td>Moje cestovné</td><td><span class="auth-badge auth-member">MEMBER+</span></td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Puzzle Racer -->
+    <div class="section-card">
+        <div class="section-icon" style="background: rgba(251,191,36,0.1);"><i class="fa-solid fa-flag-checkered" style="color: #fbbf24;"></i></div>
+        <h2>Puzzle Racer</h2>
+        <table class="api-table">
+            <thead><tr><th>Metoda</th><th>Endpoint</th><th>Popis</th><th>Auth</th></tr></thead>
+            <tbody>
+                <tr><td><span class="method method-get">GET</span></td><td class="endpoint">/racer/puzzles</td><td>Série hádanek pro aktuální kolo</td><td><span class="auth-badge auth-none">Veřejné</span></td></tr>
+                <tr><td><span class="method method-post">POST</span></td><td class="endpoint">/racer/result</td><td>Odeslání výsledku závodu</td><td><span class="auth-badge auth-user">USER+</span></td></tr>
+                <tr><td><span class="method method-get">GET</span></td><td class="endpoint">/racer/leaderboard</td><td>Žebříček. Query: <code>period=week|all</code>, <code>mode=vanilla|thematic</code></td><td><span class="auth-badge auth-none">Veřejné</span></td></tr>
+                <tr><td><span class="method method-get">GET</span></td><td class="endpoint">/racer/hall-of-fame</td><td>Síň slávy (týdenní šampioni)</td><td><span class="auth-badge auth-none">Veřejné</span></td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- System -->
+    <div class="section-card">
+        <div class="section-icon" style="background: rgba(100,116,139,0.1);"><i class="fa-solid fa-gear" style="color: #94a3b8;"></i></div>
+        <h2>Systém</h2>
+        <table class="api-table">
+            <thead><tr><th>Metoda</th><th>Endpoint</th><th>Popis</th><th>Auth</th></tr></thead>
+            <tbody>
+                <tr><td><span class="method method-get">GET</span></td><td class="endpoint">/health</td><td>Healthcheck (status, timestamp)</td><td><span class="auth-badge auth-none">Veřejné</span></td></tr>
+                <tr><td><span class="method method-get">GET</span></td><td class="endpoint">/settings</td><td>Systémová nastavení</td><td><span class="auth-badge auth-admin">ADMIN+</span></td></tr>
+                <tr><td><span class="method method-post">POST</span></td><td class="endpoint">/settings</td><td>Uložení nastavení</td><td><span class="auth-badge auth-admin">ADMIN+</span></td></tr>
+                <tr><td><span class="method method-post">POST</span></td><td class="endpoint">/scraping/refresh</td><td>Aktualizace tabulek z chess-results.com</td><td><span class="auth-badge auth-admin">ADMIN+</span></td></tr>
+                <tr><td><span class="method method-get">GET</span></td><td class="endpoint">/images</td><td>Seznam obrázků</td><td><span class="auth-badge auth-none">Veřejné</span></td></tr>
+                <tr><td><span class="method method-post">POST</span></td><td class="endpoint">/images/upload</td><td>Upload obrázku (multipart)</td><td><span class="auth-badge auth-admin">ADMIN+</span></td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div style="text-align: center; margin-top: 3rem; padding: 2rem; color: var(--text-dim); font-size: 0.8rem;">
+        <p>Šachový oddíl TJ Bižuterie Jablonec nad Nisou &bull; API v32</p>
+    </div>
+
+</div>
+</body>
+</html>

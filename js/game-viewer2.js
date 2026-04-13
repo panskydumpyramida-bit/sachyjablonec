@@ -722,9 +722,7 @@ class GameViewer2 {
                             <button class="gv2-btn gv2-btn-analysis" id="gv2-analysis-btn" onclick="gameViewer2.toggleAnalysis()" title="Analýza Stockfish">
                                 <i class="fa-solid fa-microchip" id="gv2-analysis-icon"></i>
                             </button>
-                            <button class="gv2-btn" id="gv2-ai-btn" onclick="gameViewer2.aiExplain()" title="AI vysvětlení tahu (beta)" style="color: #a78bfa; display: none;">
-                                <i class="fa-solid fa-wand-magic-sparkles" id="gv2-ai-icon"></i>
-                            </button>
+                            <!-- AI explain button removed from viewer (kept in game-recorder only) -->
                         </div>
                     </div>
                     <div class="gv2-info-panel">

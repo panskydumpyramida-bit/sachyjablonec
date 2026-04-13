@@ -50,6 +50,7 @@
                 <nav><a href="/" class="logo"><i class="fa-solid fa-chess-knight"></i>Administrace</a>
                     <ul class="nav-links">
                         <li><a href="docs/admin-manual.html" target="_blank" style="color: #fbbf24;"><i class="fa-solid fa-book"></i> Manuál</a></li>
+                        <li><a href="docs/api-manual.html" target="_blank" style="color: #a78bfa;"><i class="fa-solid fa-code"></i> API</a></li>
                         <li><a href="/" target="_blank"><i class="fa-solid fa-external-link-alt"></i> Web</a></li>
                         <li><a href="#" onclick="logout()" style="color: #fca5a5;"><i
                                     class="fa-solid fa-sign-out-alt"></i> Odhlásit</a></li>
@@ -1413,6 +1414,36 @@
                             <li><strong>WCAG AA kontrast:</strong> <code>--text-muted</code> #a0a0a0 → #b0b0b0 (5.57:1).</li>
                             <li><strong>Smooth scroll:</strong> <code>scroll-behavior: smooth</code> + <code>scroll-padding-top</code>.</li>
                             <li><strong>Optimalizace obrázků:</strong> Nový skript <code>optimize-images.mjs</code> (sharp) — PNG→WebP + komprese.</li>
+                        </ul>
+                        <h4>♟️ Komentování partií</h4>
+                        <ul>
+                            <li><strong>Komentovat z editoru:</strong> Tlačítko 💬 u každé partie → otevře game-recorder → editace PGN s komentáři → uloží zpět do článku přes postMessage.</li>
+                            <li><strong>Sub-taby Partie:</strong> Admin sekce Partie má nově taby „Nahrané" a „Z článků".</li>
+                        </ul>
+                        <h4>🤖 AI Slovní anotace</h4>
+                        <ul>
+                            <li><strong>AI komentář:</strong> Tlačítko ✨ v game-recorderu i game-vieweru. GPT-4o-mini generuje 1-2 věty česky srozumitelné dětem.</li>
+                            <li><strong>Endpoint:</strong> <code>POST /api/ai/annotate</code> — posílá FEN, tah, eval → vrací slovní hodnocení.</li>
+                        </ul>
+                        <h4>🎨 Admin UI</h4>
+                        <ul>
+                            <li><strong>Stitch-inspired design:</strong> Timeline activity feed, ghost watermark na stat kartách, vertikální quick actions.</li>
+                            <li><strong>Login stránka:</strong> Vylepšený design s ikonami, placeholders, slide-up animací.</li>
+                            <li><strong>404 stránka:</strong> Nová stránka s šachovým motivem.</li>
+                            <li><strong>jQuery:</strong> Sjednocen na 3.7.1 ve všech stránkách.</li>
+                            <li><strong>WebP:</strong> Management fotky na /about v &lt;picture&gt; elementech.</li>
+                        </ul>
+                        <h4>📖 Dokumentace</h4>
+                        <ul>
+                            <li><strong>API Reference:</strong> Nový manuál <code>docs/api-manual.html</code> — kompletní dokumentace ~60 endpointů.</li>
+                            <li><strong>Admin manuál:</strong> Aktualizován na v32 — nové sekce Události, Diagramy, Komentování partií.</li>
+                        </ul>
+                        <h4>🐛 Opravy</h4>
+                        <ul>
+                            <li><strong>CSP:</strong> Opraveny chybějící zdroje — unpkg.com (chessboard CSS), chess-api.com (engine), chess.com (embeds), mapy.com (mapa).</li>
+                            <li><strong>Fragmenty/diagramy:</strong> sanitizeHtml stripoval data-* atributy — odstraněna frontend sanitace na article contentu.</li>
+                            <li><strong>Puzzle Racer:</strong> Týdenní leaderboard počítá pondělí–neděle (ISO week).</li>
+                            <li><strong>Diagram reset:</strong> Opravena duplicitní reset() metoda.</li>
                         </ul>
                     </div>
                 </div>
