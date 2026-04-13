@@ -200,6 +200,8 @@ async function selectPlayer(name) {
             if (p.movePlayed) p.blunderMoveSAN = p.movePlayed;
             if (p.movePlayedLAN) p.blunderMoveLAN = p.movePlayedLAN;
             if (p.probDrop) p.winProbDrop = String(p.probDrop);
+            
+            p.playerColor = (p.white && p.white.toLowerCase().includes(name.toLowerCase())) ? 'white' : 'black';
         });
         puzzleData = blunders;
         filteredData = [];
@@ -791,17 +793,16 @@ function renderGrid() {
             ? `<button data-featured-id="${puzzle.id}" onclick="event.stopPropagation();toggleFeatured(${puzzle.id})" style="background:none;border:none;cursor:pointer;font-size:1rem;padding:0.2rem;transition:transform 0.15s;" onmouseenter="this.style.transform='scale(1.2)'" onmouseleave="this.style.transform='scale(1)'" title="Oblíbené">${starIcon}</button>`
             : '';
 
-        // Zkraceni jmen pro kompaktni zobrazeni (jen prijmeni max)
-        const wName = escapeHtml(puzzle.white).split(' ').pop();
-        const bName = escapeHtml(puzzle.black).split(' ').pop();
+        const wName = formatShortName(puzzle.white);
+        const bName = formatShortName(puzzle.black);
 
         const opponentName = puzzle.playerColor === 'white' ? bName : wName;
         const matchResult = puzzle.result && puzzle.result !== '*' ? `<span title="Výsledek partie" style="margin-left: 0.4rem; font-size: 0.7rem; color: #94a3b8; font-weight: 600;">${puzzle.result}</span>` : '';
         let playerLabel = '';
         if (puzzle.playerColor === 'white') {
-            playerLabel = `<span title="Hero hraje bílými (${escapeHtml(puzzle.white)})"><i class="fa-solid fa-chess-knight" style="font-size:0.9rem; vertical-align:-0.1rem; margin-right:0.3rem; color:#f8fafc;"></i></span><span style="opacity:0.5;font-size:0.65rem;margin-right:0.2rem;font-weight:400;">vs</span> ${opponentName}${matchResult}`;
+            playerLabel = `<span title="Hraješ bílými (${escapeHtml(puzzle.white)})"><i class="fa-solid fa-chess-knight" style="font-size:0.9rem; vertical-align:-0.1rem; margin-right:0.3rem; color:#f8fafc;"></i></span><span style="opacity:0.5;font-size:0.65rem;margin-right:0.2rem;font-weight:400;">vs</span> ${escapeHtml(opponentName)}${matchResult}`;
         } else {
-            playerLabel = `${opponentName} <span style="opacity:0.5;font-size:0.65rem;margin-left:0.2rem;margin-right:0.3rem;font-weight:400;">vs</span><span title="Hero hraje černými (${escapeHtml(puzzle.black)})"><i class="fa-solid fa-chess-knight" style="font-size:0.9rem; vertical-align:-0.1rem; color:#0f172a; -webkit-text-stroke: 1px rgba(255,255,255,0.6);"></i></span>${matchResult}`;
+            playerLabel = `${escapeHtml(opponentName)} <span style="opacity:0.5;font-size:0.65rem;margin-left:0.2rem;margin-right:0.3rem;font-weight:400;">vs</span><span title="Hraješ černými (${escapeHtml(puzzle.black)})"><i class="fa-solid fa-chess-knight" style="font-size:0.9rem; vertical-align:-0.1rem; color:#0f172a; -webkit-text-stroke: 1px rgba(255,255,255,0.6);"></i></span>${matchResult}`;
         }
 
         if (currentMode === 'training') {
@@ -1171,6 +1172,23 @@ function escapeHtml(unsafe) {
          .replace(/'/g, "&#039;");
 }
 
+function formatShortName(fullName) {
+    if (!fullName) return '?';
+    if (fullName.includes(',')) {
+        const parts = fullName.split(',');
+        const surname = parts[0].trim();
+        const firstname = parts[1].trim();
+        return firstname ? firstname.charAt(0).toUpperCase() + '. ' + surname : surname;
+    }
+    const parts = fullName.split(' ');
+    if (parts.length >= 2) {
+        const firstname = parts[0];
+        const surname = parts.slice(1).join(' ');
+        return firstname.charAt(0).toUpperCase() + '. ' + surname;
+    }
+    return fullName;
+}
+
 // === TAB SWITCHING ===
 function switchBlunderTab(tab) {
     currentTab = tab;
@@ -1295,7 +1313,7 @@ async function loadFeatured(playerName) {
             card.className = 'grid-card';
             card.innerHTML = `
                 <div style="text-align:center;padding:0.5rem;font-size:0.8rem;color:#fbbf24;">
-                    <i class="fa-solid fa-star"></i> ${escapeHtml(data.white)} - ${escapeHtml(data.black)}
+                    <i class="fa-solid fa-star"></i> ${escapeHtml(formatShortName(data.white))} - ${escapeHtml(formatShortName(data.black))}
                 </div>
                 <div id="featured-board-${index}" style="width:100%;"></div>
                 <div style="text-align:center;padding:0.4rem;font-size:0.75rem;color:#f87171;">
@@ -1309,7 +1327,8 @@ async function loadFeatured(playerName) {
                         position: data.fenBefore,
                         pieceTheme: 'https://chessboardjs.com/img/chesspieces/wikipedia/{piece}.png',
                         draggable: false,
-                        showNotation: false
+                        showNotation: false,
+                        orientation: (data.white && data.white.toLowerCase().includes(playerName.toLowerCase())) ? 'white' : 'black'
                     });
                 } catch(e) {}
             });
