@@ -208,8 +208,15 @@ async function selectPlayer(name) {
 
         // 3. Status bar with scan info
         const pct = status.totalGames > 0 ? Math.round(status.gamesScanned / status.totalGames * 100) : 0;
+        
+        let limitMsg = '';
+        if (window.godMode && !status.canScanMore && status.gamesScanned < status.totalGames) {
+            status.canScanMore = true;
+            limitMsg = `<span style="margin-left:0.75rem; font-size:0.8rem; color: #d4af37; text-wrap: nowrap;"><i class="fa-solid fa-fire"></i> Limit prolomen</span>`;
+        }
+
         const scanBtn = status.canScanMore
-            ? `<button onclick="triggerBackendScan('${escapeHtml(name).replace(/'/g, "&#39;")}')" class="card-btn" style="display:inline-block; padding: 0.3rem 0.8rem; margin-left:0.75rem; font-size:0.8rem; background: var(--primary-color); color: #000; font-weight: 600;"><i class="fa-solid fa-magnifying-glass-plus"></i> Analyzovat další</button>`
+            ? `${limitMsg}<button onclick="triggerBackendScan('${escapeHtml(name).replace(/'/g, "&#39;")}')" class="card-btn" style="display:inline-block; padding: 0.3rem 0.8rem; margin-left:0.75rem; font-size:0.8rem; background: var(--primary-color); color: #000; font-weight: 600;"><i class="fa-solid fa-magnifying-glass-plus"></i> Analyzovat další</button>`
             : `<span style="margin-left:0.75rem; font-size:0.8rem; color: #f59e0b;"><i class="fa-solid fa-clock"></i> Denní limit vyčerpán</span>`;
 
         if (blunders.length > 0) {
