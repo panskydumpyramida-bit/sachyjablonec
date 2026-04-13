@@ -775,12 +775,20 @@ function renderGrid() {
         const wName = escapeHtml(puzzle.white).split(' ').pop();
         const bName = escapeHtml(puzzle.black).split(' ').pop();
 
+        const opponentName = puzzle.playerColor === 'white' ? bName : wName;
+        let playerLabel = '';
+        if (puzzle.playerColor === 'white') {
+            playerLabel = `<span title="Hero hraje bílými (${escapeHtml(puzzle.white)})"><i class="fa-solid fa-chess-knight" style="font-size:0.9rem; vertical-align:-0.1rem; margin-right:0.3rem; color:#f8fafc;"></i></span><span style="opacity:0.5;font-size:0.65rem;margin-right:0.2rem;font-weight:400;">vs</span> ${opponentName}`;
+        } else {
+            playerLabel = `${opponentName} <span style="opacity:0.5;font-size:0.65rem;margin-left:0.2rem;margin-right:0.3rem;font-weight:400;">vs</span><span title="Hero hraje černými (${escapeHtml(puzzle.black)})"><i class="fa-solid fa-chess-knight" style="font-size:0.9rem; vertical-align:-0.1rem; color:#0f172a; -webkit-text-stroke: 1px rgba(255,255,255,0.6);"></i></span>`;
+        }
+
         if (currentMode === 'training') {
             cardHtml = `
                 <div class="blunder-card" data-index="${realIndex}">
                     <div class="blunder-card-header">
                         <div class="${tagClass}">${isMiss ? 'Miss' : 'Blunder'}</div>
-                        <div class="blunder-players" title="${escapeHtml(puzzle.white)} vs ${escapeHtml(puzzle.black)}">${wName} v ${bName}</div>
+                        <div class="blunder-players">${playerLabel}</div>
                         ${starBtn}
                     </div>
                     <div class="board-container" id="${id}"></div>
@@ -809,7 +817,7 @@ function renderGrid() {
                 <div class="blunder-card" data-index="${realIndex}">
                     <div class="blunder-card-header">
                         <div class="${tagClass}">${isMiss ? 'Miss' : 'Blunder'}</div>
-                        <div class="blunder-players" title="${escapeHtml(puzzle.white)} vs ${escapeHtml(puzzle.black)}">${wName} v ${bName}</div>
+                        <div class="blunder-players">${playerLabel}</div>
                         ${starBtn}
                     </div>
                     <div class="board-container" id="${id}"></div>
