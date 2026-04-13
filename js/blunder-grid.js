@@ -782,11 +782,12 @@ function renderGrid() {
         const bName = escapeHtml(puzzle.black).split(' ').pop();
 
         const opponentName = puzzle.playerColor === 'white' ? bName : wName;
+        const matchResult = puzzle.result && puzzle.result !== '*' ? `<span title="Výsledek partie" style="margin-left: 0.4rem; font-size: 0.7rem; color: #94a3b8; font-weight: 600;">${puzzle.result}</span>` : '';
         let playerLabel = '';
         if (puzzle.playerColor === 'white') {
-            playerLabel = `<span title="Hero hraje bílými (${escapeHtml(puzzle.white)})"><i class="fa-solid fa-chess-knight" style="font-size:0.9rem; vertical-align:-0.1rem; margin-right:0.3rem; color:#f8fafc;"></i></span><span style="opacity:0.5;font-size:0.65rem;margin-right:0.2rem;font-weight:400;">vs</span> ${opponentName}`;
+            playerLabel = `<span title="Hero hraje bílými (${escapeHtml(puzzle.white)})"><i class="fa-solid fa-chess-knight" style="font-size:0.9rem; vertical-align:-0.1rem; margin-right:0.3rem; color:#f8fafc;"></i></span><span style="opacity:0.5;font-size:0.65rem;margin-right:0.2rem;font-weight:400;">vs</span> ${opponentName}${matchResult}`;
         } else {
-            playerLabel = `${opponentName} <span style="opacity:0.5;font-size:0.65rem;margin-left:0.2rem;margin-right:0.3rem;font-weight:400;">vs</span><span title="Hero hraje černými (${escapeHtml(puzzle.black)})"><i class="fa-solid fa-chess-knight" style="font-size:0.9rem; vertical-align:-0.1rem; color:#0f172a; -webkit-text-stroke: 1px rgba(255,255,255,0.6);"></i></span>`;
+            playerLabel = `${opponentName} <span style="opacity:0.5;font-size:0.65rem;margin-left:0.2rem;margin-right:0.3rem;font-weight:400;">vs</span><span title="Hero hraje černými (${escapeHtml(puzzle.black)})"><i class="fa-solid fa-chess-knight" style="font-size:0.9rem; vertical-align:-0.1rem; color:#0f172a; -webkit-text-stroke: 1px rgba(255,255,255,0.6);"></i></span>${matchResult}`;
         }
 
         if (currentMode === 'training') {
