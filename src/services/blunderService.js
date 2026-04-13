@@ -225,7 +225,7 @@ function delay(ms) {
 }
 
 // === Main scan function ===
-export async function scanPlayerGames(playerName) {
+export async function scanPlayerGames(playerName, specificGameIds = null) {
     // Check daily limit
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -266,8 +266,19 @@ export async function scanPlayerGames(playerName) {
     });
 
     const totalGames = allGames.length;
-    const unscannedGames = allGames.filter(g => !scannedGameIds.has(g.id));
-    const toScan = unscannedGames.slice(0, remaining);
+
+    let toScan;
+    if (specificGameIds && specificGameIds.length > 0) {
+        // Scan specific games (user-selected), filtered by daily limit
+        toScan = specificGameIds
+            .filter(id => !scannedGameIds.has(id))
+            .slice(0, remaining)
+            .map(id => ({ id }));
+    } else {
+        // Auto-select next unscanned batch
+        const unscannedGames = allGames.filter(g => !scannedGameIds.has(g.id));
+        toScan = unscannedGames.slice(0, remaining);
+    }
 
     if (toScan.length === 0) {
         return { done: true, message: 'Všechny partie jsou analyzované.', totalGames, gamesScanned: totalGames };
@@ -324,7 +335,7 @@ export async function scanPlayerGames(playerName) {
     });
 
     return {
-        done: unscannedGames.length <= toScan.length,
+        done: scannedGameIds.size >= totalGames,
         scanned: toScan.length,
         newBlunders,
         totalGames,

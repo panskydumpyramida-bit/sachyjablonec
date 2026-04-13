@@ -499,6 +499,7 @@ model BlunderAnalysis {
   white         String
   black         String
   result        String?
+  isFeatured    Boolean  @default(false) @map("is_featured")
   createdAt     DateTime @default(now()) @map("created_at")
 
   game          ChessGame @relation(fields: [gameId], references: [id], onDelete: Cascade)
