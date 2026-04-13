@@ -842,20 +842,25 @@
 /* Mobile */
 @media (max-width: 768px) {
     #adminPanel header nav {
-        flex-direction: column;
-        gap: 0.5rem;
+        flex-direction: row;
         padding: 0.5rem 1rem;
     }
 
-    #adminPanel .nav-links {
-        gap: 0.5rem;
-        flex-direction: row;
-        justify-content: center;
-        flex-wrap: wrap;
+    #adminPanel .logo {
+        font-size: 1rem !important;
     }
 
+    #adminPanel .nav-links {
+        gap: 0.75rem;
+    }
+
+    /* Hide link text, show only icons on mobile */
     #adminPanel .nav-links a {
-        font-size: 0.75rem;
+        font-size: 0;
+    }
+
+    #adminPanel .nav-links a i {
+        font-size: 1rem;
     }
 
     .admin-nav {
