@@ -246,13 +246,29 @@ async function selectPlayer(name) {
             statusText.innerHTML = `<i class="fa-solid fa-bolt" style="color: gold;"></i> Načteno z lokální cache (${cached.length} situací). <button onclick="triggerBackendScan('${escapeHtml(name).replace(/'/g, "&#39;")}')" class="card-btn" style="display:inline-block; padding: 0.2rem 0.6rem; margin-left:0.5rem; font-size:0.8rem;"><i class="fa-solid fa-rotate"></i> Skenovat</button>`;
             renderGrid();
         } else {
-            statusText.innerHTML = `<i class="fa-solid fa-triangle-exclamation" style="color: #f87171;"></i> Nepodařilo se načíst data. <button onclick="startBlunderScan('${escapeHtml(name).replace(/'/g, "&#39;")}')" class="card-btn" style="display:inline-block; padding: 0.2rem 0.6rem; margin-left:0.5rem; font-size:0.8rem;"><i class="fa-solid fa-rotate"></i> Skenovat lokálně</button>`;
+            statusText.innerHTML = `<i class="fa-solid fa-triangle-exclamation" style="color: #f87171;"></i> Skenování zhavarovalo.`;
         }
     }
 }
+window.triggerBackendScan = triggerBackendScan;
 
-// Trigger backend scan (max 10 games/day)
-async function triggerBackendScan(name, gameIds = null) {
+window.scanAllGodMode = async function() {
+    if (!currentPlayer) return alert('Nejdřív vyhledej hráče, jehož partie chceš komplet přegenerovat!');
+    const rescanAll = document.getElementById('godmode-rescan-all').checked;
+    
+    document.getElementById('godmode-modal').style.display = 'none';
+    
+    if (rescanAll) {
+        const statusText = document.getElementById('status-text');
+        statusText.innerHTML = `<i class="fa-solid fa-trash-can" style="color: #f87171;"></i> Mažu staré analytické záznamy pro hráče ${escapeHtml(currentPlayer)}...`;
+        await fetch(`/api/blunder/${encodeURIComponent(currentPlayer)}/analysis`, { method: 'DELETE' });
+    }
+    
+    triggerBackendScan(currentPlayer, null, true);
+};
+
+// Trigger backend scan (max 10 games/day or infinite if in godmode 'scan all')
+async function triggerBackendScan(name, gameIds = null, infiniteLoop = false) {
     const statusText = document.getElementById('status-text');
     const progContainer = document.getElementById('progress-container');
     const progBar = document.getElementById('progress-bar');
@@ -269,7 +285,7 @@ async function triggerBackendScan(name, gameIds = null) {
     let batchNum = 0;
 
     // Loop: server scans 2 games at a time, we call repeatedly until done or limit
-    while (!done && batchNum < 5) {
+    while (!done && (infiniteLoop || batchNum < 5)) {
         batchNum++;
         statusText.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Analyzuji dávku ${batchNum}... (${totalScanned} partií hotovo)`;
         progBar.style.width = `${Math.min(batchNum * 20, 90)}%`;

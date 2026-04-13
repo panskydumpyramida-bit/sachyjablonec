@@ -130,6 +130,24 @@ router.post('/:playerName/scan', async (req, res) => {
     }
 });
 
+// Clear analyzed games for full rescan
+router.delete('/:playerName/analysis', async (req, res) => {
+    try {
+        const { playerName } = req.params;
+        await prisma.blunderAnalysis.deleteMany({
+            where: { playerName: playerName.toLowerCase() }
+        });
+        // Also clear logs to reset stats
+        await prisma.blunderScanLog.deleteMany({
+            where: { playerName: playerName.toLowerCase() }
+        });
+        res.json({ success: true });
+    } catch (error) {
+        console.error('[Blunder] Clear analysis error:', error);
+        res.status(500).json({ error: 'Failed to clear analysis' });
+    }
+});
+
 // Toggle featured status
 router.put('/:id/featured', async (req, res) => {
     try {
