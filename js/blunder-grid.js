@@ -713,8 +713,19 @@ function renderGrid() {
     const gridEl = document.getElementById('blunder-grid');
     gridEl.innerHTML = '';
     
+    // Normalize field names (DB uses movePlayed/probDrop, legacy uses blunderMoveSAN/winProbDrop)
+    puzzleData.forEach(p => {
+        if (!p.blunderMoveSAN && p.movePlayed) p.blunderMoveSAN = p.movePlayed;
+        if (!p.blunderMoveLAN && p.movePlayedLAN) p.blunderMoveLAN = p.movePlayedLAN;
+        if (!p.winProbDrop && p.probDrop) p.winProbDrop = String(p.probDrop);
+        if (!p.bestMoveLAN && p.bestMoveLAN === undefined && p.bestMoveLAN !== null) p.bestMoveLAN = p.best_move_lan;
+    });
+
     // Filtrace
-    filteredData = puzzleData.filter(p => !p.winProbDrop || parseFloat(p.winProbDrop) >= currentThreshold);
+    filteredData = puzzleData.filter(p => {
+        const drop = parseFloat(p.winProbDrop || p.probDrop || 0);
+        return drop >= currentThreshold;
+    });
 
     if (filteredData.length === 0) {
         gridEl.innerHTML = '<div style="grid-column: 1/-1; text-align:center; padding: 3rem; color: #888;">Žádné chyby pro tento filtr. Zkus jej snížit.</div>';
@@ -728,7 +739,8 @@ function renderGrid() {
         const isMiss = puzzle.type === 'miss';
         const tagClass = isMiss ? 'blunder-tag miss' : 'blunder-tag';
         const tagText = isMiss ? `Promarněná šance` : `Blunder`;
-        const dropText = puzzle.winProbDrop ? `(-${puzzle.winProbDrop}%)` : `(${puzzle.evalAfter})`;
+        const probDropVal = puzzle.winProbDrop || puzzle.probDrop || '';
+        const dropText = probDropVal ? `(-${probDropVal}%)` : (puzzle.evalAfter ? `(${puzzle.evalAfter})` : '');
         const moveInfo = puzzle.moveNumber ? `tah ${puzzle.moveNumber}` : '';
 
         let cardHtml = '';
