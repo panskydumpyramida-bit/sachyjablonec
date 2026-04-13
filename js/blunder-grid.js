@@ -12,6 +12,7 @@ let scanAbortController = null;
 let selectedGameIds = new Set();
 let playerGames = [];
 let currentTab = 'grid';
+window.filterGameId = null;
 
 // === CACHE ===
 const CACHE_KEY_PREFIX = 'blundergrid_';
@@ -161,6 +162,7 @@ async function handleSearch(query) {
 
 async function selectPlayer(name) {
     currentPlayer = name;
+    window.filterGameId = null;
     document.getElementById('playerSearch').value = name;
     document.getElementById('autocompleteResults').style.display = 'none';
 
@@ -709,12 +711,22 @@ function renderGrid() {
 
     // Filtrace
     filteredData = puzzleData.filter(p => {
+        if (window.filterGameId && p.gameId !== window.filterGameId) return false;
         const drop = parseFloat(p.winProbDrop || p.probDrop || 0);
         return drop >= currentThreshold;
     });
 
+    if (window.filterGameId) {
+        gridEl.innerHTML += `<div style="grid-column: 1/-1; text-align: center; margin-bottom: 1rem;">
+            <div style="background: rgba(212,175,55,0.15); border: 1px solid rgba(212,175,55,0.3); border-radius: 6px; padding: 0.8rem; color: #d4af37; font-weight: 600; display: inline-flex; align-items: center; gap: 1rem;">
+                <i class="fa-solid fa-filter"></i> Zobrazeny pouze chyby z jedné vybrané partie 
+                <button onclick="clearGameFilter()" style="background: rgba(212,175,55,0.2); border: none; padding: 0.3rem 0.8rem; border-radius: 4px; color: #fff; cursor: pointer; transition: background 0.2s;" onmouseover="this.style.background='rgba(212,175,55,0.4)'" onmouseout="this.style.background='rgba(212,175,55,0.2)'">Zrušit filtr (<i class="fa-solid fa-xmark"></i>)</button>
+            </div>
+        </div>`;
+    }
+
     if (filteredData.length === 0) {
-        gridEl.innerHTML = '<div style="grid-column: 1/-1; text-align:center; padding: 3rem; color: #888;">Žádné chyby pro tento filtr. Zkus jej snížit.</div>';
+        gridEl.innerHTML += '<div style="grid-column: 1/-1; text-align:center; padding: 3rem; color: #888;">Žádné chyby pro tento filtr. Zkus jej snížit nebo zmáčkni tlačítko Zrušit filtr (pokud si ho zapnul).</div>';
         return;
     }
     
@@ -1153,13 +1165,18 @@ async function loadGamesList(playerName) {
                 ? (g.blunderCount > 0 ? `<span style="color:#f87171;" title="${g.blunderCount} chyb">🔴 ${g.blunderCount}</span>` : `<span style="color:#4ade80;" title="Čistá">✅</span>`)
                 : `<span style="color:#64748b;">⬜</span>`;
             const checkbox = g.scanned ? '' : `<input type="checkbox" class="game-checkbox" data-game-id="${g.id}" style="width:16px;height:16px;accent-color:var(--primary-color);cursor:pointer;" onchange="toggleGameSelect(${g.id}, this.checked)">`;
+            
+            const viewBtn = g.scanned && g.blunderCount > 0
+                ? `<button onclick="viewGameBlunders(${g.id})" style="background:rgba(212,175,55,0.15); border:1px solid rgba(212,175,55,0.4); color:#d4af37; padding:0.35rem 0.6rem; border-radius:4px; font-size:0.75rem; font-weight:600; cursor:pointer;" onmouseenter="this.style.background='rgba(212,175,55,0.3)'" onmouseleave="this.style.background='rgba(212,175,55,0.15)'">Blundery 👉</button>`
+                : (g.scanned ? `<span style="font-size:0.75rem; color:#4ade80; padding:0.25rem 0.6rem;">Čistá hra bez blundru</span>` : '');
 
             return `<div style="display:flex;align-items:center;gap:0.6rem;padding:0.5rem 0.75rem;background:rgba(255,255,255,0.02);border-radius:6px;border-left:3px solid ${g.scanned ? (g.blunderCount > 0 ? '#f87171' : '#4ade80') : 'transparent'};transition:background 0.15s;" onmouseenter="this.style.background='rgba(255,255,255,0.05)'" onmouseleave="this.style.background='rgba(255,255,255,0.02)'">
                 ${checkbox}
                 <span style="width:28px;text-align:center;">${statusIcon}</span>
                 <span style="flex:1;font-size:0.85rem;color:#e2e8f0;">${escapeHtml(g.white)} - ${escapeHtml(g.black)}</span>
                 <span style="font-size:0.8rem;color:#888;font-weight:600;">${g.result || '*'}</span>
-                <span style="font-size:0.75rem;color:#64748b;min-width:70px;text-align:right;">${date}</span>
+                <span style="font-size:0.75rem;color:#64748b;min-width:70px;text-align:right;margin-right:1rem;">${date}</span>
+                ${viewBtn}
             </div>`;
         }).join('');
     } catch (e) {
@@ -1195,6 +1212,19 @@ async function scanSelectedGames() {
     loadGamesList(currentPlayer);
 }
 window.scanSelectedGames = scanSelectedGames;
+
+window.viewGameBlunders = function(gameId) {
+    window.filterGameId = gameId;
+    switchBlunderTab('grid');
+    // Tab switch automatically triggers loadFeatured but doesn't strictly re-render grid
+    // So we manually force it
+    renderGrid();
+};
+
+window.clearGameFilter = function() {
+    window.filterGameId = null;
+    renderGrid();
+};
 
 // === FEATURED ===
 async function loadFeatured(playerName) {
