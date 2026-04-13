@@ -8,7 +8,10 @@ let currentThreshold = 12;
 
 let currentPlayer = null;
 let debounceTimer = null;
-let scanAbortController = null; // For cancelling ongoing scans
+let scanAbortController = null;
+let selectedGameIds = new Set();
+let playerGames = [];
+let currentTab = 'grid';
 
 // === CACHE ===
 const CACHE_KEY_PREFIX = 'blundergrid_';
@@ -156,6 +159,9 @@ async function selectPlayer(name) {
     progContainer.style.display = 'none';
     statusText.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Načítám data pro <strong>${escapeHtml(name)}</strong>...`;
 
+    // Show tabs
+    document.getElementById('blunder-tabs').style.display = '';
+
     try {
         // 1. Load cached results from DB
         const [blundersRes, statusRes] = await Promise.all([
@@ -165,6 +171,9 @@ async function selectPlayer(name) {
 
         const blunders = blundersRes.ok ? await blundersRes.json() : [];
         const status = statusRes.ok ? await statusRes.json() : { totalGames: 0, gamesScanned: 0, canScanMore: true };
+
+        // Update tab badges
+        document.getElementById('games-count-badge').textContent = `${status.gamesScanned}/${status.totalGames}`;
 
         // 2. Display results
         puzzleData = blunders;
@@ -689,11 +698,21 @@ function renderGrid() {
 
         let cardHtml = '';
 
+        const starIcon = puzzle.isFeatured
+            ? `<i class="fa-solid fa-star" style="color:#fbbf24;"></i>`
+            : `<i class="fa-regular fa-star" style="color:#555;"></i>`;
+        const starBtn = puzzle.id
+            ? `<button data-featured-id="${puzzle.id}" onclick="event.stopPropagation();toggleFeatured(${puzzle.id})" style="background:none;border:none;cursor:pointer;font-size:1rem;padding:0.2rem;transition:transform 0.15s;" onmouseenter="this.style.transform='scale(1.2)'" onmouseleave="this.style.transform='scale(1)'" title="Oblíbené">${starIcon}</button>`
+            : '';
+
         if (currentMode === 'training') {
             cardHtml = `
                 <div class="blunder-card" data-index="${realIndex}">
                     <div class="blunder-card-header">
-                        <div class="${tagClass}">${tagText}</div>
+                        <div style="display:flex;justify-content:space-between;align-items:center;">
+                            <div class="${tagClass}">${tagText}</div>
+                            ${starBtn}
+                        </div>
                         <div class="blunder-players">${escapeHtml(puzzle.white)} vs ${escapeHtml(puzzle.black)} ${puzzle.result}</div>
                     </div>
                     <div class="board-container" id="${id}"></div>
@@ -718,7 +737,10 @@ function renderGrid() {
             cardHtml = `
                 <div class="blunder-card" data-index="${realIndex}">
                     <div class="blunder-card-header">
-                        <div class="${tagClass}">${tagText}</div>
+                        <div style="display:flex;justify-content:space-between;align-items:center;">
+                            <div class="${tagClass}">${tagText}</div>
+                            ${starBtn}
+                        </div>
                         <div class="blunder-players">${escapeHtml(puzzle.white)} vs ${escapeHtml(puzzle.black)} ${puzzle.result}</div>
                     </div>
                     <div class="board-container" id="${id}"></div>
@@ -963,3 +985,191 @@ function escapeHtml(unsafe) {
          .replace(/"/g, "&quot;")
          .replace(/'/g, "&#039;");
 }
+
+// === TAB SWITCHING ===
+function switchBlunderTab(tab) {
+    currentTab = tab;
+    document.getElementById('blunder-grid').style.display = tab === 'grid' ? '' : 'none';
+    document.getElementById('games-panel').style.display = tab === 'games' ? '' : 'none';
+    document.getElementById('featured-panel').style.display = tab === 'featured' ? '' : 'none';
+
+    // Controls bar only visible in grid tab
+    document.querySelector('.controls-bar .mode-toggle').style.display = tab === 'grid' ? '' : 'none';
+    document.querySelector('.controls-bar .threshold-slider').style.display = tab === 'grid' ? '' : 'none';
+
+    document.querySelectorAll('.blunder-tab').forEach(b => {
+        b.style.background = 'rgba(255,255,255,0.03)';
+        b.style.borderColor = 'rgba(255,255,255,0.1)';
+        b.style.color = 'rgba(255,255,255,0.6)';
+    });
+    const active = document.getElementById(`tab-${tab}`);
+    if (active) {
+        active.style.background = 'rgba(212,175,55,0.2)';
+        active.style.borderColor = 'var(--primary-color)';
+        active.style.color = 'var(--primary-color)';
+    }
+
+    if (tab === 'games' && currentPlayer) loadGamesList(currentPlayer);
+    if (tab === 'featured' && currentPlayer) loadFeatured(currentPlayer);
+}
+window.switchBlunderTab = switchBlunderTab;
+
+// === GAMES LIST ===
+async function loadGamesList(playerName) {
+    const container = document.getElementById('games-list');
+    const statusText = document.getElementById('games-status-text');
+    container.innerHTML = '<div style="text-align:center;padding:1rem;color:#888;"><i class="fa-solid fa-spinner fa-spin"></i> Načítám partie...</div>';
+
+    try {
+        const res = await fetch(`/api/blunder/${encodeURIComponent(playerName)}/games`);
+        playerGames = res.ok ? await res.json() : [];
+
+        const scanned = playerGames.filter(g => g.scanned).length;
+        statusText.textContent = `${scanned}/${playerGames.length} partií analyzováno`;
+
+        selectedGameIds.clear();
+        updateScanSelectedBtn();
+
+        container.innerHTML = playerGames.map(g => {
+            const date = g.date ? new Date(g.date).toLocaleDateString('cs-CZ') : '?';
+            const statusIcon = g.scanned
+                ? (g.blunderCount > 0 ? `<span style="color:#f87171;" title="${g.blunderCount} chyb">🔴 ${g.blunderCount}</span>` : `<span style="color:#4ade80;" title="Čistá">✅</span>`)
+                : `<span style="color:#64748b;">⬜</span>`;
+            const checkbox = g.scanned ? '' : `<input type="checkbox" class="game-checkbox" data-game-id="${g.id}" style="width:16px;height:16px;accent-color:var(--primary-color);cursor:pointer;" onchange="toggleGameSelect(${g.id}, this.checked)">`;
+
+            return `<div style="display:flex;align-items:center;gap:0.6rem;padding:0.5rem 0.75rem;background:rgba(255,255,255,0.02);border-radius:6px;border-left:3px solid ${g.scanned ? (g.blunderCount > 0 ? '#f87171' : '#4ade80') : 'transparent'};transition:background 0.15s;" onmouseenter="this.style.background='rgba(255,255,255,0.05)'" onmouseleave="this.style.background='rgba(255,255,255,0.02)'">
+                ${checkbox}
+                <span style="width:28px;text-align:center;">${statusIcon}</span>
+                <span style="flex:1;font-size:0.85rem;color:#e2e8f0;">${escapeHtml(g.white)} - ${escapeHtml(g.black)}</span>
+                <span style="font-size:0.8rem;color:#888;font-weight:600;">${g.result || '*'}</span>
+                <span style="font-size:0.75rem;color:#64748b;min-width:70px;text-align:right;">${date}</span>
+            </div>`;
+        }).join('');
+    } catch (e) {
+        console.error('loadGamesList error:', e);
+        container.innerHTML = '<div style="text-align:center;padding:1rem;color:#f87171;">Chyba při načítání partií.</div>';
+    }
+}
+
+function toggleGameSelect(gameId, checked) {
+    if (checked) selectedGameIds.add(gameId);
+    else selectedGameIds.delete(gameId);
+    updateScanSelectedBtn();
+}
+window.toggleGameSelect = toggleGameSelect;
+
+function updateScanSelectedBtn() {
+    const btn = document.getElementById('scan-selected-btn');
+    const countEl = document.getElementById('selected-count');
+    if (selectedGameIds.size > 0) {
+        btn.style.display = '';
+        countEl.textContent = selectedGameIds.size;
+    } else {
+        btn.style.display = 'none';
+    }
+}
+
+async function scanSelectedGames() {
+    if (!currentPlayer || selectedGameIds.size === 0) return;
+    const statusText = document.getElementById('status-text');
+    const statusMsg = document.getElementById('status-message');
+    statusMsg.style.display = 'block';
+    statusText.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Analyzuji ${selectedGameIds.size} vybraných partií...`;
+
+    try {
+        const res = await fetch(`/api/blunder/${encodeURIComponent(currentPlayer)}/scan`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ gameIds: Array.from(selectedGameIds) })
+        });
+        const result = await res.json();
+
+        if (result.error === 'daily_limit') {
+            statusText.innerHTML = `<i class="fa-solid fa-clock" style="color:#f59e0b;"></i> ${result.message}`;
+        } else {
+            statusText.innerHTML = `<i class="fa-solid fa-check" style="color:#4ade80;"></i> Analyzováno ${result.scanned} partií, nalezeno ${result.newBlunders} situací.`;
+            selectedGameIds.clear();
+            // Reload
+            setTimeout(() => {
+                loadGamesList(currentPlayer);
+                selectPlayer(currentPlayer);
+            }, 500);
+        }
+    } catch (e) {
+        statusText.innerHTML = `<i class="fa-solid fa-triangle-exclamation" style="color:#f87171;"></i> Chyba při analýze.`;
+    }
+}
+window.scanSelectedGames = scanSelectedGames;
+
+// === FEATURED ===
+async function loadFeatured(playerName) {
+    const container = document.getElementById('featured-grid');
+    const emptyEl = document.getElementById('featured-empty');
+
+    try {
+        const res = await fetch(`/api/blunder/${encodeURIComponent(playerName)}/featured`);
+        const featured = res.ok ? await res.json() : [];
+
+        document.getElementById('featured-count-badge').textContent = featured.length || '';
+
+        if (featured.length === 0) {
+            emptyEl.style.display = '';
+            container.innerHTML = '';
+            return;
+        }
+
+        emptyEl.style.display = 'none';
+        // Render featured using same puzzleData flow
+        container.innerHTML = '';
+        // Simple render: reuse card HTML
+        featured.forEach((data, index) => {
+            const card = document.createElement('div');
+            card.className = 'grid-card';
+            card.innerHTML = `
+                <div style="text-align:center;padding:0.5rem;font-size:0.8rem;color:#fbbf24;">
+                    <i class="fa-solid fa-star"></i> ${escapeHtml(data.white)} - ${escapeHtml(data.black)}
+                </div>
+                <div id="featured-board-${index}" style="width:100%;"></div>
+                <div style="text-align:center;padding:0.4rem;font-size:0.75rem;color:#f87171;">
+                    ${data.type === 'blunder' ? '??' : '!'} ${escapeHtml(data.movePlayed)} (${data.probDrop}%)
+                </div>
+            `;
+            container.appendChild(card);
+            requestAnimationFrame(() => {
+                try {
+                    Chessboard(`featured-board-${index}`, {
+                        position: data.fenBefore,
+                        pieceTheme: 'https://chessboardjs.com/img/chesspieces/wikipedia/{piece}.png',
+                        draggable: false,
+                        showNotation: false
+                    });
+                } catch(e) {}
+            });
+        });
+
+    } catch (e) {
+        console.error('loadFeatured error:', e);
+    }
+}
+
+async function toggleFeatured(blunderId) {
+    try {
+        const res = await fetch(`/api/blunder/${blunderId}/featured`, { method: 'PUT' });
+        if (res.ok) {
+            const { isFeatured } = await res.json();
+            const btn = document.querySelector(`[data-featured-id="${blunderId}"]`);
+            if (btn) {
+                btn.innerHTML = isFeatured ? '<i class="fa-solid fa-star" style="color:#fbbf24;"></i>' : '<i class="fa-regular fa-star" style="color:#666;"></i>';
+            }
+            // Update badge count
+            if (currentPlayer) {
+                const featRes = await fetch(`/api/blunder/${encodeURIComponent(currentPlayer)}/featured`);
+                if (featRes.ok) {
+                    const featured = await featRes.json();
+                    document.getElementById('featured-count-badge').textContent = featured.length || '';
+                }
+            }
+        }
+    } catch (e) { console.error('toggleFeatured error:', e); }
+}
+window.toggleFeatured = toggleFeatured;
