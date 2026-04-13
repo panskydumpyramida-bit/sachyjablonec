@@ -11,8 +11,8 @@ const prisma = new PrismaClient();
 
 const DAILY_SCAN_LIMIT = 10; // max new games per player per day
 const BATCH_SIZE = 2; // games per single request (Cloudflare 100s timeout)
-const BLUNDER_THRESHOLD = 12; // Win% drop
-const MISS_THRESHOLD = 12;
+const BLUNDER_THRESHOLD = 5; // Minimální Win% drop pro uložení do DB (slider začíná na 5)
+const MISS_THRESHOLD = 8; // Misses můžou být o něco mírnější
 
 // === Win probability from centipawns (Lichess formula) ===
 function getWinProbability(evalObj) {
@@ -107,27 +107,17 @@ async function analyzeGame(gameData, playerName) {
     const history = chess.history({ verbose: true });
     if (history.length < 4) return [];
 
-    // Phase 1: Heuristic filter
-    const suspicious = new Set();
-    for (let i = 0; i < history.length; i++) {
-        if (isSuspiciousMove(history[i], i > 0 ? history[i - 1] : null, i, history.length)) {
-            suspicious.add(i);
-            if (i > 0) suspicious.add(i - 1);
-        }
-    }
-
-    // Phase 2: Quick eval (depth 8)
+    // Phase 1 + 2: Quick eval (depth 8) pro VŠECHNY pozice (zrušena chybná agresivní heuristika)
     const tempChess = new Chess();
     const evals = new Array(history.length + 1).fill(null);
 
     for (let i = 0; i <= history.length; i++) {
-        if (suspicious.has(i) || (i < history.length && suspicious.has(i + 1))) {
-            const ev = await getPositionEval(safeFen(tempChess.fen()), 8);
-            evals[i] = ev;
-            if (ev?.source === 'chess-api') await delay(350);
-            else if (ev?.source === 'lichess') await delay(30);
-            else await delay(100);
-        }
+        const ev = await getPositionEval(safeFen(tempChess.fen()), 8);
+        evals[i] = ev;
+        if (ev?.source === 'chess-api') await delay(350);
+        else if (ev?.source === 'lichess') await delay(30);
+        else await delay(100);
+        
         if (i < history.length) tempChess.move(history[i]);
     }
 

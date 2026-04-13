@@ -330,47 +330,6 @@ window.forceRescan = function(name) {
     triggerBackendScan(name);
 }
 
-// === HEURISTIC PRE-FILTER ===
-// Identifies "suspicious" moves that are more likely to be blunders/misses.
-// Only these positions get full eval — reduces API calls by ~70-80%.
-const PIECE_VALUES = { p: 1, n: 3, b: 3, r: 5, q: 9, k: 0 };
-
-function isSuspiciousMove(move, prevMove, moveIndex, totalMoves) {
-    // Always analyze first 4 and last 4 moves (opening mistakes, endgame blunders)
-    if (moveIndex < 4 || moveIndex > totalMoves - 4) return true;
-
-    // Capture — especially if capturing higher-value piece
-    if (move.captured) return true;
-
-    // Check — positions after check are often critical
-    if (move.san.includes('+') || move.san.includes('#')) return true;
-
-    // Pawn on 7th/2nd rank (promotion threats)
-    if (move.piece === 'p' && (move.to[1] === '7' || move.to[1] === '2')) return true;
-
-    // Promotion
-    if (move.promotion) return true;
-
-    // Piece retreat (moving back toward own side — often a wasted tempo / blunder)
-    if (move.piece !== 'p') {
-        const fromRank = parseInt(move.from[1]);
-        const toRank = parseInt(move.to[1]);
-        const isWhite = move.color === 'w';
-        if ((isWhite && toRank < fromRank - 1) || (!isWhite && toRank > fromRank + 1)) return true;
-    }
-
-    // Recapture pattern — previous move was a capture, this might be recapture (or missed recapture)
-    if (prevMove && prevMove.captured) return true;
-
-    // Queen move early in game (often a mistake for beginners)
-    if (move.piece === 'q' && moveIndex < 16) return true;
-
-    // Every 5th move as safety net (catches ~20% of remaining positions)
-    if (moveIndex % 5 === 0) return true;
-
-    return false;
-}
-
 // Quick eval (depth 8) for suspicious positions, deep eval (depth 14) for confirmed drops
 async function getPositionEvalQuick(fen) {
     return getPositionEval(fen, 8);
@@ -540,33 +499,12 @@ async function startBlunderScan(playerName) {
             const history = chess.history({ verbose: true });
             const tempChess = new Chess();
 
-            // Fáze 1: Identifikuj podezřelé pozice pomocí heuristik
-            const suspiciousIndices = new Set();
-            for (let i = 0; i < history.length; i++) {
-                const prevMove = i > 0 ? history[i - 1] : null;
-                if (isSuspiciousMove(history[i], prevMove, i, history.length)) {
-                    suspiciousIndices.add(i);
-                    // Also need eval BEFORE the suspicious move
-                    if (i > 0) suspiciousIndices.add(i - 1);
-                }
-            }
-
-            statusText.innerHTML = `Partie ${gIndex + 1}/${gamesList.length}: ${suspiciousIndices.size} podezřelých z ${history.length} tahů. Quick eval...`;
-            await new Promise(r => setTimeout(r, 0)); // Yield to UI
-
-            // Fáze 2: Quick eval (depth 8) jen na podezřelé pozice
+            // Fáze 1 a 2: Quick eval (depth 8) pro VŠECHNY pozice
             let evals = new Array(history.length + 1).fill(null);
             let quickEvalCount = 0;
 
             for (let i = 0; i <= history.length; i++) {
                 if (abortSignal.aborted) return;
-
-                if (!suspiciousIndices.has(i) && i < history.length && !suspiciousIndices.has(i + 1)) {
-                    // Skip non-suspicious positions
-                    if (i < history.length) tempChess.move(history[i]);
-                    totalSkipped++;
-                    continue;
-                }
 
                 // Progress
                 if (quickEvalCount % 3 === 0) {
