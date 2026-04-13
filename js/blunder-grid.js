@@ -8,6 +8,7 @@ let currentThreshold = 12;
 
 let currentPlayer = null;
 let debounceTimer = null;
+let scanAbortController = null; // For cancelling ongoing scans
 
 // === CACHE ===
 const CACHE_KEY_PREFIX = 'blundergrid_';
@@ -62,8 +63,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     const thresholdVal = document.getElementById('threshold-val');
     const filterBtn = document.getElementById('filter-btn');
     const searchInput = document.getElementById('playerSearch');
-
-    let renderTimeouts = [];
 
     modeSelect.addEventListener('change', (e) => {
         currentMode = e.target.value;
@@ -133,8 +132,8 @@ async function handleSearch(query) {
             resultsDiv.innerHTML = '<div class="autocomplete-item"><span style="color: #777;">Žádný hráč</span></div>';
         } else {
             resultsDiv.innerHTML = players.map(p => `
-                <div class="autocomplete-item" onclick="selectPlayer('${p.name.replace(/'/g, "\\'")}')">
-                    <span>${p.name}</span>
+                <div class="autocomplete-item" onclick="selectPlayer('${escapeHtml(p.name).replace(/'/g, "&#39;")}')">
+                    <span>${escapeHtml(p.name)}</span>
                     <span style="color: #777;">${p.totalGames}</span>
                 </div>
             `).join('');
@@ -173,8 +172,58 @@ window.forceRescan = function(name) {
     startBlunderScan(name);
 }
 
+// === HEURISTIC PRE-FILTER ===
+// Identifies "suspicious" moves that are more likely to be blunders/misses.
+// Only these positions get full eval — reduces API calls by ~70-80%.
+const PIECE_VALUES = { p: 1, n: 3, b: 3, r: 5, q: 9, k: 0 };
+
+function isSuspiciousMove(move, prevMove, moveIndex, totalMoves) {
+    // Always analyze first 4 and last 4 moves (opening mistakes, endgame blunders)
+    if (moveIndex < 4 || moveIndex > totalMoves - 4) return true;
+
+    // Capture — especially if capturing higher-value piece
+    if (move.captured) return true;
+
+    // Check — positions after check are often critical
+    if (move.san.includes('+') || move.san.includes('#')) return true;
+
+    // Pawn on 7th/2nd rank (promotion threats)
+    if (move.piece === 'p' && (move.to[1] === '7' || move.to[1] === '2')) return true;
+
+    // Promotion
+    if (move.promotion) return true;
+
+    // Piece retreat (moving back toward own side — often a wasted tempo / blunder)
+    if (move.piece !== 'p') {
+        const fromRank = parseInt(move.from[1]);
+        const toRank = parseInt(move.to[1]);
+        const isWhite = move.color === 'w';
+        if ((isWhite && toRank < fromRank - 1) || (!isWhite && toRank > fromRank + 1)) return true;
+    }
+
+    // Recapture pattern — previous move was a capture, this might be recapture (or missed recapture)
+    if (prevMove && prevMove.captured) return true;
+
+    // Queen move early in game (often a mistake for beginners)
+    if (move.piece === 'q' && moveIndex < 16) return true;
+
+    // Every 5th move as safety net (catches ~20% of remaining positions)
+    if (moveIndex % 5 === 0) return true;
+
+    return false;
+}
+
+// Quick eval (depth 8) for suspicious positions, deep eval (depth 14) for confirmed drops
+async function getPositionEvalQuick(fen) {
+    return getPositionEval(fen, 8);
+}
+
+async function getPositionEvalDeep(fen) {
+    return getPositionEval(fen, 14);
+}
+
 // Pomocná API Request funkce pro Eval (Lichess Cloud -> Chess-API)
-async function getPositionEval(fen) {
+async function getPositionEval(fen, depth = 14) {
     const fetchWithTimeout = async (resource, options = {}) => {
         const { timeout = 8000 } = options;
         const controller = new AbortController();
@@ -206,7 +255,7 @@ async function getPositionEval(fen) {
         const chessApiRes = await fetchWithTimeout('https://chess-api.com/v1', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ fen: fen, depth: 14 }), // Vyšší hloubka pro přesnější analýzu
+            body: JSON.stringify({ fen: fen, depth: depth }),
             timeout: 8000
         });
         
@@ -238,11 +287,23 @@ async function getPositionEval(fen) {
 }
 
 async function startBlunderScan(playerName) {
+    // Cancel any ongoing scan
+    if (scanAbortController) {
+        scanAbortController.abort();
+    }
+    scanAbortController = new AbortController();
+    const abortSignal = scanAbortController.signal;
+
     const statusMsg = document.getElementById('status-message');
     const statusText = document.getElementById('status-text');
     const progContainer = document.getElementById('progress-container');
     const progBar = document.getElementById('progress-bar');
     const gridEl = document.getElementById('blunder-grid');
+
+    // Cleanup old boards/games
+    Object.values(boards).forEach(b => { try { b.destroy(); } catch(e) {} });
+    boards = {};
+    games = {};
 
     // Reset UI
     gridEl.innerHTML = '';
@@ -295,13 +356,18 @@ async function startBlunderScan(playerName) {
             return;
         }
 
-        // ====== Hlavní Skenovací Jádro ======
+        // ====== Dvoustupňové Skenovací Jádro ======
+        // Fáze 1: Heuristický filtr → quick eval (depth 8)
+        // Fáze 2: CP skok > 30cp → deep eval (depth 14)
         let totalEvalsFetched = 0;
         let totalEvalsNull = 0;
+        let totalSkipped = 0;
 
         for (let gIndex = 0; gIndex < gamesList.length; gIndex++) {
+            if (abortSignal.aborted) return;
+
             const gameData = gamesList[gIndex];
-            
+
             statusText.innerHTML = `Analyzuji partii <strong>${gIndex + 1}/${gamesList.length}</strong>: ${escapeHtml(gameData.whitePlayer)} - ${escapeHtml(gameData.blackPlayer)}...`;
             progBar.style.width = `${((gIndex) / gamesList.length) * 100}%`;
 
@@ -309,55 +375,102 @@ async function startBlunderScan(playerName) {
 
             const chess = new Chess();
             const movesArr = gameData.moves.split(' ').filter(m => m);
-            // Validace přes chess.js
             for (let m of movesArr) {
                 try { chess.move(m); } catch (e) { break; }
             }
 
             const history = chess.history({ verbose: true });
             const tempChess = new Chess();
-            
-            let evals = [];
-            
-            // Tah po tahu - API požadavky
-            for (let i = 0; i <= history.length; i++) {
-                
-                // UX Progress Update každých 5 tahů
-                if (i % 5 === 0) {
-                    const partialPct = ((gIndex) / gamesList.length) * 100 + ((i / history.length) * (100 / gamesList.length));
-                    progBar.style.width = `${Math.min(partialPct, 99)}%`;
-                    statusText.innerHTML = `Analýza tahů (${i}/${history.length}). Partii ${gIndex + 1} z ${gamesList.length}`;
-                    // Yield k UI
-                    await new Promise(r => setTimeout(r, 0));
-                }
 
-                // FEN pro API
-                const fen = tempChess.fen();
-                // Fix: API rejects FEN s EP square pokud EP není možný
-                const fenParts = fen.split(' ');
-                if (fenParts.length >= 4 && fenParts[3] !== '-') fenParts[3] = '-';
-                const safeFen = fenParts.join(' ');
-                
-                let ev = await getPositionEval(safeFen);
-                evals.push(ev);
-                totalEvalsFetched++;
-                if (!ev) totalEvalsNull++;
-                
-                if (i < history.length) {
-                    tempChess.move(history[i]);
-                }
-
-                // Rate limit delay
-                if (ev && ev.source === 'chess-api') {
-                    await new Promise(r => setTimeout(r, 350));
-                } else if (ev && ev.source === 'lichess') {
-                    await new Promise(r => setTimeout(r, 30)); 
-                } else {
-                    await new Promise(r => setTimeout(r, 100)); // null response
+            // Fáze 1: Identifikuj podezřelé pozice pomocí heuristik
+            const suspiciousIndices = new Set();
+            for (let i = 0; i < history.length; i++) {
+                const prevMove = i > 0 ? history[i - 1] : null;
+                if (isSuspiciousMove(history[i], prevMove, i, history.length)) {
+                    suspiciousIndices.add(i);
+                    // Also need eval BEFORE the suspicious move
+                    if (i > 0) suspiciousIndices.add(i - 1);
                 }
             }
 
-            console.log(`Game ${gIndex+1}: ${history.length} moves, ${evals.filter(e=>e).length} evals received, ${evals.filter(e=>!e).length} null`);
+            statusText.innerHTML = `Partie ${gIndex + 1}/${gamesList.length}: ${suspiciousIndices.size} podezřelých z ${history.length} tahů. Quick eval...`;
+            await new Promise(r => setTimeout(r, 0)); // Yield to UI
+
+            // Fáze 2: Quick eval (depth 8) jen na podezřelé pozice
+            let evals = new Array(history.length + 1).fill(null);
+            let quickEvalCount = 0;
+
+            for (let i = 0; i <= history.length; i++) {
+                if (abortSignal.aborted) return;
+
+                if (!suspiciousIndices.has(i) && i < history.length && !suspiciousIndices.has(i + 1)) {
+                    // Skip non-suspicious positions
+                    if (i < history.length) tempChess.move(history[i]);
+                    totalSkipped++;
+                    continue;
+                }
+
+                // Progress
+                if (quickEvalCount % 3 === 0) {
+                    const partialPct = ((gIndex) / gamesList.length) * 100 + ((i / history.length) * (100 / gamesList.length));
+                    progBar.style.width = `${Math.min(partialPct, 99)}%`;
+                    await new Promise(r => setTimeout(r, 0));
+                }
+
+                const fen = tempChess.fen();
+                const fenParts = fen.split(' ');
+                if (fenParts.length >= 4 && fenParts[3] !== '-') fenParts[3] = '-';
+                const safeFen = fenParts.join(' ');
+
+                let ev = await getPositionEvalQuick(safeFen);
+                evals[i] = ev;
+                totalEvalsFetched++;
+                quickEvalCount++;
+                if (!ev) totalEvalsNull++;
+
+                if (i < history.length) tempChess.move(history[i]);
+
+                // Rate limit
+                if (ev?.source === 'chess-api') await new Promise(r => setTimeout(r, 350));
+                else if (ev?.source === 'lichess') await new Promise(r => setTimeout(r, 30));
+                else await new Promise(r => setTimeout(r, 100));
+            }
+
+            // Fáze 3: Deep eval na pozice s CP skokem > 30cp
+            const deepIndices = new Set();
+            for (let i = 0; i < history.length; i++) {
+                const curr = evals[i];
+                const next = evals[i + 1];
+                if (curr && next) {
+                    const cpDiff = Math.abs((next.cp || 0) - (curr.cp || 0));
+                    if (cpDiff > 30) { // 0.3 pěšce skok → deep eval
+                        deepIndices.add(i);
+                        deepIndices.add(i + 1);
+                    }
+                }
+            }
+
+            if (deepIndices.size > 0) {
+                statusText.innerHTML = `Partie ${gIndex + 1}: Hloubková analýza ${deepIndices.size} kritických pozic...`;
+                await new Promise(r => setTimeout(r, 0));
+
+                const tempChess2 = new Chess();
+                for (let i = 0; i <= history.length; i++) {
+                    if (abortSignal.aborted) return;
+                    if (deepIndices.has(i)) {
+                        const fen = tempChess2.fen();
+                        const fenParts = fen.split(' ');
+                        if (fenParts.length >= 4 && fenParts[3] !== '-') fenParts[3] = '-';
+                        const ev = await getPositionEvalDeep(fenParts.join(' '));
+                        if (ev) { evals[i] = ev; totalEvalsFetched++; }
+                        if (ev?.source === 'chess-api') await new Promise(r => setTimeout(r, 350));
+                        else await new Promise(r => setTimeout(r, 50));
+                    }
+                    if (i < history.length) tempChess2.move(history[i]);
+                }
+            }
+
+            console.log(`Game ${gIndex+1}: ${history.length} moves, ${quickEvalCount} quick evals, ${deepIndices.size} deep evals, ${totalSkipped} skipped`);
 
             // Vyhledání propadů v Evaluations (Win Probabilities)
             const BLUNDER_THRESHOLD = 12;
