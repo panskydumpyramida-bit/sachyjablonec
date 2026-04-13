@@ -329,7 +329,7 @@ async function loadNews(options = {}) {
                                 
                                 <div style="line-height: 1.6; color: var(--text-light); margin-bottom: 1.5rem;">
                                     ${displayMode === 'full'
-                    ? (typeof sanitizeHtml === 'function' ? sanitizeHtml(item.content || '') : escapeHtml(item.content || '')) || `<p>${escapeHtml(item.excerpt || '')}</p>`
+                    ? (item.content || `<p>${escapeHtml(item.excerpt || '')}</p>`)
                     : `<p>${escapeHtml(item.excerpt || '')}</p>`
                 }
                                 </div>
