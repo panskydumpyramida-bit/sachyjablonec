@@ -115,9 +115,9 @@ router.get('/:playerName/games', async (req, res) => {
 router.post('/:playerName/scan', async (req, res) => {
     try {
         const { playerName } = req.params;
-        const { gameIds } = req.body || {};
+        const { gameIds, override } = req.body || {};
 
-        const result = await scanPlayerGames(playerName, gameIds);
+        const result = await scanPlayerGames(playerName, gameIds, override);
 
         if (result.error === 'daily_limit') {
             return res.status(429).json(result);

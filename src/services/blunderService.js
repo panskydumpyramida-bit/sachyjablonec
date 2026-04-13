@@ -226,7 +226,7 @@ function delay(ms) {
 }
 
 // === Main scan function ===
-export async function scanPlayerGames(playerName, specificGameIds = null) {
+export async function scanPlayerGames(playerName, specificGameIds = null, overrideLimit = false) {
     // Check daily limit
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -239,7 +239,11 @@ export async function scanPlayerGames(playerName, specificGameIds = null) {
         _sum: { gamesScanned: true }
     });
     const scannedToday = todayScans._sum.gamesScanned || 0;
-    const remaining = Math.max(0, DAILY_SCAN_LIMIT - scannedToday);
+    let remaining = Math.max(0, DAILY_SCAN_LIMIT - scannedToday);
+
+    if (overrideLimit) {
+        remaining = 9999;
+    }
 
     if (remaining === 0) {
         return { error: 'daily_limit', message: 'Denní limit 10 partií vyčerpán. Zkuste zítra.' };
