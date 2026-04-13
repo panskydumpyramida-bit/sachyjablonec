@@ -887,11 +887,8 @@ class DiagramViewer {
         }
     }
 
-    reset() {
-        if (this.diagram) {
-            this.load(this.diagram);
-        }
-    }
+    // Note: primary reset() is defined at line ~493 with full state cleanup
+    // This duplicate was overwriting it — removed to keep solver reset working
 
     renderAnnotations(annotations) {
         if (!this.overlayEl || !this.board) return;
