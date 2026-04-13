@@ -340,7 +340,7 @@
 
     <div class="dash-header">
         <div>
-            <h1 style="cursor: default; user-select: none;" ondblclick="window.godMode = true; alert('God mode aktivován: Denní limit partií byl pro tuto obrazovku úspěšně zrušen! 🚀');"><i class="fa-solid fa-chess-board" style="margin-right:0.4rem"></i> Blunder Grid</h1>
+            <h1 style="cursor: default; user-select: none;" ondblclick="window.godMode = true; const mod = document.getElementById('godmode-modal'); const content = document.getElementById('godmode-modal-content'); mod.style.display = 'flex'; setTimeout(() => { mod.style.opacity = '1'; content.style.transform = 'scale(1)'; }, 10);"><i class="fa-solid fa-chess-board" style="margin-right:0.4rem"></i> Blunder Grid</h1>
             <p>Najdi správný tah, který tys (nebo soupeř) přehlédl ve vlastní partii. <span style="opacity: 0.5;">· v5.0</span></p>
         </div>
         
@@ -413,6 +413,18 @@
             Zatím žádné oblíbené. Klikni na <i class="fa-regular fa-star"></i> u blunderu v gridu.
         </div>
         <div id="featured-grid" class="blunder-grid" style="padding: 0;"></div>
+    </div>
+
+    <!-- God Mode Modal -->
+    <div id="godmode-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.85); backdrop-filter: blur(8px); z-index: 9999; justify-content: center; align-items: center; opacity: 0; transition: opacity 0.4s ease;">
+        <div style="background: linear-gradient(145deg, #1e293b, #0f172a); border: 2px solid #d4af37; border-radius: 16px; padding: 3rem; text-align: center; max-width: 450px; box-shadow: 0 0 40px rgba(212,175,55,0.3), inset 0 0 20px rgba(212,175,55,0.1); transform: scale(0.8); transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);" id="godmode-modal-content">
+            <i class="fa-solid fa-bolt" style="font-size: 3.5rem; color: #d4af37; margin-bottom: 1.5rem; text-shadow: 0 0 15px rgba(212,175,55,0.6);"></i>
+            <h2 style="color: #f8fafc; font-size: 1.8rem; margin-bottom: 1rem; font-weight: 800; text-transform: uppercase; letter-spacing: 2px;">God Mode <span style="color: #d4af37;">ON</span></h2>
+            <p style="color: #94a3b8; font-size: 1rem; line-height: 1.6; margin-bottom: 2rem;">Denní limit pro analýzu partií byl zrušen. Servery jedou na maximum. Užij si neomezené skenování!</p>
+            <button onclick="document.getElementById('godmode-modal').style.opacity = '0'; document.getElementById('godmode-modal-content').style.transform = 'scale(0.8)'; setTimeout(() => document.getElementById('godmode-modal').style.display = 'none', 400);" style="background: #d4af37; color: #000; border: none; padding: 0.8rem 2rem; border-radius: 30px; font-weight: 700; font-size: 1rem; cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 15px rgba(212,175,55,0.4);" onmouseover="this.style.background='#fbbf24'; this.style.transform='translateY(-2px)'" onmouseout="this.style.background='#d4af37'; this.style.transform='translateY(0)'">
+                Let's go!
+            </button>
+        </div>
     </div>
 
     <script src="https://code.jquery.com/jquery-3.7.1.min.js" crossorigin="anonymous"></script>
