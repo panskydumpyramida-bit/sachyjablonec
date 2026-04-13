@@ -378,7 +378,7 @@
     </div>
 
     <!-- Section Tabs -->
-    <div id="blunder-tabs" style="display: none; margin-bottom: 1rem;">
+    <div id="blunder-tabs" style="display: none; margin: 0 auto 1rem; max-width: 1400px; padding: 0 1.5rem;">
         <div style="display: flex; gap: 0.4rem; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 0.5rem;">
             <button class="blunder-tab active" onclick="switchBlunderTab('grid')" id="tab-grid" style="padding: 0.4rem 1rem; background: rgba(212,175,55,0.2); border: 1px solid var(--primary-color); color: var(--primary-color); border-radius: 6px; cursor: pointer; font-size: 0.85rem; font-weight: 600; transition: all 0.15s;">
                 <i class="fa-solid fa-chess-board"></i> Blunder Grid
@@ -398,7 +398,7 @@
     </div>
 
     <!-- Tab: Games List -->
-    <div id="games-panel" style="display: none;">
+    <div id="games-panel" style="display: none; margin: 0 auto; max-width: 1400px; padding: 0 1.5rem 4rem;">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
             <span style="color: var(--text-muted); font-size: 0.85rem;" id="games-status-text"></span>
             <button onclick="scanSelectedGames()" id="scan-selected-btn" class="card-btn" style="padding: 0.4rem 1rem; background: var(--primary-color); color: #000; font-weight: 600; font-size: 0.85rem; display: none;">
@@ -409,12 +409,12 @@
     </div>
 
     <!-- Tab: Featured -->
-    <div id="featured-panel" style="display: none;">
+    <div id="featured-panel" style="display: none; margin: 0 auto; max-width: 1400px; padding: 0 1.5rem 4rem;">
         <div style="text-align: center; padding: 2rem; color: var(--text-muted); font-size: 0.9rem;" id="featured-empty">
             <i class="fa-regular fa-star" style="font-size: 2rem; opacity: 0.3; display: block; margin-bottom: 0.75rem;"></i>
             Zatím žádné oblíbené. Klikni na <i class="fa-regular fa-star"></i> u blunderu v gridu.
         </div>
-        <div id="featured-grid" class="blunder-grid"></div>
+        <div id="featured-grid" class="blunder-grid" style="padding: 0;"></div>
     </div>
 
     <script src="https://code.jquery.com/jquery-3.7.1.min.js" crossorigin="anonymous"></script>
