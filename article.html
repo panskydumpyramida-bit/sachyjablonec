@@ -315,7 +315,10 @@
                 document.getElementById('articleCategory').parentNode.appendChild(viewMeta);
             }
 
-            document.getElementById('articleBody').innerHTML = typeof sanitizeHtml === 'function' ? sanitizeHtml(article.content || '') : (article.content || '');
+            // Article content is admin-created (trusted) — no frontend sanitization
+            // Backend sanitizes user inputs (comments, forum). Article HTML needs
+            // full fidelity for diagrams, fragments, column layouts, buttons etc.
+            document.getElementById('articleBody').innerHTML = article.content || '';
 
             // Initialize diagram books after content is loaded (they load async after DOMContentLoaded)
             // Use requestAnimationFrame to ensure browser has completed reflow before chessboard.js calculates dimensions
