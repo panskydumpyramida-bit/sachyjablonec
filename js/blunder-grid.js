@@ -964,11 +964,23 @@ window.showBestMove = function(index) {
     });
     boards[index].position(game.fen());
 
-    // Green arrow for best move
+    // Green borders for best move
     const elementId = `board-${filteredData.indexOf(data) !== -1 ? filteredData.indexOf(data) : index}`;
     setTimeout(() => {
         if (data.bestMoveLAN && data.bestMoveLAN.length >= 4) {
-            drawMoveArrow(elementId, data.bestMoveLAN.substring(0, 2), data.bestMoveLAN.substring(2, 4), '#4ade80');
+            const boardEl = document.getElementById(elementId);
+            if (boardEl) {
+                const fromEl = boardEl.querySelector('.square-' + data.bestMoveLAN.substring(0, 2));
+                const toEl = boardEl.querySelector('.square-' + data.bestMoveLAN.substring(2, 4));
+                if (fromEl) {
+                    fromEl.style.boxShadow = "inset 0 0 0 4px rgba(76, 175, 80, 0.8)";
+                    fromEl.style.background = "rgba(76, 175, 80, 0.25)";
+                }
+                if (toEl) {
+                    toEl.style.boxShadow = "inset 0 0 0 4px rgba(76, 175, 80, 0.8)";
+                    toEl.style.background = "rgba(76, 175, 80, 0.25)";
+                }
+            }
         }
     }, 100);
 
@@ -999,19 +1011,25 @@ window.toggleComparison = function(index, btnEl) {
         btnEl.style.color = '';
         btnEl.style.borderColor = '';
         
-        // Obnov šipku + badge
+        // Obnov rámeček + badge
         if (data.blunderMoveLAN && data.blunderMoveLAN.length >= 4) {
             const fromSq = data.blunderMoveLAN.substring(0, 2);
             const targetSquare = data.blunderMoveLAN.substring(2, 4);
             setTimeout(() => {
-                drawMoveArrow(boardEl.id, fromSq, targetSquare, data.type === 'miss' ? '#f59e0b' : '#ef4444');
+                const fromEl = boardEl.querySelector('.square-' + fromSq);
+                if (fromEl) {
+                    fromEl.style.boxShadow = data.type === 'miss' ? "inset 0 0 0 4px rgba(245, 158, 11, 0.4)" : "inset 0 0 0 4px rgba(244, 67, 54, 0.4)";
+                }
+
                 const squareEl = boardEl.querySelector('.square-' + targetSquare);
                 if (squareEl) {
-                    squareEl.style.boxShadow = "inset 0 0 0 4px rgba(244, 67, 54, 0.8)";
+                    squareEl.style.boxShadow = data.type === 'miss' ? "inset 0 0 0 4px rgba(245, 158, 11, 0.8)" : "inset 0 0 0 4px rgba(244, 67, 54, 0.8)";
+                    squareEl.style.background = data.type === 'miss' ? "rgba(245, 158, 11, 0.25)" : "rgba(244, 67, 54, 0.25)";
                     squareEl.style.position = "relative";
                     const badge = document.createElement('div');
                     badge.className = 'badge-overlay';
                     badge.innerText = data.type === 'miss' ? '?!' : '??';
+                    if (data.type === 'miss') badge.style.background = '#f59e0b';
                     squareEl.appendChild(badge);
                 }
             }, 150);
@@ -1029,15 +1047,20 @@ window.toggleComparison = function(index, btnEl) {
         btnEl.style.color = '#81c784';
         btnEl.style.borderColor = 'rgba(76, 175, 80, 0.3)';
         
-        // Zelená šipka + rámeček na správný tah
+        // Zelené rámečky na správný tah
         if (data.bestMoveLAN && data.bestMoveLAN.length >= 4) {
             const fromSq = data.bestMoveLAN.substring(0, 2);
             const targetSquare = data.bestMoveLAN.substring(2, 4);
             setTimeout(() => {
-                drawMoveArrow(boardEl.id, fromSq, targetSquare, '#4ade80');
+                const fromEl = boardEl.querySelector('.square-' + fromSq);
+                if (fromEl) {
+                    fromEl.style.boxShadow = "inset 0 0 0 4px rgba(76, 175, 80, 0.4)";
+                }
+
                 const squareEl = boardEl.querySelector('.square-' + targetSquare);
                 if (squareEl) {
                     squareEl.style.boxShadow = "inset 0 0 0 4px rgba(76, 175, 80, 0.8)";
+                    squareEl.style.background = "rgba(76, 175, 80, 0.25)";
                 }
             }, 150);
         }
@@ -1046,66 +1069,7 @@ window.toggleComparison = function(index, btnEl) {
     boards[index].position(game.fen());
 }
 
-// === DRAW ARROW ON CHESSBOARD ===
-function drawMoveArrow(boardElementId, fromSquare, toSquare, color = '#ef4444') {
-    const boardEl = document.getElementById(boardElementId);
-    if (!boardEl) return;
-
-    const fromEl = boardEl.querySelector(`.square-${fromSquare}`);
-    const toEl = boardEl.querySelector(`.square-${toSquare}`);
-    if (!fromEl || !toEl) return;
-
-    const boardRect = boardEl.getBoundingClientRect();
-    const fromRect = fromEl.getBoundingClientRect();
-    const toRect = toEl.getBoundingClientRect();
-
-    const x1 = fromRect.left - boardRect.left + fromRect.width / 2;
-    const y1 = fromRect.top - boardRect.top + fromRect.height / 2;
-    const x2 = toRect.left - boardRect.left + toRect.width / 2;
-    const y2 = toRect.top - boardRect.top + toRect.height / 2;
-
-    // Remove existing arrow
-    boardEl.querySelector('.blunder-arrow-svg')?.remove();
-
-    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-    svg.classList.add('blunder-arrow-svg');
-    svg.setAttribute('width', boardRect.width);
-    svg.setAttribute('height', boardRect.height);
-    svg.style.cssText = `position:absolute;top:0;left:0;pointer-events:none;z-index:50;`;
-
-    // Arrow marker
-    const defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
-    const marker = document.createElementNS('http://www.w3.org/2000/svg', 'marker');
-    marker.setAttribute('id', `arrowhead-${boardElementId}`);
-    marker.setAttribute('markerWidth', '10');
-    marker.setAttribute('markerHeight', '7');
-    marker.setAttribute('refX', '9');
-    marker.setAttribute('refY', '3.5');
-    marker.setAttribute('orient', 'auto');
-    const polygon = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
-    polygon.setAttribute('points', '0 0, 10 3.5, 0 7');
-    polygon.setAttribute('fill', color);
-    marker.appendChild(polygon);
-    defs.appendChild(marker);
-    svg.appendChild(defs);
-
-    // Line
-    const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-    line.setAttribute('x1', x1);
-    line.setAttribute('y1', y1);
-    line.setAttribute('x2', x2);
-    line.setAttribute('y2', y2);
-    line.setAttribute('stroke', color);
-    line.setAttribute('stroke-width', '5');
-    line.setAttribute('stroke-opacity', '0.7');
-    line.setAttribute('stroke-linecap', 'round');
-    line.setAttribute('marker-end', `url(#arrowhead-${boardElementId})`);
-    svg.appendChild(line);
-
-    // Make board container relative for overlay
-    boardEl.style.position = 'relative';
-    boardEl.appendChild(svg);
-}
+// drawMoveArrow abandoned in favor of CSS box-shadows
 
 function escapeHtml(unsafe) {
     if (!unsafe) return '';
