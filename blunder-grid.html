@@ -430,8 +430,21 @@
             <i class="fa-solid fa-bolt" style="font-size: 3.5rem; color: #d4af37; margin-bottom: 1.5rem; text-shadow: 0 0 15px rgba(212,175,55,0.6);"></i>
             <h2 style="color: #f8fafc; font-size: 1.8rem; margin-bottom: 1rem; font-weight: 800; text-transform: uppercase; letter-spacing: 2px;">God Mode <span style="color: #d4af37;">ON</span></h2>
             <p style="color: #94a3b8; font-size: 1rem; line-height: 1.6; margin-bottom: 2rem;">Denní limit pro analýzu partií byl zrušen. Servery jedou na maximum. Užij si neomezené skenování!</p>
+            
+            <div style="margin: 2rem 0; padding: 1.5rem; background: rgba(0,0,0,0.3); border-radius: 12px; border: 1px solid rgba(255,255,255,0.1);">
+                <div style="margin-bottom: 1rem; color: #fff;">
+                    <label style="cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 0.5rem;">
+                        <input type="checkbox" id="godmode-rescan-all" style="accent-color: #d4af37; width: 1.1rem; height: 1.1rem;">
+                        <span style="font-size: 0.9rem;">Smazat staré analýzy a přegenerovat od začátku</span>
+                    </label>
+                </div>
+                <button onclick="scanAllGodMode()" style="background: rgba(212,175,55,0.1); border: 1px solid #d4af37; color: #d4af37; padding: 0.6rem 1.5rem; border-radius: 20px; font-weight: 600; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='rgba(212,175,55,0.2)'" onmouseout="this.style.background='rgba(212,175,55,0.1)'">
+                    <i class="fa-solid fa-infinity"></i> Skenovat úplně všechny partie hráče
+                </button>
+            </div>
+
             <button onclick="document.getElementById('godmode-modal').style.opacity = '0'; document.getElementById('godmode-modal-content').style.transform = 'scale(0.8)'; setTimeout(() => { document.getElementById('godmode-modal').style.display = 'none'; if(typeof currentPlayer !== 'undefined' && currentPlayer) { selectPlayer(currentPlayer); } }, 400);" style="background: #d4af37; color: #000; border: none; padding: 0.8rem 2rem; border-radius: 30px; font-weight: 700; font-size: 1rem; cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 15px rgba(212,175,55,0.4);" onmouseover="this.style.background='#fbbf24'; this.style.transform='translateY(-2px)'" onmouseout="this.style.background='#d4af37'; this.style.transform='translateY(0)'">
-                Let's go!
+                Let's go! (Jen těch 10 běžných)
             </button>
         </div>
     </div>
@@ -439,7 +452,7 @@
     <script src="https://code.jquery.com/jquery-3.7.1.min.js" crossorigin="anonymous"></script>
     <script src="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.js" defer></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js" defer></script>
-    <script src="js/blunder-grid.js?v=20260414_games" defer></script>
+    <script src="js/blunder-grid.js?v=20260414_godmode" defer></script>
 
 </body>
 </html>
