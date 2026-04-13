@@ -354,6 +354,8 @@ model ChessGame {
   @@index([whitePlayer])
   @@index([blackPlayer])
   @@index([eco])
+  blunderAnalyses BlunderAnalysis[]
+
   @@index([date])
   @@map("chess_games")
 }
@@ -480,4 +482,40 @@ model Fragment {
   user         User?    @relation(fields: [userId], references: [id])
 
   @@map("fragments")
+}
+
+model BlunderAnalysis {
+  id            Int      @id @default(autoincrement())
+  playerName    String   @map("player_name")
+  gameId        Int      @map("game_id")
+  type          String   // "blunder" | "miss"
+  fenBefore     String   @map("fen_before")
+  movePlayed    String   @map("move_played")
+  movePlayedLAN String   @map("move_played_lan")
+  bestMoveLAN   String?  @map("best_move_lan")
+  evalBefore    Float?   @map("eval_before")
+  evalAfter     Float?   @map("eval_after")
+  probDrop      Float    @map("prob_drop")
+  white         String
+  black         String
+  result        String?
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  game          ChessGame @relation(fields: [gameId], references: [id], onDelete: Cascade)
+
+  @@index([playerName])
+  @@index([gameId])
+  @@map("blunder_analyses")
+}
+
+model BlunderScanLog {
+  id           Int      @id @default(autoincrement())
+  playerName   String   @map("player_name")
+  gamesScanned Int      @map("games_scanned")
+  totalGames   Int      @map("total_games")
+  lastGameId   Int?     @map("last_game_id")
+  scannedAt    DateTime @default(now()) @map("scanned_at")
+
+  @@index([playerName])
+  @@map("blunder_scan_logs")
 }
