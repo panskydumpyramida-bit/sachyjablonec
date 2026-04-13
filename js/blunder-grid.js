@@ -1165,8 +1165,10 @@ function switchBlunderTab(tab) {
     document.getElementById('featured-panel').style.display = tab === 'featured' ? '' : 'none';
 
     // Controls bar only visible in grid tab
-    document.querySelector('.controls-bar .mode-toggle').style.display = tab === 'grid' ? '' : 'none';
-    document.querySelector('.controls-bar .threshold-slider').style.display = tab === 'grid' ? '' : 'none';
+    const modeToggle = document.querySelector('.dash-controls .mode-toggle');
+    const threshSlider = document.querySelector('.dash-controls .threshold-slider');
+    if (modeToggle) modeToggle.style.display = tab === 'grid' ? 'flex' : 'none';
+    if (threshSlider) threshSlider.style.display = tab === 'grid' ? 'flex' : 'none';
 
     document.querySelectorAll('.blunder-tab').forEach(b => {
         b.style.background = 'rgba(255,255,255,0.03)';
