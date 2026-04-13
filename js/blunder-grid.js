@@ -116,6 +116,14 @@ document.addEventListener('DOMContentLoaded', async () => {
             document.getElementById('autocompleteResults').style.display = 'none';
         }
     });
+
+    // -------- Načtení hráče z URL na startu --------
+    const urlParams = new URLSearchParams(window.location.search);
+    const urlPlayer = urlParams.get('player');
+    if (urlPlayer) {
+        searchInput.value = urlPlayer;
+        selectPlayer(urlPlayer);
+    }
 });
 
 function getToken() {
@@ -149,6 +157,12 @@ async function selectPlayer(name) {
     currentPlayer = name;
     document.getElementById('playerSearch').value = name;
     document.getElementById('autocompleteResults').style.display = 'none';
+
+    // Propsání do URL bez refreshe
+    const newUrl = new URL(window.location);
+    newUrl.searchParams.set('player', name);
+    window.history.pushState({ path: newUrl.href }, '', newUrl.href);
+
 
     const statusMsg = document.getElementById('status-message');
     const statusText = document.getElementById('status-text');
