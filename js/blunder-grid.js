@@ -217,6 +217,11 @@ async function selectPlayer(name) {
         } else {
             statusText.innerHTML = `<i class="fa-solid fa-info-circle" style="color: #60a5fa;"></i> Zatím neanalyzováno. ${status.totalGames} partií k dispozici. ${scanBtn}`;
         }
+        
+        const loadMoreEl = document.getElementById('load-more-container');
+        if (loadMoreEl) {
+            loadMoreEl.style.display = status.canScanMore ? 'block' : 'none';
+        }
 
         renderGrid();
 
@@ -243,6 +248,9 @@ async function triggerBackendScan(name, gameIds = null) {
 
     progContainer.style.display = 'block';
     progBar.style.width = '0%';
+    
+    const loadMoreEl = document.getElementById('load-more-container');
+    if (loadMoreEl) loadMoreEl.style.display = 'none';
 
     let totalScanned = 0;
     let totalBlunders = 0;
@@ -296,10 +304,13 @@ async function triggerBackendScan(name, gameIds = null) {
     if (done || totalScanned > 0) {
         if (done) {
             statusText.innerHTML = `<i class="fa-solid fa-check" style="color: #4ade80;"></i> Hotovo! Analyzováno ${totalScanned} partií, nalezeno ${totalBlunders} situací.`;
-        } else if (!statusText.innerHTML.includes('fa-clock') && !statusText.innerHTML.includes('fa-triangle')) {
-            statusText.innerHTML = `<i class="fa-solid fa-check" style="color: #4ade80;"></i> Analyzováno ${totalScanned} partií, nalezeno ${totalBlunders} situací. Klikněte znovu pro další.`;
         }
-        setTimeout(() => selectPlayer(name), 500);
+        
+        // Reload player to fetch new puzzles and refresh limits
+        setTimeout(() => {
+            selectPlayer(name);
+        }, 800);
+        
     }
 
     setTimeout(() => { progContainer.style.display = 'none'; }, 3000);
