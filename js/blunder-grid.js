@@ -1182,7 +1182,10 @@ function switchBlunderTab(tab) {
         active.style.color = 'var(--primary-color)';
     }
 
-    if (tab === 'games' && currentPlayer) loadGamesList(currentPlayer);
+    if (tab === 'games') {
+        if (currentPlayer) loadGamesList(currentPlayer);
+        else document.getElementById('games-list').innerHTML = '<div style="text-align:center;padding:3rem;color:#888;">Začni vyhledáním hráče (v liště nahoře), abychom mohli načíst seznam jeho divokých i klidných partií.</div>';
+    }
     if (tab === 'featured' && currentPlayer) loadFeatured(currentPlayer);
 }
 window.switchBlunderTab = switchBlunderTab;
