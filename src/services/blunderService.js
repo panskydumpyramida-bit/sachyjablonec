@@ -281,7 +281,7 @@ export async function scanPlayerGames(playerName) {
 
         const results = await analyzeGame(gameData, playerName);
 
-        // Save to DB
+        // Save to DB — even if 0 results, save a "clean" marker so we don't rescan
         if (results.length > 0) {
             await prisma.blunderAnalysis.createMany({
                 data: results.map(r => ({
@@ -290,9 +290,26 @@ export async function scanPlayerGames(playerName) {
                 }))
             });
             newBlunders += results.length;
+        } else {
+            // Clean game — save placeholder with probDrop=0 so we know it was scanned
+            await prisma.blunderAnalysis.create({
+                data: {
+                    playerName: playerName.toLowerCase(),
+                    gameId: gameSummary.id,
+                    type: 'clean',
+                    fenBefore: '',
+                    movePlayed: '',
+                    movePlayedLAN: '',
+                    evalBefore: null,
+                    evalAfter: null,
+                    probDrop: 0,
+                    white: gameData.whitePlayer,
+                    black: gameData.blackPlayer,
+                    result: gameData.result,
+                }
+            });
         }
 
-        // Mark as scanned
         scannedGameIds.add(gameSummary.id);
     }
 
@@ -358,6 +375,7 @@ export async function getPlayerBlunders(playerName, threshold = 12) {
     return prisma.blunderAnalysis.findMany({
         where: {
             playerName: playerName.toLowerCase(),
+            type: { not: 'clean' },
             probDrop: { gte: threshold }
         },
         orderBy: { probDrop: 'desc' }
