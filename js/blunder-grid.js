@@ -59,18 +59,24 @@ function getWinProbability(evalObj) {
     return 50 + 50 * (2 / (1 + expValue) - 1);
 }
 
+window.setMode = function(mode) {
+    if (currentMode === mode) return;
+    currentMode = mode;
+    
+    document.getElementById('mode-btn-training').style.background = mode === 'training' ? 'rgba(212,175,55,0.2)' : 'transparent';
+    document.getElementById('mode-btn-training').style.color = mode === 'training' ? '#d4af37' : '#94a3b8';
+    
+    document.getElementById('mode-btn-gallery').style.background = mode === 'gallery' ? 'rgba(212,175,55,0.2)' : 'transparent';
+    document.getElementById('mode-btn-gallery').style.color = mode === 'gallery' ? '#d4af37' : '#94a3b8';
+    
+    renderGrid();
+};
+
 document.addEventListener('DOMContentLoaded', async () => {
-    // UI Eventy
-    const modeSelect = document.getElementById('mode-select');
     const thresholdInput = document.getElementById('threshold-input');
     const thresholdVal = document.getElementById('threshold-val');
     const filterBtn = document.getElementById('filter-btn');
     const searchInput = document.getElementById('playerSearch');
-
-    modeSelect.addEventListener('change', (e) => {
-        currentMode = e.target.value;
-        renderGrid();
-    });
 
     thresholdInput.addEventListener('input', (e) => {
         currentThreshold = parseInt(e.target.value);
