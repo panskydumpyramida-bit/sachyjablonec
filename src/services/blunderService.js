@@ -62,26 +62,42 @@ async function getPositionEval(fen, depth = 8) {
         }
     } catch { /* ignore */ }
 
-    // 2. Chess-API.com fallback
-    try {
-        const controller = new AbortController();
-        const timeout = setTimeout(() => controller.abort(), 8000);
-        const res = await fetch('https://chess-api.com/v1', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ fen, depth }),
-            signal: controller.signal
-        });
-        clearTimeout(timeout);
-        if (res.ok) {
-            const data = await res.json();
-            if (data && !data.error) {
-                let cpVal = data.centipawns !== undefined ? parseInt(data.centipawns) : (data.eval !== undefined ? Math.round(data.eval * 100) : null);
-                if (cpVal === null) return null;
-                return { cp: cpVal, mate: data.mate || null, bestMove: data.move, source: 'chess-api' };
+    // 2. Chess-API.com fallback (with retry on rate limit)
+    for (let attempt = 0; attempt < 3; attempt++) {
+        try {
+            if (attempt > 0) await delay(1000 * attempt); // backoff: 1s, 2s
+
+            const controller = new AbortController();
+            const timeout = setTimeout(() => controller.abort(), 10000);
+            const res = await fetch('https://chess-api.com/v1', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ fen, depth }),
+                signal: controller.signal
+            });
+            clearTimeout(timeout);
+
+            if (res.status === 429) {
+                console.warn(`[BlunderEval] Chess-API rate limited, attempt ${attempt + 1}/3`);
+                continue; // retry with backoff
             }
+
+            if (res.ok) {
+                const data = await res.json();
+                if (data && !data.error) {
+                    let cpVal = data.centipawns !== undefined ? parseInt(data.centipawns) : (data.eval !== undefined ? Math.round(data.eval * 100) : null);
+                    if (cpVal === null) continue;
+                    return { cp: cpVal, mate: data.mate || null, bestMove: data.move, source: 'chess-api' };
+                }
+                if (data?.error) {
+                    console.warn(`[BlunderEval] Chess-API error: ${data.error}, attempt ${attempt + 1}/3`);
+                    continue;
+                }
+            }
+        } catch (e) {
+            console.warn(`[BlunderEval] Chess-API exception, attempt ${attempt + 1}/3:`, e.message);
         }
-    } catch { /* ignore */ }
+    }
 
     return null;
 }
@@ -114,12 +130,18 @@ async function analyzeGame(gameData, playerName) {
     for (let i = 0; i <= history.length; i++) {
         const ev = await getPositionEval(safeFen(tempChess.fen()), 8);
         evals[i] = ev;
-        if (ev?.source === 'chess-api') await delay(350);
-        else if (ev?.source === 'lichess') await delay(30);
-        else await delay(100);
+        if (ev?.source === 'chess-api') await delay(500);
+        else if (ev?.source === 'lichess') await delay(50);
+        else await delay(200);
         
         if (i < history.length) tempChess.move(history[i]);
     }
+
+    const evalOk = evals.filter(e => e !== null).length;
+    const evalNull = evals.filter(e => e === null).length;
+    const lichessCount = evals.filter(e => e?.source === 'lichess').length;
+    const chessApiCount = evals.filter(e => e?.source === 'chess-api').length;
+    console.log(`[BlunderAnalysis] Game ${gameData.id}: ${history.length} moves, evals: ${evalOk} ok (${lichessCount} lichess, ${chessApiCount} chess-api), ${evalNull} null`);
 
     // Phase 3: Deep eval where CP jumped > 30
     const deepIndices = new Set();
