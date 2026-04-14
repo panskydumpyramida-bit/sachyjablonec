@@ -1190,16 +1190,20 @@ async function loadGamesList(playerName) {
                 : `<span style="color:#64748b;">⬜</span>`;
             const checkbox = g.scanned ? '' : `<input type="checkbox" class="game-checkbox" data-game-id="${g.id}" style="width:16px;height:16px;accent-color:var(--primary-color);cursor:pointer;" onchange="toggleGameSelect(${g.id}, this.checked)">`;
             
+            const rescanBtn = g.scanned
+                ? `<button onclick="rescanGame(${g.id})" title="Přeanalyzovat" style="background:none;border:1px solid rgba(255,255,255,0.1);color:#94a3b8;padding:0.25rem 0.5rem;border-radius:4px;font-size:0.7rem;cursor:pointer;transition:all 0.15s;" onmouseenter="this.style.color='#f59e0b';this.style.borderColor='rgba(245,158,11,0.4)'" onmouseleave="this.style.color='#94a3b8';this.style.borderColor='rgba(255,255,255,0.1)'"><i class="fa-solid fa-rotate"></i></button>`
+                : '';
             const viewBtn = g.scanned && g.blunderCount > 0
                 ? `<button onclick="viewGameBlunders(${g.id})" style="background:rgba(212,175,55,0.15); border:1px solid rgba(212,175,55,0.4); color:#d4af37; padding:0.35rem 0.6rem; border-radius:4px; font-size:0.75rem; font-weight:600; cursor:pointer;" onmouseenter="this.style.background='rgba(212,175,55,0.3)'" onmouseleave="this.style.background='rgba(212,175,55,0.15)'">Blundery 👉</button>`
-                : (g.scanned ? `<span style="font-size:0.75rem; color:#4ade80; padding:0.25rem 0.6rem;">Čistá hra bez blundru</span>` : '');
+                : (g.scanned ? `<span style="font-size:0.75rem; color:#4ade80; padding:0.25rem 0.6rem;">Čistá</span>` : '');
 
             return `<div style="display:flex;align-items:center;gap:0.6rem;padding:0.5rem 0.75rem;background:rgba(255,255,255,0.02);border-radius:6px;border-left:3px solid ${g.scanned ? (g.blunderCount > 0 ? '#f87171' : '#4ade80') : 'transparent'};transition:background 0.15s;" onmouseenter="this.style.background='rgba(255,255,255,0.05)'" onmouseleave="this.style.background='rgba(255,255,255,0.02)'">
                 ${checkbox}
                 <span style="width:28px;text-align:center;">${statusIcon}</span>
                 <span style="flex:1;font-size:0.85rem;color:#e2e8f0;">${escapeHtml(g.white)} - ${escapeHtml(g.black)}</span>
                 <span style="font-size:0.8rem;color:#888;font-weight:600;">${g.result || '*'}</span>
-                <span style="font-size:0.75rem;color:#64748b;min-width:70px;text-align:right;margin-right:1rem;">${date}</span>
+                <span style="font-size:0.75rem;color:#64748b;min-width:70px;text-align:right;">${date}</span>
+                ${rescanBtn}
                 ${viewBtn}
             </div>`;
         }).join('');
@@ -1208,6 +1212,35 @@ async function loadGamesList(playerName) {
         container.innerHTML = '<div style="text-align:center;padding:1rem;color:#f87171;">Chyba při načítání partií.</div>';
     }
 }
+
+async function rescanGame(gameId) {
+    if (!currentPlayer) return;
+    const statusText = document.getElementById('status-text');
+    const statusMsg = document.getElementById('status-message');
+    statusMsg.style.display = 'block';
+    statusText.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Přeanalyzovávám partii #${gameId}...`;
+
+    try {
+        // Delete old analysis for this game
+        await fetch(`/api/blunder/game/${gameId}/analysis`, { method: 'DELETE' });
+
+        // Re-scan this specific game
+        const bodyObj = { gameIds: [gameId] };
+        if (window.godMode) bodyObj.override = true;
+        const res = await fetch(`/api/blunder/${encodeURIComponent(currentPlayer)}/scan`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(bodyObj)
+        });
+        const result = res.ok ? await res.json() : {};
+        statusText.innerHTML = `<i class="fa-solid fa-check" style="color:#4ade80;"></i> Přeanalyzováno — ${result.newBlunders || 0} situací nalezeno.`;
+        loadGamesList(currentPlayer);
+        setTimeout(() => selectPlayer(currentPlayer), 500);
+    } catch (e) {
+        statusText.innerHTML = `<i class="fa-solid fa-triangle-exclamation" style="color:#f87171;"></i> Chyba při přeanalýze.`;
+    }
+}
+window.rescanGame = rescanGame;
 
 function toggleGameSelect(gameId, checked) {
     if (checked) selectedGameIds.add(gameId);

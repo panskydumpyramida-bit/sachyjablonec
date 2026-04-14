@@ -148,6 +148,20 @@ router.delete('/:playerName/analysis', async (req, res) => {
     }
 });
 
+// Clear analysis for a single game (for rescan)
+router.delete('/game/:gameId/analysis', async (req, res) => {
+    try {
+        const gameId = parseInt(req.params.gameId);
+        const deleted = await prisma.blunderAnalysis.deleteMany({
+            where: { gameId }
+        });
+        res.json({ success: true, deleted: deleted.count });
+    } catch (error) {
+        console.error('[Blunder] Clear game analysis error:', error);
+        res.status(500).json({ error: 'Failed to clear game analysis' });
+    }
+});
+
 // Toggle featured status
 router.put('/:id/featured', async (req, res) => {
     try {
