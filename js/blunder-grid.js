@@ -287,8 +287,10 @@ async function triggerBackendScan(name, gameIds = null, infiniteLoop = false) {
     // Loop: server scans 2 games at a time, we call repeatedly until done or limit
     while (!done && (infiniteLoop || batchNum < 5)) {
         batchNum++;
-        statusText.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Analyzuji dávku ${batchNum}... (${totalScanned} partií hotovo)`;
-        progBar.style.width = `${Math.min(batchNum * 20, 90)}%`;
+        statusText.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Analyzuji partii ${batchNum}... (${totalScanned} hotovo, ${totalBlunders} situací)`;
+        if (!infiniteLoop) {
+            progBar.style.width = `${Math.min(batchNum * 10, 90)}%`;
+        }
 
         try {
             const bodyObj = gameIds ? { gameIds } : {};
@@ -321,7 +323,13 @@ async function triggerBackendScan(name, gameIds = null, infiniteLoop = false) {
             }
         } catch (e) {
             console.error('Backend scan error:', e);
-            statusText.innerHTML = `<i class="fa-solid fa-triangle-exclamation" style="color: #f87171;"></i> Timeout/chyba serveru. Analyzováno ${totalScanned} partií, ${totalBlunders} situací. Zkuste znovu pro další dávku.`;
+            if (infiniteLoop) {
+                // God mode: wait and retry (server may have completed but Cloudflare timed out)
+                statusText.innerHTML = `<i class="fa-solid fa-rotate" style="color: #f59e0b;"></i> Timeout — čekám 3s a pokračuji...`;
+                await new Promise(r => setTimeout(r, 3000));
+                continue; // retry
+            }
+            statusText.innerHTML = `<i class="fa-solid fa-triangle-exclamation" style="color: #f87171;"></i> Timeout/chyba serveru. Analyzováno ${totalScanned} partií, ${totalBlunders} situací. Zkuste znovu.`;
             break;
         }
     }
