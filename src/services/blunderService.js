@@ -10,7 +10,7 @@ import { Chess } from 'chess.js';
 const prisma = new PrismaClient();
 
 const DAILY_SCAN_LIMIT = 10; // max new games per player per day
-const BATCH_SIZE = 2; // games per single request (Cloudflare 100s timeout)
+const BATCH_SIZE = 1; // games per single request (Cloudflare 100s timeout — full eval ~40s per game)
 const BLUNDER_THRESHOLD = 5; // Minimální Win% drop pro uložení do DB (slider začíná na 5)
 const MISS_THRESHOLD = 8; // Misses můžou být o něco mírnější
 
