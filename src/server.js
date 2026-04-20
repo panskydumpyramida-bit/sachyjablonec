@@ -67,13 +67,13 @@ app.use(helmet({
     contentSecurityPolicy: {
         directives: {
             defaultSrc: ["'self'"],
-            scriptSrc: ["'self'", "'unsafe-inline'", "https://code.jquery.com", "https://cdnjs.cloudflare.com", "https://www.googletagmanager.com", "https://www.google-analytics.com", "https://unpkg.com"],
+            scriptSrc: ["'self'", "'unsafe-inline'", "https://code.jquery.com", "https://cdnjs.cloudflare.com", "https://www.googletagmanager.com", "https://www.google-analytics.com", "https://unpkg.com", "https://static.hotjar.com", "https://script.hotjar.com"],
             scriptSrcAttr: ["'unsafe-inline'"],
             styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com", "https://cdnjs.cloudflare.com", "https://unpkg.com"],
             imgSrc: ["'self'", "data:", "https:", "blob:", "https://chessboardjs.com"],
             fontSrc: ["'self'", "https://fonts.gstatic.com", "https://cdnjs.cloudflare.com"],
-            connectSrc: ["'self'", "https://lichess.org", "https://chess-api.com", "https://www.chess.com", "https://www.googleapis.com", "https://chess-results.com", "https://www.google-analytics.com"],
-            frameSrc: ["'self'", "https://lichess.org", "https://mapy.cz", "https://mapy.com", "https://www.chess.com", "https://chess.com"],
+            connectSrc: ["'self'", "https://lichess.org", "https://chess-api.com", "https://www.chess.com", "https://www.googleapis.com", "https://chess-results.com", "https://www.google-analytics.com", "https://*.hotjar.com", "https://*.hotjar.io", "wss://*.hotjar.com"],
+            frameSrc: ["'self'", "https://lichess.org", "https://mapy.cz", "https://mapy.com", "https://www.chess.com", "https://chess.com", "https://*.hotjar.com"],
             objectSrc: ["'none'"],
             upgradeInsecureRequests: [],
         },
@@ -178,6 +178,7 @@ app.use('/js', express.static(path.join(__dirname, '../js'), staticOptions));
 app.use('/css', express.static(path.join(__dirname, '../css'), staticOptions));
 app.use('/uploads', express.static(path.join(__dirname, '../uploads'), uploadOptions));
 app.use('/images', express.static(path.join(__dirname, '../images'), imageOptions));
+app.use('/prototypes', express.static(path.join(__dirname, '../prototypes'), staticOptions));
 
 // SEO Files - Explicit rules to ensure they are served correctly
 app.get('/robots.txt', (req, res) => res.sendFile(path.join(__dirname, '../robots.txt')));
@@ -252,6 +253,18 @@ app.get('/members.html', servePage('members.html'));
 
 app.get('/account', servePage('account.html'));
 app.get('/account.html', servePage('account.html'));
+
+app.get('/reset-password', servePage('reset-password.html'));
+app.get('/reset-password.html', servePage('reset-password.html'));
+
+app.get('/member-bulletin', servePage('member-bulletin.html'));
+app.get('/member-bulletin.html', servePage('member-bulletin.html'));
+
+app.get('/member-wishlist', servePage('member-wishlist.html'));
+app.get('/member-wishlist.html', servePage('member-wishlist.html'));
+
+app.get('/member-gallery', servePage('member-gallery.html'));
+app.get('/member-gallery.html', servePage('member-gallery.html'));
 
 app.get('/blicak', servePage('blicak.html'));
 app.get('/blicak.html', servePage('blicak.html'));
@@ -345,7 +358,8 @@ const allowedHtmlFiles = [
     'tournaments.html', 'chess-database.html', 'individual-competitions.html',
     'form-scanner.html', 'game-recorder.html', 'puzzle-racer.html',
     'blunder-grid.html', 'member-games.html', 'training.html', 'account.html',
-    '404.html'
+    '404.html', 'reset-password.html', 'member-bulletin.html', 
+    'member-wishlist.html', 'member-gallery.html'
 ];
 
 // --- Blicak Registration Endpoints ---
