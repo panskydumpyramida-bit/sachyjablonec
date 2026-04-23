@@ -87,6 +87,9 @@
                 <div class="nav-tab" onclick="switchTab('events')" id="eventsTab"><i
                         class="fa-regular fa-calendar-days"></i>Události
                 </div>
+                <div class="nav-tab" onclick="switchTab('timeline')" id="timelineTab"><i
+                        class="fa-solid fa-timeline"></i>Timeline
+                </div>
                 <div class="nav-divider"></div>
                 <div class="nav-tab secondary" onclick="switchTab('games')" id="gamesTab"><i
                         class="fa-solid fa-chess-board"></i>Partie</div>
@@ -1251,6 +1254,85 @@
         </div>
     </div>
     </div>
+
+    <!-- Timeline View (admin správa klubové timeliny v about.html) -->
+    <div id="timelineView" class="hidden">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+            <h2 style="margin: 0;"><i class="fa-solid fa-timeline"></i>Správa Timeliny</h2>
+            <button class="btn-secondary" onclick="AdminTimeline.load()"><i class="fa-solid fa-sync"></i>Obnovit</button>
+        </div>
+
+        <div class="card" style="margin-bottom: 2rem;">
+            <h3 id="timeline-form-title" style="margin-top: 0; color: var(--primary-color);">
+                <i class="fa-solid fa-plus"></i>Nový milník
+            </h3>
+            <form id="timeline-form">
+                <input type="hidden" name="id">
+                <div style="display: grid; grid-template-columns: 120px 1fr 200px; gap: 1rem;">
+                    <div class="form-group">
+                        <label>Rok *</label>
+                        <input type="number" name="year" min="1900" max="2100" required placeholder="např. 1991">
+                    </div>
+                    <div class="form-group">
+                        <label>Událost *</label>
+                        <input type="text" name="event" required maxlength="120" placeholder="např. Založení TJ Bižuterie">
+                    </div>
+                    <div class="form-group">
+                        <label>Ikona (FontAwesome)</label>
+                        <select name="icon">
+                            <option value="fa-chess-pawn">♙ Pěšec</option>
+                            <option value="fa-chess-knight">♘ Jezdec</option>
+                            <option value="fa-chess-bishop">♗ Střelec</option>
+                            <option value="fa-chess-rook">♖ Věž</option>
+                            <option value="fa-chess-queen">♕ Dáma</option>
+                            <option value="fa-chess-king">♔ Král</option>
+                            <option value="fa-trophy">🏆 Pohár</option>
+                            <option value="fa-flag">🚩 Vlajka</option>
+                            <option value="fa-star">⭐ Hvězda</option>
+                        </select>
+                    </div>
+                </div>
+                <div style="display: grid; grid-template-columns: 150px 1fr; gap: 1rem; align-items: end;">
+                    <div class="form-group">
+                        <label>Pořadí</label>
+                        <input type="number" name="sortOrder" value="0" placeholder="0">
+                    </div>
+                    <div class="form-group" style="background: rgba(255,255,255,0.02); padding: 0.75rem; border-radius: 6px; border: 1px solid rgba(255,255,255,0.05);">
+                        <label style="display: flex; align-items: center; gap: 0.75rem; cursor: pointer; margin: 0;">
+                            <input type="checkbox" name="isFuture" style="width: auto;">
+                            <span style="font-weight: normal;">Budoucí cíl (vizuálně dashed + italic)</span>
+                        </label>
+                    </div>
+                </div>
+                <div style="display: flex; gap: 0.5rem; margin-top: 1rem;">
+                    <button type="submit" class="btn-primary"><i class="fa-solid fa-save"></i>Uložit</button>
+                    <button type="button" id="timeline-cancel-btn" class="btn-secondary" style="display: none;" onclick="AdminTimeline.cancelEdit()">
+                        <i class="fa-solid fa-times"></i>Zrušit úpravy
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <div class="card">
+            <h3 style="margin-top: 0;"><i class="fa-solid fa-list"></i>Milníky</h3>
+            <div class="desktop-view">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 80px;">Pořadí</th>
+                            <th style="width: 80px;">Rok</th>
+                            <th style="width: 50px;">Ikona</th>
+                            <th>Událost</th>
+                            <th style="width: 100px;">Typ</th>
+                            <th style="width: 120px;">Akce</th>
+                        </tr>
+                    </thead>
+                    <tbody id="timeline-table-body"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
     <!-- Gallery View -->
     <div id="galleryView" class="hidden">
         <div class="header-actions">
@@ -2317,6 +2399,7 @@
     <script src="js/admin/admin-competitions.js?v=ux12"></script>
     <script src="js/admin/admin-games.js?v=ux12"></script>
     <script src="js/admin/admin-events.js?v=ux12"></script>
+    <script src="js/admin/admin-timeline.js"></script>
     <script src="js/admin/admin-users.js?v=ux12"></script>
     <script src="js/admin/admin-blicak.js?v=ux12"></script>
     <script src="js/admin/admin-puzzle-racer.js?v=ux12"></script>

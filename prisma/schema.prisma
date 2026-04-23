@@ -342,6 +342,22 @@ model Event {
 }
 
 // ==========================================
+// Timeline (milníky klubu v about.html)
+// ==========================================
+model TimelineEntry {
+  id        Int      @id @default(autoincrement())
+  year      Int
+  event     String
+  icon      String   @default("fa-chess-pawn") // FontAwesome třída, např. fa-chess-rook
+  sortOrder Int      @default(0) @map("sort_order")
+  isFuture  Boolean  @default(false) @map("is_future") // cíl, ne historie
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("timeline_entries")
+}
+
+// ==========================================
 // Chess Database (SSCR 2003-2025)
 // ==========================================
 

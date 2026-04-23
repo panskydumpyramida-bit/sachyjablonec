@@ -224,7 +224,7 @@ function switchTab(tab) {
     if (activeTab) activeTab.classList.add('active');
 
     // Hide all views
-    ['dashboard', 'editor', 'members', 'users', 'messages', 'blicak', 'competitions', 'gallery', 'games', 'events', 'puzzleRacer', 'chessdb', 'changelog'].forEach(v => {
+    ['dashboard', 'editor', 'members', 'users', 'messages', 'blicak', 'competitions', 'gallery', 'games', 'events', 'timeline', 'puzzleRacer', 'chessdb', 'changelog'].forEach(v => {
         const el = document.getElementById(v + 'View');
         if (el) el.classList.add('hidden');
     });
@@ -254,6 +254,7 @@ function switchTab(tab) {
     else if (tab === 'gallery') loadAdminGallery();
     else if (tab === 'games') { loadRecordedGames(); if (window.loadDiagrams) loadDiagrams(); if (window.loadFragments) loadFragments(); }
     else if (tab === 'events' && window.AdminEvents) AdminEvents.init();
+    else if (tab === 'timeline' && window.AdminTimeline) AdminTimeline.load();
     else if (tab === 'puzzleRacer' && window.loadPuzzleRacerSettings) loadPuzzleRacerSettings();
     else if (tab === 'chessdb' && window.loadChessDBStats) loadChessDBStats();
 }
