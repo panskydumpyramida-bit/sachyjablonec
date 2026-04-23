@@ -119,6 +119,10 @@ model News {
   facebookSharedAt  DateTime? @map("facebook_shared_at")
   facebookMessage   String?   @map("facebook_message")
 
+  // Instagram Stories sharing
+  instagramStoryIds   String?   @map("instagram_story_ids")   // JSON array of IG media IDs
+  instagramSharedAt   DateTime? @map("instagram_shared_at")
+
   images        Image[]
 
   @@index([isPublished, publishedDate])

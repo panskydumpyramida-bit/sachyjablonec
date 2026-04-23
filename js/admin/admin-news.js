@@ -616,7 +616,48 @@ function applyFacebookShareState(news) {
     }
 
     toggleFacebookMessageEditor();
+    applyInstagramShareState(news);
 }
+
+function applyInstagramShareState(news) {
+    const check = document.getElementById('shareInstagramCheck');
+    const status = document.getElementById('shareInstagramStatus');
+    if (!check) return;
+
+    if (!news) {
+        check.checked = false;
+        if (status) status.style.display = 'none';
+    } else if (news.instagramStoryIds) {
+        check.checked = false;
+        if (status) status.style.display = 'inline';
+    } else {
+        check.checked = false;
+        if (status) status.style.display = 'none';
+    }
+}
+
+async function shareArticleToInstagram(newsId) {
+    try {
+        const res = await fetch(`${API_URL}/news/${newsId}/share-to-instagram-story`, {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${authToken}` }
+        });
+        if (res.ok) {
+            return true;
+        }
+        const err = await res.json().catch(() => ({}));
+        const detail = err.detail || err.error || `HTTP ${res.status}`;
+        console.error('[admin-news] Instagram share failed:', err);
+        showAlert(`Článek uložen, ale IG Stories selhaly: ${detail}`, 'error');
+        return false;
+    } catch (e) {
+        console.error('[admin-news] Instagram share error:', e);
+        showAlert('Článek uložen, ale IG Stories selhaly: ' + e.message, 'error');
+        return false;
+    }
+}
+
+window.shareArticleToInstagram = shareArticleToInstagram;
 
 function toggleFacebookMessageEditor() {
     const check = document.getElementById('shareFacebookCheck');
@@ -806,15 +847,22 @@ async function saveNews() {
             window.isNewsDirty = false; // Reset dirty flag
 
             const shareFb = document.getElementById('shareFacebookCheck')?.checked;
-            const alreadyShared = !!savedArticle.facebookPostId;
-            if (shareFb && data.isPublished && !alreadyShared) {
-                showAlert('Uloženo — odesílám na Facebook…', 'success');
-                const fbOk = await shareArticleToFacebook(savedArticle.id);
-                if (fbOk) {
-                    showAlert('Uloženo a sdíleno na Facebook ✓', 'success');
+            const shareIg = document.getElementById('shareInstagramCheck')?.checked;
+            const fbAlreadyShared = !!savedArticle.facebookPostId;
+            const igAlreadyShared = !!savedArticle.instagramStoryIds;
+
+            const willShareFb = shareFb && data.isPublished && !fbAlreadyShared;
+            const willShareIg = shareIg && data.isPublished && !igAlreadyShared;
+
+            if (willShareFb || willShareIg) {
+                const targets = [willShareFb && 'Facebook', willShareIg && 'Instagram'].filter(Boolean).join(' + ');
+                showAlert(`Uloženo — odesílám na ${targets}…`, 'success');
+                const results = [];
+                if (willShareFb) results.push(await shareArticleToFacebook(savedArticle.id) ? 'FB ✓' : 'FB ✗');
+                if (willShareIg) results.push(await shareArticleToInstagram(savedArticle.id) ? 'IG ✓' : 'IG ✗');
+                if (results.every(r => r.endsWith('✓'))) {
+                    showAlert(`Uloženo a sdíleno (${results.join(', ')})`, 'success');
                 }
-                // On failure shareArticleToFacebook already showed an error toast;
-                // article is saved, so we continue to dashboard anyway.
             } else {
                 showAlert('Uloženo!', 'success');
             }
