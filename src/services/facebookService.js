@@ -37,14 +37,25 @@ function getConfig() {
 }
 
 /**
- * Strip URL fragment (#crop=...) and resolve `/uploads/...` URL to an absolute
- * file path on disk. Returns null for unsupported URLs (remote http, missing file).
+ * Resolve any image URL that points to our own /uploads directory into an
+ * absolute file path on disk. Accepts:
+ *   /uploads/foo.webp
+ *   /uploads/foo.webp?t=123
+ *   /uploads/foo.webp#crop=50%
+ *   https://sachyjablonec.cz/uploads/foo.webp?t=123
+ *   https://www.sachyjablonec.cz/uploads/foo.webp
+ * Returns null for unrelated URLs, thumbnails or missing files.
  */
 async function resolveLocalUpload(imageUrl) {
     if (typeof imageUrl !== 'string' || !imageUrl) return null;
 
-    const [clean] = imageUrl.split('#');
-    if (!clean.startsWith('/uploads/')) return null;
+    // Strip fragment (#crop=...) and query string (?t=...)
+    let clean = imageUrl.split('#')[0].split('?')[0];
+
+    // Normalize absolute URLs pointing to the site's own uploads directory
+    const match = clean.match(/\/uploads\/[^/?#]+$/);
+    if (!match) return null;
+    clean = match[0];
 
     const filename = path.basename(clean);
     // Reject thumbnail variants – we want full-size photos on FB
