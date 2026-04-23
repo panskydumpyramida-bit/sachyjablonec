@@ -27,10 +27,11 @@
             { tab: 'changelog',   label: 'Changelog',    icon: 'fa-code-branch' },
         ],
         footer: [
-            { href: 'docs/admin-manual.html', label: 'Manuál', icon: 'fa-book', external: true },
-            { href: 'docs/api-manual.html',   label: 'API',    icon: 'fa-code', external: true },
+            { tab: 'settings',                label: 'Nastavení',    icon: 'fa-gear' },
+            { href: 'docs/admin-manual.html', label: 'Manuál',       icon: 'fa-book', external: true },
+            { href: 'docs/api-manual.html',   label: 'API',          icon: 'fa-code', external: true },
             { href: '/',                      label: 'Zobrazit web', icon: 'fa-external-link-alt', external: true },
-            { action: 'logout',               label: 'Odhlásit',  icon: 'fa-sign-out-alt', danger: true },
+            { action: 'logout',               label: 'Odhlásit',     icon: 'fa-sign-out-alt', danger: true },
         ],
     };
 

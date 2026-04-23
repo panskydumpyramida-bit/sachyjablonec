@@ -224,7 +224,7 @@ function switchTab(tab) {
     if (activeTab) activeTab.classList.add('active');
 
     // Hide all views
-    ['dashboard', 'editor', 'members', 'users', 'messages', 'blicak', 'competitions', 'gallery', 'games', 'events', 'timeline', 'puzzleRacer', 'chessdb', 'changelog'].forEach(v => {
+    ['dashboard', 'editor', 'members', 'users', 'messages', 'blicak', 'competitions', 'gallery', 'games', 'events', 'timeline', 'settings', 'puzzleRacer', 'chessdb', 'changelog'].forEach(v => {
         const el = document.getElementById(v + 'View');
         if (el) el.classList.add('hidden');
     });

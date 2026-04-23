@@ -48,17 +48,13 @@
     <div id="adminPanel" class="hidden">
         <header>
             <div class="container">
-                <nav><a href="/" class="logo"><i class="fa-solid fa-chess-knight"></i>Administrace</a>
-                    <ul class="nav-links">
-                        <li><a href="docs/admin-manual.html" target="_blank" style="color: #fbbf24;"><i class="fa-solid fa-book"></i> Manuál</a></li>
-                        <li><a href="docs/api-manual.html" target="_blank" style="color: #a78bfa;"><i class="fa-solid fa-code"></i> API</a></li>
-                        <li><a href="/" target="_blank"><i class="fa-solid fa-external-link-alt"></i> Web</a></li>
-                        <li><a href="#" onclick="logout()" style="color: #fca5a5;"><i
-                                    class="fa-solid fa-sign-out-alt"></i> Odhlásit</a></li>
-                    </ul>
+                <nav>
+                    <a href="/" class="logo"><i class="fa-solid fa-chess-knight"></i>Administrace</a>
+                    <div id="adminHeaderBuild" style="font-family: monospace; font-size: 0.7rem; color: rgba(255,255,255,0.3); margin-left: auto;"></div>
                 </nav>
             </div>
         </header>
+        <script>document.addEventListener('DOMContentLoaded', () => { const el = document.getElementById('adminHeaderBuild'); if (el) el.textContent = 'Build ' + new Date().toISOString().slice(0, 10) + ' #v' + APP_VERSION; });</script>
 
         <!-- ===== SIDEBAR ===== -->
         <aside class="admin-sidebar" id="adminSidebar">
@@ -176,13 +172,17 @@
                                     <i class="fa-solid fa-plus"></i>
                                     <span>Nový článek</span>
                                 </button>
-                                <button class="quick-action-btn" onclick="dashboardQuickAction('new-game')">
-                                    <i class="fa-solid fa-chess"></i>
-                                    <span>Přidat partii</span>
-                                </button>
                                 <button class="quick-action-btn" onclick="dashboardQuickAction('new-event')">
                                     <i class="fa-regular fa-calendar-plus"></i>
                                     <span>Nová událost</span>
+                                </button>
+                                <button class="quick-action-btn" onclick="switchTab('timeline')">
+                                    <i class="fa-solid fa-timeline"></i>
+                                    <span>Timeline</span>
+                                </button>
+                                <button class="quick-action-btn" onclick="dashboardQuickAction('new-game')">
+                                    <i class="fa-solid fa-chess"></i>
+                                    <span>Přidat partii</span>
                                 </button>
                                 <button class="quick-action-btn" onclick="dashboardQuickAction('gallery')">
                                     <i class="fa-regular fa-images"></i>
@@ -196,9 +196,9 @@
                                     <i class="fa-solid fa-file-pdf"></i>
                                     <span>Skenovat přihlášky</span>
                                 </button>
-                                <button class="quick-action-btn" onclick="window.open('/', '_blank')">
-                                    <i class="fa-solid fa-eye"></i>
-                                    <span>Zobrazit web</span>
+                                <button class="quick-action-btn" onclick="switchTab('settings')">
+                                    <i class="fa-solid fa-gear"></i>
+                                    <span>Nastavení</span>
                                 </button>
                             </div>
                         </div>
@@ -217,59 +217,6 @@
                         </div>
                     </div>
 
-                    <!-- Site Settings Panel -->
-                    <div class="site-settings-panel" data-role="superadmin"
-                        style="margin-top: 1rem; background: rgba(30, 41, 59, 0.5); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 1rem 1.5rem;">
-                        <div
-                            style="font-weight: 600; margin-bottom: 0.75rem; color: #94a3b8; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.5px;">
-                            <i class="fa-solid fa-sliders"></i> Nastavení webu
-                        </div>
-                        <div style="display: flex; flex-wrap: wrap; gap: 1rem;">
-                            <!-- Maintenance Mode Toggle -->
-                            <label
-                                style="display: flex; align-items: center; gap: 0.75rem; cursor: pointer; padding: 0.5rem 0; flex: 1; min-width: 200px;">
-                                <input type="checkbox" id="maintenanceToggle" onchange="toggleMaintenance()"
-                                    style="width: 18px; height: 18px; accent-color: #ef4444; cursor: pointer;">
-                                <span style="font-size: 0.9rem;">
-                                    <i class="fa-solid fa-wrench" style="color: #ef4444; margin-right: 0.3rem;"></i>
-                                    Režim údržby
-                                </span>
-                            </label>
-
-                            <!-- Latest Comment Toggle -->
-                            <label
-                                style="display: flex; align-items: center; gap: 0.75rem; cursor: pointer; padding: 0.5rem 0; flex: 1; min-width: 200px;">
-                                <input type="checkbox" id="showLatestCommentToggle" onchange="toggleLatestComment()"
-                                    style="width: 18px; height: 18px; accent-color: #60a5fa; cursor: pointer;">
-                                <span style="font-size: 0.9rem;">
-                                    <i class="fa-solid fa-comments" style="color: #60a5fa; margin-right: 0.3rem;"></i>
-                                    Info panel – Nový komentář
-                                </span>
-                            </label>
-                        </div>
-                    </div>
-
-                    <!-- Homepage Settings Panel -->
-                    <div class="site-settings-panel"
-                        style="margin-top: 1rem; background: rgba(30, 41, 59, 0.5); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 1rem 1.5rem;">
-                        <div
-                            style="font-weight: 600; margin-bottom: 0.75rem; color: #94a3b8; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.5px;">
-                            <i class="fa-solid fa-chess"></i> Nastavení titulní stránky (Animace partie)
-                        </div>
-                        <div style="display: flex; flex-direction: column; gap: 1rem;">
-                            <div class="form-group" style="margin: 0;">
-                                <label style="font-size: 0.85rem; color: #cbd5e1;">Zobrazená hlavička (volitelné)</label>
-                                <input type="text" id="heroAnimationHeader" placeholder="např. Magnus Carlsen vs Hikaru Nakamura, 2024" style="font-size: 0.9rem; padding: 0.5rem; background: rgba(15, 23, 42, 0.5); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; color: #e2e8f0; width: 100%;">
-                            </div>
-                            <div class="form-group" style="margin: 0;">
-                                <label style="font-size: 0.85rem; color: #cbd5e1;">PGN partie</label>
-                                <textarea id="heroAnimationPgn" rows="4" placeholder="Vložte PGN partie (pokud bude prázdné, použije se výchozí ukázka)" style="font-size: 0.9rem; padding: 0.5rem; background: rgba(15, 23, 42, 0.5); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; color: #e2e8f0; width: 100%; resize: vertical; font-family: monospace;"></textarea>
-                            </div>
-                            <div style="display: flex; justify-content: flex-end;">
-                                <button class="btn-primary" onclick="saveHeroSettings()"><i class="fa-solid fa-save"></i> Uložit nastavení</button>
-                            </div>
-                        </div>
-                    </div>
                 </div>
 
                 <!-- News List Section -->
@@ -1371,6 +1318,58 @@
                     </thead>
                     <tbody id="timeline-table-body"></tbody>
                 </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Settings View (nastavení webu + titulní stránky) -->
+    <div id="settingsView" class="hidden">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+            <h2 style="margin: 0;"><i class="fa-solid fa-gear"></i>Nastavení</h2>
+        </div>
+
+        <!-- Site Settings Panel -->
+        <div class="card" style="margin-bottom: 1.5rem;" data-role="superadmin">
+            <h3 style="margin-top: 0; color: var(--primary-color);">
+                <i class="fa-solid fa-sliders"></i> Nastavení webu
+            </h3>
+            <p style="color: #94a3b8; font-size: 0.85rem; margin-bottom: 1rem;">Globální přepínače viditelnosti veřejných částí webu.</p>
+            <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                <label style="display: flex; align-items: center; gap: 0.75rem; cursor: pointer; padding: 0.75rem 1rem; background: rgba(239, 68, 68, 0.05); border: 1px solid rgba(239, 68, 68, 0.15); border-radius: 8px;">
+                    <input type="checkbox" id="maintenanceToggle" onchange="toggleMaintenance()" style="width: 18px; height: 18px; accent-color: #ef4444; cursor: pointer;">
+                    <span style="flex: 1;">
+                        <strong><i class="fa-solid fa-wrench" style="color: #ef4444; margin-right: 0.3rem;"></i>Režim údržby</strong>
+                        <div style="font-size: 0.8rem; color: #94a3b8; margin-top: 0.2rem;">Návštěvníci uvidí maintenance stránku; admini mají přístup.</div>
+                    </span>
+                </label>
+                <label style="display: flex; align-items: center; gap: 0.75rem; cursor: pointer; padding: 0.75rem 1rem; background: rgba(96, 165, 250, 0.05); border: 1px solid rgba(96, 165, 250, 0.15); border-radius: 8px;">
+                    <input type="checkbox" id="showLatestCommentToggle" onchange="toggleLatestComment()" style="width: 18px; height: 18px; accent-color: #60a5fa; cursor: pointer;">
+                    <span style="flex: 1;">
+                        <strong><i class="fa-solid fa-comments" style="color: #60a5fa; margin-right: 0.3rem;"></i>Info panel – Nový komentář</strong>
+                        <div style="font-size: 0.8rem; color: #94a3b8; margin-top: 0.2rem;">Zobrazit na homepage upozornění s posledním komentářem.</div>
+                    </span>
+                </label>
+            </div>
+        </div>
+
+        <!-- Homepage Hero Animation Settings -->
+        <div class="card">
+            <h3 style="margin-top: 0; color: var(--primary-color);">
+                <i class="fa-solid fa-chess"></i> Nastavení titulní stránky (animace partie)
+            </h3>
+            <p style="color: #94a3b8; font-size: 0.85rem; margin-bottom: 1rem;">PGN partie která se animuje v hero sekci homepage. Prázdné pole = výchozí Caro-Kann miniatura.</p>
+            <div style="display: flex; flex-direction: column; gap: 1rem;">
+                <div class="form-group" style="margin: 0;">
+                    <label>Zobrazená hlavička (volitelné)</label>
+                    <input type="text" id="heroAnimationHeader" placeholder="např. Magnus Carlsen vs Hikaru Nakamura, 2024">
+                </div>
+                <div class="form-group" style="margin: 0;">
+                    <label>PGN partie</label>
+                    <textarea id="heroAnimationPgn" rows="6" placeholder="Vložte PGN partie…" style="font-family: monospace; font-size: 0.9rem;"></textarea>
+                </div>
+                <div style="display: flex; justify-content: flex-end;">
+                    <button class="btn-primary" onclick="saveHeroSettings()"><i class="fa-solid fa-save"></i>Uložit nastavení</button>
+                </div>
             </div>
         </div>
     </div>
