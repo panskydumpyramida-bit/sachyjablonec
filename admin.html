@@ -203,6 +203,28 @@
                             </label>
                         </div>
                     </div>
+
+                    <!-- Homepage Settings Panel -->
+                    <div class="site-settings-panel"
+                        style="margin-top: 1rem; background: rgba(30, 41, 59, 0.5); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 1rem 1.5rem;">
+                        <div
+                            style="font-weight: 600; margin-bottom: 0.75rem; color: #94a3b8; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.5px;">
+                            <i class="fa-solid fa-chess"></i> Nastavení titulní stránky (Animace partie)
+                        </div>
+                        <div style="display: flex; flex-direction: column; gap: 1rem;">
+                            <div class="form-group" style="margin: 0;">
+                                <label style="font-size: 0.85rem; color: #cbd5e1;">Zobrazená hlavička (volitelné)</label>
+                                <input type="text" id="heroAnimationHeader" placeholder="např. Magnus Carlsen vs Hikaru Nakamura, 2024" style="font-size: 0.9rem; padding: 0.5rem; background: rgba(15, 23, 42, 0.5); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; color: #e2e8f0; width: 100%;">
+                            </div>
+                            <div class="form-group" style="margin: 0;">
+                                <label style="font-size: 0.85rem; color: #cbd5e1;">PGN partie</label>
+                                <textarea id="heroAnimationPgn" rows="4" placeholder="Vložte PGN partie (pokud bude prázdné, použije se výchozí ukázka)" style="font-size: 0.9rem; padding: 0.5rem; background: rgba(15, 23, 42, 0.5); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; color: #e2e8f0; width: 100%; resize: vertical; font-family: monospace;"></textarea>
+                            </div>
+                            <div style="display: flex; justify-content: flex-end;">
+                                <button class="btn-primary" onclick="saveHeroSettings()"><i class="fa-solid fa-save"></i> Uložit nastavení</button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- News List Section -->
@@ -501,12 +523,23 @@
                                     <span id="shareFacebookStatus" style="font-size: 0.75rem; color: #22c55e; display: none;">✓ již sdíleno</span>
                                 </label>
                                 <div id="facebookMessageEditor" style="display: none; margin-top: 0.5rem; padding: 0.75rem; background: rgba(24,119,242,0.08); border: 1px solid rgba(24,119,242,0.3); border-radius: 6px;">
-                                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.4rem;">
+                                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.4rem; flex-wrap: wrap; gap: 0.4rem;">
                                         <label for="facebookMessage" style="font-size: 0.75rem; color: #93c5fd; margin: 0;">Text FB postu</label>
-                                        <button type="button" id="btnGenerateFbPost" onclick="generateFacebookPost()"
-                                            style="font-size: 0.7rem; padding: 0.3rem 0.6rem; background: linear-gradient(135deg, #8b5cf6, #6366f1); color: white; border: none; border-radius: 4px; cursor: pointer; display: inline-flex; align-items: center; gap: 0.3rem;">
-                                            <i class="fa-solid fa-wand-magic-sparkles"></i><span id="btnGenerateFbPostText">Vygenerovat AI</span>
-                                        </button>
+                                        <div style="display: inline-flex; align-items: center; gap: 0.3rem;">
+                                            <div id="fbLengthToggle" role="group" aria-label="Délka postu"
+                                                style="display: inline-flex; background: rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.1); border-radius: 4px; overflow: hidden;">
+                                                <button type="button" data-fb-length="short" onclick="setFbLength('short')"
+                                                    style="font-size: 0.7rem; padding: 0.3rem 0.55rem; background: transparent; color: #cbd5e1; border: none; cursor: pointer;">Krátký</button>
+                                                <button type="button" data-fb-length="medium" onclick="setFbLength('medium')"
+                                                    style="font-size: 0.7rem; padding: 0.3rem 0.55rem; background: transparent; color: #cbd5e1; border: none; border-left: 1px solid rgba(255,255,255,0.1); cursor: pointer;">Střední</button>
+                                                <button type="button" data-fb-length="long" onclick="setFbLength('long')"
+                                                    style="font-size: 0.7rem; padding: 0.3rem 0.55rem; background: transparent; color: #cbd5e1; border: none; border-left: 1px solid rgba(255,255,255,0.1); cursor: pointer;">Dlouhý</button>
+                                            </div>
+                                            <button type="button" id="btnGenerateFbPost" onclick="generateFacebookPost()"
+                                                style="font-size: 0.7rem; padding: 0.3rem 0.6rem; background: linear-gradient(135deg, #8b5cf6, #6366f1); color: white; border: none; border-radius: 4px; cursor: pointer; display: inline-flex; align-items: center; gap: 0.3rem;">
+                                                <i class="fa-solid fa-wand-magic-sparkles"></i><span id="btnGenerateFbPostText">Vygenerovat AI</span>
+                                            </button>
+                                        </div>
                                     </div>
                                     <textarea id="facebookMessage" rows="4"
                                         placeholder="Nech prázdné pro použití nadpisu + krátkého popisu. Nebo vygeneruj AI návrh a uprav."

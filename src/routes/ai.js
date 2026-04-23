@@ -226,7 +226,7 @@ router.post('/generate-fb-post', async (req, res) => {
     }
 
     try {
-        const { title, excerpt, content, category } = req.body;
+        const { title, excerpt, content, category, length } = req.body;
 
         if (!title || title.trim().length === 0) {
             return res.status(400).json({ error: 'Nadpis je povinný' });
@@ -241,16 +241,23 @@ router.post('/generate-fb-post', async (req, res) => {
             .trim()
             .slice(0, 6000);
 
+        const lengthPresets = {
+            short:  { rule: '1–2 věty, maximálně ~200 znaků — hook a pointa, nic navíc',             emoji: '1',   maxTokens: 180 },
+            medium: { rule: '2–4 věty, přirozený mluvený tón',                                        emoji: '1–2', maxTokens: 400 },
+            long:   { rule: '5–8 vět — hlubší shrnutí: klíčové momenty, jména hráčů, skóre po deskách', emoji: '2–3', maxTokens: 700 }
+        };
+        const preset = lengthPresets[length] || lengthPresets.medium;
+
         const systemPrompt = `Jsi social media editor šachového klubu ŠK Bižuterie Jablonec nad Nisou.
 Ze zápisu/článku připravuješ text na Facebook post pro stránku klubu.
 
 Pravidla:
-- 2–4 věty česky, přirozený mluvený tón (ne formální zpravodajství)
+- ${preset.rule}
 - První věta = hook: něco konkrétního a lákavého (skóre, dramatický moment, výjimečný výkon)
 - Drž se faktů z článku — NIC si nevymýšlej, žádné detaily navíc
 - Pokud článek obsahuje výsledek zápasu, zahrň skóre a soupeře
 - Pokud se v článku zmiňují jména hráčů, použij je
-- Emoji střídmě: 1–2 na celý post, tematické (♟️ 🏆 💪 🔥 📅 🎉)
+- Emoji střídmě: ${preset.emoji} na celý post, tematické (♟️ 🏆 💪 🔥 📅 🎉)
 - ŽÁDNÉ hashtagy (klub je lokální, působilo by to divně)
 - Zakonči odkazem na web — jemně, ne imperativně (např. „Celý zápis a partie na webu ⬇")
 - Neopisuj titulek doslova — přeformuluj
@@ -276,7 +283,7 @@ ${plainContent || '(chybí — použij pouze nadpis a krátký popis)'}`;
                     { role: 'user', content: userPrompt }
                 ],
                 temperature: 0.7,
-                max_tokens: 400
+                max_tokens: preset.maxTokens
             })
         });
 

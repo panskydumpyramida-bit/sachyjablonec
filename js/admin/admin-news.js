@@ -623,6 +623,18 @@ function toggleFacebookMessageEditor() {
     const editor = document.getElementById('facebookMessageEditor');
     if (!check || !editor) return;
     editor.style.display = check.checked ? 'block' : 'none';
+    if (check.checked && !window.__fbLength) setFbLength('medium');
+}
+
+function setFbLength(length) {
+    window.__fbLength = length;
+    const buttons = document.querySelectorAll('#fbLengthToggle [data-fb-length]');
+    buttons.forEach(btn => {
+        const active = btn.dataset.fbLength === length;
+        btn.style.background = active ? 'linear-gradient(135deg, #3b82f6, #6366f1)' : 'transparent';
+        btn.style.color = active ? '#ffffff' : '#cbd5e1';
+        btn.style.fontWeight = active ? '600' : '400';
+    });
 }
 
 async function generateFacebookPost() {
@@ -653,7 +665,8 @@ async function generateFacebookPost() {
                 title,
                 excerpt: document.getElementById('newsExcerpt').value || '',
                 content: document.getElementById('articleContent').innerHTML || '',
-                category: document.getElementById('newsCategory').value || ''
+                category: document.getElementById('newsCategory').value || '',
+                length: window.__fbLength || 'medium'
             })
         });
         const data = await res.json();
@@ -675,6 +688,7 @@ async function generateFacebookPost() {
 
 window.toggleFacebookMessageEditor = toggleFacebookMessageEditor;
 window.generateFacebookPost = generateFacebookPost;
+window.setFbLength = setFbLength;
 
 async function shareArticleToFacebook(newsId) {
     try {
