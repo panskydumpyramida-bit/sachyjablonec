@@ -133,6 +133,24 @@
         // Watch for tab switches (switchTab updates legacy .active class)
         // Use periodic poll since switchTab implementation may not dispatch events
         setInterval(syncActive, 500);
+
+        // First-run onboarding hint — explains Ctrl+B collapse (shown once per device)
+        try {
+            if (!localStorage.getItem('adminSidebarHintDismissed')) {
+                const host = document.querySelector('.sidebar-brand');
+                if (host) {
+                    const pop = document.createElement('div');
+                    pop.className = 'sidebar-onboard';
+                    pop.innerHTML = '<div class="title">Věděli jste?</div> Menu můžete sbalit přes <kbd>Ctrl+B</kbd> nebo tlačítkem na okraji.'
+                        + '<button style="margin-top:.5rem;background:var(--primary-color);border:none;color:#000;padding:.25rem .6rem;border-radius:3px;font-size:.72rem;cursor:pointer;">Rozumím</button>';
+                    host.style.position = 'relative';
+                    host.appendChild(pop);
+                    const dismiss = () => { pop.remove(); try { localStorage.setItem('adminSidebarHintDismissed', '1'); } catch (e) {} };
+                    pop.querySelector('button').onclick = dismiss;
+                    setTimeout(dismiss, 12000);
+                }
+            }
+        } catch (e) {}
     }
 
     // Mobile drawer toggle (exposed globally)
