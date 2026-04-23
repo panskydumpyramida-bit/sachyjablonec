@@ -67,19 +67,20 @@ app.use(helmet({
     contentSecurityPolicy: {
         directives: {
             defaultSrc: ["'self'"],
-            scriptSrc: ["'self'", "'unsafe-inline'", "https://code.jquery.com", "https://cdnjs.cloudflare.com", "https://www.googletagmanager.com", "https://www.google-analytics.com", "https://unpkg.com", "https://static.hotjar.com", "https://script.hotjar.com"],
+            scriptSrc: ["'self'", "'unsafe-inline'", "https://code.jquery.com", "https://cdnjs.cloudflare.com", "https://www.googletagmanager.com", "https://www.google-analytics.com", "https://unpkg.com", "https://static.hotjar.com", "https://script.hotjar.com", "https://cdn.tailwindcss.com"],
             scriptSrcAttr: ["'unsafe-inline'"],
-            styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com", "https://cdnjs.cloudflare.com", "https://unpkg.com"],
+            styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com", "https://cdnjs.cloudflare.com", "https://unpkg.com", "https://cdn.tailwindcss.com"],
             imgSrc: ["'self'", "data:", "https:", "blob:", "https://chessboardjs.com"],
             fontSrc: ["'self'", "https://fonts.gstatic.com", "https://cdnjs.cloudflare.com"],
             connectSrc: ["'self'", "https://lichess.org", "https://chess-api.com", "https://www.chess.com", "https://www.googleapis.com", "https://chess-results.com", "https://www.google-analytics.com", "https://*.hotjar.com", "https://*.hotjar.io", "wss://*.hotjar.com"],
             frameSrc: ["'self'", "https://lichess.org", "https://mapy.cz", "https://mapy.com", "https://www.chess.com", "https://chess.com", "https://*.hotjar.com"],
             objectSrc: ["'none'"],
-            upgradeInsecureRequests: [],
+            upgradeInsecureRequests: process.env.NODE_ENV === 'production' ? [] : null,
         },
     },
     crossOriginEmbedderPolicy: false,
     crossOriginResourcePolicy: { policy: 'cross-origin' },
+    hsts: process.env.NODE_ENV === 'production' ? { maxAge: 31536000, includeSubDomains: true } : false,
 }));
 
 // CORS
@@ -104,12 +105,23 @@ app.use(cors({
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
-// Health Check (for Railway zero-downtime and Cloudflare Worker)
-app.get('/health', (req, res) => {
-    res.status(200).json({
-        status: 'ok',
-        timestamp: new Date().toISOString()
-    });
+// Health Check (for Railway zero-downtime and Cloudflare Worker).
+// Pings the database with a 2s timeout so unhealthy instances stop receiving
+// traffic when DB connectivity is lost.
+app.get('/health', async (req, res) => {
+    try {
+        await Promise.race([
+            prisma.$queryRaw`SELECT 1`,
+            new Promise((_, reject) => setTimeout(() => reject(new Error('DB ping timeout')), 2000))
+        ]);
+        res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });
+    } catch (err) {
+        res.status(503).json({
+            status: 'error',
+            detail: err.message,
+            timestamp: new Date().toISOString()
+        });
+    }
 });
 
 // Maintenance Mode Middleware (with 60s cache to avoid DB hit on every request)
@@ -300,7 +312,7 @@ app.get('/index.html', servePage('index.html'));
 // Initialize Passport for OAuth
 app.use(passport.initialize());
 
-// Global API rate limiter (auth routes have their own stricter limiter)
+// Global API rate limiter
 const apiLimiter = rateLimit({
     windowMs: 60 * 1000,
     max: 100,
@@ -309,6 +321,20 @@ const apiLimiter = rateLimit({
     message: { error: 'Too many requests, please try again later' },
 });
 app.use('/api', apiLimiter);
+
+// Stricter limiter for authentication endpoints — prevents brute-force on login
+// and password reset. Must be registered BEFORE the auth routes.
+const authLimiter = rateLimit({
+    windowMs: 60 * 1000,
+    max: 10,
+    standardHeaders: true,
+    legacyHeaders: false,
+    skipSuccessfulRequests: true,
+    message: { error: 'Příliš mnoho pokusů, zkuste to prosím za chvíli.' }
+});
+app.use('/api/auth/login', authLimiter);
+app.use('/api/auth/forgot-password', authLimiter);
+app.use('/api/auth/reset-password', authLimiter);
 
 // API Routes - MUST be before static catch-all
 app.use('/api/auth', authRoutes);
@@ -838,31 +864,61 @@ app.use((err, req, res, next) => {
 // Start server
 
 // --- Graceful Shutdown ---
-const gracefulShutdown = async (signal) => {
-    console.log(`[${signal}] Received signal to terminate: starting graceful shutdown`);
+// Waits for in-flight HTTP requests to finish before disconnecting DB and
+// exiting. Bounded by SHUTDOWN_TIMEOUT — Railway forces SIGKILL after ~30s
+// on redeploy, so we need to finish well before then.
+let shuttingDown = false;
+const SHUTDOWN_TIMEOUT_MS = 15000;
 
-    // 1. Close HTTP Server
+const gracefulShutdown = async (signal, exitCode = 0) => {
+    if (shuttingDown) return;
+    shuttingDown = true;
+    console.log(`[${signal}] Starting graceful shutdown (exit=${exitCode})`);
+
+    const forceExit = setTimeout(() => {
+        console.error(`[shutdown] Forced exit after ${SHUTDOWN_TIMEOUT_MS}ms`);
+        process.exit(1);
+    }, SHUTDOWN_TIMEOUT_MS);
+    forceExit.unref();
+
     if (server) {
-        server.close(() => {
-            console.log('HTTP server closed');
+        await new Promise((resolve) => {
+            server.close((err) => {
+                if (err) console.error('[shutdown] server.close error:', err);
+                else console.log('[shutdown] HTTP server closed');
+                resolve();
+            });
         });
     }
 
-    // 2. Disconnect Database
     try {
         await prisma.$disconnect();
-        console.log('Database disconnected');
+        console.log('[shutdown] Database disconnected');
     } catch (e) {
-        console.error('Error disconnecting database:', e);
+        console.error('[shutdown] Error disconnecting database:', e);
     }
 
-    console.log('Graceful shutdown completed. Exiting.');
-    process.exit(0);
+    clearTimeout(forceExit);
+    console.log('[shutdown] Complete, exiting.');
+    process.exit(exitCode);
 };
 
 // Handle termination signals
 process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
 process.on('SIGINT', () => gracefulShutdown('SIGINT'));
+
+// Fatal error handlers — log before exit so Railway shows the cause.
+process.on('uncaughtException', (err) => {
+    console.error('[uncaughtException]', err);
+    gracefulShutdown('uncaughtException', 1);
+});
+
+process.on('unhandledRejection', (reason) => {
+    // Don't exit — log and let the process continue. Promise rejections are
+    // typically recoverable (failed fetch to FB/IG, single bad request, etc.)
+    // and crashing the whole server on them causes more downtime.
+    console.error('[unhandledRejection]', reason);
+});
 
 // Start Server
 const server = app.listen(PORT, '0.0.0.0', async () => {
