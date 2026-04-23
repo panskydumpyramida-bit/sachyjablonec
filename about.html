@@ -80,7 +80,9 @@
 
             <div class="tl">
                 <div class="tl-track"></div>
-                <div class="tl-items">
+                <div class="tl-items" id="timeline-items">
+                    <!-- Milníky se dynamicky načítají přes /api/timeline (js/timeline-loader.js).
+                         Fallback pokud API selže = tyto statické položky. -->
                     <div class="tl-item">
                         <div class="tl-marker" title="Založení TJ Bižuterie"><i class="fa-solid fa-chess-pawn"></i></div>
                         <div class="tl-year">1991</div>
@@ -282,6 +284,7 @@
     <script src="js/layout-loader.js?v=5" defer></script>
     <script src="js/main.js" defer></script>
     <script src="js/about-loader.js" defer></script>
+    <script src="js/timeline-loader.js" defer></script>
 </body>
 
 </html>
