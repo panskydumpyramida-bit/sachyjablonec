@@ -1,0 +1,2638 @@
+<!DOCTYPE html>
+<html lang="cs">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin PREVIEW — design review</title>
+    <meta name="robots" content="noindex, nofollow">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@400;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css?v=ux12">
+    <link rel="stylesheet" href="css/admin.css?v=ux13">
+    <link rel="stylesheet" href="css/admin-sidebar.css">
+    <script src="js/version.js?v=ux12"></script>
+    <script src="js/modal-manager.js?v=ux12"></script>
+
+    <!-- ============================================================
+         PREVIEW MODE — bypass auth, mock API, read-only demo
+         Slouží pro design review (Claude Design, externí designéři).
+         Ne pro produkční použití. Žádná data z DB.
+         ============================================================ -->
+    <style>
+        #previewBanner {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 99999;
+            background: linear-gradient(90deg, #d4af37, #fbbf24);
+            color: #0b0e14;
+            text-align: center;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.4rem 1rem;
+            letter-spacing: 0.02em;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+        }
+        #previewBanner a { color: #0b0e14; text-decoration: underline; }
+        body.preview-mode { padding-top: 32px; }
+        #adminPanel { margin-top: 32px; }
+    </style>
+    <script>
+        (function() {
+            window.__PREVIEW_MODE__ = true;
+
+            // Mock localStorage so auth-check passes
+            try {
+                localStorage.setItem('authToken', 'preview-mode-fake-token');
+                localStorage.setItem('currentUser', JSON.stringify({
+                    id: 0, username: 'preview', role: 'SUPERADMIN', displayName: 'Preview Designer'
+                }));
+            } catch (e) {}
+
+            // Intercept fetch — return empty/mock data for all /api/ calls
+            const origFetch = window.fetch.bind(window);
+            const mockResponses = {
+                '/api/auth/me': { id: 0, username: 'preview', role: 'SUPERADMIN', displayName: 'Preview Designer' },
+                '/api/news': [
+                    { id: 1, title: 'Postup do 1. ligy mládeže', category: 'Soutěže', authorName: 'Antonín Duda', isPublished: true, publishedDate: '2026-04-20T12:00:00Z', updatedAt: '2026-04-22T15:30:00Z' },
+                    { id: 2, title: 'Strážský rapid 2026 — KP ŠSLK', category: 'Turnaje', authorName: 'Filip Zadražil', isPublished: true, publishedDate: '2026-04-15T10:00:00Z', updatedAt: '2026-04-18T09:00:00Z' },
+                    { id: 3, title: 'Tréninky na jaře 2026', category: 'Klub', authorName: 'Radim Podrazký', isPublished: true, publishedDate: '2026-04-10T08:00:00Z', updatedAt: '2026-04-10T08:00:00Z' },
+                    { id: 4, title: 'Nové stránky TJ Bižuterie', category: 'Klub', authorName: 'Antonín Duda', isPublished: false, publishedDate: '2026-05-01T10:00:00Z', updatedAt: '2026-04-23T20:00:00Z' },
+                    { id: 5, title: 'Memoriál Evžena Blaháčka — výsledky', category: 'Výsledky', authorName: 'Lukáš Sivák', isPublished: true, publishedDate: '2026-03-28T18:00:00Z', updatedAt: '2026-03-28T20:00:00Z' },
+                ],
+                '/api/events': [
+                    { id: 1, title: 'Strážský rapid 2026', startDate: '2026-05-03T07:45:00Z', endDate: '2026-05-03T13:15:00Z', location: 'Stráž pod Ralskem', category: 'tournament', ageGroup: 'open', eventType: 'individual', timeControl: 'rapid', isPublic: true, isInternal: false, isFeatured: false },
+                    { id: 2, title: 'Krajský přebor 2026 — rapid družstev', startDate: '2026-04-19T08:00:00Z', location: 'Jablonec nad Nisou', category: 'tournament', ageGroup: 'open', eventType: 'team', timeControl: 'rapid', isPublic: true, isInternal: false },
+                    { id: 3, title: 'Vánoční rapid Rokytnice', startDate: '2025-12-26T09:30:00Z', location: 'Rokytnice nad Jizerou', category: 'tournament', ageGroup: 'adults', eventType: 'individual', timeControl: 'rapid', isPublic: true, isInternal: false },
+                ],
+                '/api/timeline': [
+                    { id: 1, year: 1991, event: 'Založení TJ Bižuterie', icon: 'fa-chess-pawn', sortOrder: 10, isFuture: false },
+                    { id: 2, year: 2006, event: 'Přestěhování z věže Sokolovny', icon: 'fa-chess-rook', sortOrder: 20, isFuture: false },
+                    { id: 3, year: 2025, event: 'Postup do 1. ligy mládeže', icon: 'fa-chess-knight', sortOrder: 30, isFuture: false },
+                    { id: 4, year: 2030, event: 'Cíl: postup do Extraligy ČR', icon: 'fa-chess-king', sortOrder: 40, isFuture: true },
+                ],
+                '/api/admin/dashboard-stats': { news: 42, comments: 128, users: 73, games: 215, events: 8 },
+                '/api/settings': { maintenance_mode: 'false', show_latest_comment: 'true', hero_animation_pgn: '', hero_animation_header: '' },
+            };
+            window.fetch = function(url, opts) {
+                const u = typeof url === 'string' ? url : url.url;
+                if (u && u.indexOf('/api/') !== -1) {
+                    const path = u.split('?')[0].replace(/^https?:\/\/[^/]+/, '');
+                    const mock = mockResponses[path] !== undefined ? mockResponses[path] : [];
+                    return Promise.resolve(new Response(JSON.stringify(mock), {
+                        status: 200, headers: { 'Content-Type': 'application/json' }
+                    }));
+                }
+                return origFetch(url, opts);
+            };
+
+            // Bypass auth redirect on init
+            document.addEventListener('DOMContentLoaded', () => {
+                document.body.classList.add('preview-mode');
+
+                // Insert preview banner
+                const banner = document.createElement('div');
+                banner.id = 'previewBanner';
+                banner.innerHTML = '<i class="fa-solid fa-eye"></i> PREVIEW MODE — design review, read-only, no backend. <a href="admin.html">Reálný admin →</a>';
+                document.body.prepend(banner);
+
+                // Force show admin panel, hide login
+                const login = document.getElementById('loginPage');
+                const panel = document.getElementById('adminPanel');
+                if (login) login.classList.add('hidden');
+                if (panel) panel.classList.remove('hidden');
+            });
+
+            // Intercept form submits — prevent backend writes
+            document.addEventListener('submit', (e) => {
+                e.preventDefault();
+                alert('PREVIEW MODE — uložení zakázáno. Toto je jen design preview.');
+            }, true);
+        })();
+    </script>
+</head>
+
+<body>
+    <!-- LOGIN -->
+    <div id="loginPage" class="hidden">
+        <div class="login-container" style="border-top: 3px solid var(--primary-color);">
+            <div style="text-align: center; margin-bottom: 2rem;">
+                <i class="fa-solid fa-chess-knight" style="font-size: 2.5rem; color: var(--primary-color); margin-bottom: 0.75rem; display: block;"></i>
+                <h1 style="font-size: 1.4rem; margin: 0; color: var(--text-color);">Administrace</h1>
+                <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 0.35rem;">TJ Bižuterie Jablonec</p>
+            </div>
+            <div id="loginError"></div>
+            <form id="loginForm">
+                <div class="form-group">
+                    <label><i class="fa-solid fa-user" style="margin-right: 0.35rem; opacity: 0.6;"></i>Uživatelské jméno</label>
+                    <input type="text" id="username" required placeholder="Zadejte jméno" autocomplete="username">
+                </div>
+                <div class="form-group">
+                    <label><i class="fa-solid fa-lock" style="margin-right: 0.35rem; opacity: 0.6;"></i>Heslo</label>
+                    <div style="position: relative;">
+                        <input type="password" id="password" required style="padding-right: 40px;" placeholder="Zadejte heslo" autocomplete="current-password">
+                        <i class="fa-solid fa-eye" id="togglePassword" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); cursor: pointer; color: var(--text-muted);"></i>
+                    </div>
+                </div>
+                <button type="submit" class="btn-primary" style="width: 100%; margin-top: 0.5rem; padding: 0.85rem;">
+                    <i class="fa-solid fa-sign-in-alt" style="margin-right: 0.5rem;"></i>Přihlásit se
+                </button>
+            </form>
+        </div>
+    </div>
+    <!-- ADMIN PANEL -->
+    <div id="adminPanel" class="hidden">
+        <header>
+            <div class="container">
+                <nav>
+                    <a href="/" class="logo"><i class="fa-solid fa-chess-knight"></i>Administrace</a>
+                    <div id="adminHeaderBuild" style="font-family: monospace; font-size: 0.7rem; color: rgba(255,255,255,0.3); margin-left: auto;"></div>
+                </nav>
+            </div>
+        </header>
+        <script>document.addEventListener('DOMContentLoaded', () => { const el = document.getElementById('adminHeaderBuild'); if (el) el.textContent = 'Build ' + new Date().toISOString().slice(0, 10) + ' #v' + APP_VERSION; });</script>
+
+        <!-- ===== SIDEBAR ===== -->
+        <aside class="admin-sidebar" id="adminSidebar">
+            <div class="sidebar-brand">
+                <div class="sidebar-brand-title">TJ Bižuterie</div>
+                <div class="sidebar-brand-sub">Administrace</div>
+            </div>
+
+            <div class="sidebar-group">
+                <div class="sidebar-group-label">Obsah</div>
+                <div class="sidebar-nav-list" id="sidebarNavContent"></div>
+            </div>
+
+            <div class="sidebar-group">
+                <div class="sidebar-group-label">Komunita</div>
+                <div class="sidebar-nav-list" id="sidebarNavCommunity"></div>
+            </div>
+
+            <div class="sidebar-group">
+                <div class="sidebar-group-label">Nástroje</div>
+                <div class="sidebar-nav-list" id="sidebarNavTools"></div>
+            </div>
+
+            <div class="sidebar-footer">
+                <div class="sidebar-nav-list" id="sidebarNavFooter"></div>
+            </div>
+        </aside>
+
+        <div class="admin-sidebar-overlay" id="adminSidebarOverlay" onclick="closeAdminSidebar()"></div>
+
+        <!-- ===== TOPBAR ===== -->
+        <div class="admin-topbar">
+            <div style="display: flex; align-items: center; gap: 0.75rem;">
+                <button class="sidebar-toggle sidebar-toggle--mobile" onclick="toggleAdminSidebar()" aria-label="Menu" title="Menu">
+                    <i class="fa-solid fa-bars"></i>
+                </button>
+                <button class="sidebar-toggle sidebar-toggle--desktop" onclick="toggleSidebarCollapse()" aria-label="Sbalit menu" title="Sbalit / rozbalit menu (Ctrl+B)">
+                    <i class="fa-solid fa-bars"></i>
+                </button>
+                <h2 class="admin-topbar-title" id="currentTabTitle">
+                    <i class="fa-solid fa-list"></i><span>Přehled</span>
+                </h2>
+            </div>
+            <div class="admin-topbar-user" id="userInfo"></div>
+        </div>
+
+        <div class="admin-container">
+            <div class="admin-header" style="display: none;">
+                <div>
+                    <h1><i class="fa-solid fa-cogs"></i>Správa webu</h1>
+                    <p style="margin: 0.1rem 0 0 0; font-size: 0.7rem; opacity: 0.5; font-family: monospace;">
+                        Build:
+                        <script>document.write(new Date().toISOString().slice(0, 10) + ' #v' + APP_VERSION)</script>
+                    </p>
+                </div>
+            </div>
+            <div class="admin-nav">
+                <div class="nav-tab active" onclick="switchTab('dashboard')"><i class="fa-solid fa-list"></i>Přehled
+                </div>
+
+                <div class="nav-tab" onclick="switchTab('members')" style="display: none;"><i
+                        class="fa-solid fa-address-book"></i>Členové </div>
+                <div class="nav-tab" onclick="switchTab('users')" id="usersTab" style="display: none;"><i
+                        class="fa-solid fa-users"></i>Uživatelé <i class="fa-solid fa-lock"
+                        style="font-size: 0.7em; margin-left: 0.4rem; color: #fbbf24; opacity: 0.8;"
+                        title="Superadmin only"></i></div>
+                <div class="nav-tab" onclick="switchTab('competitions')" id="competitionsTab" style="display: none;"><i
+                        class="fa-solid fa-trophy"></i>Soutěže</div>
+                <div class="nav-tab" onclick="switchTab('gallery')" id="galleryTab" style="display: none;"><i
+                        class="fa-regular fa-images"></i>Galerie</div>
+                <div class="nav-tab" onclick="switchTab('events')" id="eventsTab"><i
+                        class="fa-regular fa-calendar-days"></i>Události
+                </div>
+                <div class="nav-tab" onclick="switchTab('timeline')" id="timelineTab"><i
+                        class="fa-solid fa-timeline"></i>Timeline
+                </div>
+                <div class="nav-divider"></div>
+                <div class="nav-tab secondary" onclick="switchTab('games')" id="gamesTab"><i
+                        class="fa-solid fa-chess-board"></i>Partie</div>
+                <div class="nav-tab secondary" onclick="switchTab('blicak')" id="blicakTab"><i
+                        class="fa-solid fa-bolt"></i>Blicák
+                </div>
+                <div class="nav-tab secondary" id="puzzleRacerTab" onclick="switchTab('puzzleRacer')"><i
+                        class="fa-solid fa-puzzle-piece"></i>Puzzle Racer <i class="fa-solid fa-lock"
+                        style="font-size: 0.7em; margin-left: 0.4rem; color: #fbbf24; opacity: 0.8;"
+                        title="Superadmin only"></i></div>
+                <div class="nav-tab secondary" onclick="switchTab('chessdb')" id="chessdbTab"><i
+                        class="fa-solid fa-database"></i>Databáze</div>
+                <div class="nav-tab secondary" onclick="switchTab('changelog')" id="changelogTab"><i
+                        class="fa-solid fa-code-branch"></i>Changelog</div>
+            </div>
+            <div id="alertContainer"></div>
+            <!-- DASHBOARD -->
+            <div id="dashboardView">
+                <!-- Dashboard Grid -->
+                <div class="dashboard-grid">
+                    <!-- Stats Cards -->
+                    <div id="dashboardStats" class="dashboard-stats">
+                        <!-- Skeleton loaders -->
+                        <div class="stat-card" style="--accent-color: #d4af37">
+                            <div class="stat-card-icon"><i class="fa-solid fa-spinner fa-spin"></i></div>
+                            <div class="stat-card-content">
+                                <div class="stat-card-value">—</div>
+                                <div class="stat-card-label">Načítám...</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Two Column: Quick Actions + Activity -->
+                    <div class="dashboard-columns">
+                        <!-- Quick Actions Panel -->
+                        <div class="quick-actions">
+                            <div class="quick-actions-title">
+                                <i class="fa-solid fa-bolt"></i> Rychlé akce
+                            </div>
+                            <div class="quick-actions-grid">
+                                <button class="quick-action-btn" onclick="dashboardQuickAction('new-article')">
+                                    <i class="fa-solid fa-plus"></i>
+                                    <span>Nový článek</span>
+                                </button>
+                                <button class="quick-action-btn" onclick="dashboardQuickAction('new-event')">
+                                    <i class="fa-regular fa-calendar-plus"></i>
+                                    <span>Nová událost</span>
+                                </button>
+                                <button class="quick-action-btn" onclick="switchTab('timeline')">
+                                    <i class="fa-solid fa-timeline"></i>
+                                    <span>Timeline</span>
+                                </button>
+                                <button class="quick-action-btn" onclick="dashboardQuickAction('new-game')">
+                                    <i class="fa-solid fa-chess"></i>
+                                    <span>Přidat partii</span>
+                                </button>
+                                <button class="quick-action-btn" onclick="dashboardQuickAction('gallery')">
+                                    <i class="fa-regular fa-images"></i>
+                                    <span>Galerie</span>
+                                </button>
+                                <button class="quick-action-btn" onclick="dashboardQuickAction('refresh-standings')">
+                                    <i class="fa-solid fa-sync"></i>
+                                    <span>Aktualizovat tabulky</span>
+                                </button>
+                                <button class="quick-action-btn" onclick="window.open('form-scanner.html', '_blank')">
+                                    <i class="fa-solid fa-file-pdf"></i>
+                                    <span>Skenovat přihlášky</span>
+                                </button>
+                                <button class="quick-action-btn" onclick="switchTab('settings')">
+                                    <i class="fa-solid fa-gear"></i>
+                                    <span>Nastavení</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Activity Feed Panel -->
+                        <div class="activity-panel">
+                            <div class="activity-title">
+                                <i class="fa-solid fa-clock-rotate-left"></i> Nedávná aktivita
+                            </div>
+                            <div id="dashboardActivity">
+                                <div class="activity-empty">
+                                    <i class="fa-solid fa-spinner fa-spin"></i>
+                                    <span>Načítám aktivitu...</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- News List Section -->
+                <div class="dashboard-divider">
+                    <span>Články</span>
+                </div>
+
+                <h2 style="margin: 0 0 1rem 0;">Seznam novinek</h2>
+                <table class="data-table" id="newsTable">
+                    <thead>
+                        <tr>
+                            <th>Datum</th>
+                            <th>Název</th>
+                            <th class="hide-mobile">Kategorie</th>
+                            <th class="hide-mobile">Autor</th>
+                            <th class="hide-mobile">Stav</th>
+                            <th class="hide-mobile">Upraveno</th>
+                            <th>Akce</th>
+                        </tr>
+                    </thead>
+                    <tbody id="newsTableBody"></tbody>
+                </table>
+            </div>
+            <!-- EDITOR -->
+            <div id="editorView" class="hidden">
+                <div class="editor-layout">
+                    <!-- Main Editor (70%) -->
+                    <div class="editor-main">
+                        <h2 style="margin-top: 0;" id="editorTitle">Nová novinka</h2><input type="hidden"
+                            id="editNewsId">
+                        <div class="form-group"><label>Nadpis článku *</label>
+                            <textarea id="newsTitle" rows="1" class="auto-resize" placeholder="Zadejte nadpis..."
+                                oninput="updatePreview();"></textarea>
+                        </div>
+                        <!-- WYSIWYG Editor -->
+                        <div class="form-group"><label>Obsah článku *</label>
+                            <div class="wysiwyg-toolbar" style="flex-wrap: wrap;">
+                                <!-- History -->
+                                <button type="button" onmousedown="event.preventDefault()" onclick="formatText('undo')"
+                                    title="Zpět (Ctrl+Z)"><i class="fa-solid fa-rotate-left"></i></button>
+                                <button type="button" onmousedown="event.preventDefault()" onclick="formatText('redo')"
+                                    title="Vpřed (Ctrl+Y)"><i class="fa-solid fa-rotate-right"></i></button>
+                                <div class="divider"></div>
+                                <!-- Row 1: Formatting --><button type="button" id="btnBold"
+                                    onclick="formatText('bold')" title="Tučně (Ctrl+B)"><i
+                                        class="fa-solid fa-bold"></i></button><button type="button" id="btnItalic"
+                                    onclick="formatText('italic')" title="Kurzíva (Ctrl+I)"><i
+                                        class="fa-solid fa-italic"></i></button><button type="button" id="btnUnderline"
+                                    onclick="formatText('underline')" title="Podtržení (Ctrl+U)"><i
+                                        class="fa-solid fa-underline"></i></button><button type="button"
+                                    onclick="formatText('strikethrough')" title="Přeškrtnutí (Ctrl+Shift+X)"
+                                    style="color: #94a3b8;"><i class="fa-solid fa-strikethrough"></i></button><button
+                                    type="button" onclick="removeFormatting()" title="Odstranit formátování"
+                                    style="color: #94a3b8;"><i class="fa-solid fa-eraser"></i></button>
+                                <div class="divider"></div>
+                                <!-- Heading buttons -->
+                                <div
+                                    style="display: flex; gap: 2px; background: rgba(255,255,255,0.05); border-radius: 4px; padding: 2px;">
+                                    <button type="button" id="headingP" onclick="applyHeading('p')"
+                                        title="Normální text"
+                                        style="padding: 0.25rem 0.5rem; font-size: 0.7rem; font-weight: 600; border-radius: 3px; min-width: 28px;">P</button><button
+                                        type="button" id="headingH1" onclick="applyHeading('h1')" title="Nadpis 1"
+                                        style="padding: 0.25rem 0.5rem; font-size: 0.7rem; font-weight: 700; border-radius: 3px; min-width: 28px;">H1</button><button
+                                        type="button" id="headingH2" onclick="applyHeading('h2')" title="Nadpis 2"
+                                        style="padding: 0.25rem 0.5rem; font-size: 0.7rem; font-weight: 600; border-radius: 3px; min-width: 28px;">H2</button><button
+                                        type="button" id="headingH3" onclick="applyHeading('h3')" title="Nadpis 3"
+                                        style="padding: 0.25rem 0.5rem; font-size: 0.7rem; font-weight: 500; border-radius: 3px; min-width: 28px;">H3</button>
+                                </div>
+                                <div class="divider"></div><button type="button" onclick="insertList('ul')"
+                                    title="Odrážkový seznam"><i class="fa-solid fa-list-ul"></i></button><button
+                                    type="button" onclick="insertList('ol')" title="Číslovaný seznam"><i
+                                        class="fa-solid fa-list-ol"></i></button>
+                                <div class="divider"></div><button type="button" onclick="insertLink()"
+                                    title="Odkaz (Ctrl+K)"><i class="fa-solid fa-link"></i></button><button
+                                    type="button" onclick="showColorPicker()" title="Barva textu"
+                                    style="color: #f472b6;"><i class="fa-solid fa-palette"></i></button><button
+                                    type="button" onclick="toggleSource()" title="HTML" id="btnSource"><i
+                                        class="fa-solid fa-code"></i></button>
+                                <!-- Row 2: Highlights and blocks (will wrap on smaller
+                                                            screens) -->
+                                <div class="divider" style="height: 0; width: 100%; margin: 0.25rem 0;">
+                                </div><button type="button" id="btnHighlightName" onmousedown="event.preventDefault()"
+                                    onclick="insertHighlight('name')" title="Zvýraznit jméno" style="color: #60a5fa;"><i
+                                        class="fa-solid fa-user"></i>Jméno</button><button type="button"
+                                    id="btnHighlightScore" onmousedown="event.preventDefault()"
+                                    onclick="insertHighlight('score')" title="Zvýraznit skóre"
+                                    style="color: #4ade80;"><i class="fa-solid fa-bullseye"></i>Skóre</button><button
+                                    type="button" onclick="autoFormatEntireContent()"
+                                    title="Auto-formátování celého textu (najde výsledky a jména)"
+                                    style="color: #a78bfa;"><i class="fa-solid fa-wand-magic-sparkles"></i>Auto</button>
+                                <div class="divider"></div><button type="button"
+                                    onclick="insertImage()" title="Obrázek" style="color: #f472b6;"><i
+                                        class="fa-solid fa-image"></i></button><button type="button"
+                                    onclick="insertDiagram()" title="Vložit diagram" style="color: #d4a373;"><i
+                                        class="fa-solid fa-chess-board"></i></button><button type="button"
+                                    onclick="insertFragment()" title="Vložit fragment partie" style="color: #60a5fa;"><i
+                                        class="fa-solid fa-scissors"></i></button>
+                                <button type="button" onclick="insertColumnBlock()" title="Rozložení sloupců" style="color: #38bdf8;"><i class="fa-solid fa-table-columns"></i></button>
+                                <!-- Templates Dropdown -->
+                                <div style="position: relative; display: inline-block;" onmouseleave="this.querySelector('.dropdown-content').style.display='none'">
+                                    <button type="button" onclick="const el = this.nextElementSibling; el.style.display = el.style.display === 'flex' ? 'none' : 'flex'; event.stopPropagation();" title="Šablony a bloky do článku" style="color: #cbd5e1;"><i class="fa-solid fa-puzzle-piece"></i> Bloky ▾</button>
+                                    <div class="dropdown-content" style="display: none; flex-direction: column; position: absolute; top: 100%; left: 0; background-color: #1a1a2e; box-shadow: 0px 8px 16px rgba(0,0,0,0.5); z-index: 10000; padding: 5px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.1); gap: 2px; width: max-content;">
+                                        <button type="button" onclick="insertIntroBlock(); this.parentElement.style.display='none'" title="Infobox" style="text-align: left; justify-content: flex-start; width: 100%; color: #fbbf24;"><i class="fa-solid fa-lightbulb" style="margin-right:8px; width: 16px; text-align: center;"></i>Infobox</button>
+                                        <button type="button" onclick="window.showWinnersModal && window.showWinnersModal(); this.parentElement.style.display='none'" title="Zlatý box vítězů" style="text-align: left; justify-content: flex-start; width: 100%; color: #d4af37;"><i class="fa-solid fa-trophy" style="margin-right:8px; width: 16px; text-align: center;"></i>Zlatý box vítězů</button>
+                                        <button type="button" onclick="window.showRankingCardsModal && window.showRankingCardsModal(); this.parentElement.style.display='none'" title="Karty pořadí" style="text-align: left; justify-content: flex-start; width: 100%; color: #cbd5e1;"><i class="fa-solid fa-medal" style="margin-right:8px; width: 16px; text-align: center;"></i>Karty pořadí</button>
+                                        <button type="button" onclick="window.showCtaModal && window.showCtaModal(); this.parentElement.style.display='none'" title="Závěrečné tlačítko (CTA)" style="text-align: left; justify-content: flex-start; width: 100%; color: #fca5a5;"><i class="fa-solid fa-bullhorn" style="margin-right:8px; width: 16px; text-align: center;"></i>Závěrečné tlačítko</button>
+                                        <button type="button" onclick="insertCollapsibleBlock(); this.parentElement.style.display='none'" title="Rozbalovací sekce" style="text-align: left; justify-content: flex-start; width: 100%; color: #8b5cf6;"><i class="fa-solid fa-layer-group" style="margin-right:8px; width: 16px; text-align: center;"></i>Rozbalovací sekce</button>
+                                        <button type="button" onclick="window.showResultsTableModal && window.showResultsTableModal(); this.parentElement.style.display='none'" title="Tabulka výsledků z chess-results.com" style="text-align: left; justify-content: flex-start; width: 100%; color: #34d399;"><i class="fa-solid fa-ranking-star" style="margin-right:8px; width: 16px; text-align: center;"></i>Tabulka z chess-results</button>
+                                    </div>
+                                </div>
+                                <!-- AI & Table Tools -->
+                                <div class="divider"></div>
+                                <button type="button" onclick="aiSpellCheck()"
+                                    title="AI Oprava pravopisu (Ctrl+Shift+S)" style="color: #10b981;"><i
+                                        class="fa-solid fa-spell-check"></i>AI</button>
+                                <button type="button" onclick="aiTextToTable()"
+                                    title="AI Převod na tabulku (vyberte text)" style="color: #06b6d4;"><i
+                                        class="fa-solid fa-table"></i></button>
+                                <button type="button" onclick="showMatchTableModal()"
+                                    title="Vložit tabulku zápasu (Soutěže družstev)" style="color: #f59e0b;"><i
+                                        class="fa-solid fa-users"></i></button>
+                                <div class="divider"></div>
+                                <button type="button" onclick="showShortcutsModal()"
+                                    title="Klávesové zkratky a nápověda (?)"><i
+                                        class="fa-solid fa-circle-question"></i></button>
+                            </div>
+                            <div class="wysiwyg-content" id="articleContent" contenteditable="true"
+                                oninput="updatePreview()"></div><textarea id="articleSource"
+                                class="wysiwyg-content hidden" oninput="updateContentFromSource()"></textarea>
+                        </div>
+                        <!-- Games Panel -->
+                        <div class="panel-section">
+                            <div class="panel-header"><label style="margin: 0;"><i
+                                        class="fa-solid fa-chess-board"></i>Přehrávač
+                                    partií</label></div>
+                            <div class="form-group" id="gamesInputPanel">
+                                <div
+                                    style="display: flex; gap: 0.75rem; flex-wrap: wrap; align-items: center; background: rgba(255,255,255,0.03); padding: 0.75rem 1rem; border-radius: 8px; margin-bottom: 0.75rem;">
+                                    <!-- PGN -->
+                                    <div style="display: flex; gap: 0.4rem; align-items: center;">
+                                        <span style="font-size: 0.8rem; color: #60a5fa; font-weight: 600;"><i
+                                                class="fa-solid fa-chess"></i></span>
+                                        <button type="button" class="btn-primary btn-small"
+                                            onclick="showRecordedGamesModal()"
+                                            style="padding: 0.4rem 0.7rem; font-size: 0.8rem; background: #3b82f6;">
+                                            <i class="fa-solid fa-database"></i> Z DB
+                                        </button>
+                                        <button type="button" class="btn-primary btn-small"
+                                            onclick="showNewsGamePgnModal()"
+                                            style="padding: 0.4rem 0.7rem; font-size: 0.8rem; background: #10b981;">
+                                            <i class="fa-solid fa-paste"></i> PGN
+                                        </button>
+                                    </div>
+
+                                    <div style="height: 24px; width: 1px; background: rgba(255,255,255,0.15);"></div>
+
+                                    <!-- Chess.com -->
+                                    <div style="display: flex; gap: 0.4rem; align-items: center;">
+                                        <span
+                                            style="font-size: 0.8rem; color: #81b64c; font-weight: 600; display: flex; align-items: center; gap: 4px;">
+                                            <i class="fa-solid fa-globe"></i> Chess.com:
+                                        </span>
+                                        <input type="text" id="gameTitle" placeholder="Bílý - Černý"
+                                            style="width: 120px; font-size: 0.8rem; padding: 0.4rem;">
+                                        <input type="text" id="gameId" placeholder="Pouze ID partie"
+                                            title="Vložte ID partie z URL (např. 123456789)"
+                                            style="width: 100px; font-size: 0.8rem; padding: 0.4rem;">
+                                        <label
+                                            style="display: flex; align-items: center; gap: 0.25rem; cursor: pointer; font-size: 0.75rem; color: var(--text-muted);">
+                                            <input type="checkbox" id="gameCommented"
+                                                style="width: auto; margin: 0;">Kom.
+                                        </label>
+                                        <button type="button" class="btn-primary btn-small" onclick="addGame()"
+                                            style="padding: 0.4rem 0.6rem; font-size: 0.8rem; background: #81b64c;">
+                                            <i class="fa-solid fa-plus"></i> Přidat
+                                        </button>
+                                    </div>
+
+                                    <div style="height: 24px; width: 1px; background: rgba(255,255,255,0.15);"></div>
+
+                                    <!-- Separator / Header -->
+                                    <button type="button" class="btn-secondary btn-small" onclick="showHeaderModal()"
+                                        style="padding: 0.4rem 0.7rem; font-size: 0.8rem; color: var(--primary-color);">
+                                        <i class="fa-solid fa-heading"></i> Oddělovač
+                                    </button>
+                                </div>
+                            </div>
+                            <div id="gamesList" style="margin-top: 1rem;"></div>
+                        </div>
+                        <!-- Gallery Panel -->
+                        <div class="panel-section">
+                            <div class="panel-header"><label style="margin: 0;"><i
+                                        class="fa-solid fa-images"></i>Galerie</label>
+                                <div style="display: flex; gap: 0.5rem;"><button type="button"
+                                        class="btn-secondary btn-small"
+                                        onclick="document.getElementById('galleryInput').click()"><i
+                                            class="fa-solid fa-upload"></i>Nahrát</button><button type="button"
+                                        class="btn-secondary btn-small" onclick="toggleGalleryUrlInput()"><i
+                                            class="fa-solid fa-link"></i>URL</button><button type="button"
+                                        class="btn-secondary btn-small" onclick="selectGalleryForArticleGallery()"
+                                        title="Vybrat z existující galerie"><i
+                                            class="fa-regular fa-images"></i></button>
+                                </div><input type="file" id="galleryInput" accept="image/*" multiple
+                                    style="display: none;" onchange="addGalleryImages(event)">
+                            </div>
+                            <div id="galleryUrlInput" class="hidden" style="margin-bottom: 0.75rem;">
+                                <div style="display: flex; gap: 0.5rem;"><input type="text" id="galleryImageUrl"
+                                        placeholder="URL obrázku (https://...)"
+                                        style="flex: 1; font-size: 0.85rem;"><button type="button"
+                                        class="btn-primary btn-small" onclick="addGalleryFromUrl()">Přidat</button>
+                                </div>
+                            </div>
+                            <div id="galleryPreview" style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
+                            </div>
+                        </div>
+                        <div style="margin-top: 2rem; display: flex; gap: 1rem;"><button class="btn-primary"
+                                onclick="saveNews()"><i class="fa-solid fa-save"></i>Uložit</button><button
+                                class="btn-secondary" onclick="switchTab('dashboard')">Zrušit</button></div>
+                    </div>
+                    <!-- Sidebar (30%) -->
+                    <div class="editor-sidebar">
+                        <!-- SECTION 1: Publikace (collapsible) -->
+                        <div id="publikaceSection"
+                            style="margin-bottom: 1.5rem; padding-bottom: 1rem; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                            <div onclick="toggleSidebarSection('publikace')"
+                                style="display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; margin-bottom: 0.75rem; color: var(--primary-color); cursor: pointer;">
+                                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                    <i class="fa-solid fa-paper-plane"></i><span
+                                        style="font-weight: 600;">Publikace</span>
+                                </div><i class="fa-solid fa-chevron-down" id="publikaceIcon"
+                                    style="font-size: 0.7rem; transition: transform 0.2s;"></i>
+                            </div>
+                            <div id="publikaceContent">
+                                <div class="form-group" style="margin-bottom: 0.75rem;">
+                                    <label style="font-size: 0.8rem;">Kategorie</label><select id="newsCategory"
+                                        onchange="updatePreview()" style="font-size: 0.85rem;">
+                                        <option value="Soutěže družstev">Soutěže družstev
+                                        </option>
+                                        <option value="Oddílový přebor">Oddílový přebor
+                                        </option>
+                                        <option value="Soutěže jednotlivců">Soutěže jednotlivců</option>
+                                        <option value="Mládež">Mládež</option>
+                                        <option value="O nás">O nás</option>
+                                    </select>
+                                </div>
+                                <!-- Author Selection -->
+                                <div class="form-group" style="margin-bottom: 0.75rem;">
+                                    <div
+                                        style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.3rem;">
+                                        <label style="font-size: 0.8rem; margin: 0;">Autor</label>
+                                        <button type="button" id="toggleCoAuthorBtn" onclick="toggleCoAuthorSection()"
+                                            title="Přidat spoluautora"
+                                            style="width: 22px; height: 22px; padding: 0; font-size: 0.75rem; border-radius: 4px; background: rgba(212,175,55,0.2); border: 1px solid rgba(212,175,55,0.3); color: #d4af37; cursor: pointer; display: flex; align-items: center; justify-content: center;">
+                                            <i class="fa-solid fa-plus" id="toggleCoAuthorIcon"></i>
+                                        </button>
+                                    </div>
+                                    <select id="newsAuthorId" style="font-size: 0.85rem; margin-bottom: 0.3rem;"
+                                        onchange="handleAuthorChange()">
+                                        <option value="">Vlastní jméno</option>
+                                        <!-- Populated via JS -->
+                                    </select>
+                                    <input type="text" id="newsAuthorName" placeholder="Jméno autora"
+                                        oninput="updatePreview()" style="font-size: 0.85rem;">
+                                </div>
+                                <!-- Co-Author Section (hidden by default) -->
+                                <div class="form-group" id="coAuthorSection"
+                                    style="margin-bottom: 0.75rem; display: none;">
+                                    <label style="font-size: 0.8rem;">Spoluautor</label>
+                                    <select id="newsCoAuthorId" style="font-size: 0.85rem; margin-bottom: 0.3rem;"
+                                        onchange="handleCoAuthorChange()">
+                                        <option value="">Žádný / Vlastní</option>
+                                        <!-- Populated via JS -->
+                                    </select>
+                                    <input type="text" id="newsCoAuthorName" placeholder="Jméno spoluautora"
+                                        oninput="updatePreview()" style="font-size: 0.85rem; display: none;">
+                                </div>
+                                <div class="form-group" style="margin-bottom: 0.75rem;">
+                                    <label style="font-size: 0.8rem;">Datum</label><input type="date" id="newsDate"
+                                        oninput="updatePreview(); updatePublishLabel();" style="font-size: 0.85rem;">
+                                </div>
+                                <div class="form-group" style="margin-bottom: 0.75rem;">
+                                    <label style="font-size: 0.8rem;">Krátký
+                                        popis</label><textarea id="newsExcerpt" rows="2" class="auto-resize"
+                                        placeholder="Zobrazí se na kartě..." oninput="updatePreview()"
+                                        style="font-size: 0.85rem;"></textarea>
+                                </div><label
+                                    style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; font-size: 0.85rem;"><input
+                                        type="checkbox" id="publishCheck" style="width: auto;"
+                                        onchange="updatePublishLabel()"><span id="publishCheckLabel">Publikovat
+                                        ihned</span></label>
+                                <label id="shareFacebookLabel"
+                                    style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; font-size: 0.85rem; margin-top: 0.5rem;"
+                                    title="Po uložení nahraje fotky a text na Facebook stránku klubu">
+                                    <input type="checkbox" id="shareFacebookCheck" style="width: auto;" onchange="toggleFacebookMessageEditor()">
+                                    <i class="fa-brands fa-facebook" style="color: #1877f2;"></i>
+                                    <span>Sdílet na Facebook</span>
+                                    <span id="shareFacebookStatus" style="font-size: 0.75rem; color: #22c55e; display: none;">✓ již sdíleno</span>
+                                </label>
+                                <label id="shareInstagramLabel"
+                                    style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; font-size: 0.85rem; margin-top: 0.4rem;"
+                                    title="Po uložení nahraje až 5 fotek z galerie jako Instagram Stories (9:16 s blur pozadím)">
+                                    <input type="checkbox" id="shareInstagramCheck" style="width: auto;">
+                                    <i class="fa-brands fa-instagram" style="color: #e1306c;"></i>
+                                    <span>Sdílet do Instagram Stories</span>
+                                    <span id="shareInstagramStatus" style="font-size: 0.75rem; color: #22c55e; display: none;">✓ již sdíleno</span>
+                                </label>
+                                <div id="facebookMessageEditor" style="display: none; margin-top: 0.5rem; padding: 0.75rem; background: rgba(24,119,242,0.08); border: 1px solid rgba(24,119,242,0.3); border-radius: 6px;">
+                                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.4rem; flex-wrap: wrap; gap: 0.4rem;">
+                                        <label for="facebookMessage" style="font-size: 0.75rem; color: #93c5fd; margin: 0;">Text FB postu</label>
+                                        <div style="display: inline-flex; align-items: center; gap: 0.3rem;">
+                                            <div id="fbLengthToggle" role="group" aria-label="Délka postu"
+                                                style="display: inline-flex; background: rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.1); border-radius: 4px; overflow: hidden;">
+                                                <button type="button" data-fb-length="short" onclick="setFbLength('short')"
+                                                    style="font-size: 0.7rem; padding: 0.3rem 0.55rem; background: transparent; color: #cbd5e1; border: none; cursor: pointer;">Krátký</button>
+                                                <button type="button" data-fb-length="medium" onclick="setFbLength('medium')"
+                                                    style="font-size: 0.7rem; padding: 0.3rem 0.55rem; background: transparent; color: #cbd5e1; border: none; border-left: 1px solid rgba(255,255,255,0.1); cursor: pointer;">Střední</button>
+                                                <button type="button" data-fb-length="long" onclick="setFbLength('long')"
+                                                    style="font-size: 0.7rem; padding: 0.3rem 0.55rem; background: transparent; color: #cbd5e1; border: none; border-left: 1px solid rgba(255,255,255,0.1); cursor: pointer;">Dlouhý</button>
+                                            </div>
+                                            <button type="button" id="btnGenerateFbPost" onclick="generateFacebookPost()"
+                                                style="font-size: 0.7rem; padding: 0.3rem 0.6rem; background: linear-gradient(135deg, #8b5cf6, #6366f1); color: white; border: none; border-radius: 4px; cursor: pointer; display: inline-flex; align-items: center; gap: 0.3rem;">
+                                                <i class="fa-solid fa-wand-magic-sparkles"></i><span id="btnGenerateFbPostText">Vygenerovat AI</span>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <textarea id="facebookMessage" rows="4"
+                                        placeholder="Nech prázdné pro použití nadpisu + krátkého popisu. Nebo vygeneruj AI návrh a uprav."
+                                        style="width: 100%; font-size: 0.82rem; padding: 0.5rem; background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.15); border-radius: 4px; color: #e5e7eb; resize: vertical;"></textarea>
+                                    <div style="font-size: 0.7rem; color: #94a3b8; margin-top: 0.3rem;">
+                                        Odkaz na článek se přidá automaticky.
+                                    </div>
+                                </div>
+                                <button type="button" class="btn-primary" id="saveNewsBtn"
+                                    onclick="saveNews()"
+                                    style="width: 100%; margin-top: 1rem; justify-content: center;"><i
+                                        class="fa-solid fa-save" id="saveNewsBtnIcon"></i><span
+                                        id="saveNewsBtnText">Uložit</span></button>
+                            </div>
+                            <!-- end publikaceContent -->
+                        </div>
+                        <!-- end publikaceSection -->
+                        <!-- SECTION 2: Obrázek -->
+                        <div
+                            style="margin-bottom: 1.5rem; padding-bottom: 1rem; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                            <div
+                                style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1rem; color: #f472b6;">
+                                <i class="fa-solid fa-image"></i><span style="font-weight: 600;">Náhledový
+                                    obrázek</span>
+                            </div>
+                            <div class="image-upload" id="uploadArea"
+                                onclick="document.getElementById('imageInput').click()"
+                                style="height: 120px; margin-bottom: 0.5rem; position: relative;">
+                                <div id="uploadPlaceholder"><i class="fa-solid fa-cloud-upload-alt"
+                                        style="font-size: 1.2rem; color: var(--primary-color);"></i>
+                                    <p style="margin: 0.3rem 0 0 0; font-size: 0.75rem;">
+                                        Klikněte pro nahrání </p>
+                                </div><img id="uploadedImage" class="uploaded-thumb" style="display: none;"><button
+                                    type="button" id="removeImageBtn" onclick="event.stopPropagation(); removeImage();"
+                                    style="display: none; position: absolute; top: 5px; right: 5px; background: rgba(0,0,0,0.7); border: none; color: #f87171; padding: 0.3rem 0.5rem; border-radius: 4px; cursor: pointer; font-size: 0.7rem;"><i
+                                        class="fa-solid fa-times"></i></button>
+                            </div><input type="file" id="imageInput" accept="image/*" style="display: none;"
+                                onchange="handleImageUpload(event)">
+                            <div id="imageUrlWrapper" style="display: flex; gap: 0.5rem; align-items: center;">
+                                <input type="text" id="imageUrl" placeholder="nebo URL obrázku"
+                                    style="font-size: 0.8rem; flex: 1;"><button type="button"
+                                    class="btn-secondary btn-small" onclick="handleImageUrl()"
+                                    style="padding: 0.4rem 0.6rem; font-size: 0.75rem;">Použít</button><button
+                                    type="button" class="btn-secondary btn-small" onclick="selectGalleryForThumbnail()"
+                                    style="padding: 0.4rem 0.6rem; font-size: 0.75rem;" title="Vybrat z galerie"><i
+                                        class="fa-regular fa-images"></i></button>
+                            </div>
+                            <!-- Crop position selector -->
+                            <div id="cropPositionWrapper" style="display: none; margin-top: 0.8rem;">
+                                <label
+                                    style="font-size: 0.75rem; color: var(--text-muted); display: flex; justify-content: space-between; margin-bottom: 0.4rem;"><span>Pozice
+                                        ořezu (výška):</span><span id="cropValueLabel"
+                                        style="color: var(--primary-color);">50%</span></label>
+                                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                    <span style="font-size: 0.7rem; color: var(--text-muted);">Horní</span><input
+                                        type="range" id="cropSlider" min="0" max="100" value="50" step="1"
+                                        oninput="updateCropFromSlider(this.value)"
+                                        style="flex: 1; cursor: pointer;"><span
+                                        style="font-size: 0.7rem; color: var(--text-muted);">Dolní</span>
+                                </div>
+                            </div><button type="button" onclick="rotateImage()"
+                                style="width: 100%; margin-top: 0.5rem; padding: 0.3rem; background: rgba(255, 255, 255, 0.05); border: 1px solid var(--editor-border); color: var(--text-color); border-radius: 4px; cursor: pointer; font-size: 0.75rem; display: flex; align-items: center; justify-content: center; gap: 0.5rem;"><i
+                                    class="fa-solid fa-rotate-right"></i>Otočit
+                                o 90° </button>
+                        </div>
+                        <!-- SECTION 3: Náhledy -->
+                        <div>
+                            <div
+                                style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1rem; color: #60a5fa;">
+                                <i class="fa-solid fa-eye"></i><span style="font-weight: 600;">Náhledy</span>
+                            </div>
+                            <!-- Card preview -->
+                            <div class="preview-card" style="margin-bottom: 0.75rem;">
+                                <div class="preview-title" style="font-size: 0.75rem; padding: 0.5rem;">
+                                    Karta</div>
+                                <div class="news-preview"
+                                    style="width: 100%; border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; overflow: hidden; background: #1a1a1a;">
+                                    <div class="preview-image" id="previewImage"
+                                        style="height: 120px; text-align: center; background: #000; display: flex; align-items: center; justify-content: center; overflow: hidden;">
+                                        <i class="fa-solid fa-image"
+                                            style="font-size: 1.5rem; color: var(--text-muted);"></i>
+                                    </div>
+                                    <div class="card-content" style="padding: 0.75rem;"><span class="card-category"
+                                            id="previewCategory" style="font-size: 0.6rem;">Kategorie</span><span
+                                            class="card-date" id="previewDate" style="font-size: 0.55rem;">Datum</span>
+                                        <h3 class="card-title" id="previewTitle"
+                                            style="font-size: 0.8rem; margin: 0.3rem 0;">
+                                            Nadpis</h3>
+                                        <p class="card-excerpt" id="previewExcerpt"
+                                            style="font-size: 0.7rem; color: var(--text-muted);">
+                                            Popis...</p>
+
+                                        <!-- Author & Stats -->
+                                        <div
+                                            style="display: flex; justify-content: space-between; align-items: center; margin-top: 0.5rem; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 0.4rem;">
+                                            <div
+                                                style="font-size: 0.55rem; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 60%;">
+                                                <i class="fa-solid fa-user-pen" style="margin-right: 2px;"></i> <span
+                                                    id="previewAuthor">Autor</span>
+                                            </div>
+                                            <div style="font-size: 0.55rem; color: var(--text-muted);">
+                                                <i class="fa-solid fa-eye" style="margin-right: 2px;"></i> <span
+                                                    id="previewViews">0</span>
+                                                <span style="margin-left: 5px;" title="Počet slov"><i
+                                                        class="fa-solid fa-paragraph" style="margin-right: 2px;"></i>
+                                                    <span id="previewWords">0</span></span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- USERS -->
+    <!-- MEMBERS -->
+    <div id="membersView" class="hidden">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+            <h2 style="margin: 0;">Seznam členů</h2><button class="btn-primary" onclick="openMemberModal()"><i
+                    class="fa-solid fa-user-plus"></i>Nový člen</button>
+        </div>
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Jméno</th>
+                    <th>ELO</th>
+                    <th>Titul</th>
+                    <th>Narození</th>
+                    <th>Role</th>
+                    <th>Akce</th>
+                </tr>
+            </thead>
+            <tbody id="membersTableBody"></tbody>
+        </table>
+    </div>
+    <div id="usersView" class="hidden">
+        <div class="editor-layout">
+            <div>
+                <h2>Seznam uživatelů</h2>
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Username</th>
+                            <th>Email</th>
+                            <th>Role</th>
+                            <th>Akce</th>
+                        </tr>
+                    </thead>
+                    <tbody id="usersTableBody"></tbody>
+                </table>
+            </div>
+            <div class="editor-sidebar">
+                <h3>Přidat uživatele</h3>
+                <div class="form-group"><label>Username</label><input type="text" id="newUsername">
+                </div>
+                <div class="form-group"><label>Email</label><input type="email" id="newEmail"></div>
+                <div class="form-group"><label>Heslo</label><input type="password" id="newPassword">
+                </div>
+                <div class="form-group"><label>Role</label><select id="newRole">
+                        <option value="admin">Admin</option>
+                        <option value="superadmin">Superadmin</option>
+                    </select></div><button class="btn-primary" onclick="createUser()">Vytvořit</button>
+            </div>
+        </div>
+    </div>
+    <div id="messagesView" class="hidden">
+        <h2><i class="fa-solid fa-comments"></i>Správa vzkazovníku</h2>
+        <p style="color: var(--text-muted); margin-bottom: 1.5rem;">Zde můžete mazat nevhodné příspěvky
+            ze vzkazovníku.</p>
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Autor</th>
+                    <th>Obsah</th>
+                    <th>Datum</th>
+                    <th>Akce</th>
+                </tr>
+            </thead>
+            <tbody id="messagesTableBody"></tbody>
+        </table>
+        <div id="noMessagesInfo" style="text-align: center; padding: 2rem; color: var(--text-muted); display: none;">
+            Žádné
+            vzkazy k zobrazení. </div>
+    </div>
+    <!-- Games Management View -->
+    <div id="gamesView" class="hidden">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+            <h2 style="margin: 0;"><i class="fa-solid fa-chess-board"></i> Partie</h2>
+            <div style="display: flex; gap: 0.5rem;">
+                <a href="/game-recorder" target="_blank" class="btn-primary"><i class="fa-solid fa-plus"></i> Nová partie</a>
+            </div>
+        </div>
+
+        <!-- Sub-tabs: Nahrané / Z článků -->
+        <div style="display: flex; gap: 0.5rem; margin-bottom: 1rem; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 0.75rem;">
+            <button class="btn-secondary games-subtab active" onclick="switchGamesSubtab('recorded')" style="padding: 0.4rem 1rem; font-size: 0.85rem;" id="subtabRecorded">
+                <i class="fa-solid fa-save"></i> Nahrané
+            </button>
+            <button class="btn-secondary games-subtab" onclick="switchGamesSubtab('article')" style="padding: 0.4rem 1rem; font-size: 0.85rem;" id="subtabArticle">
+                <i class="fa-solid fa-newspaper"></i> Z článků
+            </button>
+        </div>
+
+        <!-- Recorded games -->
+        <div id="recordedGamesPanel">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Datum</th>
+                        <th>Bílý</th>
+                        <th>Černý</th>
+                        <th>Výsledek</th>
+                        <th>Událost</th>
+                        <th>Akce</th>
+                    </tr>
+                </thead>
+                <tbody id="gamesTableBody"></tbody>
+            </table>
+            <div id="noGamesInfo" style="text-align: center; padding: 2rem; color: var(--text-muted); display: none;">
+                Žádné nahrané partie. <a href="/game-recorder" style="color: var(--primary-color);">Přidejte novou partii</a>
+            </div>
+        </div>
+
+        <!-- Article games -->
+        <div id="articleGamesPanel" style="display: none;">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Datum</th>
+                        <th>Hráči</th>
+                        <th>Tým</th>
+                        <th>Článek</th>
+                        <th>Akce</th>
+                    </tr>
+                </thead>
+                <tbody id="articleGamesTableBody"></tbody>
+            </table>
+        </div>
+
+        <!-- Analysis Settings -->
+        <div class="card" style="margin-top: 2rem; border-left: 4px solid #60a5fa;">
+            <h3 style="margin-top: 0; color: #60a5fa;"><i class="fa-solid fa-microchip"></i> Nastavení analýzy</h3>
+            <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1rem;">
+                Konfigurace enginu pro analýzu partií. Vyšší hloubka = přesnější analýza, ale pomalejší a vyšší spotřeba
+                API limitu.
+            </p>
+            <div class="form-group" style="margin-bottom: 1rem;">
+                <label style="display: flex; justify-content: space-between; align-items: center;">
+                    <span>Hloubka analýzy (Chess-API fallback)</span>
+                    <span id="chessApiDepthValue" style="color: var(--primary-color); font-weight: 600;">16</span>
+                </label>
+                <input type="range" id="chessApiDepthSlider" min="10" max="20" value="16" step="1"
+                    oninput="updateChessApiDepth(this.value)" style="width: 100%; cursor: pointer; margin-top: 0.5rem;">
+                <div
+                    style="display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--text-muted); margin-top: 0.25rem;">
+                    <span>10 (rychlé)</span>
+                    <span>20 (přesné)</span>
+                </div>
+            </div>
+            <p style="font-size: 0.75rem; color: var(--text-muted); margin: 0;">
+                <i class="fa-solid fa-info-circle"></i> Primární zdroj: Lichess cloud cache (~7M pozic). Fallback:
+                chess-api.com s touto hloubkou.
+            </p>
+        </div>
+
+        <!-- Diagrams/Puzzles Management -->
+        <div style="margin-top: 3rem; border-top: 1px solid var(--editor-border); padding-top: 2rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <h2 style="margin: 0;"><i class="fa-solid fa-chess-pawn"></i> Diagramy a hádanky</h2>
+                <div style="display: flex; gap: 0.5rem;">
+                    <a href="/game-recorder.html" target="_blank" class="btn-primary"><i class="fa-solid fa-plus"></i>
+                        Nový diagram</a>
+                    <button class="btn-secondary" onclick="loadDiagrams()"><i class="fa-solid fa-sync"></i>
+                        Obnovit</button>
+                </div>
+            </div>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Název</th>
+                        <th>Typ</th>
+                        <th>Na tahu</th>
+                        <th>Vytvořeno</th>
+                        <th>Akce</th>
+                    </tr>
+                </thead>
+                <tbody id="diagramsTableBody"></tbody>
+            </table>
+            <div id="noDiagramsInfo"
+                style="text-align: center; padding: 2rem; color: var(--text-muted); display: none;">
+                Žádné diagramy. <a href="/game-recorder.html" style="color: var(--primary-color);">Vytvořte nový
+                    diagram</a>
+            </div>
+        </div>
+
+        <!-- Game Fragments Management -->
+        <div style="margin-top: 3rem; border-top: 1px solid var(--editor-border); padding-top: 2rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <h2 style="margin: 0;"><i class="fa-solid fa-scissors"></i> Fragmenty partií</h2>
+                <button class="btn-secondary" onclick="loadFragments()"><i class="fa-solid fa-sync"></i>
+                    Obnovit</button>
+            </div>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Název</th>
+                        <th>Hráči</th>
+                        <th>Tahy</th>
+                        <th>Vytvořeno</th>
+                        <th>Akce</th>
+                    </tr>
+                </thead>
+                <tbody id="fragmentsTableBody"></tbody>
+            </table>
+            <div id="noFragmentsInfo"
+                style="text-align: center; padding: 2rem; color: var(--text-muted); display: none;">
+                Žádné fragmenty. Vytvořte fragment v <a href="/game-recorder.html" style="color: var(--primary-color);">editoru partií</a>
+            </div>
+        </div>
+    </div>
+    <!-- Blicak Registrations View -->
+    <div id="blicakView" class="hidden">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+            <h2 style="margin: 0;"><i class="fa-solid fa-bolt"></i>Registrace - Vánoční blesk</h2>
+            <button class="btn-primary" onclick="loadBlicakRegistrations()"><i
+                    class="fa-solid fa-sync"></i>Obnovit</button>
+        </div>
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Jméno</th>
+                    <th>Oddíl</th>
+                    <th>LOK</th>
+                    <th>Ročník</th>
+                    <th>Čas registrace</th>
+                </tr>
+            </thead>
+            <tbody id="blicakTableBody"></tbody>
+        </table>
+        <div id="noBlicakInfo" style="text-align: center; padding: 2rem; color: var(--text-muted); display: none;">
+            Žádné registrace. </div>
+
+        <!-- Blicák Gallery Management -->
+        <div style="margin-top: 3rem; border-top: 1px solid var(--editor-border); padding-top: 2rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <h3 style="margin: 0;"><i class="fa-solid fa-camera"></i> Fotografie z turnaje</h3>
+                <button class="btn-primary" onclick="document.getElementById('blicakUploadInput').click()">
+                    <i class="fa-solid fa-cloud-arrow-up"></i> Nahrát fotky
+                </button>
+                <input type="file" id="blicakUploadInput" multiple accept="image/*" style="display: none;"
+                    onchange="handleAdminGalleryUpload(this, 'blicak').then(() => showToast('Fotky nahrány', 'success'))">
+            </div>
+            <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1rem;">
+                Zde nahrané fotografie se automaticky zařadí do kategorie "blicak" a zobrazí se v galerii na stránce
+                turnaje.
+            </p>
+        </div>
+    </div>
+    <!-- Competitions View -->
+    <div id="competitionsView" class="hidden">
+        <div class="card"
+            style="margin-bottom: 2rem; padding: 1.5rem; background: linear-gradient(135deg, var(--card-bg), rgba(59, 130, 246, 0.1)); border-left: 4px solid #3b82f6;">
+            <div
+                style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+                <div style="width: 100%;">
+                    <h3 style="margin: 0 0 0.5rem 0; color: #3b82f6;"><i class="fa-solid fa-table"></i>Tabulky družstva
+                    </h3>
+                    <p style="margin: 0; color: var(--text-muted); font-size: 0.9rem;">Správa
+                        zdrojů dat pro soutěže. Změny se projeví po kliknutí na "Aktualizovat
+                        tabulky" .</p>
+                    <div style="display: flex; justify-content: flex-end; margin-top: 1rem;">
+                        <button class="btn-secondary" onclick="updateStandings()" id="updateStandingsBtn"><i
+                                class="fa-solid fa-sync"></i>Aktualizovat
+                            tabulky </button>
+                    </div>
+                    <div id="competitionsList" style="margin-top: 1rem;"></div>
+                </div>
+            </div>
+            <div id="standingsResult" style="margin-top: 1rem; display: none;"></div>
+        </div>
+    </div>
+    <!-- Events Management View -->
+    <div id="eventsView" class="hidden">
+        <div
+            style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+            <h2 style="margin: 0;"><i class="fa-regular fa-calendar-days"></i>Správa událostí</h2>
+            <button class="btn-secondary" onclick="AdminEvents.loadEvents()"><i
+                    class="fa-solid fa-sync"></i>Obnovit</button>
+        </div>
+
+        <!-- Events Form -->
+        <div class="card" style="margin-bottom: 2rem;">
+            <h3 id="event-form-title" style="margin-top: 0; color: var(--primary-color);"><i
+                    class="fa-solid fa-plus"></i>Nová událost</h3>
+            <form id="event-form">
+                <div class="editor-layout">
+                    <!-- Main Content -->
+                    <div class="editor-main">
+                        <div class="form-group">
+                            <label>Název události *</label>
+                            <input type="text" name="title" required placeholder="např. Vánoční rapid">
+                        </div>
+                        <div class="form-group">
+                            <label>Popis</label>
+                            <textarea name="description" rows="5" placeholder="Podrobnosti o události..."></textarea>
+                        </div>
+
+                        <h4
+                            style="margin: 1.5rem 0 1rem; color: var(--text-muted); font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.05em;">
+                            Čas a Místo</h4>
+
+                        <div
+                            style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+                            <div class="form-group">
+                                <label>Začátek *</label>
+                                <input type="datetime-local" name="startDate" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Konec</label>
+                                <input type="datetime-local" name="endDate">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Místo konání</label>
+                            <div class="autocomplete-wrapper" style="position: relative;">
+                                <input type="text" name="location" id="eventLocationInput"
+                                    placeholder="např. Hala Bižuterie, Jablonec n.N." autocomplete="off">
+                                <div id="locationSuggestions" class="suggestions-list"></div>
+                            </div>
+                        </div>
+
+                        <h4
+                            style="margin: 1.5rem 0 1rem; color: var(--text-muted); font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.05em;">
+                            Odkazy a Kontakt</h4>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                            <div class="form-group">
+                                <label>Kontakt</label>
+                                <input type="text" name="organizerContact" placeholder="Email, telefon">
+                            </div>
+                            <div class="form-group">
+                                <label>Web / Odkaz na propozice</label>
+                                <input type="text" name="url" placeholder="https://...">
+                            </div>
+
+                        </div>
+
+                        <div class="form-group" style="margin-top: 2rem;">
+                            <button type="submit" class="btn-primary"
+                                style="width: 100%; justify-content: center; padding: 1rem;"><i
+                                    class="fa-solid fa-save"></i> Uložit událost</button>
+                            <button type="button" id="event-cancel-btn" class="btn-secondary"
+                                style="width: 100%; justify-content: center; margin-top: 0.5rem; display: none;"><i
+                                    class="fa-solid fa-times"></i> Zrušit úpravy</button>
+                        </div>
+                    </div>
+
+                    <!-- Sidebar Content -->
+                    <div class="editor-sidebar">
+                        <h4 style="margin-top: 0; margin-bottom: 1rem; color: var(--primary-color);">Nastavení</h4>
+
+                        <div class="form-group">
+                            <label>Kategorie</label>
+                            <select name="category" required>
+                                <option value="tournament">Turnaj</option>
+                                <option value="training">Trénink</option>
+                                <option value="camp">Soustředění</option>
+                                <option value="meeting">Schůze</option>
+                                <option value="other">Ostatní</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Věková kategorie</label>
+                            <select name="ageGroup">
+                                <option value="">-- Nespecifikováno --</option>
+                                <option value="youth">Mládež</option>
+                                <option value="adults">Dospělí</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Typ události</label>
+                            <select name="eventType">
+                                <option value="">-- Nespecifikováno --</option>
+                                <option value="individual">Jednotlivci</option>
+                                <option value="team">Družstva</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Tempo hry</label>
+                            <select name="timeControl">
+                                <option value="">-- Nespecifikováno --</option>
+                                <option value="blitz">Blitz</option>
+                                <option value="rapid">Rapid</option>
+                                <option value="classical">Vážný šach</option>
+                            </select>
+                        </div>
+
+                        <div class="divider" style="height: 1px; background: rgba(255,255,255,0.1); margin: 1.5rem 0;">
+                        </div>
+
+                        <h4 style="margin-bottom: 1rem; color: var(--text-color); font-size: 0.9rem;">Registrace</h4>
+
+                        <div class="form-group">
+                            <label>Přihlášky do</label>
+                            <input type="datetime-local" name="registrationDeadline">
+                        </div>
+                        <div class="form-group">
+                            <label>Konec prezence</label>
+                            <input type="datetime-local" name="presentationEnd">
+                        </div>
+                        <div class="form-group">
+                            <label>Startovné</label>
+                            <input type="text" name="entryFee" placeholder="např. 100 Kč">
+                        </div>
+
+                        <div class="form-group"
+                            style="margin-top: 1rem; background: rgba(255,255,255,0.02); padding: 0.75rem; border-radius: 6px; border: 1px solid rgba(255,255,255,0.05);">
+                            <label
+                                style="display: flex; align-items: center; gap: 0.75rem; cursor: pointer; margin: 0;">
+                                <input type="checkbox" name="isInternal" style="width: auto;">
+                                <span style="font-weight: normal;">Pouze pro členy (interní)</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+            </form>
+        </div>
+
+        <!-- Events Table -->
+        <div class="card">
+            <h3 style="margin-top: 0;"><i class="fa-solid fa-list"></i>Seznam událostí</h3>
+
+            <!-- Desktop Table -->
+            <div class="desktop-view">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Datum</th>
+                            <th>Název</th>
+                            <th>Kategorie</th>
+                            <th>Tagy</th>
+                            <th>Místo</th>
+                            <th>Akce</th>
+                        </tr>
+                    </thead>
+                    <tbody id="events-table-body"></tbody>
+                </table>
+            </div>
+
+            <!-- Mobile List (Cards) -->
+            <div id="events-mobile-list" class="mobile-view"></div>
+
+        </div>
+    </div>
+    <!-- Puzzle Racer Settings View -->
+    <div id="puzzleRacerView" class="hidden">
+        <div class="card">
+            <div
+                style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+                <div style="width: 100%;">
+                    <h3 style="margin: 0 0 0.5rem 0; color: #3b82f6;"><i class="fa-solid fa-puzzle-piece"></i>Puzzle
+                        Racer - Nastavení
+                    </h3>
+                    <p style="margin: 0; color: var(--text-muted); font-size: 0.9rem;">
+                        Konfigurace herních parametrů. Změny se projeví při dalším spuštění
+                        hry.</p>
+                    <div id="puzzleRacerSettingsForm">
+                        <div class="settings-grid">
+                            <!-- Helper: General Settings -->
+                            <div class="settings-card">
+                                <h4><i class="fa-solid fa-sliders"></i>Obecné nastavení
+                                </h4>
+                                <div class="form-group"><label>Téma úloh</label><select id="prTheme">
+                                        <option value="mix">Smíšené (Doporučeno)
+                                        </option>
+                                        <option value="opening">Zahájení</option>
+                                        <option value="middlegame">Střední hra</option>
+                                        <option value="endgame">Koncovka</option>
+                                        <option value="rookEndgame">Věžová koncovka
+                                        </option>
+                                        <option value="bishopEndgame">Střelcová koncovka
+                                        </option>
+                                        <option value="pawnEndgame">Pěšcová koncovka
+                                        </option>
+                                        <option value="knightEndgame">Jezdcová koncovka
+                                        </option>
+                                        <option value="queenEndgame">Dámová koncovka
+                                        </option>
+                                        <optgroup label="Zahájení (nad 10k)">
+                                            <option value="sicilianDefense">Sicilská obrana</option>
+                                            <option value="queensGambit">Dámský gambit</option>
+                                            <option value="kingsIndianDefense">Královská indická</option>
+                                            <option value="frenchDefense">Francouzská obrana</option>
+                                            <option value="caroKannDefense">Caro-Kann</option>
+                                            <option value="ruyLopez">Španělská hra</option>
+                                            <option value="italianGame">Italská hra</option>
+                                            <option value="scandinavianDefense">Skandinávská obrana</option>
+                                            <option value="englishOpening">Anglická hra</option>
+                                            <option value="slavDefense">Slovanská obrana</option>
+                                            <option value="philidorDefense">Philidorova obrana</option>
+                                            <option value="nimzoIndianDefense">Nimcovičova indická</option>
+                                            <option value="queensPawnGame">Hra dámským pěšcem</option>
+                                            <option value="kingsGambit">Královský gambit</option>
+                                            <option value="scotchGame">Skotská hra</option>
+                                            <option value="modernDefense">Moderní obrana</option>
+                                        </optgroup>
+                                    </select></div>
+                                <div class="form-group"><label>Časový limit
+                                        (sekundy)</label><input type="number" id="prTimeLimit" min="30" max="600"
+                                        value="180">
+                                </div>
+                                <div class="form-group"><label>Puzzlů na úroveň
+                                        obtížnosti</label><input type="number" id="prPuzzlesPerDifficulty" min="1"
+                                        max="20" value="6">
+                                </div>
+                            </div>
+                            <!-- Helper: Difficulty & Behavior -->
+                            <div class="settings-card">
+                                <h4><i class="fa-solid fa-heart-crack"></i>Obtížnost a Chyby</h4>
+
+                                <!-- Lives -->
+                                <div class="control-row">
+                                    <label>Systém životů</label>
+                                    <label class="switch">
+                                        <input type="checkbox" id="prLivesEnabled" checked>
+                                        <span class="slider round"></span>
+                                    </label>
+                                </div>
+                                <div id="prMaxLivesGroup" class="form-group" style="margin-top: 0.5rem;">
+                                    <label>Počet životů</label>
+                                    <input type="number" id="prMaxLives" min="1" max="10" value="3">
+                                </div>
+
+                                <div class="divider"
+                                    style="margin: 1rem 0; background: rgba(255,255,255,0.1); height: 1px;"></div>
+
+                                <!-- Randomize -->
+                                <div class="control-row">
+                                    <label>Náhodné úlohy</label>
+                                    <label class="switch">
+                                        <input type="checkbox" id="prRandomizePuzzles" checked
+                                            onchange="togglePrRandomizeUI()">
+                                        <span class="slider round"></span>
+                                    </label>
+                                </div>
+                                <p style="font-size: 0.8rem; color: #888; margin-top: 0.2rem; margin-bottom: 0.5rem;">
+                                    Pokud vypnuto, všichni hráči dostanou stejnou sadu úloh.
+                                </p>
+                                <button id="prRefreshSetBtn" class="btn-secondary" onclick="refreshPrFixedSet()"
+                                    style="display: none; width: 100%; font-size: 0.85rem; margin-top: 0.5rem;">
+                                    <i class="fa-solid fa-rotate"></i> Vygenerovat novou sadu
+                                </button>
+
+                                <div class="divider"
+                                    style="margin: 1rem 0; background: rgba(255,255,255,0.1); height: 1px;"></div>
+
+                                <!-- Penalty -->
+                                <div class="control-row">
+                                    <label>Časová penalizace</label>
+                                    <label class="switch">
+                                        <input type="checkbox" id="prPenaltyEnabled">
+                                        <span class="slider round"></span>
+                                    </label>
+                                </div>
+                                <div id="prPenaltySecondsGroup" class="form-group"
+                                    style="margin-top: 0.5rem; display: none;">
+                                    <label>Sekundy penalizace</label>
+                                    <input type="number" id="prPenaltySeconds" min="1" max="60" value="5">
+                                </div>
+
+                                <div class="divider"
+                                    style="margin: 1rem 0; background: rgba(255,255,255,0.1); height: 1px;"></div>
+
+                                <!-- Skip on Mistake -->
+                                <div class="control-row">
+                                    <label>Přeskočit po chybě</label>
+                                    <label class="switch">
+                                        <input type="checkbox" id="prSkipOnMistake">
+                                        <span class="slider round"></span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div style="display: flex; justify-content: flex-end; margin-top: 1.5rem;">
+                        <button class="btn-primary" onclick="savePuzzleRacerSettings()" id="savePrSettingsBtn"><i
+                                class="fa-solid fa-save"></i>Uložit
+                            nastavení </button>
+                    </div>
+                    <div id="prSettingsResult" style="margin-top: 1rem; text-align: center;">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    </div>
+
+    <!-- Timeline View (admin správa klubové timeliny v about.html) -->
+    <div id="timelineView" class="hidden">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+            <h2 style="margin: 0;"><i class="fa-solid fa-timeline"></i>Správa Timeliny</h2>
+            <button class="btn-secondary" onclick="AdminTimeline.load()"><i class="fa-solid fa-sync"></i>Obnovit</button>
+        </div>
+
+        <div class="card" style="margin-bottom: 2rem;">
+            <h3 id="timeline-form-title" style="margin-top: 0; color: var(--primary-color);">
+                <i class="fa-solid fa-plus"></i>Nový milník
+            </h3>
+            <form id="timeline-form">
+                <input type="hidden" name="id">
+                <div style="display: grid; grid-template-columns: 120px 1fr 200px; gap: 1rem;">
+                    <div class="form-group">
+                        <label>Rok *</label>
+                        <input type="number" name="year" required placeholder="např. 1991">
+                    </div>
+                    <div class="form-group">
+                        <label>Událost *</label>
+                        <input type="text" name="event" required maxlength="120" placeholder="např. Založení TJ Bižuterie">
+                    </div>
+                    <div class="form-group">
+                        <label>Ikona (FontAwesome)</label>
+                        <select name="icon">
+                            <option value="fa-chess-pawn">♙ Pěšec</option>
+                            <option value="fa-chess-knight">♘ Jezdec</option>
+                            <option value="fa-chess-bishop">♗ Střelec</option>
+                            <option value="fa-chess-rook">♖ Věž</option>
+                            <option value="fa-chess-queen">♕ Dáma</option>
+                            <option value="fa-chess-king">♔ Král</option>
+                            <option value="fa-trophy">🏆 Pohár</option>
+                            <option value="fa-flag">🚩 Vlajka</option>
+                            <option value="fa-star">⭐ Hvězda</option>
+                        </select>
+                    </div>
+                </div>
+                <div style="display: grid; grid-template-columns: 150px 1fr; gap: 1rem; align-items: end;">
+                    <div class="form-group">
+                        <label>Pořadí</label>
+                        <input type="number" name="sortOrder" value="0" placeholder="0">
+                    </div>
+                    <div class="form-group" style="background: rgba(255,255,255,0.02); padding: 0.75rem; border-radius: 6px; border: 1px solid rgba(255,255,255,0.05);">
+                        <label style="display: flex; align-items: center; gap: 0.75rem; cursor: pointer; margin: 0;">
+                            <input type="checkbox" name="isFuture" style="width: auto;">
+                            <span style="font-weight: normal;">Budoucí cíl (vizuálně dashed + italic)</span>
+                        </label>
+                    </div>
+                </div>
+                <div style="display: flex; gap: 0.5rem; margin-top: 1rem;">
+                    <button type="submit" class="btn-primary"><i class="fa-solid fa-save"></i>Uložit</button>
+                    <button type="button" id="timeline-cancel-btn" class="btn-secondary" style="display: none;" onclick="AdminTimeline.cancelEdit()">
+                        <i class="fa-solid fa-times"></i>Zrušit úpravy
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <div class="card">
+            <h3 style="margin-top: 0;"><i class="fa-solid fa-list"></i>Milníky</h3>
+            <div class="desktop-view">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 80px;">Pořadí</th>
+                            <th style="width: 80px;">Rok</th>
+                            <th style="width: 50px;">Ikona</th>
+                            <th>Událost</th>
+                            <th style="width: 100px;">Typ</th>
+                            <th style="width: 120px;">Akce</th>
+                        </tr>
+                    </thead>
+                    <tbody id="timeline-table-body"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Settings View (nastavení webu + titulní stránky) -->
+    <div id="settingsView" class="hidden">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+            <h2 style="margin: 0;"><i class="fa-solid fa-gear"></i>Nastavení</h2>
+        </div>
+
+        <!-- Site Settings Panel -->
+        <div class="card" style="margin-bottom: 1.5rem;" data-role="superadmin">
+            <h3 style="margin-top: 0; color: var(--primary-color);">
+                <i class="fa-solid fa-sliders"></i> Nastavení webu
+            </h3>
+            <p style="color: #94a3b8; font-size: 0.85rem; margin-bottom: 1rem;">Globální přepínače viditelnosti veřejných částí webu.</p>
+            <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                <label style="display: flex; align-items: center; gap: 0.75rem; cursor: pointer; padding: 0.75rem 1rem; background: rgba(239, 68, 68, 0.05); border: 1px solid rgba(239, 68, 68, 0.15); border-radius: 8px;">
+                    <input type="checkbox" id="maintenanceToggle" onchange="toggleMaintenance()" style="width: 18px; height: 18px; accent-color: #ef4444; cursor: pointer;">
+                    <span style="flex: 1;">
+                        <strong><i class="fa-solid fa-wrench" style="color: #ef4444; margin-right: 0.3rem;"></i>Režim údržby</strong>
+                        <div style="font-size: 0.8rem; color: #94a3b8; margin-top: 0.2rem;">Návštěvníci uvidí maintenance stránku; admini mají přístup.</div>
+                    </span>
+                </label>
+                <label style="display: flex; align-items: center; gap: 0.75rem; cursor: pointer; padding: 0.75rem 1rem; background: rgba(96, 165, 250, 0.05); border: 1px solid rgba(96, 165, 250, 0.15); border-radius: 8px;">
+                    <input type="checkbox" id="showLatestCommentToggle" onchange="toggleLatestComment()" style="width: 18px; height: 18px; accent-color: #60a5fa; cursor: pointer;">
+                    <span style="flex: 1;">
+                        <strong><i class="fa-solid fa-comments" style="color: #60a5fa; margin-right: 0.3rem;"></i>Info panel – Nový komentář</strong>
+                        <div style="font-size: 0.8rem; color: #94a3b8; margin-top: 0.2rem;">Zobrazit na homepage upozornění s posledním komentářem.</div>
+                    </span>
+                </label>
+            </div>
+        </div>
+
+        <!-- Homepage Hero Animation Settings -->
+        <div class="card">
+            <h3 style="margin-top: 0; color: var(--primary-color);">
+                <i class="fa-solid fa-chess"></i> Nastavení titulní stránky (animace partie)
+            </h3>
+            <p style="color: #94a3b8; font-size: 0.85rem; margin-bottom: 1rem;">PGN partie která se animuje v hero sekci homepage. Prázdné pole = výchozí Caro-Kann miniatura.</p>
+            <div style="display: flex; flex-direction: column; gap: 1rem;">
+                <div class="form-group" style="margin: 0;">
+                    <label>Zobrazená hlavička (volitelné)</label>
+                    <input type="text" id="heroAnimationHeader" placeholder="např. Magnus Carlsen vs Hikaru Nakamura, 2024">
+                </div>
+                <div class="form-group" style="margin: 0;">
+                    <label>PGN partie</label>
+                    <textarea id="heroAnimationPgn" rows="6" placeholder="Vložte PGN partie…" style="font-family: monospace; font-size: 0.9rem;"></textarea>
+                </div>
+                <div style="display: flex; justify-content: flex-end;">
+                    <button class="btn-primary" onclick="saveHeroSettings()"><i class="fa-solid fa-save"></i>Uložit nastavení</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Gallery View -->
+    <div id="galleryView" class="hidden">
+        <div class="header-actions">
+            <h2><i class="fa-regular fa-images"></i>Správa Galerie</h2>
+            <!-- Gallery Toolbar -->
+            <div class="panel-section"
+                style="margin-top: 0; background: var(--surface-color); border: none; padding: 0 0 1.5rem 0;">
+                <div
+                    style="display: flex; gap: 1rem; align-items: center; flex-wrap: wrap; justify-content: space-between;">
+                    <div style="display: flex; gap: 1rem; align-items: center;">
+                        <div class="file-upload-btn"
+                            style="position: relative; overflow: hidden; display: inline-block;">
+                            <button class="btn-primary" style="display: flex; align-items: center; gap: 0.5rem;">
+                                <i class="fa-solid fa-cloud-arrow-up"></i> Nahrát obrázky
+                            </button>
+                            <input type="file" id="adminGalleryUpload" multiple accept="image/*"
+                                onchange="handleAdminGalleryUpload(this)"
+                                style="position: absolute; left: 0; top: 0; opacity: 0; width: 100%; height: 100%; cursor: pointer;">
+                        </div>
+
+                        <select id="galleryCategoryFilter" onchange="loadAdminGallery(1)"
+                            style="width: auto; padding: 0.6rem;">
+                            <option value="">Všechny kategorie</option>
+                            <option value="news">Novinky</option>
+                            <option value="members">Členové</option>
+                            <option value="intro">Úvodní</option>
+                            <option value="blicak">Bličáky</option>
+                        </select>
+                    </div>
+
+                    <!-- Batch Actions -->
+                    <div id="batchActionsBar"
+                        style="display: flex; gap: 0.5rem; align-items: center; opacity: 0.5; pointer-events: none; transition: opacity 0.2s;">
+                        <span style="font-size: 0.9rem; color: var(--text-muted); margin-right: 0.5rem;">
+                            Vybráno: <span id="selectedCount"
+                                style="color: var(--text-color); font-weight: bold;">0</span>
+                        </span>
+
+                        <select id="batchCategorySelect" style="width: auto; padding: 0.4rem; font-size: 0.85rem;">
+                            <option value="">Změnit kategorii...</option>
+                        </select>
+                        <button class="btn-secondary btn-small" onclick="applyBatchCategory()">
+                            <i class="fa-solid fa-check"></i>
+                        </button>
+
+                        <div style="width: 1px; height: 20px; background: var(--editor-border); margin: 0 0.5rem;">
+                        </div>
+
+                        <button id="batchDeleteBtn" class="btn-delete btn-small" onclick="deleteSelectedImages()">
+                            <i class="fa-solid fa-trash"></i> Smazat
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Gallery Grid -->
+            <div style="margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;">
+                <input type="checkbox" id="selectAllGallery" onchange="toggleSelectAllGallery(this)">
+                <label for="selectAllGallery"
+                    style="cursor: pointer; font-size: 0.9rem; color: var(--text-muted);">Vybrat vše na stránce</label>
+            </div>
+
+            <div id="galleryGrid" class="gallery-grid"
+                style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 1.5rem; min-height: 200px;">
+                <!-- Items will be injected here -->
+            </div>
+
+            <!-- Pagination -->
+            <div id="galleryPagination"
+                style="display: flex; justify-content: center; align-items: center; gap: 1rem; margin-top: 2rem; padding-top: 1rem; border-top: 1px solid var(--editor-border);">
+                <!-- Pagination controls -->
+            </div>
+
+
+        </div>
+    </div>
+    </div>
+    </div>
+    <!-- Chess Database View -->
+    <div id="chessdbView" class="hidden">
+        <h2><i class="fa-solid fa-database"></i> Šachová databáze</h2>
+        <p style="color: var(--text-muted); margin-bottom: 1.5rem;">
+            Import partií z PGN souborů do databáze. Duplicity (stejný bílý, černý, datum, turnaj, výsledek) budou
+            přeskočeny.
+        </p>
+
+        <div class="card" style="margin-bottom: 1.5rem;">
+            <h3 style="margin-bottom: 1rem;"><i class="fa-solid fa-chart-bar"></i> Statistiky</h3>
+            <div id="chessdbStats" style="display: flex; gap: 2rem; flex-wrap: wrap;">
+                <div style="text-align: center;">
+                    <div style="font-size: 2rem; font-weight: 700; color: var(--primary-color);" id="totalGamesCount">-
+                    </div>
+                    <div style="color: var(--text-muted); font-size: 0.85rem;">Celkem partií</div>
+                </div>
+                <div style="text-align: center;">
+                    <div style="font-size: 2rem; font-weight: 700; color: #4ade80;" id="totalPlayersCount">-</div>
+                    <div style="color: var(--text-muted); font-size: 0.85rem;">Hráčů</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h3 style="margin-bottom: 1rem;"><i class="fa-solid fa-file-import"></i> Import PGN</h3>
+            <textarea id="pgnImportText" rows="12" placeholder="Vložte PGN notaci zde...
+[Event &quot;Turnaj&quot;]
+[White &quot;Bílý&quot;]
+[Black &quot;Černý&quot;]
+[Result &quot;1-0&quot;]
+
+1. e4 e5 2. Nf3 Nc6..."
+                style="width: 100%; padding: 1rem; background: #0a0a0a; border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; color: #e0e0e0; font-family: monospace; font-size: 0.9rem; resize: vertical;"></textarea>
+
+            <div id="pgnImportResult" style="display: none; margin-top: 1rem; padding: 1rem; border-radius: 6px;"></div>
+
+            <div style="display: flex; gap: 0.5rem; margin-top: 1rem;">
+                <button onclick="importChessGames()" class="btn-primary" id="importPgnBtn">
+                    <i class="fa-solid fa-upload"></i> Importovat partie
+                </button>
+                <button onclick="document.getElementById('pgnFileInput').click()" class="btn-secondary">
+                    <i class="fa-solid fa-file"></i> Nahrát soubor
+                </button>
+                <input type="file" id="pgnFileInput" accept=".pgn" style="display: none;" onchange="loadPgnFile(this)">
+            </div>
+        </div>
+
+        <div class="card" style="margin-top: 1.5rem;">
+            <h3 style="margin-bottom: 1rem; color: #f59e0b; margin-top: 0;"><i
+                    class="fa-solid fa-triangle-exclamation"></i> Kontrola duplicit</h3>
+            <p style="color: var(--text-muted); margin-bottom: 1rem; font-size: 0.9rem;">
+                Hledá partie se stejným bílým, černým a datem. Vhodné pro kontrolu integrity databáze.
+            </p>
+            <button onclick="checkDuplicateGames()" class="btn-secondary">
+                <i class="fa-solid fa-search"></i> Zkontrolovat duplicity
+            </button>
+            <div id="duplicateCheckResult" style="display: none; margin-top: 1rem; padding: 1rem; border-radius: 6px;">
+            </div>
+        </div>
+    </div>
+    <!-- Changelog View -->
+    <div id="changelogView" class="hidden">
+        <!-- Roadmap Section -->
+        <div class="card" style="margin-bottom: 2rem; border-left: 4px solid #10b981;">
+            <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem;">
+                <i class="fa-solid fa-map" style="font-size: 1.5rem; color: #10b981;"></i>
+                <h2 style="margin: 0; color: #10b981;">Roadmap</h2>
+            </div>
+            <p style="color: var(--text-muted); margin-bottom: 1rem; font-size: 0.9rem;">Plánované funkce a prioritní
+                úkoly</p>
+
+            <div style="display: grid; gap: 0.75rem;">
+                <div
+                    style="display: flex; gap: 1rem; padding: 0.75rem 1rem; background: rgba(16,185,129,0.15); border-radius: 8px; border-left: 3px solid #10b981;">
+                    <span
+                        style="background: #10b981; color: #000; padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.7rem; font-weight: 600; height: fit-content;">DONE</span>
+                    <div>
+                        <strong style="font-size: 0.9rem;">Blunder Grid & Skener</strong>
+                        <p style="margin: 0.2rem 0 0; font-size: 0.8rem; color: var(--text-muted);">Trénink nad lokálními chybami dětí pomocí Win % propadu. Rychlé rozhraní na skenování PGN a přihlášek.</p>
+                        <p style="margin: 0.2rem 0 0; font-size: 0.75rem; color: #10b981;">✅ Dokončeno – v31</p>
+                    </div>
+                </div>
+                <div
+                    style="display: flex; gap: 1rem; padding: 0.75rem 1rem; background: rgba(16,185,129,0.1); border-radius: 8px;">
+                    <span
+                        style="background: #10b981; color: #000; padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.7rem; font-weight: 600; height: fit-content;">P1</span>
+                    <div>
+                        <strong style="font-size: 0.9rem;">Kniha Přání & Bug report</strong>
+                        <p style="margin: 0.2rem 0 0; font-size: 0.8rem; color: var(--text-muted);">Vytvořit "Wishlist" pro děti a trenéry na nápady přímo z webu, abychom měli zpětnou vazbu bez Whatsappu.</p>
+                    </div>
+                </div>
+                <div
+                    style="display: flex; gap: 1rem; padding: 0.75rem 1rem; background: rgba(16,185,129,0.1); border-radius: 8px;">
+                    <span
+                        style="background: #10b981; color: #000; padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.7rem; font-weight: 600; height: fit-content;">P2</span>
+                    <div>
+                        <strong style="font-size: 0.9rem;">Statistiky a Liga členů</strong>
+                        <p style="margin: 0.2rem 0 0; font-size: 0.8rem; color: var(--text-muted);">Hráčské profily doplněné o žebříčky z lokálních Blicáků, historii ELO formou pěkných grafů.</p>
+                    </div>
+                </div>
+                <div
+                    style="display: flex; gap: 1rem; padding: 0.75rem 1rem; background: rgba(59,130,246,0.1); border-radius: 8px;">
+                    <span
+                        style="background: #3b82f6; color: #fff; padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.7rem; font-weight: 600; height: fit-content;">P3</span>
+                    <div>
+                        <strong style="font-size: 0.9rem;">AI slovní hodnocení (Anotace)</strong>
+                        <p style="margin: 0.2rem 0 0; font-size: 0.8rem; color: var(--text-muted);">Místo tvrdého Stockfish hodnocení využít OpenAI API k přeložení chyb z enginu do češtiny s logickým vysvětlením dětem.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Changelog Card -->
+        <div class="card" style="margin-bottom: 2rem;">
+            <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem;">
+                <i class="fa-solid fa-code-branch" style="font-size: 2rem; color: var(--primary-color);"></i>
+                <div>
+                    <h2 style="margin: 0;">Changelog</h2>
+                    <p style="margin: 0.25rem 0 0; color: var(--text-muted); font-size: 0.9rem;">Historie změn a
+                        aktualizací webu</p>
+                </div>
+            </div>
+
+            <div class="changelog-timeline">
+                <!-- 2026-04-12 v32 -->
+                <div class="changelog-entry">
+                    <div class="changelog-date">12. 4. 2026</div>
+                    <div class="changelog-version" style="background:var(--primary-color);color:#000;">v32</div>
+                    <div class="changelog-content">
+                        <h4>🔒 Bezpečnostní audit & Kvalita kódu</h4>
+                        <ul>
+                            <li><strong>Helmet:</strong> Přidány bezpečnostní HTTP hlavičky — CSP, X-Frame-Options, HSTS, X-Content-Type-Options s whitelistem CDN zdrojů.</li>
+                            <li><strong>CORS:</strong> Odstraněna duplicitní konfigurace, <code>origin: true</code> nahrazeno <code>ALLOWED_ORIGINS</code> z env vars.</li>
+                            <li><strong>Sanitace vstupů:</strong> Nový <code>sanitize-html</code> na backendu pro komentáře, forum a zprávy. Na frontendu nová <code>sanitizeHtml()</code> utility pro zobrazení článků.</li>
+                            <li><strong>Hardcoded hesla:</strong> Odstraněno plaintext heslo ze <code>seed.js</code> — nyní z env var nebo náhodně generované.</li>
+                            <li><strong>Rate limiting:</strong> Globální API limiter 100 req/min.</li>
+                        </ul>
+                        <h4>🧪 Testy & Linting</h4>
+                        <ul>
+                            <li><strong>Vitest:</strong> 33 unit testů pro auth middleware, RBAC hierarchii a sanitizační funkce.</li>
+                            <li><strong>ESLint + Prettier:</strong> Přidána konfigurace pro backend i frontend.</li>
+                            <li><strong>Race condition fix:</strong> Auth inicializace přepsána z <code>3× setTimeout</code> na <code>CustomEvent('auth:ready')</code>.</li>
+                        </ul>
+                        <h4>⚡ Performance & A11y</h4>
+                        <ul>
+                            <li><strong>DB indexy:</strong> Comment (newsId, authorId), News (isPublished+date), ForumPost (topicId).</li>
+                            <li><strong>Batch standings:</strong> <code>createMany</code> místo cyklu <code>create</code>.</li>
+                            <li><strong>Keyboard dropdown:</strong> Enter/Space/ArrowDown/Escape + <code>aria-haspopup</code>, <code>:focus-within</code>.</li>
+                            <li><strong>WCAG AA kontrast:</strong> <code>--text-muted</code> #a0a0a0 → #b0b0b0 (5.57:1).</li>
+                            <li><strong>Smooth scroll:</strong> <code>scroll-behavior: smooth</code> + <code>scroll-padding-top</code>.</li>
+                            <li><strong>Optimalizace obrázků:</strong> Nový skript <code>optimize-images.mjs</code> (sharp) — PNG→WebP + komprese.</li>
+                        </ul>
+                        <h4>♟️ Komentování partií</h4>
+                        <ul>
+                            <li><strong>Komentovat z editoru:</strong> Tlačítko 💬 u každé partie → otevře game-recorder → editace PGN s komentáři → uloží zpět do článku přes postMessage.</li>
+                            <li><strong>Sub-taby Partie:</strong> Admin sekce Partie má nově taby „Nahrané" a „Z článků".</li>
+                        </ul>
+                        <h4>🤖 AI Slovní anotace</h4>
+                        <ul>
+                            <li><strong>AI komentář:</strong> Tlačítko ✨ v game-recorderu i game-vieweru. GPT-4o-mini generuje 1-2 věty česky srozumitelné dětem.</li>
+                            <li><strong>Endpoint:</strong> <code>POST /api/ai/annotate</code> — posílá FEN, tah, eval → vrací slovní hodnocení.</li>
+                        </ul>
+                        <h4>🎨 Admin UI</h4>
+                        <ul>
+                            <li><strong>Stitch-inspired design:</strong> Timeline activity feed, ghost watermark na stat kartách, vertikální quick actions.</li>
+                            <li><strong>Login stránka:</strong> Vylepšený design s ikonami, placeholders, slide-up animací.</li>
+                            <li><strong>404 stránka:</strong> Nová stránka s šachovým motivem.</li>
+                            <li><strong>jQuery:</strong> Sjednocen na 3.7.1 ve všech stránkách.</li>
+                            <li><strong>WebP:</strong> Management fotky na /about v &lt;picture&gt; elementech.</li>
+                        </ul>
+                        <h4>📖 Dokumentace</h4>
+                        <ul>
+                            <li><strong>API Reference:</strong> Nový manuál <code>docs/api-manual.html</code> — kompletní dokumentace ~60 endpointů.</li>
+                            <li><strong>Admin manuál:</strong> Aktualizován na v32 — nové sekce Události, Diagramy, Komentování partií.</li>
+                        </ul>
+                        <h4>🐛 Opravy</h4>
+                        <ul>
+                            <li><strong>CSP:</strong> Opraveny chybějící zdroje — unpkg.com (chessboard CSS), chess-api.com (engine), chess.com (embeds), mapy.com (mapa).</li>
+                            <li><strong>Fragmenty/diagramy:</strong> sanitizeHtml stripoval data-* atributy — odstraněna frontend sanitace na article contentu.</li>
+                            <li><strong>Puzzle Racer:</strong> Týdenní leaderboard počítá pondělí–neděle (ISO week).</li>
+                            <li><strong>Diagram reset:</strong> Opravena duplicitní reset() metoda.</li>
+                        </ul>
+                    </div>
+                </div>
+                <!-- 2026-04-01 v31 -->
+                <div class="changelog-entry">
+                    <div class="changelog-date">1. 4. 2026</div>
+                    <div class="changelog-version">v31</div>
+                    <div class="changelog-content">
+                        <h4>🎯 Členská sekce: Blunder Grid & Sken přihlášek</h4>
+                        <ul>
+                            <li><strong>Blunder Grid:</strong> Nový tréninkový nástroj! Personalizovaná galerie hrubek a promarněných šancí z vlastních partií pomocí Lichess API / chess-api.com. Přidány 2 režimy (Trénink a Galerie) a posuvník pro Threshold Win % propadu.</li>
+                            <li><strong>Skenování:</strong> Ve členské sekci zarovnán a vyladěn odkaz na moderní "Sken přihlášek" pro nápravu neostylované ikony.</li>
+                            <li><strong>Verzování:</strong> Synchronizace čísel buildů s changelogem pro zachování kontinuity a vylistování reálných verzí do záhlaví modulu.</li>
+                        </ul>
+                    </div>
+                </div>
+                <!-- 2026-03-28 v30 -->
+                <div class="changelog-entry">
+                    <div class="changelog-date">28. 3. 2026</div>
+                    <div class="changelog-version">v30</div>
+                    <div class="changelog-content">
+                        <h4>👤 Autoři obsahu & Uspořádání sidebar panelu</h4>
+                        <ul>
+                            <li><strong>Filtr „Moje":</strong> Nový checkbox 👤 Moje v selektoru diagramů a fragmentů – zobrazí jen obsah vytvořený přihlášeným uživatelem. API endpoint podporuje <code>?mine=true</code>.</li>
+                            <li><strong>Autor v selektoru:</strong> U každého diagramu a fragmentu se nyní zobrazuje jméno autora (👤 username) pro snadnější orientaci.</li>
+                            <li><strong>Sidebar Game Recorder:</strong> Panel diagramů přeorganizován – figurky na 2 řádky (bílé zvlášť, černé zvlášť), anotace rozděleny do logických skupin (šipky / pole / hodnocení).</li>
+                            <li><strong>Admin manuál:</strong> Kompletní přepis manuálu – přidána dokumentace k atomickým blokům, drag & drop, edit modalu, fragmentům, filtru Moje a sloupcovým layoutům.</li>
+                        </ul>
+                    </div>
+                </div>
+                <!-- 2026-03-28 v29 -->
+                <div class="changelog-entry">
+                    <div class="changelog-date">28. 3. 2026</div>
+                    <div class="changelog-version">v29</div>
+                    <div class="changelog-content">
+                        <h4>🛡️ Atomické bloky – ochrana, drag & drop, edit modal</h4>
+                        <ul>
+                            <li><strong>Atomické bloky:</strong> Diagramy a fragmenty se chovají jako chráněné objekty – nelze do nich psát ani je omylem smazat. Kliknutí otevře edit modal, Backspace/Delete maže celý blok najednou.</li>
+                            <li><strong>Drag & drop:</strong> Diagramy a fragmenty lze přetahovat myší – uvnitř editoru i mezi sloupci. Modrý indikátor ukazuje cílovou pozici, sloupce se vizuálně zvýrazní při najetí.</li>
+                            <li><strong>Edit modal – diagram:</strong> Klik na diagram otevře modal s popiskem + 3 akční tlačítka: Upravit zdroj (otevře game-recorder), Obnovit data (fetch ze serveru), Změnit diagramy (otevře selektor).</li>
+                            <li><strong>Edit modal – fragment:</strong> Klik na fragment otevře modal s názvem fragmentu – změny se v editoru projeví v reálném čase.</li>
+                            <li><strong>Rozvržení 3 sloupců:</strong> Nový layout 1/3 + 1/3 + 1/3 pro kompaktní rozmístění diagramů vedle sebe. Diagramy mají max-width 240px v třetinových sloupcích.</li>
+                            <li><strong>Reset tlačítko:</strong> Přesunuto z neviditelného board overlaye do viditelného tlačítka vedle popisku diagramu. Vždy viditelné, zvýrazní se při hoveru.</li>
+                            <li><strong>Varování:</strong> Při vložení fragmentu do 1/3 sloupce se zobrazí toast upozornění, že se fragment nevejde a je lepší použít širší layout.</li>
+                        </ul>
+                    </div>
+                </div>
+                <!-- 2026-03-27 v38 -->
+                <div class="changelog-entry">
+                    <div class="changelog-date">27. 3. 2026</div>
+                    <div class="changelog-version">v28</div>
+                    <div class="changelog-content">
+                        <h4>🐰 Povelikonoční blicák & 🧩 Vylepšené Fragmenty</h4>
+                        <ul>
+                            <li><strong>Turnaj Blicák:</strong> Přidána nová soutěžní stránka s tématickým jarním hlavičkovým obrázkem a propojením přes zvýrazněné tlačítko v hlavní navigaci (Soutěže). Stránka komunikuje s DB formou registrace na 9. dubna 2026.</li>
+                            <li><strong>Fragmenty – Motor:</strong> Do prohlížeče fragmentů přidána podpora integrovaného enginu i s fallbackem. Nově se automaticky přizpůsobuje layout (dynamický 65/35 flex), když levý teploměr vyjede, takže šachovnice neztratí na zmenšených mobilech ani pixel šířky.</li>
+                            <li><strong>Fragmenty – Parser:</strong> Nový Regex tokenizér se nyní z PGN u fragmentů stará i o čistou injekci komentářů a NAG značek (<code>!</code>, <code>?</code>, <code>!!</code>) přímo pod jednotlivé tahy do kurzívy. Zalamování a kompaktnost dotažena k naprosté grafické dokonalosti.</li>
+                            <li><strong>Editace Partií ve článcích:</strong> Zpřístupněno tlačítko se ✂️ i přímo z detailu článku (<code>partie.html</code>), s chytrou restrikcí zakazující editaci hrubých iframů ze starých Chess.com partí, čímž je zaručena spolehlivost editoru.</li>
+                        </ul>
+                    </div>
+                </div>
+                <!-- 2026-03-27 v37 -->
+                <div class="changelog-entry">
+                    <div class="changelog-date">27. 3. 2026</div>
+                    <div class="changelog-version">v27</div>
+                    <div class="changelog-content">
+                        <h4>♟️ Editor partií – 3 taby + export fragmentů</h4>
+                        <ul>
+                            <li><strong>3 taby:</strong> Nové rozložení sidebaru – Partie, Diagramy, Hádanky. Zjednodušený workflow pro práci s pozicemi, anotacemi a hádankami.</li>
+                            <li><strong>Smart engine:</strong> Motor automaticky detekuje aktivní tab a analyzuje správnou pozici (board FEN pro Diagramy/Hádanky, game FEN pro Partie).</li>
+                            <li><strong>Export fragmentů:</strong> Nový panel ✂️ Fragment v Partie tabu – umožňuje vybrat rozsah tahů (od-do), zobrazit náhled a exportovat fragment jako PGN nebo uložit do DB.</li>
+                            <li><strong>Admin:</strong> Nová tabulka "Fragmenty partií" v záložce Partie s přehledem uložených fragmentů.</li>
+                            <li><strong>WYSIWYG:</strong> Nové tlačítko ✂️ pro vložení fragmentu do článku – bude vykresleno jako kompaktní interaktivní prohlížeč.</li>
+                            <li><strong>Article viewer:</strong> Fragmenty vložené do článků se nyní vykreslují jako kompaktní interaktivní šachovnice s navigací tahů.</li>
+                            <li><strong>Vzhled fragmentů:</strong> Moderní design s integrovaným enginem (Lichess Cloud), teploměrem a kompaktními ikonami. Tahy ve fragmentu jsou nyní esteticky formátovány do dvousloupcového seznamu.</li>
+                        </ul>
+                    </div>
+                </div>
+                <!-- 2026-03-26 v36 -->
+                <div class="changelog-entry">
+                    <div class="changelog-date">26. 3. 2026</div>
+                    <div class="changelog-version">v26</div>
+                    <div class="changelog-content">
+                        <h4>♟️ Editor partií – oprava PGN importu</h4>
+                        <ul>
+                            <li><strong>Disambiguace tahů:</strong> Oprava chyby, kdy chess.js 0.10.3 odmítal tahy
+                                s přebytečnou disambiguací souboru/řady (např. <code>Rfg8</code>, <code>R5g4</code>,
+                                <code>Rcg8</code>). Partie s těmito tahy se nyní importují kompletně.</li>
+                            <li><strong>Fallback logika:</strong> Přidán automatický fallback – pokud se tah nepodaří,
+                                odstraní se disambiguační znak a zkusí se znovu. Opraveno v importu i v anotačním
+                                parseru.</li>
+                        </ul>
+                    </div>
+                </div>
+                <!-- 2026-02-19 v35 -->
+                <div class="changelog-entry">
+                    <div class="changelog-date">19. 2. 2026</div>
+                    <div class="changelog-version">v25</div>
+                    <div class="changelog-content">
+                        <h4>♟️ Puzzle Racer – oprava statistik</h4>
+                        <ul>
+                            <li><strong>Ukládání každé hry:</strong> Osobní statistiky se nyní aktualizují po každé hře,
+                                ne jen při novém rekordu.</li>
+                            <li><strong>Auto-save:</strong> Přihlášeným hráčům se výsledek uloží automaticky – tlačítko
+                                „Uložit" odstraněno.</li>
+                        </ul>
+                    </div>
+                </div>
+                <!-- 2026-02-16 v34 -->
+                <div class="changelog-entry">
+                    <div class="changelog-date">16. 2. 2026</div>
+                    <div class="changelog-version">v24</div>
+                    <div class="changelog-content">
+                        <h4>🎮 Puzzle Racer – odznaky, síň slávy, profily</h4>
+                        <ul>
+                            <li><strong>8 odznaků (badges):</strong> Hráč, Skóre, Combo, Série, Přesnost, Veterán,
+                                Šampion, Bezchybná hra. Tier systém (Bronze → Diamant). Grid 8×1 desktop / 4×2 mobil.
+                            </li>
+                            <li><strong>Bezchybná hra:</strong> Ultimate badge za 30/30 (všech 30 úloh správně).</li>
+                            <li><strong>Síň slávy:</strong> Nová sekce týdenních šampionů pod leaderboardem.</li>
+                            <li><strong>Leaderboard dedup:</strong> Každý hráč jen jednou (osobní rekord).</li>
+                            <li><strong>Klikací profily:</strong> Klik na hráče → modal se statistikami, Top 3 a
+                                odznaky.</li>
+                            <li><strong>Auto-save skóre:</strong> Automatické ukládání osobního rekordu.</li>
+                            <li><strong>Filtr leaderboardu:</strong> Toggle pro anonymní hráče.</li>
+                        </ul>
+                    </div>
+                </div>
+                <!-- 2026-02-16 v33 -->
+                <div class="changelog-entry">
+                    <div class="changelog-date">16. 2. 2026</div>
+                    <div class="changelog-version">v23</div>
+                    <div class="changelog-content">
+                        <h4>♟️ Editor partií – systém variant</h4>
+                        <ul>
+                            <li><strong>Strom tahů:</strong> Editor partií nyní používá stromovou strukturu pro tahy,
+                                místo lineárního seznamu. Podporuje neomezené zanořené varianty.</li>
+                            <li><strong>Modal při konfliktu:</strong> Když zahrajete jiný tah než je v hlavní linii,
+                                objeví se dialog s možností: vložit variantu, přepsat hlavní tah, nebo vytvořit novou
+                                hlavní variantu.</li>
+                            <li><strong>Správa variant:</strong> U variant se zobrazují tlačítka ↑ ↓ × pro
+                                povýšení, ponížení a smazání.</li>
+                            <li><strong>PGN export:</strong> Generování PGN nyní korektně vypisuje varianty ve
+                                standardní notaci <code>( ... )</code>.</li>
+                            <li><strong>PGN import:</strong> Při importu PGN se správně parsují a zobrazují varianty
+                                včetně zanořených.</li>
+                            <li><strong>Navigace:</strong> Všechny navigační funkce (zpět, vpřed, na začátek, na konec,
+                                autoplay) pracují se stromem tahů.</li>
+                        </ul>
+                    </div>
+                </div>
+                <!-- 2026-02-15 v32 -->
+                <div class="changelog-entry">
+                    <div class="changelog-date">15. 2. 2026</div>
+                    <div class="changelog-version">v22</div>
+                    <div class="changelog-content">
+                        <h4>🏆 Oprava stránky Soutěže družstev</h4>
+                        <ul>
+                            <li><strong>Tabulky na produkci:</strong> Opraveno chybějící zobrazení tabulek a výsledků –
+                                v databázi chyběly sloupce pro standings data (migrace).</li>
+                            <li><strong>Auto-update standings:</strong> Po startu serveru se automaticky stáhnou
+                                aktuální
+                                tabulky ze chess-results.com.</li>
+                        </ul>
+                        <h4>📱 WYSIWYG Editor – mobilní UX</h4>
+                        <ul>
+                            <li><strong>Větší toolbar tlačítka:</strong> Tlačítka v editoru jsou na mobilu větší a lépe
+                                se mačkají (min. 36px touch target).</li>
+                            <li><strong>Oprava diagramů:</strong> Šachovnice v pickeru diagramů se už neroztahují na
+                                výšku – správný čtvercový poměr.</li>
+                            <li><strong>Diagram picker na mobilu:</strong> Modal zabere celou šířku, 2-sloupcový grid.
+                            </li>
+                            <li><strong>Nápověda:</strong> Ikona ❓ v toolbaru – nápověda a zkratky přístupné i bez
+                                klávesnice.</li>
+                        </ul>
+                    </div>
+                </div>
+                <!-- 2026-02-15 v31 -->
+                <div class="changelog-entry">
+                    <div class="changelog-date">15. 2. 2026</div>
+                    <div class="changelog-version">v21</div>
+                    <div class="changelog-content">
+                        <h4>🔬 Engine v Editoru Partií</h4>
+                        <ul>
+                            <li><strong>Analýza enginem:</strong> Nové tlačítko „Motor" v editoru partií – zapne/vypne
+                                hodnocení pozice přes Lichess cloud eval + chess-api.com fallback.</li>
+                            <li><strong>Eval bar (teploměr):</strong> Grafické zobrazení hodnocení pozice vedle
+                                šachovnice – stejné jako v prohlížeči partií.</li>
+                            <li><strong>Lišta analýzy:</strong> Zobrazení nejlepšího tahu, hloubky a pokračování (PV
+                                linie) pod šachovnicí.</li>
+                        </ul>
+                        <h4>♟️ Vlastní výchozí pozice</h4>
+                        <ul>
+                            <li><strong>Analyzovat z diagramu:</strong> Tlačítko „Analyzovat" v editoru diagramů nyní
+                                načte pozici přímo do záznamníku (místo otevírání Lichess).</li>
+                            <li><strong>Indikátor vlastní pozice:</strong> Při práci s vlastní výchozí pozicí se zobrazí
+                                informační banner.</li>
+                            <li><strong>Správné ukládání FEN:</strong> Partie začínající z vlastní pozice se nyní
+                                ukládají
+                                s [FEN] a [SetUp] tagy v PGN.</li>
+                        </ul>
+                        <h4>🔧 Opravy</h4>
+                        <ul>
+                            <li><strong>Jména hráčů v soupiskách:</strong> Oprava parseru – hráči se zobrazují jménem
+                                (ne FIDE ID).</li>
+                            <li><strong>SNR pro nadstavbu:</strong> Soupisky soupeřů se správně načítají i pro soutěže
+                                s méně sloupci (nadstavba, play-off).</li>
+                            <li><strong>Mobilní UX:</strong> Oprava překrývání komentářového widgetu a viditelnosti H1
+                                na mobilu.</li>
+                        </ul>
+                    </div>
+                </div>
+                <!-- 2026-02-14 v30 -->
+                <div class="changelog-entry">
+                    <div class="changelog-date">14. 2. 2026</div>
+                    <div class="changelog-version">v20</div>
+                    <div class="changelog-content">
+                        <h4>🔍 Analýza pozice – Lichess integrace</h4>
+                        <ul>
+                            <li><strong>Nové tlačítko „Analyzovat":</strong> V editoru diagramů – otevře aktuální
+                                pozici na Lichess.org v novém tabu pro analýzu enginem (Stockfish).</li>
+                            <li><strong>Automatický FEN přenos:</strong> Pozice včetně tahu, rošád a en passant se
+                                korektně přenáší do Lichess analysis boardu.</li>
+                        </ul>
+                        <h4>🔧 Opravy diagramů</h4>
+                        <ul>
+                            <li><strong>Resize ve sloupcích:</strong> Diagramy ve sloupcových blocích se nyní správně
+                                překreslí při změně rozložení (1:1, 1:2, 2:1).</li>
+                            <li><strong>Skryté zarovnání:</strong> Tlačítka plovoucího zarovnání (vlevo/střed/vpravo)
+                                jsou automaticky skryta, pokud je diagram uvnitř sloupcového bloku.</li>
+                        </ul>
+                    </div>
+                </div>
+                <!-- 2026-02-14 v19 -->
+                <div class="changelog-entry">
+                    <div class="changelog-date">14. 2. 2026</div>
+                    <div class="changelog-version">v19</div>
+                    <div class="changelog-content">
+                        <h4>📐 Sloupcové bloky v editoru (Avia-style)</h4>
+                        <ul>
+                            <li><strong>Nové tlačítko „Bloky":</strong> V toolbaru editoru – vložení 2-sloupcového
+                                rozložení s volbou poměru (1/2+1/2, 1/3+2/3, 2/3+1/3).</li>
+                            <li><strong>Plovoucí toolbar:</strong> Kliknutím na sloupcový blok se zobrazí toolbar pro
+                                přepínání rozložení nebo smazání bloku.</li>
+                            <li><strong>Responzivní design:</strong> Na mobilech se sloupce automaticky skládají pod
+                                sebe.</li>
+                        </ul>
+                        <h4>🔧 Opravy diagramů</h4>
+                        <ul>
+                            <li><strong>Centrovány diagramy:</strong> Oprava roztahování diagramu při zarovnání na
+                                střed – diagram nyní zachovává správnou šířku.</li>
+                            <li><strong>Popisek pouze ke čtení:</strong> Pole s popisem diagramu už nejde na frontendu
+                                editovat.</li>
+                            <li><strong>Diagram ve sloupcích:</strong> Diagramy vložené do sloupcového bloku se
+                                automaticky přizpůsobí šířce sloupce.</li>
+                        </ul>
+                    </div>
+                </div>
+                <!-- 2026-02-14 v18 -->
+                <div class="changelog-entry">
+                    <div class="changelog-date">14. 2. 2026</div>
+                    <div class="changelog-version">v18</div>
+                    <div class="changelog-content">
+                        <h4>♟️ Puzzle Racer – Osobní statistiky</h4>
+                        <ul>
+                            <li><strong>Per-game tracking:</strong> Správné/špatné tahy, streak, přesnost – ukládáno na
+                                server.</li>
+                            <li><strong>Dashboard:</strong> Top 3 výsledky s medailemi, průměrné skóre, best streak,
+                                přesnost, trend sparkline.</li>
+                            <li><strong>Auth fix:</strong> Detekce přihlášeného uživatele (auth_token/authToken/token).
+                            </li>
+                        </ul>
+                        <h4>🏠 Homepage & navigace</h4>
+                        <ul>
+                            <li><strong>Active link:</strong> Zlaté podtržení a barva pro aktuální stránku v menu
+                                (normalizace clean URL).</li>
+                            <li><strong>Rotující dlaždice:</strong> Oprava vertikálního zarovnání – obsah od vrchu ke
+                                spodku na obou stranách.</li>
+                            <li><strong>Turnaje:</strong> Tlačítko „Soutěže jednotlivců" přesunuto vedle titulku
+                                (napravo).</li>
+                        </ul>
+                        <h4>📋 Admin</h4>
+                        <ul>
+                            <li><strong>Roadmap:</strong> Aktualizace roadmapy – nové priority (fotogalerie, mobilní
+                                optimalizace, statistiky členů).</li>
+                        </ul>
+                    </div>
+                </div>
+                <!-- 2026-02-13 v26 -->
+                <div class="changelog-entry">
+                    <div class="changelog-date">13. 2. 2026</div>
+                    <div class="changelog-version">v26</div>
+                    <div class="changelog-content">
+                        <h4>♟️ Game Viewer 2.0 – Redesign</h4>
+                        <ul>
+                            <li><strong>Dvousloupcový seznam tahů:</strong> Nový tabulkový layout (číslo | bílý | černý)
+                                inspirovaný chess.com a Lichess.</li>
+                            <li><strong>Inline komentáře:</strong> Komentáře se zobrazují přímo v seznamu tahů se 💬
+                                ikonou místo překryvné bubliny.</li>
+                            <li><strong>NAG odznaky:</strong> Barevné pozadí pro anotace (!! zelené, ?? červené, ?!
+                                žluté).</li>
+                            <li><strong>Ovládací prvky:</strong> Navigační tlačítka přesunuta přímo pod šachovnici.</li>
+                            <li><strong>Zvýraznění tahu:</strong> Aktivní tah s levým okrajem a jemným svícením.</li>
+                        </ul>
+                        <h4>🏠 Homepage</h4>
+                        <ul>
+                            <li><strong>Rozpis zápasů:</strong> Oprava layoutu rotujícího dlaždice – responzivní font
+                                sizing, ořez dlouhých jmen.</li>
+                        </ul>
+                        <h4>🔒 Admin</h4>
+                        <ul>
+                            <li><strong>Superadmin:</strong> Citlivá nastavení webu (údržba, komentáře) omezena na
+                                superadmin roli.</li>
+                            <li><strong>Manuál:</strong> Nový stylovaný HTML manuál (dark theme, glassmorphism, obsah).
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+                <!-- 2026-02-13 v25 -->
+                <div class="changelog-entry">
+                    <div class="changelog-date">13. 2. 2026</div>
+                    <div class="changelog-version">v25</div>
+                    <div class="changelog-content">
+                        <h4>✏️ WYSIWYG Editor vylepšení</h4>
+                        <ul>
+                            <li><strong>Nová tlačítka:</strong> Přeškrtnutí, odrážkový/číslovaný seznam, paleta barev
+                                textu.</li>
+                            <li><strong>Počítadlo slov:</strong> Live zobrazení počtu slov a znaků pod editorem.</li>
+                            <li><strong>Barva textu:</strong> Paleta s 8 barvami + reset na výchozí.</li>
+                            <li><strong>Klávesové zkratky:</strong> ⌘K (odkaz), ⌘⇧X (přeškrtnutí), ⌘⇧S (AI pravopis),
+                                ⌘⇧L (seznam), ⌘⇧V (čistý text).</li>
+                            <li><strong>Drag & Drop:</strong> Přetáhněte obrázek přímo do editoru – automatický upload.
+                            </li>
+                            <li><strong>Paste as Plain Text:</strong> Shift+Paste vloží text bez formátování.</li>
+                            <li><strong>Floating toolbar:</strong> Rozšířen o underline, přeškrtnutí, gumu a H3.</li>
+                            <li><strong>Shortcuts modal:</strong> Kompletní přehled zkratek + sekce Tipy.</li>
+                        </ul>
+                    </div>
+                </div>
+                <!-- 2026-02-13 v24 -->
+                <div class="changelog-entry">
+                    <div class="changelog-date">13. 2. 2026</div>
+                    <div class="changelog-version">v24</div>
+                    <div class="changelog-content">
+                        <h4>🏗️ Refaktoring & Homepage opravy</h4>
+                        <ul>
+                            <li><strong>Turnaje:</strong> Extrakce inline CSS (485 řádků) a JS (560 řádků) z
+                                tournaments.html do <code>css/tournaments.css</code> a <code>js/tournaments.js</code>.
+                            </li>
+                            <li><strong>Turnaje SEO:</strong> Přidány Open Graph a Twitter Card meta tagy.</li>
+                            <li><strong>Homepage:</strong> Oprava překrývání komentářového banneru s nadpisem "Novinky"
+                                – widget přesunut mimo hero sekci.</li>
+                            <li><strong>Homepage:</strong> Oprava dlaždic hero gridu schovaných pod hlavičkou
+                                (margin-top 60→70px).</li>
+                            <li><strong>Admin:</strong> Nový panel "Nastavení webu" na dashboardu – toggle pro režim
+                                údržby a info panel komentářů.</li>
+                        </ul>
+                    </div>
+                </div>
+                <!-- 2026-01-22 v23 -->
+                <div class="changelog-entry">
+                    <div class="changelog-date">22. 1. 2026</div>
+                    <div class="changelog-version">v23</div>
+                    <div class="changelog-content">
+                        <h4>📱 Diagramy - Mobilní vylepšení</h4>
+                        <ul>
+                            <li><strong>Responsivní design:</strong> Plná šířka šachovnice na mobilech (≤600px) pro
+                                lepší ovládání.</li>
+                            <li><strong>Desktop layout:</strong> Diagram plovoucí vpravo (400px) s obtékáním textu.</li>
+                            <li><strong>Lichess-style tolerance:</strong> Pixel-based práh (15px) pro rozlišení kliknutí
+                                od tahu.</li>
+                            <li><strong>Micro-drag ochrana:</strong> Rychlé přetažení na sousední políčko zachová výběr
+                                místo jeho zrušení.</li>
+                        </ul>
+                    </div>
+                </div>
+                <!-- 2026-01-20 v22 -->
+                <div class="changelog-entry">
+                    <div class="changelog-date">20. 1. 2026</div>
+                    <div class="changelog-version">v22</div>
+                    <div class="changelog-content">
+                        <h4>♟️ Diagramy - Finalizace a Opravy</h4>
+                        <ul>
+                            <li><strong>Interakce:</strong> Kompletní oprava tahání figurek - spolehlivé Click-to-Move i
+                                Drag-and-Drop.</li>
+                            <li><strong>Vizuál:</strong> Oprava "ghosting" efektu (mikrodrag) a sjednocení zvýraznění
+                                polí (styl Puzzle Racer).</li>
+                            <li><strong>Editor:</strong> Odstraněn redundantní přepínač tahu (automatická detekce z
+                                pozice).</li>
+                            <li><strong>Editor:</strong> Oprava scrollování v modálním okně editoru na menších
+                                obrazovkách.</li>
+                            <li><strong>Viewer:</strong> Robustní synchronizace stavu hry a vylepšená validace tahů.
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+                <!-- 2026-01-19 v21 -->
+                <div class="changelog-entry">
+                    <div class="changelog-date">19. 1. 2026</div>
+                    <div class="changelog-version">v21</div>
+                    <div class="changelog-content">
+                        <h4>🔧 Opravy & Vylepšení</h4>
+                        <ul>
+                            <li><strong>Partie:</strong> Oprava ukládání vlastních partií pro přihlášené členy (Game
+                                Recorder).</li>
+                            <li><strong>Tabulky:</strong> Oprava načítání výsledků B týmu (KP Liberec) z Chess-Results.
+                            </li>
+                            <li><strong>Diagramy:</strong> Vylepšení "Knihy Diagramů" - 3D animace otáčení, čtvercový
+                                formát, editovatelné popisky.</li>
+                        </ul>
+                    </div>
+                </div>
+                <!-- 2026-01-18 v20 -->
+                <div class="changelog-entry">
+                    <div class="changelog-date">18. 1. 2026</div>
+                    <div class="changelog-version">v20</div>
+                    <div class="changelog-content">
+                        <h4>♟️ Šachová databáze - Engine analýza</h4>
+                        <ul>
+                            <li><strong>Engine integrace:</strong> Lichess Cloud API + chess-api.com fallback</li>
+                            <li><strong>Eval bar:</strong> Vertikální teploměr vedle šachovnice</li>
+                            <li><strong>Figurková notace:</strong> ♞f6, ♗g2 místo Nf6, Bg2</li>
+                            <li><strong>Čísla tahů:</strong> 1. e4 e5 2. ♞f3 formát v PV linii</li>
+                            <li><strong>Toggle engine:</strong> Zapnutí/vypnutí enginu tlačítkem</li>
+                            <li><strong>Hloubka analýzy:</strong> Nastavitelná v Admin → Hry (10-20)</li>
+                        </ul>
+                        <h4>🔧 Vylepšení databáze</h4>
+                        <ul>
+                            <li><strong>URL persistence:</strong> Vybraný hráč přetrvá refresh (?player=...)</li>
+                            <li><strong>Autoplay scroll:</strong> Scroll tahů nehýbe celou stránkou</li>
+                            <li><strong>ChessDB PGN import:</strong> Oprava chess.js API (loadPgn)</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- 2026-01-12 v19 -->
+                <div class="changelog-entry">
+                    <div class="changelog-date">12. 1. 2026</div>
+                    <div class="changelog-version">v19</div>
+                    <div class="changelog-content">
+                        <h4>📧 Email notifikace</h4>
+                        <ul>
+                            <li><strong>Komentáře:</strong> Autor článku dostane email při novém komentáři</li>
+                            <li><strong>Registrace:</strong> Admini dostanou email při registraci nového uživatele</li>
+                            <li><strong>Cestovní příkazy:</strong> Email uživateli při schválení/zamítnutí příkazu</li>
+                            <li><strong>Resend API:</strong> Migrace z SMTP na Resend (Railway blokuje SMTP porty)</li>
+                        </ul>
+                        <h4>👤 Uživatelé</h4>
+                        <ul>
+                            <li><strong>Poslední přihlášení:</strong> Sledování data posledního přihlášení uživatelů
+                            </li>
+                        </ul>
+                        <h4>🛠️ Utility</h4>
+                        <ul>
+                            <li><strong>Toast notifikace:</strong> Globální systém pro frontend notifikace</li>
+                            <li><strong>Auth toasty:</strong> Notifikace při přihlášení, odhlášení a registraci</li>
+                        </ul>
+                        <h4>💬 Diskuzní fórum</h4>
+                        <ul>
+                            <li><strong>Témata:</strong> CRUD API pro vytváření, čtení, mazání témat</li>
+                            <li><strong>Příspěvky:</strong> Odpovídání na témata</li>
+                            <li><strong>Admin:</strong> Připínání, zamykání a mazání témat</li>
+                        </ul>
+                        <h4>🔧 Admin</h4>
+                        <ul>
+                            <li><strong>Cestovní příkazy:</strong> API pro schvalování/zamítání + přehled všech</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- 2026-01-11 v18 -->
+                <div class="changelog-entry">
+                    <div class="changelog-date">11. 1. 2026</div>
+                    <div class="changelog-version">v18</div>
+                    <div class="changelog-content">
+                        <h4>👥 Členská sekce - Velký refaktoring</h4>
+                        <ul>
+                            <li><strong>Dashboard Hub:</strong> Nový přehledný dashboard s 6 dlaždicemi (Nástěnka,
+                                Partie, Puzzle Racer, Galerie, Databáze, Kniha Přání)</li>
+                            <li><strong>Nástěnka:</strong> Konsolidace "Vzkazovník" a "Aktuality" do jedné sekce s taby
+                                (Oznámení, Dokumenty, Cestovní příkazy, Vzkazy)</li>
+                            <li><strong>Layout:</strong> Optimalizace - dlaždice viditelné "nad foldem", info box
+                                přesunut níže</li>
+                            <li><strong>Navigace:</strong> Přidána tlačítka "Zpět" do Puzzle Racer a Databáze</li>
+                        </ul>
+                        <h4>📧 Email služby</h4>
+                        <ul>
+                            <li><strong>Reset hesla:</strong> Implementován kompletní flow - frontend modal, backend
+                                API, emailové notifikace</li>
+                            <li><strong>Notifikace:</strong> Automatický email adminům při novém cestovním příkazu</li>
+                            <li><strong>Mailer:</strong> Integrace Nodemailer s SMTP (mail.webglobe.cz)</li>
+                        </ul>
+                        <h4>🔧 Opravy</h4>
+                        <ul>
+                            <li><strong>Partie:</strong> Odkaz vede na /partie místo member-games.html</li>
+                            <li><strong>Databáze:</strong> Oprava odkazu na chess-database.html</li>
+                            <li><strong>Padding:</strong> Redukce horního odsazení stránky</li>
+                            <li><strong>Logout:</strong> Odstraněno duplicitní tlačítko z dashboardu (je v globálním
+                                menu)</li>
+                        </ul>
+                    </div>
+                </div>
+                <!-- 2026-01-05 v17 -->
+                <div class="changelog-entry">
+                    <div class="changelog-date">5. 1. 2026</div>
+                    <div class="changelog-version">v17</div>
+                    <div class="changelog-content">
+                        <h4>📅 Události & Mapy</h4>
+                        <ul>
+                            <li><strong>Nové turnaje:</strong> Přidány turnaje pro Leden-Květen 2026 (Josefův Důl,
+                                Varnsdorf, Bakov, Praha Open, PORG Open).</li>
+                            <li><strong>Mapy:</strong> Vylepšeno zobrazení mapy ČR (SVG), přidány souřadnice, zoom pro
+                                Liberecký kraj.</li>
+                            <li><strong>Vzdálenost:</strong> Automatický výpočet vzdušné vzdálenosti od Jablonce v
+                                detailu události.</li>
+                            <li><strong>Filtry:</strong> Oprava filtrování dospělých (zobrazuje i open turnaje pro
+                                všechny).</li>
+                        </ul>
+                    </div>
+                </div>
+                <!-- 2025-12-30 v16 -->
+                <div class="changelog-entry">
+                    <div class="changelog-date">30. 12. 2025</div>
+                    <div class="changelog-version">v16</div>
+                    <div class="changelog-content">
+                        <h4>📱 Mobilní zobrazení</h4>
+                        <ul>
+                            <li><strong>Tabulky:</strong> Prioritizace "Konečného pořadí" na mobilu (přesun nahoru).
+                            </li>
+                            <li><strong>Křížová tabulka:</strong> Na mobilu ve výchozím stavu sbalená (Collapsible),
+                                fixní první sloupec při scrollování.</li>
+                        </ul>
+                        <h4>✏️ Admin Editor</h4>
+                        <ul>
+                            <li><strong>Undo/Redo:</strong> Přidána tlačítka Zpět/Vpřed do panelu nástrojů editoru.</li>
+                        </ul>
+                    </div>
+                </div>
+                <!-- 2025-12-27 v15 -->
+                <div class="changelog-entry">
+                    <div class="changelog-date">27. 12. 2025</div>
+                    <div class="changelog-version">v15</div>
+                    <div class="changelog-content">
+                        <h4>🏠 Homepage</h4>
+                        <ul>
+                            <li><strong>3D Rotující dlaždice:</strong> Nová interaktivní dlaždice "Rozpis zápasů" s
+                                automatickou rotací (A, B, C, D týmy).</li>
+                            <li><strong>2x2 Mřížka:</strong> Obnoveno klasické rozložení navigace (šachovnicový vzor).
+                            </li>
+                            <li><strong>Layout:</strong> Fixní prostor pro widget (bez poskakování), zalomení nadpisu.
+                            </li>
+                        </ul>
+                        <h4>📅 Kalendář zápasů</h4>
+                        <ul>
+                            <li><strong>JS Refactoring:</strong> Přesun inline JS do <code>js/calendar.js</code> (oprava
+                                Unexpected EOF).</li>
+                            <li><strong>Deep linking:</strong> Auto-scroll a zvýraznění zápasu, auto-expand detailu.
+                            </li>
+                            <li><strong>Quote escaping:</strong> Oprava názvů týmů s uvozovkami ("B", "C").</li>
+                            <li><strong>Volno:</strong> Bye zápasy již nejsou klikatelné.</li>
+                            <li><strong>Tlačítko Turnaje:</strong> Zmenšeno pro mobilní zobrazení.</li>
+                        </ul>
+                        <h4>👥 Soupisky</h4>
+                        <ul>
+                            <li><strong>Mládež:</strong> Přidána mapování pro mládežnické týmy (1. liga mládeže A, KPM).
+                            </li>
+                            <li><strong>Escapování:</strong> Oprava zobrazení soupisek s uvozovkami v názvech.</li>
+                        </ul>
+                    </div>
+                </div>
+                <!-- 2025-12-26 v14 -->
+                <div class="changelog-entry">
+                    <div class="changelog-date">26. 12. 2025</div>
+                    <div class="changelog-version">v14</div>
+                    <div class="changelog-content">
+                        <h4>🆕 Nové funkce</h4>
+                        <ul>
+                            <li><strong>Šachová databáze:</strong> Import PGN pro adminy (detekce duplicit), statistiky,
+                                řazení (Datum, ECO)</li>
+                            <li><strong>Členská sekce:</strong> Kniha přání (Wishlist), přejmenování "Příprava" na
+                                "Databáze"</li>
+                        </ul>
+                        <h4>🔧 Opravy & Vylepšení</h4>
+                        <ul>
+                            <li><strong>Databáze:</strong> Oprava zobrazení na mobilech (výška šachovnice, scrollování),
+                                sjednocení hlavičky</li>
+                            <li><strong>Databáze:</strong> Automatické přepínání barvy stromu, optimalizace plynulosti
+                                přehrávání, scroll-to-move</li>
+                            <li><strong>Footer:</strong> Kompaktnější vzhled, přidán odkaz na "Tréninky od Karla"</li>
+                            <li><strong>Kalendář:</strong> Oprava zarovnání ikony Google Calendar</li>
+                            <li><strong>Systém:</strong> Oprava načítání konfigurace (API_URL chyba)</li>
+                            <li><strong>Členská sekce:</strong> Spuštěn testovací provoz - dočasně zpřístupněno všem
+                                registrovaným uživatelům (do konce ledna). Přidán info banner.</li>
+                            <li><strong>Registrace:</strong> Přidána možnost registrace přes Google přímo v registračním
+                                formuláři.</li>
+                        </ul>
+                    </div>
+                </div>
+                <!-- 2025-12-26 v14 -->
+                <div class="changelog-entry">
+                    <div class="changelog-date">26. 12. 2025</div>
+                    <div class="changelog-version">v14</div>
+                    <div class="changelog-content">
+                        <h4>♻️ Velký refaktoring - Tech Debt</h4>
+                        <ul>
+                            <li><strong>Server.js:</strong> 1546 → 667 řádků (-57%)</li>
+                            <li><strong>Admin.html:</strong> 1720 → 1455 řádků, CSS extrahováno</li>
+                            <li><strong>Nové moduly:</strong> <code>scrapingService.js</code>,
+                                <code>standingsService.js</code>
+                            </li>
+                            <li><strong>Odstraněn dead code:</strong> <code>scraping_backup.js</code>,
+                                <code>temp_update_logic.js</code>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+                <!-- 2025-12-26 v13 -->
+                <div class="changelog-entry">
+                    <div class="changelog-date">26. 12. 2025</div>
+                    <div class="changelog-version">v13</div>
+                    <div class="changelog-content">
+                        <h4>🆕 Nové funkce</h4>
+                        <ul>
+                            <li><strong>Blicák Galerie:</strong> Nasazena nová galerie (61 fotek, WEBP) od Davida
+                                Šafaříka</li>
+                            <li><strong>Paginace:</strong> Implementováno stránkování galerií v článcích a na stránce
+                                turnaje</li>
+                        </ul>
+                        <h4>♻️ Refaktoring</h4>
+                        <ul>
+                            <li><strong>admin-news.js:</strong> Kompletní modularizace (rozdělení na Wysiwyg, Images,
+                                Thumbnail)</li>
+                            <li>Redukce velikosti hlavního souboru o ~43% (odstranění duplicitního kódu)</li>
+                        </ul>
+                    </div>
+                </div>
+                <!-- 2025-12-26 -->
+                <div class="changelog-entry">
+                    <div class="changelog-date">26. 12. 2025</div>
+                    <div class="changelog-version">v12</div>
+                    <div class="changelog-content">
+                        <h4>🔧 Opravy</h4>
+                        <ul>
+                            <li><strong>Admin panel:</strong> Opravena inicializace - duplicitní deklarace
+                                <code>API_URL</code> a <code>selectedImage</code>
+                            </li>
+                            <li><strong>Admin panel:</strong> Opravena race condition při <code>DOMContentLoaded</code>
+                            </li>
+                            <li><strong>Login tlačítko:</strong> Opraveno zobrazení na stránce "O nás" - chyběly auth
+                                skripty</li>
+                            <li><strong>Uživatelé:</strong> Opravena chyba při načítání (403 error handling)</li>
+                            <li><strong>Role middleware:</strong> Case-insensitive kontrola (SUPERADMIN == superadmin)
+                            </li>
+                        </ul>
+                        <h4>🆕 Nové funkce</h4>
+                        <ul>
+                            <li><strong>Changelog:</strong> Přidána sekce Changelog do admin panelu</li>
+                            <li><strong>Verzování:</strong> Centralizované verzování přes <code>version.js</code> -
+                                APP_VERSION</li>
+                        </ul>
+                        <h4>♻️ Refaktoring</h4>
+                        <ul>
+                            <li>Extrakce <code>utils.js</code> - společné utility funkce (escapeHtml, debounce,
+                                throttle)</li>
+                            <li>Extrakce admin modulů: <code>admin-users.js</code>, <code>admin-blicak.js</code>,
+                                <code>admin-puzzle-racer.js</code>
+                            </li>
+                            <li>Snížení inline JS v admin.html z ~640 na ~60 řádků</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- 2025-12-25 -->
+                <div class="changelog-entry">
+                    <div class="changelog-date">25. 12. 2025</div>
+                    <div class="changelog-version">v10</div>
+                    <div class="changelog-content">
+                        <h4>🆕 Nové funkce</h4>
+                        <ul>
+                            <li><strong>Kalendář událostí:</strong> Kompletní správa událostí - turnaje, tréninky,
+                                soustředění</li>
+                            <li><strong>Admin Events:</strong> Nový modul pro správu kalendáře v admin panelu</li>
+                            <li><strong>Event tags:</strong> Šachově-specifické tagy (věková kategorie, tempo, typ)</li>
+                        </ul>
+                        <h4>♻️ Refaktoring</h4>
+                        <ul>
+                            <li>Separace admin-core.js pro sdílenou funkcionalitu</li>
+                            <li>URL hash persistence pro admin taby</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- 2025-12-27 -->
+                <div class="changelog-entry">
+                    <div class="changelog-date">27. 12. 2025</div>
+                    <div class="changelog-version">v9</div>
+                    <div class="changelog-content">
+                        <h4>🆕 Nové funkce</h4>
+                        <ul>
+                            <li><strong>Autoři:</strong> Podpora pro autory a spoluautory článků</li>
+                            <li><strong>Admin editor:</strong> Výběr autora z registrovaných uživatelů</li>
+                            <li><strong>Statistiky:</strong> Počítadlo zobrazení pro články</li>
+                            <li><strong>Nastavení:</strong> Možnost volby zobrazovaného jména (Profil / Přezdívka)</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- 2025-12-12 -->
+                <div class="changelog-entry">
+                    <div class="changelog-date">12. 12. 2025</div>
+                    <div class="changelog-version">v8</div>
+                    <div class="changelog-content">
+                        <h4>🔧 Opravy</h4>
+                        <ul>
+                            <li><strong>Game Viewer:</strong> Opravena výška šachovnice a notace na mobilu</li>
+                            <li><strong>Caching:</strong> Cache busting pro produkční prostředí</li>
+                            <li><strong>Server:</strong> Graceful shutdown při deploymentu</li>
+                        </ul>
+                        <h4>🆕 Nové funkce</h4>
+                        <ul>
+                            <li><strong>Puzzle Racer:</strong> Rozlišení vanilla/thematic módů</li>
+                            <li><strong>Game Recorder:</strong> Nahrávání vlastních partií</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- 2025-12-11 -->
+                <div class="changelog-entry">
+                    <div class="changelog-date">11. 12. 2025</div>
+                    <div class="changelog-version">v7</div>
+                    <div class="changelog-content">
+                        <h4>🆕 Nové funkce</h4>
+                        <ul>
+                            <li><strong>Galerie:</strong> Lightbox s navigací mezi fotkami</li>
+                            <li><strong>Admin galerie:</strong> Batch operace - mazání více obrázků najednou</li>
+                            <li><strong>Captions:</strong> Zobrazení skutečných popisků místo placeholderů</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Starší -->
+                <div class="changelog-entry">
+                    <div class="changelog-date">Starší verze</div>
+                    <div class="changelog-version">v1-6</div>
+                    <div class="changelog-content">
+                        <ul>
+                            <li>Počáteční vývoj webu</li>
+                            <li>Admin panel pro správu novinek</li>
+                            <li>WYSIWYG editor</li>
+                            <li>Přehrávač partií z Chess.com</li>
+                            <li>Puzzle Racer hra</li>
+                            <li>Foto galerie s kategoriemi</li>
+                            <li>Autentizace a správa uživatelů</li>
+                            <li>Blicák turnaj s registrací</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+    <!-- Member Modal -->
+    <div id="memberModal" class="modal-overlay" style="display: none;">
+        <div class="modal-content" style="width: 500px;">
+            <h2 id="memberModalTitle" style="margin-top: 0;">Nový člen</h2><input type="hidden" id="memberId">
+            <div class="form-group"><label>Jméno *</label><input type="text" id="memberFirstName" placeholder="Jan">
+            </div>
+            <div class="form-group"><label>Příjmení *</label><input type="text" id="memberLastName" placeholder="Novák">
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                <div class="form-group"><label>ELO</label><input type="number" id="memberElo"></div>
+                <div class="form-group"><label>Titul</label><input type="text" id="memberTitle" placeholder="Např. FM">
+                </div>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                <div class="form-group"><label>Rok narození</label><input type="number" id="memberBirthYear"></div>
+                <div class="form-group"><label>Role</label><input type="text" id="memberRole"
+                        placeholder="Např. Předseda"></div>
+            </div>
+            <div style="display: flex; gap: 1rem; justify-content: flex-end; margin-top: 1rem;">
+                <button class="btn-secondary" onclick="closeMemberModal()">Zrušit</button><button class="btn-primary"
+                    onclick="saveMember()">Uložit</button>
+            </div>
+        </div>
+    </div>
+    <!-- Chessboard.js & Dependencies -->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.css">
+    <script src="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
+
+    <script src="js/config.js"></script>
+    <script src="js/utils.js"></script>
+    <script src="js/diagram-viewer.js"></script>
+    <script src="js/admin/admin-core.js?v=ux12"></script>
+    <script src="js/admin/admin-gallery.js?v=ux12"></script>
+    <script src="js/admin/admin-wysiwyg.js?v=ux12"></script>
+    <script src="js/admin/admin-slash-commands.js?v=ux1"></script>
+    <script src="js/admin/admin-content-images.js?v=ux12"></script>
+    <script src="js/admin/admin-thumbnail.js?v=ux12"></script>
+    <script src="js/admin/admin-news.js?v=ux12"></script>
+    <script src="js/admin/admin-news-modals.js?v=ux12"></script>
+    <script src="js/admin/admin-members.js?v=ux12"></script>
+    <script src="js/admin/admin-messages.js?v=ux12"></script>
+    <script src="js/admin/admin-competitions.js?v=ux12"></script>
+    <script src="js/admin/admin-games.js?v=ux12"></script>
+    <script src="js/admin/admin-events.js?v=ux12"></script>
+    <script src="js/admin/admin-timeline.js"></script>
+    <script src="js/admin/admin-sidebar.js"></script>
+    <script src="js/admin/admin-users.js?v=ux12"></script>
+    <script src="js/admin/admin-blicak.js?v=ux12"></script>
+    <script src="js/admin/admin-puzzle-racer.js?v=ux12"></script>
+    <script src="js/admin/admin-chessdb.js?v=ux12"></script>
+    <script src="js/admin/admin-dashboard.js?v=ux12"></script>
+    <!-- All admin functionality moved to modular JS files in js/admin/ -->
+
+    <!-- Recorded Games Picker Modal -->
+    <div id="recordedGamesModal" class="admin-modal-overlay" style="display: none;">
+        <div class="admin-modal-box" style="max-width: 600px;">
+            <div class="admin-modal-head">
+                <h3><i class="fa-solid fa-database"></i> Vybrat partii z databáze</h3>
+                <button onclick="closeRecordedGamesModal()" class="close-btn">&times;</button>
+            </div>
+            <div id="recordedGamesList" style="max-height: 60vh; overflow-y: auto; padding: 1rem;">
+                <p style="color: var(--text-muted); text-align: center;"><i class="fa-solid fa-spinner fa-spin"></i>
+                    Načítám...</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- PGN Paste Modal for News Editor -->
+    <div id="newsGamePgnModal" class="admin-modal-overlay" style="display: none;">
+        <div class="admin-modal-box" style="max-width: 560px;">
+            <div class="admin-modal-head">
+                <h3 style="color: #4ade80;"><i class="fa-solid fa-file-code"></i> Vložit PGN</h3>
+                <button onclick="closeNewsGamePgnModal()" class="close-btn">&times;</button>
+            </div>
+            <div style="padding: 1.25rem;">
+                <p style="color: var(--text-muted); font-size: 0.85rem; margin: 0 0 0.75rem 0;">
+                    Vložte PGN nebo nahrajte soubor. Jméno hráčů se načte automaticky.
+                </p>
+
+                <!-- Drop zone / textarea -->
+                <div id="pgnDropZone" style="position: relative;">
+                    <textarea id="newsGamePgnText" rows="10"
+                        placeholder="[Event &quot;...&quot;]&#10;[White &quot;Bílý&quot;]&#10;[Black &quot;Černý&quot;]&#10;&#10;1. e4 e5 2. Nf3..."
+                        style="width: 100%; font-family: monospace; font-size: 0.85rem; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; padding: 0.75rem; color: #e0e0e0; resize: vertical;"></textarea>
+                    <div id="pgnDropOverlay"
+                        style="display: none; position: absolute; inset: 0; background: rgba(16, 185, 129, 0.2); border: 2px dashed #4ade80; border-radius: 6px; align-items: center; justify-content: center; color: #4ade80; font-weight: 600;">
+                        <i class="fa-solid fa-file-arrow-down" style="font-size: 2rem;"></i>
+                    </div>
+                </div>
+
+                <!-- File upload -->
+                <div style="display: flex; gap: 0.5rem; margin-top: 0.75rem; align-items: center;">
+                    <input type="file" id="pgnFileInput" accept=".pgn,.txt" style="display: none;"
+                        onchange="handlePgnFileUpload(event)">
+                    <button type="button" class="btn-secondary btn-small"
+                        onclick="document.getElementById('pgnFileInput').click()" style="padding: 0.4rem 0.8rem;">
+                        <i class="fa-solid fa-upload"></i> Nahrát soubor
+                    </button>
+                    <span style="font-size: 0.75rem; color: var(--text-muted);">.pgn nebo .txt</span>
+                </div>
+
+                <div style="display: flex; gap: 0.5rem; justify-content: flex-end; margin-top: 1rem;">
+                    <button onclick="closeNewsGamePgnModal()" class="btn-secondary">Zrušit</button>
+                    <button onclick="addGameFromPgn()" class="btn-primary" style="background: #4ade80; color: #000;"><i
+                            class="fa-solid fa-plus"></i> Přidat</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Header/Separator Modal -->
+    <div id="headerModal" class="admin-modal-overlay" style="display: none;">
+        <div class="admin-modal-box" style="max-width: 400px;">
+            <div class="admin-modal-head">
+                <h3 style="color: var(--primary-color);"><i class="fa-solid fa-heading"></i> Přidat oddělovač</h3>
+                <button onclick="closeHeaderModal()" class="close-btn">&times;</button>
+            </div>
+            <div style="padding: 1.25rem;">
+                <input type="text" id="headerTitleModal" placeholder="Např. A tým, B tým..."
+                    style="width: 100%; font-size: 0.9rem; padding: 0.5rem;">
+                <div style="display: flex; gap: 0.5rem; justify-content: flex-end; margin-top: 1rem;">
+                    <button onclick="closeHeaderModal()" class="btn-secondary">Zrušit</button>
+                    <button onclick="addHeaderFromModal()" class="btn-primary"><i class="fa-solid fa-plus"></i>
+                        Přidat</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Admin modules already loaded at lines 1762-1767, DO NOT duplicate here -->
+    <!-- Legacy Admin Script -->
+    <!-- <script src="js/admin.js" defer></script> -->
+</body>
+
+
+</html>
