@@ -233,10 +233,93 @@ body.has-sidebar .admin-container {
   border-radius: 6px;
   cursor: pointer;
   font-size: 1.05rem;
+  align-items: center;
+  justify-content: center;
 }
 
 .sidebar-toggle:hover {
   background: var(--sidebar-hover);
+}
+
+/* Desktop collapse toggle — visible on desktop/tablet */
+@media (min-width: 768px) {
+  .sidebar-toggle--desktop {
+    display: inline-flex;
+  }
+  .sidebar-toggle--mobile {
+    display: none;
+  }
+}
+
+/* Mobile hamburger — visible only on mobile */
+@media (max-width: 767px) {
+  .sidebar-toggle--mobile {
+    display: inline-flex;
+  }
+  .sidebar-toggle--desktop {
+    display: none;
+  }
+}
+
+/* ===== Collapsed sidebar state (desktop/tablet) ===== */
+@media (min-width: 768px) {
+  body.sidebar-collapsed {
+    --sidebar-width: 64px;
+  }
+  body.sidebar-collapsed .admin-sidebar {
+    padding: 1rem 0.4rem 0.75rem;
+  }
+  body.sidebar-collapsed .sidebar-brand-title,
+  body.sidebar-collapsed .sidebar-brand-sub,
+  body.sidebar-collapsed .sidebar-group-label,
+  body.sidebar-collapsed .admin-sidebar .nav-tab span {
+    display: none;
+  }
+  body.sidebar-collapsed .admin-sidebar .nav-tab {
+    justify-content: center;
+    padding: 0.65rem 0.4rem;
+  }
+  body.sidebar-collapsed .admin-sidebar .nav-tab i {
+    font-size: 1.05rem;
+  }
+  body.sidebar-collapsed .sidebar-brand {
+    padding: 0 0.25rem 0.75rem;
+    text-align: center;
+  }
+  body.sidebar-collapsed .sidebar-brand::before {
+    content: "\f441";
+    font-family: "Font Awesome 6 Free";
+    font-weight: 900;
+    font-size: 1.2rem;
+    color: var(--primary-color);
+    display: block;
+  }
+  body.sidebar-collapsed .sidebar-group {
+    padding-top: 0.5rem;
+    border-top: 1px solid var(--sidebar-border);
+  }
+  body.sidebar-collapsed .sidebar-group:first-child {
+    border-top: none;
+    padding-top: 0;
+  }
+  /* Tooltip on hover for collapsed items */
+  body.sidebar-collapsed .admin-sidebar .nav-tab:hover::after {
+    content: attr(data-label);
+    position: absolute;
+    left: 100%;
+    margin-left: 0.5rem;
+    top: 50%;
+    transform: translateY(-50%);
+    padding: 0.4rem 0.7rem;
+    background: #1e293b;
+    color: #fff;
+    font-size: 0.75rem;
+    border-radius: 4px;
+    white-space: nowrap;
+    z-index: 1000;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  }
+  body.sidebar-collapsed .admin-sidebar .nav-tab { position: relative; }
 }
 
 /* Hide legacy admin-header + admin-nav wrappers when sidebar layout is active */
@@ -262,68 +345,10 @@ body.has-sidebar .admin-container > .admin-nav {
   pointer-events: auto;
 }
 
-/* ---------- Tablet: icon-only collapsed sidebar ---------- */
+/* Sidebar na tabletu začíná plná — uživatel si může sbalit toggle tlačítkem
+   (body.sidebar-collapsed je definován níže ve shared desktop/tablet bloku). */
 @media (max-width: 1199px) and (min-width: 768px) {
-  :root { --sidebar-width: 64px; }
   body.has-sidebar .admin-container { padding: 1rem 1.5rem 2rem; }
-  .admin-sidebar { padding: 1rem 0.4rem 0.75rem; }
-  .sidebar-brand-title,
-  .sidebar-brand-sub,
-  .sidebar-group-label,
-  .admin-sidebar .nav-tab span,
-  .admin-sidebar .nav-tab {
-    font-size: 0;
-  }
-  .admin-sidebar .nav-tab {
-    justify-content: center;
-    padding: 0.65rem 0.4rem;
-  }
-  .admin-sidebar .nav-tab i {
-    font-size: 1.05rem;
-    width: auto;
-  }
-  .sidebar-brand {
-    padding: 0 0.25rem 0.75rem;
-    text-align: center;
-  }
-  .sidebar-brand::before {
-    content: "\f441"; /* fa-chess-knight */
-    font-family: "Font Awesome 6 Free";
-    font-weight: 900;
-    font-size: 1.2rem;
-    color: var(--primary-color);
-    display: block;
-  }
-  .sidebar-group-label {
-    display: none;
-  }
-  .sidebar-group {
-    margin-bottom: 0.25rem;
-    padding-top: 0.5rem;
-    border-top: 1px solid var(--sidebar-border);
-  }
-  .sidebar-group:first-child {
-    border-top: none;
-    padding-top: 0;
-  }
-  /* Show tooltip on hover (using title attr) */
-  .admin-sidebar .nav-tab:hover::after {
-    content: attr(data-label);
-    position: absolute;
-    left: 100%;
-    margin-left: 0.5rem;
-    top: 50%;
-    transform: translateY(-50%);
-    padding: 0.4rem 0.7rem;
-    background: #1e293b;
-    color: #fff;
-    font-size: 0.75rem;
-    border-radius: 4px;
-    white-space: nowrap;
-    z-index: 1000;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-  }
-  .admin-sidebar .nav-tab { position: relative; }
 }
 
 /* ---------- Mobile: off-canvas drawer ---------- */

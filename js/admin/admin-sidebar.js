@@ -8,11 +8,10 @@
 
     const NAV = {
         content: [
-            { tab: 'dashboard',   label: 'Přehled',      icon: 'fa-gauge-high' },
-            { tab: 'editor',      label: 'Články',       icon: 'fa-newspaper', hidden: true },
-            { tab: 'games',       label: 'Partie',       icon: 'fa-chess-board' },
-            { tab: 'timeline',    label: 'Timeline',     icon: 'fa-timeline' },
-            { tab: 'gallery',     label: 'Galerie',      icon: 'fa-images' },
+            { tab: 'dashboard',   label: 'Články & přehled', icon: 'fa-newspaper' },
+            { tab: 'games',       label: 'Partie',           icon: 'fa-chess-board' },
+            { tab: 'timeline',    label: 'Timeline',         icon: 'fa-timeline' },
+            { tab: 'gallery',     label: 'Galerie',          icon: 'fa-images' },
         ],
         community: [
             { tab: 'events',      label: 'Události',     icon: 'fa-calendar-days' },
@@ -151,6 +150,31 @@
         if (sb) sb.classList.remove('open');
         if (ov) ov.classList.remove('open');
     };
+
+    // Desktop collapse toggle (persisted to localStorage)
+    window.toggleSidebarCollapse = function () {
+        const collapsed = document.body.classList.toggle('sidebar-collapsed');
+        try { localStorage.setItem('adminSidebarCollapsed', collapsed ? '1' : '0'); } catch (e) {}
+    };
+
+    // Restore collapsed state from localStorage on init
+    try {
+        if (localStorage.getItem('adminSidebarCollapsed') === '1') {
+            document.body.classList.add('sidebar-collapsed');
+        }
+    } catch (e) {}
+
+    // Keyboard shortcut: Ctrl+B / Cmd+B to toggle
+    document.addEventListener('keydown', (e) => {
+        if ((e.ctrlKey || e.metaKey) && (e.key === 'b' || e.key === 'B')) {
+            // Don't capture if user is typing in an input/textarea/editor
+            const tag = e.target.tagName;
+            const isEditable = e.target.isContentEditable;
+            if (tag === 'INPUT' || tag === 'TEXTAREA' || isEditable) return;
+            e.preventDefault();
+            window.toggleSidebarCollapse();
+        }
+    });
 
     // Close on nav item click (mobile)
     document.addEventListener('click', (e) => {

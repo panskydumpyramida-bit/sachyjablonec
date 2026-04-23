@@ -88,7 +88,10 @@
         <!-- ===== TOPBAR ===== -->
         <div class="admin-topbar">
             <div style="display: flex; align-items: center; gap: 0.75rem;">
-                <button class="sidebar-toggle" onclick="toggleAdminSidebar()" aria-label="Menu">
+                <button class="sidebar-toggle sidebar-toggle--mobile" onclick="toggleAdminSidebar()" aria-label="Menu" title="Menu">
+                    <i class="fa-solid fa-bars"></i>
+                </button>
+                <button class="sidebar-toggle sidebar-toggle--desktop" onclick="toggleSidebarCollapse()" aria-label="Sbalit menu" title="Sbalit / rozbalit menu (Ctrl+B)">
                     <i class="fa-solid fa-bars"></i>
                 </button>
                 <h2 class="admin-topbar-title" id="currentTabTitle">
