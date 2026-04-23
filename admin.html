@@ -491,7 +491,31 @@
                                     style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; font-size: 0.85rem;"><input
                                         type="checkbox" id="publishCheck" style="width: auto;"
                                         onchange="updatePublishLabel()"><span id="publishCheckLabel">Publikovat
-                                        ihned</span></label><button type="button" class="btn-primary" id="saveNewsBtn"
+                                        ihned</span></label>
+                                <label id="shareFacebookLabel"
+                                    style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; font-size: 0.85rem; margin-top: 0.5rem;"
+                                    title="Po uložení nahraje fotky a text na Facebook stránku klubu">
+                                    <input type="checkbox" id="shareFacebookCheck" style="width: auto;" onchange="toggleFacebookMessageEditor()">
+                                    <i class="fa-brands fa-facebook" style="color: #1877f2;"></i>
+                                    <span>Sdílet na Facebook</span>
+                                    <span id="shareFacebookStatus" style="font-size: 0.75rem; color: #22c55e; display: none;">✓ již sdíleno</span>
+                                </label>
+                                <div id="facebookMessageEditor" style="display: none; margin-top: 0.5rem; padding: 0.75rem; background: rgba(24,119,242,0.08); border: 1px solid rgba(24,119,242,0.3); border-radius: 6px;">
+                                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.4rem;">
+                                        <label for="facebookMessage" style="font-size: 0.75rem; color: #93c5fd; margin: 0;">Text FB postu</label>
+                                        <button type="button" id="btnGenerateFbPost" onclick="generateFacebookPost()"
+                                            style="font-size: 0.7rem; padding: 0.3rem 0.6rem; background: linear-gradient(135deg, #8b5cf6, #6366f1); color: white; border: none; border-radius: 4px; cursor: pointer; display: inline-flex; align-items: center; gap: 0.3rem;">
+                                            <i class="fa-solid fa-wand-magic-sparkles"></i><span id="btnGenerateFbPostText">Vygenerovat AI</span>
+                                        </button>
+                                    </div>
+                                    <textarea id="facebookMessage" rows="4"
+                                        placeholder="Nech prázdné pro použití nadpisu + krátkého popisu. Nebo vygeneruj AI návrh a uprav."
+                                        style="width: 100%; font-size: 0.82rem; padding: 0.5rem; background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.15); border-radius: 4px; color: #e5e7eb; resize: vertical;"></textarea>
+                                    <div style="font-size: 0.7rem; color: #94a3b8; margin-top: 0.3rem;">
+                                        Odkaz na článek se přidá automaticky.
+                                    </div>
+                                </div>
+                                <button type="button" class="btn-primary" id="saveNewsBtn"
                                     onclick="saveNews()"
                                     style="width: 100%; margin-top: 1rem; justify-content: center;"><i
                                         class="fa-solid fa-save" id="saveNewsBtnIcon"></i><span

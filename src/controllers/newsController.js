@@ -1,4 +1,5 @@
 import { PrismaClient } from '@prisma/client';
+import { shareNewsToFacebook } from '../services/facebookService.js';
 
 const prisma = new PrismaClient();
 
@@ -304,7 +305,7 @@ const syncGalleryImages = async (galleryJson, category, newsId) => {
 
 export const createNews = async (req, res) => {
     try {
-        const { title, category, excerpt, content, thumbnailUrl, linkUrl, publishedDate, isPublished, gamesJson, teamsJson, galleryJson, introJson, authorName, coAuthorId, coAuthorName } = req.body;
+        const { title, category, excerpt, content, thumbnailUrl, linkUrl, publishedDate, isPublished, gamesJson, teamsJson, galleryJson, introJson, authorName, coAuthorId, coAuthorName, facebookMessage } = req.body;
 
         // Only title is required
         if (!title) {
@@ -344,7 +345,8 @@ export const createNews = async (req, res) => {
                 authorId: req.user ? req.user.id : null,
                 authorName: authorName || null,
                 coAuthorId: coAuthorId ? parseInt(coAuthorId) : null,
-                coAuthorName: coAuthorName || null
+                coAuthorName: coAuthorName || null,
+                facebookMessage: facebookMessage || null
             }
         });
 
@@ -368,7 +370,7 @@ export const createNews = async (req, res) => {
 export const updateNews = async (req, res) => {
     try {
         const { id } = req.params;
-        const { title, category, excerpt, content, thumbnailUrl, linkUrl, publishedDate, isPublished, gamesJson, teamsJson, galleryJson, introJson, authorId, authorName, coAuthorId, coAuthorName } = req.body;
+        const { title, category, excerpt, content, thumbnailUrl, linkUrl, publishedDate, isPublished, gamesJson, teamsJson, galleryJson, introJson, authorId, authorName, coAuthorId, coAuthorName, facebookMessage } = req.body;
 
         const updateData = {};
         if (title) {
@@ -399,6 +401,7 @@ export const updateNews = async (req, res) => {
         if (authorName !== undefined) updateData.authorName = authorName || null;
         if (coAuthorId !== undefined) updateData.coAuthorId = coAuthorId ? parseInt(coAuthorId) : null;
         if (coAuthorName !== undefined) updateData.coAuthorName = coAuthorName || null;
+        if (facebookMessage !== undefined) updateData.facebookMessage = facebookMessage || null;
 
         const news = await prisma.news.update({
             where: { id: parseInt(id) },
@@ -468,6 +471,58 @@ export const togglePublish = async (req, res) => {
     } catch (error) {
         console.error('Toggle publish error:', error);
         res.status(500).json({ error: 'Failed to toggle publish status' });
+    }
+};
+
+export const shareToFacebook = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const force = req.query.force === 'true' || req.body?.force === true;
+
+        const news = await prisma.news.findUnique({
+            where: { id: parseInt(id) }
+        });
+
+        if (!news) {
+            return res.status(404).json({ error: 'News not found' });
+        }
+
+        if (!news.isPublished) {
+            return res.status(400).json({ error: 'Article must be published before sharing to Facebook' });
+        }
+
+        if (news.facebookPostId && !force) {
+            return res.status(409).json({
+                error: 'Article already shared to Facebook',
+                facebookPostId: news.facebookPostId,
+                facebookSharedAt: news.facebookSharedAt
+            });
+        }
+
+        const { postId, photoCount } = await shareNewsToFacebook(news);
+
+        const updated = await prisma.news.update({
+            where: { id: news.id },
+            data: {
+                facebookPostId: postId,
+                facebookSharedAt: new Date()
+            },
+            select: {
+                id: true,
+                facebookPostId: true,
+                facebookSharedAt: true
+            }
+        });
+
+        res.json({ ...updated, photoCount });
+    } catch (error) {
+        console.error('[shareToFacebook] Error:', error);
+        const status = error.status >= 400 && error.status < 600 ? 502 : 500;
+        res.status(status).json({
+            error: 'Failed to share to Facebook',
+            detail: error.message,
+            fbError: error.fbError || null
+        });
     }
 };
 

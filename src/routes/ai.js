@@ -216,6 +216,88 @@ Pravidla:
 });
 
 /**
+ * POST /api/ai/generate-fb-post
+ * Generate a Facebook-friendly post from article title + excerpt + content.
+ * Returns { message } — admin edits/accepts it before saving.
+ */
+router.post('/generate-fb-post', async (req, res) => {
+    if (!OPENAI_ENABLED) {
+        return res.status(503).json({ error: 'AI není nakonfigurováno. Přidejte OPENAI_API_KEY do .env' });
+    }
+
+    try {
+        const { title, excerpt, content, category } = req.body;
+
+        if (!title || title.trim().length === 0) {
+            return res.status(400).json({ error: 'Nadpis je povinný' });
+        }
+
+        // Strip HTML tags from content for cleaner prompt input
+        const plainContent = (content || '')
+            .replace(/<[^>]+>/g, ' ')
+            .replace(/&nbsp;/g, ' ')
+            .replace(/&amp;/g, '&')
+            .replace(/\s+/g, ' ')
+            .trim()
+            .slice(0, 6000);
+
+        const systemPrompt = `Jsi social media editor šachového klubu ŠK Bižuterie Jablonec nad Nisou.
+Ze zápisu/článku připravuješ text na Facebook post pro stránku klubu.
+
+Pravidla:
+- 2–4 věty česky, přirozený mluvený tón (ne formální zpravodajství)
+- První věta = hook: něco konkrétního a lákavého (skóre, dramatický moment, výjimečný výkon)
+- Drž se faktů z článku — NIC si nevymýšlej, žádné detaily navíc
+- Pokud článek obsahuje výsledek zápasu, zahrň skóre a soupeře
+- Pokud se v článku zmiňují jména hráčů, použij je
+- Emoji střídmě: 1–2 na celý post, tematické (♟️ 🏆 💪 🔥 📅 🎉)
+- ŽÁDNÉ hashtagy (klub je lokální, působilo by to divně)
+- Zakonči odkazem na web — jemně, ne imperativně (např. „Celý zápis a partie na webu ⬇")
+- Neopisuj titulek doslova — přeformuluj
+- Vypiš POUZE text postu, bez uvozovek, bez komentáře`;
+
+        const userPrompt = `Kategorie: ${category || 'neuvedena'}
+Nadpis: ${title}
+Krátký popis: ${excerpt || '(chybí)'}
+
+Plný obsah článku:
+${plainContent || '(chybí — použij pouze nadpis a krátký popis)'}`;
+
+        const response = await fetch('https://api.openai.com/v1/chat/completions', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${OPENAI_API_KEY}`
+            },
+            body: JSON.stringify({
+                model: 'gpt-4o-mini',
+                messages: [
+                    { role: 'system', content: systemPrompt },
+                    { role: 'user', content: userPrompt }
+                ],
+                temperature: 0.7,
+                max_tokens: 400
+            })
+        });
+
+        if (!response.ok) {
+            const error = await response.json().catch(() => ({}));
+            console.error('[AI] generate-fb-post error:', error);
+            return res.status(500).json({ error: 'Chyba při volání AI' });
+        }
+
+        const data = await response.json();
+        const message = (data.choices[0]?.message?.content || '').trim();
+
+        res.json({ message });
+
+    } catch (error) {
+        console.error('[AI] generate-fb-post exception:', error);
+        res.status(500).json({ error: 'Interní chyba serveru' });
+    }
+});
+
+/**
  * GET /api/ai/status
  * Check if AI is configured
  */

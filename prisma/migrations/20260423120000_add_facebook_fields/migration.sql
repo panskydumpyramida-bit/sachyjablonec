@@ -1,0 +1,3 @@
+ALTER TABLE news ADD COLUMN IF NOT EXISTS facebook_post_id TEXT;
+ALTER TABLE news ADD COLUMN IF NOT EXISTS facebook_shared_at TIMESTAMP(3);
+ALTER TABLE news ADD COLUMN IF NOT EXISTS facebook_message TEXT;

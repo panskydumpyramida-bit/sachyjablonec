@@ -419,6 +419,7 @@ function resetEditor() {
     document.getElementById('newsDate').value = localIso;
 
     document.getElementById('publishCheck').checked = false;
+    applyFacebookShareState(null);
     document.getElementById('imageUrl').value = '';
 
     document.getElementById('newsAuthorId').value = '';
@@ -497,6 +498,10 @@ async function editNews(id) {
         document.getElementById('newsExcerpt').value = item.excerpt;
         document.getElementById('newsExcerpt').value = item.excerpt;
         document.getElementById('publishCheck').checked = item.isPublished;
+        applyFacebookShareState({
+            facebookPostId: item.facebookPostId || null,
+            category: item.category
+        });
 
         // Set authors
         // Set authors
@@ -582,6 +587,118 @@ async function editNews(id) {
     }
 }
 
+/**
+ * Reflect Facebook-share state in the publish panel UI.
+ * - For new articles (news === null): uncheck, default-check for report categories.
+ * - For edits with facebookPostId: show "již sdíleno" badge, uncheck by default.
+ * - For edits without facebookPostId: check by default for report categories.
+ */
+function applyFacebookShareState(news) {
+    const check = document.getElementById('shareFacebookCheck');
+    const status = document.getElementById('shareFacebookStatus');
+    const messageField = document.getElementById('facebookMessage');
+    if (!check) return;
+
+    if (messageField) messageField.value = news?.facebookMessage || '';
+
+    if (!news) {
+        check.checked = false;
+        check.disabled = false;
+        if (status) status.style.display = 'none';
+    } else if (news.facebookPostId) {
+        check.checked = false;
+        if (status) status.style.display = 'inline';
+    } else {
+        const reportCategories = ['zápis', 'zapis', 'report', 'reportáž', 'reportaz'];
+        const isReport = news.category && reportCategories.some(c => news.category.toLowerCase().includes(c));
+        check.checked = !!isReport;
+        if (status) status.style.display = 'none';
+    }
+
+    toggleFacebookMessageEditor();
+}
+
+function toggleFacebookMessageEditor() {
+    const check = document.getElementById('shareFacebookCheck');
+    const editor = document.getElementById('facebookMessageEditor');
+    if (!check || !editor) return;
+    editor.style.display = check.checked ? 'block' : 'none';
+}
+
+async function generateFacebookPost() {
+    const btn = document.getElementById('btnGenerateFbPost');
+    const btnText = document.getElementById('btnGenerateFbPostText');
+    const textarea = document.getElementById('facebookMessage');
+    if (!textarea) return;
+
+    const title = document.getElementById('newsTitle').value.trim();
+    if (!title) {
+        showAlert('Vyplň nejdřív nadpis článku', 'error');
+        return;
+    }
+
+    if (textarea.value.trim() && !confirm('Přepsat stávající text FB postu novým AI návrhem?')) {
+        return;
+    }
+
+    const originalText = btnText ? btnText.textContent : '';
+    if (btn) btn.disabled = true;
+    if (btnText) btnText.textContent = 'Generuji…';
+
+    try {
+        const res = await fetch(`${API_URL}/ai/generate-fb-post`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
+            body: JSON.stringify({
+                title,
+                excerpt: document.getElementById('newsExcerpt').value || '',
+                content: document.getElementById('articleContent').innerHTML || '',
+                category: document.getElementById('newsCategory').value || ''
+            })
+        });
+        const data = await res.json();
+        if (res.ok && data.message) {
+            textarea.value = data.message;
+            textarea.dispatchEvent(new Event('input'));
+            showAlert('AI návrh vygenerován — uprav podle potřeby', 'success');
+        } else {
+            showAlert(data.error || 'AI generace selhala', 'error');
+        }
+    } catch (e) {
+        console.error('[admin-news] generateFacebookPost error:', e);
+        showAlert('Chyba spojení při generování FB postu', 'error');
+    } finally {
+        if (btn) btn.disabled = false;
+        if (btnText) btnText.textContent = originalText || 'Vygenerovat AI';
+    }
+}
+
+window.toggleFacebookMessageEditor = toggleFacebookMessageEditor;
+window.generateFacebookPost = generateFacebookPost;
+
+async function shareArticleToFacebook(newsId) {
+    try {
+        const res = await fetch(`${API_URL}/news/${newsId}/share-to-facebook`, {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${authToken}` }
+        });
+        if (res.ok) {
+            return true;
+        }
+        const err = await res.json().catch(() => ({}));
+        const detail = err.detail || err.error || `HTTP ${res.status}`;
+        console.error('[admin-news] Facebook share failed:', err);
+        showAlert(`Článek uložen, ale FB post selhal: ${detail}`, 'error');
+        return false;
+    } catch (e) {
+        console.error('[admin-news] Facebook share error:', e);
+        showAlert('Článek uložen, ale FB post selhal: ' + e.message, 'error');
+        return false;
+    }
+}
+
+window.shareArticleToFacebook = shareArticleToFacebook;
+
 async function saveNews() {
     console.log('[admin-news] saveNews()');
 
@@ -642,7 +759,8 @@ async function saveNews() {
         coAuthorId: document.getElementById('newsCoAuthorId').value || null,
         coAuthorName: document.getElementById('newsCoAuthorName').value || null,
         gamesJson: JSON.stringify(games.map(g => ({ ...g, isCommented: g.commented }))),
-        galleryJson: JSON.stringify(galleryImages)
+        galleryJson: JSON.stringify(galleryImages),
+        facebookMessage: document.getElementById('facebookMessage')?.value?.trim() || null
     };
 
     // Validate required fields (ONLY Title is mandatory now)
@@ -671,8 +789,22 @@ async function saveNews() {
             }
 
             localStorage.removeItem('newsDraft'); // Clear draft to prevent duplication on reload
-            showAlert('Uloženo!', 'success');
             window.isNewsDirty = false; // Reset dirty flag
+
+            const shareFb = document.getElementById('shareFacebookCheck')?.checked;
+            const alreadyShared = !!savedArticle.facebookPostId;
+            if (shareFb && data.isPublished && !alreadyShared) {
+                showAlert('Uloženo — odesílám na Facebook…', 'success');
+                const fbOk = await shareArticleToFacebook(savedArticle.id);
+                if (fbOk) {
+                    showAlert('Uloženo a sdíleno na Facebook ✓', 'success');
+                }
+                // On failure shareArticleToFacebook already showed an error toast;
+                // article is saved, so we continue to dashboard anyway.
+            } else {
+                showAlert('Uloženo!', 'success');
+            }
+
             switchTab('dashboard');
             loadDashboard();
         } else {
