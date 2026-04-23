@@ -26,7 +26,7 @@
   padding: 2.5rem 2rem 2.8rem;
   margin-top: 70px; /* offset for fixed global header */
   overflow: hidden;
-  background: var(--bj-bg);
+  background: transparent;
   color: var(--bj-fg);
   font-family: var(--bj-font-body);
   display: flex;
