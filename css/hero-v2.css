@@ -506,11 +506,11 @@
   --bj-ease-bounce: cubic-bezier(.175, .885, .32, 1.275);
 
   position: relative;
-  padding: 4rem 2rem 3rem;
-  max-width: 1280px;
+  padding: 2.5rem 2rem 2rem;
+  max-width: 1264px;
   margin: 0 auto;
   color: var(--bj-fg);
-  background: var(--bj-bg);
+  background: transparent;
 }
 
 .about-timeline-section .about-eyebrow {
