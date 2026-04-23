@@ -178,6 +178,13 @@
   color: var(--bj-gold);
 }
 
+/* Hranatější "stavební" variant — ladí s šachovnicovým rozcestníkem */
+.hero-v2 .hero-btn--square {
+  border-radius: 6px;
+  padding: 1rem 1.6rem;
+  letter-spacing: .02em;
+}
+
 .hero-v2 .hero-stats {
   margin-top: 2.5rem;
   display: flex;
