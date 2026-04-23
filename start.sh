@@ -1,34 +1,20 @@
 #!/bin/sh
-# start.sh - Handles DB migration baselining and startup
-# Required because the production DB was previously managed by 'db push' 
-# and now we are switching to 'migrate deploy'.
+set -e
 
-echo "🚀 Starting deployment script..."
+# Railway deployment startup:
+# 1. Apply pending DB migrations (blocking — server must start with correct schema)
+# 2. Start Node server (background-triggers run AFTER server is healthy)
+# 3. Sync events seed in background AFTER server listens, so /health is ready
+#    quickly and Railway marks the deploy healthy without waiting for seeding
 
-# 1. Baseline the migrations that are ALREADY in the database structure
-# We use '|| true' to suppress errors if they are already marked applied (e.g. on second run)
-echo "📦 Baselining existing migrations..."
+echo "🔄 Running Prisma migrations..."
+npx prisma migrate deploy
 
-
-
-
-# 2. Deploy any NEW migrations (this should run the puzzle_modes migration)
-echo "🔄 Deploying pending migrations..."
-npx prisma migrate deploy || { echo "❌ Migration failed, stopping startup."; exit 1; }
-
-# 2.5 LEGACY (removed): One-time fix for competition URLs (already applied)
-# echo "🔧 Fixing competition URLs..."
-# node scripts/fix_competition.mjs || echo "⚠️ Competition fix failed, but continuing..."
-
-# 3. Sync existing games-json to Game table (for isCommented flag)
-echo "👾 Syncing games from Articles..."
-# npm run sync-games || echo "⚠️ Game sync failed, but continuing..."
-echo "⚠️ Game sync skipped for speed (data should be in DB)."
-
-# 4. Sync event data (2026 tournaments)
-echo "📅 Syncing events..."
-node scripts/sync-production-events.js || echo "⚠️ Event sync failed, but continuing..."
-
-# 5. Start the application
 echo "🟢 Starting application..."
-exec npm start
+(
+    sleep 10
+    echo "[startup] Running post-boot event sync in background..."
+    node scripts/sync-production-events.js 2>&1 | sed 's/^/[sync-events] /' || echo "[sync-events] failed (non-fatal)"
+) &
+
+exec node src/server.js
