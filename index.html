@@ -288,6 +288,8 @@
     <noscript>
         <link rel="stylesheet" href="css/auth.css?v=7">
     </noscript>
+    <link rel="stylesheet" href="css/hero-v2.css">
+    <script src="js/hero-v2.js" defer></script>
     <link rel="icon" type="image/png" href="images/favicon.png">
 
     <script type="application/ld+json">
@@ -318,60 +320,79 @@
     <header id="global-header"></header>
 
     <main>
-        <section class="hero">
-            <picture class="hero-bg">
-                <source media="(min-width: 768px)" srcset="images/hero-desktop.webp" type="image/webp">
-                <img src="images/hero-mobile.webp" alt="" fetchpriority="high" loading="eager" decoding="async"
-                    width="800" height="533">
-            </picture>
+        <section class="hero-v2">
+            <div class="hero-grid">
+                <div class="hero-copy">
+                    <span class="hero-kicker">
+                        <span class="pulse"></span>Aktivní klub · Jablonec nad Nisou
+                    </span>
+                    <h1 class="hero-title">
+                        <span class="line line--1"><span>Šachový oddíl</span></span>
+                        <span class="line line--2"><span>TJ <span class="gold">Bižuterie</span></span></span>
+                        <span class="line line--3"><span>Jablonec nad Nisou</span></span>
+                    </h1>
+                    <p class="hero-sub">Tradiční klub s bohatou historií. Soutěžní partie krajských přeborů, trénink mládeže a víkendové turnaje pro všechny věkové kategorie.</p>
+                    <div class="hero-ctas">
+                        <a href="/about.html" class="hero-btn hero-btn--primary">
+                            <i class="fa-solid fa-user-plus"></i> Přijďte mezi nás
+                        </a>
+                        <a href="/calendar.html" class="hero-btn hero-btn--ghost">
+                            <i class="fa-solid fa-calendar"></i> Rozpis zápasů
+                        </a>
+                    </div>
+                    <div class="hero-stats">
+                        <div class="hero-stat"><strong>70+</strong><span>aktivních členů</span></div>
+                        <div class="hero-stat"><strong>4</strong><span>družstva v KP</span></div>
+                        <div class="hero-stat"><strong>50+</strong><span>let tradice</span></div>
+                    </div>
+                </div>
+                <div class="hero-stage">
+                    <div class="board-scene">
+                        <div class="board" id="hero-board"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
 
+        <!-- Původní 2x2 navigační dlaždice přesunuté pod nový hero -->
+        <section class="hero-tiles">
+            <div class="hero-grid">
+                <!-- Aktuality - Light square (top-left) -->
+                <a href="#news" class="hero-grid-item light">
+                    <i class="fa-solid fa-newspaper" style="color: #5d4037;"></i>
+                    <span>Aktuality</span>
+                </a>
 
-            <div class="container hero-content">
-
-                <h1><a href="/about" style="text-decoration: none; color: inherit;">Šachový oddíl<br>TJ Bižuterie
-                        Jablonec</a></h1>
-
-                <!-- Chess Board 2x2 Navigation -->
-                <div class="hero-grid">
-
-                    <!-- Aktuality - Light square (top-left) -->
-                    <a href="#news" class="hero-grid-item light">
-                        <i class="fa-solid fa-newspaper" style="color: #5d4037;"></i>
-                        <span>Aktuality</span>
-                    </a>
-
-                    <!-- 3D Rotating Schedule Tile - Dark square (top-right) -->
-                    <div id="match-rotator-tile"
-                        style="perspective: 1000px; aspect-ratio: 1; cursor: pointer; overflow: hidden; border-radius: 0;">
-                        <div class="rotator-inner"
-                            style="position: relative; width: 100%; height: 100%; transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1); transform-style: preserve-3d;">
-                            <!-- Front Face -->
-                            <div class="hero-grid-item dark face-front"
-                                style="position: absolute; inset: 0; backface-visibility: hidden; z-index: 2; border: none; background: rgba(30, 30, 50, 0.85);">
-                                <i class="fa-solid fa-chess-king" style="color: var(--primary-color);"></i>
-                                <span>Rozpis zápasů</span>
-                            </div>
-                            <!-- Back Face -->
-                            <div class="hero-grid-item dark face-back"
-                                style="position: absolute; inset: 0; backface-visibility: hidden; transform: rotateY(180deg); background: linear-gradient(135deg, rgba(40,40,60,0.95) 0%, rgba(20,20,35,0.9) 100%); overflow: hidden; padding: 0.3rem; border: 1px solid rgba(212,175,55,0.3);">
-                                <!-- Content injected by JS -->
-                            </div>
+                <!-- 3D Rotating Schedule Tile - Dark square (top-right) -->
+                <div id="match-rotator-tile"
+                    style="perspective: 1000px; aspect-ratio: 1; cursor: pointer; overflow: hidden; border-radius: 0;">
+                    <div class="rotator-inner"
+                        style="position: relative; width: 100%; height: 100%; transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1); transform-style: preserve-3d;">
+                        <!-- Front Face -->
+                        <div class="hero-grid-item dark face-front"
+                            style="position: absolute; inset: 0; backface-visibility: hidden; z-index: 2; border: none; background: rgba(30, 30, 50, 0.85);">
+                            <i class="fa-solid fa-chess-king" style="color: var(--primary-color);"></i>
+                            <span>Rozpis zápasů</span>
+                        </div>
+                        <!-- Back Face -->
+                        <div class="hero-grid-item dark face-back"
+                            style="position: absolute; inset: 0; backface-visibility: hidden; transform: rotateY(180deg); background: linear-gradient(135deg, rgba(40,40,60,0.95) 0%, rgba(20,20,35,0.9) 100%); overflow: hidden; padding: 0.3rem; border: 1px solid rgba(212,175,55,0.3);">
+                            <!-- Content injected by JS -->
                         </div>
                     </div>
-
-                    <!-- Blicák - Dark square (bottom-left) -->
-                    <a href="/blicak" class="hero-grid-item dark">
-                        <i class="fa-solid fa-bolt" style="color: var(--primary-color);"></i>
-                        <span>Blicák</span>
-                    </a>
-
-                    <!-- Mládež - Light square (bottom-right) -->
-                    <a href="youth.html" class="hero-grid-item light">
-                        <i class="fa-solid fa-child" style="color: #5d4037;"></i>
-                        <span>Mládež</span>
-                    </a>
                 </div>
 
+                <!-- Blicák - Dark square (bottom-left) -->
+                <a href="/blicak" class="hero-grid-item dark">
+                    <i class="fa-solid fa-bolt" style="color: var(--primary-color);"></i>
+                    <span>Blicák</span>
+                </a>
+
+                <!-- Mládež - Light square (bottom-right) -->
+                <a href="youth.html" class="hero-grid-item light">
+                    <i class="fa-solid fa-child" style="color: #5d4037;"></i>
+                    <span>Mládež</span>
+                </a>
             </div>
         </section>
 
