@@ -218,28 +218,8 @@
             border-color: rgba(212, 175, 55, .15)
         }
 
-        .section-title {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-            font-size: 1.15rem;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: .08em;
-            margin: 1.4rem 0 1.2rem;
-            padding: 0;
-            color: #e5e7eb;
-        }
-
-        .section-title::after {
-            content: '';
-            flex: 1;
-            height: 1px;
-            background: linear-gradient(90deg, rgba(212, 175, 55, .45), rgba(212, 175, 55, 0));
-        }
-
         #news {
-            padding-top: 0;
+            padding-top: 0.5rem;
         }
 
         footer {
@@ -247,12 +227,6 @@
             padding: 2.5rem 0 1.5rem;
             margin-top: 2.5rem;
             border-top: 1px solid rgba(255, 255, 255, .05);
-        }
-
-        .card-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 1.5rem;
         }
 
         @media(max-width:768px) {
