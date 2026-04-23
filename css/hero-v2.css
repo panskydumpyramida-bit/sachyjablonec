@@ -422,12 +422,12 @@
 
 .hero-v2.hero-v2--about {
   min-height: auto;
-  padding: 5rem 2rem 4rem;
+  padding: 2.5rem 2rem 2.5rem;
 }
 
 .hero-v2.hero-v2--about .hero-grid {
   grid-template-columns: 1fr;
-  max-width: 900px;
+  max-width: 1200px;
   text-align: left;
 }
 
