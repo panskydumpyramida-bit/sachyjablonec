@@ -1,0 +1,260 @@
+<!--
+  Admin Dashboard Prototyp — Šachy Jablonec
+  Otevřít přímo v prohlížeči nebo zkopírovat do Stitch.
+  Ukazuje: stat karty, quick actions (pills), activity feed.
+-->
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Dashboard Prototyp</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Inter', system-ui, sans-serif; background: #0f172a; color: #e2e8f0; min-height: 100vh; }
+
+  .dashboard { max-width: 1200px; margin: 0 auto; padding: 1.5rem; }
+
+  /* --- Header Banner --- */
+  .dash-header {
+    background: linear-gradient(135deg, #1a1f2e, #111827);
+    border-radius: 12px; padding: 1.25rem 1.5rem;
+    border-left: 4px solid #d4af37;
+    border: 1px solid rgba(212,175,55,0.15);
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 1.5rem;
+  }
+  .dash-header h1 { font-size: 1.25rem; color: #d4af37; font-weight: 700; }
+  .dash-header p { font-size: 0.8rem; color: #64748b; margin-top: 0.15rem; }
+
+  /* --- Stat Cards --- */
+  .stats-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 0.75rem; margin-bottom: 1.5rem;
+  }
+  .stat-card {
+    background: linear-gradient(135deg, rgba(30,30,40,0.95), rgba(20,20,30,0.98));
+    border-radius: 12px; padding: 1rem;
+    display: flex; align-items: center; gap: 0.75rem;
+    border: 1px solid rgba(255,255,255,0.06);
+    position: relative; overflow: hidden;
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+  .stat-card:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.3); }
+  .stat-card::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+    background: var(--accent); opacity: 0.8;
+  }
+  .stat-icon {
+    width: 40px; height: 40px; border-radius: 10px;
+    background: rgba(255,255,255,0.05);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.1rem; color: var(--accent);
+  }
+  .stat-value { font-size: 1.5rem; font-weight: 700; line-height: 1; }
+  .stat-label { font-size: 0.75rem; color: #64748b; text-transform: uppercase; letter-spacing: 0.04em; margin-top: 0.15rem; }
+
+  /* --- Main Layout --- */
+  .dash-main {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 1.25rem;
+    align-items: start;
+  }
+  @media (max-width: 768px) {
+    .dash-main { grid-template-columns: 1fr; }
+  }
+
+  /* --- Quick Actions Panel --- */
+  .quick-panel {
+    background: #1e293b; border-radius: 12px; padding: 1rem;
+    border: 1px solid rgba(255,255,255,0.06);
+    min-width: 200px;
+  }
+  .panel-title {
+    font-size: 0.75rem; color: #d4af37; text-transform: uppercase;
+    letter-spacing: 0.05em; margin-bottom: 0.75rem;
+    display: flex; align-items: center; gap: 0.4rem;
+  }
+  .pills {
+    display: flex; flex-direction: column; gap: 0.4rem;
+  }
+  .pill {
+    display: flex; align-items: center; gap: 0.5rem;
+    padding: 0.5rem 0.85rem;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 8px; cursor: pointer;
+    transition: all 0.15s; color: #e2e8f0; font-size: 0.82rem;
+    text-decoration: none;
+  }
+  .pill:hover {
+    background: rgba(212,175,55,0.1);
+    border-color: rgba(212,175,55,0.3);
+  }
+  .pill:active { transform: scale(0.97); }
+  .pill i { color: #d4af37; font-size: 0.85rem; width: 16px; text-align: center; }
+
+  /* --- Activity Feed --- */
+  .activity-panel {
+    background: #1e293b; border-radius: 12px; padding: 1rem;
+    border: 1px solid rgba(255,255,255,0.06);
+  }
+  .activity-list { display: flex; flex-direction: column; gap: 0.35rem; }
+  .activity-item {
+    display: flex; gap: 0.65rem; padding: 0.6rem 0.75rem;
+    border-radius: 8px; border-left: 3px solid transparent;
+    transition: all 0.15s; cursor: pointer;
+  }
+  .activity-item:hover {
+    background: rgba(255,255,255,0.03);
+    border-left-color: #d4af37;
+    transform: translateX(2px);
+  }
+  .activity-avatar {
+    width: 32px; height: 32px; border-radius: 8px;
+    background: rgba(96,165,250,0.15);
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; color: #60a5fa; font-size: 0.8rem;
+  }
+  .activity-avatar.comment { background: rgba(251,191,36,0.15); color: #fbbf24; }
+  .activity-avatar.article { background: rgba(34,197,94,0.15); color: #22c55e; }
+  .activity-body { flex: 1; min-width: 0; }
+  .activity-author { font-weight: 600; font-size: 0.82rem; }
+  .activity-text {
+    font-size: 0.78rem; color: #94a3b8;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    margin-top: 0.1rem;
+  }
+  .activity-meta {
+    display: flex; gap: 0.75rem; font-size: 0.7rem; color: #64748b;
+    margin-top: 0.25rem;
+  }
+  .activity-meta a { color: #60a5fa; text-decoration: none; }
+</style>
+</head>
+<body>
+<div class="dashboard">
+
+  <!-- Header -->
+  <div class="dash-header">
+    <div>
+      <h1><i class="fa-solid fa-chess-knight" style="margin-right:0.4rem"></i> Administrace</h1>
+      <p>TJ Bižuterie Jablonec &bull; v32</p>
+    </div>
+    <div style="display:flex;gap:0.75rem;font-size:0.85rem;">
+      <a href="#" style="color:#fbbf24;text-decoration:none;"><i class="fa-solid fa-book"></i> Manuál</a>
+      <a href="#" style="color:#e2e8f0;text-decoration:none;"><i class="fa-solid fa-external-link-alt"></i> Web</a>
+      <a href="#" style="color:#fca5a5;text-decoration:none;"><i class="fa-solid fa-sign-out-alt"></i> Odhlásit</a>
+    </div>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats-row">
+    <div class="stat-card" style="--accent:#d4af37">
+      <div class="stat-icon"><i class="fa-solid fa-newspaper"></i></div>
+      <div><div class="stat-value">97</div><div class="stat-label">Články</div></div>
+    </div>
+    <div class="stat-card" style="--accent:#60a5fa">
+      <div class="stat-icon"><i class="fa-solid fa-comments"></i></div>
+      <div><div class="stat-value">234</div><div class="stat-label">Komentáře</div></div>
+    </div>
+    <div class="stat-card" style="--accent:#22c55e">
+      <div class="stat-icon"><i class="fa-solid fa-users"></i></div>
+      <div><div class="stat-value">48</div><div class="stat-label">Uživatelé</div></div>
+    </div>
+    <div class="stat-card" style="--accent:#f59e0b">
+      <div class="stat-icon"><i class="fa-solid fa-chess-board"></i></div>
+      <div><div class="stat-value">156</div><div class="stat-label">Partie</div></div>
+    </div>
+    <div class="stat-card" style="--accent:#a78bfa">
+      <div class="stat-icon"><i class="fa-solid fa-calendar"></i></div>
+      <div><div class="stat-value">17</div><div class="stat-label">Události</div></div>
+    </div>
+  </div>
+
+  <!-- Main: Quick Actions + Activity -->
+  <div class="dash-main">
+
+    <!-- Quick Actions -->
+    <div class="quick-panel">
+      <div class="panel-title"><i class="fa-solid fa-bolt"></i> Rychlé akce</div>
+      <div class="pills">
+        <a class="pill"><i class="fa-solid fa-plus"></i> Nový článek</a>
+        <a class="pill"><i class="fa-solid fa-chess"></i> Přidat partii</a>
+        <a class="pill"><i class="fa-regular fa-calendar-plus"></i> Nová událost</a>
+        <a class="pill"><i class="fa-regular fa-images"></i> Galerie</a>
+        <a class="pill"><i class="fa-solid fa-sync"></i> Aktualizovat tabulky</a>
+        <a class="pill"><i class="fa-solid fa-file-pdf"></i> Skenovat přihlášky</a>
+        <a class="pill"><i class="fa-solid fa-eye"></i> Zobrazit web</a>
+      </div>
+    </div>
+
+    <!-- Activity Feed -->
+    <div class="activity-panel">
+      <div class="panel-title"><i class="fa-solid fa-clock-rotate-left"></i> Nedávná aktivita</div>
+      <div class="activity-list">
+        <div class="activity-item">
+          <div class="activity-avatar comment"><i class="fa-solid fa-comment"></i></div>
+          <div class="activity-body">
+            <div class="activity-author">Antonín Duda</div>
+            <div class="activity-text">Turnaj se vážně podařil, díky všem co dorazili!</div>
+            <div class="activity-meta">
+              <a href="#">Jablonecké Velikonoční vejce 2026</a>
+              <span>před 1 dnem</span>
+            </div>
+          </div>
+        </div>
+        <div class="activity-item">
+          <div class="activity-avatar comment"><i class="fa-solid fa-comment"></i></div>
+          <div class="activity-body">
+            <div class="activity-author">MartinV</div>
+            <div class="activity-text">Děkuji za velice příjemný turnaj. Krásné zpříjemnění pracovního týdne...</div>
+            <div class="activity-meta">
+              <a href="#">Jablonecké Velikonoční vejce 2026</a>
+              <span>před 2 dny</span>
+            </div>
+          </div>
+        </div>
+        <div class="activity-item">
+          <div class="activity-avatar comment"><i class="fa-solid fa-comment"></i></div>
+          <div class="activity-body">
+            <div class="activity-author">Antonín Duda</div>
+            <div class="activity-text">Super článek a pěkný skalp Filipe :)</div>
+            <div class="activity-meta">
+              <a href="#">KP 5, B-tým: slepená sestava důstojným soupeřem Turnova</a>
+              <span>1. 2. 2026</span>
+            </div>
+          </div>
+        </div>
+        <div class="activity-item">
+          <div class="activity-avatar article"><i class="fa-solid fa-pen"></i></div>
+          <div class="activity-body">
+            <div class="activity-author">Filip Zadražil</div>
+            <div class="activity-text">Nový článek publikován</div>
+            <div class="activity-meta">
+              <a href="#">KP 5, B-tým: slepená sestava důstojným soupeřem</a>
+              <span>31. 1. 2026</span>
+            </div>
+          </div>
+        </div>
+        <div class="activity-item">
+          <div class="activity-avatar comment"><i class="fa-solid fa-comment"></i></div>
+          <div class="activity-body">
+            <div class="activity-author">Antonín Duda</div>
+            <div class="activity-text">Šťastné a veselé!</div>
+            <div class="activity-meta">
+              <a href="#">Krásné prožití vánočních svátků</a>
+              <span>23. 12. 2025</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+</body>
+</html>

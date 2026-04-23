@@ -310,7 +310,7 @@
 
 .hero-v2 .piece i {
   /* FontAwesome chess icons — uniform sizing across all platforms */
-  font-size: clamp(22px, 3.5vw, 42px);
+  font-size: clamp(18px, 4vw, 42px);
   line-height: 1;
   filter: drop-shadow(0 3px 4px rgba(0, 0, 0, .5));
 }
@@ -432,11 +432,13 @@
   .hero-v2 .hero-stat strong { font-size: 1.4rem; }
   .hero-v2 .hero-stat span { font-size: .62rem; }
   .hero-v2 .hero-kicker { font-size: .65rem; padding: .3rem .7rem; }
+  .hero-v2 .hero-stage { max-width: 280px; }
 }
 
 @media (max-width: 420px) {
   .hero-v2 .hero-stats { flex-wrap: wrap; gap: 1rem 1.3rem; }
   .hero-v2 .hero-stat { flex: 0 0 auto; }
+  .hero-v2 .hero-stage { max-width: 240px; }
 }
 
 @media (prefers-reduced-motion: reduce) {

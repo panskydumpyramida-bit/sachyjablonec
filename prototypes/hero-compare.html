@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<title>Hero Redesign — v1 vs v2 porovnání</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<style>
+:root {
+    --gold: #d4af37;
+    --bg: #0a0a0a;
+    --surface: #1a1a1a;
+    --border: rgba(255,255,255,0.08);
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+    font-family: 'Inter', system-ui, sans-serif;
+    background: var(--bg);
+    color: #e2e8f0;
+    line-height: 1.5;
+    padding: 2rem;
+}
+.header {
+    max-width: 1400px;
+    margin: 0 auto 2rem;
+    text-align: center;
+}
+.header h1 {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: 2rem;
+    color: var(--gold);
+    margin-bottom: 0.5rem;
+}
+.header p { color: #94a3b8; font-size: 0.95rem; }
+.compare {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+    max-width: 1800px;
+    margin: 0 auto;
+}
+@media (max-width: 1200px) {
+    .compare { grid-template-columns: 1fr; }
+}
+.col {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+}
+.col-header {
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.col-header h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.25rem;
+}
+.col-header .badge {
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+}
+.badge.v1 { background: rgba(239, 68, 68, 0.15); color: #ef4444; border: 1px solid rgba(239,68,68,0.3); }
+.badge.v2 { background: rgba(74, 222, 128, 0.15); color: #4ade80; border: 1px solid rgba(74,222,128,0.3); }
+.col-frame {
+    width: 100%;
+    height: 800px;
+    border: none;
+    background: #0b0b0e;
+}
+.col-meta {
+    padding: 1rem 1.5rem;
+    background: rgba(0,0,0,0.3);
+    border-top: 1px solid var(--border);
+    font-size: 0.85rem;
+}
+.col-meta ul {
+    list-style: none;
+    padding: 0;
+    margin: 0.5rem 0 0;
+}
+.col-meta li {
+    padding: 0.25rem 0;
+    color: #94a3b8;
+}
+.col-meta li::before {
+    content: '✓ ';
+    color: #4ade80;
+    font-weight: 700;
+}
+.col-meta .con::before {
+    content: '✗ ';
+    color: #ef4444;
+}
+.open-btn {
+    padding: 0.4rem 0.9rem;
+    background: var(--gold);
+    color: #000;
+    border-radius: 6px;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 0.85rem;
+}
+.open-btn:hover { opacity: 0.9; }
+</style>
+</head>
+<body>
+<div class="header">
+    <h1><i class="fa-solid fa-chess-knight"></i> Redesign — v1 vs v2 (split)</h1>
+    <p>v2 rozdělený: hero → index.html, o nás → about.html. Trenéři s reálnými daty.</p>
+    <div style="margin-top:1rem;display:flex;gap:0.5rem;justify-content:center;flex-wrap:wrap;">
+        <a href="/prototypes/hero-v2-only.html" target="_blank" style="padding:0.4rem 0.9rem;background:rgba(212,175,55,0.15);color:#d4af37;border:1px solid rgba(212,175,55,0.3);border-radius:6px;text-decoration:none;font-size:0.8rem;">🎯 Hero v2 (Partie)</a>
+        <a href="/prototypes/about-v2-only.html" target="_blank" style="padding:0.4rem 0.9rem;background:rgba(74,222,128,0.15);color:#4ade80;border:1px solid rgba(74,222,128,0.3);border-radius:6px;text-decoration:none;font-size:0.8rem;">👥 About v2 (real hráči)</a>
+        <a href="/prototypes/hero-v2-design.html" target="_blank" style="padding:0.4rem 0.9rem;background:rgba(168,85,247,0.15);color:#a855f7;border:1px solid rgba(168,85,247,0.3);border-radius:6px;text-decoration:none;font-size:0.8rem;">🎨 Full design (všechny varianty)</a>
+    </div>
+</div>
+
+<div class="compare">
+    <div class="col">
+        <div class="col-header">
+            <h2>Současný stav</h2>
+            <span class="badge v1">v1 · AKTUÁLNÍ</span>
+        </div>
+        <iframe class="col-frame" src="/prototypes/hero-v1-current.html"></iframe>
+        <div class="col-meta">
+            <strong>Silné stránky:</strong>
+            <ul>
+                <li>Jednoduchý, čistý design</li>
+                <li>Hero image v pozadí (klubovna)</li>
+                <li>2×2 šachovnicový grid navigace</li>
+                <li>3D rotátor na "Rozpis zápasů"</li>
+            </ul>
+            <strong style="display:block;margin-top:0.75rem;">Slabiny:</strong>
+            <ul>
+                <li class="con">Statický, bez animace</li>
+                <li class="con">Malý titulek</li>
+                <li class="con">Chybí stats, kontakt, CTA</li>
+                <li class="con">Grid dlaždic bez kontextu</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="col">
+        <div class="col-header">
+            <h2>Claude Design návrh</h2>
+            <div style="display:flex;gap:0.5rem;align-items:center;">
+                <span class="badge v2">v2 · NOVÝ</span>
+                <a href="/prototypes/hero-v2-design.html" class="open-btn" target="_blank">Otevřít samostatně →</a>
+            </div>
+        </div>
+        <iframe class="col-frame" src="/prototypes/hero-v2-design.html"></iframe>
+        <div class="col-meta">
+            <strong>Silné stránky:</strong>
+            <ul>
+                <li>4 animační varianty (Partie, Dlaždice, Jezdec, Typo)</li>
+                <li>Živá šachovnice s Caro-Kann miniaturou (1. e4 c6...6. Jd6#)</li>
+                <li>Stats (70+ členů, 4 družstva, 50+ let)</li>
+                <li>Kontakt (Městská hala, email)</li>
+                <li>Grid dlaždic s tagy a popisky</li>
+                <li>Typografická animace (line rise)</li>
+                <li>Sekce "O nás" s časovou osou</li>
+            </ul>
+            <strong style="display:block;margin-top:0.75rem;">Zvážit:</strong>
+            <ul>
+                <li class="con">Náročnější na performance (React + animace)</li>
+                <li class="con">Chess.com API není použité</li>
+                <li class="con">Babel JSX v prohlížeči (ne ideální pro prod)</li>
+            </ul>
+        </div>
+    </div>
+</div>
+</body>
+</html>

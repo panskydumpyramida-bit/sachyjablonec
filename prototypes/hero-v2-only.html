@@ -1,0 +1,901 @@
+<!doctype html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<title>Šachy Jablonec — Hero redesign</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Playfair+Display:wght@400;700;900&display=swap');
+:root{--bj-gold:#d4af37;--bj-gold-bright:#ffd700;--bj-gold-warm:#fbbf24;--bj-gold-dark:#b8962f;--bj-gold-tint-05:rgba(212,175,55,.05);--bj-gold-tint-10:rgba(212,175,55,.1);--bj-gold-tint-15:rgba(212,175,55,.15);--bj-gold-tint-20:rgba(212,175,55,.2);--bj-gold-tint-30:rgba(212,175,55,.3);--bj-silver:#c0c0c0;--bj-bg:#121212;--bj-surface:#1e1e1e;--bj-border:rgba(255,255,255,.05);--bj-fg:#e0e0e0;--bj-fg-strong:#fff;--bj-fg-muted:#b0b0b0;--bj-square-light:#f0d9b5;--bj-square-dark:#b58863;--bj-font-heading:'Playfair Display',Georgia,serif;--bj-font-body:'Inter',system-ui,sans-serif;--bj-ease:cubic-bezier(.4,0,.2,1);--bj-ease-out:cubic-bezier(.16,1,.3,1);--bj-ease-bounce:cubic-bezier(.175,.885,.32,1.275)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bj-bg);color:var(--bj-fg);font-family:var(--bj-font-body);-webkit-font-smoothing:antialiased}
+@media (prefers-reduced-motion:reduce){*{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important}}
+.bj-header{position:fixed;top:0;left:0;right:0;background:rgba(18,18,18,.82);backdrop-filter:blur(14px);border-bottom:1px solid var(--bj-gold-tint-10);z-index:100}
+.bj-header-inner{max-width:1280px;margin:0 auto;padding:.9rem 2rem;display:flex;justify-content:space-between;align-items:center}
+.bj-logo{display:inline-flex;align-items:center;gap:.65rem;font-family:var(--bj-font-heading);font-size:1.25rem;font-weight:700;color:var(--bj-gold);text-decoration:none}
+.bj-logo i{font-size:1.5rem}
+.bj-nav{display:flex;gap:1.5rem;align-items:center}
+.bj-nav a{color:var(--bj-fg);font-weight:500;font-size:.9rem;text-decoration:none;position:relative;padding:.25rem 0}
+.bj-nav a::after{content:'';position:absolute;bottom:-4px;left:0;right:0;height:2px;background:var(--bj-gold);transform:scaleX(0);transform-origin:center;transition:transform .3s var(--bj-ease-out)}
+.bj-nav a:hover{color:var(--bj-gold)}
+.bj-nav a:hover::after,.bj-nav a.active::after{transform:scaleX(1)}
+.bj-nav a.active{color:var(--bj-gold)}
+.bj-btn-auth{padding:.45rem 1rem;background:var(--bj-gold);color:#1a1a1a;border:none;border-radius:6px;font-weight:600;font-size:.85rem;cursor:pointer;transition:all .25s}
+.bj-btn-auth:hover{background:var(--bj-gold-bright);transform:translateY(-1px)}
+.bj-btn-auth--outline{background:transparent;color:var(--bj-gold);border:1px solid var(--bj-gold-tint-30);margin-right:.5rem}
+.bj-btn-auth--outline:hover{background:var(--bj-gold-tint-10)}
+.hero{position:relative;min-height:640px;padding:7rem 2rem 4rem;overflow:hidden;background:radial-gradient(ellipse at 20% 0%,rgba(212,175,55,.09),transparent 55%),radial-gradient(ellipse at 85% 100%,rgba(212,175,55,.07),transparent 60%),#0b0b0e;display:flex;align-items:center;justify-content:center}
+.hero-grid{position:relative;z-index:3;max-width:1280px;width:100%;display:grid;grid-template-columns:1.25fr .85fr;gap:3rem;align-items:center}
+.hero-kicker{display:inline-flex;align-items:center;gap:.5rem;padding:.35rem .85rem;background:var(--bj-gold-tint-10);border:1px solid var(--bj-gold-tint-20);border-radius:50px;font-size:.72rem;font-weight:600;color:var(--bj-gold);text-transform:uppercase;letter-spacing:.12em;animation:fadeUp .6s var(--bj-ease-out) .1s both}
+.hero-kicker .pulse{width:6px;height:6px;border-radius:50%;background:var(--bj-gold-warm);box-shadow:0 0 0 0 var(--bj-gold-warm);animation:pulse 2s ease-out infinite}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(251,191,36,.6)}70%{box-shadow:0 0 0 10px rgba(251,191,36,0)}100%{box-shadow:0 0 0 0 rgba(251,191,36,0)}}
+.hero-title{font-family:var(--bj-font-heading);font-size:clamp(2.4rem,5vw,4.2rem);line-height:1.02;font-weight:700;color:#fff;margin:1.2rem 0 .4rem;letter-spacing:-.02em}
+.hero-title .gold{color:var(--bj-gold);font-style:italic;font-weight:900;display:inline-block;position:relative}
+.hero-title .line{display:block;overflow:hidden}
+.hero-title .line>span{display:inline-block;animation:lineRise .9s var(--bj-ease-out) both}
+.hero-title .line--1>span{animation-delay:.15s}
+.hero-title .line--2>span{animation-delay:.3s}
+.hero-title .line--3>span{animation-delay:.45s}
+@keyframes lineRise{from{transform:translateY(110%);opacity:0}to{transform:translateY(0);opacity:1}}
+.hero-sub{font-size:1.05rem;line-height:1.65;color:var(--bj-fg-muted);max-width:480px;margin:.5rem 0 2rem;animation:fadeUp .7s var(--bj-ease-out) .6s both}
+.hero-ctas{display:flex;gap:.8rem;flex-wrap:wrap;animation:fadeUp .7s var(--bj-ease-out) .75s both}
+.hero-btn{display:inline-flex;align-items:center;gap:.55rem;padding:.85rem 1.4rem;border-radius:50px;font-weight:600;font-size:.95rem;text-decoration:none;cursor:pointer;border:none;font-family:inherit;transition:all .3s var(--bj-ease)}
+.hero-btn--primary{background:var(--bj-gold);color:#0b0b0e;box-shadow:0 6px 24px rgba(212,175,55,.25)}
+.hero-btn--primary:hover{background:var(--bj-gold-bright);transform:translateY(-2px);box-shadow:0 10px 30px rgba(212,175,55,.4)}
+.hero-btn--ghost{background:transparent;color:var(--bj-fg);border:1px solid rgba(255,255,255,.14)}
+.hero-btn--ghost:hover{border-color:var(--bj-gold-tint-30);color:var(--bj-gold)}
+.hero-stats{margin-top:2.5rem;display:flex;gap:2.2rem;animation:fadeUp .7s var(--bj-ease-out) .9s both}
+.hero-stat strong{display:block;font-family:var(--bj-font-heading);font-size:1.8rem;font-weight:700;color:var(--bj-gold);line-height:1;font-variant-numeric:tabular-nums}
+.hero-stat span{display:block;margin-top:.25rem;font-size:.72rem;color:var(--bj-fg-muted);text-transform:uppercase;letter-spacing:.1em}
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+.hero-stage{position:relative;aspect-ratio:1/1;width:100%;max-width:440px;margin-left:auto;opacity:.88;transform:scale(.92);transform-origin:center}
+.board-scene{position:relative;width:100%;aspect-ratio:1;filter:drop-shadow(0 20px 40px rgba(0,0,0,.5));animation:boardFloat 6s ease-in-out infinite,boardIntro 1.2s var(--bj-ease-out) both;transform-style:preserve-3d;perspective:1200px}
+@keyframes boardIntro{from{opacity:0;transform:rotateX(35deg) rotateZ(-6deg) scale(.85)}to{opacity:1;transform:rotateX(12deg) rotateZ(-3deg) scale(1)}}
+@keyframes boardFloat{0%,100%{transform:rotateX(12deg) rotateZ(-3deg) translateY(0)}50%{transform:rotateX(12deg) rotateZ(-3deg) translateY(-8px)}}
+.board{position:absolute;inset:0;display:grid;grid-template-columns:repeat(8,1fr);grid-template-rows:repeat(8,1fr);border-radius:6px;overflow:hidden;border:2px solid rgba(0,0,0,.5);box-shadow:0 0 0 6px #3d2a15,0 0 0 7px var(--bj-gold-tint-30),inset 0 0 60px rgba(0,0,0,.3)}
+.sq{position:relative}
+.sq--l{background:var(--bj-square-light)}
+.sq--d{background:var(--bj-square-dark)}
+.sq.from::after,.sq.to::after{content:'';position:absolute;inset:8%;border-radius:4px;background:radial-gradient(circle,rgba(212,175,55,.55),rgba(212,175,55,0) 70%);animation:sqGlow 1.4s ease-in-out}
+.sq.to::after{animation-delay:.4s}
+.sq.mate::after{content:'';position:absolute;inset:8%;border-radius:4px;background:radial-gradient(circle,rgba(231,76,60,.65),rgba(231,76,60,0) 70%);animation:mateGlow 1.4s ease-in-out infinite alternate;pointer-events:none}
+@keyframes mateGlow{from{opacity:.5;transform:scale(.92)}to{opacity:1;transform:scale(1.05)}}
+@keyframes sqGlow{0%{opacity:0;transform:scale(.6)}40%{opacity:1;transform:scale(1)}100%{opacity:0;transform:scale(1.1)}}
+.piece{position:absolute;width:12.5%;height:12.5%;display:flex;align-items:center;justify-content:center;font-size:clamp(28px,4.5vw,56px);line-height:1;pointer-events:none;transition:transform 1s cubic-bezier(.6,-.1,.3,1.2);will-change:transform;filter:drop-shadow(0 3px 4px rgba(0,0,0,.5))}
+.piece--white{color:#fafafa;text-shadow:0 1px 0 #aaa,0 0 2px #000}
+.piece--black{color:#1a1a1a;text-shadow:0 1px 0 #555}
+.piece.moving{z-index:10;transition:transform 1.1s cubic-bezier(.55,-.15,.4,1.25)}
+.piece.knight-hop{animation:knightHop 1.1s ease-in-out}
+@keyframes knightHop{0%{translate:0 0}50%{translate:0 -40%}100%{translate:0 0}}
+.coord{position:absolute;font-family:var(--bj-font-body);font-size:.55rem;font-weight:700;padding:2px 4px;pointer-events:none}
+.coord--file{bottom:1px;right:3px}
+.coord--rank{top:1px;left:3px}
+.sq--l .coord{color:rgba(0,0,0,.4)}
+.sq--d .coord{color:rgba(255,255,255,.5)}
+.spark{position:absolute;width:4px;height:4px;border-radius:50%;background:var(--bj-gold-warm);box-shadow:0 0 12px var(--bj-gold-warm);opacity:0;animation:sparkle 4s ease-in-out infinite}
+@keyframes sparkle{0%,100%{opacity:0;transform:translateY(0) scale(.6)}50%{opacity:.9;transform:translateY(-20px) scale(1.1)}}
+.knight-scene{position:relative;width:100%;aspect-ratio:1}
+.knight-bg-grid{position:absolute;inset:0;background:linear-gradient(rgba(212,175,55,.07) 1px,transparent 1px) 0 0/12.5% 12.5%,linear-gradient(90deg,rgba(212,175,55,.07) 1px,transparent 1px) 0 0/12.5% 12.5%;mask-image:radial-gradient(ellipse at center,#000 40%,transparent 75%);animation:gridBreathe 5s ease-in-out infinite}
+@keyframes gridBreathe{0%,100%{opacity:.5}50%{opacity:1}}
+.knight-svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+.knight-path{fill:none;stroke:var(--bj-gold);stroke-width:2;stroke-dasharray:4 6;stroke-linecap:round;opacity:.4;animation:dashFlow 8s linear infinite}
+@keyframes dashFlow{to{stroke-dashoffset:-200}}
+.knight-dot{fill:var(--bj-gold);filter:drop-shadow(0 0 6px var(--bj-gold))}
+.knight-piece{position:absolute;width:22%;height:22%;display:flex;align-items:center;justify-content:center;font-size:clamp(80px,18vw,180px);color:var(--bj-gold);text-shadow:0 0 30px rgba(212,175,55,.7),0 4px 12px rgba(0,0,0,.8);animation:knightTour 8s ease-in-out infinite;will-change:transform;z-index:5}
+@keyframes knightTour{0%{left:10%;top:70%;transform:scale(1) rotate(0)}12.5%{left:10%;top:65%;transform:scale(1.05) rotate(-8deg) translateY(-15px)}25%{left:30%;top:45%;transform:scale(1) rotate(0)}37.5%{left:30%;top:40%;transform:scale(1.05) rotate(8deg) translateY(-15px)}50%{left:55%;top:60%;transform:scale(1) rotate(0)}62.5%{left:55%;top:55%;transform:scale(1.05) rotate(-8deg) translateY(-15px)}75%{left:72%;top:30%;transform:scale(1) rotate(0)}87.5%{left:72%;top:25%;transform:scale(1.05) rotate(8deg) translateY(-15px)}100%{left:10%;top:70%;transform:scale(1) rotate(0)}}
+.knight-label{position:absolute;font-family:var(--bj-font-heading);font-style:italic;font-weight:900;font-size:clamp(48px,11vw,130px);color:transparent;-webkit-text-stroke:1.5px var(--bj-gold-tint-30);line-height:.85;user-select:none;pointer-events:none}
+.knight-label.l1{top:8%;left:5%}
+.knight-label.l2{top:42%;right:0%;color:var(--bj-gold);-webkit-text-stroke:0;opacity:.18}
+.knight-label.l3{bottom:5%;left:18%}
+.typo-scene{position:relative;width:100%;aspect-ratio:1;display:flex;align-items:center;justify-content:center}
+.typo-board{position:absolute;inset:0;display:grid;grid-template-columns:repeat(4,1fr);grid-template-rows:repeat(4,1fr);opacity:.12}
+.typo-board>div:nth-child(odd){background:var(--bj-gold)}
+.typo-mega{position:relative;font-family:var(--bj-font-heading);font-weight:900;font-size:clamp(120px,28vw,320px);line-height:.85;color:var(--bj-gold);text-shadow:0 0 60px rgba(212,175,55,.4);letter-spacing:-.08em;user-select:none;animation:megaZoom 10s ease-in-out infinite}
+@keyframes megaZoom{0%,100%{transform:scale(1) rotate(-2deg)}50%{transform:scale(1.08) rotate(2deg)}}
+.typo-mega .sweep{position:absolute;inset:0;background:linear-gradient(110deg,transparent 30%,rgba(255,215,0,.6) 50%,transparent 70%);background-clip:text;-webkit-background-clip:text;color:transparent;-webkit-text-fill-color:transparent;background-size:200% 100%;animation:sweep 3.5s ease-in-out infinite}
+@keyframes sweep{0%{background-position:200% 0}100%{background-position:-100% 0}}
+.typo-piece{position:absolute;font-size:clamp(40px,7vw,80px);color:var(--bj-gold-warm);filter:drop-shadow(0 6px 12px rgba(0,0,0,.6))}
+.typo-piece.p1{top:8%;right:12%;animation:floatA 5s ease-in-out infinite}
+.typo-piece.p2{bottom:10%;left:8%;animation:floatB 6s ease-in-out infinite}
+.typo-piece.p3{top:48%;left:-2%;animation:floatC 7s ease-in-out infinite}
+@keyframes floatA{0%,100%{transform:translate(0,0) rotate(-5deg)}50%{transform:translate(-10px,-18px) rotate(5deg)}}
+@keyframes floatB{0%,100%{transform:translate(0,0) rotate(3deg)}50%{transform:translate(12px,-14px) rotate(-6deg)}}
+@keyframes floatC{0%,100%{transform:translate(0,0) rotate(0)}50%{transform:translate(-8px,10px) rotate(8deg)}}
+.typo-crosshair{position:absolute;pointer-events:none}
+.typo-crosshair.h{top:50%;left:0;right:0;height:1px;background:var(--bj-gold);opacity:.4;animation:crossSweepH 4s ease-in-out infinite}
+.typo-crosshair.v{left:50%;top:0;bottom:0;width:1px;background:var(--bj-gold);opacity:.4;animation:crossSweepV 4s ease-in-out infinite}
+@keyframes crossSweepH{0%,100%{top:30%;opacity:.2}50%{top:70%;opacity:.6}}
+@keyframes crossSweepV{0%,100%{left:25%;opacity:.2}50%{left:75%;opacity:.6}}
+
+/* Shatter: board fragments fly out into content tiles */
+.shatter-scene{position:relative;width:100%;aspect-ratio:1;perspective:1400px;transform-style:preserve-3d}
+.shatter-board{position:absolute;inset:0;display:grid;grid-template-columns:repeat(4,1fr);grid-template-rows:repeat(4,1fr);border-radius:8px;overflow:visible;transform:rotateX(12deg) rotateZ(-3deg);transform-style:preserve-3d}
+.sh-cell{position:relative;display:flex;align-items:center;justify-content:center;border-radius:4px;overflow:hidden;transition:transform 1.1s cubic-bezier(.22,1,.36,1),box-shadow .9s var(--bj-ease-out),background .9s;will-change:transform;backface-visibility:hidden}
+.sh-cell.chess{color:rgba(0,0,0,.55);font-size:clamp(18px,3.2vw,42px);line-height:1}
+.sh-cell.chess.dark{background:var(--bj-square-dark)}
+.sh-cell.chess.light{background:var(--bj-square-light)}
+.sh-cell.tile{background:linear-gradient(180deg,#1e1e22,#141418);border:1px solid var(--bj-gold-tint-20);box-shadow:0 12px 24px rgba(0,0,0,.5),0 0 0 1px var(--bj-gold-tint-10);color:var(--bj-fg);padding:.65rem;flex-direction:column;align-items:flex-start;justify-content:flex-end;gap:.15rem;text-align:left}
+.sh-cell.tile i{font-size:clamp(14px,2.2vw,22px);color:var(--bj-gold);margin-bottom:auto}
+.sh-cell.tile strong{font-family:var(--bj-font-heading);font-size:clamp(11px,1.35vw,17px);font-weight:700;color:#fff;line-height:1.15}
+.sh-cell.tile em{font-style:normal;font-size:clamp(8px,.85vw,10px);color:var(--bj-gold);font-weight:700;text-transform:uppercase;letter-spacing:.1em}
+.sh-cell.flying{transition:transform 1.3s cubic-bezier(.34,1.56,.64,1),box-shadow 1s;box-shadow:0 24px 40px rgba(0,0,0,.7),0 0 30px var(--bj-gold-tint-20)}
+.shatter-caption{position:absolute;bottom:-18px;left:50%;transform:translateX(-50%);font-family:var(--bj-font-heading);font-style:italic;font-size:clamp(13px,1.5vw,18px);color:var(--bj-gold);white-space:nowrap;letter-spacing:.02em;opacity:0;animation:capFade 6s ease-in-out infinite}
+@keyframes capFade{0%,15%{opacity:0}30%,70%{opacity:.95}85%,100%{opacity:0}}
+
+.below{max-width:1280px;margin:-2.5rem auto 0;padding:0 2rem 5rem;display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;position:relative;z-index:4}
+.below-tile{background:linear-gradient(180deg,#1a1a1e,#131316);border:1px solid var(--bj-border);border-radius:12px;padding:1.3rem 1.2rem;text-decoration:none;color:var(--bj-fg);display:flex;flex-direction:column;gap:.6rem;transition:all .3s var(--bj-ease);position:relative;overflow:hidden}
+.below-tile::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--bj-gold);transform:scaleX(0);transform-origin:left;transition:transform .4s var(--bj-ease-out)}
+.below-tile:hover{transform:translateY(-4px);border-color:var(--bj-gold-tint-20)}
+.below-tile:hover::before{transform:scaleX(1)}
+.below-tile i{font-size:1.4rem;color:var(--bj-gold)}
+.below-tile strong{font-family:var(--bj-font-heading);font-size:1.15rem;font-weight:700;color:#fff}
+.below-tile span{font-size:.82rem;color:var(--bj-fg-muted);line-height:1.4}
+.below-tile em{font-style:normal;font-size:.68rem;color:var(--bj-gold);font-weight:700;text-transform:uppercase;letter-spacing:.08em;margin-top:auto}
+.tweaks{position:fixed;bottom:20px;right:20px;background:rgba(26,26,30,.96);backdrop-filter:blur(14px);border:1px solid var(--bj-gold-tint-20);border-radius:14px;padding:1rem;min-width:240px;box-shadow:0 20px 50px rgba(0,0,0,.6);z-index:500;font-family:var(--bj-font-body);animation:tweakIn .3s var(--bj-ease-out)}
+@keyframes tweakIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.tweaks h4{margin:0 0 .75rem;font-family:var(--bj-font-heading);color:var(--bj-gold);font-size:1rem;display:flex;align-items:center;gap:.5rem}
+.tweaks-row{display:flex;flex-direction:column;gap:.4rem;margin-bottom:.8rem}
+.tweaks-row>label{font-size:.7rem;color:var(--bj-fg-muted);text-transform:uppercase;letter-spacing:.1em}
+.tweak-seg{display:flex;background:rgba(0,0,0,.3);border-radius:8px;padding:3px;gap:2px}
+.tweak-seg button{flex:1;padding:.5rem .4rem;background:transparent;border:none;color:var(--bj-fg-muted);font-size:.78rem;font-weight:600;border-radius:6px;cursor:pointer;font-family:inherit;transition:all .2s}
+.tweak-seg button.active{background:var(--bj-gold);color:#0b0b0e}
+.tweak-seg button:not(.active):hover{color:var(--bj-fg);background:rgba(255,255,255,.05)}
+.tweak-toggle{display:flex;justify-content:space-between;align-items:center;font-size:.82rem;color:var(--bj-fg);cursor:pointer;user-select:none}
+.tweak-toggle input{display:none}
+.tweak-switch{width:32px;height:18px;border-radius:10px;background:rgba(255,255,255,.1);position:relative;transition:background .2s}
+.tweak-switch::after{content:'';position:absolute;top:2px;left:2px;width:14px;height:14px;border-radius:50%;background:#fff;transition:transform .2s}
+.tweak-toggle input:checked+.tweak-switch{background:var(--bj-gold)}
+.tweak-toggle input:checked+.tweak-switch::after{transform:translateX(14px)}
+@media (max-width:1024px){
+  .hero-grid{grid-template-columns:1fr;gap:2rem}
+  .hero-stage{max-width:380px;margin:0 auto;width:100%;opacity:1;transform:none}
+  .below{grid-template-columns:repeat(2,1fr)}
+}
+@media (max-width:720px){
+  .bj-header-inner{padding:.7rem 1rem}
+  .bj-nav{display:none}
+  .bj-logo{font-size:1rem}
+  .bj-logo i{font-size:1.15rem}
+  .bj-btn-auth{padding:.4rem .75rem;font-size:.78rem}
+  .bj-btn-auth--outline{margin-right:.35rem;padding:.4rem .6rem}
+  .hero{padding:5rem 1.1rem 2.5rem;min-height:auto}
+  .hero-grid{gap:1.5rem}
+  .hero-title{font-size:clamp(2rem,9vw,2.8rem);margin:.8rem 0 .3rem}
+  .hero-sub{font-size:.95rem;margin:.4rem 0 1.4rem}
+  .hero-ctas{gap:.6rem}
+  .hero-btn{padding:.75rem 1.1rem;font-size:.88rem;flex:1;justify-content:center}
+  .hero-stats{margin-top:1.7rem;gap:1.3rem}
+  .hero-stat strong{font-size:1.4rem}
+  .hero-stat span{font-size:.62rem}
+  .hero-kicker{font-size:.65rem;padding:.3rem .7rem}
+  .below{margin-top:-1.2rem;padding:0 1rem 3rem;gap:.7rem;grid-template-columns:1fr 1fr}
+  .below-tile{padding:1rem;border-radius:10px}
+  .below-tile strong{font-size:1rem}
+  .below-tile span{font-size:.75rem}
+  .tweaks{bottom:12px;right:12px;left:12px;min-width:auto;padding:.85rem}
+  .knight-label{font-size:clamp(40px,14vw,80px)}
+  .shatter-caption{font-size:clamp(11px,2.6vw,14px)}
+  .sh-cell.tile strong{font-size:clamp(10px,2.6vw,14px)}
+  .sh-cell.tile em{font-size:clamp(7px,1.8vw,9px)}
+  .sh-cell.tile i{font-size:clamp(12px,3.4vw,18px)}
+}
+@media (max-width:420px){
+  .hero-stats{flex-wrap:wrap;gap:1rem 1.3rem}
+  .hero-stat{flex:0 0 auto}
+}
+
+/* ============ O NÁS ============ */
+.about{position:relative;padding:6rem 2rem 7rem;max-width:1280px;margin:0 auto;color:var(--bj-fg)}
+.about::before{content:'';position:absolute;top:0;left:50%;transform:translateX(-50%);width:60px;height:1px;background:var(--bj-gold);opacity:.5}
+.about-eyebrow{text-align:center;font-size:.72rem;font-weight:600;color:var(--bj-gold);text-transform:uppercase;letter-spacing:.18em;margin:2rem 0 .8rem}
+.about-head{text-align:center;font-family:var(--bj-font-heading);font-size:clamp(2.2rem,4.2vw,3.4rem);font-weight:700;color:#fff;line-height:1.05;letter-spacing:-.02em;margin:0 0 1rem}
+.about-head em{color:var(--bj-gold);font-style:italic;font-weight:900}
+.about-lead{text-align:center;max-width:680px;margin:0 auto 4.5rem;font-size:1.05rem;line-height:1.65;color:var(--bj-fg-muted)}
+
+/* Timeline */
+.tl{position:relative;padding:2rem 0 1rem}
+.tl-track{position:relative;height:2px;background:linear-gradient(90deg,transparent,var(--bj-gold-tint-20) 8%,var(--bj-gold-tint-20) 92%,transparent);margin:0 2rem}
+.tl-track::after{content:'';position:absolute;left:8%;top:50%;transform:translateY(-50%);width:0;height:2px;background:var(--bj-gold);box-shadow:0 0 12px var(--bj-gold-tint-30);animation:tlGrow 2.4s var(--bj-ease-out) .4s forwards}
+@keyframes tlGrow{to{width:84%}}
+.tl-items{position:relative;display:grid;grid-template-columns:repeat(6,1fr);gap:1rem;margin:0 2rem;margin-top:-18px}
+.tl-item{position:relative;display:flex;flex-direction:column;align-items:center;text-align:center;opacity:0;animation:tlRise .7s var(--bj-ease-out) forwards}
+.tl-item:nth-child(1){animation-delay:.6s}
+.tl-item:nth-child(2){animation-delay:.8s}
+.tl-item:nth-child(3){animation-delay:1.0s}
+.tl-item:nth-child(4){animation-delay:1.2s}
+.tl-item:nth-child(5){animation-delay:1.4s}
+.tl-item:nth-child(6){animation-delay:1.6s}
+@keyframes tlRise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+.tl-marker{width:34px;height:34px;border-radius:50%;background:#1a1a1e;border:2px solid var(--bj-gold);display:flex;align-items:center;justify-content:center;color:var(--bj-gold);font-size:1.05rem;box-shadow:0 0 0 4px #0b0b0e,0 4px 14px rgba(212,175,55,.3);transition:transform .4s var(--bj-ease-bounce),background .3s;cursor:pointer}
+.tl-item:hover .tl-marker{transform:scale(1.2) translateY(-4px);background:var(--bj-gold);color:#0b0b0e}
+.tl-year{margin-top:.8rem;font-family:var(--bj-font-heading);font-weight:900;font-style:italic;font-size:1.4rem;color:var(--bj-gold);font-variant-numeric:tabular-nums}
+.tl-event{margin-top:.25rem;font-size:.78rem;color:var(--bj-fg-muted);line-height:1.35;max-width:140px}
+.tl-item:hover .tl-event{color:var(--bj-fg)}
+
+/* Stats bar (chess-board accent) */
+.about-stats{margin-top:5rem;display:grid;grid-template-columns:repeat(4,1fr);gap:0;background:linear-gradient(180deg,#141418,#0f0f12);border:1px solid var(--bj-gold-tint-10);border-radius:14px;overflow:hidden;position:relative}
+.about-stats::before{content:'';position:absolute;top:0;left:0;width:100%;height:3px;background:repeating-linear-gradient(90deg,var(--bj-gold) 0 20px,#0b0b0e 20px 40px);opacity:.35}
+.about-stat{padding:2rem 1.5rem;text-align:center;border-right:1px solid var(--bj-gold-tint-10);position:relative}
+.about-stat:last-child{border-right:none}
+.about-stat-num{display:block;font-family:var(--bj-font-heading);font-size:clamp(2rem,3.6vw,2.8rem);font-weight:900;font-style:italic;color:var(--bj-gold);line-height:1;font-variant-numeric:tabular-nums}
+.about-stat-label{display:block;margin-top:.5rem;font-size:.72rem;color:var(--bj-fg-muted);text-transform:uppercase;letter-spacing:.14em}
+.about-stat-icon{display:block;font-size:1.1rem;color:var(--bj-gold);opacity:.4;margin-bottom:.8rem}
+
+/* Story + trainers split */
+.about-split{margin-top:5rem;display:grid;grid-template-columns:1.1fr .9fr;gap:4rem;align-items:start}
+.about-story h3{font-family:var(--bj-font-heading);font-size:1.6rem;font-weight:700;color:#fff;margin:0 0 1.2rem;letter-spacing:-.01em}
+.about-story h3 em{color:var(--bj-gold);font-style:italic}
+.about-story p{font-size:.98rem;line-height:1.75;color:var(--bj-fg-muted);margin:0 0 1rem}
+.about-story p strong{color:var(--bj-fg);font-weight:600}
+.about-values{margin-top:2rem;display:grid;grid-template-columns:1fr 1fr;gap:.9rem}
+.about-value{padding:1rem;background:rgba(212,175,55,.04);border-left:2px solid var(--bj-gold);border-radius:0 8px 8px 0}
+.about-value i{color:var(--bj-gold);font-size:1rem;margin-bottom:.45rem;display:block}
+.about-value strong{display:block;font-size:.9rem;font-weight:700;color:#fff;margin-bottom:.2rem}
+.about-value span{font-size:.78rem;color:var(--bj-fg-muted);line-height:1.5}
+
+/* Trainers */
+.trainers-head{font-family:var(--bj-font-heading);font-size:1.25rem;font-weight:700;color:#fff;margin:0 0 1.2rem;display:flex;align-items:center;gap:.6rem}
+.trainers-head::before{content:'';width:6px;height:18px;background:var(--bj-gold);border-radius:2px}
+.trainers{display:flex;flex-direction:column;gap:.9rem}
+.trainer{display:flex;gap:1rem;padding:1rem;background:linear-gradient(180deg,#16161a,#101014);border:1px solid var(--bj-border);border-radius:12px;transition:all .35s var(--bj-ease);position:relative;overflow:hidden}
+.trainer::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--bj-gold);transform:scaleY(0);transform-origin:top;transition:transform .4s var(--bj-ease-out)}
+.trainer:hover{border-color:var(--bj-gold-tint-20);transform:translateX(4px)}
+.trainer:hover::before{transform:scaleY(1)}
+.trainer-avatar{width:64px;height:64px;border-radius:12px;background:linear-gradient(135deg,#2a2a30,#1a1a1e);border:1px solid var(--bj-gold-tint-20);display:flex;align-items:center;justify-content:center;flex-shrink:0;position:relative;overflow:hidden}
+.trainer-avatar .piece-bg{position:absolute;font-size:56px;opacity:.15;color:var(--bj-gold);line-height:1;transform:translateY(4px)}
+.trainer-avatar .initials{position:relative;font-family:var(--bj-font-heading);font-weight:900;font-size:1.3rem;color:var(--bj-gold);letter-spacing:-.02em}
+.trainer-body{flex:1;min-width:0}
+.trainer-name{display:flex;align-items:baseline;gap:.6rem;flex-wrap:wrap}
+.trainer-name strong{font-family:var(--bj-font-heading);font-size:1.05rem;font-weight:700;color:#fff}
+.trainer-name span{font-size:.72rem;color:var(--bj-gold);font-weight:700;letter-spacing:.08em;text-transform:uppercase}
+.trainer-role{font-size:.82rem;color:var(--bj-fg-muted);margin-top:.2rem;line-height:1.5}
+.trainer-meta{margin-top:.5rem;font-size:.7rem;color:var(--bj-fg-muted);display:flex;gap:.8rem;flex-wrap:wrap}
+.trainer-meta span{display:inline-flex;align-items:center;gap:.3rem}
+.trainer-meta i{color:var(--bj-gold);font-size:.7rem}
+
+/* Contact footer of section */
+.about-foot{margin-top:5rem;padding:2rem;background:linear-gradient(135deg,rgba(212,175,55,.08),rgba(212,175,55,.02));border:1px solid var(--bj-gold-tint-20);border-radius:14px;display:grid;grid-template-columns:1fr auto;gap:2rem;align-items:center}
+.about-foot-copy h4{font-family:var(--bj-font-heading);font-size:1.3rem;font-weight:700;color:#fff;margin:0 0 .3rem}
+.about-foot-copy p{font-size:.92rem;color:var(--bj-fg-muted);margin:0;line-height:1.6}
+.about-foot-copy p i{color:var(--bj-gold);margin-right:.4rem}
+.about-foot .hero-btn{white-space:nowrap}
+
+@media (max-width:1024px){
+  .tl-items{grid-template-columns:repeat(3,1fr) !important;gap:2.5rem 1rem;margin-top:1rem}
+  .tl-track{display:none}
+  .about-stats{grid-template-columns:repeat(2,1fr)}
+  .about-stat:nth-child(2){border-right:none}
+  .about-stat:nth-child(1),.about-stat:nth-child(2){border-bottom:1px solid var(--bj-gold-tint-10)}
+  .about-split{grid-template-columns:1fr;gap:3rem}
+}
+@media (max-width:720px){
+  .about{padding:4rem 1rem 4rem}
+  .tl-items{grid-template-columns:repeat(2,1fr) !important;gap:2rem 1rem}
+  .about-values{grid-template-columns:1fr}
+  .about-foot{grid-template-columns:1fr;text-align:left}
+}
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script>
+  // Tweakable defaults — the variant currently showing in the hero.
+  window.__TWEAKS = /*EDITMODE-BEGIN*/{
+    "variant": "board",
+    "showBelow": true
+  }/*EDITMODE-END*/;
+</script>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<script type="text/babel" data-presets="react">
+function Header() {
+  const links = [
+    { key: 'home', label: 'Domů', active: true },
+    { key: 'about', label: 'O nás' },
+    { key: 'calendar', label: 'Kalendář' },
+    { key: 'competitions', label: 'Soutěže' },
+    { key: 'youth', label: 'Mládež' },
+  ];
+  return (
+    <header className="bj-header">
+      <div className="bj-header-inner">
+        <a href="#" className="bj-logo">
+          <i className="fa-solid fa-chess-knight"></i>
+          <span>Bižuterie Jablonec</span>
+        </a>
+        <nav className="bj-nav">
+          {links.map(l => (
+            <a key={l.key} href="#" className={l.active ? 'active' : ''}>{l.label}</a>
+          ))}
+        </nav>
+        <div>
+          <button className="bj-btn-auth bj-btn-auth--outline">Registrace</button>
+          <button className="bj-btn-auth">Přihlášení</button>
+        </div>
+      </div>
+    </header>
+  );
+}
+
+const { useState, useEffect, useRef } = React;
+
+// Caro-Kann miniature (6 tahů, mat):
+// 1. e4 c6  2. d4 d5  3. Nc3 dxe4  4. Nxe4 Nd7  5. Qe2 Ngf6??  6. Nd6#
+const BOARD_SEQ = [
+  { type: 'move', piece: 'Pe',  from: 'e2', to: 'e4' },           // 1. e4
+  { type: 'move', piece: 'pc',  from: 'c7', to: 'c6' },           // 1... c6
+  { type: 'move', piece: 'Pd',  from: 'd2', to: 'd4' },           // 2. d4
+  { type: 'move', piece: 'pd',  from: 'd7', to: 'd5' },           // 2... d5
+  { type: 'move', piece: 'Nb',  from: 'b1', to: 'c3', knight: true }, // 3. Nc3
+  { type: 'move', piece: 'pd',  from: 'd5', to: 'e4', capture: 'Pe' }, // 3... dxe4
+  { type: 'move', piece: 'Nb',  from: 'c3', to: 'e4', knight: true, capture: 'pd' }, // 4. Nxe4
+  { type: 'move', piece: 'nb',  from: 'b8', to: 'd7', knight: true }, // 4... Nd7
+  { type: 'move', piece: 'Qd',  from: 'd1', to: 'e2' },           // 5. Qe2
+  { type: 'move', piece: 'ng',  from: 'g8', to: 'f6', knight: true }, // 5... Ngf6??
+  { type: 'move', piece: 'Nb',  from: 'e4', to: 'd6', knight: true, mate: true }, // 6. Nd6#
+  { type: 'reset' },
+];
+
+const FILES = ['a','b','c','d','e','f','g','h'];
+function sqToCoord(sq) {
+  const file = FILES.indexOf(sq[0]);
+  const rank = 8 - parseInt(sq[1], 10);
+  return { file, rank };
+}
+function coordToPct(file, rank) {
+  return { left: `${file * 12.5}%`, top: `${rank * 12.5}%` };
+}
+
+const INITIAL_PIECES = [
+  // White pieces
+  { id: 'Ra', glyph: '♖', side: 'white', sq: 'a1' },
+  { id: 'Nb', glyph: '♘', side: 'white', sq: 'b1' },
+  { id: 'Bc', glyph: '♗', side: 'white', sq: 'c1' },
+  { id: 'Qd', glyph: '♕', side: 'white', sq: 'd1' },
+  { id: 'Ke', glyph: '♔', side: 'white', sq: 'e1' },
+  { id: 'Bf', glyph: '♗', side: 'white', sq: 'f1' },
+  { id: 'Ng', glyph: '♘', side: 'white', sq: 'g1' },
+  { id: 'Rh', glyph: '♖', side: 'white', sq: 'h1' },
+  // White pawns (full rank 2)
+  { id: 'Pa', glyph: '♙', side: 'white', sq: 'a2' },
+  { id: 'Pb', glyph: '♙', side: 'white', sq: 'b2' },
+  { id: 'Pc', glyph: '♙', side: 'white', sq: 'c2' },
+  { id: 'Pd', glyph: '♙', side: 'white', sq: 'd2' },
+  { id: 'Pe', glyph: '♙', side: 'white', sq: 'e2' },
+  { id: 'Pf', glyph: '♙', side: 'white', sq: 'f2' },
+  { id: 'Pg', glyph: '♙', side: 'white', sq: 'g2' },
+  { id: 'Ph', glyph: '♙', side: 'white', sq: 'h2' },
+  // Black pieces
+  { id: 'ra', glyph: '♜', side: 'black', sq: 'a8' },
+  { id: 'nb', glyph: '♞', side: 'black', sq: 'b8' },
+  { id: 'bc', glyph: '♝', side: 'black', sq: 'c8' },
+  { id: 'qd', glyph: '♛', side: 'black', sq: 'd8' },
+  { id: 'ke', glyph: '♚', side: 'black', sq: 'e8' },
+  { id: 'bf', glyph: '♝', side: 'black', sq: 'f8' },
+  { id: 'ng', glyph: '♞', side: 'black', sq: 'g8' },
+  { id: 'rh', glyph: '♜', side: 'black', sq: 'h8' },
+  // Black pawns (full rank 7)
+  { id: 'pa', glyph: '♟', side: 'black', sq: 'a7' },
+  { id: 'pb', glyph: '♟', side: 'black', sq: 'b7' },
+  { id: 'pc', glyph: '♟', side: 'black', sq: 'c7' },
+  { id: 'pd', glyph: '♟', side: 'black', sq: 'd7' },
+  { id: 'pe', glyph: '♟', side: 'black', sq: 'e7' },
+  { id: 'pf', glyph: '♟', side: 'black', sq: 'f7' },
+  { id: 'pg', glyph: '♟', side: 'black', sq: 'g7' },
+  { id: 'ph', glyph: '♟', side: 'black', sq: 'h7' },
+];
+
+function HeroBoard() {
+  const [pieces, setPieces] = useState(INITIAL_PIECES);
+  const [highlight, setHighlight] = useState({ from: null, to: null });
+  const [mateSq, setMateSq] = useState(null);
+  const [moving, setMoving] = useState(null);
+
+  useEffect(() => {
+    let alive = true;
+    let stepIndex = 0;
+    let timers = [];
+    const addTimer = (fn, ms) => { const t = setTimeout(fn, ms); timers.push(t); return t; };
+
+    function step() {
+      if (!alive) return;
+      const action = BOARD_SEQ[stepIndex % BOARD_SEQ.length];
+      stepIndex++;
+      if (action.type === 'reset') {
+        setHighlight({ from: null, to: null });
+        setMateSq(null);
+        setMoving(null);
+        addTimer(() => {
+          if (!alive) return;
+          setPieces(INITIAL_PIECES);
+          addTimer(step, 1200);
+        }, 700);
+        return;
+      }
+      // 1) highlight squares first
+      setHighlight({ from: action.from, to: action.to });
+      // 2) begin the move (piece animates to destination via CSS transition)
+      addTimer(() => {
+        if (!alive) return;
+        setMoving({ id: action.piece, knight: action.knight });
+        setPieces(prev => prev
+          .filter(p => p.id !== action.capture)
+          .map(p => p.id === action.piece ? { ...p, sq: action.to } : p)
+        );
+        // If mate: light up the checkmated king's square in red once piece arrives
+        if (action.mate) {
+          addTimer(() => { if (alive) setMateSq('e8'); }, 700);
+        }
+        // 3) clear moving state after transition completes, then queue next
+        addTimer(() => {
+          if (!alive) return;
+          setMoving(null);
+          // Linger longer on mate so viewer can see the red flash
+          addTimer(step, action.mate ? 2400 : 1100);
+        }, 1300);
+      }, 350);
+    }
+    const t = addTimer(step, 1400);
+    return () => { alive = false; timers.forEach(clearTimeout); };
+  }, []);
+
+  const squares = [];
+  for (let r = 0; r < 8; r++) {
+    for (let f = 0; f < 8; f++) {
+      const sq = FILES[f] + (8 - r);
+      const dark = (r + f) % 2 === 1;
+      const isFrom = highlight.from === sq;
+      const isTo = highlight.to === sq;
+      const isMate = mateSq === sq;
+      squares.push(
+        <div key={sq} className={`sq ${dark ? 'sq--d' : 'sq--l'} ${isFrom ? 'from' : ''} ${isTo ? 'to' : ''} ${isMate ? 'mate' : ''}`}>
+          {f === 0 && <span className="coord coord--rank">{8 - r}</span>}
+          {r === 7 && <span className="coord coord--file">{FILES[f]}</span>}
+        </div>
+      );
+    }
+  }
+
+  return (
+    <div className="board-scene">
+      <div className="board">{squares}</div>
+      {pieces.map(p => {
+        const { file, rank } = sqToCoord(p.sq);
+        const { left, top } = coordToPct(file, rank);
+        const isMoving = moving && moving.id === p.id;
+        const cls = `piece piece--${p.side} ${isMoving ? 'moving' : ''} ${isMoving && moving.knight ? 'knight-hop' : ''}`;
+        return (
+          <div key={p.id} className={cls} style={{ left, top }}>{p.glyph}</div>
+        );
+      })}
+      <div className="spark" style={{ left: '8%',  top: '20%', animationDelay: '0s' }}></div>
+      <div className="spark" style={{ left: '92%', top: '30%', animationDelay: '1.2s' }}></div>
+      <div className="spark" style={{ left: '80%', top: '85%', animationDelay: '2.5s' }}></div>
+      <div className="spark" style={{ left: '15%', top: '90%', animationDelay: '3.1s' }}></div>
+    </div>
+  );
+}
+
+function HeroKnight() {
+  const points = [
+    { x: 18, y: 75 },
+    { x: 35, y: 42 },
+    { x: 60, y: 60 },
+    { x: 78, y: 28 },
+    { x: 50, y: 15 },
+    { x: 25, y: 38 },
+    { x: 18, y: 75 },
+  ];
+  const pathD = points.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ');
+
+  return (
+    <div className="knight-scene">
+      <div className="knight-bg-grid"></div>
+      <span className="knight-label l1">Šachy</span>
+      <span className="knight-label l2">táhni</span>
+      <span className="knight-label l3">vpřed</span>
+      <svg className="knight-svg" viewBox="0 0 100 100" preserveAspectRatio="none">
+        <path className="knight-path" d={pathD} />
+        {points.slice(0, -1).map((p, i) => (
+          <circle key={i} className="knight-dot" cx={p.x} cy={p.y} r="0.8" />
+        ))}
+      </svg>
+      <div className="knight-piece">
+        <i className="fa-solid fa-chess-knight"></i>
+      </div>
+    </div>
+  );
+}
+
+function HeroTypo() {
+  const cells = Array.from({ length: 16 }, (_, i) => <div key={i}></div>);
+  return (
+    <div className="typo-scene">
+      <div className="typo-board">{cells}</div>
+      <div className="typo-crosshair h"></div>
+      <div className="typo-crosshair v"></div>
+      <div className="typo-mega">
+        ♞
+        <span className="sweep">♞</span>
+      </div>
+      <div className="typo-piece p1">♔</div>
+      <div className="typo-piece p2">♖</div>
+      <div className="typo-piece p3">♗</div>
+    </div>
+  );
+}
+
+// Shatter variant — chessboard fragments fly out into content tiles
+const SHATTER_TILES = [
+  { i: 3,  icon: 'fa-newspaper',  title: 'Aktuality',      tag: 'Nové · 3' },
+  { i: 6,  icon: 'fa-calendar',   title: 'Rozpis',         tag: 'Tento týden' },
+  { i: 9,  icon: 'fa-child',      title: 'Mládež',         tag: 'Po 17:00' },
+  { i: 12, icon: 'fa-bolt',       title: 'Blicák',         tag: 'Pá 19:00' },
+];
+// Chess glyphs for a 4x4 reduced 'board' (white on bottom, black on top)
+const SHATTER_GLYPHS = [
+  '♜','♞','♝','♛',
+  '♟','♟','♟','♟',
+  '♙','♙','♙','♙',
+  '♖','♘','♗','♕',
+];
+// Per-cell fly-out transforms (in percent of container, + rotate)
+const SHATTER_FLY = {
+  3:  'translate(6%,-18%) rotate(6deg)',
+  6:  'translate(-8%,-4%) rotate(-4deg)',
+  9:  'translate(4%,8%) rotate(3deg)',
+  12: 'translate(-10%,18%) rotate(-6deg)',
+};
+
+function HeroShatter() {
+  const [phase, setPhase] = useState('board'); // 'board' | 'shatter'
+  useEffect(() => {
+    let alive = true;
+    let tm;
+    function loop(next) {
+      if (!alive) return;
+      setPhase(next);
+      tm = setTimeout(() => loop(next === 'board' ? 'shatter' : 'board'),
+        next === 'board' ? 2200 : 3400);
+    }
+    tm = setTimeout(() => loop('shatter'), 1800);
+    return () => { alive = false; clearTimeout(tm); };
+  }, []);
+
+  const tileMap = Object.fromEntries(SHATTER_TILES.map(t => [t.i, t]));
+
+  return (
+    <div className="shatter-scene">
+      <div className="shatter-board">
+        {Array.from({ length: 16 }, (_, i) => {
+          const row = Math.floor(i / 4);
+          const col = i % 4;
+          const isDark = (row + col) % 2 === 1;
+          const tile = tileMap[i];
+          const isTile = phase === 'shatter' && !!tile;
+          const isFlying = isTile;
+          const style = isFlying ? { transform: SHATTER_FLY[i] || '' } : {};
+          if (isTile) {
+            return (
+              <div key={i} className="sh-cell tile flying" style={style}>
+                <i className={`fa-solid ${tile.icon}`}></i>
+                <strong>{tile.title}</strong>
+                <em>{tile.tag}</em>
+              </div>
+            );
+          }
+          return (
+            <div key={i} className={`sh-cell chess ${isDark ? 'dark' : 'light'}`}>
+              {SHATTER_GLYPHS[i]}
+            </div>
+          );
+        })}
+      </div>
+      <div className="shatter-caption">z šachovnice se stává klubový web</div>
+    </div>
+  );
+}
+
+// ============ O nás ============
+const TIMELINE = [
+  { year: '1947', event: 'Založení šachového oddílu',       glyph: '♙' },
+  { year: '1968', event: 'Postup do krajského přeboru',     glyph: '♘' },
+  { year: '1984', event: 'Otevření nové klubovny',          glyph: '♖' },
+  { year: '2002', event: 'Oddíl mládeže rozjíždí školičku', glyph: '♗' },
+  { year: '2015', event: 'Návrat do Extraligy ČR',          glyph: '♕' },
+  { year: '2026', event: 'Nový klubový web a nástroje',     glyph: '♔' },
+];
+
+const TRAINERS = [
+  { name: 'Ing. Petr Dvořák',  title: 'GM',  role: 'Hlavní trenér A-týmu, šéftrenér mládeže',        meta: [{i:'fa-chess',label:'ELO 2512'},{i:'fa-clock',label:'20 let u oddílu'}] },
+  { name: 'Martin Kouba',      title: 'IM',  role: 'Trenér mládeže 10–14 let, analytika partií',     meta: [{i:'fa-chess',label:'ELO 2387'},{i:'fa-child',label:'Školička'}] },
+  { name: 'Kateřina Procházková', title: 'WFM', role: 'Trenérka ženy/junior, koordinátorka turnajů', meta: [{i:'fa-chess',label:'ELO 2128'},{i:'fa-trophy',label:'M-ČR 2023'}] },
+];
+
+const VALUES = [
+  { i: 'fa-people-group', title: 'Otevřená komunita',     sub: 'Vítáme děti, seniory i začátečníky bez rozdílu úrovně.' },
+  { i: 'fa-graduation-cap', title: 'Důraz na výchovu',     sub: 'Systematická práce s mládeží od 6 let.' },
+  { i: 'fa-trophy',         title: 'Soutěžní ambice',       sub: 'Hrajeme Extraligu a KP se čtrnácti družstvy.' },
+  { i: 'fa-brain',          title: 'Moderní tréninkové nástroje', sub: 'Blunder Grid, Puzzle Racer, vlastní databáze.' },
+];
+
+function About() {
+  return (
+    <section className="about" id="o-nas">
+      <div className="about-eyebrow">O nás · od roku 1947</div>
+      <h2 className="about-head">Klub, kde se <em>tradice</em><br/>potkává s novou generací</h2>
+      <p className="about-lead">
+        TJ Bižuterie Jablonec nad Nisou vychovává šachisty téměř 80 let. Od prvních tahů v mládežnické školičce po ligové partie seniorů — u nás najde svoje místo každý, kdo má rád tahy, které dávají smysl.
+      </p>
+
+      {/* Timeline */}
+      <div className="tl">
+        <div className="tl-track"></div>
+        <div className="tl-items">
+          {TIMELINE.map((m, idx) => (
+            <div key={m.year} className="tl-item">
+              <div className="tl-marker" title={m.event}>{m.glyph}</div>
+              <div className="tl-year">{m.year}</div>
+              <div className="tl-event">{m.event}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Stats */}
+      <div className="about-stats">
+        <div className="about-stat">
+          <i className="fa-solid fa-users about-stat-icon"></i>
+          <span className="about-stat-num">256</span>
+          <span className="about-stat-label">Aktivních členů</span>
+        </div>
+        <div className="about-stat">
+          <i className="fa-solid fa-chess-board about-stat-icon"></i>
+          <span className="about-stat-num">14</span>
+          <span className="about-stat-label">Družstev v soutěžích</span>
+        </div>
+        <div className="about-stat">
+          <i className="fa-solid fa-trophy about-stat-icon"></i>
+          <span className="about-stat-num">79</span>
+          <span className="about-stat-label">Let tradice</span>
+        </div>
+        <div className="about-stat">
+          <i className="fa-solid fa-calendar-check about-stat-icon"></i>
+          <span className="about-stat-num">38</span>
+          <span className="about-stat-label">Turnajů ročně</span>
+        </div>
+      </div>
+
+      {/* Split: story + trainers */}
+      <div className="about-split">
+        <div className="about-story">
+          <h3>Naše <em>DNA</em></h3>
+          <p>Klub založili v roce <strong>1947</strong> nadšenci z jablonecké bižuterní tradice — odtud název, který nám zůstal. Osmdesát sezón později máme za sebou postup do Extraligy, desítky vychovaných mistrů a klubovnu, která bzučí tréninkem každý týden od pondělí do neděle.</p>
+          <p>Nehráme jen pro body. Šachy bereme jako řemeslo, hlavolam i způsob, jak si sednout vedle souseda přes tři generace a říct: <strong>„tvůj tah.“</strong></p>
+
+          <div className="about-values">
+            {VALUES.map(v => (
+              <div key={v.title} className="about-value">
+                <i className={`fa-solid ${v.i}`}></i>
+                <strong>{v.title}</strong>
+                <span>{v.sub}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="about-trainers">
+          <div className="trainers-head">Trenéři & vedení</div>
+          <div className="trainers">
+            {TRAINERS.map(t => {
+              const initials = t.name.split(' ').slice(-2).map(s => s[0]).join('');
+              const piece = { GM: '♔', IM: '♕', WFM: '♖' }[t.title] || '♘';
+              return (
+                <div key={t.name} className="trainer">
+                  <div className="trainer-avatar">
+                    <span className="piece-bg">{piece}</span>
+                    <span className="initials">{initials}</span>
+                  </div>
+                  <div className="trainer-body">
+                    <div className="trainer-name">
+                      <strong>{t.name}</strong>
+                      <span>{t.title}</span>
+                    </div>
+                    <div className="trainer-role">{t.role}</div>
+                    <div className="trainer-meta">
+                      {t.meta.map(m => (
+                        <span key={m.label}><i className={`fa-solid ${m.i}`}></i>{m.label}</span>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+
+      {/* Contact CTA */}
+      <div className="about-foot">
+        <div className="about-foot-copy">
+          <h4>Zajímá vás členství?</h4>
+          <p>
+            <i className="fa-solid fa-location-dot"></i>Městská hala, Jablonec nad Nisou &nbsp;·&nbsp;
+            <i className="fa-solid fa-envelope"></i>info@sachyjablonec.cz
+          </p>
+        </div>
+        <a href="/about.html" className="hero-btn hero-btn--primary">
+          <i className="fa-solid fa-user-plus"></i> Přijít na trénink
+        </a>
+      </div>
+    </section>
+  );
+}
+
+function Below() {
+  const tiles = [
+    { icon: 'fa-newspaper',   title: 'Aktuality',      sub: 'Výsledky turnajů, dění v klubu',     tag: 'Novinky',     href: '/#news' },
+    { icon: 'fa-calendar',    title: 'Rozpis zápasů',  sub: 'Krajský přebor, oddílové soutěže',   tag: 'Kalendář',    href: '/calendar.html' },
+    { icon: 'fa-child',       title: 'Mládež',         sub: 'Trénink pro začátečníky i pokročilé', tag: 'Po 17:00',   href: '/youth.html' },
+    { icon: 'fa-bolt',        title: 'Blicák',         sub: 'Velikonoční bleskový turnaj',         tag: 'Turnaje',     href: '/blicak.html' },
+  ];
+  return (
+    <div className="below">
+      {tiles.map(t => (
+        <a key={t.title} href={t.href} className="below-tile">
+          <i className={`fa-solid ${t.icon}`}></i>
+          <strong>{t.title}</strong>
+          <span>{t.sub}</span>
+          <em>{t.tag}</em>
+        </a>
+      ))}
+    </div>
+  );
+}
+
+function Tweaks({ variant, setVariant, showBelow, setShowBelow, visible }) {
+  if (!visible) return null;
+  const variants = [
+    { key: 'board',   label: 'Partie' },
+    { key: 'shatter', label: 'Dlaždice' },
+    { key: 'knight',  label: 'Jezdec' },
+    { key: 'typo',    label: 'Typo' },
+  ];
+  return (
+    <div className="tweaks">
+      <h4><i className="fa-solid fa-sliders"></i> Tweaks</h4>
+      <div className="tweaks-row">
+        <label>Varianta animace</label>
+        <div className="tweak-seg">
+          {variants.map(v => (
+            <button key={v.key}
+              className={variant === v.key ? 'active' : ''}
+              onClick={() => setVariant(v.key)}>{v.label}</button>
+          ))}
+        </div>
+      </div>
+      <div className="tweaks-row">
+        <label className="tweak-toggle">
+          <span>Zobrazit karty pod hero</span>
+          <input type="checkbox" checked={showBelow} onChange={(e) => setShowBelow(e.target.checked)} />
+          <span className="tweak-switch"></span>
+        </label>
+      </div>
+    </div>
+  );
+}
+
+function persist(edits) {
+  try { window.parent.postMessage({ type: '__edit_mode_set_keys', edits }, '*'); } catch (e) {}
+}
+
+function App() {
+  const defaults = window.__TWEAKS || { variant: 'board', showBelow: true };
+  const [variant, setVariantRaw] = useState(defaults.variant);
+  const [showBelow, setShowBelowRaw] = useState(defaults.showBelow);
+  const [tweaksOn, setTweaksOn] = useState(false);
+
+  const setVariant = (v) => { setVariantRaw(v); persist({ variant: v }); };
+  const setShowBelow = (b) => { setShowBelowRaw(b); persist({ showBelow: b }); };
+
+  useEffect(() => {
+    const onMsg = (e) => {
+      const d = e.data || {};
+      if (d.type === '__activate_edit_mode') setTweaksOn(true);
+      if (d.type === '__deactivate_edit_mode') setTweaksOn(false);
+    };
+    window.addEventListener('message', onMsg);
+    try { window.parent.postMessage({ type: '__edit_mode_available' }, '*'); } catch (e) {}
+    return () => window.removeEventListener('message', onMsg);
+  }, []);
+
+  const Stage =
+    variant === 'board'   ? <HeroBoard   /> :
+    variant === 'shatter' ? <HeroShatter /> :
+    variant === 'knight'  ? <HeroKnight  /> :
+                            <HeroTypo    />;
+
+  const titleByVariant = {
+    board: {
+      kicker: 'AKTIVNÍ KLUB · JABLONEC NAD NISOU',
+      l1: 'Šachový oddíl',
+      l2: <>TJ <span className="gold">Bižuterie</span></>,
+      l3: 'Jablonec nad Nisou',
+      sub: 'Tradiční klub s bohatou historií. Soutěžní partie krajských přeborů, trénink mládeže a víkendové turnaje pro všechny věkové kategorie.',
+    },
+    shatter: {
+      kicker: 'KLUB · TURNAJE · MLÁDEŽ',
+      l1: 'Všechno',
+      l2: <>na <span className="gold">jednom</span></>,
+      l3: 'místě.',
+      sub: 'Aktuality, rozpis zápasů, trénink mládeže, páteční blicák — celý klubový život přehledně, vždy po ruce.',
+    },
+    knight: {
+      kicker: 'BIŽUTERIE OD 70. LET',
+      l1: 'Vyzvi se.',
+      l2: <>Táhni <span className="gold">vpřed.</span></>,
+      l3: 'Přijď k nám.',
+      sub: 'Od prvních tahů jezdce po krajský přebor — v Bižuterii se naučíš hrát, analyzovat a vyhrávat partie.',
+    },
+    typo: {
+      kicker: 'ŠACHY · TRÉNINK · KOMUNITA',
+      l1: 'Každý tah',
+      l2: <>má svůj <span className="gold">smysl.</span></>,
+      l3: 'Najdi ten svůj.',
+      sub: 'Klubový web, turnajový kalendář, pokročilé tréninkové nástroje — Blunder Grid, Puzzle Racer a šachová databáze.',
+    },
+  };
+  const t = titleByVariant[variant];
+
+  return (
+    <>
+      <Header />
+      <section className="hero">
+        <div className="hero-grid">
+          <div className="hero-copy">
+            <span className="hero-kicker">
+              <span className="pulse"></span>
+              {t.kicker}
+            </span>
+            <h1 className="hero-title">
+              <span className="line line--1"><span>{t.l1}</span></span>
+              <span className="line line--2"><span>{t.l2}</span></span>
+              <span className="line line--3"><span>{t.l3}</span></span>
+            </h1>
+            <p className="hero-sub">{t.sub}</p>
+            <div className="hero-ctas">
+              <a href="/about.html" className="hero-btn hero-btn--primary">
+                <i className="fa-solid fa-user-plus"></i> Přijďte mezi nás
+              </a>
+              <a href="/calendar.html" className="hero-btn hero-btn--ghost">
+                <i className="fa-solid fa-calendar"></i> Rozpis zápasů
+              </a>
+            </div>
+            <div className="hero-stats">
+              <div className="hero-stat"><strong>70+</strong><span>aktivních členů</span></div>
+              <div className="hero-stat"><strong>4</strong><span>družstva v KP</span></div>
+              <div className="hero-stat"><strong>50+</strong><span>let tradice</span></div>
+            </div>
+          </div>
+          <div className="hero-stage" key={variant}>{Stage}</div>
+        </div>
+      </section>
+      {showBelow && <Below />}
+      <Tweaks
+        variant={variant} setVariant={setVariant}
+        showBelow={showBelow} setShowBelow={setShowBelow}
+        visible={tweaksOn}
+      />
+    </>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>

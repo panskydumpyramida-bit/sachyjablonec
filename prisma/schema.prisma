@@ -113,7 +113,12 @@ model News {
   
   // Stats
   viewCount     Int       @default(0) @map("view_count")
-  
+
+  // Facebook sharing
+  facebookPostId    String?   @map("facebook_post_id")
+  facebookSharedAt  DateTime? @map("facebook_shared_at")
+  facebookMessage   String?   @map("facebook_message")
+
   images        Image[]
 
   @@index([isPublished, publishedDate])
