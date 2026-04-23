@@ -1,8 +1,29 @@
 import express from 'express';
 import fetch from 'node-fetch';
 import { clean } from '../utils/helpers.js';
+import { scrapeStandings } from '../services/scrapingService.js';
+import { authMiddleware } from '../middleware/auth.js';
 
 const router = express.Router();
+
+/**
+ * POST /api/scraping/standings
+ * Generic tournament table scraper — returns headers + rows as plain text,
+ * letting the admin UI render the final HTML with club highlight.
+ * Body: { url: string }
+ */
+router.post('/standings', authMiddleware, async (req, res) => {
+    const { url } = req.body || {};
+    if (!url) return res.status(400).json({ error: 'URL je povinný' });
+
+    try {
+        const result = await scrapeStandings(url);
+        res.json(result);
+    } catch (e) {
+        console.error('[scrape standings] error:', e.message);
+        res.status(502).json({ error: e.message });
+    }
+});
 
 router.get('/chess-results', async (req, res) => {
     const { url } = req.query;

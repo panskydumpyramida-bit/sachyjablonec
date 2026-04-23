@@ -264,6 +264,90 @@ function parseArt8(html) {
     return players;
 }
 
+/**
+ * Generic standings-table scraper for chess-results.com pages (art=1, art=46, etc.).
+ * Returns the table as-is (headers + all rows) so the admin can decide what to show.
+ *
+ * @param {string} url - Any chess-results.com tournament URL (preferably art=1)
+ * @returns {Promise<{headers:string[], rows:string[][], tournamentTitle:string, url:string}>}
+ */
+const HTML_ENTITIES = {
+    nbsp: ' ', amp: '&', lt: '<', gt: '>', quot: '"', apos: "'",
+    auml: 'ä', ouml: 'ö', uuml: 'ü', Auml: 'Ä', Ouml: 'Ö', Uuml: 'Ü', szlig: 'ß',
+    aacute: 'á', eacute: 'é', iacute: 'í', oacute: 'ó', uacute: 'ú', yacute: 'ý',
+    Aacute: 'Á', Eacute: 'É', Iacute: 'Í', Oacute: 'Ó', Uacute: 'Ú', Yacute: 'Ý',
+    acirc: 'â', ecirc: 'ê', icirc: 'î', ocirc: 'ô', ucirc: 'û',
+    ccaron: 'č', Ccaron: 'Č', ncaron: 'ň', Ncaron: 'Ň', rcaron: 'ř', Rcaron: 'Ř',
+    scaron: 'š', Scaron: 'Š', tcaron: 'ť', Tcaron: 'Ť', zcaron: 'ž', Zcaron: 'Ž',
+    ecaron: 'ě', Ecaron: 'Ě', dcaron: 'ď', Dcaron: 'Ď', lcaron: 'ľ', Lcaron: 'Ľ',
+    ntilde: 'ñ', atilde: 'ã', otilde: 'õ',
+    frac12: '½', frac14: '¼', frac34: '¾'
+};
+
+function decodeEntities(s) {
+    return String(s)
+        .replace(/&#(\d+);/g, (_, n) => String.fromCodePoint(parseInt(n, 10)))
+        .replace(/&#x([0-9a-f]+);/gi, (_, n) => String.fromCodePoint(parseInt(n, 16)))
+        .replace(/&([a-zA-Z][a-zA-Z0-9]{1,20});/g, (m, name) => HTML_ENTITIES[name] ?? m);
+}
+
+export async function scrapeStandings(url) {
+    if (!url || !/chess-results\.com/i.test(url)) {
+        throw new Error('URL musí být z chess-results.com');
+    }
+
+    const response = await fetchWithHeaders(url);
+    if (!response.ok) throw new Error(`HTTP ${response.status} z chess-results.com`);
+    const html = await response.text();
+
+    const titleMatch = html.match(/<h2[^>]*>([\s\S]*?)<\/h2>/i);
+    const tournamentTitle = titleMatch
+        ? decodeEntities(clean(titleMatch[1].replace(/<[^>]+>/g, ' ')))
+        : '';
+
+    // chess-results wraps the main standings in <table class="CRs1">
+    const tableMatch = html.match(/<table[^>]*class="[^"]*CRs1[^"]*"[^>]*>([\s\S]*?)<\/table>/i);
+    if (!tableMatch) {
+        throw new Error('Na stránce nebyla nalezena tabulka (class="CRs1"). Použij URL s art=1 (žebříček) nebo art=46 (týmy).');
+    }
+    const tableInner = tableMatch[1];
+
+    const rawRows = tableInner.split(/<tr\b[^>]*>/i).slice(1);
+    const parsed = [];
+    for (const rawRow of rawRows) {
+        const cellRe = /<t([hd])\b[^>]*>([\s\S]*?)<\/t\1>/gi;
+        const cells = [];
+        let m;
+        while ((m = cellRe.exec(rawRow)) !== null) {
+            const text = decodeEntities(
+                clean(m[2].replace(/<br\s*\/?>/gi, ' ').replace(/<[^>]+>/g, ' '))
+            );
+            cells.push(text);
+        }
+        if (cells.length > 0) parsed.push(cells);
+    }
+
+    if (parsed.length < 2) {
+        throw new Error('Tabulka je prázdná nebo neobsahuje data.');
+    }
+
+    // Pick the canonical column count (mode of row widths) so we filter out
+    // team-title rows, summary rows, and other noise that have 1-2 cells.
+    const freq = new Map();
+    for (const r of parsed) freq.set(r.length, (freq.get(r.length) || 0) + 1);
+    let canonical = 0, best = 0;
+    for (const [count, f] of freq) { if (f > best) { best = f; canonical = count; } }
+
+    const canonRows = parsed.filter(r => r.length === canonical);
+    if (canonRows.length < 2) {
+        throw new Error('Tabulka rozpoznána, ale neobsahuje dost řádků na extrakci.');
+    }
+    const headers = canonRows[0];
+    const dataRows = canonRows.slice(1);
+
+    return { headers, rows: dataRows, tournamentTitle, url };
+}
+
 function parseArt1(html) {
     const players = [];
     if (!html) return players;

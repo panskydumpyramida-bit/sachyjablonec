@@ -744,6 +744,135 @@ function insertCtaButton(titleText, btnText, urlTarget) {
 }
 
 // ================================
+// CHESS-RESULTS TABLE IMPORT
+// ================================
+function escapeHtml(str) {
+    return String(str == null ? '' : str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+}
+
+function containsKeyword(text, keyword) {
+    if (!keyword) return false;
+    const norm = s => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+    return norm(text).includes(norm(keyword));
+}
+
+function buildResultsTableHtml({ headers, rows, keyword }) {
+    const headerHtml = headers.map(h => `<th>${escapeHtml(h)}</th>`).join('');
+    const bodyHtml = rows.map(row => {
+        const isHighlight = row.some(cell => containsKeyword(cell, keyword));
+        const trStyle = isHighlight ? ' style="background-color:rgba(212,175,55,0.08);"' : '';
+        const cellStyle = isHighlight ? ' style="color:#fbbf24; font-weight:700;"' : '';
+        const cells = row.map(c => `<td${cellStyle}>${escapeHtml(c)}</td>`).join('');
+        return `<tr${trStyle}>${cells}</tr>`;
+    }).join('');
+    return `<table class="results-table highlight-last"><thead><tr>${headerHtml}</tr></thead><tbody>${bodyHtml}</tbody></table>`;
+}
+
+function showResultsTableModal() {
+    // Save cursor for later insert
+    let savedRange = null;
+    const selection = window.getSelection();
+    if (selection.rangeCount > 0) savedRange = selection.getRangeAt(0).cloneRange();
+
+    const modal = document.createElement('div');
+    modal.style.cssText = 'position:fixed; inset:0; background:rgba(0,0,0,0.85); z-index:12000; display:flex; align-items:center; justify-content:center; backdrop-filter:blur(4px);';
+    modal.innerHTML = `
+        <div style="width:860px; max-width:95%; max-height:90vh; overflow:auto; background:#1a1a2e; border:1px solid rgba(255,255,255,0.1); padding:20px; border-radius:8px;">
+            <h3 style="margin:0 0 16px; color:#fff;">🏆 Tabulka výsledků z chess-results.com</h3>
+            <div style="display:flex; gap:10px; margin-bottom:12px; flex-wrap:wrap;">
+                <div style="flex:1; min-width:280px;">
+                    <label style="display:block; color:#a0a0a0; font-size:0.85em; margin-bottom:4px;">URL turnaje (art=1 pro žebříček, art=46 pro týmy)</label>
+                    <input type="text" id="rtUrl" placeholder="https://chess-results.com/tnr1276470.aspx?lan=5&art=1" style="width:100%; box-sizing:border-box; padding:8px; background:rgba(0,0,0,0.2); border:1px solid rgba(255,255,255,0.1); color:#fff; border-radius:4px; font-size:0.9em;">
+                </div>
+                <div style="width:200px;">
+                    <label style="display:block; color:#a0a0a0; font-size:0.85em; margin-bottom:4px;">Zvýraznit (obsahuje)</label>
+                    <input type="text" id="rtKeyword" value="Bižuterie" style="width:100%; box-sizing:border-box; padding:8px; background:rgba(0,0,0,0.2); border:1px solid rgba(255,255,255,0.1); color:#fff; border-radius:4px; font-size:0.9em;">
+                </div>
+                <div style="display:flex; align-items:flex-end;">
+                    <button type="button" id="rtFetch" style="padding:8px 14px; background:#60a5fa; border:none; color:#000; font-weight:bold; border-radius:4px; cursor:pointer;">Načíst tabulku</button>
+                </div>
+            </div>
+            <div id="rtStatus" style="font-size:0.85em; color:#94a3b8; margin-bottom:8px;">Zadej URL a klikni „Načíst tabulku".</div>
+            <div id="rtPreview" style="background:rgba(0,0,0,0.3); padding:12px; border-radius:4px; min-height:120px; max-height:50vh; overflow:auto; border:1px solid rgba(255,255,255,0.05);"></div>
+            <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:16px;">
+                <button type="button" id="rtCancel" style="padding:8px 16px; background:transparent; border:1px solid rgba(255,255,255,0.2); color:#fff; border-radius:4px; cursor:pointer;">Zrušit</button>
+                <button type="button" id="rtInsert" disabled style="padding:8px 16px; background:#34d399; border:none; color:#000; font-weight:bold; border-radius:4px; cursor:pointer; opacity:0.5;">Vložit do článku</button>
+            </div>
+        </div>`;
+    document.body.appendChild(modal);
+
+    const $ = sel => modal.querySelector(sel);
+    let lastTableHtml = '';
+
+    $('#rtCancel').onclick = () => {
+        if (savedRange) { selection.removeAllRanges(); selection.addRange(savedRange); }
+        modal.remove();
+    };
+
+    $('#rtFetch').onclick = async () => {
+        const url = $('#rtUrl').value.trim();
+        const keyword = $('#rtKeyword').value.trim();
+        if (!url) { $('#rtStatus').textContent = 'Chybí URL.'; return; }
+
+        $('#rtStatus').textContent = 'Načítám…';
+        $('#rtFetch').disabled = true;
+        try {
+            const res = await fetch(`${API_URL}/scraping/standings`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
+                body: JSON.stringify({ url })
+            });
+            const data = await res.json();
+            if (!res.ok) {
+                $('#rtStatus').textContent = '❌ ' + (data.error || `HTTP ${res.status}`);
+                return;
+            }
+            lastTableHtml = buildResultsTableHtml({ headers: data.headers, rows: data.rows, keyword });
+            $('#rtPreview').innerHTML = lastTableHtml;
+            const hiCount = data.rows.filter(r => r.some(c => containsKeyword(c, keyword))).length;
+            $('#rtStatus').innerHTML = `✓ Načteno ${data.rows.length} řádků, zvýrazněno ${hiCount} (klíčové slovo „${escapeHtml(keyword)}"). Turnaj: <strong>${escapeHtml(data.tournamentTitle || '')}</strong>`;
+            $('#rtInsert').disabled = false;
+            $('#rtInsert').style.opacity = '1';
+        } catch (e) {
+            $('#rtStatus').textContent = '❌ Chyba spojení: ' + e.message;
+        } finally {
+            $('#rtFetch').disabled = false;
+        }
+    };
+
+    // Re-highlight on keyword change without re-fetching
+    $('#rtKeyword').oninput = () => {
+        if (!lastTableHtml) return;
+        $('#rtFetch').click();
+    };
+
+    $('#rtInsert').onclick = () => {
+        if (!lastTableHtml) return;
+        if (savedRange) { selection.removeAllRanges(); selection.addRange(savedRange); }
+
+        const editor = document.getElementById('articleContent');
+        editor.focus();
+        const range = (savedRange || selection.getRangeAt(0));
+        const wrapper = document.createElement('div');
+        wrapper.innerHTML = lastTableHtml + '<p><br></p>';
+        const fragment = document.createDocumentFragment();
+        while (wrapper.firstChild) fragment.appendChild(wrapper.firstChild);
+        range.deleteContents();
+        range.insertNode(fragment);
+
+        modal.remove();
+        if (typeof updatePreview === 'function') updatePreview();
+        window.isNewsDirty = true;
+    };
+}
+
+window.showResultsTableModal = showResultsTableModal;
+
+// ================================
 // EXPORTS
 // ================================
 window.initSlashCommands = initSlashCommands;
