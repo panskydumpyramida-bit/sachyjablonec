@@ -518,7 +518,8 @@
 .about-timeline-section .tl-track {
   position: relative;
   height: 2px;
-  background: linear-gradient(90deg, transparent, var(--bj-gold-tint-20) 8%, var(--bj-gold-tint-20) 92%, transparent);
+  /* Track ends before the future milestone (4th column, center ~87.5%) — stops around 75% */
+  background: linear-gradient(90deg, transparent, var(--bj-gold-tint-20) 12%, var(--bj-gold-tint-20) 62%, transparent 75%);
   margin: 0 2rem;
 }
 
@@ -535,7 +536,7 @@
   animation: bjTlGrow 2.4s var(--bj-ease-out) .4s forwards;
 }
 
-@keyframes bjTlGrow { to { width: 84%; } }
+@keyframes bjTlGrow { to { width: 55%; } }
 
 .about-timeline-section .tl-items {
   position: relative;
