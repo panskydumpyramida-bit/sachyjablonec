@@ -1,0 +1,2 @@
+ALTER TABLE news ADD COLUMN IF NOT EXISTS instagram_story_ids TEXT;
+ALTER TABLE news ADD COLUMN IF NOT EXISTS instagram_shared_at TIMESTAMP(3);

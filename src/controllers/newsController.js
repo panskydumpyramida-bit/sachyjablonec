@@ -1,5 +1,6 @@
 import { PrismaClient } from '@prisma/client';
 import { shareNewsToFacebook } from '../services/facebookService.js';
+import { shareNewsToInstagramStories } from '../services/instagramService.js';
 
 const prisma = new PrismaClient();
 
@@ -522,6 +523,55 @@ export const shareToFacebook = async (req, res) => {
             error: 'Failed to share to Facebook',
             detail: error.message,
             fbError: error.fbError || null
+        });
+    }
+};
+
+export const shareToInstagramStories = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const force = req.query.force === 'true' || req.body?.force === true;
+
+        const news = await prisma.news.findUnique({
+            where: { id: parseInt(id) }
+        });
+
+        if (!news) {
+            return res.status(404).json({ error: 'News not found' });
+        }
+
+        if (!news.isPublished) {
+            return res.status(400).json({ error: 'Article must be published before sharing to Instagram' });
+        }
+
+        if (news.instagramStoryIds && !force) {
+            return res.status(409).json({
+                error: 'Article already shared to Instagram Stories',
+                instagramStoryIds: news.instagramStoryIds,
+                instagramSharedAt: news.instagramSharedAt
+            });
+        }
+
+        const { mediaIds } = await shareNewsToInstagramStories(news);
+
+        const updated = await prisma.news.update({
+            where: { id: news.id },
+            data: {
+                instagramStoryIds: JSON.stringify(mediaIds),
+                instagramSharedAt: new Date()
+            },
+            select: { id: true, instagramStoryIds: true, instagramSharedAt: true }
+        });
+
+        res.json({ ...updated, storyCount: mediaIds.length });
+    } catch (error) {
+        console.error('[shareToInstagramStories] Error:', error);
+        const status = error.status >= 400 && error.status < 600 ? 502 : 500;
+        res.status(status).json({
+            error: 'Failed to share to Instagram Stories',
+            detail: error.message,
+            igError: error.igError || null,
+            partialMediaIds: error.partialMediaIds || null
         });
     }
 };
