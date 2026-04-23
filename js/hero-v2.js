@@ -14,41 +14,41 @@
     return { left: (file * 12.5) + '%', top: (rank * 12.5) + '%' };
   }
 
-  // Use the same solid glyphs (♚♛♜♝♞♟) for both sides to ensure uniform rendering.
-  // CSS color on .piece--white/.piece--black distinguishes sides.
+  // Use FontAwesome chess icons — uniform rendering across iOS/Android/desktop
+  // (Unicode chess glyphs have per-glyph font fallback issues on mobile).
   const INITIAL_PIECES = [
-    { id: 'Ra', glyph: '♜', side: 'white', sq: 'a1' },
-    { id: 'Nb', glyph: '♞', side: 'white', sq: 'b1' },
-    { id: 'Bc', glyph: '♝', side: 'white', sq: 'c1' },
-    { id: 'Qd', glyph: '♛', side: 'white', sq: 'd1' },
-    { id: 'Ke', glyph: '♚', side: 'white', sq: 'e1' },
-    { id: 'Bf', glyph: '♝', side: 'white', sq: 'f1' },
-    { id: 'Ng', glyph: '♞', side: 'white', sq: 'g1' },
-    { id: 'Rh', glyph: '♜', side: 'white', sq: 'h1' },
-    { id: 'Pa', glyph: '♟', side: 'white', sq: 'a2' },
-    { id: 'Pb', glyph: '♟', side: 'white', sq: 'b2' },
-    { id: 'Pc', glyph: '♟', side: 'white', sq: 'c2' },
-    { id: 'Pd', glyph: '♟', side: 'white', sq: 'd2' },
-    { id: 'Pe', glyph: '♟', side: 'white', sq: 'e2' },
-    { id: 'Pf', glyph: '♟', side: 'white', sq: 'f2' },
-    { id: 'Pg', glyph: '♟', side: 'white', sq: 'g2' },
-    { id: 'Ph', glyph: '♟', side: 'white', sq: 'h2' },
-    { id: 'ra', glyph: '♜', side: 'black', sq: 'a8' },
-    { id: 'nb', glyph: '♞', side: 'black', sq: 'b8' },
-    { id: 'bc', glyph: '♝', side: 'black', sq: 'c8' },
-    { id: 'qd', glyph: '♛', side: 'black', sq: 'd8' },
-    { id: 'ke', glyph: '♚', side: 'black', sq: 'e8' },
-    { id: 'bf', glyph: '♝', side: 'black', sq: 'f8' },
-    { id: 'ng', glyph: '♞', side: 'black', sq: 'g8' },
-    { id: 'rh', glyph: '♜', side: 'black', sq: 'h8' },
-    { id: 'pa', glyph: '♟', side: 'black', sq: 'a7' },
-    { id: 'pb', glyph: '♟', side: 'black', sq: 'b7' },
-    { id: 'pc', glyph: '♟', side: 'black', sq: 'c7' },
-    { id: 'pd', glyph: '♟', side: 'black', sq: 'd7' },
-    { id: 'pe', glyph: '♟', side: 'black', sq: 'e7' },
-    { id: 'pf', glyph: '♟', side: 'black', sq: 'f7' },
-    { id: 'pg', glyph: '♟', side: 'black', sq: 'g7' },
-    { id: 'ph', glyph: '♟', side: 'black', sq: 'h7' },
+    { id: 'Ra', icon: 'fa-chess-rook',   side: 'white', sq: 'a1' },
+    { id: 'Nb', icon: 'fa-chess-knight', side: 'white', sq: 'b1' },
+    { id: 'Bc', icon: 'fa-chess-bishop', side: 'white', sq: 'c1' },
+    { id: 'Qd', icon: 'fa-chess-queen',  side: 'white', sq: 'd1' },
+    { id: 'Ke', icon: 'fa-chess-king',   side: 'white', sq: 'e1' },
+    { id: 'Bf', icon: 'fa-chess-bishop', side: 'white', sq: 'f1' },
+    { id: 'Ng', icon: 'fa-chess-knight', side: 'white', sq: 'g1' },
+    { id: 'Rh', icon: 'fa-chess-rook',   side: 'white', sq: 'h1' },
+    { id: 'Pa', icon: 'fa-chess-pawn',   side: 'white', sq: 'a2' },
+    { id: 'Pb', icon: 'fa-chess-pawn',   side: 'white', sq: 'b2' },
+    { id: 'Pc', icon: 'fa-chess-pawn',   side: 'white', sq: 'c2' },
+    { id: 'Pd', icon: 'fa-chess-pawn',   side: 'white', sq: 'd2' },
+    { id: 'Pe', icon: 'fa-chess-pawn',   side: 'white', sq: 'e2' },
+    { id: 'Pf', icon: 'fa-chess-pawn',   side: 'white', sq: 'f2' },
+    { id: 'Pg', icon: 'fa-chess-pawn',   side: 'white', sq: 'g2' },
+    { id: 'Ph', icon: 'fa-chess-pawn',   side: 'white', sq: 'h2' },
+    { id: 'ra', icon: 'fa-chess-rook',   side: 'black', sq: 'a8' },
+    { id: 'nb', icon: 'fa-chess-knight', side: 'black', sq: 'b8' },
+    { id: 'bc', icon: 'fa-chess-bishop', side: 'black', sq: 'c8' },
+    { id: 'qd', icon: 'fa-chess-queen',  side: 'black', sq: 'd8' },
+    { id: 'ke', icon: 'fa-chess-king',   side: 'black', sq: 'e8' },
+    { id: 'bf', icon: 'fa-chess-bishop', side: 'black', sq: 'f8' },
+    { id: 'ng', icon: 'fa-chess-knight', side: 'black', sq: 'g8' },
+    { id: 'rh', icon: 'fa-chess-rook',   side: 'black', sq: 'h8' },
+    { id: 'pa', icon: 'fa-chess-pawn',   side: 'black', sq: 'a7' },
+    { id: 'pb', icon: 'fa-chess-pawn',   side: 'black', sq: 'b7' },
+    { id: 'pc', icon: 'fa-chess-pawn',   side: 'black', sq: 'c7' },
+    { id: 'pd', icon: 'fa-chess-pawn',   side: 'black', sq: 'd7' },
+    { id: 'pe', icon: 'fa-chess-pawn',   side: 'black', sq: 'e7' },
+    { id: 'pf', icon: 'fa-chess-pawn',   side: 'black', sq: 'f7' },
+    { id: 'pg', icon: 'fa-chess-pawn',   side: 'black', sq: 'g7' },
+    { id: 'ph', icon: 'fa-chess-pawn',   side: 'black', sq: 'h7' },
   ];
 
   // Caro-Kann miniature: 1.e4 c6 2.d4 d5 3.Nc3 dxe4 4.Nxe4 Nd7 5.Qe2 Ngf6?? 6.Nd6#
@@ -108,7 +108,9 @@
       el.dataset.id = p.id;
       el.style.left = left;
       el.style.top = top;
-      el.textContent = p.glyph;
+      const icon = document.createElement('i');
+      icon.className = 'fa-solid ' + p.icon;
+      el.appendChild(icon);
       stage.appendChild(el);
       byId[p.id] = { el, sq: p.sq };
     });
