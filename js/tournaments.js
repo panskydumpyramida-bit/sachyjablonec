@@ -171,6 +171,7 @@ const cityToCoords = {
     'teplice': { lat: 50.64, lon: 13.82 },
     'varnsdorf': { lat: 50.91, lon: 14.62, region: 'LI' },
     'josefův důl': { lat: 50.78, lon: 15.23, region: 'LI' },
+    'stráž pod ralskem': { lat: 50.7028, lon: 14.8011, region: 'LI' },
     'bakov': { lat: 50.48, lon: 14.94, region: 'LI' },
     'dobrovice': { lat: 50.37, lon: 14.97, region: 'ST' },
     'tábor': { lat: 49.41, lon: 14.66, region: 'JC' },
