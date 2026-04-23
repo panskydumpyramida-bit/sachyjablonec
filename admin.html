@@ -11,6 +11,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="css/style.css?v=ux12">
     <link rel="stylesheet" href="css/admin.css?v=ux13">
+    <link rel="stylesheet" href="css/admin-sidebar.css">
     <script src="js/version.js?v=ux12"></script>
     <script src="js/modal-manager.js?v=ux12"></script>
 </head>
@@ -58,12 +59,53 @@
                 </nav>
             </div>
         </header>
+
+        <!-- ===== SIDEBAR ===== -->
+        <aside class="admin-sidebar" id="adminSidebar">
+            <div class="sidebar-brand">
+                <div class="sidebar-brand-title">TJ Bižuterie</div>
+                <div class="sidebar-brand-sub">Administrace</div>
+            </div>
+
+            <div class="sidebar-group">
+                <div class="sidebar-group-label">Obsah</div>
+                <div class="sidebar-nav-list" id="sidebarNavContent"></div>
+            </div>
+
+            <div class="sidebar-group">
+                <div class="sidebar-group-label">Komunita</div>
+                <div class="sidebar-nav-list" id="sidebarNavCommunity"></div>
+            </div>
+
+            <div class="sidebar-group">
+                <div class="sidebar-group-label">Nástroje</div>
+                <div class="sidebar-nav-list" id="sidebarNavTools"></div>
+            </div>
+
+            <div class="sidebar-footer">
+                <div class="sidebar-nav-list" id="sidebarNavFooter"></div>
+            </div>
+        </aside>
+
+        <div class="admin-sidebar-overlay" id="adminSidebarOverlay" onclick="closeAdminSidebar()"></div>
+
+        <!-- ===== TOPBAR ===== -->
+        <div class="admin-topbar">
+            <div style="display: flex; align-items: center; gap: 0.75rem;">
+                <button class="sidebar-toggle" onclick="toggleAdminSidebar()" aria-label="Menu">
+                    <i class="fa-solid fa-bars"></i>
+                </button>
+                <h2 class="admin-topbar-title" id="currentTabTitle">
+                    <i class="fa-solid fa-list"></i><span>Přehled</span>
+                </h2>
+            </div>
+            <div class="admin-topbar-user" id="userInfo"></div>
+        </div>
+
         <div class="admin-container">
-            <div class="admin-header">
+            <div class="admin-header" style="display: none;">
                 <div>
                     <h1><i class="fa-solid fa-cogs"></i>Správa webu</h1>
-                    <p style="margin: 0.25rem 0 0 0; font-size: 0.9rem; opacity: 0.8; visibility: visible !important;"
-                        id="userInfo"></p>
                     <p style="margin: 0.1rem 0 0 0; font-size: 0.7rem; opacity: 0.5; font-family: monospace;">
                         Build:
                         <script>document.write(new Date().toISOString().slice(0, 10) + ' #v' + APP_VERSION)</script>
@@ -2400,6 +2442,7 @@
     <script src="js/admin/admin-games.js?v=ux12"></script>
     <script src="js/admin/admin-events.js?v=ux12"></script>
     <script src="js/admin/admin-timeline.js"></script>
+    <script src="js/admin/admin-sidebar.js"></script>
     <script src="js/admin/admin-users.js?v=ux12"></script>
     <script src="js/admin/admin-blicak.js?v=ux12"></script>
     <script src="js/admin/admin-puzzle-racer.js?v=ux12"></script>
