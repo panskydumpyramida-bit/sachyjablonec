@@ -185,6 +185,22 @@
   letter-spacing: .02em;
 }
 
+/* Šachovnicový rozcestník vložený přímo do hero-copy (místo CTA tlačítka) */
+.hero-v2 .hero-tiles-inline {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: .6rem;
+  max-width: 420px;
+  margin-top: 1.4rem;
+  animation: bjFadeUp .7s var(--bj-ease-out) .75s both;
+}
+.hero-v2 .hero-tiles-inline .hero-grid-item {
+  aspect-ratio: 1;
+}
+@media (max-width: 720px) {
+  .hero-v2 .hero-tiles-inline { max-width: 100%; gap: .5rem; }
+}
+
 .hero-v2 .hero-stats {
   margin-top: 2.5rem;
   display: flex;
