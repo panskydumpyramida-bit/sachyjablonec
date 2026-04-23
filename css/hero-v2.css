@@ -185,23 +185,26 @@
   letter-spacing: .02em;
 }
 
-/* 3D flip — šachovnice se po matu otočí na rozcestník (4 dlaždice) */
+/* 3D flip — šachovnice se po matu otočí na rozcestník (4 dlaždice).
+ * Naklonění + bobbing je na wrapperu (obě strany to dědí),
+ * faces provádí jen rotateY pro samotný flip. */
 .hero-v2 .hero-flip-card {
   position: relative;
   width: 100%;
   aspect-ratio: 1;
   perspective: 1600px;
+  transform-style: preserve-3d;
+  animation: bjBoardIntro 1.2s var(--bj-ease-out) both, bjBoardFloat 6s ease-in-out infinite 1.2s;
 }
 .hero-v2 .hero-flip-face {
   position: absolute;
   inset: 0;
   backface-visibility: hidden;
-  transform-style: preserve-3d;
   transition: transform .95s cubic-bezier(.65, .05, .36, 1);
   will-change: transform;
 }
 .hero-v2 .hero-flip-front { transform: rotateY(0deg); }
-.hero-v2 .hero-flip-back  { transform: rotateY(180deg); }
+.hero-v2 .hero-flip-back  { transform: rotateY(180deg); background: var(--bj-bg); }
 .hero-v2 .hero-flip-card.flipped .hero-flip-front { transform: rotateY(-180deg); pointer-events: none; }
 .hero-v2 .hero-flip-card.flipped .hero-flip-back  { transform: rotateY(0deg); }
 
@@ -221,6 +224,7 @@
 
 @media (prefers-reduced-motion: reduce) {
   .hero-v2 .hero-flip-face { transition: none; }
+  .hero-v2 .hero-flip-card { animation: none; transform: rotateX(12deg) rotateZ(-3deg); }
 }
 
 .hero-v2 .hero-stats {
@@ -270,11 +274,9 @@
 .hero-v2 .board-scene {
   position: relative;
   width: 100%;
-  aspect-ratio: 1;
+  height: 100%;
   filter: drop-shadow(0 20px 40px rgba(0, 0, 0, .5));
-  animation: bjBoardFloat 6s ease-in-out infinite, bjBoardIntro 1.2s var(--bj-ease-out) both;
   transform-style: preserve-3d;
-  perspective: 1200px;
 }
 
 @keyframes bjBoardIntro {
