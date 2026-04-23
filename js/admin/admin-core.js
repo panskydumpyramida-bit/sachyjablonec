@@ -462,6 +462,36 @@ async function toggleLatestComment() {
     }
 }
 
+async function saveHeroSettings() {
+    const pgn = document.getElementById('heroAnimationPgn').value;
+    const header = document.getElementById('heroAnimationHeader').value;
+    
+    try {
+        await fetch(`${API_URL}/settings`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${authToken}`
+            },
+            body: JSON.stringify({ key: 'hero_animation_pgn', value: pgn })
+        });
+        
+        await fetch(`${API_URL}/settings`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${authToken}`
+            },
+            body: JSON.stringify({ key: 'hero_animation_header', value: header })
+        });
+        
+        showAlert('Nastavení titulní stránky uloženo', 'success');
+    } catch (e) {
+        console.error('Chyba při ukládání hero nastavení:', e);
+        showAlert('Chyba spojení', 'error');
+    }
+}
+
 /**
  * Check maintenance mode and other settings on load
  */
@@ -477,6 +507,12 @@ async function checkMaintenance() {
 
         const commentToggle = document.getElementById('showLatestCommentToggle');
         if (commentToggle) commentToggle.checked = settings.show_latest_comment === 'true';
+        
+        const heroPgnInput = document.getElementById('heroAnimationPgn');
+        if (heroPgnInput) heroPgnInput.value = settings.hero_animation_pgn || '';
+        
+        const heroHeaderInput = document.getElementById('heroAnimationHeader');
+        if (heroHeaderInput) heroHeaderInput.value = settings.hero_animation_header || '';
     } catch (e) {
         console.error('Failed to check settings:', e);
     }
@@ -548,6 +584,7 @@ window.showToast = showToast;
 window.showAlert = showAlert;
 window.toggleMaintenance = toggleMaintenance;
 window.toggleLatestComment = toggleLatestComment;
+window.saveHeroSettings = saveHeroSettings;
 window.checkMaintenance = checkMaintenance;
 window.toggleSidebarSection = toggleSidebarSection;
 
