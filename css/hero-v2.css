@@ -22,8 +22,8 @@
   --bj-ease-out: cubic-bezier(.16, 1, .3, 1);
 
   position: relative;
-  min-height: 640px;
-  padding: 4rem 2rem 4rem;
+  min-height: auto;
+  padding: 2rem 2rem 2.2rem;
   margin-top: 70px; /* offset for fixed global header */
   overflow: hidden;
   background: radial-gradient(ellipse at 20% 0%, rgba(212, 175, 55, .09), transparent 55%),
@@ -87,11 +87,11 @@
 
 .hero-v2 .hero-title {
   font-family: var(--bj-font-heading);
-  font-size: clamp(2.4rem, 5vw, 4.2rem);
-  line-height: 1.02;
+  font-size: clamp(1.8rem, 3.2vw, 2.8rem);
+  line-height: 1.05;
   font-weight: 700;
   color: #fff;
-  margin: 1.2rem 0 .4rem;
+  margin: .4rem 0 .4rem;
   letter-spacing: -.02em;
   text-align: left;
   text-shadow: none;
@@ -125,11 +125,11 @@
 }
 
 .hero-v2 .hero-sub {
-  font-size: 1.05rem;
-  line-height: 1.65;
+  font-size: .95rem;
+  line-height: 1.55;
   color: var(--bj-fg-muted);
   max-width: 480px;
-  margin: .5rem 0 2rem;
+  margin: .5rem 0 .5rem;
   animation: bjFadeUp .7s var(--bj-ease-out) .6s both;
 }
 
@@ -185,20 +185,42 @@
   letter-spacing: .02em;
 }
 
-/* Šachovnicový rozcestník vložený přímo do hero-copy (místo CTA tlačítka) */
-.hero-v2 .hero-tiles-inline {
+/* 3D flip — šachovnice se po matu otočí na rozcestník (4 dlaždice) */
+.hero-v2 .hero-flip-card {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1;
+  perspective: 1600px;
+}
+.hero-v2 .hero-flip-face {
+  position: absolute;
+  inset: 0;
+  backface-visibility: hidden;
+  transform-style: preserve-3d;
+  transition: transform .95s cubic-bezier(.65, .05, .36, 1);
+  will-change: transform;
+}
+.hero-v2 .hero-flip-front { transform: rotateY(0deg); }
+.hero-v2 .hero-flip-back  { transform: rotateY(180deg); }
+.hero-v2 .hero-flip-card.flipped .hero-flip-front { transform: rotateY(-180deg); pointer-events: none; }
+.hero-v2 .hero-flip-card.flipped .hero-flip-back  { transform: rotateY(0deg); }
+
+.hero-v2 .hero-flip-tiles {
+  position: absolute;
+  inset: 0;
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: .6rem;
-  max-width: 420px;
-  margin-top: 1.4rem;
-  animation: bjFadeUp .7s var(--bj-ease-out) .75s both;
+  grid-template-rows: repeat(2, 1fr);
+  gap: 0;
 }
-.hero-v2 .hero-tiles-inline .hero-grid-item {
-  aspect-ratio: 1;
+.hero-v2 .hero-flip-tiles .hero-grid-item {
+  aspect-ratio: auto;
+  width: 100%;
+  height: 100%;
 }
-@media (max-width: 720px) {
-  .hero-v2 .hero-tiles-inline { max-width: 100%; gap: .5rem; }
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-v2 .hero-flip-face { transition: none; }
 }
 
 .hero-v2 .hero-stats {

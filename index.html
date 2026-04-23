@@ -330,34 +330,6 @@
                         <span class="line line--3"><span>Jablonec nad Nisou</span></span>
                     </h1>
                     <p class="hero-sub">Šachový klub z Jablonce. U nás se hraje, trénuje, jezdí na turnaje a občas i prohraje — hlavně že spolu. Přijď si zkusit šachovnici, přivést dítě, nebo se jen podívat.</p>
-                    <div class="hero-tiles-inline">
-                        <a href="#news" class="hero-grid-item light">
-                            <i class="fa-solid fa-newspaper" style="color: #5d4037;"></i>
-                            <span>Aktuality</span>
-                        </a>
-                        <div id="match-rotator-tile"
-                            style="perspective: 1000px; aspect-ratio: 1; cursor: pointer; overflow: hidden; border-radius: 0;">
-                            <div class="rotator-inner"
-                                style="position: relative; width: 100%; height: 100%; transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1); transform-style: preserve-3d;">
-                                <div class="hero-grid-item dark face-front"
-                                    style="position: absolute; inset: 0; backface-visibility: hidden; z-index: 2; border: none; background: rgba(30, 30, 50, 0.85);">
-                                    <i class="fa-solid fa-chess-king" style="color: var(--primary-color);"></i>
-                                    <span>Rozpis zápasů</span>
-                                </div>
-                                <div class="hero-grid-item dark face-back"
-                                    style="position: absolute; inset: 0; backface-visibility: hidden; transform: rotateY(180deg); background: linear-gradient(135deg, rgba(40,40,60,0.95) 0%, rgba(20,20,35,0.9) 100%); overflow: hidden; padding: 0.3rem; border: 1px solid rgba(212,175,55,0.3);">
-                                </div>
-                            </div>
-                        </div>
-                        <a href="/blicak" class="hero-grid-item dark">
-                            <i class="fa-solid fa-bolt" style="color: var(--primary-color);"></i>
-                            <span>Blicák</span>
-                        </a>
-                        <a href="youth.html" class="hero-grid-item light">
-                            <i class="fa-solid fa-child" style="color: #5d4037;"></i>
-                            <span>Mládež</span>
-                        </a>
-                    </div>
                     <!-- HIDDEN: hero-stats (vrátit smazáním komentářů)
                     <div class="hero-stats">
                         <div class="hero-stat"><strong>70+</strong><span>aktivních členů</span></div>
@@ -368,8 +340,32 @@
                     <!-- /HIDDEN -->
                 </div>
                 <div class="hero-stage">
-                    <div class="board-scene">
-                        <div class="board" id="hero-board"></div>
+                    <div class="hero-flip-card" id="heroFlipCard">
+                        <div class="hero-flip-face hero-flip-front">
+                            <div class="board-scene">
+                                <div class="board" id="hero-board"></div>
+                            </div>
+                        </div>
+                        <div class="hero-flip-face hero-flip-back">
+                            <div class="hero-flip-tiles">
+                                <a href="#news" class="hero-grid-item light">
+                                    <i class="fa-solid fa-newspaper" style="color: #5d4037;"></i>
+                                    <span>Aktuality</span>
+                                </a>
+                                <a href="/calendar.html" class="hero-grid-item dark">
+                                    <i class="fa-solid fa-chess-king" style="color: var(--primary-color);"></i>
+                                    <span>Rozpis zápasů</span>
+                                </a>
+                                <a href="/blicak.html" class="hero-grid-item dark">
+                                    <i class="fa-solid fa-bolt" style="color: var(--primary-color);"></i>
+                                    <span>Blicák</span>
+                                </a>
+                                <a href="/youth.html" class="hero-grid-item light">
+                                    <i class="fa-solid fa-child" style="color: #5d4037;"></i>
+                                    <span>Mládež</span>
+                                </a>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>

@@ -315,6 +315,11 @@
       if (mateSquare && squares[mateSquare]) {
         squares[mateSquare].classList.add('mate');
       }
+      // Reduced motion: po krátké pauze flip rovnou na rozcestník, bez animace partie
+      setTimeout(() => {
+        const flipCard = document.getElementById('heroFlipCard');
+        if (flipCard) flipCard.classList.add('flipped');
+      }, 1500);
       return;
     }
 
@@ -380,6 +385,14 @@
               squares[action.mateSquare].classList.add('mate');
             }
           }, 700);
+          // Po matu otočit kartu na rozcestník (4 dlaždice). Nechá se flipnutá natrvalo.
+          addTimer(() => {
+            if (!alive) return;
+            const flipCard = document.getElementById('heroFlipCard');
+            if (flipCard && !flipCard.classList.contains('flipped')) {
+              flipCard.classList.add('flipped');
+            }
+          }, 2000);
         }
 
         addTimer(() => {
