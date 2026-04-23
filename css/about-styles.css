@@ -28,30 +28,36 @@
     display: grid;
     grid-template-columns: 1fr 1fr;
     /* 50/50 Split */
-    gap: 3rem;
+    gap: 2rem;
     align-items: start;
-    margin-bottom: 4rem;
+    margin-bottom: 2.5rem;
 }
 
 .split-col {
-    background: #252525;
-    /* Dark background */
-    padding: 2rem;
-    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.03);
+    /* Near-transparent — body gradient prosvítá */
+    backdrop-filter: blur(2px);
+    padding: 1.5rem;
+    border-radius: 10px;
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
     height: 100%;
     color: #f0f0f0;
-    border: 1px solid #333;
+    border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .split-col .section-title {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
     text-align: left;
-    margin-bottom: 1.5rem;
-    border-bottom: 2px solid #333;
-    padding-bottom: 0.5rem;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    font-weight: 600;
+    margin: 0 0 1.2rem;
+    padding: 0;
     color: #d4af37;
-    /* Gold title */
-    font-size: 1.8rem;
+    font-size: 1.15rem;
+    border-bottom: none;
 }
 
 /* Management Grid in Split View */
@@ -65,9 +71,9 @@
 /* Compact Card Style for Split View */
 .management-card.small-card {
     padding: 1rem;
-    background: #303030;
-    /* Slightly lighter card bg */
-    border: 1px solid #3d3d3d;
+    background: rgba(255, 255, 255, 0.04);
+    /* Near-transparent — body gradient prosvítá, text zůstává čitelný */
+    border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .management-card.small-card .m-card-photo {
