@@ -451,6 +451,192 @@
   }
 }
 
+/* ---------- About timeline ---------- */
+
+.about-timeline-section {
+  --bj-gold: #d4af37;
+  --bj-gold-warm: #fbbf24;
+  --bj-gold-tint-10: rgba(212, 175, 55, 0.1);
+  --bj-gold-tint-20: rgba(212, 175, 55, 0.2);
+  --bj-gold-tint-30: rgba(212, 175, 55, 0.3);
+  --bj-bg: #0b0b0e;
+  --bj-fg: #e0e0e0;
+  --bj-fg-muted: #b0b0b0;
+  --bj-font-heading: 'Playfair Display', Georgia, serif;
+  --bj-ease-out: cubic-bezier(.16, 1, .3, 1);
+  --bj-ease-bounce: cubic-bezier(.175, .885, .32, 1.275);
+
+  position: relative;
+  padding: 4rem 2rem 3rem;
+  max-width: 1280px;
+  margin: 0 auto;
+  color: var(--bj-fg);
+  background: var(--bj-bg);
+}
+
+.about-timeline-section .about-eyebrow {
+  text-align: center;
+  font-size: .72rem;
+  font-weight: 600;
+  color: var(--bj-gold);
+  text-transform: uppercase;
+  letter-spacing: .18em;
+  margin: 0 0 .8rem;
+}
+
+.about-timeline-section .about-head {
+  text-align: center;
+  font-family: var(--bj-font-heading);
+  font-size: clamp(2rem, 4vw, 3rem);
+  font-weight: 700;
+  color: #fff;
+  line-height: 1.1;
+  letter-spacing: -.02em;
+  margin: 0 0 1rem;
+}
+
+.about-timeline-section .about-head em {
+  color: var(--bj-gold);
+  font-style: italic;
+  font-weight: 900;
+}
+
+.about-timeline-section .about-lead {
+  text-align: center;
+  max-width: 680px;
+  margin: 0 auto 3rem;
+  font-size: 1.02rem;
+  line-height: 1.65;
+  color: var(--bj-fg-muted);
+}
+
+.about-timeline-section .tl {
+  position: relative;
+  padding: 2rem 0 1rem;
+}
+
+.about-timeline-section .tl-track {
+  position: relative;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--bj-gold-tint-20) 8%, var(--bj-gold-tint-20) 92%, transparent);
+  margin: 0 2rem;
+}
+
+.about-timeline-section .tl-track::after {
+  content: '';
+  position: absolute;
+  left: 8%;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 0;
+  height: 2px;
+  background: var(--bj-gold);
+  box-shadow: 0 0 12px var(--bj-gold-tint-30);
+  animation: bjTlGrow 2.4s var(--bj-ease-out) .4s forwards;
+}
+
+@keyframes bjTlGrow { to { width: 84%; } }
+
+.about-timeline-section .tl-items {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 1rem;
+  margin: -18px 2rem 0;
+}
+
+.about-timeline-section .tl-item {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  opacity: 0;
+  animation: bjTlRise .7s var(--bj-ease-out) forwards;
+}
+
+.about-timeline-section .tl-item:nth-child(1) { animation-delay: .6s; }
+.about-timeline-section .tl-item:nth-child(2) { animation-delay: .8s; }
+.about-timeline-section .tl-item:nth-child(3) { animation-delay: 1.0s; }
+.about-timeline-section .tl-item:nth-child(4) { animation-delay: 1.2s; }
+.about-timeline-section .tl-item:nth-child(5) { animation-delay: 1.4s; }
+.about-timeline-section .tl-item:nth-child(6) { animation-delay: 1.6s; }
+
+@keyframes bjTlRise {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.about-timeline-section .tl-marker {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: #1a1a1e;
+  border: 2px solid var(--bj-gold);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--bj-gold);
+  font-size: 1rem;
+  box-shadow: 0 0 0 4px var(--bj-bg), 0 4px 14px rgba(212, 175, 55, .3);
+  transition: transform .4s var(--bj-ease-bounce), background .3s;
+  cursor: default;
+}
+
+.about-timeline-section .tl-item:hover .tl-marker {
+  transform: scale(1.2) translateY(-4px);
+  background: var(--bj-gold);
+  color: #0b0b0e;
+}
+
+.about-timeline-section .tl-year {
+  margin-top: .8rem;
+  font-family: var(--bj-font-heading);
+  font-weight: 900;
+  font-style: italic;
+  font-size: 1.4rem;
+  color: var(--bj-gold);
+  font-variant-numeric: tabular-nums;
+}
+
+.about-timeline-section .tl-event {
+  margin-top: .25rem;
+  font-size: .78rem;
+  color: var(--bj-fg-muted);
+  line-height: 1.35;
+  max-width: 140px;
+}
+
+.about-timeline-section .tl-item:hover .tl-event {
+  color: var(--bj-fg);
+}
+
+@media (max-width: 1024px) {
+  .about-timeline-section .tl-items {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2.5rem 1rem;
+    margin-top: 1rem;
+  }
+  .about-timeline-section .tl-track { display: none; }
+}
+
+@media (max-width: 720px) {
+  .about-timeline-section { padding: 3rem 1rem 2rem; }
+  .about-timeline-section .tl-items {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 2rem 1rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .about-timeline-section *,
+  .about-timeline-section *::before,
+  .about-timeline-section *::after {
+    animation-duration: .001ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}
+
 /* ---------- Hero tiles wrapper (2x2 navigation under new hero) ---------- */
 
 .hero-tiles {

@@ -14,8 +14,6 @@
     return { left: (file * 12.5) + '%', top: (rank * 12.5) + '%' };
   }
 
-  // Use FontAwesome chess icons — uniform rendering across iOS/Android/desktop
-  // (Unicode chess glyphs have per-glyph font fallback issues on mobile).
   const INITIAL_PIECES = [
     { id: 'Ra', icon: 'fa-chess-rook',   side: 'white', sq: 'a1' },
     { id: 'Nb', icon: 'fa-chess-knight', side: 'white', sq: 'b1' },
@@ -51,8 +49,7 @@
     { id: 'ph', icon: 'fa-chess-pawn',   side: 'black', sq: 'h7' },
   ];
 
-  // Caro-Kann miniature: 1.e4 c6 2.d4 d5 3.Nc3 dxe4 4.Nxe4 Nd7 5.Qe2 Ngf6?? 6.Nd6#
-  const BOARD_SEQ = [
+  const FALLBACK_BOARD_SEQ = [
     { type: 'move', piece: 'Pe', from: 'e2', to: 'e4' },
     { type: 'move', piece: 'pc', from: 'c7', to: 'c6' },
     { type: 'move', piece: 'Pd', from: 'd2', to: 'd4' },
@@ -63,9 +60,100 @@
     { type: 'move', piece: 'nb', from: 'b8', to: 'd7', knight: true },
     { type: 'move', piece: 'Qd', from: 'd1', to: 'e2' },
     { type: 'move', piece: 'ng', from: 'g8', to: 'f6', knight: true },
-    { type: 'move', piece: 'Nb', from: 'e4', to: 'd6', knight: true, mate: true },
+    { type: 'move', piece: 'Nb', from: 'e4', to: 'd6', knight: true, mate: true, mateSquare: 'e8' },
     { type: 'reset' },
   ];
+
+  function findKing(sqMap, kingChar) {
+    for (const [sq, id] of Object.entries(sqMap)) {
+      if (id === 'Ke' && kingChar === 'K') return sq;
+      if (id === 'ke' && kingChar === 'k') return sq;
+    }
+    return kingChar === 'K' ? 'e1' : 'e8';
+  }
+
+  function pgnToBoardSeq(pgn) {
+    if (!window.Chess || !pgn) return FALLBACK_BOARD_SEQ;
+    
+    const chess = new window.Chess();
+    if (!chess.load_pgn(pgn)) {
+        console.warn("Invalid PGN for hero animation, falling back.");
+        return FALLBACK_BOARD_SEQ;
+    }
+    
+    const history = chess.history({ verbose: true });
+    if (history.length === 0) return FALLBACK_BOARD_SEQ;
+
+    const sqMap = {};
+    INITIAL_PIECES.forEach(p => {
+      sqMap[p.sq] = p.id;
+    });
+    
+    const seq = [];
+    
+    history.forEach(move => {
+      const pieceId = sqMap[move.from];
+      if (!pieceId) return; // Should not happen in valid chess
+
+      const isKnight = pieceId.toLowerCase().startsWith('n');
+      
+      const action = {
+        type: 'move',
+        piece: pieceId,
+        from: move.from,
+        to: move.to,
+        knight: isKnight
+      };
+      
+      if (move.flags.includes('c') || move.flags.includes('e')) {
+         if (sqMap[move.to]) {
+            action.capture = sqMap[move.to];
+         } else if (move.flags.includes('e')) {
+            const epSq = move.to[0] + move.from[1];
+            action.capture = sqMap[epSq];
+            delete sqMap[epSq];
+         }
+      }
+      
+      sqMap[move.to] = pieceId;
+      delete sqMap[move.from];
+      
+      if (move.san.includes('#')) {
+         action.mate = true;
+         action.mateSquare = move.color === 'w' ? findKing(sqMap, 'k') : findKing(sqMap, 'K');
+      }
+      
+      seq.push(action);
+      
+      if (move.flags.includes('k') || move.flags.includes('q')) {
+        let rookFrom, rookTo;
+        if (move.color === 'w') {
+           if (move.flags.includes('k')) { rookFrom = 'h1'; rookTo = 'f1'; }
+           else { rookFrom = 'a1'; rookTo = 'd1'; }
+        } else {
+           if (move.flags.includes('k')) { rookFrom = 'h8'; rookTo = 'f8'; }
+           else { rookFrom = 'a8'; rookTo = 'd8'; }
+        }
+        
+        const rId = sqMap[rookFrom];
+        if (rId) {
+            seq.push({
+               type: 'move',
+               piece: rId,
+               from: rookFrom,
+               to: rookTo,
+               knight: false,
+               isCastleRookMove: true
+            });
+            sqMap[rookTo] = rId;
+            delete sqMap[rookFrom];
+        }
+      }
+    });
+    
+    seq.push({ type: 'reset' });
+    return seq;
+  }
 
   function buildBoard(board) {
     board.innerHTML = '';
@@ -146,11 +234,58 @@
     if (to && squares[to]) squares[to].classList.add('to');
   }
 
-  function init() {
+  async function fetchSettings() {
+    try {
+      const [pgnRes, hdrRes] = await Promise.all([
+        fetch('/api/settings/public/hero_animation_pgn'),
+        fetch('/api/settings/public/hero_animation_header')
+      ]);
+      const pgnData = pgnRes.ok ? await pgnRes.json() : { value: null };
+      const hdrData = hdrRes.ok ? await hdrRes.json() : { value: null };
+      return { pgn: pgnData.value, header: hdrData.value };
+    } catch (e) {
+      console.error('Failed to fetch hero settings', e);
+      return { pgn: null, header: null };
+    }
+  }
+
+  function renderHeader(scene, headerText) {
+    if (!headerText) return;
+    
+    const existing = scene.querySelector('.hero-game-header');
+    if (existing) existing.remove();
+    
+    const header = document.createElement('div');
+    header.className = 'hero-game-header';
+    header.style.position = 'absolute';
+    header.style.top = '-40px';
+    header.style.left = '0';
+    header.style.width = '100%';
+    header.style.textAlign = 'center';
+    header.style.color = '#cbd5e1';
+    header.style.fontSize = '0.9rem';
+    header.style.fontWeight = '600';
+    header.style.letterSpacing = '0.5px';
+    header.style.textShadow = '0 2px 4px rgba(0,0,0,0.8)';
+    header.style.background = 'linear-gradient(90deg, transparent, rgba(15, 23, 42, 0.7), transparent)';
+    header.style.padding = '4px 0';
+    header.style.borderRadius = '4px';
+    header.style.zIndex = '10';
+    
+    header.innerHTML = `<i class="fa-solid fa-chess-board" style="margin-right: 6px; color: #fbbf24;"></i> ${headerText}`;
+    scene.appendChild(header);
+  }
+
+  async function init() {
     const board = document.getElementById('hero-board');
     if (!board) return;
     const scene = board.parentElement; // .board-scene
     if (!scene) return;
+
+    // Load settings from server
+    const settings = await fetchSettings();
+    const BOARD_SEQ = pgnToBoardSeq(settings.pgn);
+    renderHeader(scene, settings.header);
 
     const squares = buildBoard(board);
     let pieces = INITIAL_PIECES.slice();
@@ -159,15 +294,17 @@
 
     const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     if (reduced) {
-      // Show static mate position
       const finalPieces = [];
       const captured = new Set();
       const moves = BOARD_SEQ.filter(a => a.type === 'move');
       const positions = {};
+      let mateSquare = null;
+      
       INITIAL_PIECES.forEach(p => { positions[p.id] = p.sq; });
       moves.forEach(m => {
         if (m.capture) captured.add(m.capture);
         positions[m.piece] = m.to;
+        if (m.mate) mateSquare = m.mateSquare;
       });
       INITIAL_PIECES.forEach(p => {
         if (!captured.has(p.id)) {
@@ -175,7 +312,9 @@
         }
       });
       pieceMap = renderPieces(scene, finalPieces);
-      squares['e8'] && squares['e8'].classList.add('mate');
+      if (mateSquare && squares[mateSquare]) {
+        squares[mateSquare].classList.add('mate');
+      }
       return;
     }
 
@@ -204,16 +343,25 @@
         return;
       }
 
-      setHighlight(squares, action.from, action.to);
+      // If it's a rook move for castling, don't clear highlights of the king move
+      if (!action.isCastleRookMove) {
+        setHighlight(squares, action.from, action.to);
+      } else {
+        // Just add the to square highlight for the rook
+        if (action.to && squares[action.to]) squares[action.to].classList.add('to');
+      }
 
+      // Delay execution of piece movement slightly
+      let delay = action.isCastleRookMove ? 0 : 350;
+      
       addTimer(() => {
         if (!alive) return;
-        // Remove captured piece
+        
         if (action.capture && pieceMap[action.capture]) {
           pieceMap[action.capture].el.remove();
           delete pieceMap[action.capture];
         }
-        // Move the piece
+        
         const moving = pieceMap[action.piece];
         if (moving) {
           const { file, rank } = sqToCoord(action.to);
@@ -228,7 +376,9 @@
         if (action.mate) {
           addTimer(() => {
             if (!alive) return;
-            squares['e8'] && squares['e8'].classList.add('mate');
+            if (action.mateSquare && squares[action.mateSquare]) {
+              squares[action.mateSquare].classList.add('mate');
+            }
           }, 700);
         }
 
@@ -237,14 +387,18 @@
           if (moving) {
             moving.el.classList.remove('moving', 'knight-hop');
           }
-          addTimer(step, action.mate ? 2400 : 1100);
-        }, 1300);
-      }, 350);
+          // If this is the king move of a castle, don't wait, immediately do the next step (rook move)
+          // Peek next step
+          const nextAction = BOARD_SEQ[stepIndex % BOARD_SEQ.length];
+          const waitTime = (nextAction && nextAction.isCastleRookMove) ? 0 : (action.mate ? 2400 : 1100);
+          
+          addTimer(step, waitTime);
+        }, action.isCastleRookMove ? 200 : 1300);
+      }, delay);
     }
 
     addTimer(step, 1400);
 
-    // Cleanup if section is removed (unlikely but defensive)
     window.addEventListener('beforeunload', () => {
       alive = false;
       timers.forEach(clearTimeout);
