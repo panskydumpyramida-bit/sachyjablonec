@@ -26,9 +26,7 @@
   padding: 2.5rem 2rem 2.8rem;
   margin-top: 70px; /* offset for fixed global header */
   overflow: hidden;
-  background: radial-gradient(ellipse at 20% 0%, rgba(212, 175, 55, .09), transparent 55%),
-              radial-gradient(ellipse at 85% 100%, rgba(212, 175, 55, .07), transparent 60%),
-              var(--bj-bg);
+  background: var(--bj-bg);
   color: var(--bj-fg);
   font-family: var(--bj-font-body);
   display: flex;
