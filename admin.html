@@ -80,7 +80,14 @@
 
             <div class="sidebar-footer">
                 <div class="sidebar-nav-list" id="sidebarNavFooter"></div>
+                <button class="sidebar-footer-collapse" onclick="toggleSidebarCollapse()" title="Sbalit / rozbalit menu">
+                    <span><i class="fa-solid fa-outdent"></i> Sbalit menu</span>
+                    <kbd>Ctrl+B</kbd>
+                </button>
             </div>
+            <button class="sidebar-edge-tab" onclick="toggleSidebarCollapse()" aria-label="Sbalit menu" title="Sbalit (Ctrl+B)">
+                <i class="fa-solid fa-chevron-left"></i>
+            </button>
         </aside>
 
         <div class="admin-sidebar-overlay" id="adminSidebarOverlay" onclick="closeAdminSidebar()"></div>
@@ -150,7 +157,7 @@
             <!-- DASHBOARD -->
             <div id="dashboardView">
                 <!-- Dashboard Grid -->
-                <div class="dashboard-grid">
+                <div class="dashboard-grid is-slim">
                     <!-- Stats Cards -->
                     <div id="dashboardStats" class="dashboard-stats">
                         <!-- Skeleton loaders -->
@@ -206,9 +213,9 @@
                             </div>
                         </div>
 
-                        <!-- Activity Feed Panel -->
-                        <div class="activity-panel">
-                            <div class="activity-title">
+                        <!-- Activity Feed Panel (collapsible by click on title) -->
+                        <div class="activity-panel" id="dashActivity">
+                            <div class="activity-title" onclick="this.parentElement.classList.toggle('activity-panel--collapsed')" title="Kliknutím sbalit / rozbalit">
                                 <i class="fa-solid fa-clock-rotate-left"></i> Nedávná aktivita
                             </div>
                             <div id="dashboardActivity">
@@ -245,6 +252,10 @@
             </div>
             <!-- EDITOR -->
             <div id="editorView" class="hidden">
+                <!-- Publish drawer rail — viditelný 1024-1399px, skrytý nad i pod -->
+                <button class="editor-publish-rail" onclick="document.body.classList.toggle('editor-publish-open')" title="Publikovací panel">
+                    <i class="fa-solid fa-paper-plane"></i> Publikace
+                </button>
                 <div class="editor-layout">
                     <!-- Main Editor (70%) -->
                     <div class="editor-main">

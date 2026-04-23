@@ -368,3 +368,113 @@ body.has-sidebar .admin-container > .admin-nav {
   .admin-topbar { left: 0; padding: 0 1rem; }
   .sidebar-toggle { display: inline-flex; align-items: center; justify-content: center; }
 }
+
+/* ============================================================
+   PATCH 4 — sidebar UX (z Claude Design handoff)
+   Edge chevron tab, explicit footer collapse button, onboard popover
+   ============================================================ */
+
+.admin-sidebar { position: fixed; } /* already fixed; ensures positioning context for edge tab */
+
+.sidebar-edge-tab {
+    position: absolute;
+    top: 80px;
+    right: -12px;
+    width: 24px;
+    height: 36px;
+    background: var(--primary-color);
+    color: #0b0e14;
+    border: none;
+    border-radius: 0 6px 6px 0;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.8rem;
+    box-shadow: 2px 0 6px rgba(0, 0, 0, 0.3);
+    transition: background 0.15s;
+    z-index: 96;
+}
+.sidebar-edge-tab:hover { background: #fbbf24; }
+body.sidebar-collapsed .sidebar-edge-tab i { transform: rotate(180deg); }
+
+@media (max-width: 767px) {
+    .sidebar-edge-tab { display: none; }
+}
+
+/* Footer collapse button — explicit s textem + kbd */
+.sidebar-footer-collapse {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    padding: 0.5rem 0.85rem;
+    margin-top: 0.5rem;
+    background: transparent;
+    border: 1px dashed var(--sidebar-border);
+    border-radius: 6px;
+    color: rgba(255, 255, 255, 0.55);
+    font-size: 0.78rem;
+    cursor: pointer;
+    transition: all 0.15s;
+    width: 100%;
+    font-family: inherit;
+}
+.sidebar-footer-collapse:hover { border-color: var(--primary-color); color: var(--primary-color); }
+.sidebar-footer-collapse kbd {
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 3px;
+    padding: 0.1rem 0.35rem;
+    font-family: "JetBrains Mono", monospace;
+    font-size: 0.68rem;
+}
+body.sidebar-collapsed .sidebar-footer-collapse span,
+body.sidebar-collapsed .sidebar-footer-collapse kbd { display: none; }
+body.sidebar-collapsed .sidebar-footer-collapse { justify-content: center; }
+
+@media (max-width: 767px) {
+    .sidebar-footer-collapse { display: none; }
+}
+
+/* Group label jako jemná zlatá rule nad každou další skupinou */
+.sidebar-group + .sidebar-group .sidebar-group-label {
+    border-top: 1px solid rgba(212, 175, 55, 0.08);
+    padding-top: 0.6rem;
+}
+
+/* First-run onboarding popover */
+.sidebar-onboard {
+    position: absolute;
+    top: calc(100% + 12px);
+    left: 12px;
+    background: #1e293b;
+    color: #fff;
+    padding: 0.75rem 1rem;
+    border-radius: 6px;
+    border: 1px solid rgba(212, 175, 55, 0.3);
+    font-size: 0.8rem;
+    max-width: 260px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+    z-index: 500;
+    animation: sidebarOnboardIn 0.4s ease;
+}
+.sidebar-onboard::before {
+    content: "";
+    position: absolute;
+    top: -6px;
+    left: 16px;
+    width: 10px;
+    height: 10px;
+    background: #1e293b;
+    border-top: 1px solid rgba(212, 175, 55, 0.3);
+    border-left: 1px solid rgba(212, 175, 55, 0.3);
+    transform: rotate(45deg);
+}
+.sidebar-onboard .title { color: var(--primary-color); font-weight: 700; margin-bottom: 0.25rem; }
+.sidebar-onboard kbd { background: rgba(255, 255, 255, 0.1); padding: 0.05rem 0.3rem; border-radius: 2px; font-family: monospace; }
+
+@keyframes sidebarOnboardIn {
+    from { opacity: 0; transform: translateY(-8px); }
+    to { opacity: 1; transform: none; }
+}
