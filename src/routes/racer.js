@@ -1,5 +1,6 @@
 import express from 'express';
 import { PrismaClient } from '@prisma/client';
+import { getPragueWeekRange } from '../utils/weekRange.js';
 
 const router = express.Router();
 const prisma = new PrismaClient();
@@ -316,15 +317,10 @@ router.get('/my-stats', async (req, res) => {
         });
         const bestToday = bestTodayResult._max.score || null;
 
-        // --- Best This Week (Monday-Sunday ISO week) ---
-        const now = new Date();
-        const dayOfWeek = now.getDay();
-        const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
-        const weekStart = new Date(now);
-        weekStart.setDate(now.getDate() + mondayOffset);
-        weekStart.setHours(0, 0, 0, 0);
+        // --- Best This Week (Po–Ne ISO week, Europe/Prague TZ) ---
+        const { start: weekStart, end: weekEnd } = getPragueWeekRange();
         const bestWeekResult = await prisma.puzzleRaceResult.aggregate({
-            where: { userId, mode, createdAt: { gte: weekStart } },
+            where: { userId, mode, createdAt: { gte: weekStart, lte: weekEnd } },
             _max: { score: true }
         });
         const bestThisWeek = bestWeekResult._max.score || null;
@@ -526,34 +522,45 @@ router.get('/hall-of-fame', async (req, res) => {
     try {
         const mode = req.query.mode || 'vanilla';
 
-        // Use raw SQL to group by ISO week and find best score per week
+        // Raw SQL: group by ISO week (Po–Ne) v Europe/Prague TZ.
+        // DATE_TRUNC s AT TIME ZONE posune timestamp do Praha local time před truncem,
+        // takže hráč v Po 00:30 Praha landuje v novém týdnu (ne v předchozí neděli UTC).
         const weeklyChampions = await prisma.$queryRaw`
             SELECT
-                DATE_TRUNC('week', created_at)::date AS week_start,
-                DATE_TRUNC('week', created_at)::date + 6 AS week_end,
-                EXTRACT(ISOYEAR FROM created_at)::int AS year,
-                EXTRACT(WEEK FROM created_at)::int AS week_num,
+                DATE_TRUNC('week', (created_at AT TIME ZONE 'Europe/Prague'))::date AS week_start,
+                DATE_TRUNC('week', (created_at AT TIME ZONE 'Europe/Prague'))::date + 6 AS week_end,
+                EXTRACT(ISOYEAR FROM (created_at AT TIME ZONE 'Europe/Prague'))::int AS year,
+                EXTRACT(WEEK FROM (created_at AT TIME ZONE 'Europe/Prague'))::int AS week_num,
                 MAX(score) AS best_score
             FROM puzzle_race_results
             WHERE mode = ${mode}
               AND user_id IS NOT NULL
-            GROUP BY DATE_TRUNC('week', created_at), EXTRACT(ISOYEAR FROM created_at), EXTRACT(WEEK FROM created_at)
-            HAVING DATE_TRUNC('week', created_at) < DATE_TRUNC('week', NOW())
+            GROUP BY
+                DATE_TRUNC('week', (created_at AT TIME ZONE 'Europe/Prague')),
+                EXTRACT(ISOYEAR FROM (created_at AT TIME ZONE 'Europe/Prague')),
+                EXTRACT(WEEK FROM (created_at AT TIME ZONE 'Europe/Prague'))
+            HAVING DATE_TRUNC('week', (created_at AT TIME ZONE 'Europe/Prague'))
+                 < DATE_TRUNC('week', (NOW() AT TIME ZONE 'Europe/Prague'))
             ORDER BY week_start DESC
             LIMIT 20
         `;
 
-        // For each week, find the actual player who achieved the best score
+        // Pro každý týden najít konkrétního hráče s best_score.
+        // Použije getPragueWeekRange k získání přesných hranic týdne (Po 00:00 – Ne 23:59:59.999 Prague).
         const enriched = await Promise.all(weeklyChampions.map(async (w) => {
+            // week_start je PG date (UTC midnight reprezentující pondělí v Praze)
+            const anchor = new Date(w.week_start);
+            // Posun o 12h dopředu aby se getPragueWeekRange definitivně trefil do správného týdne
+            // (chrání proti edge case kdy week_start je půlnoc UTC která v Praze padne na 01:00 dne pondělí)
+            anchor.setUTCHours(anchor.getUTCHours() + 12);
+            const { start, end } = getPragueWeekRange(anchor);
+
             const champion = await prisma.puzzleRaceResult.findFirst({
                 where: {
                     mode,
                     score: Number(w.best_score),
                     userId: { not: null },
-                    createdAt: {
-                        gte: new Date(w.week_start),
-                        lt: new Date(new Date(w.week_end).getTime() + 86400000)
-                    }
+                    createdAt: { gte: start, lte: end }
                 },
                 include: {
                     user: { select: { username: true, realName: true } }
@@ -595,14 +602,9 @@ router.get('/leaderboard', async (req, res) => {
         }
 
         if (period === 'week') {
-            // Start from Monday 00:00 of current ISO week
-            const now = new Date();
-            const dayOfWeek = now.getDay(); // 0=Sun, 1=Mon, ...
-            const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
-            const monday = new Date(now);
-            monday.setDate(now.getDate() + mondayOffset);
-            monday.setHours(0, 0, 0, 0);
-            whereClause.createdAt = { gte: monday };
+            // Aktuální ISO týden Po–Ne v Europe/Prague TZ
+            const { start, end } = getPragueWeekRange();
+            whereClause.createdAt = { gte: start, lte: end };
         }
 
         // Fetch more results to ensure we get enough unique players
