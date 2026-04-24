@@ -2820,6 +2820,27 @@ textarea.auto-resize {
     font-size: 0.8rem;
     white-space: nowrap;
 }
+
+/* Mobile (<768px): vertikální wrap místo horizontal scroll — UX friendlier */
+@media (max-width: 767px) {
+    .dashboard-grid.is-slim .quick-actions-grid {
+        flex-wrap: wrap;
+        overflow-x: visible;
+        gap: 0.4rem;
+    }
+    .dashboard-grid.is-slim .quick-action-btn {
+        flex: 1 1 calc(50% - 0.2rem);
+        min-width: 0;
+        justify-content: center;
+        padding: 0.6rem 0.5rem;
+        font-size: 0.78rem;
+    }
+    .dashboard-grid.is-slim .quick-action-btn span {
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+}
+
 .activity-panel { transition: max-height 0.3s ease; overflow: hidden; max-height: 2000px; }
 .activity-panel--collapsed { max-height: 54px; }
 .activity-panel--collapsed .activity-title::after {
