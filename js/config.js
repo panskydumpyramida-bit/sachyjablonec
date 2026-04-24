@@ -6,18 +6,15 @@
 
 if (typeof API_CONFIG === 'undefined') {
     window.API_CONFIG = {
-        // Relative path for production (same domain)
-        production: '/api',
-        development: 'http://localhost:3001/api'
+        // Z důvodu problémů s HSTS cache a localhost vs 127.0.0.1 
+        // budeme všude používat relativní cestu, protože frontend
+        // i backend běží na stejném serveru a portu.
+        default: '/api'
     };
 }
 
-// Auto-detect environment
 if (typeof API_URL === 'undefined') {
-    const isProduction = window.location.hostname !== 'localhost' &&
-        window.location.hostname !== '127.0.0.1';
-
-    window.API_URL = isProduction ? API_CONFIG.production : API_CONFIG.development;
+    window.API_URL = API_CONFIG.default;
 }
 
 // Export for use in other scripts

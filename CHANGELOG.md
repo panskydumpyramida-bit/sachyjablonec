@@ -1,5 +1,66 @@
 # 📋 Changelog
 
+## 24. dubna 2026 (v33)
+
+### 🎨 Hero redesign (úvodní stránka + O nás)
+- **Nový hero v `index.html`:** Varianta "Partie" z prototypu — animovaná šachovnice s Caro-Kann miniaturou (1.e4 c6 až 6.Nd6#), lineRise animace titulku "Šachový oddíl TJ Bižuterie Jablonec nad Nisou", CTA tlačítka a subtitle.
+- **Vanilla implementace:** React+Babel prototyp převeden na čistý HTML/CSS/JS — žádný framework v produkci. Nové soubory `css/hero-v2.css` a `js/hero-v2.js`.
+- **Dynamické PGN:** Admin může nastavit vlastní PGN partie pro hero animaci přes nastavení webu (výchozí fallback = Caro-Kann miniatura).
+- **Figurky přes FontAwesome:** Unicode chess glyphy nahrazeny FA ikonami (`fa-chess-pawn/knight/bishop/rook/queen/king`) — uniform velikost napříč iOS/Android/desktop (Unicode rendering se lišil per-glyph).
+- **About hero intro:** Stejný vizuální styl bez šachovnice (varianta `.hero-v2--about`). Titulek "Klub, kde se tradice potkává s novou generací", stats (70+ členů, 4 družstva, 50+ let tradice).
+- **Tréninky opraveny:** Úterní řádek smazán, zbyl jen čtvrtek (16:00–17:30 mládež, 17:30–20:00 dospělí).
+- **"Novinky" CTA:** Tlačítko "Rozpis zápasů" nahrazeno "Novinky" s anchor na `#news` (smooth scroll).
+
+### 🕰️ Timeline klubu v about.html + admin správa
+- **Reálné milníky:** 1991 Založení TJ Bižuterie, 2006 Přestěhování z věže Sokolovny, 2025 Postup do 1. ligy mládeže, 2030 (cíl) Postup do Extraligy ČR.
+- **Budoucí cíl vizuálně odlišený:** Dashed border, transparent background, italic text (`.tl-item--future`). Gold linka timeliny končí před posledním milníkem — king stojí sám, visuálně oddělený od dokončené historie.
+- **Admin sekce Timeline:** Nový tab v administraci s CRUD formulářem (rok, událost, ikona — šachová figurka / pohár / vlajka / hvězda, pořadí, checkbox "budoucí cíl").
+- **API `/api/timeline`:** GET public, POST/PUT/DELETE pro ADMIN+. Prisma model `TimelineEntry`, migrace + seed počátečních 4 milníků.
+- **Dynamický loader:** `js/timeline-loader.js` fetchuje z API a přepisuje `.tl-items` v about.html. Statické HTML slouží jako SSR fallback. XSS escaping na user-generated obsah.
+
+### 🗺️ Stráž pod Ralskem + turnaje
+- **Event Strážský rapid 2026:** Extrakce z PDF propozic, vloženo do DB přes `/api/events` (kat. rapid, 3. 5. 2026, KP ŠSLK).
+- **Mapa turnajů:** Stráž pod Ralskem přidán do `cityToCoords` v `js/tournaments.js` (region LI) — turnaj se zobrazí na mapě v Libereckém kraji.
+
+### 🛠️ Admin redesign (Claude Design handoff)
+- **Sidebar místo horizontálních tabů:** Fixovaný levý panel 260px (desktop), seskupená navigace "Obsah / Komunita / Nástroje", footer s Nastavení a Odhlásit.
+- **Sbalitelný sidebar:** Toggle tlačítko v topbaru (ikona outdent) + Ctrl+B / Cmd+B zkratka. Stav persistovaný v localStorage. Sbaleno = 64px icon-only s tooltipem.
+- **Edge-tab chevron + footer collapse button:** Zlatý chevron na pravém okraji sidebaru + explicitní textové tlačítko "Sbalit menu · Ctrl+B" v patě.
+- **First-run onboarding popover:** Ukáže se jednou při prvním otevření admina, vysvětluje collapse + Ctrl+B. Dismissnutelný tlačítkem nebo auto za 12s.
+- **Mobile hamburger:** Off-canvas drawer s overlay, tap mimo zavírá.
+- **Topbar s breadcrumbem:** Sticky pod globálním headerem — ukazuje aktivní sekci (Playfair font) + uživatele.
+- **Dedupikace navigace:** Manuál / API / Web / Odhlásit odebrány z globálního headeru (byly duplicitní se sidebar footerem). Header teď jen logo + build info.
+
+### 📊 Admin dashboard cleanup
+- **Nastavení přesunuto ze dashboardu** do vlastního `#settingsView` (admin sidebar → Nastavení). Přesunuto: Nastavení webu (maintenance, info panel) + Nastavení titulní stránky (PGN animace partie).
+- **Dashboard slim mode (`.is-slim`):** Quick actions v horizontálním stripu (desktop) / 2 sloupce wrap (mobile), activity feed collapsible kliknutím na titulek.
+- **Quick actions rozšířené:** Přidáno tlačítko Timeline (přímý odkaz) a Nastavení místo duplicitního "Zobrazit web".
+- **Mobile dashboard denser:** Stats cards 2 sloupce i pod 600px, overflow-x hidden jako safety net proti širokým tabulkám.
+- **Články & přehled:** Sidebar "Články" teď jde na dashboard (tabulka článků), ne rovnou na blank WYSIWYG. Přejmenováno z "Přehled" → "Články & přehled".
+
+### ✏️ WYSIWYG editor vylepšení
+- **Chess-results promoted:** "Tabulka z chess-results" posunuta z Bloky dropdownu na top-level toolbar. Custom textový badge "CH-R" v zeleném outline boxu (fa-ranking-star neexistuje v FA 6.0.0 na CDN).
+- **Modal chess-results s presety:**
+  - **Počet hráčů:** 🥇 Vítěz / Top 3 / **Top 10** (default) / Všichni — naši hráči (match keyword "Bižuterie") jsou vždy zahrnuti navíc.
+  - **Column picker:** Presety Kompaktní (Rk + Jméno + Body) / **Standardní** (+ Rtg + Klub + FED, default) / Plná (všechny sloupce) + ruční zaškrtnutí.
+  - Re-render bez nové fetch při změně topN / sloupců / keyword.
+  - Separator ⋯ mezi top N a našimi hráči pokud jsou skoky v pořadí.
+- **Rendered tabulka responsivní:** Non-essential sloupce dostávají `class="hide-mobile"` → v publikovaném článku se na mobilu zbydou jen 3 sloupce (Rk + Jméno + Body).
+- **Editor publish drawer responsive (3 stavy):**
+  - ≥1400px: docked panel (default)
+  - 1024–1399px: off-canvas drawer s "PUBLIKACE" rail na pravém okraji
+  - <1024px: stackovaný pod obsahem
+- **Toolbar compact na mobilu:** 22+ tlačítek vejde do ~4 řádků — icon-only přes `font-size: 0` na button + normal na `<i>`. Texty "Jméno/Skóre/Auto/AI/Tabulka/Bloky ▾" skryty.
+
+### 🧪 Admin preview mode
+- **`admin-preview.html`:** Read-only klon admina pro design review (Claude Design, externí designéři). Bypass auth (fake token + mocked fetch), PREVIEW banner nahoře, zamknuté form submity, noindex meta tag.
+- **Mock data:** 5 ukázkových článků, 3 akce, 4 timeline milníky, dashboard stats, settings.
+
+### 📱 Hotjar tracking
+- Hotjar skript přidán do `js/layout-loader.js` (hjid 6694683). CSP whitelist rozšířen o `*.hotjar.com` / `*.hotjar.io` (script-src, connect-src včetně WebSocket, frame-src).
+
+---
+
 ## 12. dubna 2026 (v32)
 
 ### 🔒 Bezpečnostní zpevnění

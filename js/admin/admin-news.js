@@ -111,20 +111,20 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 2000); // Save 2s after last change
     };
 
-    content.addEventListener('input', () => { autoSave(); window.isNewsDirty = true; });
-    document.getElementById('newsTitle')?.addEventListener('input', () => { autoSave(); window.isNewsDirty = true; });
-    document.getElementById('newsExcerpt')?.addEventListener('input', () => { autoSave(); window.isNewsDirty = true; });
+    content.addEventListener('input', () => { autoSave(); window.isNewsDirty = true; updateEditorUXStatus(); });
+    document.getElementById('newsTitle')?.addEventListener('input', () => { autoSave(); window.isNewsDirty = true; updateEditorUXStatus(); });
+    document.getElementById('newsExcerpt')?.addEventListener('input', () => { autoSave(); window.isNewsDirty = true; updateEditorUXStatus(); });
 
     // Authors listeners
-    document.getElementById('newsAuthorId')?.addEventListener('change', () => { autoSave(); window.isNewsDirty = true; });
-    document.getElementById('newsAuthorName')?.addEventListener('input', () => { autoSave(); window.isNewsDirty = true; });
-    document.getElementById('newsCoAuthorId')?.addEventListener('change', () => { autoSave(); window.isNewsDirty = true; });
-    document.getElementById('newsCoAuthorName')?.addEventListener('input', () => { autoSave(); window.isNewsDirty = true; });
+    document.getElementById('newsAuthorId')?.addEventListener('change', () => { autoSave(); window.isNewsDirty = true; updateEditorUXStatus(); });
+    document.getElementById('newsAuthorName')?.addEventListener('input', () => { autoSave(); window.isNewsDirty = true; updateEditorUXStatus(); });
+    document.getElementById('newsCoAuthorId')?.addEventListener('change', () => { autoSave(); window.isNewsDirty = true; updateEditorUXStatus(); });
+    document.getElementById('newsCoAuthorName')?.addEventListener('input', () => { autoSave(); window.isNewsDirty = true; updateEditorUXStatus(); });
 
     // Other inputs dirty tracking
     ['newsDate', 'newsCategory', 'publishCheck', 'newsAuthorId'].forEach(id => {
-        document.getElementById(id)?.addEventListener('input', () => window.isNewsDirty = true);
-        document.getElementById(id)?.addEventListener('change', () => window.isNewsDirty = true);
+        document.getElementById(id)?.addEventListener('input', () => { window.isNewsDirty = true; updateEditorUXStatus(); });
+        document.getElementById(id)?.addEventListener('change', () => { window.isNewsDirty = true; updateEditorUXStatus(); });
     });
 
     // Check for saved draft on load
@@ -147,6 +147,52 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // editId handling moved to admin-core.js showAdmin() to ensure auth is ready
 });
+
+function updateEditorUXStatus() {
+    const editId = document.getElementById('editNewsId')?.value;
+    const modeBadge = document.getElementById('editorModeBadge');
+    const saveState = document.getElementById('editorSaveState');
+    const publishSummary = document.getElementById('editorPublishSummary');
+    const wordCount = document.getElementById('editorWordCount');
+    const publishCheck = document.getElementById('publishCheck');
+    const dateInput = document.getElementById('newsDate');
+    const articleContent = document.getElementById('articleContent');
+
+    if (modeBadge) {
+        modeBadge.textContent = editId ? `Úprava #${editId}` : 'Nový článek';
+    }
+
+    if (saveState) {
+        saveState.classList.toggle('is-dirty', !!window.isNewsDirty);
+        saveState.innerHTML = window.isNewsDirty
+            ? '<i class="fa-solid fa-circle"></i> Neuloženo'
+            : '<i class="fa-solid fa-check"></i> Uloženo';
+    }
+
+    if (publishSummary && publishCheck && dateInput) {
+        const todayStr = new Date().toISOString().split('T')[0];
+        const isFutureDate = dateInput.value > todayStr;
+        if (!publishCheck.checked) {
+            publishSummary.className = 'editor-status-pill is-draft';
+            publishSummary.innerHTML = '<i class="fa-solid fa-file-pen"></i> Koncept';
+        } else if (isFutureDate) {
+            publishSummary.className = 'editor-status-pill is-scheduled';
+            publishSummary.innerHTML = '<i class="fa-regular fa-clock"></i> Naplánováno';
+        } else {
+            publishSummary.className = 'editor-status-pill is-public';
+            publishSummary.innerHTML = '<i class="fa-solid fa-paper-plane"></i> Publikovat';
+        }
+    }
+
+    if (wordCount && articleContent) {
+        const words = (articleContent.textContent || '').trim().split(/\s+/).filter(Boolean).length;
+        wordCount.innerHTML = `<i class="fa-solid fa-align-left"></i> ${words} ${words === 1 ? 'slovo' : words > 1 && words < 5 ? 'slova' : 'slov'}`;
+    }
+}
+
+function toggleEditorFocusMode() {
+    document.body.classList.toggle('editor-focus-mode');
+}
 
 // Helper to safely select author when data is ready
 function tryAutoSelectAuthor() {
@@ -400,6 +446,8 @@ function updatePublishLabel() {
         btnIcon.className = 'fa-solid fa-paper-plane';
         btn.style.background = 'linear-gradient(135deg, #22c55e, #16a34a)'; // Green gradient
     }
+
+    updateEditorUXStatus();
 }
 
 // Export for global access
@@ -468,6 +516,8 @@ function resetEditor() {
 
     // Clear auto-saved draft
     localStorage.removeItem('newsDraft');
+    window.isNewsDirty = false;
+    updateEditorUXStatus();
 }
 
 async function editNews(id) {
@@ -579,6 +629,8 @@ async function editNews(id) {
         renderGallery();
         updatePreview();
         updatePublishLabel(); // Update button/checkbox labels based on date
+        window.isNewsDirty = false;
+        updateEditorUXStatus();
     } catch (e) {
         console.error(e);
         // Fallback rendering in case of partial failure
@@ -658,6 +710,8 @@ async function shareArticleToInstagram(newsId) {
 }
 
 window.shareArticleToInstagram = shareArticleToInstagram;
+window.toggleEditorFocusMode = toggleEditorFocusMode;
+window.updateEditorUXStatus = updateEditorUXStatus;
 
 function toggleFacebookMessageEditor() {
     const check = document.getElementById('shareFacebookCheck');
@@ -845,6 +899,7 @@ async function saveNews() {
 
             localStorage.removeItem('newsDraft'); // Clear draft to prevent duplication on reload
             window.isNewsDirty = false; // Reset dirty flag
+            updateEditorUXStatus();
 
             const shareFb = document.getElementById('shareFacebookCheck')?.checked;
             const shareIg = document.getElementById('shareInstagramCheck')?.checked;
@@ -917,6 +972,7 @@ function updatePreview() {
     document.getElementById('previewTitle').textContent = document.getElementById('newsTitle').value || 'Nadpis';
     document.getElementById('previewCategory').textContent = document.getElementById('newsCategory').value;
     document.getElementById('previewExcerpt').textContent = document.getElementById('newsExcerpt').value || 'Krátký popis...';
+    updateEditorUXStatus();
     const date = document.getElementById('newsDate').value;
     document.getElementById('previewDate').textContent = date ? new Date(date).toLocaleDateString('cs-CZ') : 'Datum';
 

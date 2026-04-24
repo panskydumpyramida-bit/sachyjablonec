@@ -94,7 +94,7 @@
 
         <!-- ===== TOPBAR ===== -->
         <div class="admin-topbar">
-            <div style="display: flex; align-items: center; gap: 0.75rem;">
+            <div class="admin-topbar-main" style="display: flex; align-items: center; gap: 0.75rem;">
                 <button class="sidebar-toggle sidebar-toggle--mobile" onclick="toggleAdminSidebar()" aria-label="Menu" title="Menu">
                     <i class="fa-solid fa-bars"></i>
                 </button>
@@ -105,7 +105,15 @@
                     <i class="fa-solid fa-list"></i><span>Přehled</span>
                 </h2>
             </div>
-            <div class="admin-topbar-user" id="userInfo"></div>
+            <div class="admin-topbar-actions">
+                <button class="admin-topbar-action admin-topbar-action--primary" onclick="dashboardQuickAction('new-article')" title="Nový článek">
+                    <i class="fa-solid fa-plus"></i><span>Nový článek</span>
+                </button>
+                <a class="admin-topbar-action" href="/" target="_blank" rel="noopener" title="Otevřít web">
+                    <i class="fa-solid fa-arrow-up-right-from-square"></i><span>Web</span>
+                </a>
+                <div class="admin-topbar-user" id="userInfo"></div>
+            </div>
         </div>
 
         <div class="admin-container">
@@ -259,9 +267,22 @@
                 <div class="editor-layout">
                     <!-- Main Editor (70%) -->
                     <div class="editor-main">
-                        <h2 style="margin-top: 0;" id="editorTitle">Nová novinka</h2><input type="hidden"
-                            id="editNewsId">
-                        <div class="form-group"><label>Nadpis článku *</label>
+                        <div class="editor-masthead">
+                            <div class="editor-masthead-main">
+                                <div class="editor-eyebrow" id="editorModeBadge">Nový článek</div>
+                                <h2 id="editorTitle">Nová novinka</h2>
+                            </div>
+                            <div class="editor-status-strip" aria-label="Stav článku">
+                                <span class="editor-status-pill" id="editorSaveState"><i class="fa-regular fa-circle"></i> Bez změn</span>
+                                <span class="editor-status-pill" id="editorPublishSummary"><i class="fa-solid fa-file-pen"></i> Koncept</span>
+                                <span class="editor-status-pill" id="editorWordCount"><i class="fa-solid fa-align-left"></i> 0 slov</span>
+                                <button type="button" class="editor-focus-toggle" onclick="toggleEditorFocusMode()" title="Skrýt doplňkové panely">
+                                    <i class="fa-solid fa-feather"></i><span>Režim psaní</span>
+                                </button>
+                            </div>
+                        </div>
+                        <input type="hidden" id="editNewsId">
+                        <div class="form-group editor-title-group"><label>Nadpis článku *</label>
                             <textarea id="newsTitle" rows="1" class="auto-resize" placeholder="Zadejte nadpis..."
                                 oninput="updatePreview();"></textarea>
                         </div>
@@ -364,7 +385,7 @@
                                 class="wysiwyg-content hidden" oninput="updateContentFromSource()"></textarea>
                         </div>
                         <!-- Games Panel -->
-                        <div class="panel-section">
+                        <div class="panel-section editor-attachment-panel">
                             <div class="panel-header"><label style="margin: 0;"><i
                                         class="fa-solid fa-chess-board"></i>Přehrávač
                                     partií</label></div>
@@ -423,7 +444,7 @@
                             <div id="gamesList" style="margin-top: 1rem;"></div>
                         </div>
                         <!-- Gallery Panel -->
-                        <div class="panel-section">
+                        <div class="panel-section editor-attachment-panel">
                             <div class="panel-header"><label style="margin: 0;"><i
                                         class="fa-solid fa-images"></i>Galerie</label>
                                 <div style="display: flex; gap: 0.5rem;"><button type="button"
@@ -448,7 +469,7 @@
                             <div id="galleryPreview" style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
                             </div>
                         </div>
-                        <div style="margin-top: 2rem; display: flex; gap: 1rem;"><button class="btn-primary"
+                        <div class="editor-primary-actions" style="margin-top: 2rem; display: flex; gap: 1rem;"><button class="btn-primary"
                                 onclick="saveNews()"><i class="fa-solid fa-save"></i>Uložit</button><button
                                 class="btn-secondary" onclick="switchTab('dashboard')">Zrušit</button></div>
                     </div>
