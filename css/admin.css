@@ -2828,6 +2828,31 @@ textarea.auto-resize {
    Aditivní, nepřejmenovávat stávající třídy.
    ============================================================ */
 
+/* Chess-results toolbar button — text badge "CH-R" místo FA ikony
+   (fa-ranking-star není v FA 6.0.0 co máme načteno) */
+.wysiwyg-toolbar .tb-chess-results {
+    color: #34d399;
+    gap: 0.35rem;
+}
+.wysiwyg-toolbar .tb-cr-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'JetBrains Mono', 'SF Mono', Menlo, monospace;
+    font-size: 0.6rem;
+    font-weight: 800;
+    letter-spacing: 0.02em;
+    padding: 0.15rem 0.3rem;
+    border: 1px solid currentColor;
+    border-radius: 3px;
+    line-height: 1;
+}
+/* Mobile: badge zůstává viditelný (na rozdíl od textového labelu) */
+@media (max-width: 768px) {
+    .wysiwyg-toolbar .tb-chess-results { font-size: 0; }
+    .wysiwyg-toolbar .tb-cr-badge { font-size: 0.58rem; }
+}
+
 /* === PATCH 1: Dashboard slim quick-strip + collapsible activity === */
 .dashboard-grid.is-slim .dashboard-columns { grid-template-columns: 1fr; }
 .dashboard-grid.is-slim .quick-actions { padding: 0.5rem 0.75rem; }
