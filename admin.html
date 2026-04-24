@@ -338,9 +338,12 @@
                                         <button type="button" onclick="window.showRankingCardsModal && window.showRankingCardsModal(); this.parentElement.style.display='none'" title="Karty pořadí" style="text-align: left; justify-content: flex-start; width: 100%; color: #cbd5e1;"><i class="fa-solid fa-medal" style="margin-right:8px; width: 16px; text-align: center;"></i>Karty pořadí</button>
                                         <button type="button" onclick="window.showCtaModal && window.showCtaModal(); this.parentElement.style.display='none'" title="Závěrečné tlačítko (CTA)" style="text-align: left; justify-content: flex-start; width: 100%; color: #fca5a5;"><i class="fa-solid fa-bullhorn" style="margin-right:8px; width: 16px; text-align: center;"></i>Závěrečné tlačítko</button>
                                         <button type="button" onclick="insertCollapsibleBlock(); this.parentElement.style.display='none'" title="Rozbalovací sekce" style="text-align: left; justify-content: flex-start; width: 100%; color: #8b5cf6;"><i class="fa-solid fa-layer-group" style="margin-right:8px; width: 16px; text-align: center;"></i>Rozbalovací sekce</button>
-                                        <button type="button" onclick="window.showResultsTableModal && window.showResultsTableModal(); this.parentElement.style.display='none'" title="Tabulka výsledků z chess-results.com" style="text-align: left; justify-content: flex-start; width: 100%; color: #34d399;"><i class="fa-solid fa-ranking-star" style="margin-right:8px; width: 16px; text-align: center;"></i>Tabulka z chess-results</button>
                                     </div>
                                 </div>
+                                <!-- Chess-results table loader (promoted z Bloky na top-level) -->
+                                <button type="button" onclick="window.showResultsTableModal && window.showResultsTableModal()"
+                                    title="Tabulka výsledků z chess-results.com" style="color: #34d399;"><i
+                                        class="fa-solid fa-ranking-star"></i><span class="tb-label">Tabulka</span></button>
                                 <!-- AI & Table Tools -->
                                 <div class="divider"></div>
                                 <button type="button" onclick="aiSpellCheck()"
