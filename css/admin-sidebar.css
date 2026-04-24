@@ -366,7 +366,7 @@ body.has-sidebar .admin-container > .admin-nav {
     padding: 1rem;
   }
   .admin-topbar { left: 0; padding: 0 1rem; }
-  .sidebar-toggle { display: inline-flex; align-items: center; justify-content: center; }
+  /* --mobile button display handled by .sidebar-toggle--mobile rule above */
 }
 
 /* ============================================================
