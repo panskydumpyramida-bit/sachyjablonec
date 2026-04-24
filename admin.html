@@ -10,8 +10,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="css/style.css?v=ux12">
-    <link rel="stylesheet" href="css/admin.css?v=ux13">
-    <link rel="stylesheet" href="css/admin-sidebar.css">
+    <link rel="stylesheet" href="css/admin.css?v=ux14">
+    <link rel="stylesheet" href="css/admin-sidebar.css?v=ux2">
     <script src="js/version.js?v=ux12"></script>
     <script src="js/modal-manager.js?v=ux12"></script>
 </head>
@@ -287,98 +287,59 @@
                                 oninput="updatePreview();"></textarea>
                         </div>
                         <!-- WYSIWYG Editor -->
-                        <div class="form-group"><label>Obsah článku *</label>
+                        <div class="form-group editor-content-group"><label>Obsah článku *</label>
                             <div class="wysiwyg-toolbar" style="flex-wrap: wrap;">
-                                <!-- History -->
-                                <button type="button" onmousedown="event.preventDefault()" onclick="formatText('undo')"
-                                    title="Zpět (Ctrl+Z)"><i class="fa-solid fa-rotate-left"></i></button>
-                                <button type="button" onmousedown="event.preventDefault()" onclick="formatText('redo')"
-                                    title="Vpřed (Ctrl+Y)"><i class="fa-solid fa-rotate-right"></i></button>
-                                <div class="divider"></div>
-                                <!-- Row 1: Formatting --><button type="button" id="btnBold"
-                                    onclick="formatText('bold')" title="Tučně (Ctrl+B)"><i
-                                        class="fa-solid fa-bold"></i></button><button type="button" id="btnItalic"
-                                    onclick="formatText('italic')" title="Kurzíva (Ctrl+I)"><i
-                                        class="fa-solid fa-italic"></i></button><button type="button" id="btnUnderline"
-                                    onclick="formatText('underline')" title="Podtržení (Ctrl+U)"><i
-                                        class="fa-solid fa-underline"></i></button><button type="button"
-                                    onclick="formatText('strikethrough')" title="Přeškrtnutí (Ctrl+Shift+X)"
-                                    style="color: #94a3b8;"><i class="fa-solid fa-strikethrough"></i></button><button
-                                    type="button" onclick="removeFormatting()" title="Odstranit formátování"
-                                    style="color: #94a3b8;"><i class="fa-solid fa-eraser"></i></button>
-                                <div class="divider"></div>
-                                <!-- Heading buttons -->
-                                <div
-                                    style="display: flex; gap: 2px; background: rgba(255,255,255,0.05); border-radius: 4px; padding: 2px;">
-                                    <button type="button" id="headingP" onclick="applyHeading('p')"
-                                        title="Normální text"
-                                        style="padding: 0.25rem 0.5rem; font-size: 0.7rem; font-weight: 600; border-radius: 3px; min-width: 28px;">P</button><button
-                                        type="button" id="headingH1" onclick="applyHeading('h1')" title="Nadpis 1"
-                                        style="padding: 0.25rem 0.5rem; font-size: 0.7rem; font-weight: 700; border-radius: 3px; min-width: 28px;">H1</button><button
-                                        type="button" id="headingH2" onclick="applyHeading('h2')" title="Nadpis 2"
-                                        style="padding: 0.25rem 0.5rem; font-size: 0.7rem; font-weight: 600; border-radius: 3px; min-width: 28px;">H2</button><button
-                                        type="button" id="headingH3" onclick="applyHeading('h3')" title="Nadpis 3"
-                                        style="padding: 0.25rem 0.5rem; font-size: 0.7rem; font-weight: 500; border-radius: 3px; min-width: 28px;">H3</button>
-                                </div>
-                                <div class="divider"></div><button type="button" onclick="insertList('ul')"
-                                    title="Odrážkový seznam"><i class="fa-solid fa-list-ul"></i></button><button
-                                    type="button" onclick="insertList('ol')" title="Číslovaný seznam"><i
-                                        class="fa-solid fa-list-ol"></i></button>
-                                <div class="divider"></div><button type="button" onclick="insertLink()"
-                                    title="Odkaz (Ctrl+K)"><i class="fa-solid fa-link"></i></button><button
-                                    type="button" onclick="showColorPicker()" title="Barva textu"
-                                    style="color: #f472b6;"><i class="fa-solid fa-palette"></i></button><button
-                                    type="button" onclick="toggleSource()" title="HTML" id="btnSource"><i
-                                        class="fa-solid fa-code"></i></button>
-                                <!-- Row 2: Highlights and blocks (will wrap on smaller
-                                                            screens) -->
-                                <div class="divider" style="height: 0; width: 100%; margin: 0.25rem 0;">
-                                </div><button type="button" id="btnHighlightName" onmousedown="event.preventDefault()"
-                                    onclick="insertHighlight('name')" title="Zvýraznit jméno" style="color: #60a5fa;"><i
-                                        class="fa-solid fa-user"></i>Jméno</button><button type="button"
-                                    id="btnHighlightScore" onmousedown="event.preventDefault()"
-                                    onclick="insertHighlight('score')" title="Zvýraznit skóre"
-                                    style="color: #4ade80;"><i class="fa-solid fa-bullseye"></i>Skóre</button><button
-                                    type="button" onclick="autoFormatEntireContent()"
-                                    title="Auto-formátování celého textu (najde výsledky a jména)"
-                                    style="color: #a78bfa;"><i class="fa-solid fa-wand-magic-sparkles"></i>Auto</button>
-                                <div class="divider"></div><button type="button"
-                                    onclick="insertImage()" title="Obrázek" style="color: #f472b6;"><i
-                                        class="fa-solid fa-image"></i></button><button type="button"
-                                    onclick="insertDiagram()" title="Vložit diagram" style="color: #d4a373;"><i
-                                        class="fa-solid fa-chess-board"></i></button><button type="button"
-                                    onclick="insertFragment()" title="Vložit fragment partie" style="color: #60a5fa;"><i
-                                        class="fa-solid fa-scissors"></i></button>
-                                <button type="button" onclick="insertColumnBlock()" title="Rozložení sloupců" style="color: #38bdf8;"><i class="fa-solid fa-table-columns"></i></button>
-                                <!-- Templates Dropdown -->
-                                <div style="position: relative; display: inline-block;" onmouseleave="this.querySelector('.dropdown-content').style.display='none'">
-                                    <button type="button" onclick="const el = this.nextElementSibling; el.style.display = el.style.display === 'flex' ? 'none' : 'flex'; event.stopPropagation();" title="Šablony a bloky do článku" style="color: #cbd5e1;"><i class="fa-solid fa-puzzle-piece"></i> Bloky ▾</button>
-                                    <div class="dropdown-content" style="display: none; flex-direction: column; position: absolute; top: 100%; left: 0; background-color: #1a1a2e; box-shadow: 0px 8px 16px rgba(0,0,0,0.5); z-index: 10000; padding: 5px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.1); gap: 2px; width: max-content;">
-                                        <button type="button" onclick="insertIntroBlock(); this.parentElement.style.display='none'" title="Infobox" style="text-align: left; justify-content: flex-start; width: 100%; color: #fbbf24;"><i class="fa-solid fa-lightbulb" style="margin-right:8px; width: 16px; text-align: center;"></i>Infobox</button>
-                                        <button type="button" onclick="window.showWinnersModal && window.showWinnersModal(); this.parentElement.style.display='none'" title="Zlatý box vítězů" style="text-align: left; justify-content: flex-start; width: 100%; color: #d4af37;"><i class="fa-solid fa-trophy" style="margin-right:8px; width: 16px; text-align: center;"></i>Zlatý box vítězů</button>
-                                        <button type="button" onclick="window.showRankingCardsModal && window.showRankingCardsModal(); this.parentElement.style.display='none'" title="Karty pořadí" style="text-align: left; justify-content: flex-start; width: 100%; color: #cbd5e1;"><i class="fa-solid fa-medal" style="margin-right:8px; width: 16px; text-align: center;"></i>Karty pořadí</button>
-                                        <button type="button" onclick="window.showCtaModal && window.showCtaModal(); this.parentElement.style.display='none'" title="Závěrečné tlačítko (CTA)" style="text-align: left; justify-content: flex-start; width: 100%; color: #fca5a5;"><i class="fa-solid fa-bullhorn" style="margin-right:8px; width: 16px; text-align: center;"></i>Závěrečné tlačítko</button>
-                                        <button type="button" onclick="insertCollapsibleBlock(); this.parentElement.style.display='none'" title="Rozbalovací sekce" style="text-align: left; justify-content: flex-start; width: 100%; color: #8b5cf6;"><i class="fa-solid fa-layer-group" style="margin-right:8px; width: 16px; text-align: center;"></i>Rozbalovací sekce</button>
+                                <div class="toolbar-primary-row" aria-label="Základní nástroje">
+                                    <button type="button" onmousedown="event.preventDefault()" onclick="formatText('undo')"
+                                        title="Zpět (Ctrl+Z)"><i class="fa-solid fa-rotate-left"></i></button>
+                                    <button type="button" onmousedown="event.preventDefault()" onclick="formatText('redo')"
+                                        title="Vpřed (Ctrl+Y)"><i class="fa-solid fa-rotate-right"></i></button>
+                                    <div class="divider"></div>
+                                    <button type="button" id="btnBold" onclick="formatText('bold')" title="Tučně (Ctrl+B)"><i class="fa-solid fa-bold"></i></button>
+                                    <button type="button" id="btnItalic" onclick="formatText('italic')" title="Kurzíva (Ctrl+I)"><i class="fa-solid fa-italic"></i></button>
+                                    <button type="button" id="btnUnderline" onclick="formatText('underline')" title="Podtržení (Ctrl+U)"><i class="fa-solid fa-underline"></i></button>
+                                    <div class="divider"></div>
+                                    <div class="toolbar-heading-group">
+                                        <button type="button" id="headingP" onclick="applyHeading('p')" title="Normální text">P</button>
+                                        <button type="button" id="headingH1" onclick="applyHeading('h1')" title="Nadpis 1">H1</button>
+                                        <button type="button" id="headingH2" onclick="applyHeading('h2')" title="Nadpis 2">H2</button>
+                                        <button type="button" id="headingH3" onclick="applyHeading('h3')" title="Nadpis 3">H3</button>
                                     </div>
+                                    <div class="divider"></div>
+                                    <button type="button" onclick="insertList('ul')" title="Odrážkový seznam"><i class="fa-solid fa-list-ul"></i></button>
+                                    <button type="button" onclick="insertList('ol')" title="Číslovaný seznam"><i class="fa-solid fa-list-ol"></i></button>
+                                    <button type="button" onclick="insertLink()" title="Odkaz (Ctrl+K)"><i class="fa-solid fa-link"></i></button>
+                                    <button type="button" onclick="insertImage()" title="Obrázek" style="color: #f472b6;"><i class="fa-solid fa-image"></i></button>
                                 </div>
-                                <!-- Chess-results table loader (promoted z Bloky na top-level) -->
-                                <button type="button" onclick="window.showResultsTableModal && window.showResultsTableModal()"
-                                    title="Tabulka výsledků z chess-results.com" class="tb-chess-results"><span class="tb-cr-badge">CH-R</span><span class="tb-label">Tabulka</span></button>
-                                <!-- AI & Table Tools -->
-                                <div class="divider"></div>
-                                <button type="button" onclick="aiSpellCheck()"
-                                    title="AI Oprava pravopisu (Ctrl+Shift+S)" style="color: #10b981;"><i
-                                        class="fa-solid fa-spell-check"></i>AI</button>
-                                <button type="button" onclick="aiTextToTable()"
-                                    title="AI Převod na tabulku (vyberte text)" style="color: #06b6d4;"><i
-                                        class="fa-solid fa-table"></i></button>
-                                <button type="button" onclick="showMatchTableModal()"
-                                    title="Vložit tabulku zápasu (Soutěže družstev)" style="color: #f59e0b;"><i
-                                        class="fa-solid fa-users"></i></button>
-                                <div class="divider"></div>
-                                <button type="button" onclick="showShortcutsModal()"
-                                    title="Klávesové zkratky a nápověda (?)"><i
-                                        class="fa-solid fa-circle-question"></i></button>
+                                <div class="toolbar-scroll-hint"><span>Další nástroje</span><i class="fa-solid fa-arrow-right-long"></i></div>
+                                <div class="toolbar-secondary-row" aria-label="Další nástroje">
+                                    <button type="button" onclick="formatText('strikethrough')" title="Přeškrtnutí (Ctrl+Shift+X)" style="color: #94a3b8;"><i class="fa-solid fa-strikethrough"></i></button>
+                                    <button type="button" onclick="removeFormatting()" title="Odstranit formátování" style="color: #94a3b8;"><i class="fa-solid fa-eraser"></i></button>
+                                    <button type="button" onclick="showColorPicker()" title="Barva textu" style="color: #f472b6;"><i class="fa-solid fa-palette"></i></button>
+                                    <button type="button" onclick="toggleSource()" title="HTML" id="btnSource"><i class="fa-solid fa-code"></i></button>
+                                    <button type="button" id="btnHighlightName" onmousedown="event.preventDefault()" onclick="insertHighlight('name')" title="Zvýraznit jméno" style="color: #60a5fa;"><i class="fa-solid fa-user"></i>Jméno</button>
+                                    <button type="button" id="btnHighlightScore" onmousedown="event.preventDefault()" onclick="insertHighlight('score')" title="Zvýraznit skóre" style="color: #4ade80;"><i class="fa-solid fa-bullseye"></i>Skóre</button>
+                                    <button type="button" onclick="autoFormatEntireContent()" title="Auto-formátování celého textu (najde výsledky a jména)" style="color: #a78bfa;"><i class="fa-solid fa-wand-magic-sparkles"></i>Auto</button>
+                                    <button type="button" onclick="insertDiagram()" title="Vložit diagram" style="color: #d4a373;"><i class="fa-solid fa-chess-board"></i></button>
+                                    <button type="button" onclick="insertFragment()" title="Vložit fragment partie" style="color: #60a5fa;"><i class="fa-solid fa-scissors"></i></button>
+                                    <button type="button" onclick="insertColumnBlock()" title="Rozložení sloupců" style="color: #38bdf8;"><i class="fa-solid fa-table-columns"></i></button>
+                                    <div style="position: relative; display: inline-block;" onmouseleave="this.querySelector('.dropdown-content').style.display='none'">
+                                        <button type="button" onclick="const el = this.nextElementSibling; el.style.display = el.style.display === 'flex' ? 'none' : 'flex'; event.stopPropagation();" title="Šablony a bloky do článku" style="color: #cbd5e1;"><i class="fa-solid fa-puzzle-piece"></i> Bloky ▾</button>
+                                        <div class="dropdown-content" style="display: none; flex-direction: column; position: absolute; top: 100%; left: 0; background-color: #1a1a2e; box-shadow: 0px 8px 16px rgba(0,0,0,0.5); z-index: 10000; padding: 5px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.1); gap: 2px; width: max-content;">
+                                            <button type="button" onclick="insertIntroBlock(); this.parentElement.style.display='none'" title="Infobox" style="text-align: left; justify-content: flex-start; width: 100%; color: #fbbf24;"><i class="fa-solid fa-lightbulb" style="margin-right:8px; width: 16px; text-align: center;"></i>Infobox</button>
+                                            <button type="button" onclick="window.showWinnersModal && window.showWinnersModal(); this.parentElement.style.display='none'" title="Zlatý box vítězů" style="text-align: left; justify-content: flex-start; width: 100%; color: #d4af37;"><i class="fa-solid fa-trophy" style="margin-right:8px; width: 16px; text-align: center;"></i>Zlatý box vítězů</button>
+                                            <button type="button" onclick="window.showRankingCardsModal && window.showRankingCardsModal(); this.parentElement.style.display='none'" title="Karty pořadí" style="text-align: left; justify-content: flex-start; width: 100%; color: #cbd5e1;"><i class="fa-solid fa-medal" style="margin-right:8px; width: 16px; text-align: center;"></i>Karty pořadí</button>
+                                            <button type="button" onclick="window.showCtaModal && window.showCtaModal(); this.parentElement.style.display='none'" title="Závěrečné tlačítko (CTA)" style="text-align: left; justify-content: flex-start; width: 100%; color: #fca5a5;"><i class="fa-solid fa-bullhorn" style="margin-right:8px; width: 16px; text-align: center;"></i>Závěrečné tlačítko</button>
+                                            <button type="button" onclick="insertCollapsibleBlock(); this.parentElement.style.display='none'" title="Rozbalovací sekce" style="text-align: left; justify-content: flex-start; width: 100%; color: #8b5cf6;"><i class="fa-solid fa-layer-group" style="margin-right:8px; width: 16px; text-align: center;"></i>Rozbalovací sekce</button>
+                                        </div>
+                                    </div>
+                                    <button type="button" onclick="window.showResultsTableModal && window.showResultsTableModal()"
+                                        title="Tabulka výsledků z chess-results.com" class="tb-chess-results"><span class="tb-cr-badge">CH-R</span><span class="tb-label">Tabulka</span></button>
+                                    <button type="button" onclick="aiSpellCheck()" title="AI Oprava pravopisu (Ctrl+Shift+S)" style="color: #10b981;"><i class="fa-solid fa-spell-check"></i>AI</button>
+                                    <button type="button" onclick="aiTextToTable()" title="AI Převod na tabulku (vyberte text)" style="color: #06b6d4;"><i class="fa-solid fa-table"></i></button>
+                                    <button type="button" onclick="showMatchTableModal()" title="Vložit tabulku zápasu (Soutěže družstev)" style="color: #f59e0b;"><i class="fa-solid fa-users"></i></button>
+                                    <button type="button" onclick="showShortcutsModal()" title="Klávesové zkratky a nápověda (?)"><i class="fa-solid fa-circle-question"></i></button>
+                                </div>
                             </div>
                             <div class="wysiwyg-content" id="articleContent" contenteditable="true"
                                 oninput="updatePreview()"></div><textarea id="articleSource"
@@ -591,6 +552,9 @@
                                     style="width: 100%; margin-top: 1rem; justify-content: center;"><i
                                         class="fa-solid fa-save" id="saveNewsBtnIcon"></i><span
                                         id="saveNewsBtnText">Uložit</span></button>
+                                <button type="button" class="btn-secondary editor-cancel-mobile" onclick="switchTab('dashboard')">
+                                    <i class="fa-solid fa-arrow-left"></i>Zpět bez uložení
+                                </button>
                             </div>
                             <!-- end publikaceContent -->
                         </div>
@@ -1613,6 +1577,21 @@
             </div>
 
             <div class="changelog-timeline">
+                <!-- 2026-04-24 v34 -->
+                <div class="changelog-entry">
+                    <div class="changelog-date">24. 4. 2026</div>
+                    <div class="changelog-version" style="background:var(--primary-color);color:#000;">v34</div>
+                    <div class="changelog-content">
+                        <h4>🛠️ Admin UX: mobilní editor a sidebar layout</h4>
+                        <ul>
+                            <li><strong>Layout sekcí:</strong> Všechny admin view se nově přizpůsobují šířce levého sidebaru i jeho sbalenému stavu; sekce mimo hlavní container už neleží pod menu.</li>
+                            <li><strong>Mobilní editor:</strong> Publikační karta je na telefonu dostupná jako spodní panel přes tlačítko Publikace, takže Uložit/Zrušit zůstává v publikačním kontextu.</li>
+                            <li><strong>Toolbar článku:</strong> Nejčastější akce zůstávají viditelné v základním řádku, pokročilé nástroje jsou v druhém označeném řádku „Další nástroje”.</li>
+                            <li><strong>Panely partií a galerie:</strong> Tlačítka na mobilu už se neroztahují přes celou šířku a lépe drží kompaktní pracovní rytmus.</li>
+                            <li><strong>Cache bust:</strong> Navýšené query verze admin CSS/JS, aby se po deployi načetly aktuální úpravy.</li>
+                        </ul>
+                    </div>
+                </div>
                 <!-- 2026-04-12 v32 -->
                 <div class="changelog-entry">
                     <div class="changelog-date">12. 4. 2026</div>
@@ -2464,7 +2443,7 @@
     <script src="js/config.js"></script>
     <script src="js/utils.js"></script>
     <script src="js/diagram-viewer.js"></script>
-    <script src="js/admin/admin-core.js?v=ux12"></script>
+    <script src="js/admin/admin-core.js?v=ux13"></script>
     <script src="js/admin/admin-gallery.js?v=ux12"></script>
     <script src="js/admin/admin-wysiwyg.js?v=ux12"></script>
     <script src="js/admin/admin-slash-commands.js?v=ux1"></script>
@@ -2478,7 +2457,7 @@
     <script src="js/admin/admin-games.js?v=ux12"></script>
     <script src="js/admin/admin-events.js?v=ux12"></script>
     <script src="js/admin/admin-timeline.js"></script>
-    <script src="js/admin/admin-sidebar.js"></script>
+    <script src="js/admin/admin-sidebar.js?v=ux2"></script>
     <script src="js/admin/admin-users.js?v=ux12"></script>
     <script src="js/admin/admin-blicak.js?v=ux12"></script>
     <script src="js/admin/admin-puzzle-racer.js?v=ux12"></script>

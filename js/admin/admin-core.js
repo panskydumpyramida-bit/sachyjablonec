@@ -202,6 +202,10 @@ async function verifyToken() {
 function switchTab(tab) {
     if (!currentUser) return; // Guard against unauthenticated access
 
+    if (tab !== 'editor') {
+        document.body.classList.remove('editor-publish-open', 'editor-focus-mode');
+    }
+
     // Check for unsaved changes in Editor
     // 'editor' is the ID of the news editor view.
     // If we are currently ON the editor tab (which is active), and isNewsDirty is true.

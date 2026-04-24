@@ -1,5 +1,16 @@
 # 📋 Changelog
 
+## 24. dubna 2026 (v34)
+
+### 🛠️ Admin UX: mobilní editor a sidebar layout
+- **Layout admin sekcí:** Všechny view mimo `.admin-container` se nově řídí stejným odsazením jako dashboard/editor, takže na desktopu neleží pod levým sidebar menu a reagují i na sbalený sidebar.
+- **Mobilní publikace:** Publikační karta v editoru je na telefonu dostupná jako spodní sheet přes tlačítko Publikace; Uložit/Zrušit je tím zpět v publikačním kontextu.
+- **Toolbar článku:** Nejčastější akce zůstávají viditelné v základním řádku, pokročilé nástroje jsou v druhém scrollovatelném řádku „Další nástroje”.
+- **Kompaktní panely:** Tlačítka v panelech Partií/Galerie se na mobilu neroztahují zbytečně přes celou šířku.
+- **Cache bust:** Navýšené query verze admin CSS/JS pro spolehlivé načtení změn po deployi.
+
+---
+
 ## 24. dubna 2026 (v33)
 
 ### 🎨 Hero redesign (úvodní stránka + O nás)

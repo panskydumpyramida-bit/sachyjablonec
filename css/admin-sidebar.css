@@ -173,13 +173,16 @@
 
 /* ---------- Main content ---------- */
 
-body.has-sidebar .admin-container {
+body.has-sidebar .admin-container,
+body.has-sidebar #adminPanel > [id$="View"] {
   margin-left: var(--sidebar-width);
   margin-top: calc(var(--admin-header-height) + var(--topbar-height));
   width: calc(100% - var(--sidebar-width));
   max-width: none;
   padding: 1.5rem 2rem 3rem;
   transition: margin-left 0.25s, width 0.25s;
+  box-sizing: border-box;
+  overflow-x: hidden;
 }
 
 .admin-topbar {
@@ -406,7 +409,8 @@ body.has-sidebar .admin-container > .admin-nav {
 /* Sidebar na tabletu začíná plná — uživatel si může sbalit toggle tlačítkem
    (body.sidebar-collapsed je definován níže ve shared desktop/tablet bloku). */
 @media (max-width: 1199px) and (min-width: 768px) {
-  body.has-sidebar .admin-container { padding: 1rem 1.5rem 2rem; }
+  body.has-sidebar .admin-container,
+  body.has-sidebar #adminPanel > [id$="View"] { padding: 1rem 1.5rem 2rem; }
 }
 
 /* ---------- Mobile: off-canvas drawer ---------- */
@@ -422,7 +426,8 @@ body.has-sidebar .admin-container > .admin-nav {
     z-index: 200;
   }
   .admin-sidebar.open { transform: translateX(0); }
-  body.has-sidebar .admin-container {
+  body.has-sidebar .admin-container,
+  body.has-sidebar #adminPanel > [id$="View"] {
     margin-left: 0;
     width: 100%;
     padding: 1rem;
