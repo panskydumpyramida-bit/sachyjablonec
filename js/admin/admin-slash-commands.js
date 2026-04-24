@@ -760,13 +760,55 @@ function containsKeyword(text, keyword) {
     return norm(text).includes(norm(keyword));
 }
 
-function buildResultsTableHtml({ headers, rows, keyword }) {
-    const headerHtml = headers.map(h => `<th>${escapeHtml(h)}</th>`).join('');
-    const bodyHtml = rows.map(row => {
+// Essential headers — vždy viditelné i na mobilu. Ostatní dostanou hide-mobile.
+const RT_ESSENTIAL_PATTERNS = [
+    /^(rk|rank|#|po[řr]ad)/i,   // Rank
+    /^(jm[ée]no|name|hr[áa][čc])/i, // Jméno
+    /^(body|pts|pt\.|score)/i,   // Body
+];
+
+function isEssentialHeader(header) {
+    return RT_ESSENTIAL_PATTERNS.some(r => r.test(header));
+}
+
+function buildResultsTableHtml({ headers, rows, keyword, topN, colMask }) {
+    // topN: 1 (vítěz), 3 (top 3), 10 (top 10), 0/null (všichni)
+    // colMask: bool[] stejné délky jako headers; true = zobrazit sloupec. Pokud null → všechny.
+    const showCol = headers.map((_h, i) => !colMask || colMask[i]);
+    const mobileHide = headers.map((h, i) => showCol[i] && !isEssentialHeader(h));
+
+    // Row filtering
+    let visibleRows = rows;
+    if (topN && topN > 0) {
+        const keepIdx = new Set();
+        for (let i = 0; i < Math.min(topN, rows.length); i++) keepIdx.add(i);
+        rows.forEach((row, i) => {
+            if (row.some(cell => containsKeyword(cell, keyword))) keepIdx.add(i);
+        });
+        const sortedIdx = Array.from(keepIdx).sort((a, b) => a - b);
+        visibleRows = [];
+        let prev = -1;
+        sortedIdx.forEach(idx => {
+            if (prev !== -1 && idx > prev + 1) {
+                visibleRows.push({ __gap: true });
+            }
+            visibleRows.push(rows[idx]);
+            prev = idx;
+        });
+    }
+
+    const visibleColCount = showCol.filter(Boolean).length;
+    const headerHtml = headers.map((h, i) => showCol[i]
+        ? `<th${mobileHide[i] ? ' class="hide-mobile"' : ''}>${escapeHtml(h)}</th>` : '').join('');
+    const bodyHtml = visibleRows.map(row => {
+        if (row.__gap) {
+            return `<tr class="results-gap"><td colspan="${visibleColCount}" style="text-align:center; color:#64748b; padding:0.4rem; font-size:0.85em; background:rgba(255,255,255,0.02);">⋯</td></tr>`;
+        }
         const isHighlight = row.some(cell => containsKeyword(cell, keyword));
         const trStyle = isHighlight ? ' style="background-color:rgba(212,175,55,0.08);"' : '';
         const cellStyle = isHighlight ? ' style="color:#fbbf24; font-weight:700;"' : '';
-        const cells = row.map(c => `<td${cellStyle}>${escapeHtml(c)}</td>`).join('');
+        const cells = row.map((c, i) => showCol[i]
+            ? `<td${cellStyle}${mobileHide[i] ? ' class="hide-mobile"' : ''}>${escapeHtml(c)}</td>` : '').join('');
         return `<tr${trStyle}>${cells}</tr>`;
     }).join('');
     return `<table class="results-table highlight-last"><thead><tr>${headerHtml}</tr></thead><tbody>${bodyHtml}</tbody></table>`;
@@ -789,14 +831,34 @@ function showResultsTableModal() {
                     <input type="text" id="rtUrl" placeholder="https://chess-results.com/tnr1276470.aspx?lan=5&art=1" style="width:100%; box-sizing:border-box; padding:8px; background:rgba(0,0,0,0.2); border:1px solid rgba(255,255,255,0.1); color:#fff; border-radius:4px; font-size:0.9em;">
                 </div>
                 <div style="width:200px;">
-                    <label style="display:block; color:#a0a0a0; font-size:0.85em; margin-bottom:4px;">Zvýraznit (obsahuje)</label>
+                    <label style="display:block; color:#a0a0a0; font-size:0.85em; margin-bottom:4px;">Zvýraznit (naši hráči)</label>
                     <input type="text" id="rtKeyword" value="Bižuterie" style="width:100%; box-sizing:border-box; padding:8px; background:rgba(0,0,0,0.2); border:1px solid rgba(255,255,255,0.1); color:#fff; border-radius:4px; font-size:0.9em;">
                 </div>
                 <div style="display:flex; align-items:flex-end;">
                     <button type="button" id="rtFetch" style="padding:8px 14px; background:#60a5fa; border:none; color:#000; font-weight:bold; border-radius:4px; cursor:pointer;">Načíst tabulku</button>
                 </div>
             </div>
+            <div style="display:flex; gap:10px; margin-bottom:12px; align-items:center; flex-wrap:wrap;">
+                <label style="color:#a0a0a0; font-size:0.85em; margin:0;">Kolik hráčů zobrazit (naši jsou vždy zahrnuti):</label>
+                <div id="rtTopN" style="display:inline-flex; background:rgba(0,0,0,0.25); border-radius:6px; padding:3px; gap:2px;">
+                    <button type="button" data-topn="1"  class="rtTopNBtn" style="padding:6px 10px; background:transparent; border:none; color:#cbd5e1; font-size:0.82em; border-radius:4px; cursor:pointer;">🥇 Vítěz</button>
+                    <button type="button" data-topn="3"  class="rtTopNBtn" style="padding:6px 10px; background:transparent; border:none; color:#cbd5e1; font-size:0.82em; border-radius:4px; cursor:pointer;">Top 3</button>
+                    <button type="button" data-topn="10" class="rtTopNBtn" style="padding:6px 10px; background:rgba(212,175,55,0.2); color:#fbbf24; border:none; font-weight:600; font-size:0.82em; border-radius:4px; cursor:pointer;">Top 10</button>
+                    <button type="button" data-topn="0"  class="rtTopNBtn" style="padding:6px 10px; background:transparent; border:none; color:#cbd5e1; font-size:0.82em; border-radius:4px; cursor:pointer;">Všichni</button>
+                </div>
+            </div>
             <div id="rtStatus" style="font-size:0.85em; color:#94a3b8; margin-bottom:8px;">Zadej URL a klikni „Načíst tabulku".</div>
+            <div id="rtColumnPicker" style="display:none; margin-bottom:12px; padding:10px 12px; background:rgba(0,0,0,0.25); border-radius:6px; border:1px solid rgba(255,255,255,0.05);">
+                <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:8px;">
+                    <span style="color:#a0a0a0; font-size:0.82em;">Sloupce (nezaškrtnuté se nezobrazí, esenciální jsou vždy viditelné i na mobilu):</span>
+                    <div style="display:inline-flex; gap:4px;">
+                        <button type="button" data-preset="compact"  class="rtPresetBtn" style="padding:4px 8px; background:transparent; border:1px solid rgba(255,255,255,0.15); color:#cbd5e1; font-size:0.75em; border-radius:4px; cursor:pointer;">Kompaktní</button>
+                        <button type="button" data-preset="standard" class="rtPresetBtn" style="padding:4px 8px; background:transparent; border:1px solid rgba(255,255,255,0.15); color:#cbd5e1; font-size:0.75em; border-radius:4px; cursor:pointer;">Standardní</button>
+                        <button type="button" data-preset="full"     class="rtPresetBtn" style="padding:4px 8px; background:transparent; border:1px solid rgba(255,255,255,0.15); color:#cbd5e1; font-size:0.75em; border-radius:4px; cursor:pointer;">Plná</button>
+                    </div>
+                </div>
+                <div id="rtColList" style="display:flex; gap:6px 12px; flex-wrap:wrap;"></div>
+            </div>
             <div id="rtPreview" style="background:rgba(0,0,0,0.3); padding:12px; border-radius:4px; min-height:120px; max-height:50vh; overflow:auto; border:1px solid rgba(255,255,255,0.05);"></div>
             <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:16px;">
                 <button type="button" id="rtCancel" style="padding:8px 16px; background:transparent; border:1px solid rgba(255,255,255,0.2); color:#fff; border-radius:4px; cursor:pointer;">Zrušit</button>
@@ -807,6 +869,106 @@ function showResultsTableModal() {
 
     const $ = sel => modal.querySelector(sel);
     let lastTableHtml = '';
+    let lastData = null; // cache fetched data for re-render on topN change
+    let currentTopN = 10; // default: top 10 + ours
+    let currentColMask = null; // bool[] per header; null = all visible
+
+    // Toggle active topN button styling
+    const setTopN = (n) => {
+        currentTopN = n;
+        modal.querySelectorAll('.rtTopNBtn').forEach(b => {
+            const active = parseInt(b.dataset.topn, 10) === n;
+            b.style.background = active ? 'rgba(212,175,55,0.2)' : 'transparent';
+            b.style.color = active ? '#fbbf24' : '#cbd5e1';
+            b.style.fontWeight = active ? '600' : 'normal';
+        });
+    };
+    modal.querySelectorAll('.rtTopNBtn').forEach(btn => {
+        btn.onclick = () => {
+            setTopN(parseInt(btn.dataset.topn, 10));
+            if (lastData) renderTable();
+        };
+    });
+
+    const renderTable = () => {
+        if (!lastData) return;
+        const keyword = $('#rtKeyword').value.trim();
+        lastTableHtml = buildResultsTableHtml({
+            headers: lastData.headers,
+            rows: lastData.rows.map(r => r.slice()),
+            keyword,
+            topN: currentTopN,
+            colMask: currentColMask,
+        });
+        $('#rtPreview').innerHTML = lastTableHtml;
+        const hiCount = lastData.rows.filter(r => r.some(c => containsKeyword(c, keyword))).length;
+        const totalShown = currentTopN === 0 ? lastData.rows.length : `top ${currentTopN} + ${hiCount} našich`;
+        const shownCols = currentColMask ? currentColMask.filter(Boolean).length : lastData.headers.length;
+        $('#rtStatus').innerHTML = `✓ Turnaj: <strong>${escapeHtml(lastData.tournamentTitle || '')}</strong> · ${totalShown} z ${lastData.rows.length} řádků · ${shownCols} / ${lastData.headers.length} sloupců · ${hiCount} zvýrazněno`;
+        $('#rtInsert').disabled = false;
+        $('#rtInsert').style.opacity = '1';
+    };
+
+    // Presets aplikují výběr sloupců podle názvu hlaviček
+    const applyPreset = (preset) => {
+        if (!lastData) return;
+        const headers = lastData.headers;
+        const headerNorm = headers.map(h => h.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase());
+        const match = (hNorm, patterns) => patterns.some(p => p.test(hNorm));
+        // Kompaktní: jen Rk + Jméno + Body
+        const compactPatterns = [/^(rk|#|poradi|poradn[ií])/, /^(jmeno|name|hrac)/, /^(body|pts|pt\.|score)/];
+        // Standardní: + Rtg + Klub/Oddil + FED
+        const standardPatterns = compactPatterns.concat([/^(rtg|elo|rating)/, /^(klub|oddil|club|city|tym|team)/, /^(fed|zem|country)/]);
+
+        if (preset === 'full') {
+            currentColMask = headers.map(() => true);
+        } else if (preset === 'compact') {
+            currentColMask = headerNorm.map(h => match(h, compactPatterns));
+        } else { // standard
+            currentColMask = headerNorm.map(h => match(h, standardPatterns));
+        }
+
+        // Pokud preset neosvobodil žádný sloupec (edge case u neznámých headerů), ponecháme první tři
+        if (!currentColMask.some(Boolean)) {
+            currentColMask = headers.map((_, i) => i < 3);
+        }
+
+        // Aktualizovat checkboxy
+        modal.querySelectorAll('.rtColCheck').forEach((cb, i) => {
+            cb.checked = !!currentColMask[i];
+        });
+        // Highlight active preset button
+        modal.querySelectorAll('.rtPresetBtn').forEach(b => {
+            const active = b.dataset.preset === preset;
+            b.style.background = active ? 'rgba(212,175,55,0.2)' : 'transparent';
+            b.style.color = active ? '#fbbf24' : '#cbd5e1';
+            b.style.borderColor = active ? 'rgba(212,175,55,0.4)' : 'rgba(255,255,255,0.15)';
+        });
+        renderTable();
+    };
+
+    // Build checkbox list for columns after data loads
+    const buildColumnPicker = () => {
+        const list = $('#rtColList');
+        list.innerHTML = '';
+        lastData.headers.forEach((h, i) => {
+            const label = document.createElement('label');
+            label.style.cssText = 'display:inline-flex; align-items:center; gap:4px; font-size:0.82em; color:#cbd5e1; cursor:pointer;';
+            label.innerHTML = `<input type="checkbox" class="rtColCheck" data-idx="${i}" ${currentColMask && currentColMask[i] ? 'checked' : ''} style="accent-color:#d4af37;"> ${escapeHtml(h)}`;
+            label.querySelector('input').onchange = (e) => {
+                if (!currentColMask) currentColMask = lastData.headers.map(() => true);
+                currentColMask[i] = e.target.checked;
+                renderTable();
+            };
+            list.appendChild(label);
+        });
+        $('#rtColumnPicker').style.display = 'block';
+    };
+
+    // Wire preset buttons
+    modal.querySelectorAll('.rtPresetBtn').forEach(btn => {
+        btn.onclick = () => applyPreset(btn.dataset.preset);
+    });
 
     $('#rtCancel').onclick = () => {
         if (savedRange) { selection.removeAllRanges(); selection.addRange(savedRange); }
@@ -815,7 +977,6 @@ function showResultsTableModal() {
 
     $('#rtFetch').onclick = async () => {
         const url = $('#rtUrl').value.trim();
-        const keyword = $('#rtKeyword').value.trim();
         if (!url) { $('#rtStatus').textContent = 'Chybí URL.'; return; }
 
         $('#rtStatus').textContent = 'Načítám…';
@@ -831,12 +992,9 @@ function showResultsTableModal() {
                 $('#rtStatus').textContent = '❌ ' + (data.error || `HTTP ${res.status}`);
                 return;
             }
-            lastTableHtml = buildResultsTableHtml({ headers: data.headers, rows: data.rows, keyword });
-            $('#rtPreview').innerHTML = lastTableHtml;
-            const hiCount = data.rows.filter(r => r.some(c => containsKeyword(c, keyword))).length;
-            $('#rtStatus').innerHTML = `✓ Načteno ${data.rows.length} řádků, zvýrazněno ${hiCount} (klíčové slovo „${escapeHtml(keyword)}"). Turnaj: <strong>${escapeHtml(data.tournamentTitle || '')}</strong>`;
-            $('#rtInsert').disabled = false;
-            $('#rtInsert').style.opacity = '1';
+            lastData = data;
+            buildColumnPicker();
+            applyPreset('standard'); // default preset — renders and highlights button
         } catch (e) {
             $('#rtStatus').textContent = '❌ Chyba spojení: ' + e.message;
         } finally {
@@ -844,10 +1002,9 @@ function showResultsTableModal() {
         }
     };
 
-    // Re-highlight on keyword change without re-fetching
+    // Re-render on keyword change without re-fetching
     $('#rtKeyword').oninput = () => {
-        if (!lastTableHtml) return;
-        $('#rtFetch').click();
+        if (lastData) renderTable();
     };
 
     $('#rtInsert').onclick = () => {
