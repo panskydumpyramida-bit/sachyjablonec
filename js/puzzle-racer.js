@@ -1314,6 +1314,9 @@ async function loadHallOfFame() {
         container.innerHTML = `<div style="display: flex; flex-wrap: wrap; gap: 0.6rem; justify-content: center;">` +
             data.map((w, i) => {
                 const medal = i === 0 ? '👑' : '⭐';
+                const weekLabel = w.weekNum
+                    ? `Týden ${w.weekNum} · Po–Ne`
+                    : 'Po–Ne';
                 return `<div style="
                     background: ${i === 0 ? 'linear-gradient(135deg, rgba(251,191,36,0.12), rgba(251,191,36,0.04))' : 'rgba(255,255,255,0.03)'};
                     border: 1px solid ${i === 0 ? 'rgba(251,191,36,0.3)' : 'rgba(255,255,255,0.08)'};
@@ -1322,6 +1325,9 @@ async function loadHallOfFame() {
                     min-width: 140px;
                     text-align: center;
                 ">
+                    <div style="font-size: 0.58rem; color: var(--text-muted); opacity: 0.75; letter-spacing: 0.04em; text-transform: uppercase;">
+                        ${weekLabel}
+                    </div>
                     <div style="font-size: 0.65rem; color: var(--text-muted); margin-bottom: 0.2rem;">
                         ${formatDate(w.weekStart)} – ${formatDate(w.weekEnd)}
                     </div>

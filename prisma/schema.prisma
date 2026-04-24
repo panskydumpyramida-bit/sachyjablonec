@@ -272,6 +272,9 @@ model PuzzleRaceResult {
 
   user         User?    @relation(fields: [userId], references: [id])
 
+  @@index([createdAt])
+  @@index([mode, createdAt])
+  @@index([userId, mode, createdAt])
   @@map("puzzle_race_results")
 }
 
