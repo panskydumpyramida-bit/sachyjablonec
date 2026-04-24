@@ -235,6 +235,7 @@ function switchTab(tab) {
 
     // Save current tab to URL hash for persistence
     setTabHash(tab);
+    window.dispatchEvent(new CustomEvent('admin:tabchange', { detail: { tab } }));
 
     // Load data for view
     if (tab === 'dashboard') {
@@ -355,23 +356,30 @@ async function loadDashboard() {
                 statusText = ' Konc';
             }
 
+            const publishedDate = new Date(item.publishedDate).toLocaleDateString('cs-CZ');
+            const updatedTitle = item.updatedAt ? new Date(item.updatedAt).toLocaleString('cs-CZ') : '';
+            const updatedRelative = formatRelativeTime(item.updatedAt);
+            const safeTitle = escapeHtml(item.title);
+            const safeCategory = escapeHtml(item.category || '-');
             let authorDisplay = item.authorName || (item.author ? item.author.username : '-');
             if (item.coAuthorName) {
                 authorDisplay += ` & ${item.coAuthorName}`;
             }
+            const safeAuthor = escapeHtml(authorDisplay);
+            const canDelete = ['ADMIN', 'SUPERADMIN'].includes((currentUser?.role || '').toUpperCase());
 
             return `
-            <tr>
-                <td>${new Date(item.publishedDate).toLocaleDateString('cs-CZ')}</td>
-                <td>${item.title}</td>
-                <td class="hide-mobile">${item.category}</td>
-                <td class="hide-mobile"><span class="highlight-name" style="font-size: 0.85rem;">${authorDisplay}</span></td>
-                <td class="hide-mobile"><span class="status-badge ${statusClass}">${statusIcon}<span class="status-text">${statusText}</span></span></td>
-                <td class="hide-mobile" style="font-size: 0.8rem; color: var(--text-muted);" title="${item.updatedAt ? new Date(item.updatedAt).toLocaleString('cs-CZ') : ''}">${formatRelativeTime(item.updatedAt)}</td>
-                <td>
-                    <button class="action-btn btn-edit" onclick="editNews(${item.id})"><i class="fa-solid fa-pen"></i></button>
-                    <button class="action-btn btn-publish" onclick="togglePublish(${item.id})" title="${item.isPublished ? 'Skrýt' : 'Publikovat'}"><i class="fa-solid fa-${item.isPublished ? 'eye-slash' : 'eye'}"></i></button>
-                    ${['ADMIN', 'SUPERADMIN'].includes((currentUser?.role || '').toUpperCase()) ? `<button class="action-btn btn-delete" onclick="deleteNews(${item.id})"><i class="fa-solid fa-trash"></i></button>` : ''}
+            <tr class="news-row-card">
+                <td class="news-card-date" data-label="Datum">${publishedDate}</td>
+                <td class="news-card-title" data-label="Název">${safeTitle}</td>
+                <td class="hide-mobile news-card-meta" data-label="Kategorie">${safeCategory}</td>
+                <td class="hide-mobile news-card-meta" data-label="Autor"><span class="highlight-name" style="font-size: 0.85rem;">${safeAuthor}</span></td>
+                <td class="hide-mobile news-card-status" data-label="Stav"><span class="status-badge ${statusClass}">${statusIcon}<span class="status-text">${statusText}</span></span></td>
+                <td class="hide-mobile news-card-updated" data-label="Upraveno" style="font-size: 0.8rem; color: var(--text-muted);" title="${escapeHtml(updatedTitle)}">${escapeHtml(updatedRelative)}</td>
+                <td class="news-card-actions" data-label="Akce">
+                    <button class="action-btn btn-edit" onclick="editNews(${item.id})" title="Upravit článek" aria-label="Upravit článek"><i class="fa-solid fa-pen"></i></button>
+                    <button class="action-btn btn-publish" onclick="togglePublish(${item.id})" title="${item.isPublished ? 'Skrýt článek' : 'Publikovat článek'}" aria-label="${item.isPublished ? 'Skrýt článek' : 'Publikovat článek'}"><i class="fa-solid fa-${item.isPublished ? 'eye-slash' : 'eye'}"></i></button>
+                    ${canDelete ? `<button class="action-btn btn-delete" onclick="deleteNews(${item.id})" title="Smazat článek" aria-label="Smazat článek"><i class="fa-solid fa-trash"></i></button>` : ''}
                 </td>
             </tr>
         `}).join('');
@@ -621,4 +629,3 @@ window.addEventListener('hashchange', () => {
         switchTab(tab);
     }
 });
-
