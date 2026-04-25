@@ -15,34 +15,36 @@ const BLUNDER_THRESHOLD = 5; // Minimální Win% drop pro uložení do DB (slide
 const MISS_THRESHOLD = 8; // Misses můžou být o něco mírnější
 
 // === Position-based blunder rule (pawn units, target player's perspective) ===
+// Symetrické prahy: |1.5| = "jasná převaha" / "jasná prohra".
+// Mezi -1.5 a +1.5 = gray zone (cca remíza).
+//
 // Tři kumulativní podmínky (všechny musí platit):
 //
-//   (1) Pozice před tahem nebyla už předtím prohraná: evalBefore ≥ -1
-//   (2) Drop v evalu byl ≥ 2.5 pawnů (nikoliv jen drobné posunutí)
+//   (1) Pozice před tahem nebyla už předtím jasně prohraná: evalBefore ≥ -1.5
+//   (2) Drop v evalu byl ≥ 2.5 pawnů (ne drobné posuny)
 //   (3) Konečná pozice je buď:
-//       (a) Vypuštěná jasná výhra: evalBefore ≥ +2 AND evalAfter ≤ +1
-//           (gray zone +1 už není výhra; +2 → +1 nestačí kvůli (2))
-//       (b) NEBO jasně prohraná pozice: evalAfter ≤ -1
+//       (a) Vypuštěná jasná výhra: evalBefore ≥ +1.5 AND evalAfter < +1.5
+//           (vypadl z clear-win zóny do gray nebo prohry)
+//       (b) NEBO jasně prohraná pozice: evalAfter ≤ -1.5
 //
-// Příklady:
-//   ✓ Blunder:
-//     +5 → +1   (vypuštěná výhra, drop 4 ≥ 2.5, evalAfter ≤ 1)
-//     +1 → -2   (z výhry do prohry)
-//     0 → -3    (z remízy do prohry)
-//     -1 → -4   (ze slabší pozice do drtivé prohry)
-//   ✗ NE blunder:
-//     +5 → +2   (pořád výhra)
-//     +2 → +1   (malý rozdíl, drop < 2.5)
-//     +3 → +1.5 (drop 1.5, pořád výhra)
-//     +0.5 → -1.2 (drop 1.7 < 2.5, gray zone)
-//     -1 → -3   (drop 2 < 2.5, hraniční)
-//     -2 → -5   (už předtím prohraná)
-//     0 → -0.8  (mírné kolísání kolem rovnováhy)
-const BLUNDER_BEFORE_AT_LEAST = -1.0;
+// Příklady ✓ blunder:
+//   +5 → +1     (vypuštěná výhra, drop 4)
+//   +1 → -2     (z výhry do prohry)
+//   0 → -3      (z remízy do prohry)
+//   -1 → -4     (ze slabší pozice do drtivé prohry)
+//   -1.5 → -4   (boundary: before na hranici clearly-lost ≥ -1.5)
+//
+// Příklady ✗ NE blunder:
+//   +5 → +2     (pořád jasná výhra ≥ +1.5)
+//   +2 → +1     (drop jen 1, malý rozdíl)
+//   +0.5 → -1.2 (drop 1.7 < 2.5, gray zone)
+//   -1 → -3     (drop 2 < 2.5, hraniční)
+//   -2 → -5     (před tahem už jasně prohraná, evalBefore < -1.5)
+//   0 → -0.8    (mírné kolísání, drop < 2.5)
+const BLUNDER_BEFORE_AT_LEAST = -1.5;
 const BLUNDER_MIN_DROP = 2.5;
-const BLUNDER_GAVE_UP_WIN_FROM = 2.0;
-const BLUNDER_GAVE_UP_WIN_TO = 1.0;
-const BLUNDER_LOSING_AFTER = -1.0;
+const BLUNDER_CLEAR_WIN = 1.5;
+const BLUNDER_CLEAR_LOSS = -1.5;
 
 // Převede eval na target-perspective pawns (z Lichess white-perspective cp).
 function evalToTargetPawns(evalObj, targetIsWhite) {
@@ -58,14 +60,14 @@ function evalToTargetPawns(evalObj, targetIsWhite) {
 
 export function matchesBlunderRule(evalBeforeTarget, evalAfterTarget) {
     if (evalBeforeTarget === null || evalAfterTarget === null) return false;
-    // (1) Pozice musela být aspoň lehce horší — ne již prohraná
+    // (1) Před tahem nebyla pozice už jasně prohraná (≥ -1.5)
     if (evalBeforeTarget < BLUNDER_BEFORE_AT_LEAST) return false;
-    // (2) Drop musí být dostatečně velký
+    // (2) Drop ≥ 2.5 pawnů — ne drobné posuny
     const drop = evalBeforeTarget - evalAfterTarget;
     if (drop < BLUNDER_MIN_DROP) return false;
-    // (3) Konečná pozice je buď vypuštěná výhra nebo jasná prohra
-    const gaveUpWin = evalBeforeTarget >= BLUNDER_GAVE_UP_WIN_FROM && evalAfterTarget <= BLUNDER_GAVE_UP_WIN_TO;
-    const nowLosing = evalAfterTarget <= BLUNDER_LOSING_AFTER;
+    // (3) Buď vypuštěná jasná výhra, nebo nyní jasná prohra
+    const gaveUpWin = evalBeforeTarget >= BLUNDER_CLEAR_WIN && evalAfterTarget < BLUNDER_CLEAR_WIN;
+    const nowLosing = evalAfterTarget <= BLUNDER_CLEAR_LOSS;
     return gaveUpWin || nowLosing;
 }
 

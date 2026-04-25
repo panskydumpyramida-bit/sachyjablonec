@@ -1,14 +1,18 @@
 import { describe, it, expect } from 'vitest';
 import { matchesBlunderRule } from '../../src/services/blunderService.js';
 
-describe('matchesBlunderRule — Position-based blunder klasifikace', () => {
-    describe('Vypuštěná výhra (gave-up-win branch)', () => {
+describe('matchesBlunderRule — Position-based blunder klasifikace (±1.5 symetrický práh)', () => {
+    describe('Vypuštěná výhra (≥ +1.5 → < +1.5)', () => {
         it('+5 → +1 = blunder (vypustil výhru do gray zone)', () => {
             expect(matchesBlunderRule(5, 1)).toBe(true);
         });
 
-        it('+5 → +2 = NE (pořád jasná výhra)', () => {
+        it('+5 → +2 = NE (pořád jasná výhra ≥ +1.5)', () => {
             expect(matchesBlunderRule(5, 2)).toBe(false);
+        });
+
+        it('+5 → +1.5 = NE (přesně na hranici clear win)', () => {
+            expect(matchesBlunderRule(5, 1.5)).toBe(false);
         });
 
         it('+5 → 0 = blunder', () => {
@@ -19,11 +23,11 @@ describe('matchesBlunderRule — Position-based blunder klasifikace', () => {
             expect(matchesBlunderRule(5, -3)).toBe(true);
         });
 
-        it('+3 → +1.5 = NE (stále výhra)', () => {
+        it('+3 → +1.5 = NE (pořád výhra)', () => {
             expect(matchesBlunderRule(3, 1.5)).toBe(false);
         });
 
-        it('+2 → +1 = NE (malý rozdíl, drop < 2.5)', () => {
+        it('+2 → +1 = NE (drop jen 1 < 2.5)', () => {
             expect(matchesBlunderRule(2, 1)).toBe(false);
         });
 
@@ -32,7 +36,7 @@ describe('matchesBlunderRule — Position-based blunder klasifikace', () => {
         });
     });
 
-    describe('Změna výsledku (now-losing branch)', () => {
+    describe('Změna výsledku do prohry (≤ -1.5)', () => {
         it('0 → -3 = blunder (z remízy do prohry)', () => {
             expect(matchesBlunderRule(0, -3)).toBe(true);
         });
@@ -45,6 +49,10 @@ describe('matchesBlunderRule — Position-based blunder klasifikace', () => {
             expect(matchesBlunderRule(-1, -4)).toBe(true);
         });
 
+        it('-1.5 → -4 = blunder (boundary: před tahem na hranici clear-loss)', () => {
+            expect(matchesBlunderRule(-1.5, -4)).toBe(true);
+        });
+
         it('-1 → -3 = NE (drop 2 < 2.5, hraniční)', () => {
             expect(matchesBlunderRule(-1, -3)).toBe(false);
         });
@@ -53,22 +61,26 @@ describe('matchesBlunderRule — Position-based blunder klasifikace', () => {
             expect(matchesBlunderRule(0.5, -1.2)).toBe(false);
         });
 
-        it('0 → -0.8 = NE (mírné kolísání, drop < 2.5 a evalAfter > -1)', () => {
+        it('0 → -0.8 = NE (mírné kolísání)', () => {
             expect(matchesBlunderRule(0, -0.8)).toBe(false);
         });
 
-        it('0 → -2.5 = blunder (přesně na hranici drop)', () => {
+        it('0 → -2.5 = blunder (drop 2.5 hraniční ✓, after ≤ -1.5 ✓)', () => {
             expect(matchesBlunderRule(0, -2.5)).toBe(true);
+        });
+
+        it('0 → -1.5 = NE (drop 1.5 < 2.5)', () => {
+            expect(matchesBlunderRule(0, -1.5)).toBe(false);
         });
     });
 
-    describe('Hraniční případy / nesplňuje předpoklady', () => {
-        it('-2 → -5 = NE (už předtím v prohře, evalBefore < -1)', () => {
+    describe('Hraniční / nesplňuje předpoklady', () => {
+        it('-2 → -5 = NE (už jasně prohraná, evalBefore < -1.5)', () => {
             expect(matchesBlunderRule(-2, -5)).toBe(false);
         });
 
-        it('-1.5 → -4 = NE (evalBefore -1.5 < -1)', () => {
-            expect(matchesBlunderRule(-1.5, -4)).toBe(false);
+        it('-1.6 → -4 = NE (před tahem těsně pod -1.5)', () => {
+            expect(matchesBlunderRule(-1.6, -4)).toBe(false);
         });
 
         it('+3 → +5 = NE (zlepšení)', () => {
@@ -83,8 +95,8 @@ describe('matchesBlunderRule — Position-based blunder klasifikace', () => {
     });
 
     describe('Mate hodnoty (jako extrémní pawny ±999)', () => {
-        it('Mat v ruce (999) → ztráta (-1.5) = blunder', () => {
-            expect(matchesBlunderRule(999, -1.5)).toBe(true);
+        it('Mat v ruce (999) → ztráta (-2) = blunder', () => {
+            expect(matchesBlunderRule(999, -2)).toBe(true);
         });
 
         it('Z prohraného matu (-999) → ještě prohraný (-5) = NE', () => {
