@@ -15,15 +15,21 @@ const BLUNDER_THRESHOLD = 5; // Minimální Win% drop pro uložení do DB (slide
 const MISS_THRESHOLD = 8; // Misses můžou být o něco mírnější
 
 // === Position-based blunder rule (pawn units, target player's perspective) ===
-// Tah je blunder JEN pokud:
-//   (a) hráč vypustil výhru — měl eval ≥ +2.5 a po tahu spadl pod -1
-//   (b) nebo obrátil partii — byl v převaze ≥ +1 a dostal se do ztráty ≤ -1
-// Tohle je striktnější než čistě Win% drop a lépe odpovídá tomu, co hráč
-// vnímá jako "skutečný blunder" (vypuštěná výhra / obrácená partie).
-const BLUNDER_GAVE_UP_WIN_FROM = 2.5;
-const BLUNDER_GAVE_UP_WIN_TO = -1;
-const BLUNDER_REVERSAL_FROM = 1.0;
-const BLUNDER_REVERSAL_TO = -1.0;
+// Tah je blunder pokud platí ALESPOŇ JEDNA z dvou podmínek:
+//
+// (A) Vypuštěná výhra: pozice byla jasně vyhraná (≥ +2) a teď je v gray zone
+//     nebo horší (≤ +1). Zóna +1 je hraniční ("gray zone") — už není převaha.
+//     Příklady: +5 → +1 ✓, +3 → 0 ✓
+//     Naopak: +5 → +2 ✗ (stále jasná výhra)
+//
+// (B) Obrácený výsledek: pozice byla aspoň remízová (≥ -0.5) a tah ji udělal
+//     jasně prohranou (≤ -1).
+//     Příklady: 0 → -3 ✓, +0.5 → -1.2 ✓, +1 → -2 ✓
+//     Naopak: -2 → -5 ✗ (už předtím ztracené), 0 → -0.8 ✗ (jen mírné kolísání)
+const BLUNDER_GAVE_UP_WIN_FROM = 2.0;
+const BLUNDER_GAVE_UP_WIN_TO = 1.0;
+const BLUNDER_RESULT_CHANGE_FROM = -0.5;
+const BLUNDER_RESULT_CHANGE_TO = -1.0;
 
 // Převede eval na target-perspective pawns (z Lichess white-perspective cp).
 function evalToTargetPawns(evalObj, targetIsWhite) {
@@ -39,9 +45,9 @@ function evalToTargetPawns(evalObj, targetIsWhite) {
 
 export function matchesBlunderRule(evalBeforeTarget, evalAfterTarget) {
     if (evalBeforeTarget === null || evalAfterTarget === null) return false;
-    const gaveUpWin = evalBeforeTarget >= BLUNDER_GAVE_UP_WIN_FROM && evalAfterTarget < BLUNDER_GAVE_UP_WIN_TO;
-    const reversal = evalBeforeTarget >= BLUNDER_REVERSAL_FROM && evalAfterTarget <= BLUNDER_REVERSAL_TO;
-    return gaveUpWin || reversal;
+    const gaveUpWin = evalBeforeTarget >= BLUNDER_GAVE_UP_WIN_FROM && evalAfterTarget <= BLUNDER_GAVE_UP_WIN_TO;
+    const resultChanged = evalBeforeTarget >= BLUNDER_RESULT_CHANGE_FROM && evalAfterTarget <= BLUNDER_RESULT_CHANGE_TO;
+    return gaveUpWin || resultChanged;
 }
 
 // === Win probability from centipawns (Lichess formula) ===
