@@ -15,21 +15,34 @@ const BLUNDER_THRESHOLD = 5; // Minimální Win% drop pro uložení do DB (slide
 const MISS_THRESHOLD = 8; // Misses můžou být o něco mírnější
 
 // === Position-based blunder rule (pawn units, target player's perspective) ===
-// Tah je blunder pokud platí ALESPOŇ JEDNA z dvou podmínek:
+// Tři kumulativní podmínky (všechny musí platit):
 //
-// (A) Vypuštěná výhra: pozice byla jasně vyhraná (≥ +2) a teď je v gray zone
-//     nebo horší (≤ +1). Zóna +1 je hraniční ("gray zone") — už není převaha.
-//     Příklady: +5 → +1 ✓, +3 → 0 ✓
-//     Naopak: +5 → +2 ✗ (stále jasná výhra)
+//   (1) Pozice před tahem nebyla už předtím prohraná: evalBefore ≥ -1
+//   (2) Drop v evalu byl ≥ 2.5 pawnů (nikoliv jen drobné posunutí)
+//   (3) Konečná pozice je buď:
+//       (a) Vypuštěná jasná výhra: evalBefore ≥ +2 AND evalAfter ≤ +1
+//           (gray zone +1 už není výhra; +2 → +1 nestačí kvůli (2))
+//       (b) NEBO jasně prohraná pozice: evalAfter ≤ -1
 //
-// (B) Obrácený výsledek: pozice byla aspoň remízová (≥ -0.5) a tah ji udělal
-//     jasně prohranou (≤ -1).
-//     Příklady: 0 → -3 ✓, +0.5 → -1.2 ✓, +1 → -2 ✓
-//     Naopak: -2 → -5 ✗ (už předtím ztracené), 0 → -0.8 ✗ (jen mírné kolísání)
+// Příklady:
+//   ✓ Blunder:
+//     +5 → +1   (vypuštěná výhra, drop 4 ≥ 2.5, evalAfter ≤ 1)
+//     +1 → -2   (z výhry do prohry)
+//     0 → -3    (z remízy do prohry)
+//     -1 → -4   (ze slabší pozice do drtivé prohry)
+//   ✗ NE blunder:
+//     +5 → +2   (pořád výhra)
+//     +2 → +1   (malý rozdíl, drop < 2.5)
+//     +3 → +1.5 (drop 1.5, pořád výhra)
+//     +0.5 → -1.2 (drop 1.7 < 2.5, gray zone)
+//     -1 → -3   (drop 2 < 2.5, hraniční)
+//     -2 → -5   (už předtím prohraná)
+//     0 → -0.8  (mírné kolísání kolem rovnováhy)
+const BLUNDER_BEFORE_AT_LEAST = -1.0;
+const BLUNDER_MIN_DROP = 2.5;
 const BLUNDER_GAVE_UP_WIN_FROM = 2.0;
 const BLUNDER_GAVE_UP_WIN_TO = 1.0;
-const BLUNDER_RESULT_CHANGE_FROM = -0.5;
-const BLUNDER_RESULT_CHANGE_TO = -1.0;
+const BLUNDER_LOSING_AFTER = -1.0;
 
 // Převede eval na target-perspective pawns (z Lichess white-perspective cp).
 function evalToTargetPawns(evalObj, targetIsWhite) {
@@ -45,9 +58,15 @@ function evalToTargetPawns(evalObj, targetIsWhite) {
 
 export function matchesBlunderRule(evalBeforeTarget, evalAfterTarget) {
     if (evalBeforeTarget === null || evalAfterTarget === null) return false;
+    // (1) Pozice musela být aspoň lehce horší — ne již prohraná
+    if (evalBeforeTarget < BLUNDER_BEFORE_AT_LEAST) return false;
+    // (2) Drop musí být dostatečně velký
+    const drop = evalBeforeTarget - evalAfterTarget;
+    if (drop < BLUNDER_MIN_DROP) return false;
+    // (3) Konečná pozice je buď vypuštěná výhra nebo jasná prohra
     const gaveUpWin = evalBeforeTarget >= BLUNDER_GAVE_UP_WIN_FROM && evalAfterTarget <= BLUNDER_GAVE_UP_WIN_TO;
-    const resultChanged = evalBeforeTarget >= BLUNDER_RESULT_CHANGE_FROM && evalAfterTarget <= BLUNDER_RESULT_CHANGE_TO;
-    return gaveUpWin || resultChanged;
+    const nowLosing = evalAfterTarget <= BLUNDER_LOSING_AFTER;
+    return gaveUpWin || nowLosing;
 }
 
 // === Win probability from centipawns (Lichess formula) ===
