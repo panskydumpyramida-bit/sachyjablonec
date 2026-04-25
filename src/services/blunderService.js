@@ -14,6 +14,36 @@ const BATCH_SIZE = 1; // games per single request (Cloudflare 100s timeout — f
 const BLUNDER_THRESHOLD = 5; // Minimální Win% drop pro uložení do DB (slider začíná na 5)
 const MISS_THRESHOLD = 8; // Misses můžou být o něco mírnější
 
+// === Position-based blunder rule (pawn units, target player's perspective) ===
+// Tah je blunder JEN pokud:
+//   (a) hráč vypustil výhru — měl eval ≥ +2.5 a po tahu spadl pod -1
+//   (b) nebo obrátil partii — byl v převaze ≥ +1 a dostal se do ztráty ≤ -1
+// Tohle je striktnější než čistě Win% drop a lépe odpovídá tomu, co hráč
+// vnímá jako "skutečný blunder" (vypuštěná výhra / obrácená partie).
+const BLUNDER_GAVE_UP_WIN_FROM = 2.5;
+const BLUNDER_GAVE_UP_WIN_TO = -1;
+const BLUNDER_REVERSAL_FROM = 1.0;
+const BLUNDER_REVERSAL_TO = -1.0;
+
+// Převede eval na target-perspective pawns (z Lichess white-perspective cp).
+function evalToTargetPawns(evalObj, targetIsWhite) {
+    if (!evalObj) return null;
+    if (evalObj.mate !== undefined && evalObj.mate !== null) {
+        // Lichess konvence: mate > 0 = white mates
+        const whiteView = evalObj.mate > 0 ? 999 : -999;
+        return targetIsWhite ? whiteView : -whiteView;
+    }
+    if (evalObj.cp === undefined || evalObj.cp === null) return null;
+    return targetIsWhite ? evalObj.cp / 100 : -evalObj.cp / 100;
+}
+
+export function matchesBlunderRule(evalBeforeTarget, evalAfterTarget) {
+    if (evalBeforeTarget === null || evalAfterTarget === null) return false;
+    const gaveUpWin = evalBeforeTarget >= BLUNDER_GAVE_UP_WIN_FROM && evalAfterTarget < BLUNDER_GAVE_UP_WIN_TO;
+    const reversal = evalBeforeTarget >= BLUNDER_REVERSAL_FROM && evalAfterTarget <= BLUNDER_REVERSAL_TO;
+    return gaveUpWin || reversal;
+}
+
 // === Win probability from centipawns (Lichess formula) ===
 function getWinProbability(evalObj) {
     if (!evalObj) return 50;
@@ -192,21 +222,30 @@ async function analyzeGame(gameData, playerName) {
 
         const moveLAN = getMoveLAN(move);
 
-        if (isTargetPlayerMove && probDrop >= BLUNDER_THRESHOLD && curr.bestMove && curr.bestMove !== moveLAN) {
-            results.push({
-                type: 'blunder',
-                gameId: gameData.id,
-                fenBefore,
-                movePlayed: move.san,
-                movePlayedLAN: moveLAN,
-                bestMoveLAN: curr.bestMove,
-                evalBefore: curr.cp !== undefined ? curr.cp / 100 : null,
-                evalAfter: next.cp !== undefined ? next.cp / 100 : null,
-                probDrop: Math.round(probDrop * 10) / 10,
-                white: gameData.whitePlayer,
-                black: gameData.blackPlayer,
-                result: gameData.result,
-            });
+        if (isTargetPlayerMove && curr.bestMove && curr.bestMove !== moveLAN) {
+            // Target player's absolute eval (pawn units, from their perspective)
+            const evalBeforeTarget = evalToTargetPawns(curr, isWhiteToMove);
+            const evalAfterTarget = evalToTargetPawns(next, isWhiteToMove);
+            // Nová pravidla: blunder JEN když hráč vypustil výhru nebo obrátil partii.
+            // Win% drop threshold zůstává jako sanity check (≥5%), ale skutečný rozhodující
+            // filtr je absolutní eval přechod z výhry do prohry.
+            const isReversal = matchesBlunderRule(evalBeforeTarget, evalAfterTarget);
+            if (isReversal && probDrop >= BLUNDER_THRESHOLD) {
+                results.push({
+                    type: 'blunder',
+                    gameId: gameData.id,
+                    fenBefore,
+                    movePlayed: move.san,
+                    movePlayedLAN: moveLAN,
+                    bestMoveLAN: curr.bestMove,
+                    evalBefore: curr.cp !== undefined ? curr.cp / 100 : null,
+                    evalAfter: next.cp !== undefined ? next.cp / 100 : null,
+                    probDrop: Math.round(probDrop * 10) / 10,
+                    white: gameData.whitePlayer,
+                    black: gameData.blackPlayer,
+                    result: gameData.result,
+                });
+            }
         }
 
         if (!isTargetPlayerMove && probDrop <= -MISS_THRESHOLD) {
@@ -398,13 +437,27 @@ export async function getPlayerStatus(playerName) {
 }
 
 // === Get cached results ===
+// Nově filtruje i podle position-based pravidla (vypuštěná výhra / obrácená partie),
+// i pro záznamy co jsou v DB ještě z doby kdy platil jen probDrop threshold.
 export async function getPlayerBlunders(playerName, threshold = 12) {
-    return prisma.blunderAnalysis.findMany({
+    const records = await prisma.blunderAnalysis.findMany({
         where: {
             playerName: playerName.toLowerCase(),
             type: { not: 'clean' },
             probDrop: { gte: threshold }
         },
         orderBy: { probDrop: 'desc' }
+    });
+    return records.filter(b => {
+        // Miss detection má jinou logiku (soupeř udělal chybu) — necháme projít
+        if (b.type === 'miss') return true;
+        if (b.evalBefore === null || b.evalAfter === null) return false;
+        // Target color — hráč je buď white nebo black v uložené partii
+        const pnLower = playerName.toLowerCase();
+        const isWhite = (b.white || '').toLowerCase() === pnLower;
+        // Stored eval je v pawn units z white perspective (viz scan logic)
+        const evalBeforeTarget = isWhite ? b.evalBefore : -b.evalBefore;
+        const evalAfterTarget = isWhite ? b.evalAfter : -b.evalAfter;
+        return matchesBlunderRule(evalBeforeTarget, evalAfterTarget);
     });
 }
