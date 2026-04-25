@@ -761,13 +761,15 @@ function containsKeyword(text, keyword) {
 }
 
 // Essential headers — vždy viditelné i na mobilu. Ostatní dostanou hide-mobile.
+// Pořadí (index 0) je esenciální vždy, bez ohledu na header text — chess-results
+// někdy vrací "Rk.", jindy "Poř.", jindy prázdné. Strukturální pravidlo je spolehlivější.
 const RT_ESSENTIAL_PATTERNS = [
-    /^(rk|rank|#|po[řr]ad)/i,   // Rank
     /^(jm[ée]no|name|hr[áa][čc])/i, // Jméno
-    /^(body|pts|pt\.|score)/i,   // Body
+    /^(body|pts|pt\.|score)/i,       // Body
 ];
 
-function isEssentialHeader(header) {
+function isEssentialHeader(header, index) {
+    if (index === 0) return true; // rank column — always essential
     return RT_ESSENTIAL_PATTERNS.some(r => r.test(header));
 }
 
@@ -775,7 +777,7 @@ function buildResultsTableHtml({ headers, rows, keyword, topN, colMask }) {
     // topN: 1 (vítěz), 3 (top 3), 10 (top 10), 0/null (všichni)
     // colMask: bool[] stejné délky jako headers; true = zobrazit sloupec. Pokud null → všechny.
     const showCol = headers.map((_h, i) => !colMask || colMask[i]);
-    const mobileHide = headers.map((h, i) => showCol[i] && !isEssentialHeader(h));
+    const mobileHide = headers.map((h, i) => showCol[i] && !isEssentialHeader(h, i));
 
     // Row filtering
     let visibleRows = rows;
@@ -928,8 +930,12 @@ function showResultsTableModal() {
             currentColMask = headerNorm.map(h => match(h, standardPatterns));
         }
 
-        // Pokud preset neosvobodil žádný sloupec (edge case u neznámých headerů), ponecháme první tři
-        if (!currentColMask.some(Boolean)) {
+        // První sloupec (rank) je strukturálně esenciální — chess-results někdy
+        // vrací neobvyklé hlavičky ("Poř.", prázdné), na které pattern nezabere
+        if (!currentColMask[0]) currentColMask[0] = true;
+
+        // Pokud preset neosvobodil žádný další sloupec, ponecháme první tři
+        if (currentColMask.filter(Boolean).length < 2) {
             currentColMask = headers.map((_, i) => i < 3);
         }
 
