@@ -409,7 +409,7 @@ app.get('/api/registration/blicak', async (req, res) => {
 
 app.post('/api/registration/blicak', async (req, res) => {
     try {
-        const { name, club, lok, year, tournamentId } = req.body;
+        const { name, club, lok, year, tournamentId, note } = req.body;
 
         if (!name || !year) {
             return res.status(400).json({ error: 'Name and year are required' });
@@ -421,6 +421,7 @@ app.post('/api/registration/blicak', async (req, res) => {
                 club: club || '',
                 lok: lok ? String(lok) : '',
                 birthYear: parseInt(year),
+                note: note || null,
                 tournamentId: tournamentId || 'velikonocni-2026',
                 eventDate: new Date() // Sets to current time, effectively registering for "now"
             }
@@ -431,6 +432,19 @@ app.post('/api/registration/blicak', async (req, res) => {
     } catch (err) {
         console.error('Registration error:', err);
         res.status(500).json({ error: 'Failed to process registration' });
+    }
+});
+
+app.delete('/api/registration/blicak/:id', authMiddleware, requireAdmin, async (req, res) => {
+    try {
+        const id = parseInt(req.params.id);
+        await prisma.blicakRegistration.delete({
+            where: { id }
+        });
+        res.json({ success: true });
+    } catch (err) {
+        console.error('Delete registration error:', err);
+        res.status(500).json({ error: 'Failed to delete registration' });
     }
 });
 

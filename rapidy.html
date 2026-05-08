@@ -330,6 +330,11 @@
                             <input type="number" id="year" name="year" class="premium-input" required placeholder="např. 2010" min="1900" max="2026">
                         </div>
                     </div>
+                    
+                    <div style="margin-bottom: 1.5rem;">
+                        <label for="note" class="premium-label">Poznámka</label>
+                        <textarea id="note" name="note" class="premium-input" rows="2" placeholder="Např. přijdu až na 2. kolo, atd."></textarea>
+                    </div>
 
                     <button type="submit" class="premium-btn" id="submitBtn">
                         <i class="fa-solid fa-paper-plane" style="margin-right: 0.5rem;"></i> Odeslat přihlášku
@@ -462,6 +467,7 @@
                 club: document.getElementById('club').value,
                 lok: document.getElementById('lok').value,
                 year: document.getElementById('year').value,
+                note: document.getElementById('note').value,
                 tournamentId: TOURNAMENT_ID
             };
 
