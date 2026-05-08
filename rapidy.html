@@ -213,6 +213,22 @@
             transform: translateY(-2px);
             box-shadow: 0 8px 25px rgba(212, 175, 55, 0.5);
         }
+
+        /* Responsivita nadpisů + hero na mobilu */
+        @media (max-width: 768px) {
+            .blicak-hero h1 { font-size: 1.8rem !important; margin-bottom: 1rem !important; line-height: 1.15; }
+            .blicak-hero p { font-size: 0.95rem !important; }
+            .premium-grid { gap: 1rem; margin: 1rem 0; }
+            .premium-card { padding: 1.25rem !important; }
+            .premium-card h3 { font-size: 1.1rem; padding-bottom: 0.6rem; margin-bottom: 0.9rem; }
+            .premium-form-container h2 { font-size: 1.4rem !important; margin-bottom: 1.5rem !important; }
+            .section-title { font-size: 1.6rem !important; }
+        }
+        @media (max-width: 480px) {
+            .blicak-hero h1 { font-size: 1.5rem !important; }
+            .premium-card h3 i { font-size: 0.9em; }
+            .premium-grid { grid-template-columns: 1fr; }
+        }
     </style>
 
         <section class="container" style="padding-top: 4rem;">
@@ -234,6 +250,7 @@
                         <li style="display:flex; align-items:baseline; gap:0.6rem;"><i class="fa-regular fa-clock" style="color:var(--primary-color); width:18px;"></i> <span>Tempo: <strong style="color:#fff;">12 min + 3 s/tah</strong></span></li>
                         <li style="display:flex; align-items:baseline; gap:0.6rem;"><i class="fa-solid fa-list-ol" style="color:var(--primary-color); width:18px;"></i> <span><strong style="color:#fff;">12 kol</strong> celkem</span></li>
                         <li style="display:flex; align-items:baseline; gap:0.6rem;"><i class="fa-solid fa-calendar-week" style="color:var(--primary-color); width:18px;"></i> <span><strong style="color:#fff;">3 čtvrtky</strong> (14.5., 21.5., 28.5.)</span></li>
+                        <li style="display:flex; align-items:baseline; gap:0.6rem;"><i class="fa-solid fa-clipboard-check" style="color:var(--primary-color); width:18px;"></i> <span>Prezentace do <strong style="color:#fff;">16:45</strong></span></li>
                     </ul>
                 </div>
 
@@ -249,14 +266,7 @@
                     </ul>
                 </div>
 
-                <!-- 3: Rozbory mezi koly -->
-                <div class="premium-card">
-                    <h3><i class="fa-solid fa-graduation-cap"></i> Rozbory mezi koly</h3>
-                    <p style="margin-bottom:0.8rem; color:#e2e8f0;">Mezi jednotlivými koly bude probíhat <strong style="color:#fff;">rozbor partií</strong> se zkušenějšími hráči.</p>
-                    <p style="margin:0; color:#cbd5e1; font-size:0.95em;">Příležitost, jak partii hned probrat a posunout se herně. Účast na rozborech je dobrovolná.</p>
-                </div>
-
-                <!-- 4: Flexibilní účast -->
+                <!-- 3: Flexibilní účast -->
                 <div class="premium-card">
                     <h3><i class="fa-solid fa-calendar-check"></i> Flexibilní účast</h3>
                     <p style="margin-bottom:0.8rem; color:#e2e8f0;">Nestíháte vše? <strong>Vůbec nevadí.</strong></p>
@@ -268,7 +278,7 @@
                     <p style="margin:0; font-size:0.85em; color:#cbd5e1; font-style:italic;"><i class="fa-solid fa-circle-info" style="color:var(--primary-color); margin-right:0.4rem;"></i> Stačí to říct rozhodčímu před začátkem kola.</p>
                 </div>
 
-                <!-- 5: Startovné a ceny -->
+                <!-- 4: Startovné a ceny -->
                 <div class="premium-card">
                     <h3><i class="fa-solid fa-money-bill-wave"></i> Startovné a ceny</h3>
                     <p style="margin-bottom:1rem; font-size:0.95em;">Startovné jde ze <strong style="color:var(--primary-color);">100 % zpět do cen</strong>.</p>
@@ -285,7 +295,7 @@
                     <p style="margin:0; font-size:0.85em; color:var(--text-muted); font-style:italic; text-align:center;">Jednorázově za celý turnaj.</p>
                 </div>
 
-                <!-- 6: Kapacita a kontakt -->
+                <!-- 5: Kapacita a kontakt -->
                 <div class="premium-card">
                     <h3><i class="fa-solid fa-users"></i> Kapacita a kontakt</h3>
                     <p style="margin-bottom:1rem;">Max <strong style="color:#fff;">50 hráčů</strong>, 2 sály předem zarezervované.</p>
@@ -298,6 +308,13 @@
                         <p style="margin-bottom:0.6rem; display:flex; align-items:center;"><i class="fa-solid fa-envelope" style="width:22px; color:var(--primary-color);"></i> <a href="mailto:info@sachyjablonec.cz" style="color:#fff; text-decoration:none;">info@sachyjablonec.cz</a></p>
                         <p style="margin:0; display:flex; align-items:center;"><i class="fa-solid fa-phone" style="width:22px; color:var(--primary-color);"></i> <span style="color:#fff;">731 183 859</span> <span style="color:#94a3b8; font-size:0.85em; margin-left:0.5rem;">(A. Duda)</span></p>
                     </div>
+                </div>
+
+                <!-- 6: Rozbory mezi koly (méně důležité, posunuto na konec) -->
+                <div class="premium-card">
+                    <h3><i class="fa-solid fa-graduation-cap"></i> Rozbory mezi koly</h3>
+                    <p style="margin-bottom:0.8rem; color:#e2e8f0;">Mezi jednotlivými koly bude probíhat <strong style="color:#fff;">rozbor partií</strong> se zkušenějšími hráči.</p>
+                    <p style="margin:0; color:#cbd5e1; font-size:0.95em;">Příležitost, jak partii hned probrat a posunout se herně. Účast je dobrovolná.</p>
                 </div>
             </div>
 
@@ -457,7 +474,18 @@
             }
         }
 
-        document.getElementById('blicakForm').addEventListener('submit', async function (e) {
+        // Snapshot původní HTML formuláře, abychom ho mohli obnovit po úspěšném odeslání
+        // bez refreshe stránky (pro hromadnou registraci více lidí).
+        const ORIG_FORM_HTML = document.getElementById('regFormContainer').innerHTML;
+
+        function bindBlicakForm() {
+            const form = document.getElementById('blicakForm');
+            if (!form || form.__bound) return;
+            form.__bound = true;
+            form.addEventListener('submit', handleBlicakSubmit);
+        }
+
+        async function handleBlicakSubmit(e) {
             e.preventDefault();
             const btn = document.getElementById('submitBtn');
             const msg = document.getElementById('formMessage');
@@ -483,13 +511,25 @@
 
                 if (response.ok) {
                     await checkCapacity();
+                    if (typeof loadParticipants === 'function') loadParticipants();
+                    const firstName = (formData.name || '').split(' ')[0];
                     document.getElementById('regFormContainer').innerHTML = `
                         <div style="text-align: center; padding: 2rem;">
                             <i class="fa-solid fa-check-circle" style="font-size: 3rem; color: #4ade80; margin-bottom: 1rem;"></i>
                             <h3 style="color: #4ade80; margin-bottom: 0.5rem;">Přihláška přijata!</h3>
-                            <p>Těšíme se na vás na turnaji.</p>
+                            <p style="margin-bottom: 1.5rem;">${firstName ? 'Těšíme se na ' + firstName + ' na turnaji.' : 'Těšíme se na vás na turnaji.'}</p>
+                            <button type="button" class="premium-btn" id="registerAnotherBtn" style="display:inline-flex; align-items:center; gap:0.5rem;">
+                                <i class="fa-solid fa-user-plus"></i> Přihlásit dalšího
+                            </button>
                         </div>
                     `;
+                    document.getElementById('registerAnotherBtn').addEventListener('click', () => {
+                        // Obnovit formulář bez refreshe — vrátit původní HTML a re-bindovat submit
+                        document.getElementById('regFormContainer').innerHTML = ORIG_FORM_HTML;
+                        bindBlicakForm();
+                        checkCapacity();
+                        document.getElementById('regFormContainer').scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    });
                 } else {
                     throw new Error('Server error');
                 }
@@ -500,7 +540,9 @@
                 btn.disabled = false;
                 btn.textContent = 'Odeslat přihlášku';
             }
-        });
+        }
+
+        bindBlicakForm();
     </script>
 </body>
 
