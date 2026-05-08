@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Propozice - Rapidové čtvrtky</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+    <style>
+        /* CSS variables for print-friendly colors */
+        :root {
+            --primary: #b8860b; /* Dark gold */
+            --text-main: #111827;
+            --text-muted: #4b5563;
+            --border: #e5e7eb;
+            --bg-accent: #f9fafb;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            color: var(--text-main);
+            line-height: 1.5;
+            margin: 0;
+            padding: 0;
+            background-color: #fff;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+
+        /* A4 Page Setup */
+        @page {
+            size: A4;
+            margin: 20mm;
+        }
+
+        .document-container {
+            max-width: 210mm;
+            margin: 0 auto;
+            padding: 20mm;
+            box-sizing: border-box;
+            background: #fff;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+
+        /* Header Styles */
+        .header {
+            text-align: center;
+            border-bottom: 2px solid var(--primary);
+            padding-bottom: 15px;
+            margin-bottom: 30px;
+        }
+
+        .club-name {
+            font-family: 'Playfair Display', serif;
+            font-size: 16pt;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 5px;
+        }
+
+        .title {
+            font-family: 'Playfair Display', serif;
+            font-size: 28pt;
+            color: var(--text-main);
+            margin: 10px 0;
+            font-weight: 700;
+        }
+
+        .subtitle {
+            font-size: 14pt;
+            color: var(--primary);
+            font-weight: 600;
+        }
+
+        /* Content Grid */
+        .info-grid {
+            display: grid;
+            grid-template-columns: 150px 1fr;
+            gap: 15px 20px;
+            margin-bottom: 30px;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            font-size: 9pt;
+            letter-spacing: 1px;
+            border-bottom: 1px dotted var(--border);
+            padding-bottom: 4px;
+        }
+
+        .info-value {
+            font-size: 11pt;
+            font-weight: 500;
+            border-bottom: 1px dotted var(--border);
+            padding-bottom: 4px;
+        }
+
+        /* Sections */
+        .section-title {
+            font-size: 13pt;
+            color: var(--text-main);
+            border-left: 4px solid var(--primary);
+            padding-left: 10px;
+            margin: 25px 0 15px 0;
+            background: var(--bg-accent);
+            padding-top: 5px;
+            padding-bottom: 5px;
+        }
+
+        .text-block {
+            font-size: 10.5pt;
+            margin-bottom: 15px;
+            text-align: justify;
+        }
+
+        ul {
+            margin: 5px 0 15px 20px;
+            padding: 0;
+            font-size: 10.5pt;
+        }
+
+        li {
+            margin-bottom: 6px;
+        }
+
+        /* Schedule Table */
+        .schedule-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+            font-size: 10.5pt;
+        }
+
+        .schedule-table th, .schedule-table td {
+            border: 1px solid var(--border);
+            padding: 8px 12px;
+            text-align: left;
+        }
+
+        .schedule-table th {
+            background-color: var(--bg-accent);
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .schedule-table td:first-child {
+            font-weight: 600;
+            width: 120px;
+        }
+
+        /* Footer */
+        .footer {
+            margin-top: 40px;
+            border-top: 1px solid var(--border);
+            padding-top: 15px;
+            font-size: 9pt;
+            color: var(--text-muted);
+            text-align: center;
+        }
+
+        .flex-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            margin-top: 40px;
+        }
+
+        .signature {
+            text-align: center;
+            width: 200px;
+        }
+
+        .signature-line {
+            border-bottom: 1px solid var(--text-main);
+            height: 30px;
+            margin-bottom: 5px;
+        }
+
+        /* Print Specific Media Query */
+        @media print {
+            .document-container {
+                box-shadow: none;
+                margin: 0;
+                padding: 0;
+                max-width: none;
+            }
+            body {
+                background-color: #fff;
+            }
+            .no-print {
+                display: none !important;
+            }
+        }
+
+        /* Print Button for Browser View */
+        .print-btn {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: var(--primary);
+            color: #fff;
+            border: none;
+            padding: 15px 25px;
+            border-radius: 50px;
+            font-size: 12pt;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(184, 134, 11, 0.4);
+            transition: transform 0.2s;
+            font-family: 'Inter', sans-serif;
+            z-index: 1000;
+        }
+
+        .print-btn:hover {
+            transform: translateY(-2px);
+        }
+    </style>
+</head>
+<body>
+
+    <button class="print-btn no-print" onclick="window.print()">
+        <svg style="width: 20px; height: 20px; vertical-align: text-bottom; margin-right: 8px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
+        Vytisknout / Uložit PDF
+    </button>
+
+    <div class="document-container">
+        
+        <div class="header">
+            <div class="club-name">TJ Bižuterie Jablonec nad Nisou</div>
+            <div class="title">RAPIDOVÉ ČTVRTKY</div>
+            <div class="subtitle">Neoficiální tréninkový turnaj – nultý ročník</div>
+        </div>
+
+        <div class="info-grid">
+            <div class="info-label">Termíny</div>
+            <div class="info-value">14. 5., 21. 5. a 28. 5. 2026 (Tři po sobě jdoucí čtvrtky)</div>
+
+            <div class="info-label">Místo konání</div>
+            <div class="info-value">Městská hala, Jablonec nad Nisou – hrací sál</div>
+
+            <div class="info-label">Pořadatel</div>
+            <div class="info-value">Šachový oddíl TJ Bižuterie Jablonec nad Nisou</div>
+
+            <div class="info-label">Ředitel turnaje</div>
+            <div class="info-value">Antonín Duda (tel.: 731 183 859, e-mail: info@sachyjablonec.cz)</div>
+
+            <div class="info-label">Právo účasti</div>
+            <div class="info-value">Turnaj je otevřený pro všechny hráče, s LOK i bez LOK</div>
+        </div>
+
+        <h3 class="section-title">1. Formát a systém turnaje</h3>
+        <div class="text-block">
+            Turnaj se hraje švýcarským systémem na celkem <strong>12 kol</strong>. Turnaj je rozdělen do tří hracích dnů (čtvrtků), přičemž každý den se odehrají 4 kola.
+        </div>
+        <ul>
+            <li><strong>Tempo hry:</strong> 12 minut + 3 sekundy za každý provedený tah.</li>
+            <li><strong>Hodnocení:</strong> Turnaj není započítáván na LOK ČR ani FIDE. Slouží k tréninkovým účelům.</li>
+            <li><strong>Rozbory:</strong> Mezi jednotlivými koly a po skončení dne bude probíhat společný rozbor partií se zkušenými hráči oddílu.</li>
+        </ul>
+
+        <h3 class="section-title">2. Flexibilní účast a nasazování</h3>
+        <div class="text-block">
+            Účast v turnaji je vysoce flexibilní s ohledem na pracovní a osobní povinnosti hráčů. Nemusíte se zúčastnit všech čtvrtků ani všech kol v daný den.
+        </div>
+        <ul>
+            <li>Lze se do turnaje zapojit i v pozdějších kolech (např. při pozdějším příchodu z práce).</li>
+            <li>Lze vynechat konkrétní den nebo turnaj opustit dříve.</li>
+            <li><strong>Podmínka:</strong> Hráč musí vždy před začátkem losování dalšího kola jasně informovat rozhodčího, zda chce být do daného kola nalosován.</li>
+        </ul>
+
+        <h3 class="section-title">3. Časový harmonogram</h3>
+        <div class="text-block">
+            Tento harmonogram platí totožně pro všechny tři hrací dny (14. 5., 21. 5. a 28. 5.).
+        </div>
+        <table class="schedule-table">
+            <tr>
+                <th>Čas</th>
+                <th>Aktivita</th>
+            </tr>
+            <tr>
+                <td>16:45</td>
+                <td>Prezence hráčů přítomných na 1. kolo</td>
+            </tr>
+            <tr>
+                <td>17:00 – 17:35</td>
+                <td>1. kolo daného dne</td>
+            </tr>
+            <tr>
+                <td>17:45 – 18:20</td>
+                <td>2. kolo daného dne</td>
+            </tr>
+            <tr>
+                <td>18:30 – 19:05</td>
+                <td>3. kolo daného dne</td>
+            </tr>
+            <tr>
+                <td>19:15 – 19:50</td>
+                <td>4. kolo daného dne</td>
+            </tr>
+        </table>
+
+        <h3 class="section-title">4. Přihlášky a kapacita</h3>
+        <div class="text-block">
+            Z důvodu zajištění hracích místností (případného otevření 2. sálu) prosíme o včasné přihlášení, nejpozději však <strong>do 12. 5. 2026</strong>.
+        </div>
+        <ul>
+            <li><strong>Kapacita:</strong> Maximálně 50 hráčů.</li>
+            <li><strong>Způsob přihlášení:</strong> Preferujeme online přihlášku na <strong>www.sachyjablonec.cz/rapidy</strong>.</li>
+            <li>Alternativně lze využít e-mail <em>info@sachyjablonec.cz</em>.</li>
+        </ul>
+
+        <h3 class="section-title">5. Startovné a cenový fond</h3>
+        <div class="text-block">
+            Startovné se platí v hotovosti na místě a je jednorázové za celý turnaj (neplatí se za každý den zvlášť). Z vybraného startovného bude <strong>100 % vloženo zpět do cenového fondu</strong>.
+        </div>
+        <ul>
+            <li>Dospělí hráči: <strong>100 Kč</strong></li>
+            <li>Děti, mládež a studenti: <strong>50 Kč</strong></li>
+        </ul>
+
+        <div class="flex-row">
+            <div style="font-size: 9pt; color: var(--text-muted); max-width: 60%;">
+                V Jablonci nad Nisou, dne 8. 5. 2026<br><br>
+                <em>Pořadatel si vyhrazuje právo na změny v propozicích v případě nepředvídaných událostí.</em>
+            </div>
+            <div class="signature">
+                <div class="signature-line"></div>
+                <div style="font-size: 10pt; font-weight: 600; color: var(--text-main);">Antonín Duda</div>
+                <div style="font-size: 9pt; color: var(--text-muted);">Ředitel turnaje</div>
+            </div>
+        </div>
+
+        <div class="footer">
+            Více informací a online přihlášky najdete na www.sachyjablonec.cz
+        </div>
+
+    </div>
+</body>
+</html>
