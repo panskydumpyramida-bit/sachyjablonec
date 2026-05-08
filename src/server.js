@@ -307,6 +307,12 @@ app.get('/chess-database.html', servePage('chess-database.html'));
 app.get('/article', servePage('article.html')); // Dynamic article page often uses query params
 app.get('/article.html', servePage('article.html'));
 
+app.get('/rapidy', servePage('rapidy.html'));
+app.get('/rapidy.html', servePage('rapidy.html'));
+
+app.get('/propozice_rapidy_tisk', servePage('propozice_rapidy_tisk.html'));
+app.get('/propozice_rapidy_tisk.html', servePage('propozice_rapidy_tisk.html'));
+
 app.get('/index', servePage('index.html'));
 app.get('/index.html', servePage('index.html'));
 
