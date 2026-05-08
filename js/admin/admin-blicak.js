@@ -30,6 +30,12 @@ async function loadBlicakRegistrations() {
                         <td>${escapeHtml(reg.lok || '-')}</td>
                         <td>${escapeHtml(reg.birthYear)}</td>
                         <td>${new Date(reg.createdAt).toLocaleString('cs-CZ')}</td>
+                        <td>${escapeHtml(reg.note || '-')}</td>
+                        <td>
+                            <button class="btn-danger btn-small" onclick="deleteBlicakRegistration(${reg.id})" title="Smazat hráče">
+                                <i class="fa-solid fa-trash"></i>
+                            </button>
+                        </td>
                     </tr>
                 `).join('');
             }
@@ -39,5 +45,25 @@ async function loadBlicakRegistrations() {
     }
 }
 
+async function deleteBlicakRegistration(id) {
+    if (!confirm('Opravdu chcete smazat tuto přihlášku?')) return;
+    try {
+        const res = await fetch(`${API_URL}/registration/blicak/${id}`, {
+            method: 'DELETE',
+            headers: { 'Authorization': `Bearer ${authToken}` }
+        });
+        if (res.ok) {
+            showToast('Přihláška úspěšně smazána', 'success');
+            loadBlicakRegistrations();
+        } else {
+            showToast('Chyba při mazání přihlášky', 'error');
+        }
+    } catch (e) {
+        console.error('Delete Blicák registration error:', e);
+        showToast('Chyba komunikace se serverem', 'error');
+    }
+}
+
 // Export for global access
 window.loadBlicakRegistrations = loadBlicakRegistrations;
+window.deleteBlicakRegistration = deleteBlicakRegistration;

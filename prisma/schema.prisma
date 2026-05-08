@@ -242,6 +242,7 @@ model BlicakRegistration {
   club         String?
   lok          String?
   birthYear    Int?     @map("birth_year")
+  note         String?
   eventDate    DateTime @default(now()) @map("event_date")
   createdAt    DateTime @default(now()) @map("created_at")
   tournamentId String   @default("vanocni-2025") @map("tournament_id")
