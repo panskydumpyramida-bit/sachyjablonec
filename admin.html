@@ -871,11 +871,19 @@
     </div>
     <!-- Blicak Registrations View -->
     <div id="blicakView" class="hidden">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-            <h2 style="margin: 0;"><i class="fa-solid fa-bolt"></i>Registrace - Vánoční blesk</h2>
-            <button class="btn-primary" onclick="loadBlicakRegistrations()"><i
-                    class="fa-solid fa-sync"></i>Obnovit</button>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 1rem;">
+            <h2 style="margin: 0;"><i class="fa-solid fa-bolt"></i>Registrace turnajů <span id="blicakTournamentLabel" style="color: var(--text-muted); font-weight: normal; font-size: 0.85em;"></span></h2>
+            <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
+                <label for="blicakTournamentSelect" style="font-size: 0.9em; color: var(--text-muted);">Turnaj:</label>
+                <select id="blicakTournamentSelect" onchange="loadBlicakRegistrations()" style="padding: 0.4rem 0.6rem; background: var(--editor-bg); color: var(--text-color); border: 1px solid var(--editor-border); border-radius: 6px; font-size: 0.9em;">
+                    <option value="rapidy-2026">Květnové rapid čtvrtky 2026</option>
+                    <option value="velikonocni-2026">Velikonoční bleskovka 2026</option>
+                    <option value="vanocni-2025">Vánoční bleskovka 2025</option>
+                </select>
+                <button class="btn-primary" onclick="loadBlicakRegistrations()"><i class="fa-solid fa-sync"></i>Obnovit</button>
+            </div>
         </div>
+        <div id="blicakRegCount" style="color: var(--text-muted); font-size: 0.9em; margin-bottom: 0.5rem;"></div>
         <table class="data-table">
             <thead>
                 <tr>
