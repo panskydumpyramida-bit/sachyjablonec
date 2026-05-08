@@ -704,7 +704,7 @@ async function shareArticleToInstagram(newsId) {
         return false;
     } catch (e) {
         console.error('[admin-news] Instagram share error:', e);
-        showAlert('Článek uložen, ale IG Stories selhaly: ' + e.message, 'error');
+        showAlert('Článek uložen, ale spojení vypršelo. Zkontrolujte IG manuálně, post tam už pravděpodobně je!', 'warning');
         return false;
     }
 }
@@ -801,7 +801,7 @@ async function shareArticleToFacebook(newsId) {
         return false;
     } catch (e) {
         console.error('[admin-news] Facebook share error:', e);
-        showAlert('Článek uložen, ale FB post selhal: ' + e.message, 'error');
+        showAlert('Článek uložen, ale spojení vypršelo. Zkontrolujte FB manuálně, post tam už pravděpodobně je!', 'warning');
         return false;
     }
 }

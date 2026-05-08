@@ -310,6 +310,10 @@ body.editor-focus-mode .editor-focus-toggle {
     display: none;
 }
 
+.editor-publish-close {
+    display: none;
+}
+
 body.editor-focus-mode .editor-attachment-panel,
 body.editor-focus-mode .editor-layout > .editor-sidebar:last-child,
 body.editor-focus-mode .editor-publish-rail {
@@ -425,17 +429,17 @@ body.editor-focus-mode .editor-layout {
 .toolbar-heading-group {
     display: flex;
     align-items: center;
-    gap: 2px;
-    padding: 2px;
+    gap: 1px;
+    padding: 1px;
     border-radius: 4px;
     background: rgba(255, 255, 255, 0.05);
 }
 
 .toolbar-heading-group button {
-    min-width: 28px;
-    padding: 0.25rem 0.5rem;
+    min-width: 24px;
+    padding: 0.25rem 0.38rem;
     border-radius: 3px;
-    font-size: 0.7rem;
+    font-size: 0.66rem;
     font-weight: 700;
 }
 
@@ -1109,9 +1113,18 @@ body.editor-focus-mode .editor-layout {
     }
 
     .toolbar-primary-row {
-        flex-wrap: wrap;
+        flex-wrap: nowrap;
         gap: 0.16rem;
         width: 100%;
+        overflow-x: auto;
+        overflow-y: visible;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+        scroll-snap-type: x proximity;
+    }
+
+    .toolbar-primary-row::-webkit-scrollbar {
+        display: none;
     }
 
     .toolbar-secondary-row {
@@ -1173,7 +1186,9 @@ body.editor-focus-mode .editor-layout {
     }
 
     .toolbar-secondary-row button,
-    .toolbar-secondary-row > div {
+    .toolbar-secondary-row > div,
+    .toolbar-primary-row button,
+    .toolbar-primary-row > div {
         flex: 0 0 auto;
     }
 
@@ -1184,14 +1199,14 @@ body.editor-focus-mode .editor-layout {
         display: none;
     }
 
-    /* Heading buttons (P, H1, H2, H3) — text je jediný obsah, zachovat font-size */
+    /* Heading buttons (P, H1-H3) — text je jediný obsah, zachovat font-size */
     .wysiwyg-toolbar #headingP,
     .wysiwyg-toolbar #headingH1,
     .wysiwyg-toolbar #headingH2,
     .wysiwyg-toolbar #headingH3 {
-        font-size: 0.72rem !important;
-        min-width: 28px !important;
-        padding: 0.25rem 0.4rem !important;
+        font-size: 0.66rem !important;
+        min-width: 24px !important;
+        padding: 0.25rem 0.34rem !important;
     }
 
     .wysiwyg-toolbar .divider {
@@ -1281,6 +1296,26 @@ body.editor-focus-mode .editor-layout {
         justify-content: center;
         width: 100%;
         margin-top: 0.55rem;
+    }
+
+    .editor-publish-close {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 30px;
+        height: 30px;
+        padding: 0;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.06);
+        color: rgba(255, 255, 255, 0.72);
+        cursor: pointer;
+    }
+
+    .editor-publish-close:hover {
+        border-color: rgba(212, 175, 55, 0.32);
+        color: var(--primary-color);
+        background: rgba(212, 175, 55, 0.08);
     }
 
     /* Diagram Selector Modal - mobile */
