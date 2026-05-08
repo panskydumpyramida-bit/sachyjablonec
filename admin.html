@@ -298,6 +298,8 @@
                                     <button type="button" id="btnBold" onclick="formatText('bold')" title="Tučně (Ctrl+B)"><i class="fa-solid fa-bold"></i></button>
                                     <button type="button" id="btnItalic" onclick="formatText('italic')" title="Kurzíva (Ctrl+I)"><i class="fa-solid fa-italic"></i></button>
                                     <button type="button" id="btnUnderline" onclick="formatText('underline')" title="Podtržení (Ctrl+U)"><i class="fa-solid fa-underline"></i></button>
+                                    <button type="button" onclick="formatText('strikethrough')" title="Přeškrtnutí (Ctrl+Shift+X)" style="color: #94a3b8;"><i class="fa-solid fa-strikethrough"></i></button>
+                                    <button type="button" onclick="removeFormatting()" title="Odstranit formátování" style="color: #94a3b8;"><i class="fa-solid fa-eraser"></i></button>
                                     <div class="divider"></div>
                                     <div class="toolbar-heading-group">
                                         <button type="button" id="headingP" onclick="applyHeading('p')" title="Normální text">P</button>
@@ -306,17 +308,13 @@
                                         <button type="button" id="headingH3" onclick="applyHeading('h3')" title="Nadpis 3">H3</button>
                                     </div>
                                     <div class="divider"></div>
-                                    <button type="button" onclick="insertList('ul')" title="Odrážkový seznam"><i class="fa-solid fa-list-ul"></i></button>
-                                    <button type="button" onclick="insertList('ol')" title="Číslovaný seznam"><i class="fa-solid fa-list-ol"></i></button>
+                                    <button type="button" onclick="showColorPicker()" title="Barva textu" style="color: #f472b6;"><i class="fa-solid fa-palette"></i></button>
+                                    <button type="button" onclick="toggleSource()" title="HTML" id="btnSource"><i class="fa-solid fa-code"></i></button>
                                     <button type="button" onclick="insertLink()" title="Odkaz (Ctrl+K)"><i class="fa-solid fa-link"></i></button>
                                     <button type="button" onclick="insertImage()" title="Obrázek" style="color: #f472b6;"><i class="fa-solid fa-image"></i></button>
                                 </div>
                                 <div class="toolbar-scroll-hint"><span>Další nástroje</span><i class="fa-solid fa-arrow-right-long"></i></div>
                                 <div class="toolbar-secondary-row" aria-label="Další nástroje">
-                                    <button type="button" onclick="formatText('strikethrough')" title="Přeškrtnutí (Ctrl+Shift+X)" style="color: #94a3b8;"><i class="fa-solid fa-strikethrough"></i></button>
-                                    <button type="button" onclick="removeFormatting()" title="Odstranit formátování" style="color: #94a3b8;"><i class="fa-solid fa-eraser"></i></button>
-                                    <button type="button" onclick="showColorPicker()" title="Barva textu" style="color: #f472b6;"><i class="fa-solid fa-palette"></i></button>
-                                    <button type="button" onclick="toggleSource()" title="HTML" id="btnSource"><i class="fa-solid fa-code"></i></button>
                                     <button type="button" id="btnHighlightName" onmousedown="event.preventDefault()" onclick="insertHighlight('name')" title="Zvýraznit jméno" style="color: #60a5fa;"><i class="fa-solid fa-user"></i>Jméno</button>
                                     <button type="button" id="btnHighlightScore" onmousedown="event.preventDefault()" onclick="insertHighlight('score')" title="Zvýraznit skóre" style="color: #4ade80;"><i class="fa-solid fa-bullseye"></i>Skóre</button>
                                     <button type="button" onclick="autoFormatEntireContent()" title="Auto-formátování celého textu (najde výsledky a jména)" style="color: #a78bfa;"><i class="fa-solid fa-wand-magic-sparkles"></i>Auto</button>
@@ -444,8 +442,14 @@
                                 <div style="display: flex; align-items: center; gap: 0.5rem;">
                                     <i class="fa-solid fa-paper-plane"></i><span
                                         style="font-weight: 600;">Publikace</span>
-                                </div><i class="fa-solid fa-chevron-down" id="publikaceIcon"
-                                    style="font-size: 0.7rem; transition: transform 0.2s;"></i>
+                                </div>
+                                <div style="display: inline-flex; align-items: center; gap: 0.45rem;">
+                                    <button type="button" class="editor-publish-close" onclick="event.stopPropagation(); document.body.classList.remove('editor-publish-open')" title="Zpět k článku">
+                                        <i class="fa-solid fa-xmark"></i>
+                                    </button>
+                                    <i class="fa-solid fa-chevron-down" id="publikaceIcon"
+                                        style="font-size: 0.7rem; transition: transform 0.2s;"></i>
+                                </div>
                             </div>
                             <div id="publikaceContent">
                                 <div class="form-group" style="margin-bottom: 0.75rem;">
@@ -552,8 +556,8 @@
                                     style="width: 100%; margin-top: 1rem; justify-content: center;"><i
                                         class="fa-solid fa-save" id="saveNewsBtnIcon"></i><span
                                         id="saveNewsBtnText">Uložit</span></button>
-                                <button type="button" class="btn-secondary editor-cancel-mobile" onclick="switchTab('dashboard')">
-                                    <i class="fa-solid fa-arrow-left"></i>Zpět bez uložení
+                                <button type="button" class="btn-secondary editor-cancel-mobile" onclick="document.body.classList.remove('editor-publish-open')">
+                                    <i class="fa-solid fa-arrow-left"></i>Zpět k článku
                                 </button>
                             </div>
                             <!-- end publikaceContent -->
@@ -2445,7 +2449,7 @@
     <script src="js/diagram-viewer.js"></script>
     <script src="js/admin/admin-core.js?v=ux13"></script>
     <script src="js/admin/admin-gallery.js?v=ux12"></script>
-    <script src="js/admin/admin-wysiwyg.js?v=ux12"></script>
+    <script src="js/admin/admin-wysiwyg.js?v=ux13"></script>
     <script src="js/admin/admin-slash-commands.js?v=ux1"></script>
     <script src="js/admin/admin-content-images.js?v=ux12"></script>
     <script src="js/admin/admin-thumbnail.js?v=ux12"></script>

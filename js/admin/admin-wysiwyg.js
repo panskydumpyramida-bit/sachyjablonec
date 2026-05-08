@@ -281,8 +281,17 @@ function checkToolbarState() {
 
     // Heading
     const headingSelect = document.getElementById('headingSelect');
+    const blockValue = (document.queryCommandValue('formatBlock') || '').toLowerCase();
+    const normalizedBlock = blockValue && blockValue.startsWith('h') ? blockValue : 'p';
+
+    ['P', 'H1', 'H2', 'H3'].forEach(key => {
+        const btn = document.getElementById(`heading${key}`);
+        if (btn) {
+            btn.classList.toggle('active', normalizedBlock === key.toLowerCase());
+        }
+    });
+
     if (headingSelect) {
-        const blockValue = document.queryCommandValue('formatBlock');
         if (blockValue && blockValue.toLowerCase().startsWith('h')) {
             headingSelect.value = blockValue.toLowerCase();
         } else {
