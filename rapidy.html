@@ -37,117 +37,304 @@
             </div>
         </section>
 
-        <section class="container" style="padding-top: 3rem;">
+    <style>
+        .premium-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 2rem;
+            margin: 2rem 0;
+        }
+
+        .premium-card {
+            background: linear-gradient(145deg, rgba(255,255,255,0.05) 0%, rgba(0,0,0,0.4) 100%);
+            border: 1px solid rgba(212, 175, 55, 0.15);
+            border-radius: 12px;
+            padding: 2rem;
+            transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .premium-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.5), inset 0 0 20px rgba(212, 175, 55, 0.05);
+            border-color: rgba(212, 175, 55, 0.4);
+        }
+
+        .premium-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; width: 4px; height: 100%;
+            background: var(--primary-color);
+            box-shadow: 0 0 15px var(--primary-color);
+        }
+
+        .premium-card h3 {
+            color: #fff;
+            font-size: 1.3rem;
+            margin-bottom: 1.2rem;
+            display: flex;
+            align-items: center;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            padding-bottom: 0.8rem;
+        }
+
+        .premium-card h3 i {
+            color: var(--primary-color);
+            margin-right: 0.8rem;
+            font-size: 1.2em;
+            text-shadow: 0 0 10px rgba(212, 175, 55, 0.5);
+        }
+
+        .time-list {
+            list-style: none;
+            padding: 0;
+            margin: 1rem 0;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.8rem;
+        }
+
+        .time-list li {
+            background: rgba(255,255,255,0.03);
+            padding: 0.6rem;
+            border-radius: 6px;
+            font-size: 0.95em;
+            display: flex;
+            align-items: center;
+            border: 1px solid rgba(255,255,255,0.02);
+        }
+
+        .time-list li i {
+            color: var(--primary-color);
+            margin-right: 0.5rem;
+        }
+
+        .premium-notice {
+            background: linear-gradient(90deg, rgba(212, 175, 55, 0.1) 0%, transparent 100%);
+            padding: 1rem;
+            border-radius: 6px;
+            border-left: 3px solid var(--primary-color);
+            margin-top: 1.5rem;
+            font-size: 0.95em;
+        }
+
+        .urgent-box {
+            background: linear-gradient(145deg, rgba(255, 68, 68, 0.1) 0%, rgba(0,0,0,0.3) 100%);
+            border: 1px solid rgba(255, 68, 68, 0.3);
+            border-left: 4px solid #ff4444;
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+            animation: pulse-border 2s infinite;
+        }
+
+        @keyframes pulse-border {
+            0% { box-shadow: 0 0 0 0 rgba(255, 68, 68, 0.4); }
+            70% { box-shadow: 0 0 0 10px rgba(255, 68, 68, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(255, 68, 68, 0); }
+        }
+
+        .premium-form-container {
+            background: linear-gradient(145deg, rgba(20,20,20,0.9) 0%, rgba(10,10,10,0.95) 100%);
+            border: 1px solid rgba(212, 175, 55, 0.3);
+            border-radius: 16px;
+            padding: 3rem;
+            max-width: 800px;
+            margin: 4rem auto;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 30px rgba(212, 175, 55, 0.05);
+            position: relative;
+        }
+
+        .premium-form-container::after {
+            content: '';
+            position: absolute;
+            top: -1px; left: 10%; width: 80%; height: 2px;
+            background: linear-gradient(90deg, transparent, var(--primary-color), transparent);
+            opacity: 0.5;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        @media (max-width: 600px) {
+            .form-row, .time-list { grid-template-columns: 1fr; }
+            .premium-form-container { padding: 1.5rem; }
+        }
+
+        .premium-input {
+            width: 100%;
+            padding: 1rem;
+            background: rgba(0,0,0,0.3);
+            border: 1px solid rgba(255,255,255,0.1);
+            color: #fff;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: all 0.3s;
+        }
+
+        .premium-input:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.2);
+            background: rgba(0,0,0,0.5);
+            outline: none;
+        }
+
+        .premium-label {
+            display: block;
+            margin-bottom: 0.6rem;
+            color: #e2e8f0;
+            font-weight: 500;
+            font-size: 0.95rem;
+        }
+
+        .premium-btn {
+            width: 100%;
+            padding: 1.2rem;
+            background: linear-gradient(135deg, var(--primary-color) 0%, #b8860b 100%);
+            color: #000;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1.1rem;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(212, 175, 55, 0.3);
+            margin-top: 1rem;
+        }
+
+        .premium-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(212, 175, 55, 0.5);
+        }
+    </style>
+
+        <section class="container" style="padding-top: 4rem;">
             
-            <div style="text-align: center; margin-bottom: 3rem; margin-top: 1rem;">
-                <h2 class="section-title" style="left: auto; transform: none;">Propozice turnaje</h2>
-                <div style="font-size: 1.2rem; color: var(--primary-color); font-weight: bold; margin-bottom: 1rem;">
-                    14. 5., 21. 5. a 28. 5. 2026
+            <div style="text-align: center; margin-bottom: 4rem;">
+                <h2 class="section-title" style="left: auto; transform: none; font-size: 2.5rem; margin-bottom: 1rem;">Propozice turnaje</h2>
+                <div style="font-size: 1.4rem; color: var(--primary-color); font-weight: bold; margin-bottom: 1rem; letter-spacing: 1px;">
+                    <i class="fa-regular fa-calendar-days" style="margin-right: 0.5rem;"></i> 14. 5., 21. 5. a 28. 5. 2026
                 </div>
-                <p>Městská hala, Jablonec nad Nisou – hrací sál</p>
-                <p style="color: var(--text-muted); font-style: italic; max-width: 600px; margin: 1rem auto;">Při úspěchu "nultého ročníku" budeme tento formát tréninkových turnajů opakovat.</p>
+                <p style="font-size: 1.1rem; color: #e2e8f0;"><i class="fa-solid fa-location-dot" style="color: var(--primary-color); margin-right: 0.5rem;"></i> Městská hala, Jablonec nad Nisou – hrací sál</p>
+                <p style="color: var(--text-muted); font-style: italic; max-width: 600px; margin: 1.5rem auto 0; font-size: 0.95rem;">Při úspěchu "nultého ročníku" budeme tento formát tréninkových turnajů opakovat.</p>
             </div>
 
-            <div class="proposition-details">
-                <div class="prop-card">
-                    <h3><i class="fa-solid fa-stopwatch"></i> Formát a Časový harmonogram</h3>
-                    <p style="margin-bottom: 0.5rem;">Hraje se tempem <strong>12 minut + 3 sekundy</strong> za každý tah.</p>
-                    <p style="margin-bottom: 1rem;">Celý turnaj je rozložen do <strong>tří čtvrtků</strong>, celkem se odehraje <strong>12 kol</strong>.</p>
+            <div class="premium-grid">
+                <div class="premium-card">
+                    <h3><i class="fa-solid fa-stopwatch"></i> Formát a Čas</h3>
+                    <p style="margin-bottom: 0.5rem;">Hraje se tempem <strong style="color: #fff;">12 minut + 3 sekundy</strong> za každý tah.</p>
+                    <p style="margin-bottom: 1rem; color: #cbd5e1;">Celý turnaj je rozložen do <strong>tří čtvrtků</strong>, celkem se odehraje <strong>12 kol</strong>.</p>
                     
-                    <p style="font-size: 0.95em; margin-bottom: 0.3rem;"><strong>Rozpis každého čtvrtka (4 kola):</strong></p>
-                    <ul style="list-style: none; padding-left: 0; margin-bottom: 0.8rem; font-size: 0.9em; color: var(--text-color);">
-                        <li style="margin-bottom: 0.2rem;"><i class="fa-regular fa-clock" style="color: var(--primary-color);"></i> <strong>17:00</strong> – 1. kolo dne</li>
-                        <li style="margin-bottom: 0.2rem;"><i class="fa-regular fa-clock" style="color: var(--primary-color);"></i> <strong>17:45</strong> – 2. kolo dne</li>
-                        <li style="margin-bottom: 0.2rem;"><i class="fa-regular fa-clock" style="color: var(--primary-color);"></i> <strong>18:30</strong> – 3. kolo dne</li>
-                        <li style="margin-bottom: 0.2rem;"><i class="fa-regular fa-clock" style="color: var(--primary-color);"></i> <strong>19:15</strong> – 4. kolo dne</li>
+                    <p style="font-size: 0.9em; text-transform: uppercase; letter-spacing: 1px; color: var(--primary-color); margin-top: 1.5rem;">Rozpis každého čtvrtka:</p>
+                    <ul class="time-list">
+                        <li><i class="fa-regular fa-clock"></i> <strong>17:00</strong> (1. kolo)</li>
+                        <li><i class="fa-regular fa-clock"></i> <strong>17:45</strong> (2. kolo)</li>
+                        <li><i class="fa-regular fa-clock"></i> <strong>18:30</strong> (3. kolo)</li>
+                        <li><i class="fa-regular fa-clock"></i> <strong>19:15</strong> (4. kolo)</li>
                     </ul>
 
-                    <p style="background: rgba(212, 175, 55, 0.1); padding: 0.8rem; border-radius: 6px; border-left: 3px solid var(--primary-color); margin-top: 1rem; font-size: 0.9em;">
+                    <div class="premium-notice">
                         <i class="fa-solid fa-graduation-cap" style="color: var(--primary-color); margin-right: 0.5rem;"></i>
-                        <strong>Trénink navíc:</strong> Mezi jednotlivými koly bude probíhat rozbor partií se zkušenými hráči.
-                    </p>
+                        <strong>Trénink navíc:</strong> Mezi koly bude probíhat rozbor partií se zkušenými hráči.
+                    </div>
                 </div>
 
-                <div class="prop-card">
+                <div class="premium-card">
                     <h3><i class="fa-solid fa-calendar-check"></i> Flexibilní účast</h3>
-                    <p style="margin-bottom: 0.8rem;">Nemáte čas přijít na všechny tři čtvrtky, nebo nestíháte všechna kola? <strong>To vůbec nevadí!</strong></p>
-                    <p style="margin-bottom: 0.8rem; font-size: 0.95em;">Je možné se zúčastnit jen některých kol každý týden, nebo klidně vynechat celý čtvrtek (pokud zrovna nemáte ambice na celkové vítězství).</p>
-                    <ul style="list-style: none; padding: 0; margin-bottom: 1rem; font-size: 0.9em; color: var(--text-muted);">
-                        <li style="margin-bottom: 0.5rem;"><i class="fa-solid fa-arrow-right" style="color: var(--primary-color);"></i> Končíte později v práci? Připojte se až do dalších kol.</li>
-                        <li style="margin-bottom: 0.5rem;"><i class="fa-solid fa-arrow-right" style="color: var(--primary-color);"></i> Musíte dřív domů? Odehrajte, co stihnete.</li>
-                        <li style="margin-bottom: 0.5rem;"><i class="fa-solid fa-arrow-right" style="color: var(--primary-color);"></i> Můžete dorazit jen na 2 čtvrtky ze 3? Žádný problém.</li>
+                    <p style="margin-bottom: 1rem; color: #e2e8f0; font-size: 1.05em;">Nemáte čas přijít na všechny tři čtvrtky, nebo nestíháte všechna kola? <strong>To vůbec nevadí!</strong></p>
+                    <p style="margin-bottom: 1.5rem; font-size: 0.95em; color: #cbd5e1;">Je možné se zúčastnit jen některých kol každý týden, nebo klidně vynechat celý čtvrtek (pokud zrovna nemáte ambice na celkové vítězství).</p>
+                    <ul style="list-style: none; padding: 0; margin-bottom: 1.5rem; font-size: 0.95em; color: #94a3b8;">
+                        <li style="margin-bottom: 0.8rem; display: flex;"><i class="fa-solid fa-check" style="color: var(--primary-color); margin-right: 0.8rem; margin-top: 0.2rem;"></i> Končíte později v práci? Připojte se až do dalších kol.</li>
+                        <li style="margin-bottom: 0.8rem; display: flex;"><i class="fa-solid fa-check" style="color: var(--primary-color); margin-right: 0.8rem; margin-top: 0.2rem;"></i> Musíte dřív domů? Odehrajte, co stihnete.</li>
+                        <li style="margin-bottom: 0; display: flex;"><i class="fa-solid fa-check" style="color: var(--primary-color); margin-right: 0.8rem; margin-top: 0.2rem;"></i> Můžete dorazit jen na 2 čtvrtky ze 3? Žádný problém.</li>
                     </ul>
-                    <p style="border-top: 1px solid rgba(255,255,255,0.05); padding-top: 0.5rem; font-size: 0.9em; font-weight: bold; color: #fff;">
-                        Důležité: Stačí dát vždy vědět rozhodčímu před začátkem kola, jestli chcete do dalšího kola nalosovat. Losování se budeme snažit dělat spravedlivě, tak abyste si vždy hezky zahráli.
-                    </p>
+                    <div style="background: rgba(255,255,255,0.02); padding: 1rem; border-radius: 8px; font-size: 0.9em; color: #e2e8f0;">
+                        <i class="fa-solid fa-circle-info" style="color: var(--primary-color); margin-right: 0.5rem;"></i> Důležité: Stačí dát vždy vědět rozhodčímu před začátkem kola, jestli chcete do dalšího kola nalosovat. Losování se budeme snažit dělat spravedlivě, tak abyste si vždy hezky zahráli.
+                    </div>
                 </div>
 
-                <div class="prop-card">
+                <div class="premium-card">
                     <h3><i class="fa-solid fa-money-bill-wave"></i> Startovné a Ceny</h3>
-                    <p style="margin-bottom: 0.8rem;">Vybrané startovné jde ze <strong>100 % zpět do cen</strong> pro účastníky.</p>
-                    <ul style="list-style: none; padding: 0; margin-bottom: 1rem;">
-                        <li style="margin-bottom: 0.5rem;">👨 Dospělí: <strong>100 Kč</strong></li>
-                        <li style="margin-bottom: 0.5rem;">👦 Děti a mládež: <strong>50 Kč</strong></li>
-                    </ul>
-                    <p style="font-size: 0.85em; color: var(--text-muted); font-style: italic;">
-                        Startovné se platí jednorázově za celý turnaj. 
+                    <p style="margin-bottom: 1.5rem; font-size: 1.05em;">Vybrané startovné jde ze <strong style="color: var(--primary-color);">100 % zpět do cen</strong> pro účastníky.</p>
+                    
+                    <div style="display: flex; flex-direction: column; gap: 1rem; margin-bottom: 1.5rem;">
+                        <div style="background: rgba(0,0,0,0.2); padding: 1rem 1.5rem; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; border: 1px solid rgba(255,255,255,0.05);">
+                            <span style="font-size: 1.1em;"><i class="fa-solid fa-user" style="color: #94a3b8; margin-right: 0.5rem;"></i> Dospělí</span>
+                            <strong style="font-size: 1.3em; color: #fff;">100 Kč</strong>
+                        </div>
+                        <div style="background: rgba(0,0,0,0.2); padding: 1rem 1.5rem; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; border: 1px solid rgba(255,255,255,0.05);">
+                            <span style="font-size: 1.1em;"><i class="fa-solid fa-child-reaching" style="color: #94a3b8; margin-right: 0.5rem;"></i> Děti a mládež</span>
+                            <strong style="font-size: 1.3em; color: #fff;">50 Kč</strong>
+                        </div>
+                    </div>
+                    
+                    <p style="font-size: 0.9em; color: var(--text-muted); font-style: italic; text-align: center;">
+                        Startovné se platí jednorázově za celý turnaj.
                     </p>
                 </div>
 
-                <div class="prop-card">
+                <div class="premium-card">
                     <h3><i class="fa-solid fa-info-circle"></i> Kapacita a Přihlášky</h3>
-                    <p style="margin-bottom: 1rem;">Kapacita turnaje je maximálně <strong>50 hráčů</strong>. Máme předběžně zarezervované 2 sály.</p>
+                    <p style="margin-bottom: 1.5rem; font-size: 1.05em;">Kapacita turnaje je maximálně <strong style="color: #fff;">50 hráčů</strong>. Máme předběžně zarezervované 2 sály.</p>
                     
-                    <div style="background: rgba(255, 100, 100, 0.1); border-left: 4px solid #ff4444; padding: 1rem; border-radius: 4px; margin-bottom: 1rem;">
-                        <p style="margin-bottom: 0; font-weight: bold; color: #ff8888; font-size: 0.95em;">
-                            <i class="fa-solid fa-triangle-exclamation"></i> URGENTNÍ VÝZVA:<br>
-                            Prosíme, hlaste se co nejdříve pomocí formuláře níže, ať víme, jestli s jistotou využijeme i druhý zarezervovaný sál!
+                    <div class="urgent-box">
+                        <p style="margin-bottom: 0; font-weight: 600; color: #ff8888; font-size: 0.95em; line-height: 1.5;">
+                            <i class="fa-solid fa-triangle-exclamation" style="margin-right: 0.5rem;"></i> URGENTNÍ VÝZVA<br>
+                            <span style="color: #fff; font-weight: 400; display: block; margin-top: 0.5rem;">Prosíme, hlaste se co nejdříve pomocí formuláře níže, ať víme, jestli s jistotou využijeme i druhý zarezervovaný sál!</span>
                         </p>
                     </div>
 
-                    <div style="font-size: 0.9em; color: var(--text-muted); background: rgba(255,255,255,0.03); padding: 1rem; border-radius: 8px;">
-                        <p style="margin-bottom: 0.5rem;"><i class="fa-solid fa-envelope" style="width: 20px;"></i> <a
-                                href="mailto:info@sachyjablonec.cz"
-                                style="color: var(--text-color); text-decoration: none;">info@sachyjablonec.cz</a></p>
-                        <p style="margin-bottom: 0;"><i class="fa-solid fa-phone" style="width: 20px;"></i> 731 183 859 (Antonín Duda)</p>
+                    <div style="font-size: 0.95em; color: #cbd5e1; background: rgba(0,0,0,0.2); padding: 1.2rem; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05);">
+                        <p style="margin-bottom: 0.8rem; display: flex; align-items: center;"><i class="fa-solid fa-envelope" style="width: 25px; color: var(--primary-color);"></i> <a href="mailto:info@sachyjablonec.cz" style="color: #fff; text-decoration: none;">info@sachyjablonec.cz</a></p>
+                        <p style="margin-bottom: 0; display: flex; align-items: center;"><i class="fa-solid fa-phone" style="width: 25px; color: var(--primary-color);"></i> <span style="color: #fff;">731 183 859</span> <span style="color: #94a3b8; font-size: 0.9em; margin-left: 0.5rem;">(Antonín Duda)</span></p>
                     </div>
                 </div>
             </div>
 
             <!-- REGISTRATION FORM SECTION -->
-            <div class="registration-form" id="regFormContainer" style="margin-top: 3rem; background: rgba(255,255,255,0.02); padding: 2rem; border-radius: 12px; border: 1px solid rgba(212, 175, 55, 0.2);">
-                <div id="capacityStatus"
-                    style="text-align: center; margin-bottom: 2rem; padding: 1rem; background: rgba(0,0,0,0.3); border-radius: 8px; border: 1px solid rgba(255,255,255,0.1);">
+            <div class="premium-form-container" id="regFormContainer">
+                <div id="capacityStatus" style="text-align: center; margin-bottom: 2rem; padding: 1rem; background: rgba(0,0,0,0.5); border-radius: 8px; border: 1px solid rgba(255,255,255,0.05); font-size: 1.1rem;">
                     <i class="fa-solid fa-spinner fa-spin"></i> Načítám volná místa...
                 </div>
 
-                <h2 style="text-align: center; margin-bottom: 1.5rem;">Online Přihláška</h2>
+                <h2 style="text-align: center; margin-bottom: 2.5rem; font-size: 2rem; display: flex; align-items: center; justify-content: center; gap: 1rem;">
+                    <i class="fa-solid fa-pen-to-square" style="color: var(--primary-color);"></i> Online Přihláška
+                </h2>
+                
                 <form id="blicakForm">
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
-                        <div class="form-group" style="margin-bottom: 0;">
-                            <label for="name" style="display: block; margin-bottom: 0.5rem; color: #fff;">Jméno a Příjmení *</label>
-                            <input type="text" id="name" name="name" required placeholder="Jan Novák" style="width: 100%; padding: 0.8rem; background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.1); color: #fff; border-radius: 4px;">
+                    <div class="form-row">
+                        <div>
+                            <label for="name" class="premium-label">Jméno a Příjmení *</label>
+                            <input type="text" id="name" name="name" class="premium-input" required placeholder="Jan Novák">
                         </div>
-
-                        <div class="form-group" style="margin-bottom: 0;">
-                            <label for="club" style="display: block; margin-bottom: 0.5rem; color: #fff;">Oddíl (nepovinné)</label>
-                            <input type="text" id="club" name="club" placeholder="např. TJ Bižuterie Jablonec" style="width: 100%; padding: 0.8rem; background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.1); color: #fff; border-radius: 4px;">
-                        </div>
-                    </div>
-
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem;">
-                        <div class="form-group" style="margin-bottom: 0;">
-                            <label for="lok" style="display: block; margin-bottom: 0.5rem; color: #fff;">Číslo LOK (registrace ŠSČR)</label>
-                            <input type="number" id="lok" name="lok" placeholder="např. 12345" style="width: 100%; padding: 0.8rem; background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.1); color: #fff; border-radius: 4px;">
-                        </div>
-
-                        <div class="form-group" style="margin-bottom: 0;">
-                            <label for="year" style="display: block; margin-bottom: 0.5rem; color: #fff;">Ročník narození *</label>
-                            <input type="number" id="year" name="year" required placeholder="např. 2010" min="1900" max="2026" style="width: 100%; padding: 0.8rem; background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.1); color: #fff; border-radius: 4px;">
+                        <div>
+                            <label for="club" class="premium-label">Oddíl (nepovinné)</label>
+                            <input type="text" id="club" name="club" class="premium-input" placeholder="např. TJ Bižuterie Jablonec">
                         </div>
                     </div>
 
-                    <button type="submit" class="submit-btn" id="submitBtn" style="width: 100%; padding: 1rem; background: var(--primary-color); color: #000; font-weight: bold; border: none; border-radius: 4px; cursor: pointer; font-size: 1.1rem; transition: background 0.3s;">Odeslat přihlášku</button>
+                    <div class="form-row">
+                        <div>
+                            <label for="lok" class="premium-label">Číslo LOK (registrace ŠSČR)</label>
+                            <input type="number" id="lok" name="lok" class="premium-input" placeholder="např. 12345">
+                        </div>
+                        <div>
+                            <label for="year" class="premium-label">Ročník narození *</label>
+                            <input type="number" id="year" name="year" class="premium-input" required placeholder="např. 2010" min="1900" max="2026">
+                        </div>
+                    </div>
+
+                    <button type="submit" class="premium-btn" id="submitBtn">
+                        <i class="fa-solid fa-paper-plane" style="margin-right: 0.5rem;"></i> Odeslat přihlášku
+                    </button>
+
                     <p id="formMessage" style="margin-top: 1rem; text-align: center; display: none;"></p>
                 </form>
             </div>
