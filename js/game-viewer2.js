@@ -1349,12 +1349,12 @@ class GameViewer2 {
     }
 
     // Render a variation block
-    renderVariation(varContent, mainHistory) {
+    renderVariation(varContent, mainHistory, context = {}) {
         const varId = 'var_' + (this.variationCounter++);
-        const parentPly = this.lastMatchedPly;
+        const parentPly = Number.isInteger(context.parentPly) ? context.parentPly : this.lastMatchedPly;
 
         // Get the FEN from the position BEFORE the last main line move (where variation starts)
-        const startFen = parentPly > 0 ? this.mainLinePlies[parentPly - 1].fen : 'start';
+        const startFen = context.startFen || (parentPly > 0 ? this.mainLinePlies[parentPly - 1]?.fen : 'start') || 'start';
 
         // Parse variation moves using a temp chess instance
         const varMoves = this.parseVariationMoves(varContent, startFen);
@@ -1364,14 +1364,15 @@ class GameViewer2 {
             parentPly: parentPly,
             startFen: startFen,
             moves: varMoves,
-            content: varContent
+            content: varContent,
+            parentVarId: context.parentVarId || null
         };
 
         // Render variation HTML with clickable moves
         let html = '<span class="gv2-variation">(';
 
         // Process variation content to make moves clickable
-        html += this.renderVariationMoves(varContent, varId, startFen);
+        html += this.renderVariationMoves(varContent, varId, startFen, { parentPly });
 
         html += ')</span>';
         return html;
@@ -1381,9 +1382,10 @@ class GameViewer2 {
     parseVariationMoves(varContent, startFen) {
         const moves = [];
         const tempGame = new Chess(startFen === 'start' ? undefined : startFen);
+        const linearContent = this.stripVariations(varContent);
 
         // Simple tokenizer to extract moves from variation
-        const tokens = varContent.split(/\s+/).filter(t => t.trim());
+        const tokens = linearContent.split(/(\s+|[0-9]+\.+)/).filter(t => t.trim());
 
         for (const token of tokens) {
             // Check for NAG (Numeric Annotation Glyph)
@@ -1422,7 +1424,7 @@ class GameViewer2 {
     }
 
     // Render variation content with clickable moves
-    renderVariationMoves(varContent, varId, startFen) {
+    renderVariationMoves(varContent, varId, startFen, context = {}) {
         let html = '';
         let buffer = '';
         let inComment = false;
@@ -1430,6 +1432,10 @@ class GameViewer2 {
         let varMoveIdx = 0;
 
         const tempGame = new Chess(startFen === 'start' ? undefined : startFen);
+        const renderState = {
+            lastMoveStartFen: null,
+            lastMoveEndFen: null
+        };
 
         for (let i = 0; i < varContent.length; i++) {
             const char = varContent[i];
@@ -1446,7 +1452,7 @@ class GameViewer2 {
             }
 
             if (char === '{') {
-                html += this.flushVariationBuffer(buffer, varId, tempGame);
+                html += this.flushVariationBuffer(buffer, varId, tempGame, renderState);
                 buffer = '';
                 html += '<span class="gv2-comment">';
                 inComment = true;
@@ -1454,7 +1460,7 @@ class GameViewer2 {
             }
 
             if (char === '(') {
-                html += this.flushVariationBuffer(buffer, varId, tempGame);
+                html += this.flushVariationBuffer(buffer, varId, tempGame, renderState);
                 buffer = '';
                 // Collect nested variation
                 inNestedVar = 1;
@@ -1471,19 +1477,25 @@ class GameViewer2 {
                     i++;
                 }
                 // Render nested variation recursively
-                html += this.renderVariation(nestedContent, []);
+                const parentVariation = this.allVariations[varId] || {};
+                const nestedStartFen = renderState.lastMoveStartFen || tempGame.fen();
+                html += this.renderVariation(nestedContent, [], {
+                    parentPly: parentVariation.parentPly ?? context.parentPly ?? this.lastMatchedPly,
+                    parentVarId: varId,
+                    startFen: nestedStartFen
+                });
                 continue;
             }
 
             buffer += char;
         }
 
-        html += this.flushVariationBuffer(buffer, varId, tempGame);
+        html += this.flushVariationBuffer(buffer, varId, tempGame, renderState);
         return html;
     }
 
     // Process buffer for variation moves
-    flushVariationBuffer(buffer, varId, tempGame) {
+    flushVariationBuffer(buffer, varId, tempGame, renderState = null) {
         if (!buffer.trim()) return buffer;
 
         const parts = buffer.split(/(\s+|[0-9]+\.+)/).filter(x => x);
@@ -1511,9 +1523,14 @@ class GameViewer2 {
             // Try as move
             if (clean && !clean.match(/^\s+$/) && clean.length > 1) {
                 try {
+                    const moveStartFen = tempGame.fen();
                     const move = tempGame.move(clean, { sloppy: true });
                     if (move) {
                         const fen = tempGame.fen();
+                        if (renderState) {
+                            renderState.lastMoveStartFen = moveStartFen;
+                            renderState.lastMoveEndFen = fen;
+                        }
                         const moveIdx = this.allVariations[varId]?.moves?.findIndex(m => m.san === move.san && m.fen === fen) ?? -1;
                         html += `<span class="gv2-var-move" data-var="${varId}" data-fen="${fen}">${this.formatSan(move.san)}</span>`;
                         continue;
@@ -1772,27 +1789,24 @@ class GameViewer2 {
             if (idx < varData.moves.length - 1) {
                 // Next move exists
                 const nextMove = varData.moves[idx + 1];
-                // Try to use board.move if possible for smoother animation
-                // We need the SAN or from-to. nextMove has .move object
-                if (nextMove.move && nextMove.move.from && nextMove.move.to) {
-                    const moveStr = nextMove.move.from + '-' + nextMove.move.to;
-                    console.log('[DEBUG stepForward] Variation: calling board.move with:', moveStr);
-                    this.board.move(moveStr); // Triggers animation
+                const variations = this.getVariationsAtCurrentPosition()
+                    .filter(v => v.varId !== this.currentVariation);
 
-                    // Wait for animation to complete before updating internal state (200ms moveSpeed + buffer)
-                    const varId = this.currentVariation;
-                    const targetFen = nextMove.fen;
-                    setTimeout(() => {
-                        // Update internal state AFTER animation completes
-                        this.inVariation = true;
-                        this.currentVariation = varId;
-                        this.safeLoad(targetFen);
-                        this.updateVariationIndicator(varId);
-                        this.updateActiveVariationMove(varId, targetFen);
-                    }, 250);
+                if (variations.length > 0 && !this.modalCooldown) {
+                    const openModal = (withAutoplayTimeout) => this.showVariationChoiceModal(nextMove.san, variations, withAutoplayTimeout, {
+                        mainNag: nextMove.nag,
+                        onMainSelect: () => this.advanceVariationMove(this.currentVariation, nextMove)
+                    });
+
+                    if (this.autoplayInterval) {
+                        clearInterval(this.autoplayInterval);
+                        this.autoplayInterval = null;
+                        openModal(true);
+                    } else {
+                        openModal(false);
+                    }
                 } else {
-                    console.log('[DEBUG stepForward] Variation: no from/to, using jumpToVariation');
-                    this.jumpToVariation(this.currentVariation, nextMove.fen);
+                    this.advanceVariationMove(this.currentVariation, nextMove);
                 }
             } else {
                 // End of variation
@@ -1861,6 +1875,31 @@ class GameViewer2 {
                 console.log('[DEBUG stepForward] End of main line reached');
                 this.toggleAutoplay(false);
             }
+        }
+    }
+
+    advanceVariationMove(varId, nextMove) {
+        if (!varId || !nextMove) return;
+
+        // Try to use board.move if possible for smoother animation
+        if (nextMove.move && nextMove.move.from && nextMove.move.to) {
+            const moveStr = nextMove.move.from + '-' + nextMove.move.to;
+            console.log('[DEBUG stepForward] Variation: calling board.move with:', moveStr);
+            this.board.move(moveStr); // Triggers animation
+
+            // Wait for animation to complete before updating internal state (200ms moveSpeed + buffer)
+            const targetFen = nextMove.fen;
+            setTimeout(() => {
+                // Update internal state AFTER animation completes
+                this.inVariation = true;
+                this.currentVariation = varId;
+                this.safeLoad(targetFen);
+                this.updateVariationIndicator(varId);
+                this.updateActiveVariationMove(varId, targetFen);
+            }, 250);
+        } else {
+            console.log('[DEBUG stepForward] Variation: no from/to, using jumpToVariation');
+            this.jumpToVariation(varId, nextMove.fen);
         }
     }
 
@@ -2360,8 +2399,11 @@ class GameViewer2 {
     getVariationsAtCurrentPosition() {
         const currentFen = this.game.fen();
         const variations = [];
+        const currentParentVarId = this.inVariation ? this.currentVariation : null;
 
         for (const [varId, varData] of Object.entries(this.allVariations)) {
+            if ((varData.parentVarId || null) !== currentParentVarId) continue;
+
             if (varData.startFen === currentFen && varData.moves && varData.moves.length > 0) {
                 variations.push({
                     varId,
@@ -2393,7 +2435,7 @@ class GameViewer2 {
 
     // Show modal to choose between main line and variations
     // withAutoplayTimeout: if true, auto-select main line after 2s and resume autoplay
-    showVariationChoiceModal(mainMove, variations, withAutoplayTimeout = false) {
+    showVariationChoiceModal(mainMove, variations, withAutoplayTimeout = false, options = {}) {
         // remove existing modal/listeners if any
         if (this.activeModalCleanup) {
             this.activeModalCleanup();
@@ -2430,8 +2472,16 @@ class GameViewer2 {
             return symbol ? `<span style="color: ${color}; margin-left: 2px;">${symbol}</span>` : '';
         };
 
-        const mainNagCode = this.mainLinePlies[this.currentPly + 1]?.nag;
+        const mainNagCode = options.mainNag ?? this.mainLinePlies[this.currentPly + 1]?.nag;
         const mainNagHtml = getNagHtml(mainNagCode);
+
+        const chooseMain = () => {
+            if (typeof options.onMainSelect === 'function') {
+                options.onMainSelect();
+            } else {
+                this.jumpTo(this.currentPly + 1);
+            }
+        };
 
         modal.innerHTML = `
             <div class="gv2-var-modal-content">
@@ -2449,7 +2499,10 @@ class GameViewer2 {
             </div>
         `;
 
-        document.body.appendChild(modal);
+        const modalHost = document.querySelector('#gv2-main-container .gv2-board-section')
+            || document.getElementById('gv2-main-container')
+            || document.body;
+        modalHost.appendChild(modal);
 
         // Cleanup function to remove modal and listeners
         const cleanup = () => {
@@ -2478,7 +2531,7 @@ class GameViewer2 {
             cleanup();
 
             if (action === 'main') {
-                this.jumpTo(this.currentPly + 1);
+                chooseMain();
             } else if (action === 'var') {
                 this.jumpToVariation(btn.dataset.var, btn.dataset.fen);
             }
@@ -2496,7 +2549,7 @@ class GameViewer2 {
                 this.modalCooldown = true;
                 setTimeout(() => { this.modalCooldown = false; }, 500);
                 cleanup();
-                this.jumpTo(this.currentPly + 1);
+                chooseMain();
                 if (withAutoplayTimeout) {
                     setTimeout(() => this.toggleAutoplay(true), 300);
                 }
@@ -2511,7 +2564,7 @@ class GameViewer2 {
                 // Right arrow = main move
                 e.preventDefault();
                 cleanup();
-                this.jumpTo(this.currentPly + 1);
+                chooseMain();
                 if (withAutoplayTimeout) {
                     setTimeout(() => this.toggleAutoplay(true), 300);
                 }
@@ -2536,6 +2589,12 @@ class GameViewer2 {
             this.variationAutoplayTimeout = setTimeout(() => {
                 clearInterval(countdownInterval);
                 cleanup();
+
+                if (typeof options.onMainSelect === 'function') {
+                    chooseMain();
+                    this.toggleAutoplay(true);
+                    return;
+                }
 
                 // Auto-select main line with animation
                 const nextData = this.mainLinePlies[this.currentPly + 1];
