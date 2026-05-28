@@ -8,6 +8,7 @@
 - **Figurky:** Přehrávač zůstává na čitelných PNG figurkách z lokálního Wikipedia setu místo prototypových glyphů.
 - **Responzivita:** Nový skin zmenšuje mezery na mobilu, zahušťuje ovládání a drží výběr variant přímo u šachovnice.
 - **Mini partie v textu:** WYSIWYG umí vložit jednu PGN partii přímo doprostřed článku jako kompaktní interaktivní přehrávač se šachovnicí, tahy a komentáři.
+- **Redesign zápasového vieweru:** Moderní skin dostal hráčskou hlavičku ve stylu prototypu, spodní komentářový pruh a přehlednější karty partií pro zápasy o více deskách.
 - **Subvarianty:** Viewer rozlišuje hlavní linii, varianty a vnořené subvarianty; modal už nenabízí tahy o úroveň níže.
 - **CH-R tabulky:** Editor umí k tabulce z Chess-Results přidat žluté tlačítko „🔗 Kompletní výsledky".
 

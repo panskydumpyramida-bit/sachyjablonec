@@ -603,6 +603,7 @@ class GameViewer2 {
                 this.board.resize();
                 this.syncEvalBarHeight();
             }
+            this.updateCommentBubble();
         });
     }
 
@@ -783,6 +784,17 @@ class GameViewer2 {
                         </div>
                     </div>
                 </div>
+                <div class="gv2-comment-dock" id="gv2-comment-dock" hidden>
+                    <div class="gv2-comment-dock-avatar" id="gv2-comment-dock-avatar"><i class="fa-solid fa-user-tie"></i></div>
+                    <div class="gv2-comment-dock-body">
+                        <div class="gv2-comment-dock-meta">
+                            <strong>Bižuterie</strong>
+                            <span id="gv2-comment-dock-move"></span>
+                        </div>
+                        <div class="gv2-comment-dock-text" id="gv2-comment-dock-text"></div>
+                    </div>
+                    <button class="gv2-comment-dock-close" onclick="gameViewer2.hideBubble()" title="Schovat komentář"><i class="fa-solid fa-xmark"></i></button>
+                </div>
             `;
 
             // Insert into DOM - prefer .iframe-container (legacy), fallback to viewerSection
@@ -902,13 +914,7 @@ class GameViewer2 {
             }
 
             // Set Title & Metadata
-            const titleEl = document.getElementById('gv2-title');
-            if (gameData.white && gameData.black) {
-                // Use HTML to allow mobile styling (stacking)
-                titleEl.innerHTML = `<span class="gv2-player-white">${gameData.white}</span><span class="gv2-vs-sep"> - </span><span class="gv2-player-black">${gameData.black}</span>`;
-            } else {
-                titleEl.textContent = gameData.title;
-            }
+            this.renderGameTitle(gameData);
 
             this.renderMetadata(gameData);
 
@@ -976,15 +982,68 @@ class GameViewer2 {
             }
         }
 
+        const event = gameData.event || '';
+        const round = gameData.round || '';
+        const result = gameData.result || '';
+
         metaEl.innerHTML = `
             <div class="gv2-metadata-row">
                 <span><strong>White:</strong> ${gameData.white || '?'}</span>
             </div>
             <div class="gv2-metadata-row">
                 <span><strong>Black:</strong> ${gameData.black || '?'}</span>
-                <span>${gameData.result || ''}</span>
+                <span>${result}</span>
+            </div>
+            ${(event || round || dateStr) ? `
+            <div class="gv2-metadata-row gv2-metadata-row--event">
+                <span>${event ? this.escapeHtml(event) : ''}${round ? ` · ${this.escapeHtml(round)}. kolo` : ''}</span>
+                <span>${dateStr}</span>
+            </div>
+            ` : ''}
+        `;
+    }
+
+    renderGameTitle(gameData) {
+        const titleEl = document.getElementById('gv2-title');
+        if (!titleEl) return;
+
+        const white = gameData.white || 'Bílý';
+        const black = gameData.black || 'Černý';
+        const result = gameData.result && gameData.result !== '*' ? gameData.result : 'vs';
+        const eventParts = [];
+        if (gameData.event) eventParts.push(gameData.event);
+        if (gameData.round) eventParts.push(`${gameData.round}. kolo`);
+        const eventLabel = eventParts.join(' · ');
+
+        titleEl.innerHTML = `
+            <div class="gv2-title-card">
+                <div class="gv2-title-player gv2-title-player--white">
+                    <span class="gv2-title-avatar gv2-title-avatar--white">${this.getInitials(white)}</span>
+                    <span class="gv2-title-name">
+                        <strong>${this.escapeHtml(white)}</strong>
+                        <small>bílý</small>
+                    </span>
+                </div>
+                <div class="gv2-title-result">
+                    <strong>${this.escapeHtml(result)}</strong>
+                    ${eventLabel ? `<span>${this.escapeHtml(eventLabel)}</span>` : ''}
+                </div>
+                <div class="gv2-title-player gv2-title-player--black">
+                    <span class="gv2-title-name">
+                        <strong>${this.escapeHtml(black)}</strong>
+                        <small>černý</small>
+                    </span>
+                    <span class="gv2-title-avatar gv2-title-avatar--black">${this.getInitials(black)}</span>
+                </div>
             </div>
         `;
+    }
+
+    getInitials(name) {
+        const parts = String(name || '').trim().split(/\s+/).filter(Boolean);
+        if (parts.length === 0) return '?';
+        if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+        return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase();
     }
 
     // --- PGN Parsing & Logic ---
@@ -2258,11 +2317,47 @@ class GameViewer2 {
         this.triggerAnalysis();
     }
 
+    getGameTitleParts(game) {
+        let white = game.white || game.whitePlayer || '';
+        let black = game.black || game.blackPlayer || '';
+
+        if ((!white || !black) && game.title) {
+            const parts = String(game.title).replace(/\*/g, '').split(/\s+[-–]\s+/);
+            if (!white && parts[0]) white = parts[0].trim();
+            if (!black && parts[1]) black = parts[1].trim();
+        }
+
+        return {
+            white: white || game.title || 'Partie',
+            black: black || '',
+            title: String(game.title || `${white} - ${black}` || 'Partie').replace(/\*/g, '').trim()
+        };
+    }
+
+    renderGameListItemHtml(game, boardNo) {
+        const parts = this.getGameTitleParts(game);
+        const result = game.result || '';
+        const hasResult = result && result !== '*' && result !== '?' && result.trim();
+        const hasComments = Boolean(game.pgn && game.pgn.includes('{'));
+        const boardLabel = Number.isFinite(boardNo) ? boardNo : '';
+
+        return `
+            <span class="gv2-game-board-num">${boardLabel}</span>
+            <span class="gv2-game-players">
+                <span class="gv2-game-player-row"><span class="gv2-side-dot gv2-side-dot--white"></span>${this.escapeHtml(parts.white)}</span>
+                ${parts.black ? `<span class="gv2-game-player-row"><span class="gv2-side-dot gv2-side-dot--black"></span>${this.escapeHtml(parts.black)}</span>` : `<span>${this.escapeHtml(parts.title)}</span>`}
+            </span>
+            ${hasResult ? `<span class="game-result gv2-game-result-pill">${this.escapeHtml(result)}</span>` : ''}
+            ${hasComments ? '<i class="fa-solid fa-comment gv2-game-comment-icon" title="Komentovaná partie"></i>' : ''}
+        `;
+    }
+
     // List rendering (sidebar)
     renderList() {
         const list = document.getElementById('game-list-content');
         if (!list) return;
         list.innerHTML = '';
+        let boardNo = 0;
         this.gamesData.forEach((game, index) => {
             if (game.type === 'header') {
                 const header = document.createElement('div');
@@ -2270,21 +2365,11 @@ class GameViewer2 {
                 header.textContent = game.title;
                 list.appendChild(header);
             } else {
+                boardNo++;
                 const item = document.createElement('div');
-                item.className = 'game-item';
+                item.className = 'game-item gv2-game-card';
                 if (index === this.currentIndex) item.classList.add('active');
-
-                // Build title with result (hide * and ?)
-                let titleHtml = `<span>${this.escapeHtml(game.title || 'Partie')}</span>`;
-                const result = game.result || '';
-                if (result && result !== '*' && result !== '?' && result.trim()) {
-                    titleHtml += `<span class="game-result">${result}</span>`;
-                }
-                if (game.pgn) {
-                    titleHtml += '<i class="fa-solid fa-chess-board" style="opacity:0.5; font-size:0.8em; margin-left:auto;"></i>';
-                }
-
-                item.innerHTML = titleHtml;
+                item.innerHTML = this.renderGameListItemHtml(game, boardNo);
                 item.dataset.index = index;
                 item.onclick = () => this.loadGame(index);
                 list.appendChild(item);
@@ -2348,7 +2433,6 @@ class GameViewer2 {
     updateCommentBubble() {
         const overlay = document.querySelector('.gv2-board-overlay');
         const content = document.getElementById('gv2-bubble-content');
-        const titleEl = document.getElementById('gv2-title'); // Title to hide when bubble shows
         if (!overlay || !content) return;
 
         let comment = '';
@@ -2356,6 +2440,51 @@ class GameViewer2 {
         if (currentData && currentData.comment) comment = currentData.comment;
 
         const showBtn = document.getElementById('gv2-bubble-show');
+        const dock = document.getElementById('gv2-comment-dock');
+        const dockText = document.getElementById('gv2-comment-dock-text');
+        const dockMove = document.getElementById('gv2-comment-dock-move');
+        const dockAvatar = document.getElementById('gv2-comment-dock-avatar');
+        const isModern = this.viewerSkin === 'modern';
+        const avatarUrl = this.getCommentAvatarUrl();
+        const viewerContainer = document.getElementById('gv2-main-container');
+        let layoutChanged = false;
+
+        if (isModern && dock && dockText) {
+            overlay.style.display = 'none';
+            if (comment && !this.bubbleManuallyHidden) {
+                dock.hidden = false;
+                dock.classList.add('visible');
+                dockText.textContent = comment;
+                if (dockMove) dockMove.textContent = this.getCurrentMoveLabel();
+                this.renderCommentAvatar(dockAvatar, avatarUrl);
+                if (viewerContainer && !viewerContainer.classList.contains('gv2-has-comment-dock')) {
+                    viewerContainer.classList.add('gv2-has-comment-dock');
+                    layoutChanged = true;
+                }
+                if (showBtn) showBtn.classList.remove('visible');
+            } else {
+                dock.hidden = true;
+                dock.classList.remove('visible');
+                if (viewerContainer && viewerContainer.classList.contains('gv2-has-comment-dock')) {
+                    viewerContainer.classList.remove('gv2-has-comment-dock');
+                    layoutChanged = true;
+                }
+                if (comment && this.bubbleManuallyHidden) {
+                    if (showBtn) showBtn.classList.add('visible');
+                } else {
+                    if (showBtn) showBtn.classList.remove('visible');
+                }
+            }
+            if (layoutChanged && this.board && typeof this.board.resize === 'function') {
+                requestAnimationFrame(() => {
+                    this.board.resize();
+                    this.syncEvalBarHeight();
+                });
+            }
+            return;
+        }
+
+        if (viewerContainer) viewerContainer.classList.remove('gv2-has-comment-dock');
 
         if (comment && !this.bubbleManuallyHidden) {
             content.innerHTML = this.escapeHtml(comment);
@@ -2363,31 +2492,8 @@ class GameViewer2 {
             // Title and nav controls stay visible to prevent jumping
             if (showBtn) showBtn.classList.remove('visible');
 
-            // Avatar Selection - Manager comments both players
-            let avatarUrl = null;
-
-            // If any manager (club member) is playing, use their avatar for all comments
-            if (this.whiteAvatar) {
-                avatarUrl = this.whiteAvatar;
-            } else if (this.blackAvatar) {
-                avatarUrl = this.blackAvatar;
-            }
-
-            // Fallback to random coach if no manager is playing
-            if (!avatarUrl) {
-                avatarUrl = this.randomCoach;
-            }
-
             const avatarEl = overlay.querySelector('.gv2-avatar');
-            if (avatarEl) {
-                if (avatarUrl) {
-                    avatarEl.innerHTML = `<img src="${avatarUrl}" style="width:100%; height:100%; border-radius:50%; object-fit:cover;">`;
-                    avatarEl.style.background = 'none';
-                } else {
-                    avatarEl.innerHTML = '<i class="fa-solid fa-user-tie"></i>';
-                    avatarEl.style.background = '#8B4513';
-                }
-            }
+            this.renderCommentAvatar(avatarEl, avatarUrl);
 
             overlay.style.display = 'flex';
             overlay.classList.remove('pop-in');
@@ -2408,14 +2514,42 @@ class GameViewer2 {
         }
     }
 
+    getCommentAvatarUrl() {
+        if (this.whiteAvatar) return this.whiteAvatar;
+        if (this.blackAvatar) return this.blackAvatar;
+        return this.randomCoach || null;
+    }
+
+    renderCommentAvatar(avatarEl, avatarUrl) {
+        if (!avatarEl) return;
+        if (avatarUrl) {
+            avatarEl.innerHTML = `<img src="${avatarUrl}" alt="">`;
+            avatarEl.style.background = 'none';
+        } else {
+            avatarEl.innerHTML = '<i class="fa-solid fa-user-tie"></i>';
+            avatarEl.style.background = '#8B4513';
+        }
+    }
+
+    getCurrentMoveLabel() {
+        if (this.currentPly <= 0) return 'výchozí pozice';
+        const ply = this.currentPly;
+        const move = this.mainLinePlies[ply]?.move;
+        const moveNumber = Math.ceil(ply / 2);
+        const dots = ply % 2 === 1 ? '.' : '...';
+        return move ? `${moveNumber}${dots} ${move.san}` : `${moveNumber}${dots}`;
+    }
+
     // Manually hide bubble (called by close button)
     hideBubble() {
         const overlay = document.querySelector('.gv2-board-overlay');
-        const titleEl = document.getElementById('gv2-title');
-        const navControls = document.querySelector('.gv2-global-controls');
+        const dock = document.getElementById('gv2-comment-dock');
 
         if (overlay) overlay.style.display = 'none';
-        if (overlay) overlay.style.display = 'none';
+        if (dock) {
+            dock.hidden = true;
+            dock.classList.remove('visible');
+        }
 
         // Don't toggle title or nav controls display
 
@@ -2932,18 +3066,20 @@ GameViewer2.create = function (containerSelector, games, options = {}) {
     if (options.skin) {
         gameViewer2.setViewerSkin(options.skin);
     }
+    const playableCount = (games || []).filter(g => !(g.type === 'header' || g.isHeader)).length;
 
     // Create the complete split-view structure
     targetContainer.innerHTML = `
         <div class="gv-split-view ${gameViewer2.viewerSkin === 'modern' ? 'gv2-skin-modern' : 'gv2-skin-classic'}" style="--gv-max-height: ${maxHeight}px;">
             <!-- Games List Panel (Left) -->
             <div class="gv-games-panel">
-                <div style="padding: 1rem 1.25rem; background: rgba(0,0,0,0.4); border-bottom: 1px solid rgba(255,255,255,0.1);">
-                    <h3 style="margin: 0; color: var(--primary-color); font-size: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+                <div class="gv-games-head">
+                    <h3>
                         <i class="fa-solid fa-chess-board"></i> ${title}
                     </h3>
+                    <span class="gv-games-count">${playableCount} partií</span>
                 </div>
-                <div id="${listId}" style="flex: 1; overflow-y: auto; padding: 0.5rem;"></div>
+                <div id="${listId}" class="gv-games-list"></div>
             </div>
 
             <!-- Viewer Panel (Right) -->
@@ -2998,31 +3134,11 @@ GameViewer2.prototype.renderListToElement = function (listElement) {
             header.textContent = game.title || game.name || 'Skupina';
             listElement.appendChild(header);
         } else {
+            const boardNo = listElement.querySelectorAll('.game-item').length + 1;
             const item = document.createElement('div');
-            item.className = 'game-item';
+            item.className = 'game-item gv2-game-card';
             if (index === this.currentIndex) item.classList.add('active');
-
-            // Build clean title (player names without asterisks)
-            let displayTitle = game.title || 'Partie';
-            // Remove any asterisks from title
-            displayTitle = displayTitle.replace(/\*/g, '').trim();
-
-            let titleHtml = `<span>${this.escapeHtml(displayTitle)}</span>`;
-            const result = game.result || '';
-            if (result && result !== '*' && result !== '?' && result.trim()) {
-                titleHtml += `<span class="game-result">${result}</span>`;
-            }
-            if (game.pgn) {
-                // Check if PGN has comments (text in {} brackets)
-                const hasComments = game.pgn.includes('{');
-                if (hasComments) {
-                    titleHtml += '<i class="fa-solid fa-comment" style="color: #60a5fa; font-size:0.8em; margin-left:auto;" title="Komentovaná partie"></i>';
-                } else {
-                    titleHtml += '<i class="fa-solid fa-chess-board" style="opacity:0.5; font-size:0.8em; margin-left:auto;"></i>';
-                }
-            }
-
-            item.innerHTML = titleHtml;
+            item.innerHTML = this.renderGameListItemHtml(game, boardNo);
             item.dataset.index = index;
             item.onclick = () => this.loadGame(index);
             listElement.appendChild(item);
