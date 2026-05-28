@@ -59,6 +59,10 @@
     position: relative;
 }
 
+.gv2-swipe-zone {
+    touch-action: pan-y;
+}
+
 /* Right column containing both info and analysis */
 .gv2-info-panel {
     grid-area: right;

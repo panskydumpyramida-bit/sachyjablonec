@@ -835,12 +835,48 @@ class GameViewer2 {
 
         // Initial sync of eval bar height
         this.syncEvalBarHeight();
+        this.setupSwipeNavigation();
 
         // Add resize listener
         window.addEventListener('resize', () => {
             this.board && this.board.resize();
             this.syncEvalBarHeight();
         });
+    }
+
+    setupSwipeNavigation() {
+        const target = document.querySelector('#gv2-main-container .gv2-board-section');
+        if (!target || target.dataset.swipeReady === 'true') return;
+
+        target.dataset.swipeReady = 'true';
+        target.classList.add('gv2-swipe-zone');
+
+        let startX = 0;
+        let startY = 0;
+        let activePointerId = null;
+
+        const isInteractive = (el) => el.closest('button, a, input, textarea, select, .gv2-var-modal, .gv2-move, .gv2-var-move');
+
+        target.addEventListener('pointerdown', event => {
+            if (event.pointerType === 'mouse' || isInteractive(event.target)) return;
+            activePointerId = event.pointerId;
+            startX = event.clientX;
+            startY = event.clientY;
+        });
+
+        const finishSwipe = event => {
+            if (activePointerId !== event.pointerId) return;
+            const deltaX = event.clientX - startX;
+            const deltaY = event.clientY - startY;
+            activePointerId = null;
+
+            if (Math.abs(deltaX) < 44 || Math.abs(deltaX) < Math.abs(deltaY) * 1.35) return;
+            if (deltaX < 0) this.stepForward();
+            else this.stepBack();
+        };
+
+        target.addEventListener('pointerup', finishSwipe);
+        target.addEventListener('pointercancel', () => { activePointerId = null; });
     }
 
     syncEvalBarHeight() {
