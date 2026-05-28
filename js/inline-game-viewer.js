@@ -193,6 +193,7 @@
         const result = parsed.headers.Result || '';
         const event = parsed.headers.Event || '';
         const orientation = container.dataset.orientation === 'black' ? 'black' : 'white';
+        const hasComments = parsed.moves.some(move => move.comment);
 
         container.innerHTML = `
             <div class="igv-shell">
@@ -221,10 +222,10 @@
                         <div class="igv-status">
                             <div class="igv-current" id="${uid}-current">Výchozí pozice</div>
                             <div class="igv-count"><span id="${uid}-count">0</span>/${parsed.moves.length}</div>
-                            <div class="igv-progress"><div class="igv-progress-fill" id="${uid}-progress"></div></div>
+                            <input type="range" class="igv-scrub" id="${uid}-scrub" min="0" max="${parsed.moves.length}" value="0" step="1" aria-label="Přejít na tah">
                         </div>
+                        <div class="igv-comment" id="${uid}-comment" ${hasComments ? '' : 'hidden'}></div>
                         <div class="igv-moves" id="${uid}-moves">${buildMoveRows(parsed.moves, uid)}</div>
-                        <div class="igv-comment" id="${uid}-comment"><span class="igv-empty-comment">Komentář k tahu se zobrazí tady.</span></div>
                     </div>
                 </div>
             </div>
@@ -253,6 +254,10 @@
 
             container.querySelectorAll('.igv-move').forEach(button => {
                 button.addEventListener('click', () => goTo(state, parseInt(button.dataset.ply, 10)));
+            });
+
+            container.querySelector(`#${uid}-scrub`)?.addEventListener('input', event => {
+                goTo(state, parseInt(event.target.value, 10) - 1);
             });
 
             container.querySelectorAll('.igv-btn').forEach(button => {
@@ -313,29 +318,41 @@
         const currentMove = state.currentPly === -1 ? null : state.moves[state.currentPly];
         const currentEl = container.querySelector(`#${state.uid}-current`);
         const countEl = container.querySelector(`#${state.uid}-count`);
-        const progressEl = container.querySelector(`#${state.uid}-progress`);
+        const scrubEl = container.querySelector(`#${state.uid}-scrub`);
         const commentEl = container.querySelector(`#${state.uid}-comment`);
+        const currentIndex = state.currentPly + 1;
 
         if (currentEl) {
             currentEl.textContent = currentMove
                 ? `${currentMove.moveNumber}${currentMove.color === 'b' ? '...' : '.'} ${currentMove.san}`
                 : 'Výchozí pozice';
         }
-        if (countEl) countEl.textContent = String(state.currentPly + 1);
-        if (progressEl) {
-            const pct = state.moves.length ? ((state.currentPly + 1) / state.moves.length) * 100 : 0;
-            progressEl.style.width = `${Math.max(0, pct)}%`;
+        if (countEl) countEl.textContent = String(currentIndex);
+        if (scrubEl) {
+            scrubEl.value = String(currentIndex);
+            const pct = state.moves.length ? (currentIndex / state.moves.length) * 100 : 0;
+            scrubEl.style.setProperty('--igv-scrub-progress', `${Math.max(0, pct)}%`);
         }
         if (commentEl) {
-            commentEl.innerHTML = currentMove?.comment
-                ? escapeHtml(currentMove.comment)
-                : '<span class="igv-empty-comment">Komentář k tahu se zobrazí tady.</span>';
+            const comment = currentMove?.comment || '';
+            commentEl.hidden = !comment;
+            commentEl.innerHTML = comment ? escapeHtml(comment) : '';
         }
 
         container.querySelectorAll('.igv-move').forEach(button => {
             const isActive = parseInt(button.dataset.ply, 10) === state.currentPly;
             button.classList.toggle('is-active', isActive);
+            if (isActive) button.setAttribute('aria-current', 'step');
+            else button.removeAttribute('aria-current');
             if (isActive) button.scrollIntoView({ block: 'nearest' });
+        });
+
+        container.querySelectorAll('.igv-btn').forEach(button => {
+            const action = button.dataset.action;
+            button.disabled =
+                (action === 'play' && state.moves.length === 0) ||
+                (['start', 'prev'].includes(action) && state.currentPly <= -1) ||
+                (['next', 'end'].includes(action) && state.currentPly >= state.moves.length - 1);
         });
     }
 
