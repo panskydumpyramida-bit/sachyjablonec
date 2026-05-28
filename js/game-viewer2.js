@@ -769,6 +769,13 @@ class GameViewer2 {
                             </button>
                             <!-- AI explain button removed from viewer (kept in game-recorder only) -->
                         </div>
+                        <div class="gv2-scrubber" id="gv2-scrubber">
+                            <div class="gv2-scrubber-meta">
+                                <span id="gv2-scrubber-current">Výchozí pozice</span>
+                                <strong id="gv2-scrubber-count">0/0</strong>
+                            </div>
+                            <input type="range" id="gv2-scrubber-range" class="gv2-scrubber-range" min="0" max="0" value="0" step="1" aria-label="Přejít na tah">
+                        </div>
                     </div>
                     <div class="gv2-info-panel">
                         <div class="gv2-info-content">
@@ -836,6 +843,7 @@ class GameViewer2 {
         // Initial sync of eval bar height
         this.syncEvalBarHeight();
         this.setupSwipeNavigation();
+        this.setupMoveScrubber();
 
         // Add resize listener
         window.addEventListener('resize', () => {
@@ -877,6 +885,41 @@ class GameViewer2 {
 
         target.addEventListener('pointerup', finishSwipe);
         target.addEventListener('pointercancel', () => { activePointerId = null; });
+    }
+
+    setupMoveScrubber() {
+        const range = document.getElementById('gv2-scrubber-range');
+        if (!range || range.dataset.scrubberReady === 'true') return;
+
+        range.dataset.scrubberReady = 'true';
+        range.addEventListener('input', event => {
+            const targetPly = parseInt(event.target.value, 10);
+            if (Number.isNaN(targetPly)) return;
+            this.hideVariationChoiceModal();
+            this.toggleAutoplay(false);
+            this.jumpTo(targetPly);
+        });
+    }
+
+    updateMoveScrubber(options = {}) {
+        const range = document.getElementById('gv2-scrubber-range');
+        const currentEl = document.getElementById('gv2-scrubber-current');
+        const countEl = document.getElementById('gv2-scrubber-count');
+        const wrapper = document.getElementById('gv2-scrubber');
+        if (!range || !currentEl || !countEl || !wrapper) return;
+
+        const maxPly = Math.max(0, (this.mainLinePlies?.length || 1) - 1);
+        const currentPly = Math.max(0, Math.min(this.currentPly || 0, maxPly));
+        const pct = maxPly > 0 ? (currentPly / maxPly) * 100 : 0;
+
+        range.max = String(maxPly);
+        range.value = String(currentPly);
+        range.disabled = maxPly === 0;
+        range.style.setProperty('--gv2-scrub-progress', `${pct}%`);
+
+        wrapper.classList.toggle('is-variation', Boolean(options.inVariation));
+        currentEl.textContent = options.label || this.getCurrentMoveLabel();
+        countEl.textContent = options.inVariation ? 'větev' : `${currentPly}/${maxPly}`;
     }
 
     syncEvalBarHeight() {
@@ -1127,6 +1170,7 @@ class GameViewer2 {
             tempGame.move(move);
             this.mainLinePlies.push({ fen: tempGame.fen(), move: move });
         });
+        this.updateMoveScrubber();
 
         // 2. Render Full Text (with comments)
         // We need to parse valid PGN tokens and try to match them to our main line history
@@ -1784,6 +1828,7 @@ class GameViewer2 {
         // Update comment bubble and NAG marker for this position
         this.updateCommentBubble();
         this.updateNagMarker();
+        this.updateMoveScrubber({ inVariation: true, label: 'Varianta' });
     }
 
     processBuffer(text, history, parentVarId = null) {
@@ -2348,6 +2393,7 @@ class GameViewer2 {
 
         this.updateCommentBubble();
         this.updateNagMarker();
+        this.updateMoveScrubber();
 
         // Trigger analysis if enabled
         this.triggerAnalysis();
