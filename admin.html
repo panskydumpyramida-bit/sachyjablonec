@@ -10,7 +10,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="css/style.css?v=ux12">
-    <link rel="stylesheet" href="css/admin.css?v=ux14">
+    <link rel="stylesheet" href="css/admin.css?v=ux15">
     <link rel="stylesheet" href="css/admin-sidebar.css?v=ux2">
     <script src="js/version.js?v=ux12"></script>
     <script src="js/modal-manager.js?v=ux12"></script>
@@ -331,7 +331,7 @@
                                             <button type="button" onclick="insertCollapsibleBlock(); this.parentElement.style.display='none'" title="Rozbalovací sekce" style="text-align: left; justify-content: flex-start; width: 100%; color: #8b5cf6;"><i class="fa-solid fa-layer-group" style="margin-right:8px; width: 16px; text-align: center;"></i>Rozbalovací sekce</button>
                                         </div>
                                     </div>
-                                    <button type="button" onclick="window.showResultsTableModal && window.showResultsTableModal()"
+                                    <button type="button" onmousedown="event.preventDefault()" onclick="window.showResultsTableModal && window.showResultsTableModal()"
                                         title="Tabulka výsledků z chess-results.com" class="tb-chess-results"><span class="tb-cr-badge">CH-R</span><span class="tb-label">Tabulka</span></button>
                                     <button type="button" onclick="aiSpellCheck()" title="AI Oprava pravopisu (Ctrl+Shift+S)" style="color: #10b981;"><i class="fa-solid fa-spell-check"></i>AI</button>
                                     <button type="button" onclick="aiTextToTable()" title="AI Převod na tabulku (vyberte text)" style="color: #06b6d4;"><i class="fa-solid fa-table"></i></button>
@@ -2460,7 +2460,7 @@
     <script src="js/admin/admin-core.js?v=ux13"></script>
     <script src="js/admin/admin-gallery.js?v=ux12"></script>
     <script src="js/admin/admin-wysiwyg.js?v=ux13"></script>
-    <script src="js/admin/admin-slash-commands.js?v=ux2"></script>
+    <script src="js/admin/admin-slash-commands.js?v=ux3"></script>
     <script src="js/admin/admin-content-images.js?v=ux12"></script>
     <script src="js/admin/admin-thumbnail.js?v=ux12"></script>
     <script src="js/admin/admin-news.js?v=ux12"></script>

@@ -836,7 +836,7 @@ function showResultsTableModal() {
     const modal = document.createElement('div');
     modal.style.cssText = 'position:fixed; inset:0; background:rgba(0,0,0,0.85); z-index:12000; display:flex; align-items:center; justify-content:center; backdrop-filter:blur(4px);';
     modal.innerHTML = `
-        <div style="width:860px; max-width:95%; max-height:90vh; overflow:auto; background:#1a1a2e; border:1px solid rgba(255,255,255,0.1); padding:20px; border-radius:8px;">
+        <div style="width:min(860px, calc(100vw - 24px)); box-sizing:border-box; max-height:90vh; overflow:auto; background:#1a1a2e; border:1px solid rgba(255,255,255,0.1); padding:clamp(14px, 3vw, 20px); border-radius:8px;">
             <h3 style="margin:0 0 16px; color:#fff;">🏆 Tabulka výsledků z chess-results.com</h3>
             <div style="display:flex; gap:10px; margin-bottom:12px; flex-wrap:wrap;">
                 <div style="flex:1; min-width:280px;">
