@@ -496,6 +496,10 @@ body.editor-focus-mode .editor-layout {
     font-size: 0.7em;
 }
 
+.wysiwyg-content a.cta-button::after {
+    content: none;
+}
+
 .wysiwyg-content a:hover {
     color: #93c5fd;
 }
