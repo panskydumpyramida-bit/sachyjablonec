@@ -100,6 +100,7 @@ https://www.sachyjablonec.cz/admin.html
    - **Úvodní obrázek** - klikněte pro výběr z galerie
    - **Galerie** - přidejte další obrázky
    - **Partie** - přidejte šachové partie (PGN nebo Chess.com odkaz)
+   - **Mini partie** - vložte jednu PGN partii přímo mezi odstavce článku
 
 ### Formátování obsahu
 
@@ -457,6 +458,14 @@ Výstřižky z partií (rozsah tahů od-do) s vlastním PGN.
 
 - **Vytvoření** — v editoru článku, tlačítko ✂️ u partie
 - **Vkládání do článků** — přes tlačítko "Fragmenty" v WYSIWYG
+
+### Mini partie v textu
+
+Kompaktní přehrávač jedné PGN partie vložený přímo mezi odstavce článku.
+
+- **Vložení** — v WYSIWYG přes tlačítko "Mini partie"
+- **Editace** — klik na blok, změna názvu/orientace nebo otevření PGN
+- **Použití** — když má partie působit jako výstřižek uvnitř textu, ne jako velký přehrávač pod článkem
 
 ### API endpointy
 

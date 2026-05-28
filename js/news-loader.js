@@ -3,7 +3,8 @@
 
 // Helper: Check if article has games and return indicator HTML
 function getGamesIndicator(item) {
-    if (!item.gamesJson || item.gamesJson === '[]' || item.gamesJson === 'null') {
+    const hasInlineGame = item.content && item.content.includes('inline-game-viewer');
+    if ((!item.gamesJson || item.gamesJson === '[]' || item.gamesJson === 'null') && !hasInlineGame) {
         return '';
     }
     // Return a 2x2 chessboard mini-icon

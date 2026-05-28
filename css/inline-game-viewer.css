@@ -1,0 +1,290 @@
+.inline-game-viewer {
+    margin: 1.25rem auto;
+    max-width: 760px;
+    width: 100%;
+}
+
+.igv-shell {
+    background: linear-gradient(180deg, #202029, #17171f);
+    border: 1px solid rgba(212, 175, 55, 0.18);
+    border-radius: 12px;
+    overflow: hidden;
+    color: #e8e8ee;
+    box-shadow: 0 18px 50px -28px rgba(0, 0, 0, 0.75);
+}
+
+.igv-head {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.65rem 0.85rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+    background: linear-gradient(180deg, rgba(0, 0, 0, 0.24), rgba(0, 0, 0, 0.04));
+}
+
+.igv-title {
+    min-width: 0;
+    flex: 1;
+    color: #f1d36b;
+    font-family: var(--font-heading, 'Playfair Display', Georgia, serif);
+    font-weight: 700;
+    font-size: 1.05rem;
+    line-height: 1.25;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.igv-meta {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    color: #a0a0ac;
+    font-size: 0.78rem;
+    white-space: nowrap;
+}
+
+.igv-layout {
+    display: grid;
+    grid-template-columns: minmax(260px, 0.95fr) minmax(220px, 1fr);
+    align-items: stretch;
+    min-height: 330px;
+}
+
+.igv-board-pane {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 0.55rem;
+    padding: 0.75rem;
+    border-right: 1px solid rgba(212, 175, 55, 0.12);
+    background: radial-gradient(circle at 45% 40%, rgba(255, 255, 255, 0.04), rgba(0, 0, 0, 0.16) 58%, rgba(0, 0, 0, 0.26));
+}
+
+.igv-board-wrap {
+    width: min(100%, 360px);
+    aspect-ratio: 1;
+    margin: 0 auto;
+    border-radius: 8px;
+    overflow: hidden;
+    border: 1px solid rgba(0, 0, 0, 0.55);
+    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.45);
+}
+
+.igv-board,
+.igv-board > div {
+    width: 100% !important;
+    height: 100% !important;
+}
+
+.igv-controls {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 0.25rem;
+    max-width: 100%;
+}
+
+.igv-btn {
+    width: 34px;
+    height: 34px;
+    display: inline-grid;
+    place-items: center;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.07);
+    color: #d7d7df;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s, transform 0.15s;
+}
+
+.igv-btn:hover {
+    color: #f1d36b;
+    background: rgba(255, 255, 255, 0.1);
+    transform: translateY(-1px);
+}
+
+.igv-btn-play {
+    width: 40px;
+    height: 40px;
+    background: #d4af37;
+    color: #111116;
+    border-color: #d4af37;
+    box-shadow: 0 5px 16px rgba(212, 175, 55, 0.24);
+}
+
+.igv-btn-play:hover {
+    background: #f1d36b;
+    color: #111116;
+}
+
+.igv-side {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    background: rgba(0, 0, 0, 0.16);
+}
+
+.igv-status {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 0.5rem;
+    padding: 0.65rem 0.75rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+    font-size: 0.8rem;
+    color: #a0a0ac;
+}
+
+.igv-current {
+    min-width: 0;
+    color: #e8e8ee;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.igv-count {
+    color: #d4af37;
+    font-variant-numeric: tabular-nums;
+}
+
+.igv-progress {
+    grid-column: 1 / -1;
+    height: 5px;
+    border-radius: 999px;
+    overflow: hidden;
+    background: rgba(255, 255, 255, 0.07);
+}
+
+.igv-progress-fill {
+    width: 0;
+    height: 100%;
+    background: linear-gradient(90deg, #a98725, #f1d36b);
+    transition: width 0.2s ease;
+}
+
+.igv-moves {
+    flex: 1;
+    min-height: 0;
+    max-height: 265px;
+    overflow: auto;
+    padding: 0.5rem;
+    font-family: 'Roboto Mono', ui-monospace, monospace;
+    font-size: 0.86rem;
+}
+
+.igv-row {
+    display: grid;
+    grid-template-columns: 2.5rem 1fr 1fr;
+    gap: 0.25rem;
+    align-items: stretch;
+    min-height: 30px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.igv-num {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    padding-right: 0.35rem;
+    color: #72727e;
+    font-size: 0.78rem;
+}
+
+.igv-move {
+    min-width: 0;
+    border: 0;
+    border-radius: 5px;
+    background: transparent;
+    color: #e8e8ee;
+    text-align: left;
+    padding: 0.3rem 0.35rem;
+    cursor: pointer;
+    font: inherit;
+}
+
+.igv-move:hover {
+    background: rgba(212, 175, 55, 0.1);
+}
+
+.igv-move.is-active {
+    background: rgba(212, 175, 55, 0.24);
+    color: #f1d36b;
+    box-shadow: inset 0 0 0 1px rgba(212, 175, 55, 0.34);
+    font-weight: 700;
+}
+
+.igv-nag {
+    color: #60a5fa;
+    font-weight: 800;
+    margin-left: 0.12rem;
+}
+
+.igv-comment {
+    min-height: 3.1rem;
+    padding: 0.65rem 0.75rem;
+    border-top: 1px solid rgba(212, 175, 55, 0.13);
+    background: linear-gradient(135deg, rgba(212, 175, 55, 0.08), rgba(255, 255, 255, 0.03));
+    color: #cfcfd7;
+    font-size: 0.84rem;
+    line-height: 1.45;
+}
+
+.igv-empty-comment {
+    color: #777783;
+    font-style: italic;
+}
+
+.igv-error {
+    padding: 1rem;
+    border: 1px solid rgba(239, 68, 68, 0.25);
+    border-radius: 10px;
+    background: rgba(239, 68, 68, 0.08);
+    color: #fca5a5;
+}
+
+@media (max-width: 760px) {
+    .inline-game-viewer {
+        max-width: 100%;
+        margin: 1rem 0;
+    }
+
+    .igv-layout {
+        display: flex;
+        flex-direction: column;
+        min-height: 0;
+    }
+
+    .igv-board-pane {
+        border-right: 0;
+        border-bottom: 1px solid rgba(212, 175, 55, 0.12);
+        padding: 0.6rem;
+    }
+
+    .igv-board-wrap {
+        width: min(100%, 360px, calc(100vw - 4rem));
+    }
+
+    .igv-moves {
+        max-height: 220px;
+    }
+}
+
+@media (max-width: 430px) {
+    .igv-head {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 0.25rem;
+    }
+
+    .igv-meta {
+        white-space: normal;
+    }
+
+    .igv-board-wrap {
+        width: min(100%, calc(100vw - 3rem));
+    }
+
+    .igv-controls {
+        flex-wrap: wrap;
+    }
+}

@@ -320,6 +320,7 @@
                                     <button type="button" onclick="autoFormatEntireContent()" title="Auto-formátování celého textu (najde výsledky a jména)" style="color: #a78bfa;"><i class="fa-solid fa-wand-magic-sparkles"></i>Auto</button>
                                     <button type="button" onclick="insertDiagram()" title="Vložit diagram" style="color: #d4a373;"><i class="fa-solid fa-chess-board"></i></button>
                                     <button type="button" onclick="insertFragment()" title="Vložit fragment partie" style="color: #60a5fa;"><i class="fa-solid fa-scissors"></i></button>
+                                    <button type="button" onclick="showInlineGameModal()" title="Vložit mini přehrávač partie přímo do textu" style="color: #facc15;"><i class="fa-solid fa-chess-knight"></i>Mini partie</button>
                                     <button type="button" onclick="insertColumnBlock()" title="Rozložení sloupců" style="color: #38bdf8;"><i class="fa-solid fa-table-columns"></i></button>
                                     <div style="position: relative; display: inline-block;" onmouseleave="this.querySelector('.dropdown-content').style.display='none'">
                                         <button type="button" onclick="const el = this.nextElementSibling; el.style.display = el.style.display === 'flex' ? 'none' : 'flex'; event.stopPropagation();" title="Šablony a bloky do článku" style="color: #cbd5e1;"><i class="fa-solid fa-puzzle-piece"></i> Bloky ▾</button>
@@ -1616,6 +1617,7 @@
                             <li><strong>Nový skin přehrávače:</strong> Game Viewer 2 dostal kompaktnější skin podle prototypu ze „Sachy animace". Výchozí je nový vzhled, starý zůstává dostupný.</li>
                             <li><strong>Přepínač skinu:</strong> V Nastavení je volba Skin přehrávače partií → Nový skin / Klasický skin, takže se dá rychle vrátit původní vzhled bez úprav článků.</li>
                             <li><strong>Figurky:</strong> Produkční viewer používá čitelné lokální PNG figurky z Wikipedia setu, ne prototypové glyphy.</li>
+                            <li><strong>Mini partie v textu:</strong> WYSIWYG má tlačítko Mini partie pro vložení jedné PGN partie přímo mezi odstavce článku jako kompaktní interaktivní přehrávač.</li>
                             <li><strong>Subvarianty v partiích:</strong> Prohlížeč partií v článcích nově rozlišuje hlavní linii, varianty a vnořené subvarianty. Modal výběru tahu už nenabízí tahy o úroveň níže.</li>
                             <li><strong>Volba uvnitř varianty:</strong> Pokud čtenář vstoupí do varianty, další výběr tahu zobrazí pouze subvarianty navázané na aktuální větev.</li>
                             <li><strong>Umístění modalu:</strong> Výběr tahu je ukotvený přímo pod ovládáním partie, takže v článku nepřekrývá diskuzi a nepůsobí odtrženě od šachovnice.</li>
@@ -2492,7 +2494,7 @@
     <script src="js/diagram-viewer.js"></script>
     <script src="js/admin/admin-core.js?v=ux13"></script>
     <script src="js/admin/admin-gallery.js?v=ux12"></script>
-    <script src="js/admin/admin-wysiwyg.js?v=ux13"></script>
+    <script src="js/admin/admin-wysiwyg.js?v=ux14"></script>
     <script src="js/admin/admin-slash-commands.js?v=ux3"></script>
     <script src="js/admin/admin-content-images.js?v=ux12"></script>
     <script src="js/admin/admin-thumbnail.js?v=ux12"></script>
