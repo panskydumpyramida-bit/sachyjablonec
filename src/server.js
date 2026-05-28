@@ -595,7 +595,7 @@ app.post('/api/settings', authMiddleware, async (req, res) => {
 app.get('/api/settings/public/:key', async (req, res) => {
     const { key } = req.params;
     // Only allow specific public keys
-    const publicKeys = ['chessApiDepth', 'show_latest_comment', 'hero_animation_pgn', 'hero_animation_header'];
+    const publicKeys = ['chessApiDepth', 'show_latest_comment', 'hero_animation_pgn', 'hero_animation_header', 'gameViewerSkin'];
     if (!publicKeys.includes(key)) {
         return res.status(403).json({ error: 'This setting is not public' });
     }

@@ -1696,3 +1696,375 @@ body>.gv2-var-modal {
         /* Minimal padding on mobile to save space */
     }
 }
+
+/* ==========================================================================
+   Modern skin - compact redesign inspired by the Downloads prototype.
+   Classic skin is the unscoped base above and remains available from admin.
+   ========================================================================== */
+
+.gv-split-view.gv2-skin-modern {
+    background: linear-gradient(180deg, #1e1e26, #17171f);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 14px;
+    box-shadow: 0 30px 80px -24px rgba(0, 0, 0, 0.75), inset 0 1px 0 rgba(255, 255, 255, 0.03);
+}
+
+.gv-split-view.gv2-skin-modern .gv-games-panel {
+    background: linear-gradient(180deg, rgba(0, 0, 0, 0.28), rgba(0, 0, 0, 0.12));
+    border-right-color: rgba(255, 255, 255, 0.08);
+}
+
+.gv-split-view.gv2-skin-modern .gv-viewer-content {
+    padding: 0.75rem;
+}
+
+.game-viewer-2-container.gv2-skin-modern {
+    --gv-bg-color: #1e1e26;
+    --gv-border-color: rgba(255, 255, 255, 0.08);
+    --gv-highlight-color: rgba(212, 175, 55, 0.12);
+    --gv-active-color: #d4af37;
+    --gv-text-color: #e8e8ee;
+    --gv-muted-color: #a0a0ac;
+    --gv-comment-bg: rgba(212, 175, 55, 0.08);
+    --gv-comment-border: rgba(212, 175, 55, 0.55);
+    background: linear-gradient(180deg, #202029, #17171f);
+    border-color: rgba(212, 175, 55, 0.16);
+    border-radius: 14px;
+    box-shadow: none;
+    overflow: hidden;
+}
+
+.game-viewer-2-container.gv2-skin-modern .gv2-header {
+    min-height: 0;
+    padding: 0.65rem 0.85rem;
+    margin: 0;
+    background: linear-gradient(180deg, rgba(0, 0, 0, 0.24), rgba(0, 0, 0, 0.04));
+    border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.game-viewer-2-container.gv2-skin-modern .gv2-title {
+    color: #f1d36b;
+    font-size: clamp(1rem, 2cqi, 1.28rem);
+    letter-spacing: 0;
+    line-height: 1.2;
+    min-width: 0;
+    text-align: center;
+}
+
+.game-viewer-2-container.gv2-skin-modern .gv2-global-controls {
+    gap: 0.55rem;
+}
+
+.game-viewer-2-container.gv2-skin-modern .gv2-nav-btn {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    border-color: rgba(212, 175, 55, 0.32);
+    background: rgba(212, 175, 55, 0.05);
+    color: #d4af37;
+}
+
+.game-viewer-2-container.gv2-skin-modern .gv2-nav-btn:hover {
+    background: rgba(212, 175, 55, 0.16);
+    border-color: rgba(212, 175, 55, 0.6);
+}
+
+.game-viewer-2-container.gv2-skin-modern .gv2-content {
+    grid-template-columns: minmax(0, 1fr) minmax(250px, 300px);
+}
+
+.game-viewer-2-container.gv2-skin-modern .gv2-board-section {
+    min-height: 0;
+    padding: 0.7rem;
+    background: radial-gradient(circle at 45% 40%, rgba(255, 255, 255, 0.045), rgba(0, 0, 0, 0.14) 58%, rgba(0, 0, 0, 0.28));
+    gap: 0.55rem;
+}
+
+.game-viewer-2-container.gv2-skin-modern .gv2-board-area {
+    width: 100%;
+    max-width: min(100%, 520px);
+    justify-content: center;
+    gap: 0.35rem;
+}
+
+.game-viewer-2-container.gv2-skin-modern .gv2-eval-bar {
+    width: 16px;
+    min-width: 16px;
+    border-radius: 5px;
+    background: #14141a;
+    border-color: rgba(255, 255, 255, 0.12);
+}
+
+.game-viewer-2-container.gv2-skin-modern .gv2-board-wrapper {
+    width: min(100%, 500px);
+    height: auto;
+    aspect-ratio: 1;
+    max-width: min(calc(100cqi - 3rem), 500px);
+    max-height: none;
+    border-radius: 8px;
+    overflow: hidden;
+    border: 1px solid rgba(0, 0, 0, 0.55);
+    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.45);
+}
+
+.game-viewer-2-container.gv2-skin-modern #gv2-board {
+    width: 100% !important;
+    height: 100% !important;
+    max-width: 100%;
+}
+
+.game-viewer-2-container.gv2-skin-modern #gv2-board > div {
+    width: 100% !important;
+    height: 100% !important;
+}
+
+.game-viewer-2-container.gv2-skin-modern .piece-417db img {
+    filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.45));
+}
+
+.game-viewer-2-container.gv2-skin-modern .gv2-controls {
+    gap: 0.3rem;
+    padding: 0.35rem 0.5rem;
+    margin: 0 auto;
+    background: rgba(255, 255, 255, 0.07);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 999px;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+.game-viewer-2-container.gv2-skin-modern .gv2-btn {
+    width: 38px;
+    height: 38px;
+    padding: 0;
+    color: #d7d7df;
+    font-size: 1.08rem;
+    border-radius: 50%;
+}
+
+.game-viewer-2-container.gv2-skin-modern .gv2-btn:nth-child(3) {
+    width: 42px;
+    height: 42px;
+    background: #d4af37;
+    color: #111116;
+    box-shadow: 0 5px 16px rgba(212, 175, 55, 0.24);
+}
+
+.game-viewer-2-container.gv2-skin-modern .gv2-btn:hover {
+    color: #f1d36b;
+    background: rgba(255, 255, 255, 0.09);
+    transform: translateY(-1px);
+}
+
+.game-viewer-2-container.gv2-skin-modern .gv2-btn:nth-child(3):hover {
+    background: #f1d36b;
+    color: #111116;
+}
+
+.game-viewer-2-container.gv2-skin-modern .gv2-info-panel {
+    width: auto !important;
+    max-width: none !important;
+    max-height: none;
+    background: rgba(0, 0, 0, 0.18);
+    border-left-color: rgba(212, 175, 55, 0.18);
+}
+
+.game-viewer-2-container.gv2-skin-modern .gv2-metadata {
+    padding: 0.8rem 0.9rem;
+    background: rgba(0, 0, 0, 0.18);
+}
+
+.game-viewer-2-container.gv2-skin-modern .gv2-metadata-row {
+    font-size: 0.82rem;
+}
+
+.game-viewer-2-container.gv2-skin-modern .gv2-metadata-row strong {
+    color: #d4af37;
+}
+
+.game-viewer-2-container.gv2-skin-modern .gv2-moves {
+    padding: 0.55rem;
+    font-size: 0.9rem;
+}
+
+.game-viewer-2-container.gv2-skin-modern .gv2-move-row {
+    border-bottom-color: rgba(255, 255, 255, 0.045);
+}
+
+.game-viewer-2-container.gv2-skin-modern .gv2-move-num-cell {
+    width: 34px;
+    min-width: 34px;
+    background: rgba(0, 0, 0, 0.14);
+}
+
+.game-viewer-2-container.gv2-skin-modern .gv2-move {
+    border-left: 0;
+}
+
+.game-viewer-2-container.gv2-skin-modern .gv2-move.active,
+.game-viewer-2-container.gv2-skin-modern .gv2-var-move.active {
+    background: rgba(212, 175, 55, 0.24);
+    color: #f1d36b;
+    box-shadow: inset 0 0 0 1px rgba(212, 175, 55, 0.34);
+}
+
+.game-viewer-2-container.gv2-skin-modern .gv2-comment {
+    margin: 0.35rem 0;
+    background: linear-gradient(135deg, rgba(212, 175, 55, 0.09), rgba(255, 255, 255, 0.035));
+    border-left-color: rgba(212, 175, 55, 0.62);
+    color: #cfcfd7;
+}
+
+.game-viewer-2-container.gv2-skin-modern .gv2-variation {
+    color: #9ca3af;
+}
+
+.game-viewer-2-container.gv2-skin-modern .gv2-analysis-info {
+    min-height: 58px;
+    background: rgba(96, 165, 250, 0.065);
+    border-top-color: rgba(96, 165, 250, 0.18);
+}
+
+.game-viewer-2-container.gv2-skin-modern .gv2-var-modal {
+    position: static;
+    inset: auto;
+    width: 100%;
+    flex-shrink: 0;
+    background: transparent;
+    padding: 0.4rem 0 0;
+}
+
+.game-viewer-2-container.gv2-skin-modern .gv2-var-modal-content {
+    max-width: min(100%, 520px);
+    padding: 0.45rem;
+    gap: 0.35rem;
+    background: rgba(12, 12, 16, 0.96);
+    border-color: rgba(212, 175, 55, 0.5);
+    border-radius: 10px;
+}
+
+.game-viewer-2-container.gv2-skin-modern .gv2-var-choice {
+    min-width: 62px;
+    padding: 0.48rem 0.75rem;
+    border-radius: 7px;
+    font-family: 'Roboto Mono', ui-monospace, monospace;
+    font-size: 0.9rem;
+}
+
+.game-viewer-2-container.gv2-skin-modern .gv2-var-choice.gv2-var-main {
+    background: #d4af37;
+    color: #111116;
+}
+
+@container gameviewer (max-width: 700px) {
+    .game-viewer-2-container.gv2-skin-modern .gv2-content {
+        display: flex !important;
+        flex-direction: column;
+    }
+
+    .game-viewer-2-container.gv2-skin-modern .gv2-board-section {
+        padding: 0.55rem;
+    }
+
+    .game-viewer-2-container.gv2-skin-modern .gv2-info-panel {
+        max-height: 260px;
+        border-left: none;
+        border-top: 1px solid rgba(212, 175, 55, 0.18);
+    }
+}
+
+@media (max-width: 900px) {
+    .gv-split-view.gv2-skin-modern {
+        border-radius: 12px;
+    }
+
+    .gv-split-view.gv2-skin-modern .gv-viewer-content {
+        padding: 0.45rem;
+    }
+
+    .game-viewer-2-container.gv2-skin-modern .gv2-content {
+        display: flex !important;
+        flex-direction: column;
+    }
+
+    .game-viewer-2-container.gv2-skin-modern .gv2-header {
+        padding: 0.55rem 0.6rem;
+        gap: 0.5rem;
+    }
+
+    .game-viewer-2-container.gv2-skin-modern .gv2-global-controls {
+        gap: 0.35rem;
+    }
+
+    .game-viewer-2-container.gv2-skin-modern .gv2-nav-btn {
+        width: 34px;
+        height: 34px;
+    }
+
+    .game-viewer-2-container.gv2-skin-modern .gv2-board-wrapper {
+        width: min(calc(100vw - 78px), 430px, 55vh);
+        height: auto;
+        max-width: none;
+    }
+
+    .game-viewer-2-container.gv2-skin-modern .gv2-controls {
+        gap: 0.22rem;
+        padding: 0.32rem 0.38rem;
+        max-width: 100%;
+    }
+
+    .game-viewer-2-container.gv2-skin-modern .gv2-btn {
+        width: 34px;
+        height: 34px;
+        font-size: 0.98rem;
+    }
+
+    .game-viewer-2-container.gv2-skin-modern .gv2-btn:nth-child(3) {
+        width: 38px;
+        height: 38px;
+    }
+
+    .game-viewer-2-container.gv2-skin-modern .gv2-info-panel {
+        width: 100% !important;
+        max-width: 100% !important;
+        max-height: 260px;
+        border-left: none;
+        border-top: 1px solid rgba(212, 175, 55, 0.18);
+    }
+
+    .game-viewer-2-container.gv2-skin-modern .gv2-moves {
+        text-align: left;
+        justify-content: flex-start;
+        padding: 0.45rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .game-viewer-2-container.gv2-skin-modern .gv2-title {
+        font-size: 0.95rem;
+    }
+
+    .game-viewer-2-container.gv2-skin-modern .gv2-board-section {
+        padding: 0.4rem;
+        gap: 0.4rem;
+    }
+
+    .game-viewer-2-container.gv2-skin-modern .gv2-board-wrapper {
+        width: min(calc(100vw - 64px), 390px, 52vh);
+        height: auto;
+    }
+
+    .game-viewer-2-container.gv2-skin-modern .gv2-eval-bar {
+        width: 14px;
+        min-width: 14px;
+    }
+
+    .game-viewer-2-container.gv2-skin-modern .gv2-controls {
+        border-radius: 14px;
+        flex-wrap: wrap;
+    }
+
+    .game-viewer-2-container.gv2-skin-modern .gv2-btn {
+        width: 32px;
+        height: 32px;
+    }
+}

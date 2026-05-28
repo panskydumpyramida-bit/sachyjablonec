@@ -283,6 +283,22 @@ Fragment je interaktivní výřez z partie (např. od 15. do 25. tahu), který o
 4. Do editoru se vloží chráněný zástupný blok. Ten neupravujte ručně – použijte edit modal (klik na blok).
 5. Po uložení a náhledu novinky se vygeneruje překrásný interaktivní widget!
 
+### Skin přehrávače partií
+
+Veřejný přehrávač partií má dva skiny:
+
+| Skin | Kdy použít |
+|------|------------|
+| **Nový skin** | Výchozí kompaktní vzhled podle prototypu, lepší pro články a mobil |
+| **Klasický skin** | Návrat k původnímu vzhledu, pokud by nový skin v konkrétní situaci působil hůř |
+
+Přepnutí je globální:
+
+1. Otevřete v adminu **Nastavení**.
+2. Najděte kartu **Skin přehrávače partií**.
+3. Vyberte **Nový skin** nebo **Klasický skin**.
+4. Změna se projeví ve veřejných přehrávačích partií v článcích a na stránkách webu.
+
 ---
 
 ## 6️⃣ Atomické bloky v editoru
