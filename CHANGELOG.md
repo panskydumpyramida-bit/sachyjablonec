@@ -1,5 +1,17 @@
 # 📋 Changelog
 
+## 28. května 2026 (v35)
+
+### ♟️ Game Viewer 2 a výsledky v článcích
+- **Nový skin přehrávače:** Do Game Vieweru 2 byl přidán nový kompaktnější skin podle prototypu z `Downloads/Sachy animace`. Je zapnutý jako výchozí pro veřejné přehrávače partií.
+- **Rollback v adminu:** V Nastavení je přepínač **Skin přehrávače partií** s volbami Nový skin / Klasický skin. Klasická volba vrací původní vzhled bez zásahu do článků.
+- **Figurky:** Přehrávač zůstává na čitelných PNG figurkách z lokálního Wikipedia setu místo prototypových glyphů.
+- **Responzivita:** Nový skin zmenšuje mezery na mobilu, zahušťuje ovládání a drží výběr variant přímo u šachovnice.
+- **Subvarianty:** Viewer rozlišuje hlavní linii, varianty a vnořené subvarianty; modal už nenabízí tahy o úroveň níže.
+- **CH-R tabulky:** Editor umí k tabulce z Chess-Results přidat žluté tlačítko „🔗 Kompletní výsledky".
+
+---
+
 ## 24. dubna 2026 (v34)
 
 ### 🛠️ Admin UX: mobilní editor a sidebar layout

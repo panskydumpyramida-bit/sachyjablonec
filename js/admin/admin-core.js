@@ -475,6 +475,32 @@ async function toggleLatestComment() {
     }
 }
 
+async function updateGameViewerSkin(value) {
+    const select = document.getElementById('gameViewerSkinSelect');
+    const skin = value === 'classic' ? 'classic' : 'modern';
+
+    try {
+        const res = await fetch(`${API_URL}/settings`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${authToken}`
+            },
+            body: JSON.stringify({ key: 'gameViewerSkin', value: skin })
+        });
+
+        if (res.ok) {
+            showAlert(skin === 'modern' ? 'Nový skin přehrávače zapnut' : 'Klasický skin přehrávače zapnut', 'success');
+        } else {
+            if (select) select.value = skin === 'modern' ? 'classic' : 'modern';
+            showAlert('Chyba při změně skinu přehrávače', 'error');
+        }
+    } catch (e) {
+        if (select) select.value = skin === 'modern' ? 'classic' : 'modern';
+        showAlert('Chyba spojení', 'error');
+    }
+}
+
 async function saveHeroSettings() {
     const pgn = document.getElementById('heroAnimationPgn').value;
     const header = document.getElementById('heroAnimationHeader').value;
@@ -520,6 +546,9 @@ async function checkMaintenance() {
 
         const commentToggle = document.getElementById('showLatestCommentToggle');
         if (commentToggle) commentToggle.checked = settings.show_latest_comment === 'true';
+
+        const gameViewerSkinSelect = document.getElementById('gameViewerSkinSelect');
+        if (gameViewerSkinSelect) gameViewerSkinSelect.value = settings.gameViewerSkin === 'classic' ? 'classic' : 'modern';
         
         const heroPgnInput = document.getElementById('heroAnimationPgn');
         if (heroPgnInput) heroPgnInput.value = settings.hero_animation_pgn || '';
@@ -597,6 +626,7 @@ window.showToast = showToast;
 window.showAlert = showAlert;
 window.toggleMaintenance = toggleMaintenance;
 window.toggleLatestComment = toggleLatestComment;
+window.updateGameViewerSkin = updateGameViewerSkin;
 window.saveHeroSettings = saveHeroSettings;
 window.checkMaintenance = checkMaintenance;
 window.toggleSidebarSection = toggleSidebarSection;

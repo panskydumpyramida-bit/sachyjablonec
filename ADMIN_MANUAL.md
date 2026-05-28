@@ -216,6 +216,15 @@ Pro zrychlení práce v panelu a editoru článků můžete využít tyto zkratk
 - `Blicák` - partie z bleskových turnajů
 - `Výuka` - komentované partie pro studium
 
+### Skin přehrávače partií
+
+V adminu v sekci **Nastavení** je karta **Skin přehrávače partií**:
+
+- **Nový skin** - výchozí kompaktní vzhled podle prototypu, lepší pro články a mobil.
+- **Klasický skin** - návrat k původnímu vzhledu, pokud nový skin někde nesedí.
+
+Přepnutí je globální a projeví se ve veřejných přehrávačích partií v článcích i na stránkách webu.
+
 ### Formát PGN
 
 Správný PGN formát:

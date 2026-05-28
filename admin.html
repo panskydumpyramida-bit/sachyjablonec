@@ -1367,6 +1367,21 @@
             </div>
         </div>
 
+        <!-- Game Viewer Skin Settings -->
+        <div class="card">
+            <h3 style="margin-top: 0; color: var(--primary-color);">
+                <i class="fa-solid fa-chess-board"></i> Skin přehrávače partií
+            </h3>
+            <p style="color: #94a3b8; font-size: 0.85rem; margin-bottom: 1rem;">Nový skin vychází z prototypu přehrávače. Klasický skin ponechává původní vzhled jako rychlý návrat zpět.</p>
+            <div style="display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap;">
+                <select id="gameViewerSkinSelect" onchange="updateGameViewerSkin(this.value)" style="width: auto; min-width: 220px;">
+                    <option value="modern">Nový skin</option>
+                    <option value="classic">Klasický skin</option>
+                </select>
+                <span style="font-size: 0.8rem; color: #94a3b8;">Platí pro přehrávače partií v článcích a na stránkách webu.</span>
+            </div>
+        </div>
+
         <!-- Homepage Hero Animation Settings -->
         <div class="card">
             <h3 style="margin-top: 0; color: var(--primary-color);">
@@ -1598,6 +1613,9 @@
                     <div class="changelog-content">
                         <h4>♟️ Game Viewer 2 a výsledky v článcích</h4>
                         <ul>
+                            <li><strong>Nový skin přehrávače:</strong> Game Viewer 2 dostal kompaktnější skin podle prototypu ze „Sachy animace". Výchozí je nový vzhled, starý zůstává dostupný.</li>
+                            <li><strong>Přepínač skinu:</strong> V Nastavení je volba Skin přehrávače partií → Nový skin / Klasický skin, takže se dá rychle vrátit původní vzhled bez úprav článků.</li>
+                            <li><strong>Figurky:</strong> Produkční viewer používá čitelné lokální PNG figurky z Wikipedia setu, ne prototypové glyphy.</li>
                             <li><strong>Subvarianty v partiích:</strong> Prohlížeč partií v článcích nově rozlišuje hlavní linii, varianty a vnořené subvarianty. Modal výběru tahu už nenabízí tahy o úroveň níže.</li>
                             <li><strong>Volba uvnitř varianty:</strong> Pokud čtenář vstoupí do varianty, další výběr tahu zobrazí pouze subvarianty navázané na aktuální větev.</li>
                             <li><strong>Umístění modalu:</strong> Výběr tahu je ukotvený přímo pod ovládáním partie, takže v článku nepřekrývá diskuzi a nepůsobí odtrženě od šachovnice.</li>

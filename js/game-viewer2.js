@@ -552,6 +552,7 @@ class GameViewer2 {
         this.currentIndex = -1;
         this.game = new Chess();
         this.board = null;
+        this.viewerSkin = 'modern';
         this.currentPly = 0; // 0 = start
         this.mainLinePlies = []; // Array of FENs or Move Objects for main line
         this.parsedMoves = []; // Structure for rendering
@@ -573,6 +574,49 @@ class GameViewer2 {
         this.modalCooldown = false;
 
         this.bindEvents();
+        this.loadViewerSkinSetting();
+    }
+
+    normalizeViewerSkin(skin) {
+        return ['classic', 'legacy', 'old'].includes(String(skin || '').toLowerCase()) ? 'classic' : 'modern';
+    }
+
+    setViewerSkin(skin) {
+        this.viewerSkin = this.normalizeViewerSkin(skin);
+
+        const root = document.getElementById('gv2-main-container');
+        if (root) {
+            root.classList.toggle('gv2-skin-modern', this.viewerSkin === 'modern');
+            root.classList.toggle('gv2-skin-classic', this.viewerSkin === 'classic');
+        }
+
+        const splitView = document.querySelector('.gv-split-view');
+        if (splitView) {
+            splitView.classList.toggle('gv2-skin-modern', this.viewerSkin === 'modern');
+            splitView.classList.toggle('gv2-skin-classic', this.viewerSkin === 'classic');
+        }
+
+        document.documentElement.dataset.gameViewerSkin = this.viewerSkin;
+
+        requestAnimationFrame(() => {
+            if (this.board && typeof this.board.resize === 'function') {
+                this.board.resize();
+                this.syncEvalBarHeight();
+            }
+        });
+    }
+
+    async loadViewerSkinSetting() {
+        this.setViewerSkin(this.viewerSkin);
+
+        try {
+            const response = await fetch('/api/settings/public/gameViewerSkin');
+            if (!response.ok) return;
+            const data = await response.json();
+            this.setViewerSkin(data.value || 'modern');
+        } catch (e) {
+            this.setViewerSkin('modern');
+        }
     }
 
     bindEvents() {
@@ -750,6 +794,7 @@ class GameViewer2 {
                 viewerSection.appendChild(container);
             }
         }
+        this.setViewerSkin(this.viewerSkin);
 
         // Initialize Chessboard
         if (!this.board) {
@@ -762,7 +807,7 @@ class GameViewer2 {
                     this.board = Chessboard('gv2-board', {
                         position: 'start',
                         draggable: false,
-                        pieceTheme: 'https://chessboardjs.com/img/chesspieces/wikipedia/{piece}.png',
+                        pieceTheme: 'img/chesspieces/wikipedia/{piece}.png',
                         moveSpeed: 200,
                         appearSpeed: 150,
                         snapSpeed: 50
@@ -2884,10 +2929,13 @@ GameViewer2.create = function (containerSelector, games, options = {}) {
     const title = options.title || 'Partie';
     const maxHeight = options.maxHeight || 600;
     const listId = options.listId || 'gv2-games-list';
+    if (options.skin) {
+        gameViewer2.setViewerSkin(options.skin);
+    }
 
     // Create the complete split-view structure
     targetContainer.innerHTML = `
-        <div class="gv-split-view" style="--gv-max-height: ${maxHeight}px;">
+        <div class="gv-split-view ${gameViewer2.viewerSkin === 'modern' ? 'gv2-skin-modern' : 'gv2-skin-classic'}" style="--gv-max-height: ${maxHeight}px;">
             <!-- Games List Panel (Left) -->
             <div class="gv-games-panel">
                 <div style="padding: 1rem 1.25rem; background: rgba(0,0,0,0.4); border-bottom: 1px solid rgba(255,255,255,0.1);">
