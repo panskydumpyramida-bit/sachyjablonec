@@ -754,6 +754,17 @@ function escapeHtml(str) {
         .replace(/"/g, '&quot;');
 }
 
+function escapeAttr(str) {
+    return escapeHtml(str).replace(/'/g, '&#39;');
+}
+
+function buildChessResultsLinkHtml(url) {
+    if (!/^https?:\/\//i.test(url)) return '';
+    return `<div class="results-source-link" style="text-align:center; margin:1.25rem 0 1.75rem;">
+        <a href="${escapeAttr(url)}" class="cta-button chess-results-link" target="_blank" rel="noopener noreferrer" style="display:inline-block; background-color:var(--primary-color, #d4af37); color:var(--secondary-color, #1a1a1a); padding:12px 30px; text-decoration:none; border-radius:50px; font-size:1.05em; font-weight:700; box-shadow:0 4px 12px rgba(212, 175, 55, 0.3); border:none;">🔗 Kompletní výsledky</a>
+    </div>`;
+}
+
 function containsKeyword(text, keyword) {
     if (!keyword) return false;
     const norm = s => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
@@ -849,6 +860,10 @@ function showResultsTableModal() {
                     <button type="button" data-topn="0"  class="rtTopNBtn" style="padding:6px 10px; background:transparent; border:none; color:#cbd5e1; font-size:0.82em; border-radius:4px; cursor:pointer;">Všichni</button>
                 </div>
             </div>
+            <label style="display:inline-flex; align-items:center; gap:8px; color:#cbd5e1; font-size:0.85em; cursor:pointer; margin-bottom:12px;">
+                <input type="checkbox" id="rtAddSourceLink" style="accent-color:#d4af37;">
+                Přidat pod tabulku tlačítko „🔗 Kompletní výsledky“
+            </label>
             <div id="rtStatus" style="font-size:0.85em; color:#94a3b8; margin-bottom:8px;">Zadej URL a klikni „Načíst tabulku".</div>
             <div id="rtColumnPicker" style="display:none; margin-bottom:12px; padding:10px 12px; background:rgba(0,0,0,0.25); border-radius:6px; border:1px solid rgba(255,255,255,0.05);">
                 <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:8px;">
@@ -874,6 +889,14 @@ function showResultsTableModal() {
     let lastData = null; // cache fetched data for re-render on topN change
     let currentTopN = 10; // default: top 10 + ours
     let currentColMask = null; // bool[] per header; null = all visible
+    let currentSourceUrl = '';
+
+    const composeResultsHtml = () => {
+        if (!lastTableHtml) return '';
+        const shouldAddSourceLink = $('#rtAddSourceLink').checked;
+        const linkHtml = shouldAddSourceLink ? buildChessResultsLinkHtml(currentSourceUrl) : '';
+        return lastTableHtml + linkHtml;
+    };
 
     // Toggle active topN button styling
     const setTopN = (n) => {
@@ -902,7 +925,7 @@ function showResultsTableModal() {
             topN: currentTopN,
             colMask: currentColMask,
         });
-        $('#rtPreview').innerHTML = lastTableHtml;
+        $('#rtPreview').innerHTML = composeResultsHtml();
         const hiCount = lastData.rows.filter(r => r.some(c => containsKeyword(c, keyword))).length;
         const totalShown = currentTopN === 0 ? lastData.rows.length : `top ${currentTopN} + ${hiCount} našich`;
         const shownCols = currentColMask ? currentColMask.filter(Boolean).length : lastData.headers.length;
@@ -999,6 +1022,7 @@ function showResultsTableModal() {
                 return;
             }
             lastData = data;
+            currentSourceUrl = url;
             buildColumnPicker();
             applyPreset('standard'); // default preset — renders and highlights button
         } catch (e) {
@@ -1013,15 +1037,20 @@ function showResultsTableModal() {
         if (lastData) renderTable();
     };
 
+    $('#rtAddSourceLink').onchange = () => {
+        if (lastData) renderTable();
+    };
+
     $('#rtInsert').onclick = () => {
-        if (!lastTableHtml) return;
+        const htmlToInsert = composeResultsHtml();
+        if (!htmlToInsert) return;
         if (savedRange) { selection.removeAllRanges(); selection.addRange(savedRange); }
 
         const editor = document.getElementById('articleContent');
         editor.focus();
         const range = (savedRange || selection.getRangeAt(0));
         const wrapper = document.createElement('div');
-        wrapper.innerHTML = lastTableHtml + '<p><br></p>';
+        wrapper.innerHTML = htmlToInsert + '<p><br></p>';
         const fragment = document.createDocumentFragment();
         while (wrapper.firstChild) fragment.appendChild(wrapper.firstChild);
         range.deleteContents();
