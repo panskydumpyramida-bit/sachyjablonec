@@ -715,6 +715,209 @@ async function insertFragment() {
 }
 window.insertFragment = insertFragment;
 
+function encodeInlineGamePgn(pgn) {
+    const bytes = encodeURIComponent(pgn).replace(/%([0-9A-F]{2})/g, (_, hex) => {
+        return String.fromCharCode(parseInt(hex, 16));
+    });
+    return btoa(bytes);
+}
+
+function decodeInlineGamePgn(encoded) {
+    if (!encoded) return '';
+    try {
+        const binary = atob(encoded);
+        const escaped = Array.prototype.map.call(binary, char => {
+            return '%' + char.charCodeAt(0).toString(16).padStart(2, '0');
+        }).join('');
+        return decodeURIComponent(escaped);
+    } catch (e) {
+        try {
+            return atob(encoded);
+        } catch (e2) {
+            return '';
+        }
+    }
+}
+
+function escapeInlineAttr(value) {
+    return String(value || '')
+        .replace(/&/g, '&amp;')
+        .replace(/"/g, '&quot;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+}
+
+function parseInlinePgnHeaders(pgn) {
+    const headers = {};
+    const regex = /\[([A-Za-z0-9_]+)\s+"([^"]*)"\]/g;
+    let match;
+    while ((match = regex.exec(pgn || '')) !== null) {
+        headers[match[1]] = match[2];
+    }
+    return headers;
+}
+
+function getInlineGameTitle(pgn, fallbackTitle = '') {
+    if (fallbackTitle.trim()) return fallbackTitle.trim();
+    const headers = parseInlinePgnHeaders(pgn);
+    const white = headers.White || 'Bílý';
+    const black = headers.Black || 'Černý';
+    return `${white} - ${black}`;
+}
+
+function countInlineGameMoves(pgn) {
+    try {
+        const chess = new Chess();
+        let cleaned = (pgn || '').replace(/\{[^}]*\}/g, ' ');
+        let previousLength;
+        do {
+            previousLength = cleaned.length;
+            cleaned = cleaned.replace(/\([^()]*\)/g, ' ');
+        } while (cleaned.length < previousLength);
+        if (chess.load_pgn(cleaned)) return chess.history().length;
+    } catch (e) {
+        // Non-fatal: this is only an editor badge.
+    }
+    return null;
+}
+
+function buildInlineGamePlaceholder({ pgn, title, orientation }) {
+    const encoded = encodeInlineGamePgn(pgn);
+    const displayTitle = getInlineGameTitle(pgn, title);
+    const moveCount = countInlineGameMoves(pgn);
+    const moveLabel = moveCount ? `${moveCount} půltahů` : 'PGN partie';
+    const orientationLabel = orientation === 'black' ? 'Černé dole' : 'Bílé dole';
+
+    return `<div class="inline-game-viewer" data-pgn-b64="${encoded}" data-title="${escapeInlineAttr(displayTitle)}" data-orientation="${orientation === 'black' ? 'black' : 'white'}" contenteditable="false" style="background:linear-gradient(180deg,#202029,#17171f);border:1px solid rgba(212,175,55,0.22);border-radius:12px;overflow:hidden;margin:1rem 0;max-width:760px;width:100%;box-shadow:0 12px 32px rgba(0,0,0,0.28);">
+        <div style="display:flex;align-items:center;gap:0.65rem;padding:0.65rem 0.8rem;border-bottom:1px solid rgba(255,255,255,0.08);background:rgba(0,0,0,0.18);">
+            <i class="fa-solid fa-chess-knight" style="color:#facc15;"></i>
+            <span class="inline-game-title" style="font-family:var(--font-heading, Georgia, serif);font-weight:700;color:#f1d36b;flex:1;min-width:0;">${escapeHtml(displayTitle)}</span>
+            <span style="font-size:0.72rem;color:#a0a0ac;">${moveLabel}</span>
+        </div>
+        <div style="display:flex;gap:0;min-height:180px;">
+            <div style="flex:0 0 240px;padding:0.65rem;border-right:1px solid rgba(255,255,255,0.06);display:flex;align-items:center;justify-content:center;background:radial-gradient(circle,rgba(255,255,255,0.04),rgba(0,0,0,0.18));">
+                <div style="width:168px;aspect-ratio:1;background:repeating-conic-gradient(#b58863 0% 25%,#f0d9b5 0% 50%) 50%/25% 25%;border-radius:6px;box-shadow:0 8px 20px rgba(0,0,0,0.35);"></div>
+            </div>
+            <div style="flex:1;padding:0.9rem;display:flex;flex-direction:column;justify-content:center;gap:0.45rem;color:#d7d7df;">
+                <strong style="color:#f1d36b;font-size:0.95rem;">Mini přehrávač partie</strong>
+                <span style="color:#a0a0ac;font-size:0.82rem;">Interaktivní šachovnice, tahy a komentáře se vykreslí přímo v článku.</span>
+                <span class="inline-game-orientation" style="color:#777783;font-size:0.76rem;">${orientationLabel} · kliknutím upravíš blok</span>
+            </div>
+        </div>
+    </div>`;
+}
+
+function insertInlineGameBlock({ pgn, title, orientation }, savedRange = null) {
+    const editor = document.getElementById('articleContent') || document.querySelector('[contenteditable]');
+    if (!editor) return;
+
+    if (savedRange) {
+        const sel = window.getSelection();
+        sel.removeAllRanges();
+        sel.addRange(savedRange);
+    }
+
+    document.execCommand('insertHTML', false, buildInlineGamePlaceholder({ pgn, title, orientation }));
+    const blocks = editor.querySelectorAll('.inline-game-viewer');
+    const block = blocks[blocks.length - 1];
+    if (block) {
+        if (!block.previousElementSibling || block.previousElementSibling.matches('.diagram-book, .game-fragment, .inline-game-viewer')) {
+            const p = document.createElement('p');
+            p.innerHTML = '<br>';
+            block.parentNode.insertBefore(p, block);
+        }
+        if (!block.nextElementSibling || block.nextElementSibling.matches('.diagram-book, .game-fragment, .inline-game-viewer')) {
+            const p = document.createElement('p');
+            p.innerHTML = '<br>';
+            block.parentNode.insertBefore(p, block.nextSibling);
+        }
+    }
+
+    updatePreview();
+}
+
+function showInlineGameModal(existingBlock = null) {
+    const selection = window.getSelection();
+    let savedRange = null;
+    if (!existingBlock && selection.rangeCount > 0) {
+        savedRange = selection.getRangeAt(0).cloneRange();
+    }
+
+    const oldModal = document.getElementById('inlineGameModal');
+    if (oldModal) oldModal.remove();
+
+    const existingPgn = existingBlock ? decodeInlineGamePgn(existingBlock.dataset.pgnB64) : '';
+    const existingTitle = existingBlock?.dataset.title || '';
+    const existingOrientation = existingBlock?.dataset.orientation === 'black' ? 'black' : 'white';
+
+    const overlay = document.createElement('div');
+    overlay.id = 'inlineGameModal';
+    overlay.style.cssText = 'position:fixed;inset:0;z-index:11000;background:rgba(0,0,0,0.78);display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px);';
+    overlay.innerHTML = `
+        <div style="background:#1a1a2e;border:1px solid rgba(212,175,55,0.24);border-radius:12px;box-shadow:0 20px 60px rgba(0,0,0,0.5);max-width:680px;width:92%;max-height:86vh;overflow:auto;color:#fff;">
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:1rem 1.15rem;border-bottom:1px solid rgba(255,255,255,0.08);">
+                <h3 style="margin:0;color:#f1d36b;font-size:1rem;"><i class="fa-solid fa-chess-knight"></i> ${existingBlock ? 'Upravit mini partii' : 'Vložit mini partii do textu'}</h3>
+                <button type="button" id="inlineGameClose" style="background:none;border:none;color:#aaa;font-size:1.25rem;cursor:pointer;">&times;</button>
+            </div>
+            <div style="padding:1.15rem;display:flex;flex-direction:column;gap:0.85rem;">
+                <label style="display:flex;flex-direction:column;gap:0.35rem;font-size:0.82rem;color:#cbd5e1;">
+                    Název v článku
+                    <input id="inlineGameTitle" type="text" value="${escapeInlineAttr(existingTitle)}" placeholder="Automaticky z PGN, např. Duda - Sýkora" style="width:100%;box-sizing:border-box;padding:0.65rem;background:rgba(0,0,0,0.35);border:1px solid rgba(255,255,255,0.12);border-radius:6px;color:#fff;">
+                </label>
+                <label style="display:flex;flex-direction:column;gap:0.35rem;font-size:0.82rem;color:#cbd5e1;">
+                    PGN partie
+                    <textarea id="inlineGamePgn" rows="13" placeholder="[White &quot;Bílý&quot;]&#10;[Black &quot;Černý&quot;]&#10;[Result &quot;1-0&quot;]&#10;&#10;1. e4 e5 2. Nf3..." style="width:100%;box-sizing:border-box;font-family:monospace;font-size:0.84rem;line-height:1.45;padding:0.75rem;background:rgba(0,0,0,0.35);border:1px solid rgba(255,255,255,0.12);border-radius:6px;color:#fff;resize:vertical;">${escapeHtml(existingPgn)}</textarea>
+                </label>
+                <label style="display:flex;flex-direction:column;gap:0.35rem;font-size:0.82rem;color:#cbd5e1;">
+                    Orientace šachovnice
+                    <select id="inlineGameOrientation" style="width:fit-content;min-width:170px;padding:0.55rem;background:rgba(0,0,0,0.35);border:1px solid rgba(255,255,255,0.12);border-radius:6px;color:#fff;">
+                        <option value="white" ${existingOrientation === 'white' ? 'selected' : ''}>Bílé dole</option>
+                        <option value="black" ${existingOrientation === 'black' ? 'selected' : ''}>Černé dole</option>
+                    </select>
+                </label>
+                <div style="display:flex;justify-content:flex-end;gap:0.55rem;margin-top:0.25rem;">
+                    <button type="button" id="inlineGameCancel" class="btn-secondary">Zrušit</button>
+                    <button type="button" id="inlineGameSave" class="btn-primary"><i class="fa-solid fa-check"></i> ${existingBlock ? 'Uložit změny' : 'Vložit do článku'}</button>
+                </div>
+            </div>
+        </div>
+    `;
+
+    document.body.appendChild(overlay);
+
+    const close = () => overlay.remove();
+    overlay.querySelector('#inlineGameClose').onclick = close;
+    overlay.querySelector('#inlineGameCancel').onclick = close;
+    overlay.addEventListener('click', (e) => { if (e.target === overlay) close(); });
+
+    overlay.querySelector('#inlineGameSave').onclick = () => {
+        const pgn = overlay.querySelector('#inlineGamePgn').value.trim();
+        const title = overlay.querySelector('#inlineGameTitle').value.trim();
+        const orientation = overlay.querySelector('#inlineGameOrientation').value;
+        if (!pgn) {
+            showToast('Vlož PGN partie', 'warning');
+            return;
+        }
+
+        if (existingBlock) {
+            const replacement = buildInlineGamePlaceholder({ pgn, title, orientation });
+            const temp = document.createElement('div');
+            temp.innerHTML = replacement.trim();
+            existingBlock.replaceWith(temp.firstElementChild);
+            updatePreview();
+        } else {
+            insertInlineGameBlock({ pgn, title, orientation }, savedRange);
+        }
+
+        close();
+        showToast(existingBlock ? 'Mini partie upravena' : 'Mini partie vložena do článku', 'success');
+    };
+
+    setTimeout(() => overlay.querySelector('#inlineGamePgn')?.focus(), 50);
+}
+
+window.showInlineGameModal = showInlineGameModal;
+
 window.openDiagramSelector = async function (savedRange, initialSelection = []) {
     // Fetch available diagrams from API
     let diagrams = [];
@@ -1702,7 +1905,7 @@ function autoFormatEntireContent() {
     // Elements to skip entirely — their text should never be auto-formatted
     const SKIP_SELECTORS = [
         'table', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'a',
-        '.puzzle-section', '.diagram-book', '[data-diagram-id]',
+        '.puzzle-section', '.diagram-book', '.game-fragment', '.inline-game-viewer', '[data-diagram-id]',
         '.highlight-name', '.highlight-score',
         '.collapsible-header',
         'code', 'pre'
@@ -2611,6 +2814,10 @@ function openAtomicBlockEditModal(block) {
 
     const isDiagram = block.classList.contains('diagram-book');
     const isFragment = block.classList.contains('game-fragment');
+    const isInlineGame = block.classList.contains('inline-game-viewer');
+    const modalIcon = isDiagram ? 'fa-chess-board' : (isInlineGame ? 'fa-chess-knight' : 'fa-scissors');
+    const modalTitle = isDiagram ? 'Upravit diagram' : (isInlineGame ? 'Upravit mini partii' : 'Upravit fragment');
+    const modalAccent = isInlineGame ? '#facc15' : '#60a5fa';
 
     const modal = document.createElement('div');
     modal.id = 'atomicBlockEditModal';
@@ -2649,6 +2856,28 @@ function openAtomicBlockEditModal(block) {
                     placeholder="Název fragmentu">
             </div>
         `;
+    } else if (isInlineGame) {
+        const inlineTitle = block.dataset.title || block.querySelector('.inline-game-title')?.textContent.trim() || '';
+        const inlineOrientation = block.dataset.orientation === 'black' ? 'black' : 'white';
+
+        fieldsHtml = `
+            <div style="margin-bottom: 0.75rem;">
+                <label style="font-size: 0.75rem; color: rgba(255,255,255,0.5); display: block; margin-bottom: 4px;">Název v článku</label>
+                <input id="abeInlineTitle" type="text" value="${escapeInlineAttr(inlineTitle)}"
+                    style="width: 100%; padding: 0.5rem 0.65rem; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15);
+                    border-radius: 6px; color: #fff; font-size: 0.85rem; outline: none;"
+                    placeholder="Např. Duda - Sýkora">
+            </div>
+            <div style="margin-bottom: 0.75rem;">
+                <label style="font-size: 0.75rem; color: rgba(255,255,255,0.5); display: block; margin-bottom: 4px;">Orientace šachovnice</label>
+                <select id="abeInlineOrientation"
+                    style="width: 100%; padding: 0.5rem 0.65rem; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15);
+                    border-radius: 6px; color: #fff; font-size: 0.85rem; outline: none;">
+                    <option value="white" ${inlineOrientation === 'white' ? 'selected' : ''}>Bílé dole</option>
+                    <option value="black" ${inlineOrientation === 'black' ? 'selected' : ''}>Černé dole</option>
+                </select>
+            </div>
+        `;
     }
 
     modal.innerHTML = `
@@ -2662,8 +2891,8 @@ function openAtomicBlockEditModal(block) {
         ">
             <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem;">
                 <span style="font-weight: 600; color: #fff; font-size: 0.95rem;">
-                    <i class="fa-solid ${isDiagram ? 'fa-chess-board' : 'fa-scissors'}" style="color: #60a5fa; margin-right: 6px;"></i>
-                    ${isDiagram ? 'Upravit diagram' : 'Upravit fragment'}
+                    <i class="fa-solid ${modalIcon}" style="color: ${modalAccent}; margin-right: 6px;"></i>
+                    ${modalTitle}
                 </span>
                 <button id="abeClose" style="background: none; border: none; color: rgba(255,255,255,0.4); cursor: pointer; font-size: 1.1rem;">
                     <i class="fa-solid fa-xmark"></i>
@@ -2688,6 +2917,14 @@ function openAtomicBlockEditModal(block) {
                     font-size: 0.78rem; transition: all 0.2s; display: flex; align-items: center; gap: 5px;
                 "><i class="fa-solid fa-images"></i> Změnit diagramy</button>
             </div>
+            ` : ''}
+            ${isInlineGame ? `
+            <button id="abeEditInlinePgn" style="
+                width: 100%; background: rgba(250,204,21,0.12); border: 1px solid rgba(250,204,21,0.28);
+                color: #facc15; padding: 0.5rem 0.65rem; border-radius: 6px; cursor: pointer;
+                font-size: 0.8rem; font-weight: 600; transition: all 0.2s; display: flex;
+                align-items: center; justify-content: center; gap: 6px; margin-bottom: 0.75rem;
+            "><i class="fa-solid fa-pen-to-square"></i> Upravit PGN partie</button>
             ` : ''}
             <div style="display: flex; gap: 8px; justify-content: flex-end;">
                 <button id="abeDelete" style="
@@ -2719,6 +2956,17 @@ function openAtomicBlockEditModal(block) {
         if (titleInput && titleEl) {
             titleInput.addEventListener('input', () => {
                 titleEl.textContent = titleInput.value || 'Fragment';
+            });
+        }
+    }
+
+    if (isInlineGame) {
+        const titleInput = modal.querySelector('#abeInlineTitle');
+        const titleEl = block.querySelector('.inline-game-title');
+        if (titleInput && titleEl) {
+            titleInput.addEventListener('input', () => {
+                const pgn = decodeInlineGamePgn(block.dataset.pgnB64);
+                titleEl.textContent = getInlineGameTitle(pgn, titleInput.value);
             });
         }
     }
@@ -2797,6 +3045,16 @@ function openAtomicBlockEditModal(block) {
         }
     }
 
+    if (isInlineGame) {
+        const editInlinePgnBtn = modal.querySelector('#abeEditInlinePgn');
+        if (editInlinePgnBtn) {
+            editInlinePgnBtn.onclick = () => {
+                closeModal();
+                showInlineGameModal(block);
+            };
+        }
+    }
+
     // Save changes
     modal.querySelector('#abeSave').onclick = () => {
         if (isDiagram) {
@@ -2805,6 +3063,17 @@ function openAtomicBlockEditModal(block) {
             if (descEl) descEl.textContent = newDesc;
         } else if (isFragment) {
             // Title already updated via live preview
+        } else if (isInlineGame) {
+            const pgn = decodeInlineGamePgn(block.dataset.pgnB64);
+            const title = modal.querySelector('#abeInlineTitle').value.trim();
+            const orientation = modal.querySelector('#abeInlineOrientation').value === 'black' ? 'black' : 'white';
+            const displayTitle = getInlineGameTitle(pgn, title);
+            const titleEl = block.querySelector('.inline-game-title');
+            const orientationEl = block.querySelector('.inline-game-orientation');
+            block.dataset.title = displayTitle;
+            block.dataset.orientation = orientation;
+            if (titleEl) titleEl.textContent = displayTitle;
+            if (orientationEl) orientationEl.textContent = `${orientation === 'black' ? 'Černé' : 'Bílé'} dole · kliknutím upravíš blok`;
         }
 
         closeModal();
@@ -2858,7 +3127,7 @@ document.addEventListener('DOMContentLoaded', () => {
             let clickedAtomicBlock = e.target;
             while (clickedAtomicBlock && clickedAtomicBlock !== editor) {
                 if (clickedAtomicBlock.nodeType === 1 && clickedAtomicBlock.matches && 
-                    (clickedAtomicBlock.matches('.diagram-book') || clickedAtomicBlock.matches('.game-fragment'))) {
+                    (clickedAtomicBlock.matches('.diagram-book') || clickedAtomicBlock.matches('.game-fragment') || clickedAtomicBlock.matches('.inline-game-viewer'))) {
                     // DON'T preventDefault – allow drag to start!
                     // Store the block and position for mouseup comparison
                     editor._atomicMousedownBlock = clickedAtomicBlock;
@@ -2886,7 +3155,7 @@ document.addEventListener('DOMContentLoaded', () => {
             // Move cursor after block
             setTimeout(() => {
                 let afterEl = block.nextElementSibling;
-                if (!afterEl || (afterEl.matches && (afterEl.matches('.diagram-book') || afterEl.matches('.game-fragment')))) {
+                if (!afterEl || (afterEl.matches && (afterEl.matches('.diagram-book') || afterEl.matches('.game-fragment') || afterEl.matches('.inline-game-viewer')))) {
                     afterEl = document.createElement('p');
                     afterEl.innerHTML = '<br>';
                     block.parentNode.insertBefore(afterEl, block.nextSibling);
@@ -2932,9 +3201,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // ================================
         // ATOMIC BLOCK PROTECTION
-        // Prevent partial deletion of diagram-book and game-fragment blocks
+        // Prevent partial deletion of diagram-book, game-fragment and inline-game blocks
         // ================================
-        const ATOMIC_SELECTORS = ['.diagram-book', '.game-fragment'];
+        const ATOMIC_SELECTORS = ['.diagram-book', '.game-fragment', '.inline-game-viewer'];
 
         editor.addEventListener('keydown', (e) => {
             const sel = window.getSelection();
@@ -3067,7 +3336,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Make all atomic blocks draggable
         function makeAtomicBlocksDraggable() {
-            const blocks = editor.querySelectorAll('.diagram-book, .game-fragment');
+            const blocks = editor.querySelectorAll('.diagram-book, .game-fragment, .inline-game-viewer');
             blocks.forEach(block => {
                 if (block.dataset.draggableInit) return;
                 block.dataset.draggableInit = '1';
@@ -3211,13 +3480,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 // Ensure paragraphs exist around the moved block
                 if (!draggedAtomicBlock.previousElementSibling || 
-                    draggedAtomicBlock.previousElementSibling.matches('.diagram-book, .game-fragment')) {
+                    draggedAtomicBlock.previousElementSibling.matches('.diagram-book, .game-fragment, .inline-game-viewer')) {
                     const p = document.createElement('p');
                     p.innerHTML = '<br>';
                     draggedAtomicBlock.parentNode.insertBefore(p, draggedAtomicBlock);
                 }
                 if (!draggedAtomicBlock.nextElementSibling || 
-                    draggedAtomicBlock.nextElementSibling.matches('.diagram-book, .game-fragment')) {
+                    draggedAtomicBlock.nextElementSibling.matches('.diagram-book, .game-fragment, .inline-game-viewer')) {
                     const p = document.createElement('p');
                     p.innerHTML = '<br>';
                     draggedAtomicBlock.parentNode.insertBefore(p, draggedAtomicBlock.nextSibling);

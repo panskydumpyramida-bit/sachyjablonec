@@ -89,6 +89,7 @@ Dashboard je váš hlavní přehled - vidíte zde všechny články a rychlé ak
 | 💡 | Info box | Zvýrazněný box s pozadím |
 | 🧩 | Diagram | Vloží šachový diagram |
 | ✂️ | Fragment | Vloží fragment partie |
+| ♞ | Mini partie | Vloží jednu PGN partii přímo mezi odstavce |
 | 🖼️ | Obrázek | Vloží fotku do textu |
 | 📊 | Tabulka | Vloží tabulku |
 | ▤ | Sloupce | Vloží layout 50/50, 33/67, 67/33 nebo 33/33/33 |
@@ -283,6 +284,14 @@ Fragment je interaktivní výřez z partie (např. od 15. do 25. tahu), který o
 4. Do editoru se vloží chráněný zástupný blok. Ten neupravujte ručně – použijte edit modal (klik na blok).
 5. Po uložení a náhledu novinky se vygeneruje překrásný interaktivní widget!
 
+### Mini partie přímo v textu
+
+Mini partie slouží pro jednu PGN partii vloženou přímo mezi odstavce článku. Hodí se tam, kde nechcete samostatný velký seznam partií pod článkem.
+
+1. V editoru článku klikněte na **Mini partie**.
+2. Vložte PGN, případně vlastní název a orientaci šachovnice.
+3. Po uložení článku se v textu zobrazí kompaktní přehrávač se šachovnicí, tahy a komentáři.
+
 ### Skin přehrávače partií
 
 Veřejný přehrávač partií má dva skiny:
@@ -305,7 +314,7 @@ Přepnutí je globální:
 
 ### Co jsou atomické bloky?
 
-Diagramy a fragmenty se v editoru chovají jako **chráněné objekty** (atomické bloky). To znamená:
+Diagramy, fragmenty a mini partie se v editoru chovají jako **chráněné objekty** (atomické bloky). To znamená:
 
 - ✅ Nelze do nich omylem psát text
 - ✅ Backspace/Delete maže celý blok najednou (ne po částech)
@@ -335,11 +344,23 @@ Po kliknutí na fragment v editoru se otevře modal s:
 | 🗑️ **Smazat** | Odstraní celý blok |
 | ✅ **Uložit** | Uloží změny |
 
+### Edit modal – Mini partie
+
+Po kliknutí na mini partii v editoru se otevře modal s:
+
+| Pole / Tlačítko | Co dělá |
+|-----------------|---------|
+| **Název v článku** | Změní titulek kompaktního přehrávače |
+| **Orientace šachovnice** | Přepne bílé/černé dole |
+| ✏️ **Upravit PGN partie** | Otevře celé PGN v editačním okně |
+| 🗑️ **Smazat** | Odstraní celý blok |
+| ✅ **Uložit** | Uloží změny |
+
 ### Drag & Drop
 
 Přetahování funguje takto:
 
-1. **Chyť** diagram nebo fragment myší (podržením)
+1. **Chyť** diagram, fragment nebo mini partii myší (podržením)
 2. **Přetáhni** na nové místo – cílové sloupce se zvýrazní modře
 3. **Pusť** – blok se vloží na nové místo
 
