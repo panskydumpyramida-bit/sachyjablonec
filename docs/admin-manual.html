@@ -500,8 +500,8 @@
             <p>Webové stránky ŠO TJ Bižuterie Jablonec nad Nisou</p>
             <div class="hero-badges">
                 <span class="badge badge-gold">♟️ Šachy Jablonec</span>
-                <span class="badge badge-blue">Verze v30</span>
-                <span class="badge badge-green">Březen 2026</span>
+                <span class="badge badge-blue">Verze v35</span>
+                <span class="badge badge-green">Květen 2026</span>
             </div>
         </div>
 
@@ -551,36 +551,43 @@
                     <div class="toc-desc">Výřezy partií s enginem</div>
                 </div>
             </a>
+            <a href="#games" class="toc-item">
+                <div class="toc-num" style="background: rgba(59,130,246,0.1); color: var(--blue);">6</div>
+                <div>
+                    <div class="toc-text">Partie v článcích</div>
+                    <div class="toc-desc">PGN, varianty a GV2</div>
+                </div>
+            </a>
             <a href="#events" class="toc-item">
-                <div class="toc-num" style="background: rgba(236,72,153,0.1); color: var(--pink);">6</div>
+                <div class="toc-num" style="background: rgba(236,72,153,0.1); color: var(--pink);">7</div>
                 <div>
                     <div class="toc-text">Správa událostí</div>
                     <div class="toc-desc">Turnaje a tréninky</div>
                 </div>
             </a>
             <a href="#gallery" class="toc-item">
-                <div class="toc-num" style="background: rgba(212,175,55,0.1); color: var(--gold);">7</div>
+                <div class="toc-num" style="background: rgba(212,175,55,0.1); color: var(--gold);">8</div>
                 <div>
                     <div class="toc-text">Galerie</div>
                     <div class="toc-desc">Fotografie</div>
                 </div>
             </a>
             <a href="#columns" class="toc-item">
-                <div class="toc-num" style="background: rgba(99,102,241,0.1); color: #818cf8;">8</div>
+                <div class="toc-num" style="background: rgba(99,102,241,0.1); color: #818cf8;">9</div>
                 <div>
                     <div class="toc-text">Sloupcové bloky</div>
                     <div class="toc-desc">Rozložení obsahu do sloupců</div>
                 </div>
             </a>
             <a href="#slash" class="toc-item">
-                <div class="toc-num" style="background: rgba(239,68,68,0.1); color: var(--red);">9</div>
+                <div class="toc-num" style="background: rgba(239,68,68,0.1); color: var(--red);">10</div>
                 <div>
                     <div class="toc-text">Slash šablony</div>
                     <div class="toc-desc">Rychlé bloky přes /</div>
                 </div>
             </a>
             <a href="#blundergrid" class="toc-item">
-                <div class="toc-num" style="background: rgba(234,179,8,0.1); color: #eab308;">10</div>
+                <div class="toc-num" style="background: rgba(234,179,8,0.1); color: #eab308;">11</div>
                 <div>
                     <div class="toc-text">Blunder Grid</div>
                     <div class="toc-desc">Správa tréninku hrubek</div>
@@ -712,6 +719,11 @@
                             <td>📊</td>
                             <td>Tabulka</td>
                             <td>AI převod textu na tabulku</td>
+                        </tr>
+                        <tr>
+                            <td><strong>CH-R</strong></td>
+                            <td>Chess-Results</td>
+                            <td>Načte pořadí nebo týmovou tabulku z Chess-Results a vloží ji do článku</td>
                         </tr>
                     </tbody>
                 </table>
@@ -908,11 +920,44 @@
             </div>
         </div>
 
-        <!-- 6. Správa událostí -->
+        <!-- 6. Partie v článcích -->
+        <div class="section" id="games">
+            <div class="section-header">
+                <i class="fa-solid fa-chess-board" style="background: rgba(59,130,246,0.1); color: var(--blue);"></i>
+                <h2>Partie v článcích</h2>
+            </div>
+            <div class="card">
+                <h3>Vložení celé partie</h3>
+                <ol>
+                    <li>V editoru článku přidejte partii přes tlačítko <strong>Partie</strong> nebo přes Game Recorder.</li>
+                    <li>Vložte kompletní PGN včetně hlaviček, komentářů a případných variant.</li>
+                    <li>Po uložení článku se partie na veřejném webu zobrazí pod textem v <strong>Game Viewer 2</strong>.</li>
+                </ol>
+                <div class="callout callout-info">
+                    <span class="callout-icon">ℹ️</span>
+                    <span>PGN může obsahovat komentáře v <code>{...}</code>, NAG značky jako <code>$1</code> a varianty v závorkách <code>(...)</code>.</span>
+                </div>
+            </div>
+            <div class="card">
+                <h3>Varianty a subvarianty</h3>
+                <ul>
+                    <li>Při kroku vpřed na pozici s odbočkou se zobrazí malé tlačítkové menu: hlavní tah je žlutý, vedle něj jsou dostupné varianty.</li>
+                    <li>V hlavní linii se zobrazují jen varianty aktuální pozice. Vnořené subvarianty se nabídnou až po vstupu do rodičovské varianty.</li>
+                    <li>Šipka doprava nebo klik na žlutý tah pokračuje hlavní linií. Klik na jiný tah vstoupí do varianty.</li>
+                    <li>U složitějších komentovaných partií po uložení otevřete náhled článku a projděte první odbočku i jednu vnořenou variantu.</li>
+                </ul>
+                <div class="callout callout-tip">
+                    <span class="callout-icon">💡</span>
+                    <span>Když se varianta nechová správně, zkontrolujte hlavně závorky v PGN a SAN zápis tahů typu <code>6...Nb6</code>.</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 7. Správa událostí -->
         <div class="section" id="events">
             <div class="section-header">
                 <i class="fa-solid fa-calendar-days" style="background: rgba(236,72,153,0.1); color: var(--pink);"></i>
-                <h2>6. Správa událostí</h2>
+                <h2>7. Správa událostí</h2>
             </div>
 
             <div class="card">
@@ -963,7 +1008,7 @@
             </div>
         </div>
 
-        <!-- 6. Galerie -->
+        <!-- 8. Galerie -->
         <div class="section" id="gallery">
             <div class="section-header">
                 <i class="fa-solid fa-images" style="background: rgba(212,175,55,0.1); color: var(--gold);"></i>
@@ -1115,6 +1160,21 @@
                     <span><strong>TIP:</strong> Tlačítko (CTA) můžete kdykoliv upravit – stačí na něj v editoru <strong>dvakrát kliknout</strong> a zadat nový odkaz URL.</span>
                 </div>
             </div>
+            <div class="card">
+                <h3>Tabulka z Chess-Results</h3>
+                <ol>
+                    <li>V editoru klikněte na tlačítko <strong>CH-R Tabulka</strong>.</li>
+                    <li>Vložte URL turnaje z Chess-Results. Pro klasické pořadí používejte stránku s <code>art=1</code>, pro týmové přehledy podle potřeby např. <code>art=46</code>.</li>
+                    <li>Do pole <strong>Zvýraznit</strong> napište klub nebo hráče, které chcete v tabulce zvýraznit.</li>
+                    <li>Vyberte rozsah zobrazení: vítěz, top 3, top 10 nebo všichni. Zvýraznění hráči zůstávají zahrnutí vždy.</li>
+                    <li>Volitelně zaškrtněte <strong>Přidat pod tabulku tlačítko „🔗 Kompletní výsledky"</strong>.</li>
+                    <li>Klikněte <strong>Vložit do článku</strong>.</li>
+                </ol>
+                <div class="callout callout-info">
+                    <span class="callout-icon">ℹ️</span>
+                    <span>Vložené tlačítko je ve stylu webu: žluté CTA „🔗 Kompletní výsledky" otevře původní Chess-Results v nové záložce.</span>
+                </div>
+            </div>
         </div>
 
         <!-- 11. Blunder Grid -->
@@ -1262,7 +1322,7 @@
 
         <div class="manual-footer">
             📧 Potřebujete pomoc? Kontaktujte technickou podporu.<br>
-            Manuál v3.1 | Aktualizováno: Květen 2026
+            Manuál v3.2 | Aktualizováno: Květen 2026
         </div>
 
     </div>
