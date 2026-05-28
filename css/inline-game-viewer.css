@@ -60,6 +60,10 @@
     background: radial-gradient(circle at 45% 40%, rgba(255, 255, 255, 0.04), rgba(0, 0, 0, 0.16) 58%, rgba(0, 0, 0, 0.26));
 }
 
+.igv-swipe-zone {
+    touch-action: pan-y;
+}
+
 .igv-board-wrap {
     width: min(100%, 360px);
     aspect-ratio: 1;

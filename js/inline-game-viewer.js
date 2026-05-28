@@ -264,6 +264,12 @@
                 button.addEventListener('click', () => handleAction(state, button.dataset.action, button));
             });
 
+            setupSwipeNavigation(container.querySelector('.igv-board-pane'), () => {
+                goTo(state, state.currentPly - 1);
+            }, () => {
+                goTo(state, state.currentPly + 1);
+            });
+
             if ('ResizeObserver' in window) {
                 const observer = new ResizeObserver(() => board.resize());
                 observer.observe(container.querySelector('.igv-board-wrap'));
@@ -281,6 +287,39 @@
         if (action === 'end') goTo(state, state.moves.length - 1);
         if (action === 'flip') state.board.flip();
         if (action === 'play') togglePlay(state, button);
+    }
+
+    function setupSwipeNavigation(target, onPrevious, onNext) {
+        if (!target || target.dataset.swipeReady === 'true') return;
+        target.dataset.swipeReady = 'true';
+        target.classList.add('igv-swipe-zone');
+
+        let startX = 0;
+        let startY = 0;
+        let activePointerId = null;
+
+        const isInteractive = (el) => el.closest('button, a, input, textarea, select, .igv-scrub, .igv-move');
+
+        target.addEventListener('pointerdown', event => {
+            if (event.pointerType === 'mouse' || isInteractive(event.target)) return;
+            activePointerId = event.pointerId;
+            startX = event.clientX;
+            startY = event.clientY;
+        });
+
+        const finishSwipe = event => {
+            if (activePointerId !== event.pointerId) return;
+            const deltaX = event.clientX - startX;
+            const deltaY = event.clientY - startY;
+            activePointerId = null;
+
+            if (Math.abs(deltaX) < 44 || Math.abs(deltaX) < Math.abs(deltaY) * 1.35) return;
+            if (deltaX < 0) onNext();
+            else onPrevious();
+        };
+
+        target.addEventListener('pointerup', finishSwipe);
+        target.addEventListener('pointercancel', () => { activePointerId = null; });
     }
 
     function togglePlay(state, button) {
