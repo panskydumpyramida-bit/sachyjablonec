@@ -347,17 +347,17 @@
                             <div id="${uid}-board" class="igv-board"></div>
                         </div>
                         <div class="igv-controls" aria-label="Ovládání partie">
-                            <button type="button" class="igv-btn" data-action="start" title="Na začátek"><i class="fa-solid fa-backward-fast"></i></button>
-                            <button type="button" class="igv-btn" data-action="prev" title="Zpět"><i class="fa-solid fa-backward-step"></i></button>
-                            <button type="button" class="igv-btn igv-btn-play" data-action="play" title="Přehrát"><i class="fa-solid fa-play"></i></button>
-                            <button type="button" class="igv-btn" data-action="next" title="Vpřed"><i class="fa-solid fa-forward-step"></i></button>
-                            <button type="button" class="igv-btn" data-action="end" title="Na konec"><i class="fa-solid fa-forward-fast"></i></button>
-                            <button type="button" class="igv-btn" data-action="flip" title="Otočit šachovnici"><i class="fa-solid fa-retweet"></i></button>
+                            <button type="button" class="igv-btn" data-action="start" title="Na začátek" aria-label="Přejít na začátek partie"><i class="fa-solid fa-backward-fast"></i></button>
+                            <button type="button" class="igv-btn" data-action="prev" title="Zpět" aria-label="Předchozí tah"><i class="fa-solid fa-backward-step"></i></button>
+                            <button type="button" class="igv-btn igv-btn-play" data-action="play" title="Přehrát" aria-label="Přehrát partii" aria-pressed="false"><i class="fa-solid fa-play"></i></button>
+                            <button type="button" class="igv-btn" data-action="next" title="Vpřed" aria-label="Další tah"><i class="fa-solid fa-forward-step"></i></button>
+                            <button type="button" class="igv-btn" data-action="end" title="Na konec" aria-label="Přejít na konec partie"><i class="fa-solid fa-forward-fast"></i></button>
+                            <button type="button" class="igv-btn" data-action="flip" title="Otočit šachovnici" aria-label="Otočit šachovnici"><i class="fa-solid fa-retweet"></i></button>
                         </div>
                     </div>
                     <div class="igv-side">
                         <div class="igv-status">
-                            <div class="igv-current" id="${uid}-current">Výchozí pozice</div>
+                            <div class="igv-current" id="${uid}-current" aria-live="polite">Výchozí pozice</div>
                             <div class="igv-count"><span id="${uid}-count">0</span>/${parsed.moves.length}</div>
                             <input type="range" class="igv-scrub" id="${uid}-scrub" min="0" max="${parsed.moves.length}" value="0" step="1" aria-label="Přejít na tah">
                             ${buildMoveMarkers(parsed.moves)}
@@ -518,20 +518,30 @@
         if (state.timer) {
             clearInterval(state.timer);
             state.timer = null;
-            button?.querySelector('i')?.classList.replace('fa-pause', 'fa-play');
+            setPlayButtonState(button, false);
             return;
         }
 
-        button?.querySelector('i')?.classList.replace('fa-play', 'fa-pause');
+        setPlayButtonState(button, true);
         state.timer = setInterval(() => {
             if (state.currentPly >= state.moves.length - 1) {
                 clearInterval(state.timer);
                 state.timer = null;
-                button?.querySelector('i')?.classList.replace('fa-pause', 'fa-play');
+                setPlayButtonState(button, false);
                 return;
             }
             goTo(state, state.currentPly + 1);
         }, 900);
+    }
+
+    function setPlayButtonState(button, isPlaying) {
+        if (!button) return;
+        const label = isPlaying ? 'Zastavit přehrávání' : 'Přehrát partii';
+        button.title = isPlaying ? 'Zastavit' : 'Přehrát';
+        button.setAttribute('aria-label', label);
+        button.setAttribute('aria-pressed', String(isPlaying));
+        button.querySelector('i')?.classList.toggle('fa-pause', isPlaying);
+        button.querySelector('i')?.classList.toggle('fa-play', !isPlaying);
     }
 
     function goTo(state, ply) {
@@ -582,6 +592,7 @@
             scrubEl.value = String(currentIndex);
             const pct = state.moves.length ? (currentIndex / state.moves.length) * 100 : 0;
             scrubEl.style.setProperty('--igv-scrub-progress', `${Math.max(0, pct)}%`);
+            scrubEl.setAttribute('aria-valuetext', currentMove ? getMoveLabel(currentMove) : 'Výchozí pozice');
         }
         if (commentEl) {
             const comment = currentMove?.comment || '';
