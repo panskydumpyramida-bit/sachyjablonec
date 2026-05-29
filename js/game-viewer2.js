@@ -757,24 +757,26 @@ class GameViewer2 {
                                 <div id="gv2-board"></div>
                             </div>
                         </div>
-                        <div class="gv2-controls">
-                            <button class="gv2-btn" onclick="gameViewer2.goToStart()" title="Start"><i class="fa-solid fa-backward-fast"></i></button>
-                            <button class="gv2-btn" onclick="gameViewer2.stepBack()" title="Zpět"><i class="fa-solid fa-backward-step"></i></button>
-                            <button class="gv2-btn" onclick="gameViewer2.toggleAutoplay()" title="Přehrát"><i class="fa-solid fa-play" id="gv2-play-icon"></i></button>
-                            <button class="gv2-btn" onclick="gameViewer2.stepForward()" title="Vpřed"><i class="fa-solid fa-forward-step"></i></button>
-                            <button class="gv2-btn" onclick="gameViewer2.goToEnd()" title="Konec"><i class="fa-solid fa-forward-fast"></i></button>
-                            <button class="gv2-btn" onclick="gameViewer2.flipBoard()" title="Otočit"><i class="fa-solid fa-retweet"></i></button>
-                            <button class="gv2-btn gv2-btn-analysis" id="gv2-analysis-btn" onclick="gameViewer2.toggleAnalysis()" title="Analýza Stockfish">
-                                <i class="fa-solid fa-microchip" id="gv2-analysis-icon"></i>
-                            </button>
-                            <!-- AI explain button removed from viewer (kept in game-recorder only) -->
-                        </div>
-                        <div class="gv2-scrubber" id="gv2-scrubber">
-                            <div class="gv2-scrubber-meta">
-                                <span id="gv2-scrubber-current">Výchozí pozice</span>
-                                <strong id="gv2-scrubber-count">0/0</strong>
+                        <div class="gv2-transport" aria-label="Ovládání partie">
+                            <div class="gv2-controls">
+                                <button class="gv2-btn" onclick="gameViewer2.goToStart()" title="Start"><i class="fa-solid fa-backward-fast"></i></button>
+                                <button class="gv2-btn" onclick="gameViewer2.stepBack()" title="Zpět"><i class="fa-solid fa-backward-step"></i></button>
+                                <button class="gv2-btn" onclick="gameViewer2.toggleAutoplay()" title="Přehrát"><i class="fa-solid fa-play" id="gv2-play-icon"></i></button>
+                                <button class="gv2-btn" onclick="gameViewer2.stepForward()" title="Vpřed"><i class="fa-solid fa-forward-step"></i></button>
+                                <button class="gv2-btn" onclick="gameViewer2.goToEnd()" title="Konec"><i class="fa-solid fa-forward-fast"></i></button>
+                                <button class="gv2-btn" onclick="gameViewer2.flipBoard()" title="Otočit"><i class="fa-solid fa-retweet"></i></button>
+                                <button class="gv2-btn gv2-btn-analysis" id="gv2-analysis-btn" onclick="gameViewer2.toggleAnalysis()" title="Analýza Stockfish">
+                                    <i class="fa-solid fa-microchip" id="gv2-analysis-icon"></i>
+                                </button>
+                                <!-- AI explain button removed from viewer (kept in game-recorder only) -->
                             </div>
-                            <input type="range" id="gv2-scrubber-range" class="gv2-scrubber-range" min="0" max="0" value="0" step="1" aria-label="Přejít na tah">
+                            <div class="gv2-scrubber" id="gv2-scrubber">
+                                <div class="gv2-scrubber-meta">
+                                    <span id="gv2-scrubber-current">Výchozí pozice</span>
+                                    <strong id="gv2-scrubber-count">0/0</strong>
+                                </div>
+                                <input type="range" id="gv2-scrubber-range" class="gv2-scrubber-range" min="0" max="0" value="0" step="1" aria-label="Přejít na tah">
+                            </div>
                         </div>
                     </div>
                     <div class="gv2-info-panel">
@@ -2614,7 +2616,7 @@ class GameViewer2 {
     }
 
     getCurrentMoveLabel() {
-        if (this.currentPly <= 0) return 'výchozí pozice';
+        if (this.currentPly <= 0) return 'Výchozí pozice';
         const ply = this.currentPly;
         const move = this.mainLinePlies[ply]?.move;
         const moveNumber = Math.ceil(ply / 2);

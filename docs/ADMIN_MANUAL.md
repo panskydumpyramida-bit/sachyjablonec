@@ -290,7 +290,7 @@ Mini partie slouží pro jednu PGN partii vloženou přímo mezi odstavce člán
 
 1. V editoru článku klikněte na **Mini partie**.
 2. Vložte PGN, případně vlastní název a orientaci šachovnice.
-3. Po uložení článku se v textu zobrazí kompaktní přehrávač se šachovnicí, tahy a komentáři.
+3. Po uložení článku se v textu zobrazí kompaktní přehrávač se šachovnicí, tahy, komentáři a posuvníkem pro rychlý skok na tah.
 
 ### Skin přehrávače partií
 
@@ -298,7 +298,7 @@ Veřejný přehrávač partií má dva skiny:
 
 | Skin | Kdy použít |
 |------|------------|
-| **Nový skin** | Výchozí kompaktní vzhled podle prototypu, lepší pro články a mobil |
+| **Nový skin** | Výchozí kompaktní vzhled podle prototypu, se společnou lištou ovládání a posuvníku |
 | **Klasický skin** | Návrat k původnímu vzhledu, pokud by nový skin v konkrétní situaci působil hůř |
 
 Přepnutí je globální:
