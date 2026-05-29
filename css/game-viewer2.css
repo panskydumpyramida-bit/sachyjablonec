@@ -2072,7 +2072,13 @@ body>.gv2-var-modal {
 
 .game-viewer-2-container.gv2-skin-modern .gv2-global-controls {
     grid-column: 3;
-    gap: 0.55rem;
+    display: inline-flex;
+    gap: 0.12rem;
+    padding: 0.16rem;
+    border: 1px solid rgba(212, 175, 55, 0.24);
+    border-radius: 999px;
+    background: rgba(0, 0, 0, 0.18);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
     margin-left: 0;
     justify-self: end;
     align-self: center;
@@ -2080,22 +2086,39 @@ body>.gv2-var-modal {
 
 .game-viewer-2-container.gv2-skin-modern .gv2-bubble-show {
     grid-column: 1;
+    height: 32px;
+    padding: 0 0.72rem;
+    border-width: 1px;
+    border-radius: 999px;
+    background: rgba(212, 175, 55, 0.1);
+    box-shadow: none;
+    font-size: 0.78rem;
+    white-space: nowrap;
     margin-right: 0;
     align-self: center;
 }
 
+.game-viewer-2-container.gv2-skin-modern .gv2-bubble-show:hover {
+    background: rgba(212, 175, 55, 0.16);
+    color: #f1d36b;
+    transform: none;
+    box-shadow: none;
+}
+
 .game-viewer-2-container.gv2-skin-modern .gv2-nav-btn {
-    width: 38px;
-    height: 38px;
-    border-radius: 50%;
-    border-color: rgba(212, 175, 55, 0.32);
-    background: rgba(212, 175, 55, 0.05);
+    width: 32px;
+    height: 32px;
+    border: 0;
+    border-radius: 999px;
+    background: transparent;
     color: #d4af37;
+    box-shadow: none;
 }
 
 .game-viewer-2-container.gv2-skin-modern .gv2-nav-btn:hover {
     background: rgba(212, 175, 55, 0.16);
-    border-color: rgba(212, 175, 55, 0.6);
+    transform: none;
+    box-shadow: none;
 }
 
 .game-viewer-2-container.gv2-skin-modern .gv2-content {
@@ -2624,29 +2647,43 @@ body>.gv2-var-modal {
 
 @container gameviewer (max-width: 520px) {
     .game-viewer-2-container.gv2-skin-modern .gv2-header {
-        grid-template-columns: minmax(0, 1fr) auto;
-        gap: 0.45rem;
-    }
-
-    .game-viewer-2-container.gv2-skin-modern .gv2-title {
-        grid-column: 1;
-        grid-row: 1;
-    }
-
-    .game-viewer-2-container.gv2-skin-modern .gv2-global-controls {
-        grid-column: 2;
-        grid-row: 1;
+        grid-template-columns: auto minmax(0, 1fr) auto;
         gap: 0.3rem;
     }
 
     .game-viewer-2-container.gv2-skin-modern .gv2-bubble-show.visible {
-        grid-column: 1 / -1;
-        grid-row: 2;
+        grid-column: 1;
+        grid-row: 1;
         justify-self: start;
     }
 
+    .game-viewer-2-container.gv2-skin-modern .gv2-bubble-show {
+        width: 28px;
+        height: 28px;
+        padding: 0;
+        justify-content: center;
+        font-size: 0;
+        gap: 0;
+    }
+
+    .game-viewer-2-container.gv2-skin-modern .gv2-bubble-show i {
+        font-size: 0.9rem;
+    }
+
+    .game-viewer-2-container.gv2-skin-modern .gv2-title {
+        grid-column: 2;
+        grid-row: 1;
+    }
+
+    .game-viewer-2-container.gv2-skin-modern .gv2-global-controls {
+        grid-column: 3;
+        grid-row: 1;
+        gap: 0.06rem;
+        padding: 0.1rem;
+    }
+
     .game-viewer-2-container.gv2-skin-modern .gv2-title-card {
-        gap: 0.35rem;
+        gap: 0.28rem;
     }
 
     .game-viewer-2-container.gv2-skin-modern .gv2-title-avatar {
@@ -2659,11 +2696,11 @@ body>.gv2-var-modal {
     }
 
     .game-viewer-2-container.gv2-skin-modern .gv2-title-name strong {
-        font-size: 0.8rem;
+        font-size: 0.78rem;
     }
 
     .game-viewer-2-container.gv2-skin-modern .gv2-title-result {
-        min-width: 50px;
+        min-width: 44px;
     }
 
     .game-viewer-2-container.gv2-skin-modern .gv2-title-result strong {
@@ -2672,8 +2709,8 @@ body>.gv2-var-modal {
     }
 
     .game-viewer-2-container.gv2-skin-modern .gv2-nav-btn {
-        width: 34px;
-        height: 34px;
+        width: 28px;
+        height: 28px;
     }
 }
 
@@ -2703,8 +2740,8 @@ body>.gv2-var-modal {
     }
 
     .game-viewer-2-container.gv2-skin-modern .gv2-header {
-        padding: 0.55rem 0.6rem;
-        gap: 0.5rem;
+        padding: 0.46rem 0.52rem;
+        gap: 0.3rem;
         align-items: center;
     }
 
@@ -2738,12 +2775,12 @@ body>.gv2-var-modal {
     }
 
     .game-viewer-2-container.gv2-skin-modern .gv2-global-controls {
-        gap: 0.35rem;
+        gap: 0.12rem;
     }
 
     .game-viewer-2-container.gv2-skin-modern .gv2-nav-btn {
-        width: 34px;
-        height: 34px;
+        width: 28px;
+        height: 28px;
     }
 
     .game-viewer-2-container.gv2-skin-modern .gv2-board-wrapper {
@@ -2805,22 +2842,22 @@ body>.gv2-var-modal {
     }
 
     .game-viewer-2-container.gv2-skin-modern .gv2-header {
-        grid-template-columns: minmax(0, 1fr) auto;
+        grid-template-columns: auto minmax(0, 1fr) auto;
     }
 
     .game-viewer-2-container.gv2-skin-modern .gv2-bubble-show {
-        grid-column: 1 / -1;
-        grid-row: 2;
+        grid-column: 1;
+        grid-row: 1;
         justify-self: start;
     }
 
     .game-viewer-2-container.gv2-skin-modern .gv2-title {
-        grid-column: 1;
+        grid-column: 2;
         grid-row: 1;
     }
 
     .game-viewer-2-container.gv2-skin-modern .gv2-global-controls {
-        grid-column: 2;
+        grid-column: 3;
         grid-row: 1;
     }
 
