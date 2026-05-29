@@ -193,7 +193,7 @@
                             <div id="${uid}-eval-bar" class="frag-eval-bar">
                                 <div id="${uid}-eval-fill" class="frag-eval-fill" style="height: 50%;"></div>
                                 <span id="${uid}-eval-text-top" class="frag-eval-text top"></span>
-                                <span id="${uid}-eval-text-bottom" class="frag-eval-text bottom">0.0</span>
+                                <span id="${uid}-eval-text-bottom" class="frag-eval-text bottom">—</span>
                             </div>
                             <div id="${uid}-board" style="flex:1; box-shadow:0 4px 10px rgba(0,0,0,0.2);border-radius:2px;overflow:hidden;"></div>
                         </div>
@@ -223,7 +223,7 @@
             const boardEl = document.getElementById(`${uid}-board`);
             if (!boardEl) return;
             const board = Chessboard(`${uid}-board`, { position: startFen, pieceTheme: PIECE_THEME, draggable: false, showNotation: false });
-            const state = { board, moves, startFen, currentIdx: -1, autoplayTimer: null, engineEnabled: false };
+            const state = { board, moves, startFen, currentIdx: -1, autoplayTimer: null, engineEnabled: false, analyzer: null, lastEngineFen: null };
             window._fragStates = window._fragStates || {};
             window._fragStates[uid] = state;
             document.querySelectorAll(`[data-frag-uid="${uid}"]`).forEach(el => {
@@ -312,6 +312,7 @@
         } else {
             btn.style.color = '#ccc';
             bar.classList.remove('active');
+            if (state.analyzer) state.analyzer.stopAnalysis();
             if (leftPanel) leftPanel.style.flex = '0 0 65%';
             if (rightPanel) rightPanel.style.flex = '1 1 35%';
             setTimeout(() => state.board.resize(), 50);
@@ -336,6 +337,27 @@
         if (engineTimers[uid]) clearTimeout(engineTimers[uid]);
         engineTimers[uid] = setTimeout(async () => {
             try {
+                if (typeof ChessAnalyzer !== 'undefined') {
+                    if (!state.analyzer) {
+                        state.analyzer = new ChessAnalyzer((data) => {
+                            const currentState = window._fragStates?.[uid];
+                            if (!currentState || !currentState.engineEnabled) return;
+                            if (data.fen && normalizeFen(data.fen) !== normalizeFen(currentState.lastEngineFen)) return;
+
+                            const currentFill = document.getElementById(`${uid}-eval-fill`);
+                            const currentTop = document.getElementById(`${uid}-eval-text-top`);
+                            const currentBot = document.getElementById(`${uid}-eval-text-bottom`);
+                            if (!currentFill || !currentTop || !currentBot) return;
+
+                            updateEngineUI(currentFill, currentTop, currentBot, data, 'analyzer');
+                        });
+                    }
+
+                    state.lastEngineFen = normalizeFen(fen);
+                    state.analyzer.analyze(fen);
+                    return;
+                }
+
                 // 1. Try Lichess Cloud Eval
                 const res = await fetch(`https://lichess.org/api/cloud-eval?fen=${encodeURIComponent(fen)}`);
                 if (res.ok) {
@@ -362,7 +384,7 @@
                 }
                 
                 // fallback if both fail
-                textBot.textContent = '0.0';
+                textBot.textContent = '—';
                 fillEl.style.height = '50%';
             } catch(e) {
                 textBot.textContent = 'Err';
@@ -375,28 +397,59 @@
         let valStr = '';
         let percentage = 50;
 
-        if (source === 'lichess') {
-            if (data.mate) {
-                valStr = `M${Math.abs(data.mate)}`;
-                percentage = data.mate > 0 ? 100 : 0;
+        if (source === 'analyzer') {
+            const val = parseNumber(data.eval);
+            const mate = parseNumber(data.mate);
+            if (data.type === 'info' || data.type === 'error' || (val === null && mate === null)) {
+                textTop.textContent = '';
+                textBot.textContent = data.text || '—';
+                fillEl.style.height = '50%';
+                fillEl.classList.remove('mate');
+                return;
+            }
+
+            if (mate !== null) {
+                valStr = `M${Math.abs(mate)}`;
+                percentage = mate > 0 ? 100 : 0;
                 fillEl.classList.add('mate');
             } else {
-                const val = data.cp / 100;
+                valStr = (val > 0 ? '+' : '') + val.toFixed(1);
+                percentage = parsePercent(data.winChance) ?? (50 + 50 * Math.tanh(val / 4));
+                fillEl.classList.remove('mate');
+            }
+        } else if (source === 'lichess') {
+            const cp = parseNumber(data.cp);
+            const mate = parseNumber(data.mate);
+            if (mate !== null) {
+                valStr = `M${Math.abs(mate)}`;
+                percentage = mate > 0 ? 100 : 0;
+                fillEl.classList.add('mate');
+            } else if (cp !== null) {
+                const val = cp / 100;
                 valStr = (val > 0 ? '+' : '') + val.toFixed(1);
                 percentage = 50 + 50 * Math.tanh(val / 4);
+                fillEl.classList.remove('mate');
+            } else {
+                valStr = '—';
             }
         } else if (source === 'chess-api') {
-            if (data.mate) {
-                valStr = `M${Math.abs(data.mate)}`;
-                percentage = data.mate > 0 ? 100 : 0;
+            const centipawns = parseNumber(data.centipawns);
+            const val = centipawns !== null ? centipawns / 100 : parseNumber(data.eval);
+            const mate = parseNumber(data.mate);
+            if (mate !== null) {
+                valStr = `M${Math.abs(mate)}`;
+                percentage = mate > 0 ? 100 : 0;
                 fillEl.classList.add('mate');
-            } else {
-                const val = data.eval;
+            } else if (val !== null) {
                 valStr = (val > 0 ? '+' : '') + val.toFixed(1);
-                percentage = data.winChance || (50 + 50 * Math.tanh(val / 4));
+                percentage = parsePercent(data.winChance) ?? (50 + 50 * Math.tanh(val / 4));
+                fillEl.classList.remove('mate');
+            } else {
+                valStr = '—';
             }
         }
         
+        percentage = Math.max(0, Math.min(100, percentage));
         fillEl.style.height = `${percentage}%`;
         
         if (percentage > 50) {
@@ -406,6 +459,25 @@
             textTop.textContent = '';
             textBot.textContent = valStr;
         }
+    }
+
+    function normalizeFen(fen) {
+        if (!fen || typeof fen !== 'string') return '';
+        const parts = fen.split(' ');
+        if (parts.length >= 4 && parts[3] !== '-') parts[3] = '-';
+        return parts.slice(0, 4).join(' ');
+    }
+
+    function parseNumber(value) {
+        if (value === null || value === undefined || value === '') return null;
+        const n = typeof value === 'number' ? value : Number(String(value).replace(',', '.'));
+        return Number.isFinite(n) ? n : null;
+    }
+
+    function parsePercent(value) {
+        const n = parseNumber(value);
+        if (n === null) return null;
+        return Math.max(0, Math.min(100, n));
     }
 
     function escapeHtml(s) {

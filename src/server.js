@@ -68,13 +68,14 @@ app.use(helmet({
     contentSecurityPolicy: {
         directives: {
             defaultSrc: ["'self'"],
-            scriptSrc: ["'self'", "'unsafe-inline'", "https://code.jquery.com", "https://cdnjs.cloudflare.com", "https://www.googletagmanager.com", "https://www.google-analytics.com", "https://unpkg.com", "https://static.hotjar.com", "https://script.hotjar.com", "https://cdn.tailwindcss.com"],
+            scriptSrc: ["'self'", "'unsafe-inline'", "'wasm-unsafe-eval'", "https://code.jquery.com", "https://cdnjs.cloudflare.com", "https://www.googletagmanager.com", "https://www.google-analytics.com", "https://unpkg.com", "https://static.hotjar.com", "https://script.hotjar.com", "https://cdn.tailwindcss.com"],
             scriptSrcAttr: ["'unsafe-inline'"],
             styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com", "https://cdnjs.cloudflare.com", "https://unpkg.com", "https://cdn.tailwindcss.com"],
             imgSrc: ["'self'", "data:", "https:", "blob:", "https://chessboardjs.com"],
             fontSrc: ["'self'", "https://fonts.gstatic.com", "https://cdnjs.cloudflare.com"],
-            connectSrc: ["'self'", "https://lichess.org", "https://chess-api.com", "https://www.chess.com", "https://www.googleapis.com", "https://chess-results.com", "https://www.google-analytics.com", "https://*.hotjar.com", "https://*.hotjar.io", "wss://*.hotjar.com"],
+            connectSrc: ["'self'", "https://lichess.org", "https://chess-api.com", "https://unpkg.com", "https://www.chess.com", "https://www.googleapis.com", "https://chess-results.com", "https://www.google-analytics.com", "https://*.hotjar.com", "https://*.hotjar.io", "wss://*.hotjar.com"],
             frameSrc: ["'self'", "https://lichess.org", "https://mapy.cz", "https://mapy.com", "https://www.chess.com", "https://chess.com", "https://*.hotjar.com"],
+            workerSrc: ["'self'", "blob:"],
             objectSrc: ["'none'"],
             upgradeInsecureRequests: process.env.NODE_ENV === 'production' ? [] : null,
         },
