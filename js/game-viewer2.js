@@ -3643,6 +3643,7 @@ GameViewer2.create = function (containerSelector, games, options = {}) {
 
             <!-- Viewer Panel (Right) -->
             <div class="gv-viewer-panel">
+                <div id="${listId}-mobile-strip" class="gv-mobile-game-strip" aria-label="Rychlý výběr partie"></div>
                 <div class="gv-viewer-content" style="flex: 1;">
                     <!-- GameViewer2 Wrapper - the class will inject here -->
                     <div id="game-viewer-wrapper" class="game-viewer">
@@ -3672,6 +3673,10 @@ GameViewer2.create = function (containerSelector, games, options = {}) {
             const listContainer = document.getElementById(listId);
             if (listContainer) {
                 gameViewer2.renderListToElement(listContainer);
+            }
+            const mobileStrip = document.getElementById(`${listId}-mobile-strip`);
+            if (mobileStrip) {
+                gameViewer2.renderMobileGameStripToElement(mobileStrip);
             }
         }, 50);
     }
@@ -3709,6 +3714,65 @@ GameViewer2.prototype.renderListToElement = function (listElement) {
 };
 
 /**
+ * Render compact mobile board selector for multi-game matches.
+ */
+GameViewer2.prototype.renderMobileGameStripToElement = function (stripElement) {
+    if (!stripElement) return;
+    stripElement.innerHTML = '';
+    this.mobileStripElement = stripElement;
+
+    const playableGames = this.gamesData.filter(game => !(game.type === 'header' || game.isHeader));
+    if (playableGames.length <= 1) {
+        stripElement.hidden = true;
+        return;
+    }
+
+    stripElement.hidden = false;
+    let boardNo = 0;
+
+    this.gamesData.forEach((game, index) => {
+        if (game.type === 'header' || game.isHeader) return;
+        boardNo++;
+
+        const parts = this.getGameTitleParts(game);
+        const result = game.result && game.result !== '*' && game.result !== '?' ? game.result : '';
+        const hasComments = Boolean(game.pgn && game.pgn.includes('{'));
+        const button = document.createElement('button');
+        const isActive = index === this.currentIndex;
+
+        button.type = 'button';
+        button.className = 'gv-mobile-game-chip';
+        button.dataset.index = index;
+        button.setAttribute('aria-current', isActive ? 'true' : 'false');
+        button.setAttribute('aria-label', `Deska ${boardNo}: ${parts.white}${parts.black ? ` - ${parts.black}` : ''}${result ? `, výsledek ${result}` : ''}`);
+        button.classList.toggle('active', isActive);
+        button.innerHTML = `
+            <span class="gv-mobile-game-chip-num">${boardNo}</span>
+            ${result ? `<span class="gv-mobile-game-chip-result">${this.escapeHtml(result)}</span>` : ''}
+            ${hasComments ? '<i class="fa-solid fa-comment gv-mobile-game-chip-comment" aria-label="Komentovaná partie"></i>' : ''}
+        `;
+        button.addEventListener('click', () => this.loadGame(index));
+        stripElement.appendChild(button);
+    });
+};
+
+GameViewer2.prototype.updateMobileGameStripActive = function (index) {
+    if (!this.mobileStripElement) return;
+    let activeItem = null;
+
+    this.mobileStripElement.querySelectorAll('.gv-mobile-game-chip').forEach((item) => {
+        const isActive = parseInt(item.dataset.index) === index;
+        item.classList.toggle('active', isActive);
+        item.setAttribute('aria-current', isActive ? 'true' : 'false');
+        if (isActive) activeItem = item;
+    });
+
+    if (activeItem && window.innerWidth <= 900) {
+        activeItem.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+    }
+};
+
+/**
  * Update active state in external list (for split-view)
  */
 const originalLoadGame = GameViewer2.prototype.loadGame;
@@ -3731,4 +3795,6 @@ GameViewer2.prototype.loadGame = function (index) {
             }
         });
     }
+
+    this.updateMobileGameStripActive(index);
 };

@@ -1796,6 +1796,14 @@ body>.gv2-var-modal {
     /* Allow scrolling if viewer is tall */
 }
 
+.gv-mobile-game-strip {
+    display: none;
+}
+
+.gv-mobile-game-chip {
+    font: inherit;
+}
+
 /* Mobile Split View */
 @media (max-width: 900px) {
     .gv-split-view {
@@ -2778,6 +2786,10 @@ body>.gv2-var-modal {
     font-size: 0.74rem;
 }
 
+.gv-split-view.gv2-skin-modern .gv-mobile-game-strip {
+    display: none;
+}
+
 @container gameviewer (max-width: 700px) {
     .game-viewer-2-container.gv2-skin-modern .gv2-content {
         display: flex !important;
@@ -2919,6 +2931,74 @@ body>.gv2-var-modal {
 @media (max-width: 900px) {
     .gv-split-view.gv2-skin-modern {
         border-radius: 12px;
+    }
+
+    .gv-split-view.gv2-skin-modern .gv-mobile-game-strip:not([hidden]) {
+        display: flex;
+        gap: 0.35rem;
+        overflow-x: auto;
+        overscroll-behavior-x: contain;
+        padding: 0.42rem 0.48rem 0.34rem;
+        border-bottom: 1px solid rgba(212, 175, 55, 0.18);
+        background: linear-gradient(180deg, rgba(0, 0, 0, 0.32), rgba(0, 0, 0, 0.08));
+        scrollbar-width: none;
+    }
+
+    .gv-split-view.gv2-skin-modern .gv-mobile-game-strip::-webkit-scrollbar {
+        display: none;
+    }
+
+    .gv-split-view.gv2-skin-modern .gv-mobile-game-chip {
+        flex: 0 0 auto;
+        min-width: 46px;
+        height: 34px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.25rem;
+        padding: 0 0.42rem;
+        border: 1px solid rgba(212, 175, 55, 0.22);
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.045);
+        color: #c9c9d2;
+        cursor: pointer;
+        white-space: nowrap;
+    }
+
+    .gv-split-view.gv2-skin-modern .gv-mobile-game-chip:focus-visible {
+        outline: 2px solid rgba(212, 175, 55, 0.62);
+        outline-offset: 2px;
+    }
+
+    .gv-split-view.gv2-skin-modern .gv-mobile-game-chip.active {
+        border-color: rgba(212, 175, 55, 0.7);
+        background: #d4af37;
+        color: #111116;
+        box-shadow: 0 8px 18px rgba(212, 175, 55, 0.18);
+    }
+
+    .gv-split-view.gv2-skin-modern .gv-mobile-game-chip-num {
+        font-family: 'Playfair Display', Georgia, serif;
+        font-size: 0.84rem;
+        font-style: italic;
+        font-weight: 900;
+        line-height: 1;
+    }
+
+    .gv-split-view.gv2-skin-modern .gv-mobile-game-chip-result {
+        font-family: 'Roboto Mono', ui-monospace, monospace;
+        font-size: 0.68rem;
+        font-weight: 900;
+        line-height: 1;
+    }
+
+    .gv-split-view.gv2-skin-modern .gv-mobile-game-chip-comment {
+        color: #60a5fa;
+        font-size: 0.68rem;
+    }
+
+    .gv-split-view.gv2-skin-modern .gv-mobile-game-chip.active .gv-mobile-game-chip-comment {
+        color: #111116;
     }
 
     .gv-split-view.gv2-skin-modern .gv-viewer-content {
