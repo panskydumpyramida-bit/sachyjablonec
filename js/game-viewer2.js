@@ -912,28 +912,6 @@ class GameViewer2 {
             .replace('=Q', '=' + icon('fa-chess-queen'));
     }
 
-    // ... (rest of methods)
-
-    handleKeydown(e) {
-        // Prevent default scrolling for game controls
-        if (['ArrowRight', 'ArrowLeft', 'ArrowUp', 'ArrowDown', ' '].includes(e.key)) {
-            // Check if focus is NOT in an input (though likely none here)
-            if (e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
-                e.preventDefault();
-            }
-        }
-
-        if (e.key === 'ArrowRight') this.stepForward();
-        if (e.key === 'ArrowLeft') this.stepBack();
-        if (e.key === 'ArrowUp') this.prevGame();
-        if (e.key === 'ArrowDown') this.nextGame();
-        if (e.key === ' ') this.toggleAutoplay();
-        if (e.key === 'Escape' && this.inVariation && !document.getElementById('gv2-var-modal')) {
-            e.preventDefault();
-            this.exitVariation();
-        }
-    }
-
     init(games) {
         this.gamesData = games || [];
         this.setupCombinedDOM();
@@ -966,6 +944,8 @@ class GameViewer2 {
             container.id = 'gv2-main-container';
             container.className = 'game-viewer-2-container hidden';
             container.tabIndex = -1; // Make focusable for keyboard events
+            container.setAttribute('role', 'group');
+            container.setAttribute('aria-label', 'Přehrávač šachové partie');
 
             // New Layout Structure
             container.innerHTML = `
@@ -1072,6 +1052,17 @@ class GameViewer2 {
             container.dataset.escapeReady = 'true';
             container.addEventListener('keydown', event => {
                 if (event.key === 'Escape') this.handleKeydown(event);
+            });
+        }
+        if (container.dataset.focusReady !== 'true') {
+            container.dataset.focusReady = 'true';
+            container.addEventListener('pointerdown', event => {
+                if (event.target.closest('button, a, input, textarea, select')) return;
+                try {
+                    container.focus({ preventScroll: true });
+                } catch (e) {
+                    container.focus();
+                }
             });
         }
         this.setViewerSkin(this.viewerSkin);
@@ -2956,6 +2947,8 @@ class GameViewer2 {
         // Allow typing in inputs/textareas
         if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
 
+        if (!this.shouldHandleViewerKeydown(e)) return;
+
         if (e.key === 'Escape' && this.inVariation && !document.getElementById('gv2-var-modal')) {
             e.preventDefault();
             this.exitVariation();
@@ -2963,7 +2956,7 @@ class GameViewer2 {
         }
 
         // Keys we care about for game control
-        const keys = ['ArrowRight', 'ArrowLeft', 'ArrowUp', 'ArrowDown', ' ', 'Spacebar'];
+        const keys = ['ArrowRight', 'ArrowLeft', 'ArrowUp', 'ArrowDown', 'Home', 'End', ' ', 'Spacebar'];
 
         if (keys.includes(e.key)) {
             e.preventDefault(); // Absolutely prevent default scrolling behavior
@@ -2972,8 +2965,24 @@ class GameViewer2 {
             if (e.key === 'ArrowLeft') this.stepBack();
             if (e.key === 'ArrowUp') this.prevGame();
             if (e.key === 'ArrowDown') this.nextGame();
+            if (e.key === 'Home') this.goToStart();
+            if (e.key === 'End') this.goToEnd();
             if (e.key === ' ' || e.key === 'Spacebar') this.toggleAutoplay();
         }
+    }
+
+    shouldHandleViewerKeydown(e) {
+        const target = e.target;
+        const tag = target?.tagName;
+        if (['INPUT', 'TEXTAREA', 'SELECT'].includes(tag) || target?.isContentEditable) return false;
+
+        const viewer = document.getElementById('gv2-main-container');
+        if (!viewer || viewer.classList.contains('hidden') || viewer.style.display === 'none') return false;
+
+        // Variation picker has its own keyboard handler, so the page-level handler must stay quiet.
+        if (document.getElementById('gv2-var-modal')) return false;
+
+        return viewer.contains(target) || viewer.contains(document.activeElement);
     }
 
     prevGame() {
