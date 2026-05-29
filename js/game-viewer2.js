@@ -1216,7 +1216,9 @@ class GameViewer2 {
 
         // Highlight active sidebar item
         document.querySelectorAll('.game-item').forEach(item => {
-            item.classList.toggle('active', parseInt(item.dataset.index) === index);
+            const isActive = parseInt(item.dataset.index) === index;
+            item.classList.toggle('active', isActive);
+            item.setAttribute('aria-current', isActive ? 'true' : 'false');
         });
 
         const iframeContainer = document.querySelector('.iframe-container');
@@ -2680,17 +2682,98 @@ class GameViewer2 {
     getGameTitleParts(game) {
         let white = game.white || game.whitePlayer || '';
         let black = game.black || game.blackPlayer || '';
+        const isGenericWhite = value => !value || ['bílý', 'white'].includes(String(value).trim().toLowerCase());
+        const isGenericBlack = value => !value || ['černý', 'cerny', 'black'].includes(String(value).trim().toLowerCase());
 
-        if ((!white || !black) && game.title) {
-            const parts = String(game.title).replace(/\*/g, '').split(/\s+[-–]\s+/);
-            if (!white && parts[0]) white = parts[0].trim();
-            if (!black && parts[1]) black = parts[1].trim();
+        if ((isGenericWhite(white) || isGenericBlack(black)) && game.title) {
+            const title = String(game.title).replace(/\*/g, '').replace(/^\s*\d+\.\s*/, '').trim();
+            const parts = title.split(/\s+[-–]\s+/);
+            if (isGenericWhite(white) && parts[0]) white = parts[0].trim();
+            if (isGenericBlack(black) && parts[1]) black = parts[1].trim();
         }
 
         return {
             white: white || game.title || 'Partie',
             black: black || '',
             title: String(game.title || `${white} - ${black}` || 'Partie').replace(/\*/g, '').trim()
+        };
+    }
+
+    getGameResultScore(result) {
+        const clean = String(result || '').trim();
+        if (clean === '1-0') return { white: 1, black: 0, decisive: true, draw: false };
+        if (clean === '0-1') return { white: 0, black: 1, decisive: true, draw: false };
+        if (clean === '1/2-1/2' || clean === '½-½' || clean === '.5-.5') {
+            return { white: 0.5, black: 0.5, decisive: false, draw: true };
+        }
+        return null;
+    }
+
+    formatMatchScore(score) {
+        const whole = Math.floor(score);
+        return score % 1 === 0.5 ? `${whole}½` : String(score);
+    }
+
+    getGamesSummary(games) {
+        const playableGames = (games || []).filter(game => !(game.type === 'header' || game.isHeader));
+        const summary = {
+            playableCount: playableGames.length,
+            whiteScore: 0,
+            blackScore: 0,
+            draws: 0,
+            decisive: 0,
+            commented: 0,
+            unfinished: 0
+        };
+
+        playableGames.forEach(game => {
+            if (game.pgn && game.pgn.includes('{')) summary.commented++;
+
+            const score = this.getGameResultScore(game.result);
+            if (!score) {
+                summary.unfinished++;
+                return;
+            }
+
+            summary.whiteScore += score.white;
+            summary.blackScore += score.black;
+            if (score.draw) summary.draws++;
+            if (score.decisive) summary.decisive++;
+        });
+
+        return summary;
+    }
+
+    renderGamesSummaryHtml(games) {
+        const summary = this.getGamesSummary(games);
+        if (!summary.playableCount) return '';
+
+        const scoredGames = summary.decisive + summary.draws;
+        const score = `${this.formatMatchScore(summary.whiteScore)} : ${this.formatMatchScore(summary.blackScore)}`;
+        const chips = [];
+
+        if (scoredGames) chips.push(`<span><strong>${this.escapeHtml(score)}</strong> skóre</span>`);
+
+        if (summary.commented) chips.push(`<span><i class="fa-solid fa-comment" aria-hidden="true"></i> ${summary.commented} koment.</span>`);
+        if (summary.draws) chips.push(`<span>${summary.draws} remíz</span>`);
+        if (summary.unfinished && scoredGames) chips.push(`<span>${summary.unfinished} bez výsledku</span>`);
+        if (!chips.length) return '';
+
+        return `<div class="gv-games-summary" aria-label="Souhrn partií">${chips.join('')}</div>`;
+    }
+
+    setupGameListItemElement(item, index, game, boardNo) {
+        const parts = this.getGameTitleParts(game);
+        const result = game.result && game.result !== '*' ? `, výsledek ${game.result}` : '';
+        item.dataset.index = index;
+        item.setAttribute('role', 'button');
+        item.setAttribute('tabindex', '0');
+        item.setAttribute('aria-label', `Deska ${boardNo}: ${parts.white}${parts.black ? ` - ${parts.black}` : ''}${result}`);
+        item.onclick = () => this.loadGame(index);
+        item.onkeydown = event => {
+            if (event.key !== 'Enter' && event.key !== ' ') return;
+            event.preventDefault();
+            this.loadGame(index);
         };
     }
 
@@ -2730,8 +2813,8 @@ class GameViewer2 {
                 item.className = 'game-item gv2-game-card';
                 if (index === this.currentIndex) item.classList.add('active');
                 item.innerHTML = this.renderGameListItemHtml(game, boardNo);
-                item.dataset.index = index;
-                item.onclick = () => this.loadGame(index);
+                this.setupGameListItemElement(item, index, game, boardNo);
+                item.setAttribute('aria-current', index === this.currentIndex ? 'true' : 'false');
                 list.appendChild(item);
             }
         });
@@ -3430,6 +3513,7 @@ GameViewer2.create = function (containerSelector, games, options = {}) {
                         <i class="fa-solid fa-chess-board"></i> ${title}
                     </h3>
                     <span class="gv-games-count">${playableCount} partií</span>
+                    ${gameViewer2.renderGamesSummaryHtml(games)}
                 </div>
                 <div id="${listId}" class="gv-games-list"></div>
             </div>
@@ -3491,8 +3575,8 @@ GameViewer2.prototype.renderListToElement = function (listElement) {
             item.className = 'game-item gv2-game-card';
             if (index === this.currentIndex) item.classList.add('active');
             item.innerHTML = this.renderGameListItemHtml(game, boardNo);
-            item.dataset.index = index;
-            item.onclick = () => this.loadGame(index);
+            this.setupGameListItemElement(item, index, game, boardNo);
+            item.setAttribute('aria-current', index === this.currentIndex ? 'true' : 'false');
             listElement.appendChild(item);
         }
     });
@@ -3514,6 +3598,7 @@ GameViewer2.prototype.loadGame = function (index) {
         this.externalListElement.querySelectorAll('.game-item').forEach((item) => {
             const isActive = parseInt(item.dataset.index) === index;
             item.classList.toggle('active', isActive);
+            item.setAttribute('aria-current', isActive ? 'true' : 'false');
 
             // Scroll active item into view - ONLY ON DESKTOP
             // On mobile, the list is effectively below the viewer, so scrolling to it
