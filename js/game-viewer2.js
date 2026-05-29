@@ -1671,7 +1671,7 @@ class GameViewer2 {
                             html += `<div class="gv2-comment-row"><span class="gv2-comment">${this.escapeHtml(bt.text)}</span></div>`;
                         } else if (bt.type === 'variation') {
                             if (bt.parentPly !== undefined) this.lastMatchedPly = bt.parentPly;
-                            html += `<div class="gv2-comment-row">${this.renderVariation(bt.content, bt.history)}</div>`;
+                            html += `<div class="gv2-comment-row gv2-variation-row">${this.renderVariation(bt.content, bt.history)}</div>`;
                         }
                     }
                 } else {
@@ -1692,7 +1692,7 @@ class GameViewer2 {
                 html += `<div class="gv2-comment-row"><span class="gv2-comment">${this.escapeHtml(token.text)}</span></div>`;
             } else if (token.type === 'variation') {
                 if (token.parentPly !== undefined) this.lastMatchedPly = token.parentPly;
-                html += `<div class="gv2-comment-row">${this.renderVariation(token.content, token.history)}</div>`;
+                html += `<div class="gv2-comment-row gv2-variation-row">${this.renderVariation(token.content, token.history)}</div>`;
             } else if (token.type === 'result') {
                 html += `<div class="gv2-comment-row"><span class="gv2-result">${token.text}</span></div>`;
             }
@@ -1772,6 +1772,7 @@ class GameViewer2 {
     renderVariation(varContent, mainHistory, context = {}) {
         const varId = 'var_' + (this.variationCounter++);
         const parentPly = Number.isInteger(context.parentPly) ? context.parentPly : this.lastMatchedPly;
+        const depth = Math.max(0, Math.min(parseInt(context.depth || 0, 10) || 0, 3));
 
         // Get the FEN from the position BEFORE the last main line move (where variation starts)
         const startFen = context.startFen || (parentPly > 0 ? this.mainLinePlies[parentPly - 1]?.fen : 'start') || 'start';
@@ -1789,12 +1790,12 @@ class GameViewer2 {
         };
 
         // Render variation HTML with clickable moves
-        let html = '<span class="gv2-variation">(';
+        let html = `<div class="gv2-variation" data-depth="${depth}"><span class="gv2-variation-paren">(</span>`;
 
         // Process variation content to make moves clickable
-        html += this.renderVariationMoves(varContent, varId, startFen, { parentPly });
+        html += this.renderVariationMoves(varContent, varId, startFen, { parentPly, depth });
 
-        html += ')</span>';
+        html += '<span class="gv2-variation-paren">)</span></div>';
         return html;
     }
 
@@ -1902,7 +1903,8 @@ class GameViewer2 {
                 html += this.renderVariation(nestedContent, [], {
                     parentPly: parentVariation.parentPly ?? context.parentPly ?? this.lastMatchedPly,
                     parentVarId: varId,
-                    startFen: nestedStartFen
+                    startFen: nestedStartFen,
+                    depth: (context.depth || 0) + 1
                 });
                 continue;
             }
