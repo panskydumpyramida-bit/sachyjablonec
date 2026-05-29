@@ -2277,6 +2277,10 @@ body>.gv2-var-modal {
     border-left-color: rgba(212, 175, 55, 0.18);
 }
 
+.game-viewer-2-container.gv2-skin-modern .gv2-mobile-notation-toggle {
+    display: none;
+}
+
 .game-viewer-2-container.gv2-skin-modern .gv2-metadata {
     padding: 0.8rem 0.9rem;
     background: rgba(0, 0, 0, 0.18);
@@ -2627,6 +2631,41 @@ body>.gv2-var-modal {
         max-height: 260px;
         border-left: none;
         border-top: 1px solid rgba(212, 175, 55, 0.18);
+    }
+
+    .game-viewer-2-container.gv2-skin-modern .gv2-mobile-notation-toggle {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.55rem;
+        order: 0;
+        width: 100%;
+        padding: 0.48rem 0.62rem;
+        border: 0;
+        border-bottom: 1px solid rgba(212, 175, 55, 0.15);
+        background: rgba(212, 175, 55, 0.055);
+        color: #f1d36b;
+        font: 700 0.78rem/1.2 'Inter', system-ui, sans-serif;
+        text-align: left;
+        cursor: pointer;
+    }
+
+    .game-viewer-2-container.gv2-skin-modern .gv2-mobile-notation-toggle span {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.42rem;
+    }
+
+    .game-viewer-2-container.gv2-skin-modern .gv2-mobile-notation-chevron {
+        transition: transform 0.16s ease;
+    }
+
+    .game-viewer-2-container.gv2-skin-modern .gv2-info-panel.gv2-notation-open .gv2-mobile-notation-chevron {
+        transform: rotate(180deg);
+    }
+
+    .game-viewer-2-container.gv2-skin-modern .gv2-info-panel:not(.gv2-notation-open) .gv2-info-content {
+        display: none;
     }
 
     .game-viewer-2-container.gv2-skin-modern .gv2-analysis-info {
