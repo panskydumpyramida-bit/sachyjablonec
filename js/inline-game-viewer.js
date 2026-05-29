@@ -328,6 +328,10 @@
         const orientation = container.dataset.orientation === 'black' ? 'black' : 'white';
         const hasComments = parsed.moves.some(move => move.comment);
 
+        container.setAttribute('tabindex', '0');
+        container.setAttribute('role', 'group');
+        container.setAttribute('aria-label', `Mini přehrávač partie: ${title}`);
+
         container.innerHTML = `
             <div class="igv-shell">
                 <div class="igv-head">
@@ -420,6 +424,7 @@
             }, () => {
                 goTo(state, state.currentPly + 1);
             });
+            setupKeyboardNavigation(container, state);
 
             if ('ResizeObserver' in window) {
                 const boardWrap = container.querySelector('.igv-board-wrap');
@@ -439,6 +444,34 @@
         if (action === 'end') goTo(state, state.moves.length - 1);
         if (action === 'flip') state.board.flip();
         if (action === 'play') togglePlay(state, button);
+    }
+
+    function setupKeyboardNavigation(container, state) {
+        if (!container || container.dataset.keyboardReady === 'true') return;
+        container.dataset.keyboardReady = 'true';
+
+        container.addEventListener('keydown', event => {
+            const tag = event.target?.tagName;
+            if (['INPUT', 'TEXTAREA', 'SELECT'].includes(tag)) return;
+            if (tag === 'BUTTON' && event.key === ' ') return;
+
+            if (event.key === 'ArrowRight') {
+                event.preventDefault();
+                goTo(state, state.currentPly + 1);
+            } else if (event.key === 'ArrowLeft') {
+                event.preventDefault();
+                goTo(state, state.currentPly - 1);
+            } else if (event.key === 'Home') {
+                event.preventDefault();
+                goTo(state, -1);
+            } else if (event.key === 'End') {
+                event.preventDefault();
+                goTo(state, state.moves.length - 1);
+            } else if (event.key === ' ') {
+                event.preventDefault();
+                togglePlay(state, container.querySelector('.igv-btn[data-action="play"]'));
+            }
+        });
     }
 
     function toggleNotation(container, button) {
@@ -485,16 +518,16 @@
         if (state.timer) {
             clearInterval(state.timer);
             state.timer = null;
-            button.querySelector('i')?.classList.replace('fa-pause', 'fa-play');
+            button?.querySelector('i')?.classList.replace('fa-pause', 'fa-play');
             return;
         }
 
-        button.querySelector('i')?.classList.replace('fa-play', 'fa-pause');
+        button?.querySelector('i')?.classList.replace('fa-play', 'fa-pause');
         state.timer = setInterval(() => {
             if (state.currentPly >= state.moves.length - 1) {
                 clearInterval(state.timer);
                 state.timer = null;
-                button.querySelector('i')?.classList.replace('fa-pause', 'fa-play');
+                button?.querySelector('i')?.classList.replace('fa-pause', 'fa-play');
                 return;
             }
             goTo(state, state.currentPly + 1);
