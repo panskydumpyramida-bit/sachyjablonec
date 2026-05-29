@@ -2498,11 +2498,27 @@ body>.gv2-var-modal {
     padding: 0.68rem 0.82rem;
     border: 1px solid rgba(212, 175, 55, 0.38);
     border-radius: 10px;
-    background: linear-gradient(180deg, rgba(12, 12, 16, 0.34), rgba(18, 18, 24, 0.24));
-    box-shadow: 0 18px 36px rgba(0, 0, 0, 0.34), inset 0 1px 0 rgba(255, 255, 255, 0.06);
-    backdrop-filter: saturate(125%) brightness(0.9);
-    -webkit-backdrop-filter: saturate(125%) brightness(0.9);
+    background: linear-gradient(180deg, rgba(10, 10, 16, 0.16), rgba(12, 12, 18, 0.1));
+    box-shadow: 0 18px 38px rgba(0, 0, 0, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.07);
+    backdrop-filter: blur(1.2px) saturate(135%) brightness(0.96);
+    -webkit-backdrop-filter: blur(1.2px) saturate(135%) brightness(0.96);
+    isolation: isolate;
     pointer-events: none;
+}
+
+.game-viewer-2-container.gv2-skin-modern .gv2-comment-dock::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    border-radius: inherit;
+    background: radial-gradient(ellipse at 50% 45%, rgba(0, 0, 0, 0.38), rgba(0, 0, 0, 0.18) 58%, rgba(0, 0, 0, 0.06));
+    pointer-events: none;
+}
+
+.game-viewer-2-container.gv2-skin-modern .gv2-comment-dock > * {
+    position: relative;
+    z-index: 1;
 }
 
 .game-viewer-2-container.gv2-skin-modern .gv2-comment-dock[hidden] {
@@ -2534,8 +2550,8 @@ body>.gv2-var-modal {
     min-width: 0;
     padding: 0.28rem 0.44rem;
     border-radius: 8px;
-    background: rgba(5, 5, 8, 0.26);
-    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.035), 0 8px 18px rgba(0, 0, 0, 0.16);
+    background: rgba(5, 5, 8, 0.18);
+    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.035), 0 8px 18px rgba(0, 0, 0, 0.14);
 }
 
 .game-viewer-2-container.gv2-skin-modern .gv2-comment-dock-meta {
