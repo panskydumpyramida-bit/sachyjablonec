@@ -1256,6 +1256,95 @@
     opacity: 0.72;
 }
 
+.gv2-variation-status {
+    position: absolute;
+    top: 0.72rem;
+    left: 0.72rem;
+    z-index: 88;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    max-width: min(92%, 440px);
+    padding: 0.34rem;
+    border: 1px solid rgba(96, 165, 250, 0.26);
+    border-radius: 9px;
+    background: rgba(12, 12, 16, 0.72);
+    color: #e5e7eb;
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.24), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+    backdrop-filter: saturate(120%) brightness(0.92);
+    -webkit-backdrop-filter: saturate(120%) brightness(0.92);
+}
+
+.gv2-variation-status[hidden] {
+    display: none;
+}
+
+.gv2-variation-status-text {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.34rem;
+    min-width: 0;
+    font-size: 0.75rem;
+    font-weight: 800;
+    line-height: 1.2;
+    color: #dbeafe;
+}
+
+.gv2-variation-status-text i {
+    color: #60a5fa;
+    flex-shrink: 0;
+}
+
+.gv2-variation-status-text span {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.gv2-variation-return {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    flex-shrink: 0;
+    min-height: 28px;
+    padding: 0.28rem 0.48rem;
+    border: 1px solid rgba(212, 175, 55, 0.34);
+    border-radius: 7px;
+    background: rgba(212, 175, 55, 0.14);
+    color: #f1d36b;
+    font: inherit;
+    font-size: 0.72rem;
+    font-weight: 800;
+    cursor: pointer;
+}
+
+.gv2-variation-return:hover {
+    background: rgba(212, 175, 55, 0.22);
+    border-color: rgba(212, 175, 55, 0.52);
+}
+
+@media (max-width: 480px) {
+    .gv2-variation-status {
+        left: 0.48rem;
+        right: 0.48rem;
+        top: 0.48rem;
+        max-width: none;
+        gap: 0.32rem;
+        padding: 0.28rem;
+    }
+
+    .gv2-variation-status-text {
+        font-size: 0.68rem;
+    }
+
+    .gv2-variation-return {
+        min-height: 26px;
+        padding: 0.24rem 0.38rem;
+        font-size: 0.66rem;
+    }
+}
+
 /* Variation move styling */
 .gv2-var-move {
     display: inline-block;
