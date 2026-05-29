@@ -239,6 +239,51 @@
     box-shadow: 0 0 0 1px rgba(212, 175, 55, 0.24), 0 3px 9px rgba(0, 0, 0, 0.48);
 }
 
+.igv-markers {
+    grid-column: 1 / -1;
+    position: relative;
+    height: 16px;
+    margin-top: -0.18rem;
+}
+
+.igv-marker {
+    position: absolute;
+    left: var(--igv-marker-left);
+    top: 50%;
+    width: 17px;
+    height: 14px;
+    display: grid;
+    place-items: center;
+    padding: 0;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 5px;
+    background: rgba(255, 255, 255, 0.06);
+    color: #b8bfcd;
+    font-size: 0.58rem;
+    cursor: pointer;
+    transform: translate(-50%, -50%);
+    transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+
+.igv-marker-comment {
+    border-color: rgba(96, 165, 250, 0.28);
+    color: #60a5fa;
+}
+
+.igv-marker-variation {
+    border-color: rgba(212, 175, 55, 0.32);
+    color: #f1d36b;
+}
+
+.igv-marker:hover,
+.igv-marker:focus-visible,
+.igv-marker.is-active {
+    background: #d4af37;
+    border-color: #d4af37;
+    color: #111116;
+    outline: none;
+}
+
 .igv-moves {
     flex: 1;
     min-height: 0;
