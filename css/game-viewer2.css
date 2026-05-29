@@ -2513,6 +2513,33 @@ body>.gv2-var-modal {
     letter-spacing: 0.08em;
 }
 
+.gv-split-view.gv2-skin-modern .gv-games-summary {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem;
+    margin-top: 0.45rem;
+}
+
+.gv-split-view.gv2-skin-modern .gv-games-summary span {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.16rem 0.38rem;
+    border: 1px solid rgba(212, 175, 55, 0.18);
+    border-radius: 6px;
+    background: rgba(212, 175, 55, 0.08);
+    color: #a0a0ac;
+    font-size: 0.64rem;
+    font-weight: 750;
+    line-height: 1.2;
+}
+
+.gv-split-view.gv2-skin-modern .gv-games-summary strong {
+    color: #f1d36b;
+    font-family: 'Roboto Mono', ui-monospace, monospace;
+    font-size: 0.68rem;
+}
+
 .gv-split-view.gv2-skin-modern .gv-games-list {
     padding: 0.42rem;
 }
@@ -2546,6 +2573,12 @@ body>.gv2-var-modal {
     padding-left: 0.5rem;
     background: rgba(255, 255, 255, 0.04);
     border-color: rgba(212, 175, 55, 0.2);
+}
+
+.gv-split-view.gv2-skin-modern .game-item.gv2-game-card:focus-visible {
+    outline: 2px solid rgba(212, 175, 55, 0.56);
+    outline-offset: 2px;
+    background: rgba(212, 175, 55, 0.08);
 }
 
 .gv-split-view.gv2-skin-modern .game-item.gv2-game-card.active {
