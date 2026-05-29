@@ -241,6 +241,11 @@
         `).join('');
     }
 
+    function getMoveLabel(move) {
+        if (!move) return '';
+        return `${move.moveNumber}${move.color === 'b' ? '...' : '.'} ${move.san}`;
+    }
+
     function renderMoveButton(move, uid) {
         if (!move) return '<span></span>';
         const nag = move.nag ? `<span class="igv-nag">${escapeHtml(move.nag)}</span>` : '';
@@ -264,6 +269,36 @@
         }
 
         return lines.length ? `<div class="igv-row-variations">${lines.join('')}</div>` : '';
+    }
+
+    function buildMoveMarkers(moves) {
+        const markerMoves = moves.filter(move => move.comment || (move.variations && move.variations.length));
+        if (!markerMoves.length) return '';
+
+        return `
+            <div class="igv-markers" aria-label="Zajímavé momenty v partii">
+                ${markerMoves.map(move => {
+                    const hasComment = Boolean(move.comment);
+                    const hasVariation = Boolean(move.variations && move.variations.length);
+                    const pct = moves.length ? ((move.ply + 1) / moves.length) * 100 : 0;
+                    const typeLabel = [
+                        hasComment ? 'komentář' : '',
+                        hasVariation ? 'varianta' : ''
+                    ].filter(Boolean).join(' a ');
+                    const icon = hasVariation ? 'fa-code-branch' : 'fa-comment';
+                    return `
+                        <button type="button"
+                            class="igv-marker ${hasComment ? 'igv-marker-comment' : ''} ${hasVariation ? 'igv-marker-variation' : ''}"
+                            style="--igv-marker-left: ${pct}%"
+                            data-ply="${move.ply}"
+                            aria-label="${escapeHtml(`${getMoveLabel(move)}: ${typeLabel}`)}"
+                            title="${escapeHtml(`${getMoveLabel(move)}: ${typeLabel}`)}">
+                            <i class="fa-solid ${icon}" aria-hidden="true"></i>
+                        </button>
+                    `;
+                }).join('')}
+            </div>
+        `;
     }
 
     function renderInlineViewer(container) {
@@ -319,6 +354,7 @@
                             <div class="igv-current" id="${uid}-current">Výchozí pozice</div>
                             <div class="igv-count"><span id="${uid}-count">0</span>/${parsed.moves.length}</div>
                             <input type="range" class="igv-scrub" id="${uid}-scrub" min="0" max="${parsed.moves.length}" value="0" step="1" aria-label="Přejít na tah">
+                            ${buildMoveMarkers(parsed.moves)}
                         </div>
                         <div class="igv-comment" id="${uid}-comment" ${hasComments ? '' : 'hidden'}></div>
                         <div class="igv-variation-panel" id="${uid}-variations" hidden></div>
@@ -358,6 +394,10 @@
             });
 
             container.querySelectorAll('.igv-variation-line').forEach(button => {
+                button.addEventListener('click', () => goTo(state, parseInt(button.dataset.ply, 10)));
+            });
+
+            container.querySelectorAll('.igv-marker').forEach(button => {
                 button.addEventListener('click', () => goTo(state, parseInt(button.dataset.ply, 10)));
             });
 
@@ -514,6 +554,10 @@
 
         container.querySelectorAll('.igv-variation-line').forEach(button => {
             button.classList.toggle('is-active-parent', parseInt(button.dataset.ply, 10) === state.currentPly);
+        });
+
+        container.querySelectorAll('.igv-marker').forEach(button => {
+            button.classList.toggle('is-active', parseInt(button.dataset.ply, 10) === state.currentPly);
         });
 
         container.querySelectorAll('.igv-btn').forEach(button => {
