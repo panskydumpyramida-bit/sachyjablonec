@@ -1099,6 +1099,7 @@
 .gv2-comment-row {
     display: block;
     width: 100%;
+    min-width: 0;
 }
 
 .gv2-moves::-webkit-scrollbar {
@@ -1189,17 +1190,79 @@
 }
 
 .gv2-variation {
+    display: block;
+    width: 100%;
+    box-sizing: border-box;
     color: #aaa;
     font-size: 0.9em;
-    padding: 0 2px;
+    padding: 0.34rem 0.45rem;
+    margin: 0.18rem 0;
+    border-left: 2px solid rgba(212, 175, 55, 0.35);
+    border-radius: 0 7px 7px 0;
+    background: rgba(255, 255, 255, 0.025);
+    line-height: 1.62;
+    white-space: normal;
+    overflow-wrap: break-word;
+}
+
+.gv2-variation-row {
+    padding: 0.16rem 0.28rem;
+    box-sizing: border-box;
+}
+
+.gv2-variation-row > .gv2-variation {
+    clear: none;
+    max-width: 100%;
+    margin-left: 0;
+    margin-bottom: 0;
+}
+
+.gv2-variation .gv2-variation {
+    clear: none;
+    margin: 0.28rem 0 0.12rem;
+    padding: 0.3rem 0.4rem;
+    border-left-color: rgba(96, 165, 250, 0.42);
+    background: rgba(96, 165, 250, 0.045);
+}
+
+.gv2-variation .gv2-comment {
+    clear: none;
+    width: auto;
+    margin: 0.28rem 0;
+    padding: 0.38rem 0.5rem;
+    font-size: 0.94em;
+}
+
+.gv2-variation .gv2-move-num {
+    display: inline;
+    float: none;
+    clear: none;
+    width: auto;
+    margin-left: 0;
+    margin-right: 0.22rem;
+    text-align: inherit;
+    opacity: 0.75;
+}
+
+.gv2-variation .gv2-nag {
+    display: inline;
+    float: none;
+    clear: none;
+}
+
+.gv2-variation-paren {
+    opacity: 0.72;
 }
 
 /* Variation move styling */
 .gv2-var-move {
+    display: inline-block;
     cursor: pointer;
     padding: 2px 4px;
+    margin: 0.05rem 0.04rem;
     border-radius: 3px;
     transition: all 0.15s ease;
+    white-space: nowrap;
 }
 
 .gv2-var-move:hover {
@@ -2227,6 +2290,8 @@ body>.gv2-var-modal {
 
 .game-viewer-2-container.gv2-skin-modern .gv2-variation {
     color: #9ca3af;
+    background: rgba(255, 255, 255, 0.025);
+    border-left-color: rgba(212, 175, 55, 0.34);
 }
 
 .game-viewer-2-container.gv2-skin-modern .gv2-analysis-info {
