@@ -225,6 +225,10 @@
                             <input type="range" class="igv-scrub" id="${uid}-scrub" min="0" max="${parsed.moves.length}" value="0" step="1" aria-label="Přejít na tah">
                         </div>
                         <div class="igv-comment" id="${uid}-comment" ${hasComments ? '' : 'hidden'}></div>
+                        <button type="button" class="igv-moves-toggle" id="${uid}-moves-toggle" aria-expanded="false" aria-controls="${uid}-moves">
+                            <span class="igv-moves-toggle-label"><i class="fa-solid fa-list-ol"></i><span>Zápis partie</span></span>
+                            <i class="fa-solid fa-chevron-down igv-moves-toggle-icon"></i>
+                        </button>
                         <div class="igv-moves" id="${uid}-moves">${buildMoveRows(parsed.moves, uid)}</div>
                     </div>
                 </div>
@@ -264,6 +268,10 @@
                 button.addEventListener('click', () => handleAction(state, button.dataset.action, button));
             });
 
+            container.querySelector(`#${uid}-moves-toggle`)?.addEventListener('click', event => {
+                toggleNotation(container, event.currentTarget);
+            });
+
             setupSwipeNavigation(container.querySelector('.igv-board-pane'), () => {
                 goTo(state, state.currentPly - 1);
             }, () => {
@@ -287,6 +295,13 @@
         if (action === 'end') goTo(state, state.moves.length - 1);
         if (action === 'flip') state.board.flip();
         if (action === 'play') togglePlay(state, button);
+    }
+
+    function toggleNotation(container, button) {
+        const isOpen = container.classList.toggle('igv-notation-open');
+        button.setAttribute('aria-expanded', String(isOpen));
+        const labelText = button.querySelector('.igv-moves-toggle-label span');
+        if (labelText) labelText.textContent = isOpen ? 'Skrýt zápis' : 'Zápis partie';
     }
 
     function setupSwipeNavigation(target, onPrevious, onNext) {

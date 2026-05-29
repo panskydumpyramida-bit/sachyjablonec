@@ -7,7 +7,7 @@
 .igv-shell {
     background: linear-gradient(180deg, #202029, #17171f);
     border: 1px solid rgba(212, 175, 55, 0.18);
-    border-radius: 12px;
+    border-radius: 10px;
     overflow: hidden;
     color: #e8e8ee;
     box-shadow: 0 18px 50px -28px rgba(0, 0, 0, 0.75);
@@ -90,18 +90,18 @@
     margin: 0 auto;
     padding: 0.32rem 0.4rem;
     border: 1px solid rgba(212, 175, 55, 0.16);
-    border-radius: 999px;
+    border-radius: 10px;
     background: linear-gradient(180deg, rgba(212, 175, 55, 0.055), rgba(0, 0, 0, 0.22));
     box-shadow: 0 10px 24px -18px rgba(0, 0, 0, 0.75), inset 0 1px 0 rgba(255, 255, 255, 0.035);
 }
 
 .igv-btn {
     width: 34px;
-    height: 34px;
+    height: 32px;
     display: inline-grid;
     place-items: center;
     border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 50%;
+    border-radius: 8px;
     background: rgba(255, 255, 255, 0.07);
     color: #d7d7df;
     cursor: pointer;
@@ -126,8 +126,9 @@
 }
 
 .igv-btn-play {
-    width: 40px;
-    height: 40px;
+    width: 38px;
+    height: 34px;
+    border-radius: 9px;
     background: #d4af37;
     color: #111116;
     border-color: #d4af37;
@@ -311,6 +312,37 @@
     display: none;
 }
 
+.igv-moves-toggle {
+    display: none;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.55rem;
+    width: 100%;
+    padding: 0.5rem 0.7rem;
+    border: 0;
+    border-bottom: 1px solid rgba(212, 175, 55, 0.15);
+    background: rgba(212, 175, 55, 0.055);
+    color: #f1d36b;
+    font: 700 0.8rem/1.2 'Inter', system-ui, sans-serif;
+    text-align: left;
+    cursor: pointer;
+}
+
+.igv-moves-toggle-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.42rem;
+}
+
+.igv-moves-toggle-icon {
+    transition: transform 0.16s ease;
+}
+
+.igv-moves-toggle:focus-visible {
+    outline: 2px solid rgba(212, 175, 55, 0.55);
+    outline-offset: -2px;
+}
+
 .igv-empty-comment {
     color: #777783;
     font-style: italic;
@@ -349,6 +381,18 @@
     .igv-moves {
         max-height: 220px;
     }
+
+    .igv-moves-toggle {
+        display: flex;
+    }
+
+    .inline-game-viewer:not(.igv-notation-open) .igv-moves {
+        display: none;
+    }
+
+    .inline-game-viewer.igv-notation-open .igv-moves-toggle-icon {
+        transform: rotate(180deg);
+    }
 }
 
 @media (max-width: 600px) {
@@ -371,6 +415,6 @@
     .igv-controls {
         flex-wrap: wrap;
         width: min(100%, 270px);
-        border-radius: 14px;
+        border-radius: 10px;
     }
 }
