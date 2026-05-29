@@ -953,16 +953,16 @@ class GameViewer2 {
                 <div class="gv2-board-overlay" id="gv2-board-overlay">
                     <div class="gv2-avatar"><i class="fa-solid fa-user-tie"></i></div>
                     <div class="gv2-bubble-content" id="gv2-bubble-content"></div>
-                    <button class="gv2-bubble-close" onclick="gameViewer2.hideBubble()" title="Schovat komentář"><i class="fa-solid fa-xmark"></i></button>
+                    <button type="button" class="gv2-bubble-close" onclick="gameViewer2.hideBubble()" title="Schovat komentář" aria-label="Schovat komentář"><i class="fa-solid fa-xmark"></i></button>
                 </div>
                 <div class="gv2-header">
-                    <button class="gv2-bubble-show" id="gv2-bubble-show" onclick="gameViewer2.showBubble()" title="Zobrazit komentář">
+                    <button type="button" class="gv2-bubble-show" id="gv2-bubble-show" onclick="gameViewer2.showBubble()" title="Zobrazit komentář" aria-label="Zobrazit komentář k tahu">
                         <i class="fa-solid fa-comment"></i> Komentář
                     </button>
                     <div id="gv2-title" class="gv2-title">Game Title</div>
                     <div class="gv2-global-controls">
-                        <button class="gv2-nav-btn" onclick="gameViewer2.prevGame()" title="Předchozí partie"><i class="fa-solid fa-chevron-left"></i></button>
-                        <button class="gv2-nav-btn" onclick="gameViewer2.nextGame()" title="Další partie"><i class="fa-solid fa-chevron-right"></i></button>
+                        <button type="button" class="gv2-nav-btn" onclick="gameViewer2.prevGame()" title="Předchozí partie" aria-label="Předchozí partie"><i class="fa-solid fa-chevron-left"></i></button>
+                        <button type="button" class="gv2-nav-btn" onclick="gameViewer2.nextGame()" title="Další partie" aria-label="Další partie"><i class="fa-solid fa-chevron-right"></i></button>
                     </div>
                 </div>
                 <div class="gv2-content">
@@ -972,7 +972,7 @@ class GameViewer2 {
                                 <i class="fa-solid fa-code-branch"></i>
                                 <span id="gv2-variation-status-label">Varianta</span>
                             </span>
-                            <button type="button" class="gv2-variation-return" onclick="gameViewer2.exitVariation()" title="Zpět do hlavní linie">
+                            <button type="button" class="gv2-variation-return" onclick="gameViewer2.exitVariation()" title="Zpět do hlavní linie" aria-label="Vrátit se do hlavní linie">
                                 <i class="fa-solid fa-arrow-turn-up"></i>
                                 <span>Hlavní linie</span>
                             </button>
@@ -988,20 +988,20 @@ class GameViewer2 {
                         </div>
                         <div class="gv2-transport" aria-label="Ovládání partie">
                             <div class="gv2-controls">
-                                <button class="gv2-btn" onclick="gameViewer2.goToStart()" title="Start"><i class="fa-solid fa-backward-fast"></i></button>
-                                <button class="gv2-btn" onclick="gameViewer2.stepBack()" title="Zpět"><i class="fa-solid fa-backward-step"></i></button>
-                                <button class="gv2-btn" onclick="gameViewer2.toggleAutoplay()" title="Přehrát"><i class="fa-solid fa-play" id="gv2-play-icon"></i></button>
-                                <button class="gv2-btn" onclick="gameViewer2.stepForward()" title="Vpřed"><i class="fa-solid fa-forward-step"></i></button>
-                                <button class="gv2-btn" onclick="gameViewer2.goToEnd()" title="Konec"><i class="fa-solid fa-forward-fast"></i></button>
-                                <button class="gv2-btn" onclick="gameViewer2.flipBoard()" title="Otočit"><i class="fa-solid fa-retweet"></i></button>
-                                <button class="gv2-btn gv2-btn-analysis" id="gv2-analysis-btn" onclick="gameViewer2.toggleAnalysis()" title="Analýza Stockfish">
+                                <button type="button" class="gv2-btn" onclick="gameViewer2.goToStart()" title="Start" aria-label="Přejít na začátek partie"><i class="fa-solid fa-backward-fast"></i></button>
+                                <button type="button" class="gv2-btn" onclick="gameViewer2.stepBack()" title="Zpět" aria-label="Předchozí tah"><i class="fa-solid fa-backward-step"></i></button>
+                                <button type="button" class="gv2-btn" id="gv2-play-btn" onclick="gameViewer2.toggleAutoplay()" title="Přehrát" aria-label="Přehrát partii" aria-pressed="false"><i class="fa-solid fa-play" id="gv2-play-icon"></i></button>
+                                <button type="button" class="gv2-btn" onclick="gameViewer2.stepForward()" title="Vpřed" aria-label="Další tah"><i class="fa-solid fa-forward-step"></i></button>
+                                <button type="button" class="gv2-btn" onclick="gameViewer2.goToEnd()" title="Konec" aria-label="Přejít na konec partie"><i class="fa-solid fa-forward-fast"></i></button>
+                                <button type="button" class="gv2-btn" onclick="gameViewer2.flipBoard()" title="Otočit" aria-label="Otočit šachovnici"><i class="fa-solid fa-retweet"></i></button>
+                                <button type="button" class="gv2-btn gv2-btn-analysis" id="gv2-analysis-btn" onclick="gameViewer2.toggleAnalysis()" title="Analýza Stockfish" aria-label="Zapnout analýzu Stockfish" aria-pressed="false">
                                     <i class="fa-solid fa-microchip" id="gv2-analysis-icon"></i>
                                 </button>
                                 <!-- AI explain button removed from viewer (kept in game-recorder only) -->
                             </div>
                             <div class="gv2-scrubber" id="gv2-scrubber">
                                 <div class="gv2-scrubber-meta">
-                                    <span id="gv2-scrubber-current">Výchozí pozice</span>
+                                    <span id="gv2-scrubber-current" aria-live="polite">Výchozí pozice</span>
                                     <strong id="gv2-scrubber-count">0/0</strong>
                                 </div>
                                 <input type="range" id="gv2-scrubber-range" class="gv2-scrubber-range" min="0" max="0" value="0" step="1" aria-label="Přejít na tah">
@@ -1035,7 +1035,7 @@ class GameViewer2 {
                         </div>
                         <div class="gv2-comment-dock-text" id="gv2-comment-dock-text"></div>
                     </div>
-                    <button class="gv2-comment-dock-close" onclick="gameViewer2.hideBubble()" title="Schovat komentář"><i class="fa-solid fa-xmark"></i></button>
+                    <button type="button" class="gv2-comment-dock-close" onclick="gameViewer2.hideBubble()" title="Schovat komentář" aria-label="Schovat komentář"><i class="fa-solid fa-xmark"></i></button>
                 </div>
             `;
 
@@ -1170,7 +1170,9 @@ class GameViewer2 {
         range.style.setProperty('--gv2-scrub-progress', `${pct}%`);
 
         wrapper.classList.toggle('is-variation', Boolean(options.inVariation));
-        currentEl.textContent = options.label || this.getCurrentMoveLabel();
+        const currentLabel = options.label || this.getCurrentMoveLabel();
+        currentEl.textContent = currentLabel;
+        range.setAttribute('aria-valuetext', currentLabel);
         countEl.textContent = options.inVariation ? 'větev' : `${currentPly}/${maxPly}`;
     }
 
@@ -2512,6 +2514,9 @@ class GameViewer2 {
 
         if (this.analysisEnabled) {
             btn.classList.add('active');
+            btn.setAttribute('aria-pressed', 'true');
+            btn.setAttribute('aria-label', 'Vypnout analýzu Stockfish');
+            btn.title = 'Vypnout analýzu Stockfish';
             evalBar.classList.add('active');
             analysisInfo.style.display = 'flex';
             if (aiBtn) aiBtn.style.display = '';
@@ -2523,11 +2528,17 @@ class GameViewer2 {
                 console.error('[Analysis] Failed to connect:', err);
                 this.analysisEnabled = false;
                 btn.classList.remove('active');
+                btn.setAttribute('aria-pressed', 'false');
+                btn.setAttribute('aria-label', 'Zapnout analýzu Stockfish');
+                btn.title = 'Analýza Stockfish';
                 evalBar.classList.remove('active');
                 analysisInfo.style.display = 'none';
             });
         } else {
             btn.classList.remove('active');
+            btn.setAttribute('aria-pressed', 'false');
+            btn.setAttribute('aria-label', 'Zapnout analýzu Stockfish');
+            btn.title = 'Analýza Stockfish';
             evalBar.classList.remove('active');
             analysisInfo.style.display = 'none';
             if (aiBtn) aiBtn.style.display = 'none';
@@ -2721,12 +2732,24 @@ class GameViewer2 {
     }
 
     toggleAutoplay(forceState) {
+        const playBtn = document.getElementById('gv2-play-btn');
+        const playIcon = document.getElementById('gv2-play-icon');
         if (forceState === false || (this.autoplayInterval && forceState !== true)) {
             clearInterval(this.autoplayInterval);
             this.autoplayInterval = null;
-            document.getElementById('gv2-play-icon').className = 'fa-solid fa-play';
+            if (playIcon) playIcon.className = 'fa-solid fa-play';
+            if (playBtn) {
+                playBtn.setAttribute('aria-pressed', 'false');
+                playBtn.setAttribute('aria-label', 'Přehrát partii');
+                playBtn.title = 'Přehrát';
+            }
         } else {
-            document.getElementById('gv2-play-icon').className = 'fa-solid fa-pause';
+            if (playIcon) playIcon.className = 'fa-solid fa-pause';
+            if (playBtn) {
+                playBtn.setAttribute('aria-pressed', 'true');
+                playBtn.setAttribute('aria-label', 'Zastavit přehrávání');
+                playBtn.title = 'Zastavit';
+            }
             this.autoplayInterval = setInterval(() => this.stepForward(), 1000);
         }
     }
