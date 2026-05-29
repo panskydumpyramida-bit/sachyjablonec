@@ -2407,10 +2407,10 @@ body>.gv2-var-modal {
     padding: 0.68rem 0.82rem;
     border: 1px solid rgba(212, 175, 55, 0.38);
     border-radius: 10px;
-    background: linear-gradient(180deg, rgba(12, 12, 16, 0.96), rgba(18, 18, 24, 0.98));
-    box-shadow: 0 18px 34px rgba(0, 0, 0, 0.42), inset 0 1px 0 rgba(255, 255, 255, 0.035);
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
+    background: linear-gradient(180deg, rgba(12, 12, 16, 0.72), rgba(18, 18, 24, 0.64));
+    box-shadow: 0 16px 34px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+    backdrop-filter: blur(2px) saturate(118%);
+    -webkit-backdrop-filter: blur(2px) saturate(118%);
 }
 
 .game-viewer-2-container.gv2-skin-modern .gv2-comment-dock[hidden] {
@@ -2459,16 +2459,18 @@ body>.gv2-var-modal {
 }
 
 .game-viewer-2-container.gv2-skin-modern .gv2-comment-dock-meta span {
-    color: #a0a0ac;
+    color: #c2c2ca;
     font-family: 'Roboto Mono', ui-monospace, monospace;
     text-transform: none;
     letter-spacing: 0;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9);
 }
 
 .game-viewer-2-container.gv2-skin-modern .gv2-comment-dock-text {
-    color: #e8e8ee;
+    color: #f4f4f7;
     font-size: 0.86rem;
     line-height: 1.45;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.95), 0 0 12px rgba(0, 0, 0, 0.45);
 }
 
 .game-viewer-2-container.gv2-skin-modern .gv2-comment-dock-close {
