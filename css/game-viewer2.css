@@ -3067,7 +3067,7 @@ body>.gv2-var-modal {
     }
 
     .game-viewer-2-container.gv2-skin-modern .gv2-board-wrapper {
-        width: min(calc(100vw - 78px), 430px, 55vh);
+        width: min(calc(100cqi - 96px), calc(100vw - 96px), 430px, 55vh);
         height: auto;
         max-width: none;
     }
@@ -3078,7 +3078,7 @@ body>.gv2-var-modal {
     }
 
     .game-viewer-2-container.gv2-skin-modern .gv2-transport {
-        width: min(calc(100vw - 78px), 390px);
+        width: min(calc(100cqi - 96px), calc(100vw - 96px), 390px);
         padding: 0.36rem 0.46rem 0.44rem;
         border-radius: 10px;
     }
@@ -3173,7 +3173,7 @@ body>.gv2-var-modal {
     }
 
     .game-viewer-2-container.gv2-skin-modern .gv2-board-wrapper {
-        width: min(calc(100vw - 84px), 390px, 49vh);
+        width: min(calc(100cqi - 96px), calc(100vw - 84px), 390px, 49vh);
         height: auto;
     }
 
@@ -3188,7 +3188,7 @@ body>.gv2-var-modal {
     }
 
     .game-viewer-2-container.gv2-skin-modern .gv2-transport {
-        width: min(calc(100vw - 84px), 390px);
+        width: min(calc(100cqi - 96px), calc(100vw - 84px), 390px);
         padding: 0.26rem 0.36rem 0.32rem;
         gap: 0.16rem;
     }
