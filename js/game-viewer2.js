@@ -2780,9 +2780,13 @@ class GameViewer2 {
         const isModern = this.viewerSkin === 'modern';
         const avatarUrl = this.getCommentAvatarUrl();
         const viewerContainer = document.getElementById('gv2-main-container');
-        let layoutChanged = false;
 
         if (isModern && dock && dockText) {
+            const boardSection = viewerContainer?.querySelector('.gv2-board-section');
+            if (boardSection && dock.parentElement !== boardSection) {
+                boardSection.appendChild(dock);
+            }
+            if (viewerContainer) viewerContainer.classList.remove('gv2-has-comment-dock');
             overlay.style.display = 'none';
             if (comment && !this.bubbleManuallyHidden) {
                 dock.hidden = false;
@@ -2790,29 +2794,15 @@ class GameViewer2 {
                 dockText.textContent = comment;
                 if (dockMove) dockMove.textContent = this.getCurrentMoveLabel();
                 this.renderCommentAvatar(dockAvatar, avatarUrl);
-                if (viewerContainer && !viewerContainer.classList.contains('gv2-has-comment-dock')) {
-                    viewerContainer.classList.add('gv2-has-comment-dock');
-                    layoutChanged = true;
-                }
                 if (showBtn) showBtn.classList.remove('visible');
             } else {
                 dock.hidden = true;
                 dock.classList.remove('visible');
-                if (viewerContainer && viewerContainer.classList.contains('gv2-has-comment-dock')) {
-                    viewerContainer.classList.remove('gv2-has-comment-dock');
-                    layoutChanged = true;
-                }
                 if (comment && this.bubbleManuallyHidden) {
                     if (showBtn) showBtn.classList.add('visible');
                 } else {
                     if (showBtn) showBtn.classList.remove('visible');
                 }
-            }
-            if (layoutChanged && this.board && typeof this.board.resize === 'function') {
-                requestAnimationFrame(() => {
-                    this.board.resize();
-                    this.syncEvalBarHeight();
-                });
             }
             return;
         }
@@ -2883,6 +2873,8 @@ class GameViewer2 {
             dock.hidden = true;
             dock.classList.remove('visible');
         }
+        const viewerContainer = document.getElementById('gv2-main-container');
+        if (viewerContainer) viewerContainer.classList.remove('gv2-has-comment-dock');
 
         // Don't toggle title or nav controls display
 
