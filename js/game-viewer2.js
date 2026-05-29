@@ -11,10 +11,217 @@ const CLUB_MEMBERS = [
     { id: 'radim', keywords: ['radim', 'podrazky'], img: 'images/management_radim.png' }
 ];
 
+const STOCKFISH18_VERSION = '18.0.7';
+const STOCKFISH18_WASM_URL = `https://unpkg.com/stockfish@${STOCKFISH18_VERSION}/bin/stockfish-18-lite-single.wasm`;
+const STOCKFISH18_MAX_DEPTH = 14;
+
+function gv2Number(value) {
+    if (value === null || value === undefined || value === '') return null;
+    const n = typeof value === 'number' ? value : Number(String(value).replace(',', '.'));
+    return Number.isFinite(n) ? n : null;
+}
+
+function gv2WinChance(eval_) {
+    return 50 + 50 * Math.tanh(eval_ / 4);
+}
+
+function gv2ClampPercent(value) {
+    const n = gv2Number(value);
+    if (n === null) return null;
+    return Math.max(0, Math.min(100, n));
+}
+
+class Stockfish18Engine {
+    constructor() {
+        this.worker = null;
+        this.readyPromise = null;
+        this.active = null;
+        this.lastInfo = null;
+    }
+
+    getWorkerUrl() {
+        const workerUrl = new URL('/js/stockfish18-worker.js', window.location.href).href;
+        return `${workerUrl}#${encodeURIComponent(STOCKFISH18_WASM_URL)}`;
+    }
+
+    ensureReady() {
+        if (this.readyPromise) return this.readyPromise;
+
+        this.readyPromise = new Promise((resolve, reject) => {
+            if (!window.Worker || !window.WebAssembly) {
+                reject(new Error('Browser nepodporuje Web Worker nebo WebAssembly'));
+                return;
+            }
+
+            let settled = false;
+            const timeout = setTimeout(() => {
+                if (settled) return;
+                settled = true;
+                reject(new Error('Stockfish 18 se nepodařilo spustit'));
+            }, 15000);
+
+            try {
+                this.worker = new Worker(this.getWorkerUrl());
+            } catch (error) {
+                clearTimeout(timeout);
+                settled = true;
+                reject(error);
+                return;
+            }
+
+            this.worker.addEventListener('message', (event) => this.handleLine(String(event.data || ''), resolve, reject, timeout, () => settled, (value) => { settled = value; }));
+            this.worker.addEventListener('error', (event) => {
+                if (!settled) {
+                    clearTimeout(timeout);
+                    settled = true;
+                    reject(new Error(event.message || 'Chyba Stockfish workeru'));
+                } else if (this.active) {
+                    this.active.reject(new Error(event.message || 'Chyba Stockfish workeru'));
+                    this.active = null;
+                }
+            });
+
+            this.worker.postMessage('uci');
+        }).catch((error) => {
+            if (this.worker) this.worker.terminate();
+            this.worker = null;
+            this.readyPromise = null;
+            throw error;
+        });
+
+        return this.readyPromise;
+    }
+
+    handleLine(line, resolveReady, rejectReady, readyTimeout, getSettled, setSettled) {
+        if (!line) return;
+
+        if (line === 'uciok') {
+            this.worker.postMessage('setoption name Hash value 16');
+            this.worker.postMessage('setoption name MultiPV value 1');
+            this.worker.postMessage('isready');
+            return;
+        }
+
+        if (line === 'readyok' && !getSettled()) {
+            clearTimeout(readyTimeout);
+            setSettled(true);
+            resolveReady();
+            return;
+        }
+
+        if (!this.active) return;
+
+        if (line.startsWith('info ')) {
+            const parsed = this.parseInfo(line);
+            if (parsed) this.lastInfo = parsed;
+            return;
+        }
+
+        if (line.startsWith('bestmove ')) {
+            const active = this.active;
+            this.active = null;
+            clearTimeout(active.timeout);
+
+            const bestMove = line.split(/\s+/)[1] || this.lastInfo?.pv?.[0] || null;
+            active.resolve(this.buildResult(active.fen, active.depth, bestMove));
+        }
+    }
+
+    parseInfo(line) {
+        const parts = line.trim().split(/\s+/);
+        const depth = gv2Number(parts[parts.indexOf('depth') + 1]);
+        const scoreIdx = parts.indexOf('score');
+        const pvIdx = parts.indexOf('pv');
+
+        if (scoreIdx === -1) return null;
+
+        const scoreType = parts[scoreIdx + 1];
+        const scoreValue = gv2Number(parts[scoreIdx + 2]);
+        if (!scoreType || scoreValue === null) return null;
+
+        return {
+            depth: depth || 0,
+            scoreType,
+            scoreValue,
+            pv: pvIdx !== -1 ? parts.slice(pvIdx + 1) : []
+        };
+    }
+
+    buildResult(fen, requestedDepth, bestMove) {
+        const turn = fen.split(' ')[1] || 'w';
+        const info = this.lastInfo || {};
+        let evalScore = null;
+        let mateScore = null;
+
+        if (info.scoreType === 'cp') {
+            evalScore = info.scoreValue / 100;
+            if (turn === 'b') evalScore = -evalScore;
+        } else if (info.scoreType === 'mate') {
+            mateScore = turn === 'b' ? -info.scoreValue : info.scoreValue;
+        }
+
+        const pv = Array.isArray(info.pv) ? info.pv : [];
+        const continuation = bestMove && pv[0] === bestMove ? pv.slice(1) : pv.slice(0, 8);
+
+        return {
+            type: 'bestmove',
+            eval: evalScore,
+            mate: mateScore,
+            depth: info.depth || requestedDepth,
+            fen,
+            winChance: evalScore !== null ? gv2WinChance(evalScore) : (mateScore !== null ? (mateScore > 0 ? 100 : 0) : 50),
+            continuation,
+            uciMove: bestMove,
+            text: `Stockfish 18`
+        };
+    }
+
+    async analyze(fen, depth) {
+        await this.ensureReady();
+
+        if (this.active) {
+            this.worker.postMessage('stop');
+            clearTimeout(this.active.timeout);
+            const error = new Error('Analýza nahrazena novější pozicí');
+            error.name = 'AbortError';
+            this.active.reject(error);
+            this.active = null;
+        }
+
+        this.lastInfo = null;
+        const safeDepth = Math.max(8, Math.min(parseInt(depth, 10) || 12, STOCKFISH18_MAX_DEPTH));
+
+        return new Promise((resolve, reject) => {
+            const timeout = setTimeout(() => {
+                if (this.active) {
+                    this.worker.postMessage('stop');
+                    this.active = null;
+                }
+                reject(new Error('Stockfish 18 timeout'));
+            }, 22000);
+
+            this.active = { resolve, reject, timeout, fen, depth: safeDepth };
+            this.worker.postMessage('ucinewgame');
+            this.worker.postMessage(`position fen ${fen}`);
+            this.worker.postMessage(`go depth ${safeDepth}`);
+        });
+    }
+
+    stop() {
+        if (this.worker && this.active) {
+            const active = this.active;
+            this.worker.postMessage('stop');
+            clearTimeout(active.timeout);
+            this.active = null;
+            const error = new Error('Analýza zastavena');
+            error.name = 'AbortError';
+            active.reject(error);
+        }
+    }
+}
+
 /**
- * Chess Analyzer - Lichess Cloud Evaluation API
- * Uses cached Stockfish evaluations from Lichess (~7 million positions)
- * Falls back gracefully if position not in database
+ * Chess Analyzer - local Stockfish 18 with API fallbacks.
  */
 class ChessAnalyzer {
     constructor(onUpdate) {
@@ -53,6 +260,8 @@ class ChessAnalyzer {
     }
 
     analyze(fen) {
+        fen = this._normalizeFen(fen);
+
         // Debounce rapid requests (e.g., when clicking through moves quickly)
         if (this.debounceTimer) {
             clearTimeout(this.debounceTimer);
@@ -69,91 +278,98 @@ class ChessAnalyzer {
         this.isAnalyzing = true;
 
         try {
-            // Lichess cloud-eval uses GET with FEN as query param
-            // multiPv=3 to get up to 3 variations
-            const url = `${this.apiUrl}?fen=${encodeURIComponent(fen)}&multiPv=3`;
+            await this._analyzeWithStockfish18(fen, requestId);
 
+        } catch (error) {
+            if (error.name === 'AbortError') return;
+            if (this.currentRequestId !== requestId) return;
+            console.warn('[ChessAnalyzer] Stockfish 18 unavailable, trying API fallback:', error);
+            await this._fallbackToLichess(fen, requestId);
+        } finally {
+            this.isAnalyzing = false;
+        }
+    }
+
+    _normalizeFen(fen) {
+        if (!fen || typeof fen !== 'string') return fen;
+        const parts = fen.split(' ');
+        if (parts.length >= 4 && parts[3] !== '-') parts[3] = '-';
+        return parts.join(' ');
+    }
+
+    async _analyzeWithStockfish18(fen, requestId) {
+        if (!ChessAnalyzer.stockfish18) {
+            ChessAnalyzer.stockfish18 = new Stockfish18Engine();
+        }
+
+        if (this.onUpdate && this.currentRequestId === requestId) {
+            this.onUpdate({
+                type: 'info',
+                eval: null,
+                mate: null,
+                depth: 0,
+                fen,
+                text: 'Stockfish 18 počítá...'
+            });
+        }
+
+        const result = await ChessAnalyzer.stockfish18.analyze(fen, this.fallbackDepth);
+        if (this.onUpdate && this.currentRequestId === requestId) {
+            this.onUpdate(result);
+        }
+    }
+
+    async _fallbackToLichess(fen, requestId) {
+        try {
+            const url = `${this.apiUrl}?fen=${encodeURIComponent(fen)}&multiPv=3`;
             const response = await fetch(url, {
                 method: 'GET',
-                headers: {
-                    'Accept': 'application/json'
-                }
+                headers: { 'Accept': 'application/json' }
             });
 
-            // Check if this request is still current
-            if (this.currentRequestId !== requestId) {
-                return;
-            }
+            if (this.currentRequestId !== requestId) return;
 
-            if (response.status === 404) {
-                // Position not in Lichess cloud database - fallback to chess-api.com
-                console.log('[ChessAnalyzer] Position not in Lichess cloud, trying chess-api.com fallback');
+            if (!response.ok) {
                 await this._fallbackToChessApi(fen, requestId);
                 return;
             }
 
-            if (!response.ok) {
-                throw new Error(`HTTP ${response.status}`);
-            }
-
             const data = await response.json();
+            const mainPv = data.pvs && data.pvs[0];
 
-            // Lichess response format:
-            // { fen, knodes, depth, pvs: [{ moves: "e2e4 e7e5 ...", cp: 35 }, ...] }
-
-            if (this.onUpdate && this.currentRequestId === requestId) {
-                const mainPv = data.pvs && data.pvs[0];
-
-                // Extract evaluation (cp = centipawns, mate = mate in N)
-                let evalScore = null;
-                let mateScore = null;
-
-                if (mainPv) {
-                    if (mainPv.mate !== undefined) {
-                        mateScore = mainPv.mate;
-                    } else if (mainPv.cp !== undefined) {
-                        evalScore = mainPv.cp / 100; // Convert centipawns to pawns
-                    }
-                }
-
-                // Parse continuation moves (UCI format: "e2e4 e7e5 g1f3")
-                let continuation = [];
-                if (mainPv && mainPv.moves) {
-                    continuation = mainPv.moves.split(' ').slice(1); // Skip first move (best move)
-                }
-
-                // First move is the best move
-                const bestMoveUci = mainPv && mainPv.moves ? mainPv.moves.split(' ')[0] : null;
-
-                this.onUpdate({
-                    type: 'bestmove',
-                    eval: evalScore,
-                    mate: mateScore,
-                    depth: data.depth || 0,
-                    fen: fen, // Return original FEN for sync check
-                    winChance: evalScore !== null ? this._evalToWinChance(evalScore) : 50,
-                    continuation: continuation,
-                    uciMove: bestMoveUci,
-                    text: `Lichess Cloud`
-                });
+            if (!mainPv) {
+                await this._fallbackToChessApi(fen, requestId);
+                return;
             }
 
+            const parsed = this._parseLichessResult(data, fen);
+            if (this.onUpdate && this.currentRequestId === requestId) {
+                this.onUpdate(parsed);
+            }
         } catch (error) {
             console.error('[ChessAnalyzer] Lichess API Error:', error);
-            // Show error state
-            if (this.onUpdate && this.currentRequestId === requestId) {
-                this.onUpdate({
-                    type: 'error',
-                    eval: null,
-                    mate: null,
-                    depth: 0,
-                    fen: fen,
-                    text: 'Chyba při načítání'
-                });
-            }
-        } finally {
-            this.isAnalyzing = false;
+            await this._fallbackToChessApi(fen, requestId);
         }
+    }
+
+    _parseLichessResult(data, fen) {
+        const mainPv = data.pvs && data.pvs[0];
+        const moves = mainPv?.moves ? mainPv.moves.split(/\s+/).filter(Boolean) : [];
+        const cpScore = mainPv && mainPv.cp !== undefined ? gv2Number(mainPv.cp) : null;
+        const evalScore = cpScore !== null ? cpScore / 100 : null;
+        const mateScore = mainPv && mainPv.mate !== undefined ? gv2Number(mainPv.mate) : null;
+
+        return {
+            type: 'bestmove',
+            eval: evalScore,
+            mate: mateScore,
+            depth: data.depth || 0,
+            fen,
+            winChance: evalScore !== null ? this._evalToWinChance(evalScore) : (mateScore !== null ? (mateScore > 0 ? 100 : 0) : 50),
+            continuation: moves.slice(1),
+            uciMove: moves[0] || null,
+            text: 'Lichess Cloud'
+        };
     }
 
     // Convert evaluation to win chance percentage
@@ -162,7 +378,7 @@ class ChessAnalyzer {
         return 50 + 50 * Math.tanh(eval_ / 4);
     }
 
-    // Fallback to chess-api.com for positions not in Lichess cloud
+    // Fallback to chess-api.com if the local engine and Lichess are unavailable
     async _fallbackToChessApi(fen, requestId) {
         try {
             const response = await fetch('https://chess-api.com/v1', {
@@ -198,17 +414,7 @@ class ChessAnalyzer {
             }
 
             if (this.onUpdate && this.currentRequestId === requestId) {
-                this.onUpdate({
-                    type: 'bestmove',
-                    eval: data.eval,
-                    mate: data.mate,
-                    depth: data.depth,
-                    fen: fen,
-                    winChance: data.winChance || (data.eval !== null ? this._evalToWinChance(data.eval) : 50),
-                    continuation: data.continuationArr || [],
-                    uciMove: data.move,
-                    text: `Stockfish (hloubka ${data.depth || this.fallbackDepth})`
-                });
+                this.onUpdate(this._parseChessApiResult(data, fen));
             }
         } catch (error) {
             console.error('[ChessAnalyzer] chess-api.com fallback error:', error);
@@ -232,8 +438,33 @@ class ChessAnalyzer {
             clearTimeout(this.debounceTimer);
             this.debounceTimer = null;
         }
+        if (ChessAnalyzer.stockfish18) ChessAnalyzer.stockfish18.stop();
+    }
+
+    _parseChessApiResult(data, fen) {
+        const centipawns = gv2Number(data.centipawns);
+        const evalScore = centipawns !== null ? centipawns / 100 : gv2Number(data.eval);
+        const mateScore = gv2Number(data.mate);
+        const rawLine = Array.isArray(data.continuationArr) ? data.continuationArr : [];
+        const bestMove = data.move || data.bestmove || rawLine[0] || null;
+        const continuation = bestMove && rawLine[0] === bestMove ? rawLine.slice(1) : rawLine;
+        const winChance = gv2ClampPercent(data.winChance) ?? (evalScore !== null ? this._evalToWinChance(evalScore) : (mateScore !== null ? (mateScore > 0 ? 100 : 0) : 50));
+
+        return {
+            type: 'bestmove',
+            eval: evalScore,
+            mate: mateScore,
+            depth: data.depth || this.fallbackDepth,
+            fen,
+            winChance,
+            continuation,
+            uciMove: bestMove,
+            text: `Chess-API fallback`
+        };
     }
 }
+
+window.ChessAnalyzer = ChessAnalyzer;
 
 /**
  * ChessEvalDisplay - Global utility for eval bar rendering
@@ -281,8 +512,11 @@ const ChessEvalDisplay = {
 
         if (!evalFill || !evalText) return;
 
+        const evalValue = gv2Number(data.eval);
+        const mateValue = gv2Number(data.mate);
+
         // Handle info messages (no eval)
-        if (data.type === 'info' || (data.eval === null && data.mate === null && data.mate === undefined)) {
+        if (data.type === 'info' || data.type === 'error' || (evalValue === null && mateValue === null)) {
             evalText.textContent = data.text || '—';
             if (bestMove) bestMove.textContent = data.text || '—';
             if (pvLine) pvLine.textContent = '';
@@ -293,12 +527,12 @@ const ChessEvalDisplay = {
         let percentage;
         let displayText;
 
-        if (data.mate !== null && data.mate !== undefined) {
-            percentage = data.mate > 0 ? 100 : 0;
-            displayText = `M${Math.abs(data.mate)}`;
+        if (mateValue !== null) {
+            percentage = mateValue > 0 ? 100 : 0;
+            displayText = `M${Math.abs(mateValue)}`;
         } else {
-            const eval_ = data.eval || 0;
-            percentage = data.winChance || (50 + 50 * Math.tanh(eval_ / 4));
+            const eval_ = evalValue;
+            percentage = gv2ClampPercent(data.winChance) ?? (50 + 50 * Math.tanh(eval_ / 4));
             displayText = (eval_ >= 0 ? '+' : '') + eval_.toFixed(1);
         }
 
@@ -2205,24 +2439,36 @@ class GameViewer2 {
         // Cache for AI explain
         this.lastAnalysisData = data;
 
+        const bestMoveEl = document.getElementById('gv2-best-move');
+        const depthEl = document.getElementById('gv2-depth');
+        const pvLineEl = document.getElementById('gv2-pv-line');
+
+        if (data.type === 'info' || data.type === 'error') {
+            this.updateEvalBar(null, null, null, data.text || '—');
+            if (bestMoveEl) bestMoveEl.textContent = data.text || '—';
+            if (depthEl) depthEl.textContent = '';
+            if (pvLineEl) pvLineEl.innerHTML = '';
+            this.lastEval = data;
+            return;
+        }
+
         // Update eval bar
         this.updateEvalBar(data.eval, data.mate, data.winChance);
 
         // Update best move display
-        const bestMoveEl = document.getElementById('gv2-best-move');
-        const depthEl = document.getElementById('gv2-depth');
-
         if (bestMoveEl) {
             let evalHtml = '';
-            if (data.mate !== null && data.mate !== undefined) {
-                const mVal = data.mate > 0 ? `M${data.mate}` : `M${Math.abs(data.mate)}`;
+            const mateValue = gv2Number(data.mate);
+            const evalValue = gv2Number(data.eval);
+            if (mateValue !== null) {
+                const mVal = mateValue > 0 ? `M${mateValue}` : `M${Math.abs(mateValue)}`;
                 evalHtml = `<span class="gv2-eval-tag">${mVal}</span>`;
-            } else if (data.eval !== null && data.eval !== undefined) {
-                const val = data.eval > 0 ? `+${data.eval.toFixed(1)}` : data.eval.toFixed(1);
+            } else if (evalValue !== null) {
+                const val = evalValue > 0 ? `+${evalValue.toFixed(1)}` : evalValue.toFixed(1);
                 evalHtml = `<span class="gv2-eval-tag">${val}</span>`;
             }
 
-            bestMoveEl.innerHTML = `${evalHtml} Stockfish 17`;
+            bestMoveEl.innerHTML = `${evalHtml} ${data.text || 'Stockfish 18'}`;
         }
 
         if (depthEl && data.depth) {
@@ -2230,7 +2476,6 @@ class GameViewer2 {
         }
 
         // Display principal variation (PV) with Czech notation and move numbers
-        const pvLineEl = document.getElementById('gv2-pv-line');
         if (pvLineEl) {
             // Combine best move + continuation for full PV
             let fullPv = [];
@@ -2283,7 +2528,7 @@ class GameViewer2 {
                 } catch (e) {
                     console.error('PV Formatting Error:', e);
                     // Fallback
-                    pvLineEl.textContent = data.continuation.slice(0, 6).join(' ');
+                    pvLineEl.textContent = fullPv.slice(0, 6).join(' ');
                 }
             } else {
                 pvLineEl.innerHTML = '';
@@ -2294,33 +2539,37 @@ class GameViewer2 {
         this.lastEval = data;
     }
 
-    updateEvalBar(evaluation, mate, winChance) {
+    updateEvalBar(evaluation, mate, winChance, emptyText = '—') {
         const evalFill = document.getElementById('gv2-eval-fill');
         const evalText = document.getElementById('gv2-eval-text');
 
         if (!evalFill || !evalText) return;
 
         let percentage, displayText;
+        const evalValue = gv2Number(evaluation);
+        const mateValue = gv2Number(mate);
 
-        if (mate !== null && mate !== undefined) {
+        if (mateValue !== null) {
             // Mate detected
-            displayText = mate > 0 ? `M${mate}` : `M${Math.abs(mate)}`;
-            percentage = mate > 0 ? 100 : 0;
+            displayText = mateValue > 0 ? `M${mateValue}` : `M${Math.abs(mateValue)}`;
+            percentage = mateValue > 0 ? 100 : 0;
             evalFill.classList.add('mate');
-        } else if (evaluation !== null && evaluation !== undefined) {
+        } else if (evalValue !== null) {
             // Normal evaluation
-            displayText = evaluation > 0 ? `+${evaluation.toFixed(1)}` : evaluation.toFixed(1);
+            displayText = evalValue > 0 ? `+${evalValue.toFixed(1)}` : evalValue.toFixed(1);
             // Use winChance if available, otherwise calculate from eval
-            if (winChance !== null && winChance !== undefined) {
-                percentage = winChance;
+            const parsedWinChance = gv2ClampPercent(winChance);
+            if (parsedWinChance !== null) {
+                percentage = parsedWinChance;
             } else {
                 // Sigmoid-like mapping: eval to percentage
-                percentage = 50 + 50 * (2 / (1 + Math.exp(-0.4 * evaluation)) - 1);
+                percentage = 50 + 50 * (2 / (1 + Math.exp(-0.4 * evalValue)) - 1);
             }
             evalFill.classList.remove('mate');
         } else {
-            displayText = '0.0';
+            displayText = emptyText;
             percentage = 50;
+            evalFill.classList.remove('mate');
         }
 
         // Clamp percentage
