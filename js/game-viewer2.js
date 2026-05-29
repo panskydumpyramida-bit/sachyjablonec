@@ -798,6 +798,7 @@ class GameViewer2 {
         this.inVariation = false;
         this.currentVariation = null;
         this.variationPly = 0;
+        this.mobileNotationOpen = false;
 
         // Stockfish analysis
         this.analyzer = new ChessAnalyzer((data) => this.handleAnalysisUpdate(data));
@@ -1014,7 +1015,11 @@ class GameViewer2 {
                         </div>
                     </div>
                     <div class="gv2-info-panel">
-                        <div class="gv2-info-content">
+                        <button class="gv2-mobile-notation-toggle" id="gv2-mobile-notation-toggle" onclick="gameViewer2.toggleMobileNotation()" type="button" aria-expanded="false" aria-controls="gv2-info-content">
+                            <span><i class="fa-solid fa-list-ol"></i> Zápis partie</span>
+                            <i class="fa-solid fa-chevron-down gv2-mobile-notation-chevron"></i>
+                        </button>
+                        <div class="gv2-info-content" id="gv2-info-content">
                             <div id="gv2-metadata" class="gv2-metadata"></div>
                             <div id="gv2-moves" class="gv2-moves"></div>
                         </div>
@@ -1227,6 +1232,8 @@ class GameViewer2 {
                 gv2Container.classList.remove('hidden');
                 gv2Container.style.display = 'flex'; // Force flex
             }
+            this.mobileNotationOpen = false;
+            this.updateMobileNotationToggle();
 
             // Set Title & Metadata
             this.renderGameTitle(gameData);
@@ -1316,6 +1323,24 @@ class GameViewer2 {
             </div>
             ` : ''}
         `;
+    }
+
+    toggleMobileNotation(forceState) {
+        this.mobileNotationOpen = typeof forceState === 'boolean' ? forceState : !this.mobileNotationOpen;
+        this.updateMobileNotationToggle();
+    }
+
+    updateMobileNotationToggle() {
+        const panel = document.querySelector('.gv2-info-panel');
+        const button = document.getElementById('gv2-mobile-notation-toggle');
+        if (!panel || !button) return;
+
+        panel.classList.toggle('gv2-notation-open', this.mobileNotationOpen);
+        button.setAttribute('aria-expanded', String(this.mobileNotationOpen));
+        const label = button.querySelector('span');
+        if (label) {
+            label.innerHTML = `<i class="fa-solid fa-list-ol"></i> ${this.mobileNotationOpen ? 'Skrýt zápis' : 'Zápis partie'}`;
+        }
     }
 
     renderGameTitle(gameData) {
