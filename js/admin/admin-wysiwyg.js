@@ -788,7 +788,7 @@ function buildInlineGamePlaceholder({ pgn, title, orientation }) {
     const moveLabel = moveCount ? `${moveCount} půltahů` : 'PGN partie';
     const orientationLabel = orientation === 'black' ? 'Černé dole' : 'Bílé dole';
 
-    return `<div class="inline-game-viewer" data-pgn-b64="${encoded}" data-title="${escapeInlineAttr(displayTitle)}" data-orientation="${orientation === 'black' ? 'black' : 'white'}" contenteditable="false" style="background:linear-gradient(180deg,#202029,#17171f);border:1px solid rgba(212,175,55,0.22);border-radius:12px;overflow:hidden;margin:1rem 0;max-width:760px;width:100%;box-shadow:0 12px 32px rgba(0,0,0,0.28);">
+    return `<div class="inline-game-viewer" data-pgn-b64="${encoded}" data-title="${escapeInlineAttr(displayTitle)}" data-orientation="${orientation === 'black' ? 'black' : 'white'}" contenteditable="false" style="background:linear-gradient(180deg,#202029,#17171f);border:1px solid rgba(212,175,55,0.22);border-radius:10px;overflow:hidden;margin:1rem 0;max-width:760px;width:100%;box-shadow:0 12px 32px rgba(0,0,0,0.28);">
         <div style="display:flex;align-items:center;gap:0.65rem;padding:0.65rem 0.8rem;border-bottom:1px solid rgba(255,255,255,0.08);background:rgba(0,0,0,0.18);">
             <i class="fa-solid fa-chess-knight" style="color:#facc15;"></i>
             <span class="inline-game-title" style="font-family:var(--font-heading, Georgia, serif);font-weight:700;color:#f1d36b;flex:1;min-width:0;">${escapeHtml(displayTitle)}</span>
@@ -800,7 +800,7 @@ function buildInlineGamePlaceholder({ pgn, title, orientation }) {
             </div>
             <div style="flex:1;padding:0.9rem;display:flex;flex-direction:column;justify-content:center;gap:0.45rem;color:#d7d7df;">
                 <strong style="color:#f1d36b;font-size:0.95rem;">Mini přehrávač partie</strong>
-                <span style="color:#a0a0ac;font-size:0.82rem;">Interaktivní šachovnice, tahy a komentáře se vykreslí přímo v článku.</span>
+                <span style="color:#a0a0ac;font-size:0.82rem;">Interaktivní šachovnice, komentáře a rozklikávací zápis tahů se vykreslí přímo v článku.</span>
                 <span class="inline-game-orientation" style="color:#777783;font-size:0.76rem;">${orientationLabel} · kliknutím upravíš blok</span>
             </div>
         </div>
