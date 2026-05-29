@@ -7,6 +7,7 @@
 
     const PIECE_THEME = '/img/chesspieces/wikipedia/{piece}.png';
     const START_FEN = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1';
+    const NAG_MAP = { '$1': '!', '$2': '?', '$3': '!!', '$4': '??', '$5': '!?', '$6': '?!' };
     let inlineViewerCounter = 0;
 
     function escapeHtml(value) {
@@ -78,28 +79,102 @@
         return result;
     }
 
-    function parsePgn(pgn) {
-        const headers = parseHeaders(pgn);
-        const body = stripNestedVariations(pgn.replace(/\[[^\]]+\]\s*/g, ' '));
-        const startFen = headers.SetUp === '1' && headers.FEN ? headers.FEN : START_FEN;
-        const game = new Chess(startFen);
-        const moves = [];
-        const tokenRegex = /\{[^}]*\}|\$\d+|\d+\.(?:\.\.)?|1-0|0-1|1\/2-1\/2|\*|[^\s{}()]+/g;
-        const tokens = body.match(tokenRegex) || [];
-        const nagMap = { '$1': '!', '$2': '?', '$3': '!!', '$4': '??', '$5': '!?', '$6': '?!' };
-        let currentMove = null;
+    function tokenizePgnBody(text) {
+        const tokens = [];
+        let i = 0;
 
-        for (const rawToken of tokens) {
-            const token = rawToken.trim();
-            if (!token || /^\d+\.(?:\.\.)?$/.test(token) || /^(1-0|0-1|1\/2-1\/2|\*)$/.test(token)) continue;
+        while (i < text.length) {
+            const char = text[i];
 
-            if (token.startsWith('{')) {
-                if (currentMove) currentMove.comment = token.slice(1, -1).trim();
+            if (/\s/.test(char)) {
+                i++;
                 continue;
             }
 
+            if (char === '{') {
+                const end = text.indexOf('}', i + 1);
+                const close = end === -1 ? text.length : end;
+                tokens.push({ type: 'comment', text: text.slice(i + 1, close).trim() });
+                i = close + 1;
+                continue;
+            }
+
+            if (char === '(') {
+                let depth = 1;
+                let inComment = false;
+                let j = i + 1;
+
+                for (; j < text.length; j++) {
+                    const c = text[j];
+                    if (c === '{') {
+                        inComment = true;
+                    } else if (c === '}') {
+                        inComment = false;
+                    } else if (!inComment && c === '(') {
+                        depth++;
+                    } else if (!inComment && c === ')') {
+                        depth--;
+                        if (depth === 0) break;
+                    }
+                }
+
+                tokens.push({ type: 'variation', text: text.slice(i + 1, j).trim() });
+                i = Math.min(j + 1, text.length);
+                continue;
+            }
+
+            if (char === ')') {
+                i++;
+                continue;
+            }
+
+            let j = i;
+            while (j < text.length && !/\s/.test(text[j]) && !['{', '(', ')'].includes(text[j])) {
+                j++;
+            }
+            tokens.push({ type: 'token', text: text.slice(i, j).trim() });
+            i = j;
+        }
+
+        return tokens;
+    }
+
+    function normalizeVariationText(text) {
+        return stripNestedVariations(text || '')
+            .replace(/\{[^}]*\}/g, ' ')
+            .replace(/\$\d+/g, nag => NAG_MAP[nag] || '')
+            .replace(/\s+/g, ' ')
+            .trim();
+    }
+
+    function parsePgn(pgn) {
+        const headers = parseHeaders(pgn);
+        const body = pgn.replace(/\[[^\]]+\]\s*/g, ' ');
+        const startFen = headers.SetUp === '1' && headers.FEN ? headers.FEN : START_FEN;
+        const game = new Chess(startFen);
+        const moves = [];
+        const tokens = tokenizePgnBody(body);
+        let currentMove = null;
+
+        for (const item of tokens) {
+            if (item.type === 'comment') {
+                if (currentMove && item.text) {
+                    currentMove.comment = [currentMove.comment, item.text].filter(Boolean).join(' ');
+                }
+                continue;
+            }
+
+            if (item.type === 'variation') {
+                const variation = normalizeVariationText(item.text);
+                if (currentMove && variation) currentMove.variations.push(variation);
+                continue;
+            }
+
+            const token = item.text;
+            if (!token || /^\d+\.(?:\.\.)?$/.test(token) || /^(1-0|0-1|1\/2-1\/2|\*)$/.test(token)) continue;
+
             if (token.startsWith('$')) {
-                if (currentMove && nagMap[token]) currentMove.nag = nagMap[token];
+                if (currentMove && NAG_MAP[token]) currentMove.nag = NAG_MAP[token];
                 continue;
             }
 
@@ -125,6 +200,7 @@
                 san: move.san,
                 nag: suffixNag,
                 comment: '',
+                variations: [],
                 fen: game.fen()
             };
             moves.push(currentMove);
@@ -160,6 +236,7 @@
                 <div class="igv-num">${row.moveNumber}.</div>
                 ${renderMoveButton(row.white, uid)}
                 ${renderMoveButton(row.black, uid)}
+                ${renderVariationLines(row)}
             </div>
         `).join('');
     }
@@ -168,6 +245,25 @@
         if (!move) return '<span></span>';
         const nag = move.nag ? `<span class="igv-nag">${escapeHtml(move.nag)}</span>` : '';
         return `<button type="button" class="igv-move" data-igv="${uid}" data-ply="${move.ply}">${escapeHtml(move.san)}${nag}</button>`;
+    }
+
+    function renderVariationLines(row) {
+        const moves = [row.white, row.black].filter(Boolean);
+        const lines = [];
+
+        for (const move of moves) {
+            const label = `${move.moveNumber}${move.color === 'b' ? '...' : '.'} ${move.san}`;
+            for (const variation of move.variations || []) {
+                lines.push(`
+                    <button type="button" class="igv-variation-line" data-ply="${move.ply}">
+                        <span class="igv-variation-anchor">${escapeHtml(label)}</span>
+                        <span class="igv-variation-text">${escapeHtml(variation)}</span>
+                    </button>
+                `);
+            }
+        }
+
+        return lines.length ? `<div class="igv-row-variations">${lines.join('')}</div>` : '';
     }
 
     function renderInlineViewer(container) {
@@ -225,6 +321,7 @@
                             <input type="range" class="igv-scrub" id="${uid}-scrub" min="0" max="${parsed.moves.length}" value="0" step="1" aria-label="Přejít na tah">
                         </div>
                         <div class="igv-comment" id="${uid}-comment" ${hasComments ? '' : 'hidden'}></div>
+                        <div class="igv-variation-panel" id="${uid}-variations" hidden></div>
                         <button type="button" class="igv-moves-toggle" id="${uid}-moves-toggle" aria-expanded="false" aria-controls="${uid}-moves">
                             <span class="igv-moves-toggle-label"><i class="fa-solid fa-list-ol"></i><span>Zápis partie</span></span>
                             <i class="fa-solid fa-chevron-down igv-moves-toggle-icon"></i>
@@ -260,6 +357,10 @@
                 button.addEventListener('click', () => goTo(state, parseInt(button.dataset.ply, 10)));
             });
 
+            container.querySelectorAll('.igv-variation-line').forEach(button => {
+                button.addEventListener('click', () => goTo(state, parseInt(button.dataset.ply, 10)));
+            });
+
             container.querySelector(`#${uid}-scrub`)?.addEventListener('input', event => {
                 goTo(state, parseInt(event.target.value, 10) - 1);
             });
@@ -279,8 +380,9 @@
             });
 
             if ('ResizeObserver' in window) {
+                const boardWrap = container.querySelector('.igv-board-wrap');
                 const observer = new ResizeObserver(() => board.resize());
-                observer.observe(container.querySelector('.igv-board-wrap'));
+                if (boardWrap) observer.observe(boardWrap);
             }
 
             setTimeout(() => board.resize(), 80);
@@ -374,6 +476,7 @@
         const countEl = container.querySelector(`#${state.uid}-count`);
         const scrubEl = container.querySelector(`#${state.uid}-scrub`);
         const commentEl = container.querySelector(`#${state.uid}-comment`);
+        const variationEl = container.querySelector(`#${state.uid}-variations`);
         const currentIndex = state.currentPly + 1;
 
         if (currentEl) {
@@ -392,6 +495,14 @@
             commentEl.hidden = !comment;
             commentEl.innerHTML = comment ? escapeHtml(comment) : '';
         }
+        if (variationEl) {
+            const variations = currentMove?.variations || [];
+            variationEl.hidden = variations.length === 0;
+            variationEl.innerHTML = variations.length ? `
+                <div class="igv-variation-panel-title"><i class="fa-solid fa-code-branch"></i> Varianty</div>
+                ${variations.map(variation => `<div class="igv-current-variation">${escapeHtml(variation)}</div>`).join('')}
+            ` : '';
+        }
 
         container.querySelectorAll('.igv-move').forEach(button => {
             const isActive = parseInt(button.dataset.ply, 10) === state.currentPly;
@@ -399,6 +510,10 @@
             if (isActive) button.setAttribute('aria-current', 'step');
             else button.removeAttribute('aria-current');
             if (isActive) button.scrollIntoView({ block: 'nearest' });
+        });
+
+        container.querySelectorAll('.igv-variation-line').forEach(button => {
+            button.classList.toggle('is-active-parent', parseInt(button.dataset.ply, 10) === state.currentPly);
         });
 
         container.querySelectorAll('.igv-btn').forEach(button => {
