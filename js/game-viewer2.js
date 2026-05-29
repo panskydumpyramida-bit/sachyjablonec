@@ -928,6 +928,10 @@ class GameViewer2 {
         if (e.key === 'ArrowUp') this.prevGame();
         if (e.key === 'ArrowDown') this.nextGame();
         if (e.key === ' ') this.toggleAutoplay();
+        if (e.key === 'Escape' && this.inVariation && !document.getElementById('gv2-var-modal')) {
+            e.preventDefault();
+            this.exitVariation();
+        }
     }
 
     init(games) {
@@ -983,6 +987,16 @@ class GameViewer2 {
                 </div>
                 <div class="gv2-content">
                     <div class="gv2-board-section">
+                        <div class="gv2-variation-status" id="gv2-variation-status" hidden aria-live="polite">
+                            <span class="gv2-variation-status-text">
+                                <i class="fa-solid fa-code-branch"></i>
+                                <span id="gv2-variation-status-label">Varianta</span>
+                            </span>
+                            <button type="button" class="gv2-variation-return" onclick="gameViewer2.exitVariation()" title="Zpět do hlavní linie">
+                                <i class="fa-solid fa-arrow-turn-up"></i>
+                                <span>Hlavní linie</span>
+                            </button>
+                        </div>
                         <div class="gv2-board-area">
                             <div class="gv2-eval-bar" id="gv2-eval-bar">
                                 <div class="gv2-eval-fill" id="gv2-eval-fill"></div>
@@ -1054,6 +1068,12 @@ class GameViewer2 {
                 viewerSection.appendChild(container);
             }
         }
+        if (container.dataset.escapeReady !== 'true') {
+            container.dataset.escapeReady = 'true';
+            container.addEventListener('keydown', event => {
+                if (event.key === 'Escape') this.handleKeydown(event);
+            });
+        }
         this.setViewerSkin(this.viewerSkin);
 
         // Initialize Chessboard
@@ -1104,7 +1124,7 @@ class GameViewer2 {
         let startY = 0;
         let activePointerId = null;
 
-        const isInteractive = (el) => el.closest('button, a, input, textarea, select, .gv2-var-modal, .gv2-move, .gv2-var-move');
+        const isInteractive = (el) => el.closest('button, a, input, textarea, select, .gv2-var-modal, .gv2-variation-status, .gv2-move, .gv2-var-move');
 
         target.addEventListener('pointerdown', event => {
             if (event.pointerType === 'mouse' || isInteractive(event.target)) return;
@@ -1999,6 +2019,7 @@ class GameViewer2 {
     jumpToVariation(varId, fen) {
         if (!this.allVariations[varId]) return;
 
+        this.bubbleManuallyHidden = false;
         this.inVariation = true;
         this.currentVariation = varId;
         this.board.position(fen, true); // true = animate
@@ -2046,6 +2067,7 @@ class GameViewer2 {
     exitVariation() {
         if (!this.inVariation) return;
 
+        this.hideVariationChoiceModal();
         const varData = this.allVariations[this.currentVariation];
         if (varData) {
             // Return to the parent ply
@@ -2061,8 +2083,12 @@ class GameViewer2 {
     updateVariationIndicator(varId) {
         // Add/remove class from moves container
         const movesEl = document.getElementById('gv2-moves');
+        const statusEl = document.getElementById('gv2-variation-status');
+        const statusLabelEl = document.getElementById('gv2-variation-status-label');
         if (varId) {
-            movesEl.classList.add('in-variation');
+            if (movesEl) movesEl.classList.add('in-variation');
+            if (statusEl) statusEl.hidden = false;
+            if (statusLabelEl) statusLabelEl.textContent = this.getVariationStatusLabel(varId);
             // Highlight variation spans
             document.querySelectorAll('.gv2-variation').forEach(el => el.classList.remove('active'));
             // Find and highlight the active variation
@@ -2071,9 +2097,34 @@ class GameViewer2 {
                 activeVarMoves[0].closest('.gv2-variation')?.classList.add('active');
             }
         } else {
-            movesEl.classList.remove('in-variation');
+            if (movesEl) movesEl.classList.remove('in-variation');
+            if (statusEl) statusEl.hidden = true;
             document.querySelectorAll('.gv2-variation').forEach(el => el.classList.remove('active'));
         }
+    }
+
+    getMoveLabelForPly(ply) {
+        if (ply <= 0) return 'výchozí pozice';
+        const move = this.mainLinePlies?.[ply]?.move;
+        const moveNumber = Math.ceil(ply / 2);
+        const dots = ply % 2 === 1 ? '.' : '...';
+        return move ? `${moveNumber}${dots} ${move.san}` : `${moveNumber}${dots}`;
+    }
+
+    getVariationStatusLabel(varId, fen = null) {
+        const varData = this.allVariations?.[varId];
+        if (!varData) return 'Varianta';
+
+        const currentFen = fen || this.game?.fen?.();
+        const currentIndex = varData.moves?.findIndex(move => move.fen === currentFen) ?? -1;
+        const parentLabel = this.getMoveLabelForPly(varData.parentPly);
+
+        if (currentIndex >= 0) {
+            const currentMove = varData.moves[currentIndex];
+            return `po ${parentLabel} · ${currentIndex + 1}. tah varianty: ${currentMove.san}`;
+        }
+
+        return `po ${parentLabel} · začátek varianty`;
     }
 
     // Update active move highlighting in variation
@@ -2093,7 +2144,7 @@ class GameViewer2 {
         // Update comment bubble and NAG marker for this position
         this.updateCommentBubble();
         this.updateNagMarker();
-        this.updateMoveScrubber({ inVariation: true, label: 'Varianta' });
+        this.updateMoveScrubber({ inVariation: true, label: this.getVariationStatusLabel(varId, fen) });
     }
 
     processBuffer(text, history, parentVarId = null) {
@@ -2966,11 +3017,7 @@ class GameViewer2 {
 
     getCurrentMoveLabel() {
         if (this.currentPly <= 0) return 'Výchozí pozice';
-        const ply = this.currentPly;
-        const move = this.mainLinePlies[ply]?.move;
-        const moveNumber = Math.ceil(ply / 2);
-        const dots = ply % 2 === 1 ? '.' : '...';
-        return move ? `${moveNumber}${dots} ${move.san}` : `${moveNumber}${dots}`;
+        return this.getMoveLabelForPly(this.currentPly);
     }
 
     // Manually hide bubble (called by close button)
