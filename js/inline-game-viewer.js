@@ -198,6 +198,8 @@
                 moveNumber,
                 color,
                 san: move.san,
+                from: move.from,
+                to: move.to,
                 nag: suffixNag,
                 comment: '',
                 variations: [],
@@ -507,6 +509,22 @@
         updateUi(state);
     }
 
+    function updateBoardHighlights(container, currentMove) {
+        const boardEl = container.querySelector('.igv-board');
+        if (!boardEl) return;
+
+        boardEl.querySelectorAll('.igv-square-last-move, .igv-square-last-to').forEach(square => {
+            square.classList.remove('igv-square-last-move', 'igv-square-last-to');
+        });
+
+        if (!currentMove?.from || !currentMove?.to) return;
+
+        const fromSquare = boardEl.querySelector(`.square-${currentMove.from}`);
+        const toSquare = boardEl.querySelector(`.square-${currentMove.to}`);
+        fromSquare?.classList.add('igv-square-last-move');
+        toSquare?.classList.add('igv-square-last-move', 'igv-square-last-to');
+    }
+
     function updateUi(state) {
         const container = document.querySelector(`#${state.uid}-board`)?.closest('.inline-game-viewer');
         if (!container) return;
@@ -518,6 +536,8 @@
         const commentEl = container.querySelector(`#${state.uid}-comment`);
         const variationEl = container.querySelector(`#${state.uid}-variations`);
         const currentIndex = state.currentPly + 1;
+
+        updateBoardHighlights(container, currentMove);
 
         if (currentEl) {
             currentEl.textContent = currentMove
