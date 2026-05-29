@@ -1850,32 +1850,36 @@ class GameViewer2 {
     parseVariationMoves(varContent, startFen) {
         const moves = [];
         const tempGame = new Chess(startFen === 'start' ? undefined : startFen);
-        const linearContent = this.stripVariations(varContent);
-
-        // Simple tokenizer to extract moves from variation
-        const tokens = linearContent.split(/(\s+|[0-9]+\.+)/).filter(t => t.trim());
+        const tokens = this.tokenizeVariationLine(varContent);
 
         for (const token of tokens) {
+            if (token.type === 'comment') {
+                const lastMove = moves[moves.length - 1];
+                if (lastMove && token.text) {
+                    lastMove.comment = [lastMove.comment, token.text].filter(Boolean).join(' ');
+                }
+                continue;
+            }
+
+            if (token.type !== 'token') continue;
+            const text = token.text;
+
             // Check for NAG (Numeric Annotation Glyph)
-            if (token.match(/^\$[0-9]+$/)) {
+            if (text.match(/^\$[0-9]+$/)) {
                 if (moves.length > 0) {
-                    moves[moves.length - 1].nag = token;
+                    moves[moves.length - 1].nag = text;
                 }
                 continue;
             }
 
             // Skip move numbers and comments start
-            if (token.match(/^[0-9]+\.+$/) || token.startsWith('{')) {
-                continue;
-            }
-            // Skip nested variations (handled recursively)
-            if (token.includes('(') || token.includes(')')) {
+            if (text.match(/^[0-9]+\.+$/)) {
                 continue;
             }
 
             // Try to make the move
             try {
-                const move = tempGame.move(token, { sloppy: true });
+                const move = tempGame.move(text, { sloppy: true });
                 if (move) {
                     moves.push({
                         san: move.san,
@@ -1889,6 +1893,54 @@ class GameViewer2 {
         }
 
         return moves;
+    }
+
+    tokenizeVariationLine(varContent) {
+        const tokens = [];
+        let buffer = '';
+        let depth = 0;
+
+        const flushBuffer = () => {
+            if (!buffer.trim()) {
+                buffer = '';
+                return;
+            }
+
+            buffer
+                .split(/(\s+|[0-9]+\.+)/)
+                .map(part => part.trim())
+                .filter(Boolean)
+                .forEach(text => tokens.push({ type: 'token', text }));
+            buffer = '';
+        };
+
+        for (let i = 0; i < varContent.length; i++) {
+            const char = varContent[i];
+
+            if (char === '{' && depth === 0) {
+                flushBuffer();
+                const end = varContent.indexOf('}', i + 1);
+                const close = end === -1 ? varContent.length : end;
+                tokens.push({ type: 'comment', text: varContent.slice(i + 1, close).trim() });
+                i = close;
+                continue;
+            }
+
+            if (char === '(') {
+                depth++;
+                continue;
+            }
+
+            if (char === ')') {
+                depth = Math.max(0, depth - 1);
+                continue;
+            }
+
+            if (depth === 0) buffer += char;
+        }
+
+        flushBuffer();
+        return tokens;
     }
 
     // Render variation content with clickable moves
@@ -1910,7 +1962,7 @@ class GameViewer2 {
 
             if (inComment) {
                 if (char === '}') {
-                    html += buffer + '</span>';
+                    html += this.escapeHtml(buffer) + '</span>';
                     buffer = '';
                     inComment = false;
                 } else {
@@ -2145,6 +2197,23 @@ class GameViewer2 {
         this.updateCommentBubble();
         this.updateNagMarker();
         this.updateMoveScrubber({ inVariation: true, label: this.getVariationStatusLabel(varId, fen) });
+    }
+
+    getCurrentPositionData() {
+        if (this.inVariation && this.currentVariation && this.allVariations[this.currentVariation]) {
+            const currentFen = this.game?.fen?.();
+            const varData = this.allVariations[this.currentVariation];
+            const currentMove = varData.moves?.find(move => move.fen === currentFen);
+            if (currentMove) {
+                return {
+                    ...currentMove,
+                    label: this.getVariationStatusLabel(this.currentVariation, currentFen)
+                };
+            }
+        }
+
+        const mainData = this.mainLinePlies?.[this.currentPly] || null;
+        return mainData ? { ...mainData, label: this.getCurrentMoveLabel() } : null;
     }
 
     processBuffer(text, history, parentVarId = null) {
@@ -2887,6 +2956,12 @@ class GameViewer2 {
         // Allow typing in inputs/textareas
         if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
 
+        if (e.key === 'Escape' && this.inVariation && !document.getElementById('gv2-var-modal')) {
+            e.preventDefault();
+            this.exitVariation();
+            return;
+        }
+
         // Keys we care about for game control
         const keys = ['ArrowRight', 'ArrowLeft', 'ArrowUp', 'ArrowDown', ' ', 'Spacebar'];
 
@@ -2930,7 +3005,7 @@ class GameViewer2 {
         if (!overlay || !content) return;
 
         let comment = '';
-        const currentData = this.mainLinePlies[this.currentPly];
+        const currentData = this.getCurrentPositionData();
         if (currentData && currentData.comment) comment = currentData.comment;
 
         const showBtn = document.getElementById('gv2-bubble-show');
@@ -2953,7 +3028,7 @@ class GameViewer2 {
                 dock.hidden = false;
                 dock.classList.add('visible');
                 dockText.textContent = comment;
-                if (dockMove) dockMove.textContent = this.getCurrentMoveLabel();
+                if (dockMove) dockMove.textContent = currentData?.label || this.getCurrentMoveLabel();
                 this.renderCommentAvatar(dockAvatar, avatarUrl);
                 if (showBtn) showBtn.classList.remove('visible');
             } else {
@@ -3016,6 +3091,7 @@ class GameViewer2 {
     }
 
     getCurrentMoveLabel() {
+        if (this.inVariation && this.currentVariation) return this.getVariationStatusLabel(this.currentVariation);
         if (this.currentPly <= 0) return 'Výchozí pozice';
         return this.getMoveLabelForPly(this.currentPly);
     }
