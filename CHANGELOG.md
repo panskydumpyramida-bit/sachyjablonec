@@ -1,5 +1,14 @@
 # 📋 Changelog
 
+## 30. května 2026 (v36)
+
+### ♟️ Vyčištění hlavičky přehrávače partií
+- **Hlavička bez přetékání:** Z hlavičky Game Vieweru 2 zmizel dlouhý podtitul s názvem turnaje, který natahoval prostřední sloupec a přeléval layout. Hlavička drží kompaktní mřížku bílý · výsledek · černý.
+- **Konec duplicit:** Boční panel už neopakuje jména hráčů a výsledek (jsou v hlavičce). Zůstal jen jeden řádek s turnajem, kolem a datem.
+- **Pryč s nesmyslným skóre:** U seznamu partií zmizel chip „X : Y skóre" — sčítal výhry bílých přes nesouvisející partie, což u sady různých partií nedávalo smysl.
+
+---
+
 ## 28. května 2026 (v35)
 
 ### ♟️ Game Viewer 2 a výsledky v článcích
