@@ -1321,23 +1321,13 @@ class GameViewer2 {
 
         const event = gameData.event || '';
         const round = gameData.round || '';
-        const result = gameData.result || '';
 
-        metaEl.innerHTML = `
-            <div class="gv2-metadata-row">
-                <span><strong>White:</strong> ${gameData.white || '?'}</span>
-            </div>
-            <div class="gv2-metadata-row">
-                <span><strong>Black:</strong> ${gameData.black || '?'}</span>
-                <span>${result}</span>
-            </div>
-            ${(event || round || dateStr) ? `
+        metaEl.innerHTML = (event || round || dateStr) ? `
             <div class="gv2-metadata-row gv2-metadata-row--event">
                 <span>${event ? this.escapeHtml(event) : ''}${round ? ` · ${this.escapeHtml(round)}. kolo` : ''}</span>
                 <span>${dateStr}</span>
             </div>
-            ` : ''}
-        `;
+        ` : '';
     }
 
     toggleMobileNotation(forceState) {
@@ -1365,10 +1355,6 @@ class GameViewer2 {
         const white = gameData.white || 'Bílý';
         const black = gameData.black || 'Černý';
         const result = gameData.result && gameData.result !== '*' ? gameData.result : 'vs';
-        const eventParts = [];
-        if (gameData.event) eventParts.push(gameData.event);
-        if (gameData.round) eventParts.push(`${gameData.round}. kolo`);
-        const eventLabel = eventParts.join(' · ');
 
         titleEl.innerHTML = `
             <div class="gv2-title-card">
@@ -1381,7 +1367,6 @@ class GameViewer2 {
                 </div>
                 <div class="gv2-title-result">
                     <strong>${this.escapeHtml(result)}</strong>
-                    ${eventLabel ? `<span>${this.escapeHtml(eventLabel)}</span>` : ''}
                 </div>
                 <div class="gv2-title-player gv2-title-player--black">
                     <span class="gv2-title-name">
@@ -2843,11 +2828,6 @@ class GameViewer2 {
         return null;
     }
 
-    formatMatchScore(score) {
-        const whole = Math.floor(score);
-        return score % 1 === 0.5 ? `${whole}½` : String(score);
-    }
-
     getGamesSummary(games) {
         const playableGames = (games || []).filter(game => !(game.type === 'header' || game.isHeader));
         const summary = {
@@ -2883,10 +2863,7 @@ class GameViewer2 {
         if (!summary.playableCount) return '';
 
         const scoredGames = summary.decisive + summary.draws;
-        const score = `${this.formatMatchScore(summary.whiteScore)} : ${this.formatMatchScore(summary.blackScore)}`;
         const chips = [];
-
-        if (scoredGames) chips.push(`<span><strong>${this.escapeHtml(score)}</strong> skóre</span>`);
 
         if (summary.commented) chips.push(`<span><i class="fa-solid fa-comment" aria-hidden="true"></i> ${summary.commented} koment.</span>`);
         if (summary.draws) chips.push(`<span>${summary.draws} remíz</span>`);

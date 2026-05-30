@@ -1009,6 +1009,7 @@
 }
 
 /* Hide empty metadata rows */
+.gv2-metadata:empty,
 .gv2-metadata-row:empty,
 .gv2-metadata-row span:empty {
     display: none;
@@ -1880,13 +1881,8 @@ body>.gv2-var-modal {
     }
 }
 
-/* Update: Hide Metadata on Mobile to save space */
 @media (max-width: 768px) {
-    .gv2-metadata {
-        display: none !important;
-    }
-
-    /* Make moves list take more height since metadata is gone */
+    /* Metadata is now a single compact turnaj/datum line, keep it visible */
     .gv2-info-content {
         flex: 1;
         display: flex;
