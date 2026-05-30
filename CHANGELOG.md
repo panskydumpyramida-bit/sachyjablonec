@@ -6,6 +6,9 @@
 - **Hlavička bez přetékání:** Z hlavičky Game Vieweru 2 zmizel dlouhý podtitul s názvem turnaje, který natahoval prostřední sloupec a přeléval layout. Hlavička drží kompaktní mřížku bílý · výsledek · černý.
 - **Konec duplicit:** Boční panel už neopakuje jména hráčů a výsledek (jsou v hlavičce). Zůstal jen jeden řádek s turnajem, kolem a datem.
 - **Pryč s nesmyslným skóre:** U seznamu partií zmizel chip „X : Y skóre" — sčítal výhry bílých přes nesouvisející partie, což u sady různých partií nedávalo smysl.
+- **Vycentrovaná hlavička:** Bílý · výsledek · černý se seskupují doprostřed jako banner místo roztažení do krajů, takže se layout nerozpadá v mezilehlých šířkách a dlouhá jména se plynule zkracují.
+- **Čistší pozadí hlavičky:** Z hlavičky zmizel tmavý gradientový pruh, který tvořil viditelný šev proti šachovnici.
+- **Konec duplicit u variant:** Při přehrávání odbočky už spodní posuvník neopakuje celou větu „po … · tah varianty: …" — ukazuje jen aktuální tah, plný kontext zůstává v pruhu nad šachovnicí.
 
 ---
 
