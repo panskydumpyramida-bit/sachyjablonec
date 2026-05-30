@@ -2001,9 +2001,18 @@ body>.gv2-var-modal {
 }
 
 .gv-split-view.gv2-skin-modern .gv-viewer-content {
-    padding: 0.75rem;
+    padding: 0;
     min-height: 0;
     overflow: hidden;
+}
+
+/* Inside the split-view the outer card already frames everything, so the
+   inner container must not draw a second card — otherwise the header looks
+   like it floats inside a nested box instead of being the panel's top bar. */
+.gv-split-view.gv2-skin-modern .game-viewer-2-container.gv2-skin-modern {
+    border: none;
+    border-radius: 0;
+    background: transparent;
 }
 
 .gv-split-view.gv2-skin-modern .game-viewer {
@@ -2042,7 +2051,7 @@ body>.gv2-var-modal {
     margin: 0;
     gap: 0.58rem;
     align-items: center;
-    background: transparent;
+    background: rgba(0, 0, 0, 0.18);
     border-bottom: 1px solid rgba(255, 255, 255, 0.07);
 }
 

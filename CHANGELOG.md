@@ -9,6 +9,7 @@
 - **Vycentrovaná hlavička:** Bílý · výsledek · černý se seskupují doprostřed jako banner místo roztažení do krajů, takže se layout nerozpadá v mezilehlých šířkách a dlouhá jména se plynule zkracují.
 - **Čistší pozadí hlavičky:** Z hlavičky zmizel tmavý gradientový pruh, který tvořil viditelný šev proti šachovnici.
 - **Konec duplicit u variant:** Při přehrávání odbočky už spodní posuvník neopakuje celou větu „po … · tah varianty: …" — ukazuje jen aktuální tah, plný kontext zůstává v pruhu nad šachovnicí.
+- **Konec karty v kartě:** Přehrávač byl orámovaný hned třikrát (obal článku, split-view i vnitřní kontejner), takže hlavička vypadala, že plave v odsazené vnořené krabici. Teď je to jeden rám a hlavička sedí jako horní lišta panelu.
 
 ---
 
