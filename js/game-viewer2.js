@@ -2157,6 +2157,17 @@ class GameViewer2 {
         return `po ${parentLabel} · začátek varianty`;
     }
 
+    // Short label for the scrubber meta (full context is in the floating status bar)
+    getVariationMoveLabel(varId, fen = null) {
+        const varData = this.allVariations?.[varId];
+        if (!varData) return 'Varianta';
+
+        const currentFen = fen || this.game?.fen?.();
+        const currentIndex = varData.moves?.findIndex(move => move.fen === currentFen) ?? -1;
+        if (currentIndex >= 0) return varData.moves[currentIndex].san;
+        return 'začátek varianty';
+    }
+
     // Update active move highlighting in variation
     updateActiveVariationMove(varId, fen) {
         // Remove all active states
@@ -2174,7 +2185,7 @@ class GameViewer2 {
         // Update comment bubble and NAG marker for this position
         this.updateCommentBubble();
         this.updateNagMarker();
-        this.updateMoveScrubber({ inVariation: true, label: this.getVariationStatusLabel(varId, fen) });
+        this.updateMoveScrubber({ inVariation: true, label: this.getVariationMoveLabel(varId, fen) });
     }
 
     getCurrentPositionData() {
