@@ -67,6 +67,21 @@ export async function updateStandings(competitions = null) {
                                 }
                             }
 
+                            // Fallback: chess-results removed the team hyperlinks (server-load
+                            // reduction — links older than 2 weeks are hidden behind a button),
+                            // so team names are now plain text. Detect the team cell as the first
+                            // non-numeric text cell. Columns: Poř., St.č., Družstvo, Partie, +, =, -, PH1, PH2
+                            if (teamCellIndex === -1) {
+                                for (let i = 1; i < Math.min(cells.length, 4); i++) {
+                                    const txt = clean(cells[i]);
+                                    if (txt && /[A-Za-zÀ-ž]/.test(txt) && !/^\d+([.,]\d+)?$/.test(txt)) {
+                                        teamCellIndex = i;
+                                        teamStr = txt;
+                                        break;
+                                    }
+                                }
+                            }
+
                             // If no team cell found, skip this row
                             if (teamCellIndex === -1) continue;
 
@@ -108,11 +123,16 @@ export async function updateStandings(competitions = null) {
                                         (lowerName.includes('tj') || lowerName.includes('šk') ||
                                             lowerName.includes('sk') || lowerName.includes('ddm')));
 
-                                // Extract actual SNR from team details URL (e.g. snr=5)
+                                // Extract actual SNR from team details URL (e.g. snr=5);
+                                // fall back to the St.č. column (cells[1]) now that the links are gone.
                                 let snr = null;
                                 if (teamDetailsUrl) {
                                     const snrMatch = teamDetailsUrl.match(/snr=(\d+)/);
                                     if (snrMatch) snr = parseInt(snrMatch[1]);
+                                }
+                                if (snr === null) {
+                                    const stc = parseInt(clean(cells[1]));
+                                    if (!isNaN(stc)) snr = stc;
                                 }
 
                                 standings.push({
