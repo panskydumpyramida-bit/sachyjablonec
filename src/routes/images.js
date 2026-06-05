@@ -5,7 +5,8 @@ import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
 import { PrismaClient } from '@prisma/client';
-import { checkClubPassword } from '../controllers/messageController.js';
+import { authMiddleware } from '../middleware/auth.js';
+import { requireMember, requireAdmin } from '../middleware/rbac.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -37,7 +38,7 @@ const upload = multer({
 });
 
 // Upload image - with multer error handling
-router.post('/upload', checkClubPassword, (req, res, next) => {
+router.post('/upload', authMiddleware, requireMember, (req, res, next) => {
     upload.single('image')(req, res, (err) => {
         if (err) {
             console.error('Multer error:', err);
@@ -153,7 +154,7 @@ router.get('/public', async (req, res) => {
 });
 
 // Get all images (Admin)
-router.get('/', checkClubPassword, async (req, res) => {
+router.get('/', authMiddleware, requireMember, async (req, res) => {
     try {
         const { category } = req.query;
         let images;
@@ -220,7 +221,7 @@ router.get('/', checkClubPassword, async (req, res) => {
 });
 
 // Toggle image visibility
-router.patch('/:id/visibility', checkClubPassword, async (req, res) => {
+router.patch('/:id/visibility', authMiddleware, requireAdmin, async (req, res) => {
     try {
         const { id } = req.params;
         const { isPublic } = req.body;
@@ -238,7 +239,7 @@ router.patch('/:id/visibility', checkClubPassword, async (req, res) => {
 });
 
 // Update image caption (altText)
-router.put('/:id/caption', checkClubPassword, async (req, res) => {
+router.put('/:id/caption', authMiddleware, requireAdmin, async (req, res) => {
     try {
         const { id } = req.params;
         const { altText, category } = req.body;
@@ -267,7 +268,7 @@ router.put('/:id/caption', checkClubPassword, async (req, res) => {
 });
 
 // Update image sort order
-router.put('/:id/order', checkClubPassword, async (req, res) => {
+router.put('/:id/order', authMiddleware, requireAdmin, async (req, res) => {
     try {
         const { id } = req.params;
         const { sortOrder } = req.body;
@@ -285,7 +286,7 @@ router.put('/:id/order', checkClubPassword, async (req, res) => {
 });
 
 // Delete image
-router.delete('/:id', checkClubPassword, async (req, res) => {
+router.delete('/:id', authMiddleware, requireAdmin, async (req, res) => {
     try {
         const { id } = req.params;
 
@@ -368,7 +369,7 @@ router.delete('/:id', checkClubPassword, async (req, res) => {
 });
 
 // Get list of all unique categories
-router.get('/categories', checkClubPassword, async (req, res) => {
+router.get('/categories', authMiddleware, requireAdmin, async (req, res) => {
     try {
         const categories = await prisma.image.findMany({
             distinct: ['category'],
