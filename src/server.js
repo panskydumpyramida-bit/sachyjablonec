@@ -74,7 +74,7 @@ app.use(helmet({
             imgSrc: ["'self'", "data:", "https:", "blob:", "https://chessboardjs.com"],
             fontSrc: ["'self'", "https://fonts.gstatic.com", "https://cdnjs.cloudflare.com"],
             connectSrc: ["'self'", "https://lichess.org", "https://chess-api.com", "https://unpkg.com", "https://www.chess.com", "https://www.googleapis.com", "https://chess-results.com", "https://www.google-analytics.com", "https://*.hotjar.com", "https://*.hotjar.io", "wss://*.hotjar.com"],
-            frameSrc: ["'self'", "https://lichess.org", "https://mapy.cz", "https://mapy.com", "https://www.chess.com", "https://chess.com", "https://*.hotjar.com"],
+            frameSrc: ["'self'", "https://lichess.org", "https://mapy.cz", "https://mapy.com", "https://www.openstreetmap.org", "https://www.chess.com", "https://chess.com", "https://*.hotjar.com"],
             workerSrc: ["'self'", "blob:"],
             objectSrc: ["'none'"],
             upgradeInsecureRequests: process.env.NODE_ENV === 'production' ? [] : null,
