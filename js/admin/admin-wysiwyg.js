@@ -3515,7 +3515,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 try {
                     const token = window.authToken || localStorage.getItem('auth_token');
-                    const res = await fetch(`${API_URL}/gallery/upload`, {
+                    const res = await fetch(`${API_URL}/images/upload`, {
                         method: 'POST',
                         headers: { 'Authorization': `Bearer ${token}` },
                         body: formData

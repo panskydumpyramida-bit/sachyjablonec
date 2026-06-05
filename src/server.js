@@ -701,8 +701,11 @@ app.get('/api/standings', async (req, res) => {
         res.json({ standings: validCompetitions, lastUpdated: new Date().toISOString() });
 
     } catch (err) {
+        // Don't return an empty 200 — that wipes the standings UI as if the
+        // tables were really empty. Signal the failure so the client can keep
+        // showing its last state / an error instead of blank tables.
         console.error('Error reading standings:', err);
-        res.json({ standings: [] });
+        res.status(500).json({ error: 'Standings dočasně nedostupné', standings: [] });
     }
 });
 

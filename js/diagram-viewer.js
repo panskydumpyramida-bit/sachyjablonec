@@ -1132,6 +1132,9 @@ const TrainingModule = {
                     boardArea.innerHTML = '<p class="error" style="text-align:center; padding:1rem;">Nepodařilo se načíst diagramy.</p>';
                 }
             }
+            // Re-throw so init() stops here and does NOT clear boardArea / build an
+            // empty viewer over the login prompt (that left the page blank for guests).
+            throw e;
         } finally {
             if (loadingEl) loadingEl.style.display = 'none';
         }

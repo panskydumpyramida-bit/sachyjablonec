@@ -245,17 +245,21 @@ export const deleteAccount = async (req, res) => {
     try {
         const userId = req.user.id;
 
-        // Delete user's comments first (foreign key constraint)
-        await prisma.comment.deleteMany({ where: { authorId: userId } });
-
-        // Delete user's puzzle results
-        await prisma.puzzleRaceResult.deleteMany({ where: { userId } });
-
-        // Delete user's recorded games
-        await prisma.gameRecorded.deleteMany({ where: { userId } });
-
-        // Delete the user
-        await prisma.user.delete({ where: { id: userId } });
+        // Every REQUIRED relation to User (onDelete default = Restrict) must be
+        // cleared first, otherwise prisma.user.delete throws a FK error and the
+        // whole account deletion fails. Done in one transaction so it's atomic.
+        // (Optional relations like News/Diagram/Fragment are SetNull and don't block.)
+        await prisma.$transaction([
+            prisma.comment.deleteMany({ where: { authorId: userId } }),
+            prisma.puzzleRaceResult.deleteMany({ where: { userId } }),
+            prisma.gameRecorded.deleteMany({ where: { userId } }),
+            prisma.announcement.deleteMany({ where: { authorId: userId } }),
+            prisma.document.deleteMany({ where: { uploadedById: userId } }),
+            prisma.travelReport.deleteMany({ where: { userId } }),
+            prisma.forumPost.deleteMany({ where: { authorId: userId } }),
+            prisma.forumTopic.deleteMany({ where: { authorId: userId } }),
+            prisma.user.delete({ where: { id: userId } }),
+        ]);
 
         res.json({ success: true, message: 'Účet byl smazán' });
     } catch (error) {
