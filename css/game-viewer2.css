@@ -120,6 +120,10 @@
     border-bottom: 1px solid var(--gv-border-color);
     margin-bottom: 0.5rem;
     position: relative;
+    /* The container is a fixed-height flex column; without this the header
+       shrinks below its content (collapsing ~57px → ~32px), so the player
+       names overflow into the board and the bar looks like it floats. */
+    flex-shrink: 0;
 }
 
 .gv2-title {
