@@ -1,5 +1,19 @@
 # 📋 Changelog
 
+## 5. června 2026 (v37)
+
+### 🔒 Bezpečnostní audit a opravy napříč webem
+- **Vyztužení oprávnění:** Administrátorské a výpočetně náročné operace (seedování DB, mazání analýz, skenování partií, AI funkce, nastavení Puzzle Raceru) nyní vyžadují přihlášení a odpovídající roli.
+- **Omezení externích požadavků:** Scrapování výsledků smí sahat jen na povolené domény (chess-results.com).
+- **Konfigurace přes prostředí:** Citlivé hodnoty (klíče, hesla) se čtou výhradně z proměnných prostředí serveru.
+- **Ochrana rolí:** Změnu role na administrátorskou úroveň smí provést jen superadmin (konec možné eskalace).
+- **Tabulky družstev:** Po změně chess-results (odebrání odkazů u týmů) opraveno scrapování pořadí — prázdné tabulky znovu ukazují reálná data.
+- **Mapa v sekci O nás:** Nefunkční mapa nahrazena novou (OpenStreetMap) se správnou polohou Městské haly.
+- **Game Viewer:** Hlavička partie se už nesmršťuje a neplave — drží se jako horní lišta panelu.
+- **Drobné opravy:** Nahrávání obrázků přetažením do editoru, mazání uživatelského účtu, prázdné stavy v Tréninku (Diagramy) a Blunder Gridu pro nepřihlášené.
+
+---
+
 ## 30. května 2026 (v36)
 
 ### ♟️ Vyčištění hlavičky přehrávače partií

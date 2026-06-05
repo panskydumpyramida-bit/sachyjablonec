@@ -46,3 +46,6 @@ generated_table.html
 # Jednorázové stránky a reportáže
 jednorazove_stranky/
 
+
+# Interní bezpečnostní audit — NIKDY necommitovat (public repo)
+SECURITY-AUDIT-*.md

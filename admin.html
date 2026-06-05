@@ -1607,6 +1607,24 @@
             </div>
 
             <div class="changelog-timeline">
+                <!-- 2026-06-05 v37 -->
+                <div class="changelog-entry">
+                    <div class="changelog-date">5. 6. 2026</div>
+                    <div class="changelog-version" style="background:var(--primary-color);color:#000;">v37</div>
+                    <div class="changelog-content">
+                        <h4>🔒 Bezpečnostní audit a opravy napříč webem</h4>
+                        <ul>
+                            <li><strong>Vyztužení oprávnění:</strong> Administrátorské a výpočetně náročné operace (seedování DB, mazání analýz, skenování partií, AI funkce, nastavení Puzzle Raceru) nyní vyžadují přihlášení a odpovídající roli.</li>
+                            <li><strong>Omezení externích požadavků:</strong> Scrapování výsledků smí sahat jen na povolené domény (chess-results.com).</li>
+                            <li><strong>Konfigurace přes prostředí:</strong> Citlivé hodnoty (klíče, hesla) se čtou výhradně z proměnných prostředí serveru.</li>
+                            <li><strong>Ochrana rolí:</strong> Změnu role na administrátorskou úroveň smí provést jen superadmin (konec možné eskalace).</li>
+                            <li><strong>Tabulky družstev:</strong> Po změně chess-results (odebrání odkazů u týmů) opraveno scrapování pořadí — prázdné tabulky znovu ukazují reálná data.</li>
+                            <li><strong>Mapa v sekci O nás:</strong> Nefunkční mapa nahrazena novou (OpenStreetMap) se správnou polohou Městské haly.</li>
+                            <li><strong>Game Viewer:</strong> Hlavička partie se už nesmršťuje a neplave — drží se jako horní lišta panelu.</li>
+                            <li><strong>Drobné opravy:</strong> Nahrávání obrázků přetažením do editoru, mazání uživatelského účtu, prázdné stavy v Tréninku (Diagramy) a Blunder Gridu pro nepřihlášené.</li>
+                        </ul>
+                    </div>
+                </div>
                 <!-- 2026-05-30 v36 -->
                 <div class="changelog-entry">
                     <div class="changelog-date">30. 5. 2026</div>
