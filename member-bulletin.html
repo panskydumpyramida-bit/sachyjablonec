@@ -162,7 +162,7 @@
     <script src="js/member-bulletin.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', async () => {
-            const user = await checkAuth(true); // Redirect if not auth
+            const user = await checkAuth(true, true); // Redirect if not auth; show pending if not a member
             if (user) {
                 if (user.role === 'ADMIN' || user.role === 'SUPERADMIN') {
                     const actions = document.getElementById('adminAnnouncementActions');

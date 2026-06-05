@@ -53,7 +53,7 @@
     <script src="js/member-wishlist.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', async () => {
-            const user = await checkAuth(true);
+            const user = await checkAuth(true, true);
             if (user) loadWishes();
         });
     </script>

@@ -188,8 +188,6 @@ if (typeof AuthManager === 'undefined') {
 
         // Check if user is member or higher
         isMember() {
-            // Temporary: Allow all users access until Feb 2026
-            if (this.user && new Date() < new Date('2026-02-01')) return true;
             return this.user && ['MEMBER', 'ADMIN', 'SUPERADMIN'].includes(this.user.role);
         }
 

@@ -109,7 +109,7 @@
     <script src="js/member-games.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', async () => {
-            const user = await checkAuth(true);
+            const user = await checkAuth(true, true);
             if (user) {
                 loadGames();
             }

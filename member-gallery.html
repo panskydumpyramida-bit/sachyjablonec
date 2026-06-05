@@ -43,7 +43,7 @@
     <script src="js/member-gallery.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', async () => {
-            const user = await checkAuth(true);
+            const user = await checkAuth(true, true);
             if (user) loadMemberGallery();
         });
     </script>

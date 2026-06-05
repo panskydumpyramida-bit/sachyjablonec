@@ -198,6 +198,15 @@
                     document.getElementById('userRoleBadge').style.color = '#fcd34d';
                 }
 
+                // Logged in but not a member yet → explain why the member tiles won't open.
+                if (!['MEMBER', 'ADMIN', 'SUPERADMIN'].includes(user.role)) {
+                    const hub = document.getElementById('hubView');
+                    const banner = document.createElement('div');
+                    banner.style.cssText = 'background:rgba(212,175,55,0.12);border:1px solid rgba(212,175,55,0.4);border-radius:12px;padding:1rem 1.25rem;margin:0 0 1.5rem;color:#f1d36b;';
+                    banner.innerHTML = '<strong>Účet čeká na schválení členství.</strong> <span style="color:#cfcfd6;">Členský obsah se odemkne, až tě správce ověří. Napiš na <a href="mailto:info@sachyjablonec.cz" style="color:#d4af37;">info@sachyjablonec.cz</a> a uveď své jméno.</span>';
+                    hub.insertBefore(banner, hub.firstChild);
+                }
+
                 loadDashboardNews();
             } else {
                 document.getElementById('loginView').classList.remove('hidden');

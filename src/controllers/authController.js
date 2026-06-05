@@ -29,8 +29,10 @@ export const register = async (req, res) => {
                 username,
                 email,
                 passwordHash,
-                // Temporary: Grant MEMBER access for testing until End of Jan 2026
-                role: (new Date() < new Date('2026-02-01')) ? 'MEMBER' : 'USER'
+                // New accounts start as USER. Membership (access to internal club
+                // data — bulletin, documents, travel reports) is granted by an admin
+                // after verifying the person is a real club member.
+                role: 'USER'
             }
         });
 
