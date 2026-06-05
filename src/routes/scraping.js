@@ -1,6 +1,6 @@
 import express from 'express';
 import fetch from 'node-fetch';
-import { clean } from '../utils/helpers.js';
+import { clean, isChessResultsUrl } from '../utils/helpers.js';
 import { scrapeStandings } from '../services/scrapingService.js';
 import { authMiddleware } from '../middleware/auth.js';
 
@@ -30,6 +30,12 @@ router.get('/chess-results', async (req, res) => {
 
     if (!url) {
         return res.status(400).json({ error: 'URL parameter is required' });
+    }
+
+    // SSRF guard — this endpoint is public (blicak.html), so the URL must be
+    // restricted to chess-results.com; never let it fetch arbitrary hosts.
+    if (!isChessResultsUrl(url)) {
+        return res.status(400).json({ error: 'URL musí být z chess-results.com' });
     }
 
     try {

@@ -5,6 +5,7 @@
 import express from 'express';
 import { PrismaClient } from '@prisma/client';
 import { getPlayerBlunders, getPlayerStatus, scanPlayerGames } from '../services/blunderService.js';
+import { requireRole } from '../middleware/auth.js';
 
 const router = express.Router();
 const prisma = new PrismaClient();
@@ -111,8 +112,8 @@ router.get('/:playerName/games', async (req, res) => {
     }
 });
 
-// Trigger scan — either next batch or specific game IDs
-router.post('/:playerName/scan', async (req, res) => {
+// Trigger scan — either next batch or specific game IDs (members only — runs engine analysis)
+router.post('/:playerName/scan', requireRole('MEMBER'), async (req, res) => {
     try {
         const { playerName } = req.params;
         const { gameIds, override } = req.body || {};
@@ -130,8 +131,8 @@ router.post('/:playerName/scan', async (req, res) => {
     }
 });
 
-// Clear analyzed games for full rescan
-router.delete('/:playerName/analysis', async (req, res) => {
+// Clear analyzed games for full rescan (destructive — admin only)
+router.delete('/:playerName/analysis', requireRole('ADMIN'), async (req, res) => {
     try {
         const { playerName } = req.params;
         await prisma.blunderAnalysis.deleteMany({
@@ -148,8 +149,8 @@ router.delete('/:playerName/analysis', async (req, res) => {
     }
 });
 
-// Clear analysis for a single game (for rescan)
-router.delete('/game/:gameId/analysis', async (req, res) => {
+// Clear analysis for a single game (for rescan) (destructive — admin only)
+router.delete('/game/:gameId/analysis', requireRole('ADMIN'), async (req, res) => {
     try {
         const gameId = parseInt(req.params.gameId);
         const deleted = await prisma.blunderAnalysis.deleteMany({
@@ -162,8 +163,8 @@ router.delete('/game/:gameId/analysis', async (req, res) => {
     }
 });
 
-// Toggle featured status
-router.put('/:id/featured', async (req, res) => {
+// Toggle featured status (content moderation — admin only)
+router.put('/:id/featured', requireRole('ADMIN'), async (req, res) => {
     try {
         const id = parseInt(req.params.id);
         const current = await prisma.blunderAnalysis.findUnique({ where: { id } });

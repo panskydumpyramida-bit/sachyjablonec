@@ -39,10 +39,10 @@ After deployment and migration:
 
 ## 4. Configuration Reference
 **Production Database URL** (For future migrations):
-```bash
-${REMOTE_DATABASE_URL}
-```
-*Keep this safe. It allows direct access to the production database.*
+
+> ⚠️ Nikdy necommituj připojovací řetězec sem ani do žádného souboru v repu.
+> Najdeš ho v **Railway → projekt → Postgres → Connect / Variables** (`DATABASE_URL`).
+> Backend ho čte z env proměnné `DATABASE_URL`.
 
 ## 5. URL Aliases
 - `/bleskovy_report` -> `/article.html?id=54`

@@ -3,16 +3,20 @@ import { PrismaClient } from '@prisma/client';
 import { sanitizeUserContent } from '../utils/sanitize.js';
 
 const prisma = new PrismaClient();
-const CLUB_PASSWORD = process.env.CLUB_PASSWORD || 'gambitjbc';
-const JWT_SECRET = process.env.JWT_SECRET || 'sachy-jablonec-secret-key-2024';
+// No hardcoded fallbacks — these live only in the environment. If unset, the
+// matching auth path is simply disabled (fail closed) rather than degrading to
+// a publicly-known secret.
+const CLUB_PASSWORD = process.env.CLUB_PASSWORD;
+const JWT_SECRET = process.env.JWT_SECRET;
 
 // Middleware to check password OR admin token
 export const checkClubPassword = (req, res, next) => {
     const password = req.headers['x-club-password'];
     const authHeader = req.headers.authorization;
 
-    // Allow club password
-    if (password === CLUB_PASSWORD) {
+    // Allow club password (only when one is actually configured — otherwise a
+    // missing header would equal an undefined secret and bypass the check)
+    if (CLUB_PASSWORD && password === CLUB_PASSWORD) {
         return next();
     }
 

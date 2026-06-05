@@ -98,6 +98,27 @@ export const updateUser = async (req, res) => {
             return res.status(400).json({ error: 'Role is required' });
         }
 
+        // Privilege-escalation guard: a non-superadmin must not grant a role at/above
+        // their own level, nor modify a user who already outranks them (otherwise any
+        // admin could promote themselves or anyone to SUPERADMIN).
+        const ROLE_LEVEL = { USER: 1, MEMBER: 2, ADMIN: 3, SUPERADMIN: 4 };
+        const newLevel = ROLE_LEVEL[role];
+        if (!newLevel) {
+            return res.status(400).json({ error: 'Neplatná role' });
+        }
+        const target = await prisma.user.findUnique({
+            where: { id: parseInt(id) },
+            select: { role: true }
+        });
+        if (!target) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+        const callerLevel = ROLE_LEVEL[req.user?.role] || 0;
+        const targetLevel = ROLE_LEVEL[target.role] || 0;
+        if (req.user?.role !== 'SUPERADMIN' && (newLevel >= callerLevel || targetLevel >= callerLevel)) {
+            return res.status(403).json({ error: 'Nedostatečná oprávnění pro změnu této role.' });
+        }
+
         const user = await prisma.user.update({
             where: { id: parseInt(id) },
             data: { role },

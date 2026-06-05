@@ -1,6 +1,7 @@
 import express from 'express';
 import { PrismaClient } from '@prisma/client';
 import { getPragueWeekRange } from '../utils/weekRange.js';
+import { requireRole } from '../middleware/auth.js';
 
 const router = express.Router();
 const prisma = new PrismaClient();
@@ -146,15 +147,9 @@ router.get('/settings', async (req, res) => {
     }
 });
 
-// PUT /api/racer/settings - Admin only (requires auth token)
-router.put('/settings', async (req, res) => {
+// PUT /api/racer/settings - Admin only (JWT is actually verified by requireRole)
+router.put('/settings', requireRole('ADMIN'), async (req, res) => {
     try {
-        // Simple auth check - reuse Bearer token pattern
-        const authHeader = req.headers.authorization;
-        if (!authHeader || !authHeader.startsWith('Bearer ')) {
-            return res.status(401).json({ error: 'Unauthorized' });
-        }
-
         const { puzzleTheme, timeLimitSeconds, livesEnabled, maxLives, puzzlesPerDifficulty, penaltyEnabled, penaltySeconds, skipOnMistake, randomizePuzzles } = req.body;
 
         const data = {

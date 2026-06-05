@@ -3,11 +3,13 @@
  * Contains: Messages management (view, delete)
  */
 
-const CLUB_PASSWORD_MSG = 'gambitjbc'; // Renamed to avoid potential conflict if global
+// Admin is already authenticated — send the JWT instead of a hardcoded club
+// password (the backend accepts a Bearer token in checkClubPassword).
+const msgAuthHeader = () => ({ 'Authorization': `Bearer ${window.authToken || ''}` });
 
 async function loadAdminMessages() {
     try {
-        const res = await fetch(`${API_URL}/messages`, { headers: { 'X-Club-Password': CLUB_PASSWORD_MSG } });
+        const res = await fetch(`${API_URL}/messages`, { headers: msgAuthHeader() });
         const messages = await res.json();
         const tbody = document.getElementById('messagesTableBody');
         const noInfo = document.getElementById('noMessagesInfo');
@@ -37,7 +39,7 @@ async function loadAdminMessages() {
 async function deleteAdminMessage(id) {
     if (!confirm('Opravdu smazat tento vzkaz?')) return;
     try {
-        await fetch(`${API_URL}/messages/${id}`, { method: 'DELETE', headers: { 'X-Club-Password': CLUB_PASSWORD_MSG } });
+        await fetch(`${API_URL}/messages/${id}`, { method: 'DELETE', headers: msgAuthHeader() });
         if (window.showAlert) showAlert('Vzkaz smazán', 'success');
         loadAdminMessages();
     } catch (e) {

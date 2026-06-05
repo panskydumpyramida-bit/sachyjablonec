@@ -93,6 +93,24 @@ export const isMatch = (team, rowText) => {
  * @param {number} timeoutMs - Timeout in milliseconds (default: 30000)
  * @returns {Promise<Response>}
  */
+/**
+ * SSRF guard: only allow scraping URLs that point at chess-results.com
+ * (the bare host or any of its sN subdomains). Rejects every other host,
+ * private/internal targets, and non-http(s) schemes.
+ * @param {string} url
+ * @returns {boolean}
+ */
+export const isChessResultsUrl = (url) => {
+    try {
+        const u = new URL(url);
+        if (u.protocol !== 'https:' && u.protocol !== 'http:') return false;
+        const host = u.hostname.toLowerCase();
+        return host === 'chess-results.com' || host.endsWith('.chess-results.com');
+    } catch {
+        return false;
+    }
+};
+
 export const fetchWithHeaders = (url, timeoutMs = 30000) => {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
@@ -105,4 +123,4 @@ export const fetchWithHeaders = (url, timeoutMs = 30000) => {
     }).finally(() => clearTimeout(timeoutId));
 };
 
-export default { clean, isElo, simplify, isMatch, fetchWithHeaders };
+export default { clean, isElo, simplify, isMatch, fetchWithHeaders, isChessResultsUrl };

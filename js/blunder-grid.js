@@ -261,7 +261,7 @@ window.scanAllGodMode = async function() {
     if (rescanAll) {
         const statusText = document.getElementById('status-text');
         statusText.innerHTML = `<i class="fa-solid fa-trash-can" style="color: #f87171;"></i> Mažu staré analytické záznamy pro hráče ${escapeHtml(currentPlayer)}...`;
-        await fetch(`/api/blunder/${encodeURIComponent(currentPlayer)}/analysis`, { method: 'DELETE' });
+        await fetch(`/api/blunder/${encodeURIComponent(currentPlayer)}/analysis`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${getToken() || ''}` } });
     }
     
     triggerBackendScan(currentPlayer, null, true);
@@ -299,11 +299,15 @@ async function triggerBackendScan(name, gameIds = null, infiniteLoop = false) {
 
             const res = await fetch(`/api/blunder/${encodeURIComponent(name)}/scan`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${getToken() || ''}` },
                 body
             });
 
             if (!res.ok) {
+                if (res.status === 401 || res.status === 403) {
+                    statusText.innerHTML = `<i class="fa-solid fa-lock" style="color: #f59e0b;"></i> Pro skenování nových partií se přihlas do členské sekce.`;
+                    break;
+                }
                 if (res.status === 429) {
                     const err = await res.json();
                     statusText.innerHTML = `<i class="fa-solid fa-clock" style="color: #f59e0b;"></i> ${err.message} (analyzováno ${totalScanned} partií, ${totalBlunders} situací)`;
@@ -1222,7 +1226,7 @@ async function rescanGame(gameId) {
 
     try {
         // Delete old analysis for this game
-        await fetch(`/api/blunder/game/${gameId}/analysis`, { method: 'DELETE' });
+        await fetch(`/api/blunder/game/${gameId}/analysis`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${getToken() || ''}` } });
 
         // Re-scan this specific game
         const bodyObj = { gameIds: [gameId] };
@@ -1337,7 +1341,7 @@ async function loadFeatured(playerName) {
 
 async function toggleFeatured(blunderId) {
     try {
-        const res = await fetch(`/api/blunder/${blunderId}/featured`, { method: 'PUT' });
+        const res = await fetch(`/api/blunder/${blunderId}/featured`, { method: 'PUT', headers: { 'Authorization': `Bearer ${getToken() || ''}` } });
         if (res.ok) {
             const { isFeatured } = await res.json();
             const btn = document.querySelector(`[data-featured-id="${blunderId}"]`);

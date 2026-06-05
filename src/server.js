@@ -361,7 +361,7 @@ app.use('/api/comments', commentsRoutes);
 app.use('/api/events', eventsRoutes);
 app.use('/api/timeline', timelineRoutes);
 app.use('/api/chess', chessRoutes);
-app.use('/api/ai', aiRoutes);
+app.use('/api/ai', authMiddleware, aiRoutes); // require login — the AI proxy spends the OpenAI key
 app.use('/api/announcements', announcementRoutes);
 app.use('/api/documents', documentRoutes);
 app.use('/api/travel-reports', travelReportRoutes);
@@ -370,7 +370,7 @@ app.use('/api', diagramsRoutes);
 app.use('/api/blunder', blunderRoutes);
 
 // Import helpers from utils
-import { clean, isElo, simplify, isMatch, fetchWithHeaders } from './utils/helpers.js';
+import { clean, isElo, simplify, isMatch, fetchWithHeaders, isChessResultsUrl } from './utils/helpers.js';
 
 // Scraping functions extracted to services/scrapingService.js
 import { scrapeMatchDetails, scrapeTeamRoster, scrapeCompetitionMatches } from './services/scrapingService.js';
@@ -712,6 +712,9 @@ app.get('/api/standings/match-details', async (req, res) => {
     if (!url || !round || !home || !away) {
         return res.status(400).json({ error: 'Missing parameters' });
     }
+    if (!isChessResultsUrl(url)) {
+        return res.status(400).json({ error: 'URL musí být z chess-results.com' });
+    }
     const boards = await scrapeMatchDetails(url, round, home, away);
     res.json({ boards });
 });
@@ -721,6 +724,9 @@ app.get('/api/standings/team-roster', async (req, res) => {
     const { url, snr } = req.query;
     if (!url || !snr) {
         return res.status(400).json({ error: 'Missing parameters: url and snr required' });
+    }
+    if (!isChessResultsUrl(url)) {
+        return res.status(400).json({ error: 'URL musí být z chess-results.com' });
     }
     try {
         const players = await scrapeTeamRoster(url, snr);
@@ -856,8 +862,9 @@ app.post('/api/admin/migrate', authMiddleware, requireSuperadmin, async (req, re
     }
 });
 
-// Seed Endpoint (Protected)un once to populate database
-app.post('/api/seed', async (req, res) => {
+// Seed Endpoint (Protected) — superadmin only; never expose publicly (it can
+// create/upsert a SUPERADMIN account).
+app.post('/api/seed', authMiddleware, requireSuperadmin, async (req, res) => {
     const result = await seedDatabase();
     if (result.error) {
         res.status(500).json({ error: 'Seed failed', details: result.error });
