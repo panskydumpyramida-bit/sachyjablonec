@@ -2501,9 +2501,18 @@ body>.gv2-var-modal {
     color: #111116;
 }
 
+/* Let the comment dock overflow upward to the header level. The outer container
+   still clips (overflow:hidden), so the dock can't escape the viewer card. */
+.game-viewer-2-container.gv2-skin-modern .gv2-board-section {
+    overflow: visible;
+}
+
 .game-viewer-2-container.gv2-skin-modern .gv2-comment-dock {
     position: absolute;
-    top: 0.85rem;
+    /* Sit up at the player-header level so the bubble doesn't cover the board;
+       it overflows the board-section upward (which is set to overflow:visible).
+       A long comment still spills a little onto the top ranks, which is fine. */
+    top: -1.8rem;
     left: 50%;
     width: min(520px, calc(100% - 1.4rem));
     max-height: min(42%, 180px);
