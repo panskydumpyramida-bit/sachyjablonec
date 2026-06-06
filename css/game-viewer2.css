@@ -2501,23 +2501,27 @@ body>.gv2-var-modal {
     color: #111116;
 }
 
-/* Let the comment dock overflow upward to the header level. The outer container
-   still clips (overflow:hidden), so the dock can't escape the viewer card. */
-.game-viewer-2-container.gv2-skin-modern .gv2-board-section {
+/* Let the comment dock overflow upward to the header level. Both the board
+   section AND the content grid must allow overflow, otherwise the dock gets
+   clipped at the header boundary and disappears "under" the header. The outer
+   container still clips (overflow:hidden), so the dock can't escape the card. */
+.game-viewer-2-container.gv2-skin-modern .gv2-board-section,
+.game-viewer-2-container.gv2-skin-modern .gv2-content {
     overflow: visible;
 }
 
 .game-viewer-2-container.gv2-skin-modern .gv2-comment-dock {
     position: absolute;
-    /* Sit up at the player-header level so the bubble doesn't cover the board;
-       it overflows the board-section upward (which is set to overflow:visible).
+    /* Sit up at the player-header level so the bubble doesn't cover the board.
+       Needs a z-index above the header (otherwise it renders "under" it) and the
+       content/board-section overflow:visible above so it isn't clipped.
        A long comment still spills a little onto the top ranks, which is fine. */
-    top: -1.8rem;
+    top: -1.2rem;
     left: 50%;
     width: min(520px, calc(100% - 1.4rem));
     max-height: min(42%, 180px);
     overflow: auto;
-    z-index: 95;
+    z-index: 120;
     transform: translateX(-50%);
     display: flex;
     align-items: flex-start;
@@ -2531,6 +2535,12 @@ body>.gv2-var-modal {
     -webkit-backdrop-filter: blur(1.2px) saturate(135%) brightness(0.96);
     isolation: isolate;
     pointer-events: none;
+}
+
+/* When viewing a variation, the variation-status bar sits at the top, so drop
+   the comment dock below it instead of piling up on the same spot. */
+.game-viewer-2-container.gv2-skin-modern .gv2-variation-status:not([hidden]) ~ .gv2-comment-dock {
+    top: 3.5rem;
 }
 
 .game-viewer-2-container.gv2-skin-modern .gv2-comment-dock::before {
