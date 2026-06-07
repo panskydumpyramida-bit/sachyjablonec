@@ -15,6 +15,7 @@
 
 import { PrismaClient } from '@prisma/client';
 import { Chess } from 'chess.js';
+import { isEngineAvailable, analyzePosition } from './stockfishEngine.js';
 
 const prisma = new PrismaClient();
 
@@ -22,8 +23,9 @@ const prisma = new PrismaClient();
 const ALREADY_WON_PAWNS = 2.5;   // řešitel už drtivě vyhrával PŘED tahem → ne úloha
 const DECISIVE_MIN_CP = 180;     // řešení musí vést k rozhodující výhodě (~+1.8 pawn)
 const UNIQ_MARGIN_MIN = 0.5;     // wc(best) - wc(second); mezi DeepMind 0.5 a lichess 0.7
-const VERIFY_POOL = 28;          // kolik top kandidátů ověřit přes Lichess (rate-limit šetrné)
+const VERIFY_POOL = 28;          // kolik top kandidátů ověřit (uniqueness gate)
 const LICHESS_DELAY_MS = 130;
+const ENGINE_DEPTH = 14;         // hloubka lokálního Stockfishe pro uniqueness gate
 
 // Win-chance z centipawnů (Lichess sigmoid), rozsah [-1, +1]. Mat = ±1.
 function winChance(cp, mate) {
@@ -126,34 +128,49 @@ export async function getPuzzleCandidates({ threshold = 10, limit = 30 } = {}) {
 
     // ohodnotit nejprve podle probDrop, ověřovat jen top VERIFY_POOL (Lichess rate-limit)
     const toVerify = prelim.slice(0, VERIFY_POOL);
+    const engineOk = await isEngineAvailable();
 
     const scored = [];
     for (const cand of toVerify) {
         const { row: r, solverIsWhite } = cand;
 
-        // 3. UNIQUENESS GATE + decisive — Lichess multiPv (cache), jinak chess-api eval
+        // 3. UNIQUENESS GATE + decisive
+        // Primárně lokální Stockfish MultiPV=2 (libovolná pozice; score = pohled řešitele).
+        // Fallback Lichess multiPv (white-pov, cache-only), když engine není dostupný.
         let uniqMargin = null;
         let uniqSource = 'none';
         let bestSolverCp = null;
         let mateIn = null;
 
-        const pvs = await lichessMultiPv(r.fenBefore, 5);
-        if (pvs && pvs.length) {
-            const best = toSolver(pvs[0].cp, pvs[0].mate, solverIsWhite);
-            bestSolverCp = best.cp;
-            if (best.mate !== null && best.mate > 0) mateIn = best.mate;
-            if (pvs.length >= 2) {
-                const second = toSolver(pvs[1].cp, pvs[1].mate, solverIsWhite);
-                uniqMargin = winChance(best.cp, best.mate) - winChance(second.cp, second.mate);
-            } else {
-                uniqMargin = 1; // jen 1 legální/rozumný tah dle Lichess = jedinečné
+        if (engineOk) {
+            const sf = await analyzePosition(r.fenBefore, { depth: ENGINE_DEPTH, multiPv: 2 });
+            if (sf && sf.length) {
+                const best = sf[0]; // už z pohledu řešitele
+                bestSolverCp = best.mate !== null ? null : best.cp;
+                if (best.mate !== null && best.mate > 0) mateIn = best.mate;
+                if (sf.length >= 2) {
+                    uniqMargin = winChance(best.cp, best.mate) - winChance(sf[1].cp, sf[1].mate);
+                } else {
+                    uniqMargin = 1; // jen 1 legální tah → triviálně jedinečné
+                }
+                uniqSource = 'stockfish';
             }
-            uniqSource = 'lichess';
-            await delay(LICHESS_DELAY_MS);
+        } else {
+            const pvs = await lichessMultiPv(r.fenBefore, 5);
+            if (pvs && pvs.length) {
+                const best = toSolver(pvs[0].cp, pvs[0].mate, solverIsWhite);
+                bestSolverCp = best.cp;
+                if (best.mate !== null && best.mate > 0) mateIn = best.mate;
+                if (pvs.length >= 2) {
+                    const second = toSolver(pvs[1].cp, pvs[1].mate, solverIsWhite);
+                    uniqMargin = winChance(best.cp, best.mate) - winChance(second.cp, second.mate);
+                } else {
+                    uniqMargin = 1;
+                }
+                uniqSource = 'lichess';
+                await delay(LICHESS_DELAY_MS);
+            }
         }
-        // F1: pozice mimo Lichess cache NEřešíme drahým chess-api fallbackem (timeout risk
-        // při desítkách pozic) — projdou jako "jedinečnost nepotvrzena", skóre dle probDrop.
-        // Plný multiPV pro libovolnou pozici = F1.5 (lokální Stockfish, viz deep-research).
 
         // decisive: po nejlepším tahu má řešitel rozhodující výhodu (nebo mat)
         const decisive = (mateIn !== null) || (bestSolverCp !== null && bestSolverCp >= DECISIVE_MIN_CP);
@@ -172,7 +189,7 @@ export async function getPuzzleCandidates({ threshold = 10, limit = 30 } = {}) {
             0.40 * uniqScore + 0.30 * decisiveScore + 0.15 * forcingLite + 0.15 * freshness
         ));
 
-        const verified = uniqSource === 'lichess' && uniqMargin !== null && uniqMargin >= UNIQ_MARGIN_MIN;
+        const verified = uniqSource !== 'none' && uniqMargin !== null && uniqMargin >= UNIQ_MARGIN_MIN;
 
         scored.push({
             id: r.id,
@@ -211,7 +228,7 @@ export async function getPuzzleCandidates({ threshold = 10, limit = 30 } = {}) {
         meta: {
             poolTotal: prelim.length,
             verified: toVerify.length,
-            lichessHits: scored.filter(c => c.uniqSource === 'lichess').length,
+            engine: engineOk ? 'stockfish' : 'lichess',
             confirmedUnique: scored.filter(c => c.verified).length,
             threshold,
         },

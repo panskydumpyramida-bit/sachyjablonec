@@ -147,7 +147,7 @@
             const data = await res.json();
             lastCandidates = data.candidates || [];
             if (metaEl && data.meta) {
-                metaEl.innerHTML = `Pool: ${data.meta.poolTotal} pozic · ověřeno top ${data.meta.verified} · Lichess pokrytí: ${data.meta.lichessHits} · potvrzená jedinečnost: <strong style="color:#22c55e;">${data.meta.confirmedUnique}</strong>`;
+                metaEl.innerHTML = `Pool: ${data.meta.poolTotal} pozic · ověřeno top ${data.meta.verified} · engine: <strong>${data.meta.engine || '?'}</strong> · potvrzená jedinečnost: <strong style="color:#22c55e;">${data.meta.confirmedUnique}</strong>`;
             }
             render();
         } catch (e) {

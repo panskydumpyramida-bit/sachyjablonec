@@ -254,12 +254,21 @@ POST /api/weekly-puzzles/generate     [ADMIN]
 
 RBAC: `requireRole('ADMIN')` (vzor `src/routes/blunder.js`).
 
-### Zdroj multiPV=2 (klíčové — uniqueness gate na tom stojí)
-`fenBefore` potřebuje skóre **2. nejlepšího tahu**, které BlunderAnalysis neukládá. Možnosti (sestupně dle kvality):
-- **A) Vlastní Stockfish MultiPV=2** na kandidátní pozice — máme Stockfish 17 přes chess-api. Jen ~40 pozic (ne celé partie) → levné, deterministické, vždy dostupné. **Doporučeno.**
-- **B) Lichess cloud-eval `?multiPv=2`** — zdarma, ale **nepokrývá každou pozici** (jen co je v cloudu); amatérské pozice z našich partií tam často nebudou.
-- **C) Hybrid:** zkus Lichess (B), fallback Stockfish (A).
-Pozice bez 2. tahu (cloud miss + bez vlastního SF) označit `uniqMargin=null` → „jedinečnost neověřena", v dashboardu řadit níž / vizuálně odlišit.
+### Zdroj multiPV=2 — ověřeno deep-research (2026-06, 104 agentů, proti zdrojům)
+`fenBefore` potřebuje skóre **2. nejlepšího tahu**, které BlunderAnalysis neukládá. **Žádné hotové SaaS to nevyřeší:**
+- stockfish.online → jen 1 PV (multipv ignoruje, jako chess-api.com).
+- chessdb.cn `queryall` → multi-move, ALE crowdsourced cache; naše pozice = `unknown` → `queue` (minuty–hodiny).
+- Lichess cloud-eval → cache-only (404 na naše amatérské pozice).
+- Lichess External Engine API → alpha, a STEJNĚ si hostíš vlastní Stockfish (Lichess je jen broker) → jen overhead.
+
+**Jediné spolehlivé řešení = self-host Stockfish (F1.5):**
+1. **Railway** `nixpacks.toml`: `[phases.setup]` → `aptPkgs = ["...", "stockfish"]` → nativní binárka na `/usr/games/stockfish`.
+2. **Node** `node-uci`: `engine.setoption('MultiPV', 2)` → `engine.go({depth})` vrátí `{ bestmove, info[] }` s parsovanými `score`/`pv`/`multipv`. (node-uci je stale v1.3.4 ale funkční; fallback = přímý `child_process` stdin/stdout.)
+3. **1 perzistentní engine proces** (reuse, ne spawn/pozice), malý `Hash` (16–32 MB), `depth ~14–16`, `MultiPV=2` → uniqueness gate pro **libovolnou** pozici, deterministicky, bez rate-limitů.
+
+Pozn.: nativní binárka ≫ WASM (rychlost/paměť). WASM (`stockfish` npm, SF18) jen když apt nejde, nebo pro klientskou analýzu (odlehčení backendu). Ověřit při nasazení: CPU/RAM Stockfishe na Railway plánu.
+
+Do té doby (F1) Lichess multiPv + `uniqMargin=null` pro cache-miss („jedinečnost neověřena").
 
 ---
 
