@@ -1171,12 +1171,13 @@ class GameViewer2 {
 
         wrapper.classList.toggle('is-variation', Boolean(options.inVariation));
         const currentLabel = options.label || this.getCurrentMoveLabel();
-        currentEl.textContent = currentLabel;
-        range.setAttribute('aria-valuetext', currentLabel);
+        // Labels may contain figurine icons (HTML), so render as HTML; keep aria plain.
+        currentEl.innerHTML = currentLabel;
+        range.setAttribute('aria-valuetext', String(currentLabel).replace(/<[^>]*>/g, ''));
         if (options.inVariation) {
-            // The "větev" badge in the scrubber doubles as the exit button — there
-            // is no separate variation bar anymore (it overlapped the board).
-            countEl.innerHTML = '<i class="fa-solid fa-arrow-turn-up" style="font-size:0.82em;margin-right:0.25em;"></i>větev';
+            // The scrubber badge doubles as the exit button — there is no separate
+            // variation bar anymore (it overlapped the board).
+            countEl.innerHTML = '<i class="fa-solid fa-arrow-turn-up" style="font-size:0.82em;margin-right:0.3em;"></i>zpět do hlavní linie';
             countEl.title = 'Zpět do hlavní linie';
             countEl.style.cursor = 'pointer';
             countEl.onclick = () => this.exitVariation();
@@ -2147,7 +2148,7 @@ class GameViewer2 {
         if (varId) {
             if (movesEl) movesEl.classList.add('in-variation');
             if (statusEl) statusEl.hidden = false;
-            if (statusLabelEl) statusLabelEl.textContent = this.getVariationStatusLabel(varId);
+            if (statusLabelEl) statusLabelEl.innerHTML = this.getVariationStatusLabel(varId);
             // Highlight variation spans
             document.querySelectorAll('.gv2-variation').forEach(el => el.classList.remove('active'));
             // Find and highlight the active variation
@@ -2170,35 +2171,53 @@ class GameViewer2 {
         return move ? `${moveNumber}${dots} ${move.san}` : `${moveNumber}${dots}`;
     }
 
+    // Same as getMoveLabelForPly but with figurine (piece-icon) notation.
+    moveLabelFig(ply) {
+        if (ply <= 0) return 'výchozí pozice';
+        const move = this.mainLinePlies?.[ply]?.move;
+        const moveNumber = Math.ceil(ply / 2);
+        const dots = ply % 2 === 1 ? '.' : '...';
+        return move ? `${moveNumber}${dots} ${this.formatSan(move.san)}` : `${moveNumber}${dots}`;
+    }
+
+    // Figurine label for a move INSIDE a variation, using its REAL game move number
+    // (derived from the branch ply), e.g. "6. O-O" / "6... ♞f6".
+    variationMoveFig(varData, index) {
+        const ply = varData.parentPly + index;
+        const moveNumber = Math.ceil(ply / 2);
+        const dots = ply % 2 === 1 ? '.' : '...';
+        return `${moveNumber}${dots} ${this.formatSan(varData.moves[index].san)}`;
+    }
+
+    // Full context for the comment dock meta. A variation REPLACES the move it is
+    // attached to (parentPly), so it branches from the move BEFORE it (parentPly-1).
+    // → "Varianta z partie po 5...♞xd5 — 6. O-O".
     getVariationStatusLabel(varId, fen = null) {
         const varData = this.allVariations?.[varId];
         if (!varData) return 'Varianta';
 
         const currentFen = fen || this.game?.fen?.();
         const currentIndex = varData.moves?.findIndex(move => move.fen === currentFen) ?? -1;
-        const parentLabel = this.getMoveLabelForPly(varData.parentPly);
+        const branch = this.moveLabelFig(varData.parentPly - 1);
 
         if (currentIndex >= 0) {
-            const currentMove = varData.moves[currentIndex];
-            return `po ${parentLabel} · ${currentIndex + 1}. tah varianty: ${currentMove.san}`;
+            return `Varianta z partie po ${branch} — ${this.variationMoveFig(varData, currentIndex)}`;
         }
-
-        return `po ${parentLabel} · začátek varianty`;
+        return `Varianta z partie po ${branch}`;
     }
 
-    // Short label for the scrubber meta. The floating variation bar is gone, so this
-    // now carries the branch context too (shortened): "po 6...Bg4 · 1. f6".
+    // Shorter context for the scrubber: "po 5...♞xd5 · 6. O-O".
     getVariationMoveLabel(varId, fen = null) {
         const varData = this.allVariations?.[varId];
         if (!varData) return 'Varianta';
 
         const currentFen = fen || this.game?.fen?.();
         const currentIndex = varData.moves?.findIndex(move => move.fen === currentFen) ?? -1;
-        const parentLabel = this.getMoveLabelForPly(varData.parentPly);
+        const branch = this.moveLabelFig(varData.parentPly - 1);
         if (currentIndex >= 0) {
-            return `po ${parentLabel} · ${currentIndex + 1}. ${varData.moves[currentIndex].san}`;
+            return `po ${branch} · ${this.variationMoveFig(varData, currentIndex)}`;
         }
-        return `po ${parentLabel} · začátek`;
+        return `po ${branch}`;
     }
 
     // Update active move highlighting in variation
@@ -3081,7 +3100,7 @@ class GameViewer2 {
                 dock.hidden = false;
                 dock.classList.add('visible');
                 dockText.textContent = comment;
-                if (dockMove) dockMove.textContent = currentData?.label || this.getCurrentMoveLabel();
+                if (dockMove) dockMove.innerHTML = currentData?.label || this.getCurrentMoveLabel();
                 this.renderCommentAvatar(dockAvatar, avatarUrl);
                 if (showBtn) showBtn.classList.remove('visible');
             } else {
@@ -3144,9 +3163,9 @@ class GameViewer2 {
     }
 
     getCurrentMoveLabel() {
-        if (this.inVariation && this.currentVariation) return this.getVariationStatusLabel(this.currentVariation);
+        if (this.inVariation && this.currentVariation) return this.getVariationMoveLabel(this.currentVariation);
         if (this.currentPly <= 0) return 'Výchozí pozice';
-        return this.getMoveLabelForPly(this.currentPly);
+        return this.moveLabelFig(this.currentPly);
     }
 
     // Manually hide bubble (called by close button)
