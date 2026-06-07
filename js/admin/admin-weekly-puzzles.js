@@ -86,12 +86,11 @@
                 </div>
                 <div style="font-size:0.85rem;">${verified}${mate}${evalTxt}</div>
                 <div style="font-size:0.8rem;color:#94a3b8;">
-                    Nejlepší tah: <strong style="color:#e2e8f0;">${c.bestSan}</strong>
-                    ${c.isCapture ? ' · braní' : ''}${c.isCheck ? ' · šach' : ''}
-                    · typ: ${c.type === 'miss' ? 'přehlédnutá šance' : 'přehlédnutá taktika'}
+                    Nejlepší tah: <strong style="color:#e2e8f0;">${c.bestSan}</strong> · tah ${c.moveNo}
+                    · ${c.playedBest ? '<span style="color:#22c55e;">✓ zahráno v partii</span>' : 'v partii přehlédnuto'}
                 </div>
                 <div style="font-size:0.78rem;color:#64748b;">
-                    Z partie ${c.white} – ${c.black}${dateTxt ? ' · ' + dateTxt : ''}${c.event ? ' · ' + c.event : ''}
+                    Z partie ${c.white} – ${c.black}${c.newsTitle ? ' · článek: ' + c.newsTitle : ''}${dateTxt ? ' · ' + dateTxt : ''}
                 </div>
                 <label style="margin-top:auto;display:inline-flex;align-items:center;gap:0.4rem;font-size:0.85rem;cursor:pointer;">
                     <input type="checkbox" ${isSel ? 'checked' : ''} data-id="${c.id}"> Vybrat do úlohy týdne
@@ -120,7 +119,7 @@
         if (!grid) return;
         grid.innerHTML = '';
         if (!lastCandidates.length) {
-            grid.innerHTML = '<p style="color:#94a3b8;padding:2rem;text-align:center;">Žádní kandidáti. Nejdřív naskenuj partie v Blunder Gridu — z nich se kombinace vybírají.</p>';
+            grid.innerHTML = '<p style="color:#94a3b8;padding:2rem;text-align:center;">V projitých partiích nebyly žádné ostré kombinace. Zkus víc partií, nebo přidej partie s taktikou do článků.</p>';
         } else {
             lastCandidates.forEach(c => grid.appendChild(card(c)));
         }
@@ -135,10 +134,10 @@
     async function load() {
         const grid = document.getElementById('wpGrid');
         const metaEl = document.getElementById('wpMeta');
-        if (grid) grid.innerHTML = '<p style="color:#94a3b8;padding:2rem;text-align:center;"><i class="fa-solid fa-spinner fa-spin"></i> Hledám kombinace… (ověřuji jedinečnost přes engine, chvíli to trvá)</p>';
+        if (grid) grid.innerHTML = '<p style="color:#94a3b8;padding:2rem;text-align:center;"><i class="fa-solid fa-spinner fa-spin"></i> Procházím partie z článků Stockfishem… (analýza, chvíli to trvá)</p>';
         selected.clear();
         try {
-            const res = await fetch(`${apiBase()}/weekly-puzzles/candidates?threshold=10&limit=30`, { headers: authHeaders() });
+            const res = await fetch(`${apiBase()}/weekly-puzzles/candidates?maxGames=3&limit=30`, { headers: authHeaders() });
             if (res.status === 401 || res.status === 403) {
                 if (grid) grid.innerHTML = '<p style="color:#f87171;padding:2rem;text-align:center;">Nemáš oprávnění (jen ADMIN). Přihlas se jako administrátor.</p>';
                 return;
@@ -147,7 +146,9 @@
             const data = await res.json();
             lastCandidates = data.candidates || [];
             if (metaEl && data.meta) {
-                metaEl.innerHTML = `Pool: ${data.meta.poolTotal} pozic · ověřeno top ${data.meta.verified} · engine: <strong>${data.meta.engine || '?'}</strong> · potvrzená jedinečnost: <strong style="color:#22c55e;">${data.meta.confirmedUnique}</strong>`;
+                metaEl.innerHTML = data.meta.error
+                    ? `<span style="color:#f87171;">${data.meta.error}</span>`
+                    : `Prošel ${data.meta.gamesScanned} článkových partií · nalezeno <strong style="color:#22c55e;">${data.meta.found}</strong> kombinací · engine: <strong>${data.meta.engine}</strong>`;
             }
             render();
         } catch (e) {

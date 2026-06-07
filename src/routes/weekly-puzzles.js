@@ -12,10 +12,10 @@ const router = express.Router();
 // Navržené pozice (kombinace) na úlohu — skórované, s uniqueness gate
 router.get('/candidates', requireRole('ADMIN'), async (req, res) => {
     try {
-        const threshold = parseFloat(req.query.threshold);
+        const maxGames = parseInt(req.query.maxGames);
         const limit = parseInt(req.query.limit);
         const result = await getPuzzleCandidates({
-            threshold: Number.isFinite(threshold) ? threshold : 10,
+            maxGames: Number.isFinite(maxGames) ? maxGames : 3,
             limit: Number.isFinite(limit) ? limit : 30,
         });
         res.json(result);

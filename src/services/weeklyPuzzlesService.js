@@ -1,16 +1,13 @@
 /**
  * Weekly Puzzles Service — "Úloha týdne"
  *
- * Z BlunderAnalysis (1. síto: pozice, kde taktika reálně byla a tah byl přehlédnut)
- * vybírá KOMBINACE (2. síto: jediné úzké řešení = uniqueness gate) vhodné jako
- * interaktivní taktické úlohy "najdi nejlepší tah".
+ * Zdroj = PARTIE Z ČLÁNKŮ (model Game, pgn, vázané na publikované News).
+ * NE Blunder Grid. Projde partie Stockfishem a hledá v nich KOMBINACE —
+ * pozice s jediným úzkým řešením (uniqueness gate) vedoucím k rozhodující
+ * výhodě / matu, ZAHRANÉ I PŘEHLÉDNUTÉ.
  *
- * Metodika ověřena deep-research proti lichess-puzzler / Play Magnus / DeepMind
- * (arXiv 2510.23881) / Chess-Tactic-Finder. Viz WEEKLY-PUZZLES-PLAN.md §3.
- *
- * Uniqueness zdroj pro F1: Lichess cloud-eval multiPv (zdarma, cache pozice).
- * Pozice mimo cache → uniqMargin=null ("nepotvrzeno"). Plný multiPV pro libovolnou
- * pozici vyžaduje lokální Stockfish (F1.5).
+ * Metodika ověřena deep-research (lichess-puzzler / Play Magnus / DeepMind).
+ * Vyžaduje lokální Stockfish (self-host, viz stockfishEngine.js).
  */
 
 import { PrismaClient } from '@prisma/client';
@@ -19,229 +16,149 @@ import { isEngineAvailable, analyzePosition } from './stockfishEngine.js';
 
 const prisma = new PrismaClient();
 
-// === Prahy (win-chance škála [-1,+1], viz §3) ===
-const ALREADY_WON_PAWNS = 2.5;   // řešitel už drtivě vyhrával PŘED tahem → ne úloha
-const UNIQ_MARGIN_MIN = 0.4;     // wc(best) - wc(second); DeepMind 0.5 / lichess 0.7, amatér volněji
-const VERIFY_POOL = 28;          // kolik top kandidátů ověřit (uniqueness gate)
-const LICHESS_DELAY_MS = 130;
-const ENGINE_DEPTH = 14;         // hloubka lokálního Stockfishe pro uniqueness gate
+const MIN_PLY = 12;            // přeskoč otevírku (~6 tahů)
+const GAME_DEPTH = 12;         // hloubka Stockfishe při scanu partií
+const DECISIVE_CP = 200;       // řešení musí vést k rozhodující výhodě (~+2)
+const ALREADY_WON_CP = 250;    // pokud strana už předtím vyhrávala → ne kombinace
+const UNIQ_MARGIN_MIN = 0.4;   // wc(best) - wc(second), [-1,+1] škála
+const DEFAULT_MAX_GAMES = 3;   // kolik nejnovějších článkových partií projít naráz
 
-// Win-chance z centipawnů (Lichess sigmoid), rozsah [-1, +1]. Mat = ±1.
+// Win-chance z centipawnů (Lichess sigmoid), [-1,+1]. Mat = ±1.
 function winChance(cp, mate) {
     if (mate !== undefined && mate !== null) return mate > 0 ? 1 : -1;
     if (cp === undefined || cp === null) return 0;
     return 2 / (1 + Math.exp(-0.00368208 * cp)) - 1;
 }
+function clamp(x, lo, hi) { return Math.max(lo, Math.min(hi, x)); }
 
-// Eval z pohledu řešitele (uložené evaly jsou white-perspective).
-function toSolver(cpWhite, mateWhite, solverIsWhite) {
-    const cp = (cpWhite === undefined || cpWhite === null) ? null : (solverIsWhite ? cpWhite : -cpWhite);
-    const mate = (mateWhite === undefined || mateWhite === null) ? null : (solverIsWhite ? mateWhite : -mateWhite);
-    return { cp, mate };
-}
-
-function delay(ms) { return new Promise(r => setTimeout(r, ms)); }
-
-// UCI ("g1f3" / "e7e8q") → chess.js move; vrací move obj nebo null (nelegální).
-function tryMove(fen, uci) {
+function bestMoveSan(fen, uci) {
     try {
         const c = new Chess(fen);
-        const mv = c.move({ from: uci.slice(0, 2), to: uci.slice(2, 4), promotion: uci.slice(4) || 'q' });
-        return mv || null;
+        const m = c.move({ from: uci.slice(0, 2), to: uci.slice(2, 4), promotion: uci.slice(4) || 'q' });
+        return m ? m.san : uci;
     } catch {
-        return null;
+        return uci;
     }
 }
 
-// Lichess cloud-eval multiPv → pvs z pohledu BÍLÉHO (cp), seřazené nejlepší-pro-hráče první.
-async function lichessMultiPv(fen, multiPv = 5) {
+// Projde jednu partii a najde taktické kombinace (pozice = úlohy).
+async function findTacticsInGame(g) {
+    let chess;
     try {
-        const controller = new AbortController();
-        const timeout = setTimeout(() => controller.abort(), 3500);
-        const res = await fetch(
-            `https://lichess.org/api/cloud-eval?fen=${encodeURIComponent(fen)}&multiPv=${multiPv}`,
-            { signal: controller.signal }
-        );
-        clearTimeout(timeout);
-        if (!res.ok) return null; // 404 = pozice není v cache
-        const data = await res.json();
-        if (!data?.pvs?.length) return null;
-        return data.pvs.map(pv => ({
-            cp: pv.cp ?? null,
-            mate: pv.mate ?? null,
-            firstMove: pv.moves?.split(' ')[0] || null,
-        }));
+        chess = new Chess();
+        chess.loadPgn(g.pgn);
     } catch {
-        return null;
+        return [];
     }
-}
+    const history = chess.history({ verbose: true });
+    if (history.length < MIN_PLY + 2) return [];
 
-/**
- * Hlavní vstup pro dashboard: vrátí seřazené kandidáty na úlohu.
- * @param {object} opts { threshold, limit }
- */
-export async function getPuzzleCandidates({ threshold = 10, limit = 30 } = {}) {
-    // 1. síto — BlunderAnalysis (taktika reálně byla, tah přehlédnut)
-    const raw = await prisma.blunderAnalysis.findMany({
-        where: { type: { in: ['blunder', 'miss'] }, probDrop: { gte: threshold } },
-        orderBy: { probDrop: 'desc' },
-        take: 400,
-    });
+    const hdr = (typeof chess.header === 'function') ? chess.header() : {};
+    const white = g.whitePlayer || hdr.White || '?';
+    const black = g.blackPlayer || hdr.Black || '?';
 
-    // game date pro freshness
-    const gameIds = [...new Set(raw.map(r => r.gameId))];
-    const games = await prisma.chessGame.findMany({
-        where: { id: { in: gameIds } },
-        select: { id: true, date: true, event: true },
-    });
-    const gameMap = new Map(games.map(g => [g.id, g]));
+    const replay = new Chess();
+    const found = [];
+    const prevDecisive = { w: null, b: null }; // poslední eval (mover-pov) pro každou stranu
 
-    // 2. předfiltr zadarmo (chess.js): legalita bestMove + dedup + ne-už-vyhrané
-    const seenFen = new Set();
-    const gamesUsed = new Map(); // gameId -> count
-    const prelim = [];
-    for (const r of raw) {
-        if (!r.bestMoveLAN || !r.fenBefore) continue;
-        if (seenFen.has(r.fenBefore)) continue;
+    for (let i = 0; i < history.length; i++) {
+        const fenBefore = replay.fen();
+        const mover = (i % 2 === 0) ? 'w' : 'b';
+        const moverInCheck = (typeof replay.isCheck === 'function') ? replay.isCheck() : replay.in_check();
+        const legalCount = replay.moves().length;
 
-        const parts = r.fenBefore.split(' ');
-        const solverIsWhite = parts[1] === 'w';
-
-        // bestMove MUSÍ být legální ve fenBefore (vyřadí posunuté 'miss' pozice)
-        const mv = tryMove(r.fenBefore, r.bestMoveLAN);
-        if (!mv) continue;
-
-        // řešitel už drtivě vyhrával před tahem? → ne úloha
-        const before = toSolver(r.evalBefore !== null ? r.evalBefore : null, null, solverIsWhite);
-        if (before.cp !== null && before.cp > ALREADY_WON_PAWNS) continue;
-
-        seenFen.add(r.fenBefore);
-        prelim.push({
-            row: r,
-            solverIsWhite,
-            bestSan: mv.san,
-            isCapture: !!mv.captured,
-            isCheck: mv.san.includes('+') || mv.san.includes('#'),
-        });
-    }
-
-    // ohodnotit nejprve podle probDrop, ověřovat jen top VERIFY_POOL (Lichess rate-limit)
-    const toVerify = prelim.slice(0, VERIFY_POOL);
-    const engineOk = await isEngineAvailable();
-
-    const scored = [];
-    for (const cand of toVerify) {
-        const { row: r, solverIsWhite } = cand;
-
-        // 3. UNIQUENESS GATE + decisive
-        // Primárně lokální Stockfish MultiPV=2 (libovolná pozice; score = pohled řešitele).
-        // Fallback Lichess multiPv (white-pov, cache-only), když engine není dostupný.
-        let uniqMargin = null;
-        let uniqSource = 'none';
-        let bestSolverCp = null;
-        let mateIn = null;
-
-        if (engineOk) {
-            const sf = await analyzePosition(r.fenBefore, { depth: ENGINE_DEPTH, multiPv: 2 });
+        // přeskoč otevírku, konec, vynucené pozice (v šachu / jediný tah = ne kombinace)
+        if (i >= MIN_PLY && i < history.length - 1 && !moverInCheck && legalCount > 1) {
+            const sf = await analyzePosition(fenBefore, { depth: GAME_DEPTH, multiPv: 2 });
             if (sf && sf.length) {
-                const best = sf[0]; // už z pohledu řešitele
-                bestSolverCp = best.mate !== null ? null : best.cp;
-                if (best.mate !== null && best.mate > 0) mateIn = best.mate;
-                if (sf.length >= 2) {
-                    uniqMargin = winChance(best.cp, best.mate) - winChance(sf[1].cp, sf[1].mate);
-                } else {
-                    uniqMargin = 1; // jen 1 legální tah → triviálně jedinečné
+                const best = sf[0]; // Stockfish UCI score = pohled strany na tahu (= řešitel)
+                const bestCp = (best.mate !== null) ? null : best.cp;
+                const mateIn = (best.mate !== null && best.mate > 0) ? best.mate : null;
+                const decisive = (mateIn !== null) || (bestCp !== null && bestCp >= DECISIVE_CP);
+                const prev = prevDecisive[mover];
+                const alreadyWon = prev !== null && prev >= ALREADY_WON_CP;
+                const uniqMargin = (sf.length >= 2)
+                    ? winChance(best.cp, best.mate) - winChance(sf[1].cp, sf[1].mate)
+                    : 1;
+
+                // mate kombinace (oběť → mat) bereme i z vyhrané pozice; ne-mate jen když ne-už-vyhrané
+                if (decisive && (mateIn !== null || !alreadyWon) && uniqMargin >= UNIQ_MARGIN_MIN && best.firstMove) {
+                    const playedBest = history[i].lan === best.firstMove;
+                    found.push({
+                        id: `${g.id}_${i}`,
+                        fenBefore,
+                        bestMoveLAN: best.firstMove,
+                        bestSan: bestMoveSan(fenBefore, best.firstMove),
+                        toMove: mover,
+                        uniqMargin: Math.round(uniqMargin * 100) / 100,
+                        mateIn,
+                        bestSolverCp: bestCp,
+                        playedBest,
+                        ply: i,
+                        moveNo: Math.floor(i / 2) + 1,
+                        white, black,
+                        gameTitle: g.gameTitle,
+                        newsId: g.newsId,
+                        newsTitle: g.news?.title || null,
+                        gameDate: g.news?.publishedDate || null,
+                    });
                 }
-                uniqSource = 'stockfish';
-            }
-        } else {
-            const pvs = await lichessMultiPv(r.fenBefore, 5);
-            if (pvs && pvs.length) {
-                const best = toSolver(pvs[0].cp, pvs[0].mate, solverIsWhite);
-                bestSolverCp = best.cp;
-                if (best.mate !== null && best.mate > 0) mateIn = best.mate;
-                if (pvs.length >= 2) {
-                    const second = toSolver(pvs[1].cp, pvs[1].mate, solverIsWhite);
-                    uniqMargin = winChance(best.cp, best.mate) - winChance(second.cp, second.mate);
-                } else {
-                    uniqMargin = 1;
-                }
-                uniqSource = 'lichess';
-                await delay(LICHESS_DELAY_MS);
+                prevDecisive[mover] = (best.mate !== null) ? (best.mate > 0 ? 9999 : -9999) : (best.cp ?? 0);
             }
         }
 
-        // 4. skóre kvality (decisive/uniqMargin táhnou nahoru, ale nic se nevyřazuje —
-        //    celý pool je v dashboardu, admin si vybere)
-        const game = gameMap.get(r.gameId);
-        const freshness = freshnessScore(game?.date || r.createdAt);
-        const uniqScore = uniqMargin !== null ? clamp(uniqMargin / 0.9, 0, 1) : 0.45;
-        const decisiveScore = bestSolverCp !== null
-            ? clamp(winChance(bestSolverCp, mateIn) / 0.95, 0, 1)
-            : clamp(r.probDrop / 40, 0, 1);
-        const forcingLite = (cand.isCapture || cand.isCheck) ? 0.6 : 1.0;
-        const score = Math.round(100 * (
-            0.40 * uniqScore + 0.30 * decisiveScore + 0.15 * forcingLite + 0.15 * freshness
-        ));
+        try { replay.move(history[i].san); } catch { break; }
+    }
+    return found;
+}
 
-        const verified = uniqSource !== 'none' && uniqMargin !== null && uniqMargin >= UNIQ_MARGIN_MIN;
-
-        scored.push({
-            id: r.id,
-            gameId: r.gameId,
-            fenBefore: r.fenBefore,
-            bestMoveLAN: r.bestMoveLAN,
-            bestSan: cand.bestSan,
-            toMove: solverIsWhite ? 'w' : 'b',
-            type: r.type,
-            white: r.white,
-            black: r.black,
-            result: r.result,
-            event: game?.event || null,
-            gameDate: game?.date || null,
-            createdAt: r.createdAt,
-            probDrop: r.probDrop,
-            evalBefore: r.evalBefore,
-            evalAfter: r.evalAfter,
-            bestSolverCp,
-            mateIn,
-            uniqMargin: uniqMargin !== null ? Math.round(uniqMargin * 100) / 100 : null,
-            uniqSource,
-            verified,
-            isCapture: cand.isCapture,
-            isCheck: cand.isCheck,
-            difficulty: difficultyOf(uniqMargin, cand, mateIn),
-            score,
-        });
+/**
+ * Dashboard: projde nejnovější článkové partie a vrátí nalezené kombinace.
+ */
+export async function getPuzzleCandidates({ maxGames = DEFAULT_MAX_GAMES, limit = 30 } = {}) {
+    const engineOk = await isEngineAvailable();
+    if (!engineOk) {
+        return { candidates: [], meta: { engine: 'none', error: 'Stockfish není dostupný na serveru.' } };
     }
 
-    // řadit: ověřené nahoru, pak podle skóre
-    scored.sort((a, b) => (b.verified - a.verified) || (b.score - a.score));
+    const games = await prisma.game.findMany({
+        where: { pgn: { not: null }, newsId: { not: null }, news: { is: { isPublished: true } } },
+        include: { news: { select: { id: true, title: true, publishedDate: true } } },
+        orderBy: { id: 'desc' },
+        take: maxGames,
+    });
+
+    const all = [];
+    for (const g of games) {
+        const tactics = await findTacticsInGame(g);
+        all.push(...tactics);
+    }
+
+    // dedup podle pozice
+    const seen = new Set();
+    const dedup = [];
+    for (const c of all) {
+        if (seen.has(c.fenBefore)) continue;
+        seen.add(c.fenBefore);
+        dedup.push(c);
+    }
+
+    // skóre + obtížnost
+    for (const c of dedup) {
+        const uniqScore = clamp(c.uniqMargin / 0.9, 0, 1);
+        const decScore = c.mateIn !== null ? 1 : clamp(winChance(c.bestSolverCp, null) / 0.95, 0, 1);
+        c.score = Math.round(100 * (0.50 * uniqScore + 0.30 * decScore + 0.20 * (c.mateIn ? 1 : 0.6)));
+        c.difficulty = (c.mateIn !== null && c.mateIn <= 2) ? 'lehká' : (c.uniqMargin < 0.6 ? 'těžká' : 'střední');
+        c.verified = c.uniqMargin >= UNIQ_MARGIN_MIN;
+    }
+    dedup.sort((a, b) => b.score - a.score);
 
     return {
-        candidates: scored.slice(0, limit),
+        candidates: dedup.slice(0, limit),
         meta: {
-            poolTotal: prelim.length,
-            verified: toVerify.length,
-            engine: engineOk ? 'stockfish' : 'lichess',
-            confirmedUnique: scored.filter(c => c.verified).length,
-            threshold,
+            engine: 'stockfish',
+            gamesScanned: games.length,
+            found: dedup.length,
         },
     };
-}
-
-function clamp(x, lo, hi) { return Math.max(lo, Math.min(hi, x)); }
-
-function freshnessScore(date) {
-    if (!date) return 0.3;
-    const days = (Date.now() - new Date(date).getTime()) / 86400000;
-    return clamp(1 - days / 180, 0, 1);
-}
-
-function difficultyOf(uniqMargin, cand, mateIn) {
-    if (mateIn !== null && mateIn <= 2) return 'lehká';
-    const quiet = !cand.isCapture && !cand.isCheck;
-    if (uniqMargin !== null && uniqMargin < 0.6 && quiet) return 'těžká';
-    if ((cand.isCapture || cand.isCheck)) return 'lehká';
-    return 'střední';
 }
