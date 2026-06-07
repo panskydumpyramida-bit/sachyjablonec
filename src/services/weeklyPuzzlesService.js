@@ -22,7 +22,7 @@ const prisma = new PrismaClient();
 // === Prahy (win-chance škála [-1,+1], viz §3) ===
 const ALREADY_WON_PAWNS = 2.5;   // řešitel už drtivě vyhrával PŘED tahem → ne úloha
 const DECISIVE_MIN_CP = 180;     // řešení musí vést k rozhodující výhodě (~+1.8 pawn)
-const UNIQ_MARGIN_MIN = 0.5;     // wc(best) - wc(second); mezi DeepMind 0.5 a lichess 0.7
+const UNIQ_MARGIN_MIN = 0.4;     // wc(best) - wc(second); DeepMind 0.5 / lichess 0.7, amatér volněji
 const VERIFY_POOL = 28;          // kolik top kandidátů ověřit (uniqueness gate)
 const LICHESS_DELAY_MS = 130;
 const ENGINE_DEPTH = 14;         // hloubka lokálního Stockfishe pro uniqueness gate

@@ -7,7 +7,8 @@
 (function () {
     'use strict';
 
-    const PIECES = { K: '♔', Q: '♕', R: '♖', B: '♗', N: '♘', P: '♙', k: '♚', q: '♛', r: '♜', b: '♝', n: '♞', p: '♟' };
+    // jednotná sada PLNÝCH glyphů pro obě barvy (outline bílé splývají se světlými poli)
+    const GLYPH = { k: '♚', q: '♛', r: '♜', b: '♝', n: '♞', p: '♟' };
     const selected = new Set();
     let lastCandidates = [];
 
@@ -47,11 +48,13 @@
                 let bg = light ? '#ebecd0' : '#779556';
                 if (sq === fromSq) bg = '#f6c453';
                 if (sq === toSq) bg = '#e8a13a';
-                const glyph = piece ? PIECES[piece] : '';
-                const dark = piece === piece.toLowerCase() && piece !== '';
-                const color = dark ? '#111' : '#fff';
-                const shadow = dark ? '' : 'text-shadow:0 0 1px #000,0 0 1px #000;';
-                html += `<div style="display:flex;align-items:center;justify-content:center;background:${bg};font-size:19px;line-height:1;color:${color};${shadow}">${glyph}</div>`;
+                const glyph = piece ? GLYPH[piece.toLowerCase()] : '';
+                const isWhitePiece = piece && piece === piece.toUpperCase();
+                const color = isWhitePiece ? '#f8f8f8' : '#1a1a1a';
+                const shadow = isWhitePiece
+                    ? 'text-shadow:0 0 1px #000,0 0 2px #000,0 1px 1px #000;'
+                    : 'text-shadow:0 0 1px rgba(255,255,255,0.5);';
+                html += `<div style="display:flex;align-items:center;justify-content:center;background:${bg};font-size:20px;line-height:1;color:${color};${shadow}">${glyph}</div>`;
             }
         }
         html += '</div>';
@@ -66,9 +69,9 @@
     function card(c) {
         const isSel = selected.has(c.id);
         const verified = c.verified
-            ? `<span style="color:#22c55e;font-weight:600;"><i class="fa-solid fa-circle-check"></i> jedinečné řešení</span>`
-            : (c.uniqSource === 'lichess'
-                ? `<span style="color:#eab308;">slabší jedinečnost (${c.uniqMargin})</span>`
+            ? `<span style="color:#22c55e;font-weight:600;"><i class="fa-solid fa-circle-check"></i> jedinečné řešení (Δ${c.uniqMargin})</span>`
+            : (c.uniqMargin !== null
+                ? `<span style="color:#eab308;">slabší jedinečnost (Δ${c.uniqMargin})</span>`
                 : `<span style="color:#94a3b8;"><i class="fa-regular fa-circle-question"></i> jedinečnost nepotvrzena</span>`);
         const mate = c.mateIn ? ` · <span style="color:#f87171;">mat v ${c.mateIn}</span>` : '';
         const evalTxt = c.bestSolverCp !== null && c.mateIn === null
