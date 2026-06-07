@@ -23,6 +23,7 @@
         tools: [
             { tab: 'chessdb',     label: 'Databáze',     icon: 'fa-database' },
             { tab: 'puzzleRacer', label: 'Puzzle Racer', icon: 'fa-puzzle-piece' },
+            { tab: 'weeklyPuzzle', label: 'Úloha týdne', icon: 'fa-lightbulb' },
             { tab: 'changelog',   label: 'Changelog',    icon: 'fa-code-branch' },
         ],
         footer: [

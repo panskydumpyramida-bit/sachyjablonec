@@ -35,6 +35,7 @@ import travelReportRoutes from './routes/api-travel-reports.js';
 import forumRoutes from './routes/api-forum.js';
 import diagramsRoutes from './routes/api-diagrams.js';
 import blunderRoutes from './routes/blunder.js';
+import weeklyPuzzlesRoutes from './routes/weekly-puzzles.js';
 import passport from './config/passport.js';
 import { PrismaClient } from '@prisma/client';
 
@@ -368,6 +369,7 @@ app.use('/api/travel-reports', travelReportRoutes);
 app.use('/api/forum', forumRoutes);
 app.use('/api', diagramsRoutes);
 app.use('/api/blunder', blunderRoutes);
+app.use('/api/weekly-puzzles', weeklyPuzzlesRoutes);
 
 // Import helpers from utils
 import { clean, isElo, simplify, isMatch, fetchWithHeaders, isChessResultsUrl } from './utils/helpers.js';

@@ -49,3 +49,6 @@ jednorazove_stranky/
 
 # Interní bezpečnostní audit — NIKDY necommitovat (public repo)
 SECURITY-AUDIT-*.md
+
+# Claude Code lokální nastavení (permission mode — NIKDY do public repa)
+.claude/
