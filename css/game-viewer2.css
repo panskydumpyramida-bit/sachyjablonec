@@ -2538,10 +2538,12 @@ body>.gv2-var-modal {
     pointer-events: none;
 }
 
-/* When viewing a variation, the variation-status bar sits at the top, so drop
-   the comment dock below it instead of piling up on the same spot. */
-.game-viewer-2-container.gv2-skin-modern .gv2-variation-status:not([hidden]) ~ .gv2-comment-dock {
-    top: 3.5rem;
+/* In a variation, keep the comment dock right at the top (it already shows the
+   variation context in its meta line) and move the variation-status bar down to
+   the bottom-left near the controls, so the two no longer pile up over the board. */
+.game-viewer-2-container.gv2-skin-modern .gv2-variation-status {
+    top: auto;
+    bottom: 8.5rem;
 }
 
 .game-viewer-2-container.gv2-skin-modern .gv2-comment-dock::before {
