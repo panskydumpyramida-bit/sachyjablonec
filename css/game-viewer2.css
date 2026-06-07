@@ -2512,11 +2512,12 @@ body>.gv2-var-modal {
 
 .game-viewer-2-container.gv2-skin-modern .gv2-comment-dock {
     position: absolute;
-    /* Sit up at the player-header level so the bubble doesn't cover the board.
-       Needs a z-index above the header (otherwise it renders "under" it) and the
-       content/board-section overflow:visible above so it isn't clipped.
-       A long comment still spills a little onto the top ranks, which is fine. */
-    top: -1.2rem;
+    /* Sit right up at the very top of the card (over the player header) so the
+       bubble barely touches the board — only its bottom edge grazes the top rank.
+       Needs z-index above the header (otherwise it renders "under" it) and the
+       content/board-section overflow:visible above so it isn't clipped. The outer
+       container (overflow:hidden) keeps it from escaping the card. */
+    top: -3.2rem;
     left: 50%;
     width: min(520px, calc(100% - 1.4rem));
     max-height: min(42%, 180px);
