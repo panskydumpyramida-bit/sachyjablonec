@@ -1173,7 +1173,19 @@ class GameViewer2 {
         const currentLabel = options.label || this.getCurrentMoveLabel();
         currentEl.textContent = currentLabel;
         range.setAttribute('aria-valuetext', currentLabel);
-        countEl.textContent = options.inVariation ? 'větev' : `${currentPly}/${maxPly}`;
+        if (options.inVariation) {
+            // The "větev" badge in the scrubber doubles as the exit button — there
+            // is no separate variation bar anymore (it overlapped the board).
+            countEl.innerHTML = '<i class="fa-solid fa-arrow-turn-up" style="font-size:0.82em;margin-right:0.25em;"></i>větev';
+            countEl.title = 'Zpět do hlavní linie';
+            countEl.style.cursor = 'pointer';
+            countEl.onclick = () => this.exitVariation();
+        } else {
+            countEl.textContent = `${currentPly}/${maxPly}`;
+            countEl.title = '';
+            countEl.style.cursor = '';
+            countEl.onclick = null;
+        }
     }
 
     syncEvalBarHeight() {

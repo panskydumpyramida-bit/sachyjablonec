@@ -2538,12 +2538,12 @@ body>.gv2-var-modal {
     pointer-events: none;
 }
 
-/* In a variation, keep the comment dock right at the top (it already shows the
-   variation context in its meta line) and move the variation-status bar down to
-   the bottom-left near the controls, so the two no longer pile up over the board. */
+/* The floating variation bar always overlapped the board wherever it sat, so in
+   the modern skin we drop it entirely — being in a variation is already shown by
+   the "větev" badge in the scrubber (which is now clickable to return to the main
+   line), and the comment dock's meta line shows the variation context. */
 .game-viewer-2-container.gv2-skin-modern .gv2-variation-status {
-    top: auto;
-    bottom: 8.5rem;
+    display: none !important;
 }
 
 .game-viewer-2-container.gv2-skin-modern .gv2-comment-dock::before {
