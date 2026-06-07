@@ -1,28 +1,42 @@
 /**
  * Weekly Puzzles API — "Úloha týdne"
- * F1: dashboard kandidátů (read-only). Generátor článku = F2.
+ * Zdroj = partie z článků. Scan běží na pozadí, kombinace se ukládají do DB;
+ * dashboard čte z DB (okamžité). F2 = generátor článku.
  */
 
 import express from 'express';
-import { getPuzzleCandidates } from '../services/weeklyPuzzlesService.js';
+import { getStoredCandidates, startScan, getScanState } from '../services/weeklyPuzzlesService.js';
 import { requireRole } from '../middleware/auth.js';
 
 const router = express.Router();
 
-// Navržené pozice (kombinace) na úlohu — skórované, s uniqueness gate
+// Uložené kombinace (rychlé, z DB)
 router.get('/candidates', requireRole('ADMIN'), async (req, res) => {
     try {
-        const maxGames = parseInt(req.query.maxGames);
         const limit = parseInt(req.query.limit);
-        const result = await getPuzzleCandidates({
-            maxGames: Number.isFinite(maxGames) ? maxGames : 3,
-            limit: Number.isFinite(limit) ? limit : 30,
-        });
+        const result = await getStoredCandidates({ limit: Number.isFinite(limit) ? limit : 60 });
         res.json(result);
     } catch (error) {
         console.error('[WeeklyPuzzles] Candidates error:', error);
-        res.status(500).json({ error: 'Failed to fetch puzzle candidates' });
+        res.status(500).json({ error: 'Failed to fetch candidates' });
     }
+});
+
+// Spustí scan článkových partií na pozadí (inkrementálně jen nové, nebo rescanAll)
+router.post('/scan', requireRole('ADMIN'), async (req, res) => {
+    try {
+        const rescanAll = req.body?.rescanAll === true;
+        const result = await startScan({ rescanAll });
+        res.json(result);
+    } catch (error) {
+        console.error('[WeeklyPuzzles] Scan error:', error);
+        res.status(500).json({ error: 'Failed to start scan' });
+    }
+});
+
+// Stav běžícího scanu (pro polling z dashboardu)
+router.get('/scan-status', requireRole('ADMIN'), (req, res) => {
+    res.json(getScanState());
 });
 
 export default router;

@@ -152,13 +152,22 @@
         }
     }
 
+    function renderMeta(meta) {
+        const metaEl = document.getElementById('wpMeta');
+        if (!metaEl || !meta) return;
+        const sc = meta.scan || {};
+        let s = `Uloženo <strong style="color:#22c55e;">${meta.stored}</strong> kombinací`;
+        if (meta.unscanned > 0) s += ` · <strong style="color:#eab308;">${meta.unscanned}</strong> partií čeká na sken`;
+        if (sc.running) s += ` · <i class="fa-solid fa-spinner fa-spin"></i> skenuji ${sc.done}/${sc.total}…`;
+        metaEl.innerHTML = s;
+    }
+
     async function load() {
         const grid = document.getElementById('wpGrid');
-        const metaEl = document.getElementById('wpMeta');
-        if (grid) grid.innerHTML = '<p style="color:#94a3b8;padding:2rem;text-align:center;"><i class="fa-solid fa-spinner fa-spin"></i> Procházím partie z článků Stockfishem… (analýza, chvíli to trvá)</p>';
         selected.clear();
+        if (grid) grid.innerHTML = '<p style="color:#94a3b8;padding:2rem;text-align:center;"><i class="fa-solid fa-spinner fa-spin"></i> Načítám uložené kombinace…</p>';
         try {
-            const res = await fetch(`${apiBase()}/weekly-puzzles/candidates?maxGames=3&limit=30`, { headers: authHeaders() });
+            const res = await fetch(`${apiBase()}/weekly-puzzles/candidates?limit=60`, { headers: authHeaders() });
             if (res.status === 401 || res.status === 403) {
                 if (grid) grid.innerHTML = '<p style="color:#f87171;padding:2rem;text-align:center;">Nemáš oprávnění (jen ADMIN). Přihlas se jako administrátor.</p>';
                 return;
@@ -166,16 +175,55 @@
             if (!res.ok) throw new Error('HTTP ' + res.status);
             const data = await res.json();
             lastCandidates = data.candidates || [];
-            if (metaEl && data.meta) {
-                metaEl.innerHTML = data.meta.error
-                    ? `<span style="color:#f87171;">${data.meta.error}</span>`
-                    : `Prošel ${data.meta.gamesScanned} článkových partií · nalezeno <strong style="color:#22c55e;">${data.meta.found}</strong> kombinací · engine: <strong>${data.meta.engine}</strong>`;
-            }
+            renderMeta(data.meta);
             render();
+            // pokud zrovna běží scan, navaž polling
+            if (data.meta && data.meta.scan && data.meta.scan.running) pollScan();
         } catch (e) {
             console.error('[WeeklyPuzzles] load error:', e);
             if (grid) grid.innerHTML = `<p style="color:#f87171;padding:2rem;text-align:center;">Chyba načítání: ${e.message}</p>`;
         }
+    }
+
+    async function scan(rescanAll) {
+        const btn = document.getElementById('wpScanBtn');
+        try {
+            const res = await fetch(`${apiBase()}/weekly-puzzles/scan`, {
+                method: 'POST',
+                headers: { ...authHeaders(), 'Content-Type': 'application/json' },
+                body: JSON.stringify({ rescanAll: !!rescanAll }),
+            });
+            if (res.status === 401 || res.status === 403) { alert('Skenovat může jen ADMIN.'); return; }
+            const data = await res.json();
+            if (data.error) { alert(data.error); return; }
+            if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Skenuji…'; }
+            pollScan();
+        } catch (e) {
+            alert('Chyba spuštění scanu: ' + e.message);
+        }
+    }
+
+    let polling = false;
+    async function pollScan() {
+        if (polling) return;
+        polling = true;
+        const tick = async () => {
+            try {
+                const res = await fetch(`${apiBase()}/weekly-puzzles/scan-status`, { headers: authHeaders() });
+                const st = await res.json();
+                const metaEl = document.getElementById('wpMeta');
+                if (st.running) {
+                    if (metaEl) metaEl.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Skenuji <strong>${st.done}/${st.total}</strong> partií · nalezeno <strong style="color:#22c55e;">${st.found}</strong> kombinací…`;
+                    setTimeout(tick, 2000);
+                } else {
+                    polling = false;
+                    const btn = document.getElementById('wpScanBtn');
+                    if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-magnifying-glass-chart"></i> Skenovat partie'; }
+                    load();
+                }
+            } catch (e) { setTimeout(tick, 3000); }
+        };
+        tick();
     }
 
     function generate() {
@@ -187,5 +235,6 @@
     }
 
     window.loadWeeklyPuzzles = load;
+    window.wpScan = scan;
     window.wpGenerate = generate;
 })();

@@ -165,9 +165,43 @@ model Game {
   news          News?        @relation(fields: [newsId], references: [id], onDelete: Cascade)
   
   pgn           String?  @map("pgn")
-  
+  puzzleScannedAt DateTime? @map("puzzle_scanned_at")
+
+  puzzleCandidates PuzzleCandidate[]
+
   @@map("games")
   @@index([chessComId])
+}
+
+model PuzzleCandidate {
+  id           Int       @id @default(autoincrement())
+  gameId       Int       @map("game_id")
+  newsId       Int?      @map("news_id")
+  fen          String
+  bestMoveLan  String    @map("best_move_lan")
+  bestSan      String    @map("best_san")
+  toMove       String    @map("to_move")
+  uniqMargin   Float     @map("uniq_margin")
+  mateIn       Int?      @map("mate_in")
+  bestCp       Int?      @map("best_cp")
+  playedBest   Boolean   @default(false) @map("played_best")
+  ply          Int
+  moveNo       Int       @map("move_no")
+  whitePlayer  String    @map("white_player")
+  blackPlayer  String    @map("black_player")
+  newsTitle    String?   @map("news_title")
+  gameDate     DateTime? @map("game_date")
+  score        Int
+  difficulty   String
+  dismissed    Boolean   @default(false)
+  usedInNewsId Int?      @map("used_in_news_id")
+  createdAt    DateTime  @default(now()) @map("created_at")
+
+  game         Game      @relation(fields: [gameId], references: [id], onDelete: Cascade)
+
+  @@unique([gameId, ply])
+  @@index([score])
+  @@map("puzzle_candidates")
 }
 
 model Image {

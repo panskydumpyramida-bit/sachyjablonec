@@ -691,7 +691,8 @@
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; flex-wrap: wrap; gap: 0.75rem;">
             <h2 style="margin: 0;"><i class="fa-solid fa-lightbulb" style="color:#eab308;"></i> Úloha týdne</h2>
             <div style="display:flex; gap:0.5rem;">
-                <button class="btn-secondary" onclick="loadWeeklyPuzzles()"><i class="fa-solid fa-rotate"></i> Najít kombinace</button>
+                <button class="btn-secondary" id="wpScanBtn" onclick="wpScan()"><i class="fa-solid fa-magnifying-glass-chart"></i> Skenovat partie</button>
+                <button class="btn-secondary" onclick="loadWeeklyPuzzles()" title="Načíst znovu"><i class="fa-solid fa-rotate"></i></button>
                 <button class="btn-primary" id="wpGenerateBtn" onclick="wpGenerate()" disabled style="opacity:0.5;">Vygenerovat článek (vybráno 0/3)</button>
             </div>
         </div>
@@ -2588,7 +2589,7 @@
     <script src="js/admin/admin-blicak.js?v=ux12"></script>
     <script src="js/admin/admin-puzzle-racer.js?v=ux12"></script>
     <script src="js/admin/admin-chessdb.js?v=ux12"></script>
-    <script src="js/admin/admin-weekly-puzzles.js?v=ux6"></script>
+    <script src="js/admin/admin-weekly-puzzles.js?v=ux7"></script>
     <script src="js/admin/admin-dashboard.js?v=ux12"></script>
     <!-- All admin functionality moved to modular JS files in js/admin/ -->
 

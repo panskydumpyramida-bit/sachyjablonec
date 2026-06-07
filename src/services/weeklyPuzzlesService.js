@@ -21,7 +21,6 @@ const GAME_DEPTH = 12;         // hloubka Stockfishe při scanu partií
 const DECISIVE_CP = 200;       // řešení musí vést k rozhodující výhodě (~+2)
 const ALREADY_WON_CP = 250;    // pokud strana už předtím vyhrávala → ne kombinace
 const UNIQ_MARGIN_MIN = 0.4;   // wc(best) - wc(second), [-1,+1] škála
-const DEFAULT_MAX_GAMES = 3;   // kolik nejnovějších článkových partií projít naráz
 
 // Win-chance z centipawnů (Lichess sigmoid), [-1,+1]. Mat = ±1.
 function winChance(cp, mate) {
@@ -84,23 +83,28 @@ async function findTacticsInGame(g) {
                 // mate kombinace (oběť → mat) bereme i z vyhrané pozice; ne-mate jen když ne-už-vyhrané
                 if (decisive && (mateIn !== null || !alreadyWon) && uniqMargin >= UNIQ_MARGIN_MIN && best.firstMove) {
                     const playedBest = history[i].lan === best.firstMove;
+                    const um = Math.round(uniqMargin * 100) / 100;
+                    const uniqScore = clamp(uniqMargin / 0.9, 0, 1);
+                    const decScore = mateIn !== null ? 1 : clamp(winChance(bestCp, null) / 0.95, 0, 1);
+                    const score = Math.round(100 * (0.50 * uniqScore + 0.30 * decScore + 0.20 * (mateIn ? 1 : 0.6)));
+                    const difficulty = (mateIn !== null && mateIn <= 2) ? 'lehká' : (uniqMargin < 0.6 ? 'těžká' : 'střední');
                     found.push({
-                        id: `${g.id}_${i}`,
                         fenBefore,
                         bestMoveLAN: best.firstMove,
                         bestSan: bestMoveSan(fenBefore, best.firstMove),
                         toMove: mover,
-                        uniqMargin: Math.round(uniqMargin * 100) / 100,
+                        uniqMargin: um,
                         mateIn,
                         bestSolverCp: bestCp,
                         playedBest,
                         ply: i,
                         moveNo: Math.floor(i / 2) + 1,
                         white, black,
-                        gameTitle: g.gameTitle,
                         newsId: g.newsId,
                         newsTitle: g.news?.title || null,
                         gameDate: g.news?.publishedDate || null,
+                        score,
+                        difficulty,
                     });
                 }
                 prevDecisive[mover] = (best.mate !== null) ? (best.mate > 0 ? 9999 : -9999) : (best.cp ?? 0);
@@ -112,53 +116,107 @@ async function findTacticsInGame(g) {
     return found;
 }
 
-/**
- * Dashboard: projde nejnovější článkové partie a vrátí nalezené kombinace.
- */
-export async function getPuzzleCandidates({ maxGames = DEFAULT_MAX_GAMES, limit = 30 } = {}) {
+// ===== Background scan + cache v DB =====
+
+let scanState = { running: false, total: 0, done: 0, found: 0, startedAt: null, finishedAt: null, error: null };
+
+export function getScanState() {
+    return { ...scanState };
+}
+
+// Spustí scan NA POZADÍ (nečeká na dokončení). rescanAll=true projede i už naskenované.
+export async function startScan({ rescanAll = false } = {}) {
+    if (scanState.running) return { alreadyRunning: true, state: getScanState() };
     const engineOk = await isEngineAvailable();
-    if (!engineOk) {
-        return { candidates: [], meta: { engine: 'none', error: 'Stockfish není dostupný na serveru.' } };
-    }
+    if (!engineOk) return { error: 'Stockfish není dostupný na serveru.' };
+    runScan(rescanAll).catch((e) => {
+        console.error('[WeeklyPuzzles] scan error:', e);
+        scanState.running = false;
+        scanState.error = e.message;
+        scanState.finishedAt = Date.now();
+    });
+    return { started: true, state: getScanState() };
+}
+
+async function runScan(rescanAll) {
+    scanState = { running: true, total: 0, done: 0, found: 0, startedAt: Date.now(), finishedAt: null, error: null };
+
+    const where = { pgn: { not: null }, newsId: { not: null }, news: { is: { isPublished: true } } };
+    if (!rescanAll) where.puzzleScannedAt = null;
 
     const games = await prisma.game.findMany({
-        where: { pgn: { not: null }, newsId: { not: null }, news: { is: { isPublished: true } } },
+        where,
         include: { news: { select: { id: true, title: true, publishedDate: true } } },
         orderBy: { id: 'desc' },
-        take: maxGames,
+    });
+    scanState.total = games.length;
+
+    for (const g of games) {
+        try {
+            const tactics = await findTacticsInGame(g);
+            for (const t of tactics) {
+                const data = {
+                    gameId: g.id, newsId: t.newsId ?? null, fen: t.fenBefore,
+                    bestMoveLan: t.bestMoveLAN, bestSan: t.bestSan, toMove: t.toMove,
+                    uniqMargin: t.uniqMargin, mateIn: t.mateIn, bestCp: t.bestSolverCp,
+                    playedBest: t.playedBest, ply: t.ply, moveNo: t.moveNo,
+                    whitePlayer: t.white, blackPlayer: t.black,
+                    newsTitle: t.newsTitle, gameDate: t.gameDate,
+                    score: t.score, difficulty: t.difficulty,
+                };
+                await prisma.puzzleCandidate.upsert({
+                    where: { gameId_ply: { gameId: g.id, ply: t.ply } },
+                    create: data,
+                    update: data,
+                });
+            }
+            scanState.found += tactics.length;
+            await prisma.game.update({ where: { id: g.id }, data: { puzzleScannedAt: new Date() } });
+        } catch (e) {
+            console.error(`[WeeklyPuzzles] scan game ${g.id} failed:`, e.message);
+        }
+        scanState.done++;
+    }
+
+    scanState.running = false;
+    scanState.finishedAt = Date.now();
+}
+
+// Dashboard: čte uložené kombinace z DB (okamžité).
+export async function getStoredCandidates({ limit = 60 } = {}) {
+    const rows = await prisma.puzzleCandidate.findMany({
+        where: { dismissed: false },
+        orderBy: { score: 'desc' },
+        take: limit,
+    });
+    const candidates = rows.map((r) => ({
+        id: r.id,
+        fenBefore: r.fen,
+        bestMoveLAN: r.bestMoveLan,
+        bestSan: r.bestSan,
+        toMove: r.toMove,
+        uniqMargin: r.uniqMargin,
+        mateIn: r.mateIn,
+        bestSolverCp: r.bestCp,
+        playedBest: r.playedBest,
+        moveNo: r.moveNo,
+        white: r.whitePlayer,
+        black: r.blackPlayer,
+        newsId: r.newsId,
+        newsTitle: r.newsTitle,
+        gameDate: r.gameDate,
+        score: r.score,
+        difficulty: r.difficulty,
+        verified: r.uniqMargin >= UNIQ_MARGIN_MIN,
+        usedInNewsId: r.usedInNewsId,
+    }));
+
+    const unscanned = await prisma.game.count({
+        where: { pgn: { not: null }, newsId: { not: null }, news: { is: { isPublished: true } }, puzzleScannedAt: null },
     });
 
-    const all = [];
-    for (const g of games) {
-        const tactics = await findTacticsInGame(g);
-        all.push(...tactics);
-    }
-
-    // dedup podle pozice
-    const seen = new Set();
-    const dedup = [];
-    for (const c of all) {
-        if (seen.has(c.fenBefore)) continue;
-        seen.add(c.fenBefore);
-        dedup.push(c);
-    }
-
-    // skóre + obtížnost
-    for (const c of dedup) {
-        const uniqScore = clamp(c.uniqMargin / 0.9, 0, 1);
-        const decScore = c.mateIn !== null ? 1 : clamp(winChance(c.bestSolverCp, null) / 0.95, 0, 1);
-        c.score = Math.round(100 * (0.50 * uniqScore + 0.30 * decScore + 0.20 * (c.mateIn ? 1 : 0.6)));
-        c.difficulty = (c.mateIn !== null && c.mateIn <= 2) ? 'lehká' : (c.uniqMargin < 0.6 ? 'těžká' : 'střední');
-        c.verified = c.uniqMargin >= UNIQ_MARGIN_MIN;
-    }
-    dedup.sort((a, b) => b.score - a.score);
-
     return {
-        candidates: dedup.slice(0, limit),
-        meta: {
-            engine: 'stockfish',
-            gamesScanned: games.length,
-            found: dedup.length,
-        },
+        candidates,
+        meta: { stored: candidates.length, unscanned, scan: getScanState() },
     };
 }
