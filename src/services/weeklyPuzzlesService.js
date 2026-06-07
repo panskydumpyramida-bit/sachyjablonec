@@ -75,34 +75,6 @@ async function lichessMultiPv(fen, multiPv = 5) {
     }
 }
 
-// chess-api.com — eval libovolné pozice (1 PV). Fallback pro decisive, když Lichess miss.
-async function chessApiEval(fen, depth = 12) {
-    for (let attempt = 0; attempt < 2; attempt++) {
-        try {
-            if (attempt > 0) await delay(800);
-            const controller = new AbortController();
-            const timeout = setTimeout(() => controller.abort(), 10000);
-            const res = await fetch('https://chess-api.com/v1', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ fen, depth }),
-                signal: controller.signal,
-            });
-            clearTimeout(timeout);
-            if (res.status === 429) continue;
-            if (res.ok) {
-                const data = await res.json();
-                if (data && !data.error) {
-                    const cp = data.centipawns !== undefined ? parseInt(data.centipawns)
-                        : (data.eval !== undefined ? Math.round(data.eval * 100) : null);
-                    return { cp, mate: data.mate || null, bestMove: data.move };
-                }
-            }
-        } catch { /* retry */ }
-    }
-    return null;
-}
-
 /**
  * Hlavní vstup pro dashboard: vrátí seřazené kandidáty na úlohu.
  * @param {object} opts { threshold, limit }
@@ -178,15 +150,10 @@ export async function getPuzzleCandidates({ threshold = 10, limit = 30 } = {}) {
             }
             uniqSource = 'lichess';
             await delay(LICHESS_DELAY_MS);
-        } else {
-            // mimo cache: aspoň ověř decisive přes chess-api (uniqueness nepotvrzena)
-            const ev = await chessApiEval(r.fenBefore);
-            if (ev) {
-                const best = toSolver(ev.cp, ev.mate, solverIsWhite);
-                bestSolverCp = best.cp;
-                if (best.mate !== null && best.mate > 0) mateIn = best.mate;
-            }
         }
+        // F1: pozice mimo Lichess cache NEřešíme drahým chess-api fallbackem (timeout risk
+        // při desítkách pozic) — projdou jako "jedinečnost nepotvrzena", skóre dle probDrop.
+        // Plný multiPV pro libovolnou pozici = F1.5 (lokální Stockfish, viz deep-research).
 
         // decisive: po nejlepším tahu má řešitel rozhodující výhodu (nebo mat)
         const decisive = (mateIn !== null) || (bestSolverCp !== null && bestSolverCp >= DECISIVE_MIN_CP);
