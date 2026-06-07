@@ -1662,30 +1662,28 @@ class GameViewer2 {
                     }
                     html += '</div>';
 
-                    // Black move cell
-                    html += '<div class="gv2-move-cell">';
-                    // Look ahead for black move (skip comments/variations for now)
+                    // Look ahead: collect any comments/variations between the white and
+                    // black move, then locate the black move + its trailing NAG.
                     let j = i + 1;
-                    // Collect any comments/variations between white and black
                     const betweenTokens = [];
                     while (j < tokens.length && tokens[j].type !== 'move') {
                         betweenTokens.push(tokens[j]);
                         j++;
                     }
+                    const blackToken = (j < tokens.length && tokens[j].type === 'move' && !tokens[j].isWhite) ? tokens[j] : null;
+                    const blackNag = (blackToken && j + 1 < tokens.length && tokens[j + 1].type === 'nag') ? tokens[j + 1] : null;
+                    // If a comment/variation sits between white and black, push the black
+                    // move to a continuation row BELOW the comment so the comment reads as
+                    // belonging to White's move (instead of black sitting before it).
+                    const deferBlack = blackToken && betweenTokens.length > 0;
 
-                    if (j < tokens.length && tokens[j].type === 'move' && !tokens[j].isWhite) {
-                        html += `<span class="gv2-move" data-ply="${tokens[j].ply}" onclick="gameViewer2.jumpTo(${tokens[j].ply})">${tokens[j].formatted}</span>`;
-                        // Check for NAG after black move
-                        if (j + 1 < tokens.length && tokens[j + 1].type === 'nag') {
-                            j++;
-                            html += `<span class="gv2-nag ${tokens[j].cssClass}">${tokens[j].symbol}</span>`;
-                        }
-                        i = j;
+                    // Black move cell (inline only when nothing is between white and black)
+                    html += '<div class="gv2-move-cell">';
+                    if (blackToken && !deferBlack) {
+                        html += `<span class="gv2-move" data-ply="${blackToken.ply}" onclick="gameViewer2.jumpTo(${blackToken.ply})">${blackToken.formatted}</span>`;
+                        if (blackNag) html += `<span class="gv2-nag ${blackNag.cssClass}">${blackNag.symbol}</span>`;
                     } else {
-                        // No black move yet (could be comment/variation between)
                         html += '&nbsp;';
-                        // Put back the pointer to process between tokens
-                        i = i; // stay here, will advance at end
                     }
                     html += '</div>';
                     html += '</div>'; // close row
@@ -1698,6 +1696,25 @@ class GameViewer2 {
                             if (bt.parentPly !== undefined) this.lastMatchedPly = bt.parentPly;
                             html += `<div class="gv2-comment-row gv2-variation-row">${this.renderVariation(bt.content, bt.history)}</div>`;
                         }
+                    }
+
+                    // Deferred black move: its own continuation row, under the comment(s)
+                    if (deferBlack) {
+                        html += '<div class="gv2-move-row">';
+                        html += `<div class="gv2-move-num-cell">${token.moveNum}…</div>`;
+                        html += '<div class="gv2-move-cell">&hellip;</div>';
+                        html += '<div class="gv2-move-cell">';
+                        html += `<span class="gv2-move" data-ply="${blackToken.ply}" onclick="gameViewer2.jumpTo(${blackToken.ply})">${blackToken.formatted}</span>`;
+                        if (blackNag) html += `<span class="gv2-nag ${blackNag.cssClass}">${blackNag.symbol}</span>`;
+                        html += '</div>';
+                        html += '</div>';
+                    }
+
+                    // Advance the cursor past the consumed between-tokens / black move / NAG.
+                    if (blackToken) {
+                        i = blackNag ? j + 1 : j;
+                    } else if (betweenTokens.length > 0) {
+                        i = j - 1;
                     }
                 } else {
                     // Black move without white (shouldn't happen often, but handle)
