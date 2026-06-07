@@ -2186,15 +2186,19 @@ class GameViewer2 {
         return `po ${parentLabel} · začátek varianty`;
     }
 
-    // Short label for the scrubber meta (full context is in the floating status bar)
+    // Short label for the scrubber meta. The floating variation bar is gone, so this
+    // now carries the branch context too (shortened): "po 6...Bg4 · 1. f6".
     getVariationMoveLabel(varId, fen = null) {
         const varData = this.allVariations?.[varId];
         if (!varData) return 'Varianta';
 
         const currentFen = fen || this.game?.fen?.();
         const currentIndex = varData.moves?.findIndex(move => move.fen === currentFen) ?? -1;
-        if (currentIndex >= 0) return varData.moves[currentIndex].san;
-        return 'začátek varianty';
+        const parentLabel = this.getMoveLabelForPly(varData.parentPly);
+        if (currentIndex >= 0) {
+            return `po ${parentLabel} · ${currentIndex + 1}. ${varData.moves[currentIndex].san}`;
+        }
+        return `po ${parentLabel} · začátek`;
     }
 
     // Update active move highlighting in variation
