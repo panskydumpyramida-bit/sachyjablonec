@@ -21,7 +21,6 @@ const prisma = new PrismaClient();
 
 // === Prahy (win-chance škála [-1,+1], viz §3) ===
 const ALREADY_WON_PAWNS = 2.5;   // řešitel už drtivě vyhrával PŘED tahem → ne úloha
-const DECISIVE_MIN_CP = 180;     // řešení musí vést k rozhodující výhodě (~+1.8 pawn)
 const UNIQ_MARGIN_MIN = 0.4;     // wc(best) - wc(second); DeepMind 0.5 / lichess 0.7, amatér volněji
 const VERIFY_POOL = 28;          // kolik top kandidátů ověřit (uniqueness gate)
 const LICHESS_DELAY_MS = 130;
@@ -172,12 +171,8 @@ export async function getPuzzleCandidates({ threshold = 10, limit = 30 } = {}) {
             }
         }
 
-        // decisive: po nejlepším tahu má řešitel rozhodující výhodu (nebo mat)
-        const decisive = (mateIn !== null) || (bestSolverCp !== null && bestSolverCp >= DECISIVE_MIN_CP);
-        // pozice mimo cache bez evalu necháme projít (decisive=neznámé), ať je v dashboardu vidět
-        if (bestSolverCp !== null && !decisive && mateIn === null) continue;
-
-        // 4. skóre kvality
+        // 4. skóre kvality (decisive/uniqMargin táhnou nahoru, ale nic se nevyřazuje —
+        //    celý pool je v dashboardu, admin si vybere)
         const game = gameMap.get(r.gameId);
         const freshness = freshnessScore(game?.date || r.createdAt);
         const uniqScore = uniqMargin !== null ? clamp(uniqMargin / 0.9, 0, 1) : 0.45;

@@ -7,8 +7,6 @@
 (function () {
     'use strict';
 
-    // jednotná sada PLNÝCH glyphů pro obě barvy (outline bílé splývají se světlými poli)
-    const GLYPH = { k: '♚', q: '♛', r: '♜', b: '♝', n: '♞', p: '♟' };
     const selected = new Set();
     let lastCandidates = [];
 
@@ -37,7 +35,7 @@
         const fromSq = bestUci ? bestUci.slice(0, 2) : null;
         const toSq = bestUci ? bestUci.slice(2, 4) : null;
 
-        let html = '<div style="display:grid;grid-template-columns:repeat(8,1fr);width:168px;height:168px;border:1px solid #0d1117;border-radius:4px;overflow:hidden;flex-shrink:0;">';
+        let html = '<div style="display:grid;grid-template-columns:repeat(8,1fr);grid-template-rows:repeat(8,1fr);width:176px;height:176px;border:1px solid #0d1117;border-radius:4px;overflow:hidden;flex-shrink:0;">';
         for (let rr = 0; rr < 8; rr++) {
             for (let cc = 0; cc < 8; cc++) {
                 const rank = flip ? rr : 7 - rr;      // rank 0..7 (0 = řada 1)
@@ -48,13 +46,12 @@
                 let bg = light ? '#ebecd0' : '#779556';
                 if (sq === fromSq) bg = '#f6c453';
                 if (sq === toSq) bg = '#e8a13a';
-                const glyph = piece ? GLYPH[piece.toLowerCase()] : '';
-                const isWhitePiece = piece && piece === piece.toUpperCase();
-                const color = isWhitePiece ? '#f8f8f8' : '#1a1a1a';
-                const shadow = isWhitePiece
-                    ? 'text-shadow:0 0 1px #000,0 0 2px #000,0 1px 1px #000;'
-                    : 'text-shadow:0 0 1px rgba(255,255,255,0.5);';
-                html += `<div style="display:flex;align-items:center;justify-content:center;background:${bg};font-size:20px;line-height:1;color:${color};${shadow}">${glyph}</div>`;
+                let inner = '';
+                if (piece) {
+                    const pc = (piece === piece.toUpperCase() ? 'w' : 'b') + piece.toUpperCase();
+                    inner = `<img src="img/chesspieces/wikipedia/${pc}.png" alt="" style="width:90%;height:90%;display:block;">`;
+                }
+                html += `<div style="display:flex;align-items:center;justify-content:center;background:${bg};">${inner}</div>`;
             }
         }
         html += '</div>';
