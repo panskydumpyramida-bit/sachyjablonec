@@ -18,7 +18,7 @@
     }
 
     // FEN → mini šachovnice (unicode), orientace dle strany na tahu, zvýraznění best tahu.
-    function miniBoard(fen, toMove, bestUci) {
+    function miniBoard(fen, toMove, bestUci, size = 176) {
         const board = fen.split(' ')[0];
         const rows = board.split('/');
         const grid = [];
@@ -35,7 +35,7 @@
         const fromSq = bestUci ? bestUci.slice(0, 2) : null;
         const toSq = bestUci ? bestUci.slice(2, 4) : null;
 
-        let html = '<div style="display:grid;grid-template-columns:repeat(8,1fr);grid-template-rows:repeat(8,1fr);width:176px;height:176px;border:1px solid #0d1117;border-radius:4px;overflow:hidden;flex-shrink:0;">';
+        let html = `<div style="display:grid;grid-template-columns:repeat(8,1fr);grid-template-rows:repeat(8,1fr);width:${size}px;height:${size}px;border:1px solid #0d1117;border-radius:4px;overflow:hidden;flex-shrink:0;">`;
         for (let rr = 0; rr < 8; rr++) {
             for (let cc = 0; cc < 8; cc++) {
                 const rank = flip ? rr : 7 - rr;      // rank 0..7 (0 = řada 1)
@@ -96,8 +96,29 @@
                     <input type="checkbox" ${isSel ? 'checked' : ''} data-id="${c.id}"> Vybrat do úlohy týdne
                 </label>
             </div>`;
+        const boardEl = wrap.querySelector('div');
+        if (boardEl) {
+            boardEl.style.cursor = 'zoom-in';
+            boardEl.title = 'Klikni pro zvětšení';
+            boardEl.addEventListener('click', () => showZoom(c));
+        }
         wrap.querySelector('input').addEventListener('change', (e) => toggleSelect(c.id, e.target.checked));
         return wrap;
+    }
+
+    function showZoom(c) {
+        const size = Math.min(440, window.innerWidth - 48);
+        const ov = document.createElement('div');
+        ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:10050;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:1rem;padding:1rem;cursor:zoom-out;';
+        ov.innerHTML = `
+            ${miniBoard(c.fenBefore, c.toMove, c.bestMoveLAN, size)}
+            <div style="color:#e2e8f0;text-align:center;font-size:0.95rem;">
+                ${c.toMove === 'w' ? '⬜ Bílý' : '⬛ Černý'} na tahu · řešení: <strong style="color:#eab308;">${c.bestSan}</strong>
+                · Δ${c.uniqMargin}${c.mateIn ? ' · mat v ' + c.mateIn : ''}
+            </div>
+            <div style="color:#94a3b8;font-size:0.8rem;text-align:center;">Z partie ${c.white} – ${c.black} · klikni kamkoli pro zavření</div>`;
+        ov.addEventListener('click', () => ov.remove());
+        document.body.appendChild(ov);
     }
 
     function toggleSelect(id, on) {

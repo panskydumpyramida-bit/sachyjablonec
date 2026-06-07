@@ -174,7 +174,7 @@
 /* ---------- Main content ---------- */
 
 body.has-sidebar .admin-container,
-body.has-sidebar #adminPanel > [id$="View"] {
+body.has-sidebar #adminPanel ~ [id$="View"] {
   margin-left: var(--sidebar-width);
   margin-top: calc(var(--admin-header-height) + var(--topbar-height));
   width: calc(100% - var(--sidebar-width));
@@ -410,7 +410,7 @@ body.has-sidebar .admin-container > .admin-nav {
    (body.sidebar-collapsed je definován níže ve shared desktop/tablet bloku). */
 @media (max-width: 1199px) and (min-width: 768px) {
   body.has-sidebar .admin-container,
-  body.has-sidebar #adminPanel > [id$="View"] { padding: 1rem 1.5rem 2rem; }
+  body.has-sidebar #adminPanel ~ [id$="View"] { padding: 1rem 1.5rem 2rem; }
 }
 
 /* ---------- Mobile: off-canvas drawer ---------- */
@@ -427,7 +427,7 @@ body.has-sidebar .admin-container > .admin-nav {
   }
   .admin-sidebar.open { transform: translateX(0); }
   body.has-sidebar .admin-container,
-  body.has-sidebar #adminPanel > [id$="View"] {
+  body.has-sidebar #adminPanel ~ [id$="View"] {
     margin-left: 0;
     width: 100%;
     padding: 1rem;
