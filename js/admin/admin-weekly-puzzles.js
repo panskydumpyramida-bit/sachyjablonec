@@ -14,7 +14,7 @@
         sacrifice: 'oběť', fork: 'vidlička', mate: 'mat', backRankMate: 'mat na zadní řadě',
         smotheredMate: 'dušený mat', doubleCheck: 'dvojšach', discoveredCheck: 'odkrytý šach',
         discoveredAttack: 'odkrytý útok', pin: 'vazba', skewer: 'nabodnutí', xRay: 'rentgen',
-        attraction: 'nalákání', promotion: 'proměna', advancedPawn: 'pokročilý pěšec', trappedPiece: 'lapená figura',
+        attraction: 'nalákání', interference: 'překrytí', promotion: 'proměna', advancedPawn: 'pokročilý pěšec', trappedPiece: 'lapená figura',
     };
 
     function authHeaders() {
@@ -152,7 +152,9 @@
                 ${c.toMove === 'w' ? '⬜ Bílý' : '⬛ Černý'} na tahu · řešení: <strong style="color:#eab308;">${c.bestSan}</strong>
                 · Δ${c.uniqMargin}${c.mateIn ? ' · mat v ' + c.mateIn : ''}
             </div>
-            <div style="color:#94a3b8;font-size:0.8rem;text-align:center;">Z partie ${c.white} – ${c.black} · klikni kamkoli pro zavření</div>`;
+            <div style="color:#94a3b8;font-size:0.8rem;text-align:center;">Z partie ${c.white} – ${c.black}</div>
+            <input readonly value="${c.fenBefore}" onclick="this.select();event.stopPropagation();" style="width:min(90vw,440px);font-size:0.68rem;padding:5px 8px;background:#0d1117;color:#94a3b8;border:1px solid rgba(255,255,255,0.12);border-radius:5px;text-align:center;" title="FEN — klikni a zkopíruj">
+            <div style="color:#64748b;font-size:0.72rem;">klikni mimo pro zavření</div>`;
         ov.addEventListener('click', () => ov.remove());
         document.body.appendChild(ov);
     }

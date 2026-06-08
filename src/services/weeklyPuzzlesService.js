@@ -135,8 +135,13 @@ async function findTacticsInGame(g) {
                         let surprise;
                         if (isSac) surprise = 1.0;                                   // oběť = nejvíc nečekané
                         else if (quiet) surprise = 0.85;                            // tichý tah co vyhrává
-                        else if (fmv && fmv.captured) surprise = clamp(0.55 - capturedVal(fmv) * 0.05, 0.2, 0.55); // prostá výměna
-                        else surprise = 0.5;
+                        else if (fmv && fmv.captured) {
+                            // rovná výměna je očividná SAMA O SOBĚ; ale když vede k silné pozici
+                            // (motiv / velká výhoda), má pointu a je v pořádku. Trestáme jen "výměnu bez myšlenky".
+                            const leadsToStrong = (mateIn !== null) || (bestCp !== null && bestCp >= 350)
+                                || m.motifs.some((x) => x !== 'mate');
+                            surprise = leadsToStrong ? 0.7 : clamp(0.5 - capturedVal(fmv) * 0.04, 0.25, 0.5);
+                        } else surprise = 0.5;
                         const uniqScore = clamp(uniqMargin / 0.9, 0, 1);
                         const decScore = mateIn !== null ? 1 : clamp(winChance(bestCp, null) / 0.95, 0, 1);
                         const motifBonus = clamp(m.motifs.length * 0.22 + (isSac ? 0.4 : 0) + (mateIn ? 0.3 : 0), 0, 1);

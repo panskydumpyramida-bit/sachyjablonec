@@ -355,6 +355,25 @@ function advancedMotifs(boards, moves, pov) {
         if (n3 && n3.to === reply.to) { tags.add('attraction'); break; }
     }
 
+    // INTERFERENCE (překrytí): pov bere hanging figuru, jejíhož dálkového obránce
+    // předchozí pov tah přerušil vstupem na pole mezi obránce a figuru
+    for (let k = 3; k < boards.length; k += 2) {
+        const prevBoard = boards[k - 1];
+        const square = moves[k].to;
+        const capture = prevBoard.get(square);
+        const parentMove = moves[k - 1];
+        if (!capture || square === parentMove.to || !isHanging(prevBoard, square, capture.color)) continue;
+        if (k - 3 < 0) continue;
+        const initBoard = boards[k - 3];
+        const defenders = initBoard.attackers(square, capture.color);
+        if (!defenders.length) continue;
+        const defPiece = initBoard.get(defenders[0]);
+        if (defPiece && RAY.has(defPiece.type)) {
+            const interfering = moves[k - 2];
+            if (interfering && between(square, defenders[0]).includes(interfering.to)) { tags.add('interference'); break; }
+        }
+    }
+
     return [...tags];
 }
 
