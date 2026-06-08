@@ -40,6 +40,17 @@
         } catch (e) { alert('Chyba hlasování: ' + e.message); }
     }
 
+    async function copyFen(fen, btn) {
+        try {
+            await navigator.clipboard.writeText(fen);
+            const o = btn.innerHTML;
+            btn.innerHTML = '<i class="fa-solid fa-check"></i> zkopírováno';
+            setTimeout(() => { btn.innerHTML = o; }, 1200);
+        } catch {
+            window.prompt('FEN (Cmd/Ctrl+C, Enter):', fen);
+        }
+    }
+
     // FEN → mini šachovnice (unicode), orientace dle strany na tahu, zvýraznění best tahu.
     function miniBoard(fen, toMove, bestUci, size = 176) {
         const board = fen.split(' ')[0];
@@ -121,6 +132,10 @@
                 <div style="font-size:0.78rem;color:#64748b;">
                     Z partie ${c.white} – ${c.black}${c.newsTitle ? ' · článek: ' + c.newsTitle : ''}${dateTxt ? ' · ' + dateTxt : ''}
                 </div>
+                <div style="display:flex;align-items:center;gap:0.4rem;margin-top:0.2rem;">
+                    <code style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:0.66rem;color:#64748b;background:#0d1117;padding:3px 6px;border-radius:4px;">${c.fenBefore}</code>
+                    <button class="wp-copyfen" style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.14);border-radius:4px;padding:3px 8px;cursor:pointer;color:#94a3b8;font-size:0.7rem;white-space:nowrap;"><i class="fa-regular fa-copy"></i> kopírovat FEN</button>
+                </div>
                 <label style="margin-top:auto;display:inline-flex;align-items:center;gap:0.4rem;font-size:0.85rem;cursor:pointer;">
                     <input type="checkbox" ${isSel ? 'checked' : ''} data-id="${c.id}"> Vybrat do úlohy týdne
                 </label>
@@ -132,6 +147,8 @@
                 </div>
             </div>`;
         wrap.querySelectorAll('.wp-vote').forEach((b) => b.addEventListener('click', () => vote(c.id, parseInt(b.dataset.v))));
+        const cf = wrap.querySelector('.wp-copyfen');
+        if (cf) cf.addEventListener('click', () => copyFen(c.fenBefore, cf));
         const boardEl = wrap.querySelector('div');
         if (boardEl) {
             boardEl.style.cursor = 'zoom-in';
