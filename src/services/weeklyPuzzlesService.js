@@ -73,6 +73,85 @@ function formatSolutionSan(sans, startNo, moverWhite) {
     return out.join(' ');
 }
 
+// Postaví kandidáta z pozice (start hádanky); vrátí objekt nebo null (neprošel filtry kombinace).
+function buildCandidate(startFen, sf, opLast, ply, white, black, g) {
+    const best = sf[0];
+    if (!best || !best.firstMove) return null;
+    const mover = startFen.split(' ')[1];
+    const bestCp = (best.mate !== null) ? null : best.cp;
+    const mateIn = (best.mate !== null && best.mate > 0) ? best.mate : null;
+    const pvMoves = (best.pv && best.pv.length) ? best.pv : [best.firstMove];
+    const m = detectMotifs(startFen, opLast, pvMoves);
+
+    const bigAdvantage = bestCp !== null && bestCp >= 500;
+    const hasPunch = mateIn !== null || m.motifs.length > 0 || bigAdvantage;
+    const isCombination = (mateIn !== null && mateIn >= 2) || m.motifs.includes('sacrifice') || m.forcingLen >= 2;
+    if (m.obviousRecapture || !(hasPunch && isCombination && !m.hangingGrab)) return null;
+
+    const uniqMargin = (sf.length >= 2) ? winChance(best.cp, best.mate) - winChance(sf[1].cp, sf[1].mate) : 1;
+    const isSac = m.motifs.includes('sacrifice');
+    const fmv = tryFirstMove(startFen, best.firstMove);
+    const fCheck = fmv ? (fmv.san.includes('+') || fmv.san.includes('#')) : false;
+    const quiet = !!(fmv && !fmv.captured && !fCheck);
+    let surprise;
+    if (isSac) surprise = 1.0;
+    else if (quiet) surprise = 0.85;
+    else if (fmv && fmv.captured) {
+        const leadsToStrong = (mateIn !== null) || (bestCp !== null && bestCp >= 350) || m.motifs.some((x) => x !== 'mate');
+        surprise = leadsToStrong ? 0.7 : clamp(0.5 - capturedVal(fmv) * 0.04, 0.25, 0.5);
+    } else surprise = 0.5;
+    const uniqScore = clamp(uniqMargin / 0.9, 0, 1);
+    const decScore = mateIn !== null ? 1 : clamp(winChance(bestCp, null) / 0.95, 0, 1);
+    const motifBonus = clamp(m.motifs.length * 0.22 + (isSac ? 0.4 : 0) + (mateIn ? 0.3 : 0), 0, 1);
+    const score = Math.round(100 * (0.28 * uniqScore + 0.18 * decScore + 0.26 * motifBonus + 0.18 * surprise + 0.10 * (mateIn ? 1 : 0.6)));
+    const difficulty = (mateIn !== null && mateIn <= 2) ? 'lehká' : ((uniqMargin < 0.6 || isSac) ? 'těžká' : 'střední');
+    const solLen = Math.max(1, 2 * (m.forcingLen || 1) - 1);
+    const solUci = pvMoves.slice(0, solLen);
+    const solSan = formatSolutionSan(lineSan(startFen, solUci), Math.floor(ply / 2) + 1, mover === 'w');
+
+    return {
+        fenBefore: startFen, bestMoveLAN: best.firstMove, bestSan: bestMoveSan(startFen, best.firstMove),
+        toMove: mover, uniqMargin: Math.round(uniqMargin * 100) / 100, mateIn, bestSolverCp: bestCp,
+        playedBest: false, ply, moveNo: Math.floor(ply / 2) + 1, white, black,
+        newsId: g.newsId, newsTitle: g.news?.title || null, gameDate: g.news?.publishedDate || null,
+        score, difficulty, motifs: m.motifs, forcingLen: m.forcingLen,
+        cpGap: (best.mate === null && sf.length >= 2 && sf[1].mate === null) ? (best.cp - sf[1].cp) : null,
+        solutionLine: solUci.join(' '), solutionSan: solSan,
+    };
+}
+
+// Posun startu zpět: pokud úderu předchází vynucená příprava, jejíž PV pokračuje
+// právě tímto úderem (kontinuita) a je sama jediná/silná → vrátí dřívější start.
+async function extendStartBackward(history, candPly, povColor, urderUci) {
+    let result = null, ply = candPly, urder = urderUci;
+    for (let back = 0; back < 2; back++) {
+        const pi = ply - 2;
+        if (pi < MIN_PLY) break;
+        const c = new Chess();
+        let ok = true;
+        for (let h = 0; h < pi; h++) { try { c.move(history[h].san); } catch { ok = false; break; } }
+        if (!ok || c.turn() !== povColor || c.isCheck()) break;
+        const fenPi = c.fen();
+        const sfP = await analyzePosition(fenPi, { depth: GAME_DEPTH, multiPv: 2 });
+        if (!sfP || !sfP.length) break;
+        const b = sfP[0];
+        // PV přípravy musí pokračovat ÚDEREM (3. půltah) = tatáž kombinace rozšířená zpět
+        if (!b.pv || b.pv.length < 3 || b.pv[2] !== urder) break;
+        const bCp = b.mate !== null ? null : b.cp;
+        const mate = b.mate !== null && b.mate > 0;
+        const decisive = mate || (bCp !== null && bCp >= DECISIVE_CP);
+        let uniq;
+        if (mate) uniq = sfP.length < 2 || sfP[1].mate === null || sfP[1].mate > b.mate + 1;
+        else if (sfP.length >= 2 && sfP[1].mate === null) uniq = (b.cp - sfP[1].cp) >= UNIQ_GAP_CP;
+        else uniq = sfP.length < 2 || (sfP.length >= 2 && sfP[1].mate < 0);
+        if (!decisive || !uniq) break;
+        result = { fen: fenPi, sf: sfP, opLast: pi > 0 ? history[pi - 1] : null, ply: pi };
+        ply = pi;
+        urder = b.firstMove;
+    }
+    return result;
+}
+
 // Projde jednu partii a najde taktické kombinace (pozice = úlohy).
 async function findTacticsInGame(g) {
     let chess;
@@ -128,71 +207,17 @@ async function findTacticsInGame(g) {
 
                 // mate kombinace (oběť → mat) bereme i z vyhrané pozice; ne-mate jen když ne-už-vyhrané
                 if (decisive && (mateIn !== null || !alreadyWon) && unique && best.firstMove) {
-                    const opLast = i > 0 ? history[i - 1] : null;
-                    const pvMoves = (best.pv && best.pv.length) ? best.pv : [best.firstMove];
-                    const m = detectMotifs(fenBefore, opLast, pvMoves);
-
-                    // ÚDER (pointa): mat, taktický motiv, nebo drtivá výhoda
-                    const bigAdvantage = bestCp !== null && bestCp >= 500;
-                    const hasPunch = mateIn !== null || m.motifs.length > 0 || bigAdvantage;
-                    // KOMBINACE musí mít SEKVENCI (ne 1-tahový úder): mat ve 2+, oběť,
-                    // nebo vynucená sekvence ≥2 pov tahů (oběť/šach/hrozba → vynucené odpovědi → pointa)
-                    const isCombination = (mateIn !== null && mateIn >= 2)
-                        || m.motifs.includes('sacrifice')
-                        || m.forcingLen >= 2;
-                    const isPuzzle = hasPunch && isCombination && !m.hangingGrab;
-
-                    if (!m.obviousRecapture && isPuzzle) {
-                        const playedBest = history[i].lan === best.firstMove;
-                        const um = Math.round(uniqMargin * 100) / 100;
-                        const isSac = m.motifs.includes('sacrifice');
-                        // COUNTER-INTUITIVENESS 1. tahu: dobré hádanky (zvlášť lehčí) mají NEČEKANÝ
-                        // první tah — oběť / tichý tah, ne prostou výměnu. (DeepMind: penalizuj braní.)
-                        const fmv = tryFirstMove(fenBefore, best.firstMove);
-                        const fCheck = fmv ? (fmv.san.includes('+') || fmv.san.includes('#')) : false;
-                        const quiet = !!(fmv && !fmv.captured && !fCheck);
-                        let surprise;
-                        if (isSac) surprise = 1.0;                                   // oběť = nejvíc nečekané
-                        else if (quiet) surprise = 0.85;                            // tichý tah co vyhrává
-                        else if (fmv && fmv.captured) {
-                            // rovná výměna je očividná SAMA O SOBĚ; ale když vede k silné pozici
-                            // (motiv / velká výhoda), má pointu a je v pořádku. Trestáme jen "výměnu bez myšlenky".
-                            const leadsToStrong = (mateIn !== null) || (bestCp !== null && bestCp >= 350)
-                                || m.motifs.some((x) => x !== 'mate');
-                            surprise = leadsToStrong ? 0.7 : clamp(0.5 - capturedVal(fmv) * 0.04, 0.25, 0.5);
-                        } else surprise = 0.5;
-                        const uniqScore = clamp(uniqMargin / 0.9, 0, 1);
-                        const decScore = mateIn !== null ? 1 : clamp(winChance(bestCp, null) / 0.95, 0, 1);
-                        const motifBonus = clamp(m.motifs.length * 0.22 + (isSac ? 0.4 : 0) + (mateIn ? 0.3 : 0), 0, 1);
-                        const score = Math.round(100 * (0.28 * uniqScore + 0.18 * decScore + 0.26 * motifBonus + 0.18 * surprise + 0.10 * (mateIn ? 1 : 0.6)));
-                        const difficulty = (mateIn !== null && mateIn <= 2) ? 'lehká' : ((uniqMargin < 0.6 || isSac) ? 'těžká' : 'střední');
-                        // celá vynucená varianta (řešení) — do konce vynucené sekvence (do klidu/jasna)
-                        const solLen = Math.max(1, 2 * (m.forcingLen || 1) - 1);
-                        const solUci = pvMoves.slice(0, solLen);
-                        const solSan = formatSolutionSan(lineSan(fenBefore, solUci), Math.floor(i / 2) + 1, mover === 'w');
-                        found.push({
-                            fenBefore,
-                            bestMoveLAN: best.firstMove,
-                            bestSan: bestMoveSan(fenBefore, best.firstMove),
-                            toMove: mover,
-                            uniqMargin: um,
-                            mateIn,
-                            bestSolverCp: bestCp,
-                            playedBest,
-                            ply: i,
-                            moveNo: Math.floor(i / 2) + 1,
-                            white, black,
-                            newsId: g.newsId,
-                            newsTitle: g.news?.title || null,
-                            gameDate: g.news?.publishedDate || null,
-                            score,
-                            difficulty,
-                            motifs: m.motifs,
-                            forcingLen: m.forcingLen,
-                            cpGap: (best.mate === null && sf.length >= 2 && sf[1].mate === null) ? (best.cp - sf[1].cp) : null,
-                            solutionLine: solUci.join(' '),
-                            solutionSan: solSan,
-                        });
+                    // POSUN STARTU ZPĚT: zkus, jestli úderu předchází vynucená příprava,
+                    // jejíž PV pokračuje právě tímto úderem → hádanka začne dřív (méně očividná).
+                    const ext = await extendStartBackward(history, i, mover, best.firstMove);
+                    const sFen = ext ? ext.fen : fenBefore;
+                    const sSf = ext ? ext.sf : sf;
+                    const sPly = ext ? ext.ply : i;
+                    const sOpLast = ext ? ext.opLast : (i > 0 ? history[i - 1] : null);
+                    const cand = buildCandidate(sFen, sSf, sOpLast, sPly, white, black, g);
+                    if (cand) {
+                        cand.playedBest = history[cand.ply] ? (history[cand.ply].lan === cand.bestMoveLAN) : false;
+                        found.push(cand);
                     }
                 }
                 prevDecisive[mover] = (best.mate !== null) ? (best.mate > 0 ? 9999 : -9999) : (best.cp ?? 0);
