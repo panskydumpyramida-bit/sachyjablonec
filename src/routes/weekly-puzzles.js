@@ -5,7 +5,7 @@
  */
 
 import express from 'express';
-import { getStoredCandidates, startScan, getScanState } from '../services/weeklyPuzzlesService.js';
+import { getStoredCandidates, startScan, getScanState, voteCandidate, getRatingInsights } from '../services/weeklyPuzzlesService.js';
 import { requireRole } from '../middleware/auth.js';
 
 const router = express.Router();
@@ -14,11 +14,36 @@ const router = express.Router();
 router.get('/candidates', requireRole('ADMIN'), async (req, res) => {
     try {
         const limit = parseInt(req.query.limit);
-        const result = await getStoredCandidates({ limit: Number.isFinite(limit) ? limit : 60 });
+        const result = await getStoredCandidates({ limit: Number.isFinite(limit) ? limit : 60, userId: req.user?.id || null });
         res.json(result);
     } catch (error) {
         console.error('[WeeklyPuzzles] Candidates error:', error);
         res.status(500).json({ error: 'Failed to fetch candidates' });
+    }
+});
+
+// Hlasování o kvalitě kandidáta (členové i admin)
+router.post('/:id/vote', requireRole('MEMBER'), async (req, res) => {
+    try {
+        const id = parseInt(req.params.id);
+        const value = parseInt(req.body?.value);
+        if (!Number.isFinite(id) || !Number.isFinite(value)) return res.status(400).json({ error: 'Bad request' });
+        const source = req.user?.role === 'ADMIN' || req.user?.role === 'SUPERADMIN' ? 'admin' : 'member';
+        const result = await voteCandidate(id, req.user.id, value, source);
+        res.json(result);
+    } catch (error) {
+        console.error('[WeeklyPuzzles] Vote error:', error);
+        res.status(500).json({ error: 'Failed to vote' });
+    }
+});
+
+// Rysy ohodnocených kandidátů — podklad pro učení (analýza dobré vs špatné)
+router.get('/insights', requireRole('ADMIN'), async (req, res) => {
+    try {
+        res.json(await getRatingInsights());
+    } catch (error) {
+        console.error('[WeeklyPuzzles] Insights error:', error);
+        res.status(500).json({ error: 'Failed to fetch insights' });
     }
 });
 

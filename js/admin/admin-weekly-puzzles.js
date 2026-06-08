@@ -23,6 +23,22 @@
     function apiBase() {
         return window.API_URL || '/api';
     }
+    const voteBtnStyle = (active) => `background:${active ? 'rgba(212,175,55,0.3)' : 'rgba(255,255,255,0.05)'};border:1px solid ${active ? 'rgba(212,175,55,0.6)' : 'rgba(255,255,255,0.12)'};border-radius:6px;padding:2px 9px;cursor:pointer;font-size:0.9rem;line-height:1;`;
+
+    async function vote(id, value) {
+        try {
+            const res = await fetch(`${apiBase()}/weekly-puzzles/${id}/vote`, {
+                method: 'POST',
+                headers: { ...authHeaders(), 'Content-Type': 'application/json' },
+                body: JSON.stringify({ value }),
+            });
+            if (!res.ok) { alert('Hlasování selhalo (' + res.status + ')'); return; }
+            const data = await res.json();
+            const c = lastCandidates.find((x) => x.id === id);
+            if (c) { c.rating = data.rating; c.voteCount = data.voteCount; c.myVote = data.myVote; }
+            render();
+        } catch (e) { alert('Chyba hlasování: ' + e.message); }
+    }
 
     // FEN → mini šachovnice (unicode), orientace dle strany na tahu, zvýraznění best tahu.
     function miniBoard(fen, toMove, bestUci, size = 176) {
@@ -108,7 +124,14 @@
                 <label style="margin-top:auto;display:inline-flex;align-items:center;gap:0.4rem;font-size:0.85rem;cursor:pointer;">
                     <input type="checkbox" ${isSel ? 'checked' : ''} data-id="${c.id}"> Vybrat do úlohy týdne
                 </label>
+                <div style="display:flex;gap:0.3rem;align-items:center;margin-top:0.35rem;">
+                    <button class="wp-vote" data-v="1" style="${voteBtnStyle(c.myVote === 1)}" title="dobrá">👍</button>
+                    <button class="wp-vote" data-v="2" style="${voteBtnStyle(c.myVote === 2)}" title="skvělá">⭐</button>
+                    <button class="wp-vote" data-v="-1" style="${voteBtnStyle(c.myVote === -1)}" title="špatná">👎</button>
+                    <span style="font-size:0.72rem;color:#94a3b8;margin-left:0.3rem;">hodnocení <strong style="color:${c.rating > 0 ? '#22c55e' : c.rating < 0 ? '#f87171' : '#e2e8f0'};">${c.rating > 0 ? '+' : ''}${c.rating || 0}</strong>${c.voteCount ? ' (' + c.voteCount + '×)' : ''}</span>
+                </div>
             </div>`;
+        wrap.querySelectorAll('.wp-vote').forEach((b) => b.addEventListener('click', () => vote(c.id, parseInt(b.dataset.v))));
         const boardEl = wrap.querySelector('div');
         if (boardEl) {
             boardEl.style.cursor = 'zoom-in';

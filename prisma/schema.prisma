@@ -194,15 +194,35 @@ model PuzzleCandidate {
   score        Int
   difficulty   String
   motifs       String?
+  forcingLen   Int?      @map("forcing_len")
+  cpGap        Int?      @map("cp_gap")
+  rating       Int       @default(0)             // agregát hlasů (suma value)
+  voteCount    Int       @default(0) @map("vote_count")
   dismissed    Boolean   @default(false)
   usedInNewsId Int?      @map("used_in_news_id")
   createdAt    DateTime  @default(now()) @map("created_at")
 
   game         Game      @relation(fields: [gameId], references: [id], onDelete: Cascade)
+  votes        PuzzleVote[]
 
   @@unique([gameId, ply])
   @@index([score])
   @@map("puzzle_candidates")
+}
+
+model PuzzleVote {
+  id          Int             @id @default(autoincrement())
+  candidateId Int             @map("candidate_id")
+  userId      Int?            @map("user_id")
+  value       Int             // -1 špatná, 1 dobrá, 2 skvělá
+  source      String          @default("admin") // admin / member / solver
+  createdAt   DateTime        @default(now()) @map("created_at")
+
+  candidate   PuzzleCandidate @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+
+  @@unique([candidateId, userId])
+  @@index([candidateId])
+  @@map("puzzle_votes")
 }
 
 model Image {

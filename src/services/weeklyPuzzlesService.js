@@ -32,6 +32,18 @@ function winChance(cp, mate) {
 }
 function clamp(x, lo, hi) { return Math.max(lo, Math.min(hi, x)); }
 
+function tryFirstMove(fen, uci) {
+    try {
+        const c = new Chess(fen);
+        return c.move({ from: uci.slice(0, 2), to: uci.slice(2, 4), promotion: uci.slice(4) || 'q' });
+    } catch {
+        return null;
+    }
+}
+function capturedVal(mv) {
+    return mv && mv.captured ? ({ p: 1, n: 3, b: 3, r: 5, q: 9 }[mv.captured] || 0) : 0;
+}
+
 function bestMoveSan(fen, uci) {
     try {
         const c = new Chess(fen);
@@ -115,10 +127,20 @@ async function findTacticsInGame(g) {
                         const playedBest = history[i].lan === best.firstMove;
                         const um = Math.round(uniqMargin * 100) / 100;
                         const isSac = m.motifs.includes('sacrifice');
+                        // COUNTER-INTUITIVENESS 1. tahu: dobré hádanky (zvlášť lehčí) mají NEČEKANÝ
+                        // první tah — oběť / tichý tah, ne prostou výměnu. (DeepMind: penalizuj braní.)
+                        const fmv = tryFirstMove(fenBefore, best.firstMove);
+                        const fCheck = fmv ? (fmv.san.includes('+') || fmv.san.includes('#')) : false;
+                        const quiet = !!(fmv && !fmv.captured && !fCheck);
+                        let surprise;
+                        if (isSac) surprise = 1.0;                                   // oběť = nejvíc nečekané
+                        else if (quiet) surprise = 0.85;                            // tichý tah co vyhrává
+                        else if (fmv && fmv.captured) surprise = clamp(0.55 - capturedVal(fmv) * 0.05, 0.2, 0.55); // prostá výměna
+                        else surprise = 0.5;
                         const uniqScore = clamp(uniqMargin / 0.9, 0, 1);
                         const decScore = mateIn !== null ? 1 : clamp(winChance(bestCp, null) / 0.95, 0, 1);
-                        const motifBonus = clamp(m.motifs.length * 0.25 + (isSac ? 0.4 : 0) + (mateIn ? 0.3 : 0), 0, 1);
-                        const score = Math.round(100 * (0.34 * uniqScore + 0.22 * decScore + 0.30 * motifBonus + 0.14 * (mateIn ? 1 : 0.6)));
+                        const motifBonus = clamp(m.motifs.length * 0.22 + (isSac ? 0.4 : 0) + (mateIn ? 0.3 : 0), 0, 1);
+                        const score = Math.round(100 * (0.28 * uniqScore + 0.18 * decScore + 0.26 * motifBonus + 0.18 * surprise + 0.10 * (mateIn ? 1 : 0.6)));
                         const difficulty = (mateIn !== null && mateIn <= 2) ? 'lehká' : ((uniqMargin < 0.6 || isSac) ? 'těžká' : 'střední');
                         found.push({
                             fenBefore,
@@ -138,6 +160,8 @@ async function findTacticsInGame(g) {
                             score,
                             difficulty,
                             motifs: m.motifs,
+                            forcingLen: m.forcingLen,
+                            cpGap: (best.mate === null && sf.length >= 2 && sf[1].mate === null) ? (best.cp - sf[1].cp) : null,
                         });
                     }
                 }
@@ -198,6 +222,7 @@ async function runScan(rescanAll) {
                     newsTitle: t.newsTitle, gameDate: t.gameDate,
                     score: t.score, difficulty: t.difficulty,
                     motifs: (t.motifs && t.motifs.length) ? t.motifs.join(',') : null,
+                    forcingLen: t.forcingLen ?? null, cpGap: t.cpGap ?? null,
                 };
                 await prisma.puzzleCandidate.upsert({
                     where: { gameId_ply: { gameId: g.id, ply: t.ply } },
@@ -217,13 +242,21 @@ async function runScan(rescanAll) {
     scanState.finishedAt = Date.now();
 }
 
-// Dashboard: čte uložené kombinace z DB (okamžité).
-export async function getStoredCandidates({ limit = 60 } = {}) {
+// Dashboard: čte uložené kombinace z DB (okamžité). Řazeno dle hodnocení, pak skóre.
+export async function getStoredCandidates({ limit = 60, userId = null } = {}) {
     const rows = await prisma.puzzleCandidate.findMany({
         where: { dismissed: false },
-        orderBy: { score: 'desc' },
+        orderBy: [{ rating: 'desc' }, { score: 'desc' }],
         take: limit,
     });
+    let myVotes = {};
+    if (userId) {
+        const votes = await prisma.puzzleVote.findMany({
+            where: { userId, candidateId: { in: rows.map((r) => r.id) } },
+            select: { candidateId: true, value: true },
+        });
+        myVotes = Object.fromEntries(votes.map((v) => [v.candidateId, v.value]));
+    }
     const candidates = rows.map((r) => ({
         id: r.id,
         fenBefore: r.fen,
@@ -243,6 +276,11 @@ export async function getStoredCandidates({ limit = 60 } = {}) {
         score: r.score,
         difficulty: r.difficulty,
         motifs: r.motifs ? r.motifs.split(',') : [],
+        forcingLen: r.forcingLen,
+        cpGap: r.cpGap,
+        rating: r.rating,
+        voteCount: r.voteCount,
+        myVote: myVotes[r.id] ?? 0,
         verified: r.uniqMargin >= UNIQ_MARGIN_MIN,
         usedInNewsId: r.usedInNewsId,
     }));
@@ -255,4 +293,37 @@ export async function getStoredCandidates({ limit = 60 } = {}) {
         candidates,
         meta: { stored: candidates.length, unscanned, scan: getScanState() },
     };
+}
+
+// Hlasování — upsert hlasu uživatele (value: -1 špatná / 1 dobrá / 2 skvělá) + přepočet agregátu
+export async function voteCandidate(candidateId, userId, value, source = 'admin') {
+    const v = [-1, 1, 2].includes(value) ? value : (value > 0 ? 1 : -1);
+    await prisma.puzzleVote.upsert({
+        where: { candidateId_userId: { candidateId, userId } },
+        create: { candidateId, userId, value: v, source },
+        update: { value: v, source },
+    });
+    const agg = await prisma.puzzleVote.aggregate({
+        where: { candidateId },
+        _sum: { value: true },
+        _count: { _all: true },
+    });
+    const rating = agg._sum.value || 0;
+    const voteCount = agg._count._all || 0;
+    await prisma.puzzleCandidate.update({ where: { id: candidateId }, data: { rating, voteCount } });
+    return { rating, voteCount, myVote: v };
+}
+
+// Učení: rysy ohodnocených kandidátů (pro analýzu, co odlišuje dobré od špatných)
+export async function getRatingInsights() {
+    const rated = await prisma.puzzleCandidate.findMany({
+        where: { voteCount: { gt: 0 } },
+        select: {
+            id: true, rating: true, voteCount: true, motifs: true, forcingLen: true, cpGap: true,
+            mateIn: true, bestCp: true, playedBest: true, difficulty: true, score: true,
+            bestSan: true, whitePlayer: true, blackPlayer: true, fen: true,
+        },
+        orderBy: { rating: 'desc' },
+    });
+    return { rated, count: rated.length };
 }
