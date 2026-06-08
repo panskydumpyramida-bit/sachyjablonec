@@ -87,10 +87,15 @@ async function findTacticsInGame(g) {
                     const pvMoves = (best.pv && best.pv.length) ? best.pv : [best.firstMove];
                     const m = detectMotifs(fenBefore, opLast, pvMoves);
 
-                    // úloha JE, pokud: mat, NEBO má taktický motiv, NEBO drtivá výhoda (≥+5),
-                    // která NENÍ jen sebrání zavěšené figury. Vynucené přebrání vždy vyřadit.
+                    // ÚDER (pointa): mat, taktický motiv, nebo drtivá výhoda
                     const bigAdvantage = bestCp !== null && bestCp >= 500;
-                    const isPuzzle = mateIn !== null || m.motifs.length > 0 || (bigAdvantage && !m.hangingGrab);
+                    const hasPunch = mateIn !== null || m.motifs.length > 0 || bigAdvantage;
+                    // KOMBINACE musí mít SEKVENCI (ne 1-tahový úder): mat ve 2+, oběť,
+                    // nebo vynucená sekvence ≥2 pov tahů (oběť/šach/hrozba → vynucené odpovědi → pointa)
+                    const isCombination = (mateIn !== null && mateIn >= 2)
+                        || m.motifs.includes('sacrifice')
+                        || m.forcingLen >= 2;
+                    const isPuzzle = hasPunch && isCombination && !m.hangingGrab;
 
                     if (!m.obviousRecapture && isPuzzle) {
                         const playedBest = history[i].lan === best.firstMove;

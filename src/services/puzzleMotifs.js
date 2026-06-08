@@ -167,7 +167,7 @@ export function detectMotifs(fenBefore, opLast, pv) {
         cur = next;
         if (next.isCheckmate()) break;
     }
-    if (boards.length < 2) return { motifs: [], materialDiffAfter: 0, obviousRecapture: false, hangingGrab: false, mate: false };
+    if (boards.length < 2) return { motifs: [], materialDiffAfter: 0, obviousRecapture: false, hangingGrab: false, mate: false, forcingLen: 0 };
 
     const best = moves[1];                 // 1. tah řešitele
     const motifs = new Set();
@@ -254,7 +254,22 @@ export function detectMotifs(fenBefore, opLast, pv) {
 
     for (const t of advancedMotifs(boards, moves, pov)) motifs.add(t);
 
-    return { motifs: [...motifs], materialDiffAfter, obviousRecapture, hangingGrab, mate };
+    // délka VYNUCENÉ sekvence: kolik pov tahů, než má soupeř skutečnou volbu
+    // (vynucený = soupeř v šachu / musí brát zpět / má ≤2 legální tahy)
+    let forcingLen = 0;
+    for (let k = 1; k < moves.length; k += 2) {
+        forcingLen++;
+        const oppMove = moves[k + 1];
+        if (!oppMove) break; // konec linie (mat / konec PV)
+        const afterPov = boards[k];
+        const inChk = afterPov.isCheck();
+        const recapture = oppMove.captured && moves[k] && oppMove.to === moves[k].to;
+        let legalCount = 99;
+        try { legalCount = afterPov.moves().length; } catch { /* */ }
+        if (!(inChk || recapture || legalCount <= 2)) break;
+    }
+
+    return { motifs: [...motifs], materialDiffAfter, obviousRecapture, hangingGrab, mate, forcingLen };
 }
 
 // ===== pokročilé motivy (port cook.py) — boards[k]/moves[k]; pov tahy = liché k =====
