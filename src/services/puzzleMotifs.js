@@ -292,11 +292,11 @@ function advancedMotifs(boards, moves, pov) {
                 if (ap && ap.color === pov && !dir.has(attack) &&
                     (VAL[ap.type] > VAL[piece.type] || isHanging(b, attack, pov))) { tags.add('pin'); break; }
             }
-            // pin_prevents_escape: vázanou figuru bere vazač a je cennější
+            // pin_prevents_escape: vázanou figuru bere vazač (cennější), nebo je nekrytá (hanging)
             for (const attSq of b.attackers(sq, pov)) {
                 if (dir.has(attSq)) {
                     const att = b.get(attSq);
-                    if (att && VAL[piece.type] > VAL[att.type]) { tags.add('pin'); break; }
+                    if (att && (VAL[piece.type] > VAL[att.type] || isHanging(b, sq, piece.color))) { tags.add('pin'); break; }
                 }
             }
             if (tags.has('pin')) break;
@@ -315,14 +315,20 @@ function advancedMotifs(boards, moves, pov) {
         }
     }
 
-    // DISCOVERED ATTACK (odkrytý útok): pov braní, kde se předchozí pov figura odsunula z linie
-    for (let k = 3; k < boards.length; k += 2) {
-        const mv = moves[k];
-        if (!mv.captured) continue;
-        const btw = between(mv.from, mv.to);
-        const prevOp = moves[k - 1], prevPl = moves[k - 2];
-        if (prevOp.to === mv.to) break;
-        if (btw.includes(prevPl.from) && mv.to !== prevPl.to && mv.from !== prevPl.to && !isCastling(prevPl)) { tags.add('discoveredAttack'); break; }
+    // DISCOVERED ATTACK = odkrytý ŠACH (fallback z cook.py) NEBO braní s odsunem figury z linie
+    for (const k of oddPov) {
+        const chk = checkers(boards[k], opp(pov));
+        if (chk.length && moves[k] && !chk.includes(moves[k].to)) { tags.add('discoveredAttack'); break; }
+    }
+    if (!tags.has('discoveredAttack')) {
+        for (let k = 3; k < boards.length; k += 2) {
+            const mv = moves[k];
+            if (!mv.captured) continue;
+            const btw = between(mv.from, mv.to);
+            const prevOp = moves[k - 1], prevPl = moves[k - 2];
+            if (prevOp.to === mv.to) break;
+            if (btw.includes(prevPl.from) && mv.to !== prevPl.to && mv.from !== prevPl.to && !isCastling(prevPl)) { tags.add('discoveredAttack'); break; }
+        }
     }
 
     // X-RAY: série braní na stejném poli odhalí dálkový útok
@@ -334,16 +340,19 @@ function advancedMotifs(boards, moves, pov) {
         if (between(mv.from, mv.to).includes(prevOp.from)) { tags.add('xRay'); break; }
     }
 
-    // ATTRACTION (nalákání): pov táhne na pole, soupeř tam vezme král/dáma/věž, pov to pole pak napadne
-    for (let k = 1; k < boards.length - 1; k += 2) {
-        const mv = moves[k];                 // pov tah na pole
-        const reply = moves[k + 1];          // soupeřova odpověď
+    // ATTRACTION (nalákání): pov táhne na pole, soupeř tam vezme král/dáma/věž (nalákán),
+    // pov to pole napadne; u krále = šach, u dámy/věže pov navíc později na tom poli bere
+    for (let k = 1; k < boards.length; k += 2) {
+        const mv = moves[k];
+        const reply = moves[k + 1];
         if (!reply || reply.to !== mv.to) continue;
         if (!['k', 'q', 'r'].includes(reply.piece)) continue;
-        const n3 = moves[k + 2];             // pov pokračování
-        if (!n3) continue;
-        const b3 = boards[k + 2];
-        if (b3.attackers(reply.to, pov).includes(n3.to) && (reply.piece === 'k' || n3.to === reply.to)) { tags.add('attraction'); break; }
+        const next = moves[k + 2], bNext = boards[k + 2];
+        if (!next || !bNext) continue;
+        if (!bNext.attackers(reply.to, pov).includes(next.to)) continue; // pov napadne nalákané pole
+        if (reply.piece === 'k') { tags.add('attraction'); break; }       // král pod šach
+        const n3 = moves[k + 4];                                          // pozdější pov braní na poli
+        if (n3 && n3.to === reply.to) { tags.add('attraction'); break; }
     }
 
     return [...tags];
