@@ -20,8 +20,9 @@ const prisma = new PrismaClient();
 const MIN_PLY = 12;            // přeskoč otevírku (~6 tahů)
 const GAME_DEPTH = 12;         // hloubka Stockfishe při scanu partií
 const DECISIVE_CP = 200;       // řešení musí vést k rozhodující výhodě (~+2)
-const ALREADY_WON_CP = 250;    // pokud strana už předtím vyhrávala → ne kombinace
-const UNIQ_MARGIN_MIN = 0.4;   // wc(best) - wc(second), [-1,+1] škála
+const ALREADY_WON_CP = 450;    // pokud strana už DRTIVĚ vyhrávala (+4.5) → ne kombinace
+const UNIQ_GAP_CP = 150;       // best − second (centipawny) = "jediné řešení" (nesaturuje jako win-chance)
+const UNIQ_MARGIN_MIN = 0.4;   // jen pro zobrazení 'verified' (win-chance margin)
 
 // Win-chance z centipawnů (Lichess sigmoid), [-1,+1]. Mat = ±1.
 function winChance(cp, mate) {
@@ -77,12 +78,25 @@ async function findTacticsInGame(g) {
                 const decisive = (mateIn !== null) || (bestCp !== null && bestCp >= DECISIVE_CP);
                 const prev = prevDecisive[mover];
                 const alreadyWon = prev !== null && prev >= ALREADY_WON_CP;
+                // UNIQUENESS přes CENTIPAWN GAP — win-chance margin saturuje a vyřazoval
+                // vyhrané taktiky (best +600 vs +400 = celá figura, ale wc margin jen ~0.17).
+                let unique;
+                if (best.mate !== null && best.mate > 0) {
+                    // mat: jediné řešení, jen pokud druhý tah nematuje (nebo matuje výrazně pomaleji)
+                    unique = (sf.length < 2) || (sf[1].mate === null) || (sf[1].mate > best.mate + 1);
+                } else if (sf.length >= 2 && sf[1].mate === null) {
+                    unique = (best.cp - sf[1].cp) >= UNIQ_GAP_CP;
+                } else if (sf.length >= 2) {
+                    unique = sf[1].mate < 0; // druhý tah prohrává → nejlepší je jasně jediný
+                } else {
+                    unique = true; // jen jeden rozumný tah
+                }
                 const uniqMargin = (sf.length >= 2)
                     ? winChance(best.cp, best.mate) - winChance(sf[1].cp, sf[1].mate)
                     : 1;
 
                 // mate kombinace (oběť → mat) bereme i z vyhrané pozice; ne-mate jen když ne-už-vyhrané
-                if (decisive && (mateIn !== null || !alreadyWon) && uniqMargin >= UNIQ_MARGIN_MIN && best.firstMove) {
+                if (decisive && (mateIn !== null || !alreadyWon) && unique && best.firstMove) {
                     const opLast = i > 0 ? history[i - 1] : null;
                     const pvMoves = (best.pv && best.pv.length) ? best.pv : [best.firstMove];
                     const m = detectMotifs(fenBefore, opLast, pvMoves);
