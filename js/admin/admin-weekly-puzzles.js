@@ -10,6 +10,12 @@
     const selected = new Set();
     let lastCandidates = [];
 
+    const MOTIF_CZ = {
+        sacrifice: 'oběť', fork: 'vidlička', mate: 'mat', backRankMate: 'mat na zadní řadě',
+        smotheredMate: 'dušený mat', doubleCheck: 'dvojšach', discoveredCheck: 'odkrytý šach',
+        promotion: 'proměna', advancedPawn: 'pokročilý pěšec', trappedPiece: 'lapená figura',
+    };
+
     function authHeaders() {
         return { 'Authorization': 'Bearer ' + (window.authToken || '') };
     }
@@ -70,6 +76,11 @@
             : (c.uniqMargin !== null
                 ? `<span style="color:#eab308;">slabší jedinečnost (Δ${c.uniqMargin})</span>`
                 : `<span style="color:#94a3b8;"><i class="fa-regular fa-circle-question"></i> jedinečnost nepotvrzena</span>`);
+        const motifsHtml = (c.motifs && c.motifs.length)
+            ? `<div style="display:flex;gap:0.3rem;flex-wrap:wrap;margin-top:0.1rem;">` +
+              c.motifs.map(mo => `<span style="background:rgba(212,175,55,0.18);color:#eab308;padding:1px 8px;border-radius:10px;font-size:0.68rem;font-weight:600;">${MOTIF_CZ[mo] || mo}</span>`).join('') +
+              `</div>`
+            : '';
         const mate = c.mateIn ? ` · <span style="color:#f87171;">mat v ${c.mateIn}</span>` : '';
         const evalTxt = c.bestSolverCp !== null && c.mateIn === null
             ? ` · po řešení ${(c.bestSolverCp / 100 >= 0 ? '+' : '')}${(c.bestSolverCp / 100).toFixed(1)}` : '';
@@ -84,6 +95,7 @@
                     ${diffBadge(c.difficulty)}
                     <span style="background:#1e293b;color:#e2e8f0;padding:1px 7px;border-radius:10px;font-size:0.7rem;">skóre ${c.score}</span>
                 </div>
+                ${motifsHtml}
                 <div style="font-size:0.85rem;">${verified}${mate}${evalTxt}</div>
                 <div style="font-size:0.8rem;color:#94a3b8;">
                     Nejlepší tah: <strong style="color:#e2e8f0;">${c.bestSan}</strong> · tah ${c.moveNo}

@@ -135,7 +135,7 @@ function doAnalyze(fen, depth, multiPv) {
 
         function collect() {
             const arr = Object.values(pvs).sort((a, b) => a.multipv - b.multipv);
-            return arr.length ? arr.map(p => ({ multipv: p.multipv, cp: p.cp, mate: p.mate, firstMove: p.firstMove })) : null;
+            return arr.length ? arr.map(p => ({ multipv: p.multipv, cp: p.cp, mate: p.mate, firstMove: p.firstMove, pv: p.pv || [] })) : null;
         }
 
         listener = (line) => {
@@ -144,7 +144,8 @@ function doAnalyze(fen, depth, multiPv) {
                 const mp = m ? parseInt(m[1]) : 1;
                 const cpM = line.match(/ score cp (-?\d+)/);
                 const mateM = line.match(/ score mate (-?\d+)/);
-                const pvM = line.match(/ pv (\S+)/);
+                const pvFullM = line.match(/ pv (.+?)\s*$/);
+                const pvMoves = pvFullM ? pvFullM[1].trim().split(/\s+/) : [];
                 const dM = line.match(/ depth (\d+)/);
                 const d = dM ? parseInt(dM[1]) : 0;
                 // ber nejhlubší info pro daný multipv
@@ -154,7 +155,8 @@ function doAnalyze(fen, depth, multiPv) {
                         depth: d,
                         cp: cpM ? parseInt(cpM[1]) : null,
                         mate: mateM ? parseInt(mateM[1]) : null,
-                        firstMove: pvM ? pvM[1] : null,
+                        firstMove: pvMoves[0] || null,
+                        pv: pvMoves,
                     };
                 }
             } else if (line.startsWith('bestmove')) {

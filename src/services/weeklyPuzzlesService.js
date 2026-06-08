@@ -13,12 +13,14 @@
 import { PrismaClient } from '@prisma/client';
 import { Chess } from 'chess.js';
 import { isEngineAvailable, analyzePosition } from './stockfishEngine.js';
+import { detectMotifs } from './puzzleMotifs.js';
 
 const prisma = new PrismaClient();
 
 const MIN_PLY = 12;            // přeskoč otevírku (~6 tahů)
 const GAME_DEPTH = 12;         // hloubka Stockfishe při scanu partií
 const DECISIVE_CP = 200;       // řešení musí vést k rozhodující výhodě (~+2)
+const CRUSHING_CP = 400;       // lichess generator: pod 400cp a bez oběti = "seber zadarmo" → vyřadit
 const ALREADY_WON_CP = 250;    // pokud strana už předtím vyhrávala → ne kombinace
 const UNIQ_MARGIN_MIN = 0.4;   // wc(best) - wc(second), [-1,+1] škála
 
@@ -82,30 +84,45 @@ async function findTacticsInGame(g) {
 
                 // mate kombinace (oběť → mat) bereme i z vyhrané pozice; ne-mate jen když ne-už-vyhrané
                 if (decisive && (mateIn !== null || !alreadyWon) && uniqMargin >= UNIQ_MARGIN_MIN && best.firstMove) {
-                    const playedBest = history[i].lan === best.firstMove;
-                    const um = Math.round(uniqMargin * 100) / 100;
-                    const uniqScore = clamp(uniqMargin / 0.9, 0, 1);
-                    const decScore = mateIn !== null ? 1 : clamp(winChance(bestCp, null) / 0.95, 0, 1);
-                    const score = Math.round(100 * (0.50 * uniqScore + 0.30 * decScore + 0.20 * (mateIn ? 1 : 0.6)));
-                    const difficulty = (mateIn !== null && mateIn <= 2) ? 'lehká' : (uniqMargin < 0.6 ? 'těžká' : 'střední');
-                    found.push({
-                        fenBefore,
-                        bestMoveLAN: best.firstMove,
-                        bestSan: bestMoveSan(fenBefore, best.firstMove),
-                        toMove: mover,
-                        uniqMargin: um,
-                        mateIn,
-                        bestSolverCp: bestCp,
-                        playedBest,
-                        ply: i,
-                        moveNo: Math.floor(i / 2) + 1,
-                        white, black,
-                        newsId: g.newsId,
-                        newsTitle: g.news?.title || null,
-                        gameDate: g.news?.publishedDate || null,
-                        score,
-                        difficulty,
-                    });
+                    const opLast = i > 0 ? history[i - 1] : null;
+                    const pvMoves = (best.pv && best.pv.length) ? best.pv : [best.firstMove];
+                    const m = detectMotifs(fenBefore, opLast, pvMoves);
+
+                    // anti-trivial filtry (lichess):
+                    //  (a) vynucené přebrání, (b) mírná výhoda bez oběti = "seber zadarmo",
+                    //  (c) musí mít skutečný taktický motiv (nebo mat)
+                    const gateOk = !(mateIn === null && bestCp !== null && bestCp < CRUSHING_CP && m.materialDiffAfter > -1);
+                    const hasMotif = mateIn !== null || m.motifs.length > 0;
+
+                    if (!m.obviousRecapture && gateOk && hasMotif) {
+                        const playedBest = history[i].lan === best.firstMove;
+                        const um = Math.round(uniqMargin * 100) / 100;
+                        const isSac = m.motifs.includes('sacrifice');
+                        const uniqScore = clamp(uniqMargin / 0.9, 0, 1);
+                        const decScore = mateIn !== null ? 1 : clamp(winChance(bestCp, null) / 0.95, 0, 1);
+                        const motifBonus = clamp(m.motifs.length * 0.25 + (isSac ? 0.4 : 0) + (mateIn ? 0.3 : 0), 0, 1);
+                        const score = Math.round(100 * (0.34 * uniqScore + 0.22 * decScore + 0.30 * motifBonus + 0.14 * (mateIn ? 1 : 0.6)));
+                        const difficulty = (mateIn !== null && mateIn <= 2) ? 'lehká' : ((uniqMargin < 0.6 || isSac) ? 'těžká' : 'střední');
+                        found.push({
+                            fenBefore,
+                            bestMoveLAN: best.firstMove,
+                            bestSan: bestMoveSan(fenBefore, best.firstMove),
+                            toMove: mover,
+                            uniqMargin: um,
+                            mateIn,
+                            bestSolverCp: bestCp,
+                            playedBest,
+                            ply: i,
+                            moveNo: Math.floor(i / 2) + 1,
+                            white, black,
+                            newsId: g.newsId,
+                            newsTitle: g.news?.title || null,
+                            gameDate: g.news?.publishedDate || null,
+                            score,
+                            difficulty,
+                            motifs: m.motifs,
+                        });
+                    }
                 }
                 prevDecisive[mover] = (best.mate !== null) ? (best.mate > 0 ? 9999 : -9999) : (best.cp ?? 0);
             }
@@ -163,6 +180,7 @@ async function runScan(rescanAll) {
                     whitePlayer: t.white, blackPlayer: t.black,
                     newsTitle: t.newsTitle, gameDate: t.gameDate,
                     score: t.score, difficulty: t.difficulty,
+                    motifs: (t.motifs && t.motifs.length) ? t.motifs.join(',') : null,
                 };
                 await prisma.puzzleCandidate.upsert({
                     where: { gameId_ply: { gameId: g.id, ply: t.ply } },
@@ -207,6 +225,7 @@ export async function getStoredCandidates({ limit = 60 } = {}) {
         gameDate: r.gameDate,
         score: r.score,
         difficulty: r.difficulty,
+        motifs: r.motifs ? r.motifs.split(',') : [],
         verified: r.uniqMargin >= UNIQ_MARGIN_MIN,
         usedInNewsId: r.usedInNewsId,
     }));
