@@ -248,6 +248,7 @@
     }
 
     window.loadWeeklyPuzzles = load;
-    window.wpScan = scan;
+    window.wpScan = () => scan(false);
+    window.wpScanAll = () => { if (confirm('Přeskenovat VŠECHNY partie znovu s aktuálními pravidly? Běží na pozadí, může to pár minut trvat.')) scan(true); };
     window.wpGenerate = generate;
 })();

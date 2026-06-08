@@ -20,7 +20,6 @@ const prisma = new PrismaClient();
 const MIN_PLY = 12;            // přeskoč otevírku (~6 tahů)
 const GAME_DEPTH = 12;         // hloubka Stockfishe při scanu partií
 const DECISIVE_CP = 200;       // řešení musí vést k rozhodující výhodě (~+2)
-const CRUSHING_CP = 400;       // lichess generator: pod 400cp a bez oběti = "seber zadarmo" → vyřadit
 const ALREADY_WON_CP = 250;    // pokud strana už předtím vyhrávala → ne kombinace
 const UNIQ_MARGIN_MIN = 0.4;   // wc(best) - wc(second), [-1,+1] škála
 
@@ -88,13 +87,12 @@ async function findTacticsInGame(g) {
                     const pvMoves = (best.pv && best.pv.length) ? best.pv : [best.firstMove];
                     const m = detectMotifs(fenBefore, opLast, pvMoves);
 
-                    // anti-trivial filtry (lichess):
-                    //  (a) vynucené přebrání, (b) mírná výhoda bez oběti = "seber zadarmo",
-                    //  (c) musí mít skutečný taktický motiv (nebo mat)
-                    const gateOk = !(mateIn === null && bestCp !== null && bestCp < CRUSHING_CP && m.materialDiffAfter > -1);
-                    const hasMotif = mateIn !== null || m.motifs.length > 0;
+                    // úloha JE, pokud: mat, NEBO má taktický motiv, NEBO drtivá výhoda (≥+5),
+                    // která NENÍ jen sebrání zavěšené figury. Vynucené přebrání vždy vyřadit.
+                    const bigAdvantage = bestCp !== null && bestCp >= 500;
+                    const isPuzzle = mateIn !== null || m.motifs.length > 0 || (bigAdvantage && !m.hangingGrab);
 
-                    if (!m.obviousRecapture && gateOk && hasMotif) {
+                    if (!m.obviousRecapture && isPuzzle) {
                         const playedBest = history[i].lan === best.firstMove;
                         const um = Math.round(uniqMargin * 100) / 100;
                         const isSac = m.motifs.includes('sacrifice');
