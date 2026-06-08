@@ -13,7 +13,8 @@
     const MOTIF_CZ = {
         sacrifice: 'oběť', fork: 'vidlička', mate: 'mat', backRankMate: 'mat na zadní řadě',
         smotheredMate: 'dušený mat', doubleCheck: 'dvojšach', discoveredCheck: 'odkrytý šach',
-        promotion: 'proměna', advancedPawn: 'pokročilý pěšec', trappedPiece: 'lapená figura',
+        discoveredAttack: 'odkrytý útok', pin: 'vazba', skewer: 'nabodnutí', xRay: 'rentgen',
+        attraction: 'nalákání', promotion: 'proměna', advancedPawn: 'pokročilý pěšec', trappedPiece: 'lapená figura',
     };
 
     function authHeaders() {

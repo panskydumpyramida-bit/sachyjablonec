@@ -88,6 +88,53 @@ function attackedOpponentSquares(chess, from, pov) {
     return res;
 }
 
+// ---- geometrie pro pokročilé motivy (emulace python-chess between/attacks/pin) ----
+function sqIdx(sq) { return [sq.charCodeAt(0) - 97, +sq[1] - 1]; }
+function mkSq(f, r) { return FILES[f] + (r + 1); }
+function collinear(a, b, c) {
+    const [fa, ra] = sqIdx(a), [fb, rb] = sqIdx(b), [fc, rc] = sqIdx(c);
+    return (fb - fa) * (rc - ra) === (fc - fa) * (rb - ra);
+}
+function between(a, b) {
+    const [fa, ra] = sqIdx(a), [fb, rb] = sqIdx(b);
+    const df = fb - fa, dr = rb - ra;
+    if (!(fa === fb || ra === rb || Math.abs(df) === Math.abs(dr)) || (df === 0 && dr === 0)) return [];
+    const sf = Math.sign(df), sr = Math.sign(dr);
+    const out = []; let f = fa + sf, r = ra + sr;
+    while (f !== fb || r !== rb) { out.push(mkSq(f, r)); f += sf; r += sr; }
+    return out;
+}
+// board.attacks(square): pole, která figura na `square` napadá
+function attacksFrom(chess, square) {
+    const p = chess.get(square);
+    if (!p) return [];
+    const out = [];
+    for (const sq of SQUARES) {
+        if (sq === square) continue;
+        if (chess.attackers(sq, p.color).includes(square)) out.push(sq);
+    }
+    return out;
+}
+// board.pin: pokud je figura na `square` vázaná na vlastního krále, vrátí Set polí linie vazby; jinak null
+function pinDir(chess, square, color) {
+    const p = chess.get(square);
+    if (!p || p.color !== color) return null;
+    const king = kingSquare(chess, color);
+    if (!king || king === square) return null;
+    const bc = new Chess(chess.fen());
+    bc.remove(square);
+    for (const att of bc.attackers(king, opp(color))) {
+        const ap = bc.get(att);
+        if (ap && RAY.has(ap.type) && collinear(king, square, att) && between(king, att).includes(square)) {
+            return new Set([...between(king, att), king, att]);
+        }
+    }
+    return null;
+}
+function isCastling(mv) {
+    return mv && mv.piece === 'k' && Math.abs(mv.from.charCodeAt(0) - mv.to.charCodeAt(0)) > 1;
+}
+
 function neighbors(sq) {
     const fi = sq.charCodeAt(0) - 97, ri = +sq[1] - 1;
     const out = [];
@@ -174,7 +221,7 @@ export function detectMotifs(fenBefore, opLast, pv) {
         const b = boards[k], mv = moves[k];
         const chk = checkers(b, opp(pov)); // pole našich figur dávajících šach soupeřovu králi
         if (chk.length > 1) motifs.add('doubleCheck');
-        if (chk.length >= 1 && mv && chk.some((sq) => sq !== mv.to)) motifs.add('discoveredCheck');
+        if (chk.length >= 1 && mv && !chk.includes(mv.to)) motifs.add('discoveredCheck');
     }
 
     // promotion / advanced pawn
@@ -205,7 +252,86 @@ export function detectMotifs(fenBefore, opLast, pv) {
         }
     }
 
+    for (const t of advancedMotifs(boards, moves, pov)) motifs.add(t);
+
     return { motifs: [...motifs], materialDiffAfter, obviousRecapture, hangingGrab, mate };
+}
+
+// ===== pokročilé motivy (port cook.py) — boards[k]/moves[k]; pov tahy = liché k =====
+function advancedMotifs(boards, moves, pov) {
+    const tags = new Set();
+    const oddPov = []; // indexy pov tahů (liché)
+    for (let k = 1; k < boards.length; k += 2) oddPov.push(k);
+
+    // PIN (vazba): soupeřova figura je vázaná a kvůli tomu nemůže bránit / je trestaná
+    for (const k of oddPov) {
+        const b = boards[k];
+        for (const sq of SQUARES) {
+            const piece = b.get(sq);
+            if (!piece || piece.color === pov) continue;
+            const dir = pinDir(b, sq, piece.color);
+            if (!dir) continue;
+            // pin_prevents_attack: vázaná figura nemůže napadnout cennější/hanging pov figuru mimo linii
+            for (const attack of attacksFrom(b, sq)) {
+                const ap = b.get(attack);
+                if (ap && ap.color === pov && !dir.has(attack) &&
+                    (VAL[ap.type] > VAL[piece.type] || isHanging(b, attack, pov))) { tags.add('pin'); break; }
+            }
+            // pin_prevents_escape: vázanou figuru bere vazač a je cennější
+            for (const attSq of b.attackers(sq, pov)) {
+                if (dir.has(attSq)) {
+                    const att = b.get(attSq);
+                    if (att && VAL[piece.type] > VAL[att.type]) { tags.add('pin'); break; }
+                }
+            }
+            if (tags.has('pin')) break;
+        }
+        if (tags.has('pin')) break;
+    }
+
+    // SKEWER (nabodnutí): ray figura bere přes pole, odkud soupeř právě uhnul cennější figurou
+    for (let k = 3; k < boards.length; k += 2) {
+        const mv = moves[k], prevB = boards[k - 1], op = moves[k - 1];
+        const cap = prevB.get(mv.to);
+        if (cap && RAY.has(mv.piece) && !boards[k].isCheckmate()) {
+            const btw = between(mv.from, mv.to);
+            if (op.to === mv.to || !btw.includes(op.from)) continue;
+            if (KVAL[op.piece] > KVAL[cap.type] && isInBadSpot(prevB, mv.to)) { tags.add('skewer'); break; }
+        }
+    }
+
+    // DISCOVERED ATTACK (odkrytý útok): pov braní, kde se předchozí pov figura odsunula z linie
+    for (let k = 3; k < boards.length; k += 2) {
+        const mv = moves[k];
+        if (!mv.captured) continue;
+        const btw = between(mv.from, mv.to);
+        const prevOp = moves[k - 1], prevPl = moves[k - 2];
+        if (prevOp.to === mv.to) break;
+        if (btw.includes(prevPl.from) && mv.to !== prevPl.to && mv.from !== prevPl.to && !isCastling(prevPl)) { tags.add('discoveredAttack'); break; }
+    }
+
+    // X-RAY: série braní na stejném poli odhalí dálkový útok
+    for (let k = 3; k < boards.length; k += 2) {
+        const mv = moves[k], prevOp = moves[k - 1], prevPl = moves[k - 2];
+        if (!mv.captured) continue;
+        if (prevOp.to !== mv.to || prevOp.piece === 'k') continue;
+        if (prevPl.to !== prevOp.to) continue;
+        if (between(mv.from, mv.to).includes(prevOp.from)) { tags.add('xRay'); break; }
+    }
+
+    // ATTRACTION (nalákání): pov táhne na pole, soupeř tam vezme král/dáma/věž, pov to pole pak napadne
+    for (let k = 1; k < boards.length - 1; k += 2) {
+        const mv = moves[k];                 // pov tah na pole
+        const reply = moves[k + 1];          // soupeřova odpověď
+        if (!reply || reply.to !== mv.to) continue;
+        if (!['k', 'q', 'r'].includes(reply.piece)) continue;
+        const n3 = moves[k + 2];             // pov pokračování
+        if (!n3) continue;
+        const b3 = boards[k + 2];
+        if (b3.attackers(reply.to, pov).includes(n3.to) && (reply.piece === 'k' || n3.to === reply.to)) { tags.add('attraction'); break; }
+    }
+
+    return [...tags];
 }
 
 // back_rank_mate — port cook.py
