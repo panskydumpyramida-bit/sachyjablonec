@@ -258,6 +258,27 @@
         }
     }
 
+    async function dedupe() {
+        const btn = document.getElementById('wpDedupeBtn');
+        if (!confirm('Sloučit rozkouskované kombinace a duplicitní pozice? Hlasy zůstanou zachované u ponechané hádanky.')) return;
+        const orig = btn ? btn.innerHTML : '';
+        try {
+            if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Slučuji…'; }
+            const res = await fetch(`${apiBase()}/weekly-puzzles/dedupe`, {
+                method: 'POST', headers: { ...authHeaders(), 'Content-Type': 'application/json' },
+            });
+            if (res.status === 401 || res.status === 403) { alert('Slučovat může jen ADMIN.'); return; }
+            const data = await res.json();
+            if (data.error) { alert(data.error); return; }
+            alert(`Sloučeno ${data.removed} fragmentů/duplicit, hlasů přesunuto ${data.votesMoved}.`);
+            await load();
+        } catch (e) {
+            alert('Chyba slučování: ' + e.message);
+        } finally {
+            if (btn) { btn.disabled = false; btn.innerHTML = orig; }
+        }
+    }
+
     let polling = false;
     async function pollScan() {
         if (polling) return;
@@ -292,5 +313,6 @@
     window.loadWeeklyPuzzles = load;
     window.wpScan = () => scan(false);
     window.wpScanAll = () => { if (confirm('Přeskenovat VŠECHNY partie znovu s aktuálními pravidly? Běží na pozadí, může to pár minut trvat.')) scan(true); };
+    window.wpDedupe = dedupe;
     window.wpGenerate = generate;
 })();

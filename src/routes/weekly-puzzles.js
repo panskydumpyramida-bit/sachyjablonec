@@ -5,7 +5,7 @@
  */
 
 import express from 'express';
-import { getStoredCandidates, startScan, getScanState, voteCandidate, getRatingInsights } from '../services/weeklyPuzzlesService.js';
+import { getStoredCandidates, startScan, getScanState, voteCandidate, getRatingInsights, dedupeStoredCandidates } from '../services/weeklyPuzzlesService.js';
 import { requireRole } from '../middleware/auth.js';
 
 const router = express.Router();
@@ -62,6 +62,16 @@ router.post('/scan', requireRole('ADMIN'), async (req, res) => {
 // Stav běžícího scanu (pro polling z dashboardu)
 router.get('/scan-status', requireRole('ADMIN'), (req, res) => {
     res.json(getScanState());
+});
+
+// Sloučí rozkouskované kombinace / duplicity v uložených datech (hlasy zachová).
+router.post('/dedupe', requireRole('ADMIN'), async (req, res) => {
+    try {
+        res.json(await dedupeStoredCandidates());
+    } catch (error) {
+        console.error('[WeeklyPuzzles] Dedupe error:', error);
+        res.status(500).json({ error: 'Failed to dedupe' });
+    }
 });
 
 export default router;

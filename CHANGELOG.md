@@ -1,5 +1,14 @@
 # 📋 Changelog
 
+## 8. června 2026 (v38)
+
+### ♟️ Úloha týdne — slučování duplicit
+- **Konec rozkouskovaných kombinací:** Jedna vynucená kombinace se už nenabízí jako několik hádanek — varianta se bere jako celek od prvního (nenápadného) tahu. Scanner slučuje souvislé úseky téže kombinace.
+- **Tlačítko „Sloučit duplicity":** Sloučí rozkouskované kombinace i duplicitní pozice v navržených hádankách; hlasy zůstanou zachované u ponechané úlohy (přesunou se na ni).
+- **Samočištění:** Sken partií po doběhnutí sám sloučí případné duplicity; vyřešena i kolize ukládání po posunu startu hádanky.
+
+---
+
 ## 5. června 2026 (v37)
 
 ### 🔒 Bezpečnostní audit a opravy napříč webem

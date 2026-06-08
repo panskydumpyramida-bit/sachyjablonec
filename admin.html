@@ -693,6 +693,7 @@
             <div style="display:flex; gap:0.5rem;">
                 <button class="btn-secondary" id="wpScanBtn" onclick="wpScan()"><i class="fa-solid fa-magnifying-glass-chart"></i> Skenovat nové</button>
                 <button class="btn-secondary" onclick="wpScanAll()" title="Přeskenovat všechny partie znovu (aktuální pravidla)"><i class="fa-solid fa-arrows-rotate"></i> Přeskenovat vše</button>
+                <button class="btn-secondary" id="wpDedupeBtn" onclick="wpDedupe()" title="Sloučit rozkouskované kombinace a duplicity (hlasy zůstanou)"><i class="fa-solid fa-object-group"></i> Sloučit duplicity</button>
                 <button class="btn-secondary" onclick="loadWeeklyPuzzles()" title="Načíst znovu"><i class="fa-solid fa-rotate"></i></button>
                 <button class="btn-primary" id="wpGenerateBtn" onclick="wpGenerate()" disabled style="opacity:0.5;">Vygenerovat článek (vybráno 0/3)</button>
             </div>
@@ -1625,6 +1626,19 @@
             </div>
 
             <div class="changelog-timeline">
+                <!-- 2026-06-08 v38 -->
+                <div class="changelog-entry">
+                    <div class="changelog-date">8. 6. 2026</div>
+                    <div class="changelog-version" style="background:var(--primary-color);color:#000;">v38</div>
+                    <div class="changelog-content">
+                        <h4>♟️ Úloha týdne — slučování duplicit</h4>
+                        <ul>
+                            <li><strong>Konec rozkouskovaných kombinací:</strong> Jedna vynucená kombinace se už nenabízí jako několik hádanek — varianta se bere jako celek od prvního (nenápadného) tahu.</li>
+                            <li><strong>Tlačítko „Sloučit duplicity":</strong> Sloučí rozkouskované kombinace i duplicitní pozice v navržených hádankách; <strong>hlasy zůstanou zachované</strong> u ponechané úlohy.</li>
+                            <li><strong>Samočištění:</strong> Sken partií nově po doběhnutí sám sloučí případné duplicity.</li>
+                        </ul>
+                    </div>
+                </div>
                 <!-- 2026-06-05 v37 -->
                 <div class="changelog-entry">
                     <div class="changelog-date">5. 6. 2026</div>
@@ -2590,7 +2604,7 @@
     <script src="js/admin/admin-blicak.js?v=ux12"></script>
     <script src="js/admin/admin-puzzle-racer.js?v=ux12"></script>
     <script src="js/admin/admin-chessdb.js?v=ux12"></script>
-    <script src="js/admin/admin-weekly-puzzles.js?v=ux14"></script>
+    <script src="js/admin/admin-weekly-puzzles.js?v=ux15"></script>
     <script src="js/admin/admin-dashboard.js?v=ux12"></script>
     <!-- All admin functionality moved to modular JS files in js/admin/ -->
 

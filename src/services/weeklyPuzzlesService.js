@@ -73,6 +73,38 @@ function formatSolutionSan(sans, startNo, moverWhite) {
     return out.join(' ');
 }
 
+// Délka řešení v půltazích (z uložené UCI linie, fallback z forcingLen).
+function lineHalfMoves(c) {
+    if (c.solutionLine) return c.solutionLine.split(/\s+/).filter(Boolean).length || 1;
+    return c.forcingLen ? Math.max(1, 2 * c.forcingLen - 1) : 1;
+}
+
+// DEDUPLIKACE: jedna vynucená kombinace se v partii detekuje na víc plynech
+// (úder na ply p, ale i pokračovací pozice p+2, p+4 jsou "decisive+unique").
+// Tady je sloučíme: pro každou stranu vezmeme kandidáty seřazené dle plynu a
+// souvislý řetěz (další start padne dovnitř/těsně za pokrytí předchozího) bereme
+// jako TUTÉŽ kombinaci — necháme jen nejstarší start (celou kombinaci), zbytek = fragmenty.
+// Funguje pro čerstvé kandidáty i pro uložené řádky (mají ply/toMove/score/solutionLine).
+function dedupeFragments(cands) {
+    const byMover = {};
+    for (const c of cands) (byMover[c.toMove] || (byMover[c.toMove] = [])).push(c);
+    const keep = [], dropped = [];
+    for (const mv of Object.keys(byMover)) {
+        const arr = byMover[mv].slice().sort((a, b) => a.ply - b.ply || (b.score || 0) - (a.score || 0));
+        let anchor = null, coverUpto = -Infinity;
+        for (const c of arr) {
+            const cEnd = c.ply + Math.max(0, lineHalfMoves(c) - 1);
+            if (anchor && c.ply <= coverUpto + 2) {
+                dropped.push({ drop: c, anchor });
+                coverUpto = Math.max(coverUpto, cEnd);
+            } else {
+                anchor = c; coverUpto = cEnd; keep.push(c);
+            }
+        }
+    }
+    return { keep, dropped };
+}
+
 // Postaví kandidáta z pozice (start hádanky); vrátí objekt nebo null (neprošel filtry kombinace).
 function buildCandidate(startFen, sf, opLast, ply, white, black, g) {
     const best = sf[0];
@@ -226,7 +258,8 @@ async function findTacticsInGame(g) {
 
         try { replay.move(history[i].san); } catch { break; }
     }
-    return found;
+    // Slouč fragmenty téže kombinace → jen celé kombinace (nejstarší start).
+    return dedupeFragments(found).keep;
 }
 
 // ===== Background scan + cache v DB =====
@@ -292,6 +325,14 @@ async function runScan(rescanAll) {
             console.error(`[WeeklyPuzzles] scan game ${g.id} failed:`, e.message);
         }
         scanState.done++;
+    }
+
+    // Self-heal: slouč případné rozkouskované kombinace / duplicity z tohoto i dřívějších scanů.
+    try {
+        const dd = await dedupeStoredCandidates();
+        if (dd.removed) console.log(`[WeeklyPuzzles] dedupe: sloučeno ${dd.removed} fragmentů, hlasů přesunuto ${dd.votesMoved}`);
+    } catch (e) {
+        console.error('[WeeklyPuzzles] dedupe po scanu selhal:', e.message);
     }
 
     scanState.running = false;
@@ -370,6 +411,81 @@ export async function voteCandidate(candidateId, userId, value, source = 'admin'
     const voteCount = agg._count._all || 0;
     await prisma.puzzleCandidate.update({ where: { id: candidateId }, data: { rating, voteCount } });
     return { rating, voteCount, myVote: v };
+}
+
+// Přesune hlasy z fragmentu na ponechaného kandidáta (řeší unikátnost [candidate,user]).
+async function moveVotes(fromId, toId) {
+    let moved = 0;
+    const fragVotes = await prisma.puzzleVote.findMany({ where: { candidateId: fromId } });
+    for (const fv of fragVotes) {
+        if (fv.userId == null) {
+            // anonymní hlas — nehrozí kolize unikátnosti, prostě přesměruj
+            await prisma.puzzleVote.update({ where: { id: fv.id }, data: { candidateId: toId } });
+            moved++;
+            continue;
+        }
+        const existing = await prisma.puzzleVote.findUnique({
+            where: { candidateId_userId: { candidateId: toId, userId: fv.userId } },
+        });
+        if (existing) {
+            // kotva už hlas od tohoto uživatele má → fragmentový zahoď
+            await prisma.puzzleVote.delete({ where: { id: fv.id } });
+        } else {
+            await prisma.puzzleVote.update({ where: { id: fv.id }, data: { candidateId: toId } });
+            moved++;
+        }
+    }
+    return moved;
+}
+
+// ÚKLID ULOŽENÝCH DAT: sloučí rozkouskované kombinace + identické pozice napříč
+// partiemi. Hlasy zachová (přesune na ponechaného kandidáta), fragmenty smaže.
+// Idempotentní — opakované spuštění už nic nenajde. Nepotřebuje Stockfish.
+export async function dedupeStoredCandidates() {
+    const rows = await prisma.puzzleCandidate.findMany({
+        select: { id: true, gameId: true, ply: true, toMove: true, fen: true, solutionLine: true, forcingLen: true, score: true },
+    });
+
+    const pairs = []; // { dropId, keepId }  — pořadí: nejdřív fragmenty v partii, pak shodné FENy
+
+    // 1) per-partii: rozkouskované kombinace
+    const byGame = {};
+    for (const r of rows) (byGame[r.gameId] || (byGame[r.gameId] = [])).push(r);
+    for (const gid of Object.keys(byGame)) {
+        const { dropped } = dedupeFragments(byGame[gid]);
+        for (const d of dropped) pairs.push({ dropId: d.drop.id, keepId: d.anchor.id });
+    }
+
+    // 2) globálně: úplně identické pozice (např. táž partie ve dvou článcích)
+    const droppedSoFar = new Set(pairs.map((p) => p.dropId));
+    const survivors = rows.filter((r) => !droppedSoFar.has(r.id));
+    const byFen = {};
+    for (const r of survivors) (byFen[r.fen] || (byFen[r.fen] = [])).push(r);
+    for (const fen of Object.keys(byFen)) {
+        const grp = byFen[fen].sort((a, b) => (b.score || 0) - (a.score || 0));
+        for (let i = 1; i < grp.length; i++) pairs.push({ dropId: grp[i].id, keepId: grp[0].id });
+    }
+
+    const droppedIds = new Set(pairs.map((p) => p.dropId));
+    const anchors = new Set();
+    let votesMoved = 0;
+    for (const { dropId, keepId } of pairs) {
+        anchors.add(keepId);
+        votesMoved += await moveVotes(dropId, keepId);
+        await prisma.puzzleCandidate.delete({ where: { id: dropId } }); // cascade smaže případné zbylé hlasy
+    }
+    // přepočet agregátů u ponechaných (které samy nebyly smazány)
+    for (const keepId of anchors) {
+        if (droppedIds.has(keepId)) continue;
+        const agg = await prisma.puzzleVote.aggregate({
+            where: { candidateId: keepId }, _sum: { value: true }, _count: { _all: true },
+        });
+        await prisma.puzzleCandidate.update({
+            where: { id: keepId },
+            data: { rating: agg._sum.value || 0, voteCount: agg._count._all || 0 },
+        });
+    }
+    return { removed: pairs.length, anchors: anchors.size, votesMoved };
 }
 
 // Učení: rysy ohodnocených kandidátů (pro analýzu, co odlišuje dobré od špatných)
