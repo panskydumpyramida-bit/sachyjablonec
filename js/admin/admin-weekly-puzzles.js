@@ -126,8 +126,8 @@
                 ${motifsHtml}
                 <div style="font-size:0.85rem;">${verified}${mate}${evalTxt}</div>
                 <div style="font-size:0.8rem;color:#94a3b8;">
-                    Nejlepší tah: <strong style="color:#e2e8f0;">${c.bestSan}</strong> · tah ${c.moveNo}
-                    · ${c.playedBest ? '<span style="color:#22c55e;">✓ zahráno v partii</span>' : 'v partii přehlédnuto'}
+                    Řešení: <strong style="color:#e2e8f0;font-family:monospace;">${c.solutionSan || c.bestSan}</strong>
+                    · ${c.playedBest ? '<span style="color:#22c55e;">✓ zahráno</span>' : 'přehlédnuto'}
                 </div>
                 <div style="font-size:0.78rem;color:#64748b;">
                     Z partie ${c.white} – ${c.black}${c.newsTitle ? ' · článek: ' + c.newsTitle : ''}${dateTxt ? ' · ' + dateTxt : ''}

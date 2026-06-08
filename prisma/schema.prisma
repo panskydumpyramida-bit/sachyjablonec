@@ -196,6 +196,8 @@ model PuzzleCandidate {
   motifs       String?
   forcingLen   Int?      @map("forcing_len")
   cpGap        Int?      @map("cp_gap")
+  solutionLine String?   @map("solution_line")  // celá vynucená varianta (UCI, CSV)
+  solutionSan  String?   @map("solution_san")   // varianta v SAN pro zobrazení
   rating       Int       @default(0)             // agregát hlasů (suma value)
   voteCount    Int       @default(0) @map("vote_count")
   dismissed    Boolean   @default(false)

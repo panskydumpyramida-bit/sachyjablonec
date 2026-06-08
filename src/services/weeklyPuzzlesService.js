@@ -54,6 +54,25 @@ function bestMoveSan(fen, uci) {
     }
 }
 
+function lineSan(fen, uciList) {
+    const c = new Chess(fen);
+    const sans = [];
+    for (const u of uciList) {
+        try { const mv = c.move({ from: u.slice(0, 2), to: u.slice(2, 4), promotion: u.slice(4) || 'q' }); if (!mv) break; sans.push(mv.san); } catch { break; }
+    }
+    return sans;
+}
+function formatSolutionSan(sans, startNo, moverWhite) {
+    const out = [];
+    let no = startNo, white = moverWhite;
+    for (const s of sans) {
+        if (white) out.push(`${no}.${s}`);
+        else { out.push(s); no++; }
+        white = !white;
+    }
+    return out.join(' ');
+}
+
 // Projde jednu partii a najde taktické kombinace (pozice = úlohy).
 async function findTacticsInGame(g) {
     let chess;
@@ -147,6 +166,10 @@ async function findTacticsInGame(g) {
                         const motifBonus = clamp(m.motifs.length * 0.22 + (isSac ? 0.4 : 0) + (mateIn ? 0.3 : 0), 0, 1);
                         const score = Math.round(100 * (0.28 * uniqScore + 0.18 * decScore + 0.26 * motifBonus + 0.18 * surprise + 0.10 * (mateIn ? 1 : 0.6)));
                         const difficulty = (mateIn !== null && mateIn <= 2) ? 'lehká' : ((uniqMargin < 0.6 || isSac) ? 'těžká' : 'střední');
+                        // celá vynucená varianta (řešení) — do konce vynucené sekvence (do klidu/jasna)
+                        const solLen = Math.max(1, 2 * (m.forcingLen || 1) - 1);
+                        const solUci = pvMoves.slice(0, solLen);
+                        const solSan = formatSolutionSan(lineSan(fenBefore, solUci), Math.floor(i / 2) + 1, mover === 'w');
                         found.push({
                             fenBefore,
                             bestMoveLAN: best.firstMove,
@@ -167,6 +190,8 @@ async function findTacticsInGame(g) {
                             motifs: m.motifs,
                             forcingLen: m.forcingLen,
                             cpGap: (best.mate === null && sf.length >= 2 && sf[1].mate === null) ? (best.cp - sf[1].cp) : null,
+                            solutionLine: solUci.join(' '),
+                            solutionSan: solSan,
                         });
                     }
                 }
@@ -228,6 +253,7 @@ async function runScan(rescanAll) {
                     score: t.score, difficulty: t.difficulty,
                     motifs: (t.motifs && t.motifs.length) ? t.motifs.join(',') : null,
                     forcingLen: t.forcingLen ?? null, cpGap: t.cpGap ?? null,
+                    solutionLine: t.solutionLine ?? null, solutionSan: t.solutionSan ?? null,
                 };
                 await prisma.puzzleCandidate.upsert({
                     where: { gameId_ply: { gameId: g.id, ply: t.ply } },
@@ -283,6 +309,8 @@ export async function getStoredCandidates({ limit = 60, userId = null } = {}) {
         motifs: r.motifs ? r.motifs.split(',') : [],
         forcingLen: r.forcingLen,
         cpGap: r.cpGap,
+        solutionSan: r.solutionSan,
+        solutionLine: r.solutionLine,
         rating: r.rating,
         voteCount: r.voteCount,
         myVote: myVotes[r.id] ?? 0,
