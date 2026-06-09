@@ -1433,9 +1433,10 @@ function generateTreePgn(node, ply) {
         // Also check legacy moveNags by FEN
         if (moveNags[mainChild.fen]) text += `${moveNags[mainChild.fen]} `;
 
-        // Comment
-        if (mainChild.comment) text += `{${mainChild.comment}} `;
-        if (moveComments[mainChild.fen]) text += `{${moveComments[mainChild.fen]}} `;
+        // Comment — jen JEDNOU (moveComments má přednost, node.comment fallback);
+        // import komentovaného PGN plní oba zdroje → jinak by se komentář při re-editaci zdvojil
+        const mainComment = moveComments[mainChild.fen] || mainChild.comment;
+        if (mainComment) text += `{${mainComment}} `;
 
         // Render sub-variations
         for (let v = 1; v < currentNode.children.length; v++) {
@@ -1453,8 +1454,8 @@ function generateTreePgn(node, ply) {
 
             if (varNode.nag) text += `${varNode.nag} `;
             if (moveNags[varNode.fen]) text += `${moveNags[varNode.fen]} `;
-            if (varNode.comment) text += `{${varNode.comment}} `;
-            if (moveComments[varNode.fen]) text += `{${moveComments[varNode.fen]}} `;
+            const varComment = moveComments[varNode.fen] || varNode.comment;
+            if (varComment) text += `{${varComment}} `;
 
             // Continue variation
             if (varNode.children.length > 0) {
