@@ -33,56 +33,32 @@ function removeFormatting() {
         return;
     }
 
-    const range = selection.getRangeAt(0);
-
-    // First, find and remove all highlight spans within selection
-    const spansToRemove = [];
-
-    // Get all highlight spans in editor
-    const allSpans = editor.querySelectorAll('.highlight-name, .highlight-score');
-
-    allSpans.forEach(span => {
-        // Check if span is within selection range
-        if (range.intersectsNode(span)) {
-            spansToRemove.push(span);
-        }
-    });
-
-    // Remove all found highlight spans (unwrap them)
-    spansToRemove.forEach(span => {
-        const textContent = span.textContent;
-        const textNode = document.createTextNode(textContent);
-        span.parentNode.replaceChild(textNode, span);
-    });
-
-    // Check for headings
-    const container = range.commonAncestorContainer;
-    let el = container.nodeType === 3 ? container.parentNode : container;
-    let headingEl = null;
-
-    while (el && el !== editor) {
-        if (el.tagName && /^H[1-6]$/.test(el.tagName)) {
-            headingEl = el;
-            break;
-        }
-        el = el.parentNode;
-    }
-
-    if (headingEl) {
-        // Convert heading to paragraph
-        const p = document.createElement('p');
-        p.innerHTML = headingEl.innerHTML;
-        headingEl.parentNode.replaceChild(p, headingEl);
-    }
-
-    // Also apply browser's removeFormat for standard formatting (bold, italic, etc)
+    // 1) removeFormat NEJDŘÍV — dokud výběr žije (DOM zásahy níž by ho zničily a bold/kurzíva by zůstaly)
     document.execCommand('removeFormat', false, null);
+
+    // 2) Nadpisy → odstavec přes formatBlock — funguje i přes výběr více bloků a zachová výběr
+    let liveRange = selection.rangeCount ? selection.getRangeAt(0) : null;
+    const headings = liveRange
+        ? Array.from(editor.querySelectorAll('h1,h2,h3,h4,h5,h6')).filter(h => liveRange.intersectsNode(h))
+        : [];
+    if (headings.length) {
+        document.execCommand('formatBlock', false, 'p');
+        liveRange = selection.rangeCount ? selection.getRangeAt(0) : liveRange;
+    }
+
+    // 3) Highlight spany ve výběru rozbalit (až nakonec — replaceChild výběr zahodí)
+    const spansToRemove = liveRange
+        ? Array.from(editor.querySelectorAll('.highlight-name, .highlight-score')).filter(s => liveRange.intersectsNode(s))
+        : [];
+    spansToRemove.forEach(span => {
+        span.parentNode.replaceChild(document.createTextNode(span.textContent), span);
+    });
 
     editor.focus();
     checkToolbarState();
     updatePreview();
 
-    const count = spansToRemove.length + (headingEl ? 1 : 0);
+    const count = spansToRemove.length + headings.length;
     showToast(`Formátování odstraněno${count > 0 ? ` (${count} prvků)` : ''}`, 'success');
 }
 
@@ -284,7 +260,6 @@ function checkToolbarState() {
     }
 
     // Heading
-    const headingSelect = document.getElementById('headingSelect');
     const blockValue = (document.queryCommandValue('formatBlock') || '').toLowerCase();
     const normalizedBlock = blockValue && blockValue.startsWith('h') ? blockValue : 'p';
 
@@ -294,14 +269,6 @@ function checkToolbarState() {
             btn.classList.toggle('active', normalizedBlock === key.toLowerCase());
         }
     });
-
-    if (headingSelect) {
-        if (blockValue && blockValue.toLowerCase().startsWith('h')) {
-            headingSelect.value = blockValue.toLowerCase();
-        } else {
-            headingSelect.value = 'p';
-        }
-    }
 }
 
 function applyHeading(tag) {
@@ -2362,6 +2329,18 @@ function initAutoSuggest() {
 // Auto-init
 document.addEventListener('DOMContentLoaded', () => {
     setTimeout(initAutoSuggest, 300);
+
+    // Safari/iOS: mousedown na toolbar tlačítku sebere fokus z contenteditable a zruší výběr
+    // → execCommand pak nemá na čem pracovat. Delegovaně pro celý toolbar (undo/redo to měly inline).
+    const tb = document.querySelector('.wysiwyg-toolbar');
+    if (tb) tb.addEventListener('mousedown', (e) => {
+        if (e.target.closest('button')) e.preventDefault();
+    });
+
+    // Scroll-hint „Další nástroje →": schovat po prvním odscrollování sekundárního řádku
+    const hint = document.querySelector('.toolbar-scroll-hint');
+    const row2 = document.querySelector('.toolbar-secondary-row');
+    if (hint && row2) row2.addEventListener('scroll', () => { hint.style.opacity = '0'; }, { once: true });
 });
 
 // ================================
@@ -3645,10 +3624,11 @@ function showColorPicker() {
     const existing = document.getElementById('colorPickerPopup');
     if (existing) { existing.remove(); return; }
 
-    // Save selection before opening picker
+    // Save selection before opening picker — jen pokud je v editoru (jinak by barva šla mimo článek)
     const sel = window.getSelection();
+    const edEl = document.getElementById('articleContent');
     let savedRange = null;
-    if (sel.rangeCount > 0) {
+    if (sel.rangeCount > 0 && edEl && edEl.contains(sel.anchorNode)) {
         savedRange = sel.getRangeAt(0).cloneRange();
     }
 
@@ -3676,12 +3656,12 @@ function showColorPicker() {
         max-width: 200px;
     `;
 
-    // Position near the palette button
+    // Position near the palette button (clamp do viewportu — mobil)
     const btn = document.querySelector('[onclick="showColorPicker()"]');
     if (btn) {
         const rect = btn.getBoundingClientRect();
-        popup.style.top = `${rect.bottom + 8}px`;
-        popup.style.left = `${rect.left}px`;
+        popup.style.top = `${Math.min(rect.bottom + 8, window.innerHeight - 140)}px`;
+        popup.style.left = `${Math.max(8, Math.min(rect.left, window.innerWidth - 210))}px`;
     } else {
         popup.style.top = '200px';
         popup.style.left = '200px';
@@ -3730,7 +3710,21 @@ function showColorPicker() {
             s.removeAllRanges();
             s.addRange(savedRange);
         }
-        document.execCommand('removeFormat', false, null);
+        // Odstranit JEN barvu — removeFormat by smazal i tučné/kurzívu
+        if (savedRange && edEl) {
+            edEl.querySelectorAll('font[color], [style*="color"]').forEach(el => {
+                if (!savedRange.intersectsNode(el)) return;
+                if (el.tagName === 'FONT') {
+                    el.removeAttribute('color');
+                    if (!el.attributes.length) {
+                        while (el.firstChild) el.parentNode.insertBefore(el.firstChild, el);
+                        el.remove();
+                    }
+                } else {
+                    el.style.color = '';
+                }
+            });
+        }
         updatePreview();
         popup.remove();
     };
@@ -3738,16 +3732,25 @@ function showColorPicker() {
 
     document.body.appendChild(popup);
 
-    // Close on click outside
+    // Close on click outside + Escape
     setTimeout(() => {
         const closeHandler = (e) => {
             // klik na tlačítko trefí <i> ikonu uvnitř → e.target!==btn by popup zavřel a hned znovu otevřel
             if (!popup.contains(e.target) && !(btn && btn.contains(e.target))) {
                 popup.remove();
                 document.removeEventListener('mousedown', closeHandler);
+                document.removeEventListener('keydown', escHandler);
+            }
+        };
+        const escHandler = (e) => {
+            if (e.key === 'Escape') {
+                popup.remove();
+                document.removeEventListener('mousedown', closeHandler);
+                document.removeEventListener('keydown', escHandler);
             }
         };
         document.addEventListener('mousedown', closeHandler);
+        document.addEventListener('keydown', escHandler);
     }, 50);
 }
 
@@ -4730,13 +4733,10 @@ function handleAdminShortcuts(e) {
                     insertList('ul');
                     handled = true;
                     break;
-                case '1':
-                    applyHeading('h2');
-                    handled = true;
-                    break;
-                case '2':
-                    applyHeading('h3');
-                    handled = true;
+                default:
+                    // čísla přes e.code — Shift+1 na EN klávesnici dává '!', e.key by zkratku zabil
+                    if (e.code === 'Digit1') { applyHeading('h2'); handled = true; }
+                    else if (e.code === 'Digit2') { applyHeading('h3'); handled = true; }
                     break;
                 case 'e':
                     if (typeof insertIntroBlock === 'function') insertIntroBlock();
