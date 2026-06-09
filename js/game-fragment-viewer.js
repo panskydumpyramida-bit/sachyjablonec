@@ -129,12 +129,12 @@
         
         const renderMoveSpan = (i, moveObj) => {
             const nagHtml = moveObj.nag ? `<span style="color:#60a5fa;font-weight:bold;margin-left:2px;">${moveObj.nag}</span>` : '';
-            return `<span class="frag-move" data-frag-uid="${uid}" data-move-idx="${i}" style="cursor:pointer;padding:1px 2px;border-radius:3px;font-size:0.75rem;transition:background 0.15s;display:inline-block;flex:1;text-align:left;white-space:nowrap;">${moveObj.san}${nagHtml}</span>`;
+            return `<span class="frag-move" data-frag-uid="${uid}" data-move-idx="${i}" style="cursor:pointer;padding:1px 3px;border-radius:3px;font-size:0.75rem;transition:background 0.15s;display:inline-block;white-space:nowrap;">${moveObj.san}${nagHtml}</span>`;
         };
         
         const renderComment = (moveObj) => {
             if (!moveObj || !moveObj.comment) return '';
-            return `<div style="font-size:0.75rem; color:#9ca3af; padding-left:28px; padding-bottom:6px; line-height:1.3; font-style:italic; word-break:break-word;">${escapeHtml(moveObj.comment)}</div>`;
+            return `<div style="font-size:0.75rem; color:#9ca3af; padding-left:12px; padding-bottom:6px; line-height:1.3; font-style:italic; word-break:break-word;">${escapeHtml(moveObj.comment)}</div>`;
         };
         
         // Kompaktní vykreslení podvariant (ztlumené, malé, v závorkách, klikací)
@@ -158,7 +158,7 @@
         const renderVars = (node, moveNum, isWhite) => {
             if (!node || !node.variations || !node.variations.length) return '';
             return node.variations.map(v =>
-                `<div style="font-size:0.68rem;color:#94a3b8;padding-left:28px;padding-bottom:3px;line-height:1.35;word-break:break-word;">( ${renderVarLine(v, moveNum, isWhite)} )</div>`
+                `<div style="font-size:0.68rem;color:#94a3b8;padding-left:12px;padding-bottom:3px;line-height:1.35;word-break:break-word;">( ${renderVarLine(v, moveNum, isWhite)} )</div>`
             ).join('');
         };
 
@@ -169,7 +169,7 @@
         const rowOpen = `<div style="display:flex; gap:0.3rem; margin-bottom:0.1rem; align-items:center;">`;
         const numSpan = (txt) => `<span style="color:var(--text-muted);font-size:0.75rem;width:24px;text-align:right;">${txt}</span>`;
         // Černý půltah na vlastním řádku, zarovnaný vpravo (po komentáři/variantě bílého nebo jako první půltah)
-        const blackOnlyRow = (idx) => rowOpen + numSpan(`${pgnMoveNum}...`) + `<span style="flex:1;"></span>` + renderMoveSpan(idx, moves[idx]) + `</div>`;
+        const blackOnlyRow = (idx) => rowOpen + numSpan(`${pgnMoveNum}...`) + renderMoveSpan(idx, moves[idx]) + `</div>`;
 
         while (mIdx < moves.length) {
             const moveNum = pgnMoveNum;
