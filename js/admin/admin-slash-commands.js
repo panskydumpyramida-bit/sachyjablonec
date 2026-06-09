@@ -505,6 +505,11 @@ function insertResultTemplate() {
     if (selection.rangeCount) {
         const range = selection.getRangeAt(0);
         range.insertNode(template);
+        // kurzor ZA vložený blok, ať další blok/text jde za něj (ne před něj)
+        range.setStartAfter(template);
+        range.collapse(true);
+        selection.removeAllRanges();
+        selection.addRange(range);
     }
 
     editor.focus();
@@ -1052,9 +1057,18 @@ function showResultsTableModal() {
         const wrapper = document.createElement('div');
         wrapper.innerHTML = htmlToInsert + '<p><br></p>';
         const fragment = document.createDocumentFragment();
-        while (wrapper.firstChild) fragment.appendChild(wrapper.firstChild);
+        let lastNode = null;
+        while (wrapper.firstChild) { lastNode = wrapper.firstChild; fragment.appendChild(wrapper.firstChild); }
         range.deleteContents();
         range.insertNode(fragment);
+        // kurzor ZA vloženou tabulku (do koncového odstavce) — další blok jde za ni
+        if (lastNode) {
+            const r = document.createRange();
+            r.setStartAfter(lastNode);
+            r.collapse(true);
+            selection.removeAllRanges();
+            selection.addRange(r);
+        }
 
         modal.remove();
         if (typeof updatePreview === 'function') updatePreview();

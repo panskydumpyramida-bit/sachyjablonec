@@ -659,6 +659,16 @@ async function insertFragment() {
                         <div style="flex:1;padding:0.5rem;display:flex;align-items:center;justify-content:center;color:#60a5fa;font-size:0.8rem;opacity:0.7;"><i class="fa-solid fa-list" style="margin-right:6px;"></i> Tahy se zobrazí na webu</div>
                     </div>
                 </div>`;
+                // Obnov kurzor v editoru (modal mohl sebrat fokus) → fragment se vloží KAM byl kurzor
+                const fragEditorIns = document.getElementById('articleContent');
+                if (fragEditorIns) {
+                    fragEditorIns.focus();
+                    if (savedRange) {
+                        const selIns = window.getSelection();
+                        selIns.removeAllRanges();
+                        selIns.addRange(savedRange);
+                    }
+                }
                 document.execCommand('insertHTML', false, fragmentHtml);
 
                 const fragEditor = document.getElementById('articleContent') || document.querySelector('[contenteditable]');
