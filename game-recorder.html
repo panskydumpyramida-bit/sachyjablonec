@@ -1942,6 +1942,32 @@
          * @param {number} toMove - Ending move number (1-based, full moves)
          * @returns {{ pgn: string, startFen: string, moves: string[], totalMoves: number }}
          */
+        function sliceFragmentPgn(fullPgn, fromMv, toMv) {
+            const body = fullPgn
+                .replace(/\[[^\]]*\]\s*/g, '')
+                .replace(/\s*(1-0|0-1|1\/2-1\/2|\*)\s*$/, '')
+                .trim();
+            const tokens = body.match(/\{[^}]*\}|\(|\)|\$\d+|\d+\.(?:\.\.)?|O-O-O|O-O|[KQRBNa-h][a-h0-8xX=+#KQRBN-]*|[!?]+/g) || [];
+            let depth = 0, ply = 0, started = false;
+            const out = [];
+            for (const tk of tokens) {
+                if (tk === '(') { if (started) out.push('('); depth++; continue; }
+                if (tk === ')') { depth--; if (started) out.push(')'); continue; }
+                if (depth > 0) { if (started) out.push(tk); continue; }
+                if (/^\d+\.(?:\.\.)?$/.test(tk)) continue;
+                if (/^\$\d+$/.test(tk) || /^[!?]+$/.test(tk) || tk[0] === '{') { if (started) out.push(tk); continue; }
+                const moveNo = Math.floor(ply / 2) + 1;
+                const isWhite = ply % 2 === 0;
+                if (moveNo >= fromMv && moveNo <= toMv) {
+                    if (!started) { started = true; out.push(isWhite ? `${moveNo}.` : `${moveNo}...`); }
+                    else if (isWhite) out.push(`${moveNo}.`);
+                    out.push(tk);
+                } else if (started && moveNo > toMv) break;
+                ply++;
+            }
+            return out.join(' ').replace(/\(\s+/g, '(').replace(/\s+\)/g, ')').trim();
+        }
+
         function extractFragment(fromMove, toMove) {
             const mainLine = getMainLine();
             const totalMoves = Math.ceil(mainLine.length / 2);
@@ -1970,34 +1996,8 @@
             // Extract the moves in range
             const selectedNodes = mainLine.slice(fromPly, Math.min(toPly, mainLine.length));
 
-            // Build PGN text with move numbers
-            let pgn = '';
-            let pgnLines = [];
-            for (let i = 0; i < selectedNodes.length; i++) {
-                const node = selectedNodes[i];
-                const globalPly = fromPly + i + 1; // 1-based ply
-                const moveNum = Math.ceil(globalPly / 2);
-                const isWhite = (globalPly % 2 === 1);
-
-                if (isWhite) {
-                    pgnLines.push(`${moveNum}. ${node.san}`);
-                } else {
-                    if (i === 0) {
-                        // First move is black → show dots
-                        pgnLines.push(`${moveNum}... ${node.san}`);
-                    } else {
-                        pgnLines.push(node.san);
-                    }
-                }
-
-                // Add NAG/comment
-                if (node.nag) pgnLines.push(node.nag);
-                if (moveNags[node.fen]) pgnLines.push(moveNags[node.fen]);
-                if (node.comment) pgnLines.push(`{${node.comment}}`);
-                if (moveComments[node.fen]) pgnLines.push(`{${moveComments[node.fen]}}`);
-            }
-
-            pgn = pgnLines.join(' ');
+            // PGN rozsahu z CELÉ partie s variantami (token-slice) → varianty (...) i komentáře zůstanou
+            const pgn = sliceFragmentPgn(generateAnnotatedPgn(), fromMove, toMove);
 
             return {
                 pgn,
