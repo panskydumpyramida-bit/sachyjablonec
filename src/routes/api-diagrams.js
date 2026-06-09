@@ -167,6 +167,28 @@ router.post('/fragments', authMiddleware, async (req, res) => {
     }
 });
 
+router.put('/fragments/:id', authMiddleware, async (req, res) => {
+    try {
+        const { title, pgn, startFen, fromMove, toMove, white, black } = req.body;
+        const data = {};
+        if (title !== undefined) data.title = title;
+        if (pgn !== undefined) data.pgn = pgn;
+        if (startFen !== undefined) data.startFen = startFen;
+        if (fromMove !== undefined) data.fromMove = fromMove;
+        if (toMove !== undefined) data.toMove = toMove;
+        if (white !== undefined) data.white = white;
+        if (black !== undefined) data.black = black;
+        const fragment = await prisma.fragment.update({
+            where: { id: parseInt(req.params.id) },
+            data
+        });
+        res.json(fragment);
+    } catch (error) {
+        console.error('Error updating fragment:', error);
+        res.status(500).json({ error: 'Failed to update fragment' });
+    }
+});
+
 router.delete('/fragments/:id', authMiddleware, async (req, res) => {
     try {
         await prisma.fragment.delete({
