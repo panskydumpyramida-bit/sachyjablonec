@@ -573,6 +573,34 @@ body.editor-focus-mode .editor-layout {
     border-left: 4px solid var(--primary-color);
 }
 
+/* Vložené šachové výstřižky / partie — editor je nerenderuje (jsou prázdné a neviditelné).
+   Ukážeme je jen V EDITORU jako viditelnou kartu s id, ať s nimi jde pracovat
+   (kliknout = vybrat, Delete = smazat, táhnout = přesunout). Veřejná stránka
+   (.article-content) ani uložené HTML se nemění — je to čistě CSS přes ::before. */
+.wysiwyg-content .game-fragment,
+.wysiwyg-content .inline-game-viewer {
+    display: block;
+    min-height: 38px;
+    margin: 10px 0;
+    padding: 9px 13px;
+    border: 1px dashed #60a5fa;
+    border-radius: 8px;
+    background: rgba(96, 165, 250, 0.08);
+    color: #93c5fd;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: grab;
+    user-select: none;
+}
+
+.wysiwyg-content .game-fragment::before {
+    content: "📋 Šachový výstřižek (fragment #" attr(data-fragment-id) ") — klikni a Delete = smazat · táhni = přesunout";
+}
+
+.wysiwyg-content .inline-game-viewer::before {
+    content: "♟ Vložená partie — klikni a Delete = smazat · táhni = přesunout";
+}
+
 .wysiwyg-content .puzzle-section img {
     max-width: 320px;
     margin: 1rem auto;
