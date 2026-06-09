@@ -221,7 +221,7 @@
 
         container.removeAttribute('style');
         container.innerHTML = `
-            <div style="background:var(--surface-color, #1e1e1e);border:1px solid rgba(96,165,250,0.2);border-radius:10px;overflow:hidden;margin:0.5rem 0;width:100%;max-width:400px;">
+            <div style="background:var(--surface-color, #1e1e1e);border:1px solid rgba(96,165,250,0.2);border-radius:10px;overflow:hidden;margin:0.5rem 0;width:100%;max-width:450px;">
                 <div style="display:flex;align-items:center;gap:0.5rem;padding:0.5rem 0.75rem;background:rgba(96,165,250,0.06);border-bottom:1px solid rgba(96,165,250,0.1);">
                     <i class="fa-solid fa-chess" style="color:#60a5fa;font-size:0.8rem;"></i>
                     <span style="font-size:0.85rem;font-weight:600;color:#e0e0e0;flex:1;">${escapeHtml(titleStr)}</span>
@@ -229,14 +229,14 @@
                 </div>
                 <div style="display:flex;gap:0;">
                     <!-- Mini Board Column -->
-                    <div id="${uid}-left-panel" style="flex:0 0 70%; max-width:290px; transition:flex 0.2s; padding:0.4rem; border-right:1px solid rgba(255,255,255,0.05); display:flex; flex-direction:column;">
+                    <div id="${uid}-left-panel" style="flex:0 0 auto; transition:flex 0.2s; padding:0.4rem; border-right:1px solid rgba(255,255,255,0.05); display:flex; flex-direction:column;">
                         <div style="display:flex; align-items:stretch;">
                             <div id="${uid}-eval-bar" class="frag-eval-bar">
                                 <div id="${uid}-eval-fill" class="frag-eval-fill" style="height: 50%;"></div>
                                 <span id="${uid}-eval-text-top" class="frag-eval-text top"></span>
                                 <span id="${uid}-eval-text-bottom" class="frag-eval-text bottom">—</span>
                             </div>
-                            <div id="${uid}-board" style="flex:1; box-shadow:0 4px 10px rgba(0,0,0,0.2);border-radius:2px;overflow:hidden;"></div>
+                            <div id="${uid}-board" style="width:min(248px,60vw);height:min(248px,60vw);flex:0 0 auto; box-shadow:0 4px 10px rgba(0,0,0,0.2);border-radius:2px;overflow:hidden;"></div>
                         </div>
                         
                         <!-- Nav Controls Bottom (Icons Only) -->
@@ -279,7 +279,11 @@
                 board.resize();
                 const lp = document.getElementById(`${uid}-left-panel`);
                 const mv = document.getElementById(`${uid}-moves`);
-                if (lp && mv) mv.style.maxHeight = lp.offsetHeight + 'px';
+                if (lp && mv) {
+                    mv.style.maxHeight = '0px';           // sbal zápis → změř přirozenou výšku sloupce se šachovnicí
+                    const colH = lp.offsetHeight;
+                    mv.style.maxHeight = colH + 'px';     // zápis = výška šachovnice+ovládání; delší partie scroll (žádné volno)
+                }
             }, 120);
             updatePositionDisplay(uid);
         });
