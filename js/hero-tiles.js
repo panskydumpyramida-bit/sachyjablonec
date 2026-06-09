@@ -72,7 +72,12 @@
           <div style="width:min(420px,100%); background:#0f1722; border:1px solid rgba(212,175,55,0.25); border-radius:14px; overflow:hidden; box-shadow:0 20px 60px rgba(0,0,0,0.6);">
             <div style="display:flex; align-items:center; gap:0.5rem; padding:0.85rem 1rem; background:rgba(212,175,55,0.08); border-bottom:1px solid rgba(212,175,55,0.15);">
               <i class="fa-solid fa-puzzle-piece" style="color:var(--primary-color,#d4af37);"></i>
-              <strong style="color:#f1f5f9; flex:1;">Hádanka dne</strong>
+              <strong style="color:#f1f5f9;">Hádanka dne</strong>
+              <span style="flex:1; display:inline-flex; align-items:center; justify-content:flex-end; gap:0.25rem;">
+                <button id="dpPrev" title="Předchozí den" style="background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.12); color:#cbd5e1; border-radius:6px; min-width:30px; min-height:30px; cursor:pointer; touch-action:manipulation;">&lsaquo;</button>
+                <span id="dpDate" style="color:#94a3b8; font-size:0.8rem; min-width:64px; text-align:center;"></span>
+                <button id="dpNext" title="Další den" style="background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.12); color:#cbd5e1; border-radius:6px; min-width:30px; min-height:30px; cursor:pointer; touch-action:manipulation;">&rsaquo;</button>
+              </span>
               <button id="dpClose" aria-label="Zavřít" style="background:none;border:none;color:#94a3b8;font-size:1.2rem;cursor:pointer;line-height:1;">&times;</button>
             </div>
             <div style="padding:0.9rem 1rem;">
@@ -89,8 +94,12 @@
         document.body.appendChild(modalEl);
         modalEl.querySelector('#dpClose').addEventListener('click', closeModal);
         modalEl.addEventListener('click', (e) => { if (e.target === modalEl) closeModal(); });
+        modalEl.querySelector('#dpPrev').addEventListener('click', () => openDailyPuzzle(currentOffset + 1));
+        modalEl.querySelector('#dpNext').addEventListener('click', () => openDailyPuzzle(currentOffset - 1));
         return modalEl;
     }
+
+    let currentOffset = 0; // 0 = dnes, kladné = dny zpět
 
     function closeModal() {
         if (modalEl) modalEl.style.display = 'none';
@@ -98,7 +107,7 @@
         if (boardObj && boardObj.destroy) { try { boardObj.destroy(); } catch (e) {} boardObj = null; }
     }
 
-    async function openDailyPuzzle() {
+    async function openDailyPuzzle(offset = 0) {
         ensureModal();
         modalEl.style.display = 'flex';
         document.body.style.overflow = 'hidden'; // mobil: zamkni scroll pozadí, ať tah/tap ovládá figurky
@@ -112,13 +121,26 @@
 
         let puzzle;
         try {
-            const res = await fetch(`${API}/weekly-puzzles/daily`);
+            const res = await fetch(`${API}/weekly-puzzles/daily?offset=${Math.max(0, offset)}`);
             if (!res.ok) throw new Error('no puzzle');
             puzzle = await res.json();
         } catch (e) {
             promptEl.textContent = 'Hádanka dne zatím není k dispozici.';
             return;
         }
+
+        // datum + listování po dnech
+        currentOffset = puzzle.offset || 0;
+        const dateEl = modalEl.querySelector('#dpDate');
+        const prevBtn = modalEl.querySelector('#dpPrev');
+        const nextBtn = modalEl.querySelector('#dpNext');
+        if (dateEl && puzzle.date) {
+            dateEl.textContent = currentOffset === 0
+                ? 'Dnes'
+                : new Date(puzzle.date).toLocaleDateString('cs-CZ', { day: 'numeric', month: 'numeric' });
+        }
+        if (prevBtn) { const can = currentOffset < (puzzle.maxOffset || 0); prevBtn.disabled = !can; prevBtn.style.opacity = can ? '1' : '0.3'; }
+        if (nextBtn) { const can = currentOffset > 0; nextBtn.disabled = !can; nextBtn.style.opacity = can ? '1' : '0.3'; }
 
         const turn = puzzle.toMove === 'b' ? 'Černý' : 'Bílý';
         promptEl.innerHTML = `<strong>${turn} na tahu</strong> — táhni nebo klikni figurku na cílové pole.`;

@@ -13,7 +13,7 @@ const router = express.Router();
 // VEŘEJNÉ — Hádanka dne pro homepage modal (bez přihlášení)
 router.get('/daily', async (req, res) => {
     try {
-        const puzzle = await getDailyPuzzle();
+        const puzzle = await getDailyPuzzle(req.query.offset);
         if (!puzzle) return res.status(404).json({ error: 'Zatím žádná hádanka' });
         res.json(puzzle);
     } catch (error) {

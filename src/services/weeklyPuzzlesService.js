@@ -505,28 +505,38 @@ export async function getRatingInsights() {
 // HÁDANKA DNE (veřejná, pro homepage modal).
 // Mix: pokud admin připnul konkrétní (setting daily_puzzle_pinned), vrátí ji;
 // jinak auto = z nejlépe hodnocených rotace podle dne.
-export async function getDailyPuzzle() {
-    let cand = null;
-    try {
-        const s = await prisma.systemSetting.findUnique({ where: { key: 'daily_puzzle_pinned' } });
-        const pinnedId = s && s.value ? parseInt(s.value) : null;
-        if (pinnedId) cand = await prisma.puzzleCandidate.findFirst({ where: { id: pinnedId, dismissed: false } });
-    } catch { /* setting nemusí existovat */ }
+export async function getDailyPuzzle(offset = 0) {
+    offset = Math.max(0, Math.min(13, parseInt(offset, 10) || 0)); // 0 = dnes, max 13 dní zpět
 
-    if (!cand) {
-        const pool = await prisma.puzzleCandidate.findMany({
-            where: { dismissed: false },
-            orderBy: [{ rating: 'desc' }, { score: 'desc' }],
-            take: 14,
-        });
-        if (pool.length) {
-            const dayIdx = Math.floor(Date.now() / 86400000); // pořadové číslo dne → rotace
-            cand = pool[dayIdx % pool.length];
-        }
+    const pool = await prisma.puzzleCandidate.findMany({
+        where: { dismissed: false },
+        orderBy: [{ rating: 'desc' }, { score: 'desc' }],
+        take: 14,
+    });
+    const maxOffset = Math.max(0, Math.min(13, pool.length - 1));
+
+    let cand = null;
+    if (offset === 0) {
+        // připnutá hádanka platí jen pro dnešek
+        try {
+            const s = await prisma.systemSetting.findUnique({ where: { key: 'daily_puzzle_pinned' } });
+            const pinnedId = s && s.value ? parseInt(s.value) : null;
+            if (pinnedId) cand = await prisma.puzzleCandidate.findFirst({ where: { id: pinnedId, dismissed: false } });
+        } catch { /* setting nemusí existovat */ }
+    }
+
+    if (!cand && pool.length) {
+        const dayIdx = Math.floor(Date.now() / 86400000) - offset; // pořadové číslo dne → rotace
+        cand = pool[((dayIdx % pool.length) + pool.length) % pool.length];
     }
     if (!cand) return null;
 
+    const date = new Date(Date.now() - offset * 86400000);
+
     return {
+        date: date.toISOString().slice(0, 10),
+        offset,
+        maxOffset,
         id: cand.id,
         fen: cand.fen,
         toMove: cand.toMove,

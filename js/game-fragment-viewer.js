@@ -145,7 +145,7 @@
         
         const renderComment = (moveObj) => {
             if (!moveObj || !moveObj.comment) return '';
-            return `<div style="font-size:0.75rem; color:#9ca3af; padding-left:12px; padding-bottom:6px; line-height:1.3; font-style:italic; word-break:break-word;">${escapeHtml(moveObj.comment)}</div>`;
+            return `<div style="font-size:0.75rem; color:#9ca3af; padding-left:35px; padding-bottom:6px; line-height:1.3; font-style:italic; word-break:break-word;">${escapeHtml(moveObj.comment)}</div>`;
         };
         
         // Kompaktní vykreslení podvariant (ztlumené, malé, v závorkách, klikací)
@@ -169,7 +169,7 @@
         const renderVars = (node, moveNum, isWhite) => {
             if (!node || !node.variations || !node.variations.length) return '';
             return node.variations.map(v =>
-                `<div style="font-size:0.68rem;color:#94a3b8;padding-left:12px;padding-bottom:3px;line-height:1.35;word-break:break-word;">( ${renderVarLine(v, moveNum, isWhite)} )</div>`
+                `<div style="font-size:0.68rem;color:#94a3b8;padding-left:35px;padding-bottom:3px;line-height:1.35;word-break:break-word;">( ${renderVarLine(v, moveNum, isWhite)} )</div>`
             ).join('');
         };
 
@@ -178,7 +178,7 @@
         let pgnMoveNum = fragment.fromMove;
 
         const rowOpen = `<div style="display:flex; gap:0.3rem; margin-bottom:0.1rem; align-items:center;">`;
-        const numSpan = (txt) => `<span style="color:var(--text-muted);font-size:0.75rem;width:24px;text-align:right;">${txt}</span>`;
+        const numSpan = (txt) => `<span style="color:var(--text-muted);font-size:0.75rem;width:30px;flex-shrink:0;text-align:right;">${txt}</span>`;
         // Černý půltah na vlastním řádku, zarovnaný vpravo (po komentáři/variantě bílého nebo jako první půltah)
         const blackOnlyRow = (idx) => rowOpen + numSpan(`${pgnMoveNum}...`) + renderMoveSpan(idx, moves[idx]) + `</div>`;
 
@@ -232,7 +232,7 @@
 
         container.removeAttribute('style');
         container.innerHTML = `
-            <div style="background:var(--surface-color, #1e1e1e);border:1px solid rgba(96,165,250,0.2);border-radius:10px;overflow:hidden;margin:0.5rem 0;width:100%;max-width:450px;">
+            <div style="background:var(--surface-color, #1e1e1e);border:1px solid rgba(96,165,250,0.2);border-radius:10px;overflow:hidden;margin:0.5rem 0;width:100%;max-width:560px;">
                 <div style="display:flex;align-items:center;gap:0.5rem;padding:0.5rem 0.75rem;background:rgba(96,165,250,0.06);border-bottom:1px solid rgba(96,165,250,0.1);">
                     <i class="fa-solid fa-chess" style="color:#60a5fa;font-size:0.8rem;"></i>
                     <span style="font-size:0.85rem;font-weight:600;color:#e0e0e0;flex:1;">${escapeHtml(titleStr)}</span>
@@ -240,14 +240,14 @@
                 </div>
                 <div class="frag-cols" style="display:flex;gap:0;">
                     <!-- Mini Board Column -->
-                    <div id="${uid}-left-panel" style="flex:0 0 auto; transition:flex 0.2s; padding:0.4rem; border-right:1px solid rgba(255,255,255,0.05); display:flex; flex-direction:column;">
+                    <div id="${uid}-left-panel" style="flex:1 1 248px; max-width:280px; min-width:170px; transition:flex 0.2s; padding:0.4rem; border-right:1px solid rgba(255,255,255,0.05); display:flex; flex-direction:column;">
                         <div style="display:flex; align-items:stretch;">
                             <div id="${uid}-eval-bar" class="frag-eval-bar">
                                 <div id="${uid}-eval-fill" class="frag-eval-fill" style="height: 50%;"></div>
                                 <span id="${uid}-eval-text-top" class="frag-eval-text top"></span>
                                 <span id="${uid}-eval-text-bottom" class="frag-eval-text bottom">—</span>
                             </div>
-                            <div id="${uid}-board" style="width:min(248px,60vw);height:min(248px,60vw);flex:0 0 auto; box-shadow:0 4px 10px rgba(0,0,0,0.2);border-radius:2px;overflow:hidden;"></div>
+                            <div id="${uid}-board" style="flex:1; aspect-ratio:1/1; height:auto; min-width:0; box-shadow:0 4px 10px rgba(0,0,0,0.2);border-radius:2px;overflow:hidden;"></div>
                         </div>
                         
                         <!-- Nav Controls Bottom (Icons Only) -->
@@ -263,7 +263,7 @@
                         </div>
                     </div>
                     <!-- Moves Panel -->
-                    <div id="${uid}-right-panel" style="flex:1 1 35%; transition:flex 0.2s; display:flex;flex-direction:column;justify-content:space-between; overflow:hidden;">
+                    <div id="${uid}-right-panel" style="flex:1.1 1 45%; min-width:150px; transition:flex 0.2s; display:flex;flex-direction:column;justify-content:space-between; overflow:hidden;">
                         <div id="${uid}-moves" style="padding:0.2rem;line-height:1.7;flex:1;min-height:0;max-height:340px;overflow-y:auto;overflow-x:hidden;">
                             ${moveListHtml || '<span style="color:var(--text-muted);font-size:0.8rem;">Žádné tahy</span>'}
                         </div>
