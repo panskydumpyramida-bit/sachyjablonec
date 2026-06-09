@@ -119,7 +119,7 @@
         }
 
         const turn = puzzle.toMove === 'b' ? 'Černý' : 'Bílý';
-        promptEl.innerHTML = `<strong>${turn} na tahu</strong> — klikni figurku a pak cílové pole.`;
+        promptEl.innerHTML = `<strong>${turn} na tahu</strong> — táhni nebo klikni figurku na cílové pole.`;
         const players = (puzzle.white && puzzle.black) ? `${escapeHtml(puzzle.white)} – ${escapeHtml(puzzle.black)}` : '';
         const src = puzzle.source
             ? (puzzle.newsId
@@ -134,6 +134,29 @@
         const clearSel = () => { document.querySelectorAll('#dpBoard [data-square]').forEach(s => { s.style.boxShadow = ''; }); selectedSq = null; };
         const highlight = (sq) => { const el = sqEl(sq); if (el) el.style.boxShadow = 'inset 0 0 0 3px rgba(96,165,250,0.9)'; };
 
+        // chessboard.js připne taženou figurku na <body> bez z-indexu → byla ZA modalem (z-index 13000) = neviditelná
+        if (!document.getElementById('dp-drag-zfix')) {
+            const zf = document.createElement('style');
+            zf.id = 'dp-drag-zfix';
+            zf.textContent = 'body > .piece-417db { z-index: 14000 !important; }';
+            document.head.appendChild(zf);
+        }
+
+        // Sdílené vyhodnocení tahu (klik i drag)
+        const applyVerdict = (userUci, mv, game) => {
+            clearSel();
+            if (userUci === (puzzle.solutionUci || '').slice(0, 4)) {
+                solved = true;
+                statusEl.innerHTML = '<span style="color:#34d399;"><i class="fa-solid fa-circle-check"></i> Správně! ' + escapeHtml(puzzle.solutionSan || mv.san) + '</span>';
+                if (puzzle.solutionLine) { solBtn.style.display = 'inline-block'; solBtn.textContent = 'Ukázat celou variantu'; }
+                boardObj.position(game.fen());
+                return true;
+            }
+            statusEl.innerHTML = '<span style="color:#f87171;"><i class="fa-solid fa-circle-xmark"></i> Tohle ne. Zkus jiný tah.</span>';
+            retryBtn.style.display = 'inline-block';
+            return false;
+        };
+
         const renderBoard = () => {
             if (typeof Chessboard === 'undefined' || typeof Chess === 'undefined') {
                 promptEl.textContent = 'Šachovnici se nepodařilo načíst.';
@@ -141,12 +164,24 @@
             }
             if (boardObj && boardObj.destroy) { try { boardObj.destroy(); } catch (e) {} }
             selectedSq = null;
-            // KLIKÁNÍ místo drag (drag v modalu byl nespolehlivý — figurka mizela)
+            // Drag I klikání: táhni figurku, NEBO klikni figurku → cílové pole
             boardObj = Chessboard('dpBoard', {
                 position: puzzle.fen.split(' ')[0],
                 orientation: puzzle.toMove === 'b' ? 'black' : 'white',
-                draggable: false,
+                draggable: true,
                 pieceTheme: PIECE_THEME,
+                onDragStart: (src, piece) => {
+                    if (solved) return false;
+                    return (piece[0] === 'w') === (puzzle.toMove === 'w'); // jen strana na tahu
+                },
+                onDrop: (src, tgt) => {
+                    if (solved || src === tgt) return 'snapback'; // klik beze změny pole řeší click handler
+                    const game = new Chess(puzzle.fen);
+                    let mv;
+                    try { mv = game.move({ from: src, to: tgt, promotion: 'q' }); } catch (e) { mv = null; }
+                    if (!mv) return 'snapback';
+                    return applyVerdict(src + tgt, mv, game) ? undefined : 'snapback';
+                },
             });
             setTimeout(() => { if (boardObj && boardObj.resize) boardObj.resize(); }, 80);
         };
@@ -175,17 +210,7 @@
                 if (pc && pc.color === puzzle.toMove) { selectedSq = square; highlight(square); }
                 return;
             }
-            const userUci = selectedSq + square;
-            clearSel();
-            if (userUci === (puzzle.solutionUci || '').slice(0, 4)) {
-                solved = true;
-                statusEl.innerHTML = '<span style="color:#34d399;"><i class="fa-solid fa-circle-check"></i> Správně! ' + escapeHtml(puzzle.solutionSan || mv.san) + '</span>';
-                if (puzzle.solutionLine) { solBtn.style.display = 'inline-block'; solBtn.textContent = 'Ukázat celou variantu'; }
-                boardObj.position(game.fen());
-            } else {
-                statusEl.innerHTML = '<span style="color:#f87171;"><i class="fa-solid fa-circle-xmark"></i> Tohle ne. Zkus jiný tah.</span>';
-                retryBtn.style.display = 'inline-block';
-            }
+            applyVerdict(selectedSq + square, mv, game);
         };
         boardContainer.__dpHandler = handler;
         boardContainer.addEventListener('click', handler);
