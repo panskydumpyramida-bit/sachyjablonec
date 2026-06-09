@@ -235,19 +235,24 @@
                 margin: 0 !important;
             }
             .book-dot {
-                width: 6px;
-                height: 6px;
+                /* vizuálně malá tečka, hit area ~20px (padding + content-box) — 6px nešlo na dotyk trefit */
+                width: 8px;
+                height: 8px;
+                padding: 6px;
+                box-sizing: content-box;
+                background-clip: content-box;
                 border-radius: 50%;
-                background: rgba(255,255,255,0.2);
+                background-color: rgba(255,255,255,0.2);
                 cursor: pointer;
                 transition: all 0.2s;
+                touch-action: manipulation;
             }
             .book-dot.active {
-                background: #60a5fa;
+                background-color: #60a5fa;
                 transform: scale(1.3);
             }
             .book-dot:hover {
-                background: rgba(96, 165, 250, 0.5);
+                background-color: rgba(96, 165, 250, 0.5);
             }
             .book-nav-row {
                 display: flex;
@@ -442,10 +447,18 @@
                     font-size: 0.7rem !important;
                 }
                 .book-reset-btn {
-                    width: 22px !important;
-                    height: 22px !important;
-                    font-size: 0.6rem !important;
+                    width: 32px !important;
+                    height: 32px !important;
+                    font-size: 0.7rem !important;
                 }
+                .book-prev, .book-next {
+                    width: 40px !important;
+                    height: 40px !important;
+                    font-size: 0.9rem !important;
+                }
+            }
+            .book-prev, .book-next, .book-reset-btn {
+                touch-action: manipulation;
             }
         `;
         document.head.appendChild(style);

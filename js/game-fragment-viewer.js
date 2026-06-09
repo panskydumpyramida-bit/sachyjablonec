@@ -44,6 +44,17 @@
         }
         .frag-eval-text.top { top: 2px; color: #fff;}
         .frag-eval-text.bottom { bottom: 2px; color: #000; }
+        /* Mobil: pořádné tap targety + žádný iOS double-tap zoom při krokování tahů */
+        .game-fragment button { min-width: 40px; min-height: 40px; touch-action: manipulation; }
+        /* Telefon: board nad zápisem (vedle sebe se zápis vešel do ~80px a ořezával tahy) */
+        @media (max-width: 480px) {
+            .game-fragment .frag-cols { flex-direction: column !important; }
+            .game-fragment .frag-cols > div:first-child {
+                border-right: none !important;
+                border-bottom: 1px solid rgba(255,255,255,0.05);
+            }
+            .game-fragment [id$="-moves"] { max-height: 220px !important; }
+        }
     `;
     document.head.appendChild(style);
 
@@ -227,7 +238,7 @@
                     <span style="font-size:0.85rem;font-weight:600;color:#e0e0e0;flex:1;">${escapeHtml(titleStr)}</span>
                     <span style="font-size:0.7rem;color:var(--text-muted,#a0a0a0);">${rangeStr}</span>
                 </div>
-                <div style="display:flex;gap:0;">
+                <div class="frag-cols" style="display:flex;gap:0;">
                     <!-- Mini Board Column -->
                     <div id="${uid}-left-panel" style="flex:0 0 auto; transition:flex 0.2s; padding:0.4rem; border-right:1px solid rgba(255,255,255,0.05); display:flex; flex-direction:column;">
                         <div style="display:flex; align-items:stretch;">
