@@ -120,7 +120,13 @@
 
         const turn = puzzle.toMove === 'b' ? 'Černý' : 'Bílý';
         promptEl.innerHTML = `<strong>${turn} na tahu</strong> — najdi nejlepší tah.`;
-        metaEl.textContent = [puzzle.white && puzzle.black ? `${puzzle.white} – ${puzzle.black}` : '', puzzle.source].filter(Boolean).join(' · ');
+        const players = (puzzle.white && puzzle.black) ? `${escapeHtml(puzzle.white)} – ${escapeHtml(puzzle.black)}` : '';
+        const src = puzzle.source
+            ? (puzzle.newsId
+                ? `<a href="/article.html?id=${encodeURIComponent(puzzle.newsId)}" style="color:#93c5fd; text-decoration:none;"><i class="fa-regular fa-newspaper"></i> ${escapeHtml(puzzle.source)}</a>`
+                : escapeHtml(puzzle.source))
+            : '';
+        metaEl.innerHTML = [players, src].filter(Boolean).join(' · ');
 
         let solved = false;
         const renderBoard = (fen) => {

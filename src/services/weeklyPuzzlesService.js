@@ -539,5 +539,6 @@ export async function getDailyPuzzle() {
         moveNo: cand.moveNo,
         difficulty: cand.difficulty,
         source: cand.newsTitle || null,
+        newsId: cand.newsId || null,
     };
 }
