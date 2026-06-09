@@ -284,7 +284,21 @@
 
     // Load settings from server
     const settings = await fetchSettings();
-    const BOARD_SEQ = pgnToBoardSeq(settings.pgn);
+    const FULL_SEQ = pgnToBoardSeq(settings.pgn);
+    // Zkrácená hero animace: zahraj jen pár prvních tahů a rovnou otoč na 4 dlaždice
+    // (dřív se čekalo na mat = celá partie ~30 s, než vyskočila tlačítka).
+    const MAX_HERO_MOVES = 5;
+    const BOARD_SEQ = [];
+    let _mv = 0;
+    for (const a of FULL_SEQ) {
+      if (a.type === 'reset') break;            // bez smyčky celé partie
+      BOARD_SEQ.push(a);
+      if (a.type === 'move' && ++_mv >= MAX_HERO_MOVES) break;
+    }
+    // poslední tah dostane příznak flipAfter → otočí kartu i bez matu
+    for (let i = BOARD_SEQ.length - 1; i >= 0; i--) {
+      if (BOARD_SEQ[i].type === 'move') { BOARD_SEQ[i].flipAfter = true; break; }
+    }
     renderHeader(scene, settings.header);
 
     const squares = buildBoard(board);
@@ -378,21 +392,21 @@
           moving.sq = action.to;
         }
 
-        if (action.mate) {
+        if (action.mate && action.mateSquare) {
           addTimer(() => {
             if (!alive) return;
-            if (action.mateSquare && squares[action.mateSquare]) {
-              squares[action.mateSquare].classList.add('mate');
-            }
+            if (squares[action.mateSquare]) squares[action.mateSquare].classList.add('mate');
           }, 700);
-          // Po matu otočit kartu na rozcestník (4 dlaždice). Nechá se flipnutá natrvalo.
+        }
+        // Po posledním (zkráceném) tahu nebo matu otoč kartu na 4 dlaždice a zůstaň
+        if (action.mate || action.flipAfter) {
           addTimer(() => {
             if (!alive) return;
             const flipCard = document.getElementById('heroFlipCard');
             if (flipCard && !flipCard.classList.contains('flipped')) {
               flipCard.classList.add('flipped');
             }
-          }, 2000);
+          }, action.mate ? 1600 : 900);
         }
 
         addTimer(() => {
@@ -400,11 +414,11 @@
           if (moving) {
             moving.el.classList.remove('moving', 'knight-hop');
           }
+          // Po flip-tahu (poslední/mat) už nepokračuj — žádná smyčka
+          if (action.mate || action.flipAfter) return;
           // If this is the king move of a castle, don't wait, immediately do the next step (rook move)
-          // Peek next step
           const nextAction = BOARD_SEQ[stepIndex % BOARD_SEQ.length];
-          const waitTime = (nextAction && nextAction.isCastleRookMove) ? 0 : (action.mate ? 2400 : 1100);
-          
+          const waitTime = (nextAction && nextAction.isCastleRookMove) ? 0 : 1100;
           addTimer(step, waitTime);
         }, action.isCastleRookMove ? 200 : 1300);
       }, delay);
