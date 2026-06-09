@@ -365,6 +365,21 @@
             </div>
         </section>
 
+        <!-- Aktuální oznámení (auto-skrytí po datu) -->
+        <div id="trainingNotice" style="max-width:1100px; margin:0.75rem auto 0; padding:0 2rem;">
+            <div style="display:flex; align-items:center; gap:0.75rem; background:linear-gradient(145deg, rgba(255,68,68,0.12) 0%, rgba(0,0,0,0.25) 100%); border:1px solid rgba(255,68,68,0.35); border-left:4px solid #ff4444; padding:0.85rem 1.2rem; border-radius:8px;">
+                <i class="fa-solid fa-triangle-exclamation" style="color:#ff8888; font-size:1.25rem; flex-shrink:0;"></i>
+                <span style="color:#f8fafc; font-size:1rem; line-height:1.5;"><strong>Čtvrtek 11.&nbsp;6.</strong> — trénink v hale se bohužel <strong>nekoná</strong>, koná se tam taneční soutěž.</span>
+            </div>
+        </div>
+        <script>
+            (function () {
+                var n = document.getElementById('trainingNotice');
+                // skryj po skončení 11. 6. 2026 (zobrazí se do konce čtvrtka)
+                if (n && Date.now() > new Date('2026-06-12T00:00:00').getTime()) n.style.display = 'none';
+            })();
+        </script>
+
 
         <!-- Latest Comment Widget - Between hero and news -->
         <div id="latest-comment-widget" class="latest-comment-container hidden">
