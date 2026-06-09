@@ -3360,20 +3360,92 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         // ================================
-        // PASTE AS PLAIN TEXT (Ctrl+Shift+V)
+        // PASTE: obrázek ze schránky → upload; HTML → vyčistit (Word/Google junk); Shift = čistý text
         // ================================
         editor.addEventListener('paste', (e) => {
-            // If Shift is held, paste as plain text
+            const cd = e.clipboardData || window.clipboardData;
+            if (!cd) return;
+
+            // 1) Obrázek ze schránky (screenshot, kopie obrázku) → upload na server, ne data:/blob:
+            const imgItem = Array.from(cd.items || []).find(it => it.type && it.type.startsWith('image/'));
+            if (imgItem && !cd.getData('text/html') && !cd.getData('text/plain')) {
+                e.preventDefault();
+                const file = imgItem.getAsFile();
+                if (!file) return;
+                showToast('Nahrávám obrázek ze schránky…', 'info');
+                const fd = new FormData();
+                fd.append('image', file, `pasted_${Date.now()}.png`);
+                const tk = window.authToken || localStorage.getItem('authToken') || localStorage.getItem('auth_token');
+                fetch(`${window.API_URL || '/api'}/images/upload`, {
+                    method: 'POST', headers: { 'Authorization': `Bearer ${tk}` }, body: fd
+                }).then(r => r.ok ? r.json() : Promise.reject(new Error('HTTP ' + r.status)))
+                  .then(data => {
+                      const url = data.url.startsWith('http') ? data.url : `${window.location.origin}${data.url}`;
+                      editor.focus();
+                      document.execCommand('insertHTML', false, `<img src="${url}" style="max-width:100%;">`);
+                      updatePreview();
+                      window.markNewsDirty && markNewsDirty();
+                      showToast('Obrázek vložen', 'success');
+                  })
+                  .catch(err => showToast('Nahrání obrázku selhalo: ' + err.message, 'error'));
+                return;
+            }
+
+            // 2) Shift = čistý text
             if (e.shiftKey) {
                 e.preventDefault();
-                const text = (e.clipboardData || window.clipboardData).getData('text/plain');
-                // Insert as plain text preserving line breaks
+                const text = cd.getData('text/plain');
                 const lines = text.split('\n').map(l => `<p>${l || '<br>'}</p>`).join('');
                 document.execCommand('insertHTML', false, lines);
                 updatePreview();
                 showToast('Vloženo jako čistý text', 'info');
+                return;
             }
+
+            // 3) HTML z Wordu/Google Docs/webu → vyčistit (jinak jde surový markup do DB)
+            const html = cd.getData('text/html');
+            if (html) {
+                e.preventDefault();
+                document.execCommand('insertHTML', false, cleanPastedHtml(html));
+                updatePreview();
+            }
+            // bez HTML (čistý text) nechat default chování prohlížeče
         });
+
+        // Whitelist čištění vloženého HTML: nechá strukturu, zahodí Word/Google styly, classy, komentáře, skripty
+        function cleanPastedHtml(html) {
+            const ALLOWED = new Set(['P', 'BR', 'B', 'STRONG', 'I', 'EM', 'U', 'S', 'A', 'H1', 'H2', 'H3', 'H4',
+                'UL', 'OL', 'LI', 'TABLE', 'THEAD', 'TBODY', 'TR', 'TD', 'TH', 'BLOCKQUOTE', 'IMG', 'FIGURE', 'FIGCAPTION', 'DIV', 'SPAN']);
+            const doc = new DOMParser().parseFromString(html, 'text/html');
+            doc.querySelectorAll('script, style, meta, link, title, xml, o\\:p').forEach(el => el.remove());
+            // komentáře (Word jich vkládá hromady)
+            const walker = doc.createTreeWalker(doc.body, NodeFilter.SHOW_COMMENT);
+            const comments = []; while (walker.nextNode()) comments.push(walker.currentNode);
+            comments.forEach(c => c.remove());
+
+            const clean = (el) => {
+                Array.from(el.children).forEach(child => {
+                    clean(child);
+                    if (!ALLOWED.has(child.tagName)) {
+                        // neznámý tag rozbalit (obsah nechat)
+                        while (child.firstChild) child.parentNode.insertBefore(child.firstChild, child);
+                        child.remove();
+                        return;
+                    }
+                    // atributy: nechat jen href/src/alt/colspan/rowspan
+                    Array.from(child.attributes).forEach(a => {
+                        if (!['href', 'src', 'alt', 'colspan', 'rowspan', 'target', 'rel'].includes(a.name)) child.removeAttribute(a.name);
+                    });
+                    // spany bez atributů nemají po očištění funkci — rozbalit
+                    if (child.tagName === 'SPAN' && !child.attributes.length) {
+                        while (child.firstChild) child.parentNode.insertBefore(child.firstChild, child);
+                        child.remove();
+                    }
+                });
+            };
+            clean(doc.body);
+            return doc.body.innerHTML;
+        }
 
         // ================================
         // DRAG & DROP IMAGE UPLOAD + ATOMIC BLOCK REORDERING

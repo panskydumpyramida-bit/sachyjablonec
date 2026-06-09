@@ -62,15 +62,22 @@ function setTabHash(tab) {
 function showToast(message, type = 'success') {
     const toast = document.createElement('div');
     toast.className = `toast toast-${type}`;
+    const TOAST_KIND = {
+        success: { icon: 'check-circle', bg: '#22c55e' },
+        info: { icon: 'circle-info', bg: '#3b82f6' },
+        warning: { icon: 'triangle-exclamation', bg: '#f59e0b' },
+        error: { icon: 'exclamation-circle', bg: '#ef4444' },
+    };
+    const kind = TOAST_KIND[type] || TOAST_KIND.error;
     toast.innerHTML = `
-        <i class="fa-solid fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'}"></i>
+        <i class="fa-solid fa-${kind.icon}"></i>
         ${message}
     `;
     toast.style.cssText = `
         position: fixed;
         bottom: 2rem;
         right: 2rem;
-        background: ${type === 'success' ? '#22c55e' : '#ef4444'};
+        background: ${kind.bg};
         color: white;
         padding: 1rem 1.5rem;
         border-radius: 0.5rem;

@@ -3027,6 +3027,11 @@ textarea.auto-resize {
 /* --- Editor improvements --- */
 .wysiwyg-toolbar {
     border-bottom: 2px solid rgba(212, 175, 55, 0.15);
+    /* sticky i na desktopu — u dlouhého článku toolbar odscrolloval (mobil už sticky měl) */
+    position: sticky;
+    top: calc(var(--admin-header-height, 43px) + var(--topbar-height, 60px));
+    z-index: 30;
+    background: var(--surface-color, #1e1e1e);
 }
 
 .wysiwyg-content {
