@@ -3697,9 +3697,15 @@ function showColorPicker() {
 // COLUMN BLOCK INSERTION
 // ================================
 
+let columnSavedRange = null;
 function insertColumnBlock() {
     const content = document.getElementById('articleContent');
     const selection = window.getSelection();
+
+    // Ulož kurzor v editoru — popup za chvíli sebere fokus a layout by jinak spadl na konec
+    if (selection.rangeCount && content && content.contains(selection.anchorNode)) {
+        columnSavedRange = selection.getRangeAt(0).cloneRange();
+    }
 
     // If cursor is inside a content-columns block, move cursor after it
     if (selection.rangeCount > 0) {
@@ -3809,13 +3815,18 @@ function doInsertColumns(layout) {
     const content = document.getElementById('articleContent');
     if (!content) return;
 
-    // Ensure editor has focus and a valid selection
+    // Obnov uložený kurzor (popup sebral fokus) → layout se vloží KAM byl kurzor.
     const sel = window.getSelection();
-    if (!sel.rangeCount || !content.contains(sel.anchorNode)) {
+    if (columnSavedRange) {
+        content.focus();
+        sel.removeAllRanges();
+        sel.addRange(columnSavedRange);
+        columnSavedRange = null;
+    } else if (!sel.rangeCount || !content.contains(sel.anchorNode)) {
         content.focus();
         const range = document.createRange();
         range.selectNodeContents(content);
-        range.collapse(false); // move to end
+        range.collapse(false); // fallback: konec
         sel.removeAllRanges();
         sel.addRange(range);
     }
