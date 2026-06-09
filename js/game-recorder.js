@@ -1596,6 +1596,29 @@ document.addEventListener('DOMContentLoaded', () => {
                 }, 300);
             }
         }
+    } else if (importLocal === 'analyze') {
+        // Režim ANALÝZY (z /partie) — načti partii, zkoušej varianty a motor, ale NIC neukládej.
+        const pgnData = localStorage.getItem('import_pgn');
+        if (pgnData) {
+            localStorage.removeItem('import_pgn');
+            window.analysisOnly = true;
+            // Skryj VŠECHNA ukládací tlačítka — tohle je jen rozbor
+            document.querySelectorAll('.main-btn').forEach(b => { b.style.display = 'none'; });
+            // Banner do hlavičky editoru
+            const head = document.querySelector('.editor-header') || document.body;
+            const badge = document.createElement('div');
+            badge.style.cssText = 'background:rgba(167,139,250,0.15); border:1px solid rgba(167,139,250,0.4); color:#c4b5fd; padding:6px 12px; border-radius:6px; font-size:0.85rem; margin:6px 0; display:inline-flex; gap:6px; align-items:center;';
+            badge.innerHTML = '<i class="fa-solid fa-magnifying-glass-chart"></i> Režim analýzy — zkoušej vlastní varianty a pusť motor. Nic se neukládá.';
+            head.prepend(badge);
+            const pgnInput = document.getElementById('importPgnInput');
+            if (pgnInput) {
+                pgnInput.value = pgnData;
+                setTimeout(() => {
+                    importPgn();
+                    showNotification('Režim analýzy — klikej tahy a zkoušej varianty. Nic se neukládá.', 'info');
+                }, 300);
+            }
+        }
     } else if (gameId) {
         loadGameById(gameId);
     } else if (diagramId) {
