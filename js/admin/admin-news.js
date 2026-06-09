@@ -455,6 +455,15 @@ window.updatePublishLabel = updatePublishLabel;
 
 function resetEditor() {
     console.log('[admin-news] resetEditor()');
+    // Ukončit HTML source mód — jinak by nový/jiný článek psal do skrytého editoru a textarea ukazovala starý obsah
+    const srcArea = document.getElementById('articleSource');
+    const srcBtn = document.getElementById('btnSource');
+    if (srcArea && !srcArea.classList.contains('hidden')) {
+        srcArea.classList.add('hidden');
+        srcArea.value = '';
+        document.getElementById('articleContent').classList.remove('hidden');
+        if (srcBtn) srcBtn.classList.remove('active');
+    }
     document.getElementById('editorTitle').textContent = 'Nová novinka';
     document.getElementById('editNewsId').value = '';
     document.getElementById('newsTitle').value = '';

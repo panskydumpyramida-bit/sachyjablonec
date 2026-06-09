@@ -318,10 +318,13 @@ function insertLink() {
     const selection = window.getSelection();
     let selectedText = '';
     let savedRange = null;
+    let hadSelection = false;
 
-    if (selection.rangeCount > 0 && !selection.isCollapsed) {
+    // ulož i kolapsnutý kurzor — modal sebere fokus a odkaz by jinak padal na konec článku
+    if (selection.rangeCount > 0 && editor.contains(selection.anchorNode)) {
         savedRange = selection.getRangeAt(0).cloneRange();
-        selectedText = selection.toString();
+        hadSelection = !selection.isCollapsed;
+        if (hadSelection) selectedText = selection.toString();
     }
 
     // Create modal
@@ -337,7 +340,7 @@ function insertLink() {
             </div>
             <div style="margin-bottom:1rem;">
                 <label style="display:block;margin-bottom:0.3rem;color:var(--text-muted);font-size:0.85rem;">Text odkazu</label>
-                <input type="text" id="linkText" value="${selectedText}" placeholder="Zobrazovaný text" style="width:100%;box-sizing:border-box;">
+                <input type="text" id="linkText" value="${selectedText.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;')}" placeholder="Zobrazovaný text" style="width:100%;box-sizing:border-box;">
             </div>
             <div style="margin-bottom:1rem;">
                 <label style="display:flex;align-items:center;gap:0.5rem;cursor:pointer;color:var(--text-muted);font-size:0.85rem;">
@@ -373,9 +376,10 @@ function insertLink() {
         }
 
         if (savedRange) {
+            editor.focus();
             selection.removeAllRanges();
             selection.addRange(savedRange);
-            savedRange.deleteContents();
+            if (hadSelection) savedRange.deleteContents();
         }
 
         const a = document.createElement('a');
@@ -1385,7 +1389,6 @@ function showDiagramSelectorModal(diagrams, savedRange, initialSelection = []) {
     // Init
     if (selectedDiagrams.length > 0) {
         renderSelectionList();
-        updateSelectionUI();
     }
     renderList();
     searchInput.oninput = (e) => renderList(e.target.value);
@@ -1453,7 +1456,9 @@ function insertDiagramBookToEditor(diagrams, savedRange) {
         solution: d.solution,
         description: d.description,
         orientation: d.orientation || 'white'
-    })));
+    })))
+        // jednoduché uvozovky atributu data-diagrams='…' — apostrof v názvu/popisku by atribut utrhl
+        .replace(/&/g, '&amp;').replace(/'/g, '&#39;');
 
     // Generate the first board as preview
     const firstBoard = generateMiniBoard(diagrams[0].fen, 30);
@@ -1537,12 +1542,12 @@ function insertDiagramBookToEditor(diagrams, savedRange) {
         }
     } else {
         // Standard insertion for new items
+        const edEl = document.getElementById('articleContent');
+        if (edEl) edEl.focus(); // modal sebral fokus — bez focusu execCommand vloží jinam/nikam
         if (savedRange && savedRange instanceof Range) {
             const sel = window.getSelection();
             sel.removeAllRanges();
             sel.addRange(savedRange);
-        } else {
-            document.getElementById('articleContent')?.focus();
         }
         document.execCommand('insertHTML', false, html);
     }
@@ -3069,6 +3074,12 @@ function openAtomicBlockEditModal(block) {
     modal.querySelector('#abeSave').onclick = () => {
         if (isDiagram) {
             const newDesc = modal.querySelector('#abeDesc').value.trim();
+            // zapsat i do data-diagrams JSONu — bookNav z něj popisek vykresluje, jinak se po listování vrátí starý
+            try {
+                const ds = JSON.parse(block.dataset.diagrams);
+                const cur = parseInt(block.dataset.current, 10) || 0;
+                if (ds[cur]) { ds[cur].description = newDesc; block.dataset.diagrams = JSON.stringify(ds); }
+            } catch (e) {}
             const descEl = block.querySelector('.book-description');
             if (descEl) descEl.textContent = newDesc;
         } else if (isFragment) {
@@ -3151,7 +3162,14 @@ document.addEventListener('DOMContentLoaded', () => {
         // Atomic block click detection via mouseup (only if no drag occurred)
         editor.addEventListener('mouseup', (e) => {
             if (!editor._atomicMousedownBlock) return;
-            
+
+            // Klik na ovládací prvky bloku (šipky knihy apod.) NEotevírá edit modal
+            if (e.target.closest && e.target.closest('.book-prev, .book-next, button')) {
+                editor._atomicMousedownBlock = null;
+                editor._atomicMousedownPos = null;
+                return;
+            }
+
             const block = editor._atomicMousedownBlock;
             const startPos = editor._atomicMousedownPos;
             editor._atomicMousedownBlock = null;
@@ -3684,7 +3702,8 @@ function showColorPicker() {
     // Close on click outside
     setTimeout(() => {
         const closeHandler = (e) => {
-            if (!popup.contains(e.target) && e.target !== btn) {
+            // klik na tlačítko trefí <i> ikonu uvnitř → e.target!==btn by popup zavřel a hned znovu otevřel
+            if (!popup.contains(e.target) && !(btn && btn.contains(e.target))) {
                 popup.remove();
                 document.removeEventListener('mousedown', closeHandler);
             }
@@ -3802,7 +3821,8 @@ function insertColumnBlock() {
     // Close on click outside
     setTimeout(() => {
         const closeHandler = (e) => {
-            if (!popup.contains(e.target) && e.target !== btn) {
+            // klik na tlačítko trefí <i> ikonu uvnitř → e.target!==btn by popup zavřel a hned znovu otevřel
+            if (!popup.contains(e.target) && !(btn && btn.contains(e.target))) {
                 popup.remove();
                 document.removeEventListener('mousedown', closeHandler);
             }
