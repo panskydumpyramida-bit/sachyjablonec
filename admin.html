@@ -162,6 +162,8 @@
                         class="fa-solid fa-code-branch"></i>Changelog</div>
                 <div class="nav-tab secondary" onclick="switchTab('weeklyPuzzle')" id="weeklyPuzzleTab"><i
                         class="fa-solid fa-lightbulb"></i>Úloha týdne</div>
+                <div class="nav-tab secondary" onclick="switchTab('facebook')" id="facebookTab"><i
+                        class="fa-brands fa-facebook"></i>Facebook</div>
             </div>
             <div id="alertContainer"></div>
             <!-- DASHBOARD -->
@@ -754,6 +756,16 @@
             Žádné
             vzkazy k zobrazení. </div>
     </div>
+    <!-- Facebook Dashboard View -->
+    <div id="facebookView" class="hidden">
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:0.5rem;margin-bottom:0.5rem;">
+            <h2 style="margin:0;"><i class="fa-brands fa-facebook" style="color:#1877F2;"></i> Facebook — dosah příspěvků</h2>
+            <button class="btn-secondary" onclick="loadFacebookDashboard()"><i class="fa-solid fa-rotate"></i> Obnovit</button>
+        </div>
+        <p style="color:#94a3b8;font-size:0.85rem;margin:0 0 1rem;">Porovnání dosahu příspěvků publikovaných přes web (App) vs nativně na Facebooku.</p>
+        <div id="fbContent"></div>
+    </div>
+
     <!-- Games Management View -->
     <div id="gamesView" class="hidden">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
@@ -2618,6 +2630,7 @@
     <script src="js/admin/admin-chessdb.js?v=ux12"></script>
     <script src="js/admin/admin-weekly-puzzles.js?v=ux15"></script>
     <script src="js/admin/admin-home-tiles.js?v=1"></script>
+    <script src="js/admin/admin-facebook.js?v=1"></script>
     <script src="js/admin/admin-dashboard.js?v=ux12"></script>
     <!-- All admin functionality moved to modular JS files in js/admin/ -->
 

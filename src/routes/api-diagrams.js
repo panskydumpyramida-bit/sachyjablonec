@@ -1,9 +1,28 @@
 import express from 'express';
 import { PrismaClient } from '@prisma/client';
 import { authMiddleware } from '../middleware/auth.js';
+import { requireAdmin } from '../middleware/rbac.js';
+import { fetchPagePostsWithInsights } from '../services/facebookService.js';
 
 const prisma = new PrismaClient();
 const router = express.Router();
+
+// --- Facebook dashboard helpers ---
+function fbReadInsight(post, name) {
+    const arr = post.insights && post.insights.data;
+    if (!arr) return null;
+    const m = arr.find(x => x.name === name);
+    if (!m || !m.values || !m.values.length) return null;
+    const v = m.values[0].value;
+    if (v && typeof v === 'object') return Object.values(v).reduce((a, b) => a + (Number(b) || 0), 0);
+    return Number(v) || 0;
+}
+function fbMedian(nums) {
+    if (!nums.length) return null;
+    const s = [...nums].sort((a, b) => a - b);
+    const mid = Math.floor(s.length / 2);
+    return s.length % 2 ? s[mid] : Math.round((s[mid - 1] + s[mid]) / 2);
+}
 
 // --- Diagram API ---
 router.get('/diagrams', authMiddleware, async (req, res) => {
@@ -198,6 +217,64 @@ router.delete('/fragments/:id', authMiddleware, async (req, res) => {
     } catch (error) {
         console.error('Error deleting fragment:', error);
         res.status(500).json({ error: 'Failed to delete fragment' });
+    }
+});
+
+// --- Facebook dashboard: posty stránky + dosah, naše vs nativní ---
+router.get('/admin/facebook/posts', authMiddleware, requireAdmin, async (req, res) => {
+    try {
+        const { posts, insightsAvailable, appId } = await fetchPagePostsWithInsights(50);
+
+        // Naše post id z DB (deterministické rozlišení náš vs nativní)
+        const newsRows = await prisma.news.findMany({
+            where: { facebookPostId: { not: null } },
+            select: { id: true, title: true, facebookPostId: true },
+        });
+        const ourMap = new Map(newsRows.map(n => [n.facebookPostId, n]));
+
+        const out = posts.map(p => {
+            const reach = fbReadInsight(p, 'post_total_media_view_unique');
+            const impressions = fbReadInsight(p, 'post_media_view');
+            const clicks = fbReadInsight(p, 'post_clicks');
+            const reactions = fbReadInsight(p, 'post_reactions_by_type_total');
+            const engaged = (clicks == null && reactions == null) ? null : (clicks || 0) + (reactions || 0);
+            const news = ourMap.get(p.id);
+            const isOurs = !!news || (appId && p.application && String(p.application.id) === String(appId));
+            return {
+                id: p.id,
+                date: p.created_time || null,
+                text: (p.message || '').slice(0, 140),
+                permalink: p.permalink_url || null,
+                image: p.full_picture || null,
+                reach, impressions, engaged,
+                source: isOurs ? 'ours' : 'native',
+                articleId: news ? news.id : null,
+            };
+        });
+
+        const agg = (src) => {
+            const grp = out.filter(p => p.source === src);
+            const reaches = grp.map(p => p.reach).filter(r => r != null);
+            const engs = grp.map(p => p.engaged).filter(e => e != null);
+            const avg = (a) => a.length ? Math.round(a.reduce((x, y) => x + y, 0) / a.length) : null;
+            return { count: grp.length, reachAvg: avg(reaches), reachMedian: fbMedian(reaches), engagedAvg: avg(engs) };
+        };
+        const ours = agg('ours'), native = agg('native');
+        const reachAvgDeltaPct = (ours.reachAvg != null && native.reachAvg)
+            ? Math.round((ours.reachAvg - native.reachAvg) / native.reachAvg * 100) : null;
+
+        res.json({
+            posts: out,
+            aggregate: { ours, native, reachAvgDeltaPct },
+            meta: {
+                insightsAvailable,
+                appIdConfigured: !!appId,
+                postsWithoutReach: out.filter(p => p.reach == null).length,
+            },
+        });
+    } catch (e) {
+        console.error('[FB dashboard] error:', e);
+        res.status(500).json({ error: e.message || 'Failed to load Facebook posts' });
     }
 });
 

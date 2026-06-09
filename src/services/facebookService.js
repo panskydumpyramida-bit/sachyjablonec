@@ -32,6 +32,7 @@ function getConfig() {
         pageId,
         pageToken,
         apiVersion: process.env.FB_API_VERSION || 'v21.0',
+        appId: process.env.FB_APP_ID || null,
         frontendUrl: (process.env.FRONTEND_URL || 'https://sachyjablonec.cz').replace(/\/$/, '')
     };
 }
@@ -191,4 +192,42 @@ export async function shareNewsToFacebook(news) {
     );
     if (!post.id) throw new Error('[Facebook] Feed post returned no id');
     return { postId: post.id, photoCount: photos.length };
+}
+
+// ---- Dashboard: čtení postů stránky + insights (dosah) ----
+
+async function fbGet(url) {
+    const res = await fetch(url);
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok || data.error) {
+        const msg = data.error ? `${data.error.message} (code ${data.error.code})` : `HTTP ${res.status}`;
+        const err = new Error(`[Facebook] ${msg}`);
+        err.fbError = data.error || null;
+        throw err;
+    }
+    return data;
+}
+
+const FB_POST_FIELDS = 'id,message,created_time,permalink_url,full_picture,application{id,name}';
+// Nové metriky (staré post_impressions* Meta vypíná 2025/2026). post_total_media_view_unique≈reach, post_media_view≈impressions.
+const FB_POST_INSIGHTS = 'insights.metric(post_total_media_view_unique,post_media_view,post_clicks,post_reactions_by_type_total).period(lifetime)';
+
+/**
+ * Načte poslední posty stránky + (pokud jdou) insights dosahu. Když insights selžou
+ * (chybí read_insights / neplatná metrika ve staré verzi), vrátí posty bez nich.
+ */
+export async function fetchPagePostsWithInsights(limit = 50) {
+    const cfg = getConfig();
+    const base = `https://graph.facebook.com/${cfg.apiVersion}/${cfg.pageId}/posts`;
+    const tokenQ = `access_token=${encodeURIComponent(cfg.pageToken)}`;
+    let insightsAvailable = true;
+    let data;
+    try {
+        const fields = `${FB_POST_FIELDS},${FB_POST_INSIGHTS}`;
+        data = await fbGet(`${base}?fields=${encodeURIComponent(fields)}&limit=${limit}&${tokenQ}`);
+    } catch (e) {
+        insightsAvailable = false;
+        data = await fbGet(`${base}?fields=${encodeURIComponent(FB_POST_FIELDS)}&limit=${limit}&${tokenQ}`);
+    }
+    return { posts: data.data || [], paging: data.paging || null, insightsAvailable, appId: cfg.appId };
 }

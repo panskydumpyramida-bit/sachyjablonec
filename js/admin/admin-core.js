@@ -228,7 +228,7 @@ function switchTab(tab) {
     if (activeTab) activeTab.classList.add('active');
 
     // Hide all views
-    ['dashboard', 'editor', 'members', 'users', 'messages', 'blicak', 'competitions', 'gallery', 'games', 'events', 'timeline', 'settings', 'puzzleRacer', 'chessdb', 'changelog', 'weeklyPuzzle'].forEach(v => {
+    ['dashboard', 'editor', 'members', 'users', 'messages', 'blicak', 'competitions', 'gallery', 'games', 'events', 'timeline', 'settings', 'puzzleRacer', 'chessdb', 'changelog', 'weeklyPuzzle', 'facebook'].forEach(v => {
         const el = document.getElementById(v + 'View');
         if (el) el.classList.add('hidden');
     });
@@ -263,6 +263,7 @@ function switchTab(tab) {
     else if (tab === 'puzzleRacer' && window.loadPuzzleRacerSettings) loadPuzzleRacerSettings();
     else if (tab === 'chessdb' && window.loadChessDBStats) loadChessDBStats();
     else if (tab === 'weeklyPuzzle' && window.loadWeeklyPuzzles) loadWeeklyPuzzles();
+    else if (tab === 'facebook' && window.loadFacebookDashboard) loadFacebookDashboard();
 }
 
 /**
