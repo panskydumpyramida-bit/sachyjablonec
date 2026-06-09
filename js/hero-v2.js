@@ -285,24 +285,29 @@
     // Load settings from server
     const settings = await fetchSettings();
     const FULL_SEQ = pgnToBoardSeq(settings.pgn);
-    // Zkrácená hero animace: zahraj jen pár prvních tahů a rovnou otoč na 4 dlaždice
-    // (dřív se čekalo na mat = celá partie ~30 s, než vyskočila tlačítka).
-    const MAX_HERO_MOVES = 5;
-    const BOARD_SEQ = [];
-    let _mv = 0;
-    for (const a of FULL_SEQ) {
-      if (a.type === 'reset') break;            // bez smyčky celé partie
-      BOARD_SEQ.push(a);
-      if (a.type === 'move' && ++_mv >= MAX_HERO_MOVES) break;
+    // Animuj jen ZÁVĚR partie (do matu): posledních HERO_WINDOW půltahů.
+    // Předchozí tahy se jen předehrají do pozice (bez animace) — tak vidíme finiš, ne otevírku.
+    const HERO_WINDOW = 6;
+    const moveSeq = FULL_SEQ.filter(a => a.type !== 'reset');
+    const startIdx = Math.max(0, moveSeq.length - HERO_WINDOW);
+    // pozice figur na začátku okna (po předehraných tazích)
+    const _pos = {}; const _preCaptured = new Set();
+    INITIAL_PIECES.forEach(p => { _pos[p.id] = p.sq; });
+    for (let i = 0; i < startIdx; i++) {
+      const a = moveSeq[i];
+      if (a.capture) _preCaptured.add(a.capture);
+      _pos[a.piece] = a.to;
     }
-    // poslední tah dostane příznak flipAfter → otočí kartu i bez matu
+    const START_PIECES = INITIAL_PIECES.filter(p => !_preCaptured.has(p.id)).map(p => ({ ...p, sq: _pos[p.id] }));
+    const BOARD_SEQ = moveSeq.slice(startIdx);
+    // poslední tah okna flipne kartu (mat už příznak má; pro jistotu i bez matu)
     for (let i = BOARD_SEQ.length - 1; i >= 0; i--) {
       if (BOARD_SEQ[i].type === 'move') { BOARD_SEQ[i].flipAfter = true; break; }
     }
     renderHeader(scene, settings.header);
 
     const squares = buildBoard(board);
-    let pieces = INITIAL_PIECES.slice();
+    let pieces = START_PIECES.slice();
     let pieceMap = renderPieces(scene, pieces);
     addSparks(scene);
 
@@ -313,14 +318,14 @@
       const moves = BOARD_SEQ.filter(a => a.type === 'move');
       const positions = {};
       let mateSquare = null;
-      
-      INITIAL_PIECES.forEach(p => { positions[p.id] = p.sq; });
+
+      START_PIECES.forEach(p => { positions[p.id] = p.sq; });
       moves.forEach(m => {
         if (m.capture) captured.add(m.capture);
         positions[m.piece] = m.to;
         if (m.mate) mateSquare = m.mateSquare;
       });
-      INITIAL_PIECES.forEach(p => {
+      START_PIECES.forEach(p => {
         if (!captured.has(p.id)) {
           finalPieces.push({ ...p, sq: positions[p.id] });
         }
