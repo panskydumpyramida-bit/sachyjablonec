@@ -263,6 +263,9 @@ app.get('/tournaments.html', servePage('tournaments.html'));
 app.get('/about', servePage('about.html'));
 app.get('/about.html', servePage('about.html'));
 
+app.get('/privacy', servePage('privacy.html'));
+app.get('/privacy.html', servePage('privacy.html'));
+
 app.get('/members', servePage('members.html'));
 app.get('/members.html', servePage('members.html'));
 
