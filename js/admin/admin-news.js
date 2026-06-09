@@ -1389,18 +1389,45 @@ function openQuickFragmentModal(gameIndex) {
             }
             startFen = replay.fen();
             
-            let fragmentPgn = '';
-            for (let i = startPly; i < endPly; i++) {
-                const move = history[i];
-                const moveNum = Math.floor(i / 2) + 1;
-                if (i % 2 === 0) {
-                    fragmentPgn += `${moveNum}. ${move.san} `;
-                } else {
-                    if (i === startPly) fragmentPgn += `${moveNum}... ${move.san} `;
-                    else fragmentPgn += `${move.san} `;
+            // Token-slice PŮVODNÍHO PGN — zachová varianty (...) i komentáře {...} v rozsahu
+            const sliceFragmentPgn = (fullPgn, fromMv, toMv) => {
+                const body = fullPgn
+                    .replace(/\[[^\]]*\]\s*/g, '')
+                    .replace(/\s*(1-0|0-1|1\/2-1\/2|\*)\s*$/, '')
+                    .trim();
+                const tokens = body.match(/\{[^}]*\}|\(|\)|\$\d+|\d+\.(?:\.\.)?|O-O-O|O-O|[KQRBNa-h][a-h0-8xX=+#KQRBN-]*|[!?]+/g) || [];
+                let depth = 0, ply = 0, started = false;
+                const out = [];
+                for (const tk of tokens) {
+                    if (tk === '(') { if (started) out.push('('); depth++; continue; }
+                    if (tk === ')') { depth--; if (started) out.push(')'); continue; }
+                    if (depth > 0) { if (started) out.push(tk); continue; }
+                    if (/^\d+\.(?:\.\.)?$/.test(tk)) continue; // číslo tahu doplníme sami
+                    if (/^\$\d+$/.test(tk) || /^[!?]+$/.test(tk) || tk[0] === '{') { if (started) out.push(tk); continue; }
+                    const moveNo = Math.floor(ply / 2) + 1;
+                    const isWhite = ply % 2 === 0;
+                    if (moveNo >= fromMv && moveNo <= toMv) {
+                        if (!started) { started = true; out.push(isWhite ? `${moveNo}.` : `${moveNo}...`); }
+                        else if (isWhite) out.push(`${moveNo}.`);
+                        out.push(tk);
+                    } else if (started && moveNo > toMv) {
+                        break;
+                    }
+                    ply++;
                 }
+                return out.join(' ').replace(/\(\s+/g, '(').replace(/\s+\)/g, ')').trim();
+            };
+            let fragmentPgn = sliceFragmentPgn(game.pgn, fromMove, toMove);
+            // Fallback na hlavní linii (chess.js), kdyby token-slice selhal
+            if (!fragmentPgn) {
+                for (let i = startPly; i < endPly; i++) {
+                    const move = history[i];
+                    const moveNum = Math.floor(i / 2) + 1;
+                    if (i % 2 === 0) fragmentPgn += `${moveNum}. ${move.san} `;
+                    else fragmentPgn += (i === startPly ? `${moveNum}... ${move.san} ` : `${move.san} `);
+                }
+                fragmentPgn = fragmentPgn.trim();
             }
-            fragmentPgn = fragmentPgn.trim();
 
             if (!fragmentPgn) throw new Error('Fragment po vyříznutí neobsahuje žádné tahy.');
 
