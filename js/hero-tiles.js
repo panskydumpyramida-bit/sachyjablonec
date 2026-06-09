@@ -77,7 +77,7 @@
             </div>
             <div style="padding:0.9rem 1rem;">
               <p id="dpPrompt" style="margin:0 0 0.6rem; color:#cbd5e1; font-size:0.9rem; text-align:center;">Načítám…</p>
-              <div id="dpBoard" style="width:100%; max-width:340px; margin:0 auto;"></div>
+              <div id="dpBoard" style="width:100%; max-width:340px; margin:0 auto; touch-action:none;"></div>
               <div id="dpStatus" style="min-height:1.5rem; margin:0.6rem 0 0; text-align:center; font-weight:600; font-size:0.95rem;"></div>
               <div id="dpMeta" style="margin:0.3rem 0 0; text-align:center; color:#64748b; font-size:0.75rem;"></div>
               <div style="display:flex; gap:0.5rem; justify-content:center; margin-top:0.8rem;">
@@ -94,12 +94,14 @@
 
     function closeModal() {
         if (modalEl) modalEl.style.display = 'none';
+        document.body.style.overflow = ''; // odemkni scroll pozadí
         if (boardObj && boardObj.destroy) { try { boardObj.destroy(); } catch (e) {} boardObj = null; }
     }
 
     async function openDailyPuzzle() {
         ensureModal();
         modalEl.style.display = 'flex';
+        document.body.style.overflow = 'hidden'; // mobil: zamkni scroll pozadí, ať tah/tap ovládá figurky
         const promptEl = modalEl.querySelector('#dpPrompt');
         const statusEl = modalEl.querySelector('#dpStatus');
         const metaEl = modalEl.querySelector('#dpMeta');
