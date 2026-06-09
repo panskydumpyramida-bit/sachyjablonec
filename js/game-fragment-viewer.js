@@ -221,7 +221,7 @@
 
         container.removeAttribute('style');
         container.innerHTML = `
-            <div style="background:var(--surface-color, #1e1e1e);border:1px solid rgba(96,165,250,0.2);border-radius:10px;overflow:hidden;margin:0.5rem 0;width:100%;max-width:520px;">
+            <div style="background:var(--surface-color, #1e1e1e);border:1px solid rgba(96,165,250,0.2);border-radius:10px;overflow:hidden;margin:0.5rem 0;width:100%;max-width:400px;">
                 <div style="display:flex;align-items:center;gap:0.5rem;padding:0.5rem 0.75rem;background:rgba(96,165,250,0.06);border-bottom:1px solid rgba(96,165,250,0.1);">
                     <i class="fa-solid fa-chess" style="color:#60a5fa;font-size:0.8rem;"></i>
                     <span style="font-size:0.85rem;font-weight:600;color:#e0e0e0;flex:1;">${escapeHtml(titleStr)}</span>
@@ -229,7 +229,7 @@
                 </div>
                 <div style="display:flex;gap:0;">
                     <!-- Mini Board Column -->
-                    <div id="${uid}-left-panel" style="flex:0 0 52%; max-width:290px; transition:flex 0.2s; padding:0.4rem; border-right:1px solid rgba(255,255,255,0.05); display:flex; flex-direction:column;">
+                    <div id="${uid}-left-panel" style="flex:0 0 70%; max-width:290px; transition:flex 0.2s; padding:0.4rem; border-right:1px solid rgba(255,255,255,0.05); display:flex; flex-direction:column;">
                         <div style="display:flex; align-items:stretch;">
                             <div id="${uid}-eval-bar" class="frag-eval-bar">
                                 <div id="${uid}-eval-fill" class="frag-eval-fill" style="height: 50%;"></div>
@@ -273,8 +273,14 @@
             document.querySelectorAll(`.frag-var-move[data-frag-uid="${uid}"]`).forEach(el => {
                 el.addEventListener('click', () => goToFen(uid, el.getAttribute('data-frag-fen'), el));
             });
-            // Ensure board resizes properly
-            setTimeout(() => board.resize(), 100);
+            // Ensure board resizes properly + sjednoť výšku zápisu s výškou sloupce se šachovnicí
+            // (widget pak končí hned pod ovládáním, žádné volné místo dole)
+            setTimeout(() => {
+                board.resize();
+                const lp = document.getElementById(`${uid}-left-panel`);
+                const mv = document.getElementById(`${uid}-moves`);
+                if (lp && mv) mv.style.maxHeight = lp.offsetHeight + 'px';
+            }, 120);
             updatePositionDisplay(uid);
         });
     }
