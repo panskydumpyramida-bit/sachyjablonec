@@ -119,18 +119,24 @@ function doAnalyze(fen, depth, multiPv) {
 
         const pvs = {}; // multipv index -> { depth, cp, mate, firstMove }
         let done = false;
+        let hardTimer = null;
 
         const finish = (val) => {
             if (done) return;
             done = true;
             listener = null;
             clearTimeout(timer);
+            if (hardTimer) clearTimeout(hardTimer);
             resolve(val);
         };
 
+        // Timeout: požádej engine o 'stop', ale NEUKONČUJ hned — počkej na 'bestmove',
+        // které 'stop' vyvolá, ať opožděný výstup spotřebuje TOTO volání a neprosákne
+        // do dalšího (jinak další analýza dostane stará data). Tvrdá pojistka, kdyby
+        // bestmove nepřišlo.
         const timer = setTimeout(() => {
             send('stop');
-            finish(collect());
+            hardTimer = setTimeout(() => finish(collect()), 2500);
         }, ANALYZE_TIMEOUT_MS);
 
         function collect() {

@@ -6,6 +6,7 @@
 - **Konec rozkouskovaných kombinací:** Jedna vynucená kombinace se už nenabízí jako několik hádanek — varianta se bere jako celek od prvního (nenápadného) tahu. Scanner slučuje souvislé úseky téže kombinace.
 - **Tlačítko „Sloučit duplicity":** Sloučí rozkouskované kombinace i duplicitní pozice v navržených hádankách; hlasy zůstanou zachované u ponechané úlohy (přesunou se na ni).
 - **Samočištění:** Sken partií po doběhnutí sám sloučí případné duplicity; vyřešena i kolize ukládání po posunu startu hádanky.
+- **Spolehlivější analýza:** Opraven šachový engine, který při delším rozboru (timeout) mohl propašovat staré hodnocení do dalšího rozboru — mohlo to kazit výběr hádanek.
 
 ---
 
