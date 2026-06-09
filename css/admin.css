@@ -3469,3 +3469,14 @@ textarea.auto-resize {
 @media (max-width: 768px) {
     body.editor-focus-mode .editor-publish-rail { display: inline-flex !important; }
 }
+
+/* Diagram selector: pevný panel — bez pozadí ležel obsah přímo na průhledném overlay */
+#diagramSelectorModal .modal-content {
+    background: #1a1a2e;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6);
+    max-height: 92vh;
+    overflow-y: auto;
+}

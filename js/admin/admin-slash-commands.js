@@ -725,8 +725,7 @@ function insertCtaButton(titleText, btnText, urlTarget) {
     const container = document.createElement('div');
     container.style.cssText = 'text-align: center; margin-top: 50px; margin-bottom: 20px; padding: 30px 20px; background: var(--surface-color, #1e1e1e); border-radius: 12px; border: 1px solid rgba(212, 175, 55, 0.2);';
     container.innerHTML = '<h3 style="margin-top: 0; color: #ffffff; font-size: 1.3em;">' + titleText + '</h3>' +
-        '<a href="' + urlTarget + '" class="cta-button" target="_blank" rel="noopener noreferrer" style="display: inline-block; background-color: var(--primary-color, #d4af37); color: var(--secondary-color, #1a1a1a); padding: 12px 30px; text-decoration: none; border-radius: 50px; font-size: 1.1em; font-weight: 600; margin: 20px 0; box-shadow: 0 4px 12px rgba(212, 175, 55, 0.3); border: none;">🔗 ' + btnText + '</a>' +
-        '<p style="margin-bottom: 0; color: var(--text-muted, #a0a0a0); font-size: 0.95em;">[Doplňující text, např. odkaz na fotogalerii níže, nebo smažte]</p>';
+        '<a href="' + urlTarget + '" class="cta-button" target="_blank" rel="noopener noreferrer" style="display: inline-block; background-color: var(--primary-color, #d4af37); color: var(--secondary-color, #1a1a1a); padding: 12px 30px; text-decoration: none; border-radius: 6px; font-size: 1.1em; font-weight: 600; margin: 20px 0 6px; box-shadow: 0 4px 12px rgba(212, 175, 55, 0.3); border: none;">🔗 ' + btnText + '</a>';
 
     if (selection.rangeCount) {
         const range = selection.getRangeAt(0);
