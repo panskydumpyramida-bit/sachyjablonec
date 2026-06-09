@@ -1174,6 +1174,7 @@ window.addEventListener('focus', () => {
                 if (black) games[gameIndex].black = black;
                 games[gameIndex].commented = true;
                 renderGames();
+                window.isNewsDirty = true;
                 showToast('PGN partie aktualizováno z editoru');
             }
         } catch (e) { /* ignore */ }

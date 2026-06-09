@@ -818,14 +818,16 @@ async function saveGame() {
 
         // Try postMessage to opener (admin editor)
         const payload = { type: 'pgn-edited', gameIndex: articleEditGameIndex, pgn: fullPgn, white, black };
-        if (window.opener) {
+        if (window.opener && !window.opener.closed) {
             window.opener.postMessage(payload, '*');
         }
-        // Also save to localStorage as fallback
+        // Also save to localStorage as fallback (editor článku si to přečte při focusu)
         localStorage.setItem('edited_pgn_result', JSON.stringify(payload));
 
-        showNotification('PGN uloženo do článku!', 'success');
-        setTimeout(() => window.close(), 1000);
+        showNotification('Uloženo do článku — vracím tě zpět, piš dál.', 'success');
+        // Vrať fokus na článek a zavři tento tab; kdyby zavření selhalo, uživatel jen přepne záložku
+        try { if (window.opener && !window.opener.closed) window.opener.focus(); } catch (e) {}
+        setTimeout(() => window.close(), 900);
         return;
     }
 
@@ -1578,6 +1580,23 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (saveBtn) {
                     saveBtn.innerHTML = '<i class="fa-solid fa-file-import"></i> Uložit do článku';
                     saveBtn.title = 'Uloží komentované PGN zpět do editoru článku';
+                    // Tlačítko "Zpět do článku" — návrat bez uložení, ať lze dál psát článek
+                    if (!document.getElementById('backToArticleBtn')) {
+                        const back = document.createElement('button');
+                        back.id = 'backToArticleBtn';
+                        back.type = 'button';
+                        back.className = saveBtn.className;
+                        back.style.cssText = 'background:rgba(148,163,184,0.15); border:1px solid rgba(148,163,184,0.45); color:#cbd5e1; margin-right:8px;';
+                        back.innerHTML = '<i class="fa-solid fa-arrow-left"></i> Zpět do článku';
+                        back.title = 'Vrátit se do článku a pokračovat v psaní (beze změn partie)';
+                        back.addEventListener('click', () => {
+                            try { if (window.opener && !window.opener.closed) window.opener.focus(); } catch (e) {}
+                            window.close();
+                            // Kdyby prohlížeč zavření zablokoval:
+                            setTimeout(() => showNotification('Přepni zpět na záložku s článkem a piš dál.', 'info'), 200);
+                        });
+                        saveBtn.parentElement.insertBefore(back, saveBtn);
+                    }
                 }
             } catch (e) {
                 console.error('Failed to parse article_edit_pgn', e);
