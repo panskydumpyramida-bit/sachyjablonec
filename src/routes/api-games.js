@@ -10,21 +10,18 @@ router.get('/', async (req, res) => {
     try {
         const { category } = req.query;
 
-        console.log('Fetching games with category:', category);
+        console.log('Fetching games with category:', category || '(všechny)');
 
-        if (!category) {
-            return res.status(400).json({ error: 'Category parameter is required' });
-        }
+        // category je volitelná — bez ní vrátíme partie ze VŠECH publikovaných článků
+        // (jinak by se nové kategorie jako "Turnaje" musely pořád dopisovat do whitelistu)
+        const where = {
+            isPublished: true,
+            gamesJson: { not: null },
+        };
+        if (category) where.category = category;
 
-        // Fetch news articles with gamesJson in this category
         const newsWithGames = await prisma.news.findMany({
-            where: {
-                category: category,
-                isPublished: true,
-                gamesJson: {
-                    not: null
-                }
-            },
+            where,
             select: {
                 id: true,
                 title: true,
@@ -34,7 +31,7 @@ router.get('/', async (req, res) => {
             orderBy: {
                 publishedDate: 'desc'
             },
-            take: 50
+            take: category ? 50 : 200
         });
 
         // Extract and flatten games from gamesJson

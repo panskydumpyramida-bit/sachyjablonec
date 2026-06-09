@@ -518,28 +518,18 @@
             container.innerHTML = '<p style="color: var(--text-muted); text-align: center;"><i class="fa-solid fa-spinner fa-spin"></i> Načítám...</p>';
 
             try {
-                // Fetch games from all categories - use actual Czech category names from database
-                const categories = ['Soutěže družstev', 'Oddílový přebor', 'Mládež', 'O nás'];
-                let allArticleGames = [];
-
-                for (const cat of categories) {
-                    try {
-                        const res = await fetch(`${API_URL}/viewer-games?category=${encodeURIComponent(cat)}`);
-                        if (res.ok) {
-                            const games = await res.json();
-                            allArticleGames = allArticleGames.concat(games.map(g => ({
-                                ...g,
-                                source: 'chesscom',
-                                white: g.white || g.whitePlayer || 'White',
-                                black: g.black || g.blackPlayer || 'Black',
-                                result: g.result || '*',
-                                date: g.date || new Date().toISOString()
-                            })));
-                        }
-                    } catch (e) { /* ignore category errors */ }
-                }
-
-                allGames = allArticleGames;
+                // Jeden dotaz bez kategorie → partie ze VŠECH publikovaných článků
+                // (dřív se kategorie hardcodovaly a nové jako „Turnaje" vypadly)
+                const res = await fetch(`${API_URL}/viewer-games`);
+                const games = res.ok ? await res.json() : [];
+                allGames = games.map(g => ({
+                    ...g,
+                    source: 'chesscom',
+                    white: g.white || g.whitePlayer || 'White',
+                    black: g.black || g.blackPlayer || 'Black',
+                    result: g.result || '*',
+                    date: g.date || new Date().toISOString()
+                }));
                 renderGamesList();
             } catch (e) {
                 console.error(e);
