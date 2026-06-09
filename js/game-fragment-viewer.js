@@ -81,42 +81,47 @@
         fragmentCounter++;
         const uid = `frag-${fragmentCounter}`;
 
-        const chess = new Chess(fragment.startFen || undefined);
-        const moves = [];
+        const moves = []; // hlavní linie (ploché uzly) — pro šipky a eval
+        const nagMap = { '$1': '!', '$2': '?', '$3': '!!', '$4': '??', '$5': '!?', '$6': '?!' };
         if (fragment.pgn) {
-            let pgnClean = fragment.pgn.replace(/\[.*?\]\s*/g, '').replace(/\b(1-0|0-1|1\/2-1\/2|\*)\s*$/, '').trim();
-            let pgnNoVars = pgnClean;
-            let lastLen;
-            do {
-                lastLen = pgnNoVars.length;
-                pgnNoVars = pgnNoVars.replace(/\([^()]*\)/g, '');
-            } while (pgnNoVars.length < lastLen);
-
-            const regex = /{[^}]*}|\$\d+|[!?]+|[a-zA-Z0-9\-+=#]+/g;
-            const rawTokens = pgnNoVars.match(regex) || [];
-            
-            let currentMoveObj = null;
-
-            rawTokens.forEach(token => {
-                if (token.match(/^\d+\.+$/) || token.match(/^\d+\.\.\.$/)) return;
-                
-                if (token.startsWith('{')) {
-                    if (currentMoveObj) {
-                        currentMoveObj.comment = token.substring(1, token.length - 1).trim();
+            const pgnClean = fragment.pgn.replace(/\[.*?\]\s*/g, '').replace(/\b(1-0|0-1|1\/2-1\/2|\*)\s*$/, '').trim();
+            // tokeny VČETNĚ závorek variant
+            const tokens = pgnClean.match(/\(|\)|{[^}]*}|\$\d+|[!?]+|[a-zA-Z0-9\-+=#]+/g) || [];
+            let ti = 0;
+            // rekurzivní parser — varianta je alternativa k POSLEDNÍMU tahu (větví z pozice před ním)
+            const parseLine = (pos) => {
+                const line = [];
+                let last = null;
+                while (ti < tokens.length) {
+                    const tok = tokens[ti];
+                    if (tok === ')') return line;
+                    if (tok === '(') {
+                        ti++;
+                        if (last) {
+                            const vline = parseLine(new Chess(last.preMoveFen));
+                            (last.variations = last.variations || []).push(vline);
+                        } else {
+                            parseLine(new Chess(pos.fen())); // varianta bez předchozího tahu — projeď a zahoď
+                        }
+                        if (tokens[ti] === ')') ti++;
+                        continue;
                     }
-                } else if (token.startsWith('$')) {
-                    const nagMap = { '$1': '!', '$2': '?', '$3': '!!', '$4': '??', '$5': '!?', '$6': '?!' };
-                    if (currentMoveObj && nagMap[token]) currentMoveObj.nag = nagMap[token];
-                } else if (token.match(/^[!?]+$/)) {
-                    if (currentMoveObj) currentMoveObj.nag = token;
-                } else {
-                    const move = chess.move(token);
-                    if (move) {
-                        currentMoveObj = { san: move.san, fen: chess.fen(), comment: '', nag: '' };
-                        moves.push(currentMoveObj);
+                    if (/^\d+\.+$/.test(tok)) { ti++; continue; }       // číslo tahu
+                    if (tok[0] === '{') { if (last) last.comment = tok.slice(1, -1).trim(); ti++; continue; }
+                    if (tok[0] === '$') { if (last && nagMap[tok]) last.nag = nagMap[tok]; ti++; continue; }
+                    if (/^[!?]+$/.test(tok)) { if (last) last.nag = tok; ti++; continue; }
+                    const fenBefore = pos.fen();
+                    let mv = null;
+                    try { mv = pos.move(tok); } catch (e) { mv = null; }
+                    if (mv) {
+                        last = { san: mv.san, color: mv.color, fen: pos.fen(), preMoveFen: fenBefore, comment: '', nag: '', variations: [] };
+                        line.push(last);
                     }
+                    ti++;
                 }
-            });
+                return line;
+            };
+            moves.push(...parseLine(new Chess(fragment.startFen || undefined)));
         }
 
         const startFen = fragment.startFen || 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1';
@@ -132,45 +137,76 @@
             return `<div style="font-size:0.75rem; color:#9ca3af; padding-left:28px; padding-bottom:6px; line-height:1.3; font-style:italic; word-break:break-word;">${escapeHtml(moveObj.comment)}</div>`;
         };
         
+        // Kompaktní vykreslení podvariant (ztlumené, malé, v závorkách, klikací)
+        const varMoveSpan = (n) => `<span class="frag-var-move" data-frag-uid="${uid}" data-frag-fen="${n.fen}" style="cursor:pointer;padding:0 1px;border-radius:2px;color:#94a3b8;">${n.san}${n.nag ? `<span style="color:#7dd3fc;">${n.nag}</span>` : ''}</span>`;
+        const renderVarLine = (line, mnStart, whiteStart) => {
+            let html = '', mn = mnStart, white = whiteStart, first = true;
+            for (const n of line) {
+                if (white) html += `${first ? '' : ' '}<span style="color:#64748b;">${mn}.</span> `;
+                else html += first ? `<span style="color:#64748b;">${mn}…</span> ` : ' ';
+                html += varMoveSpan(n);
+                if (n.comment) html += ` <span style="font-style:italic;color:#6b7280;">${escapeHtml(n.comment)}</span>`;
+                if (n.variations && n.variations.length) {
+                    for (const sub of n.variations) html += ` (${renderVarLine(sub, mn, white)})`;
+                }
+                if (!white) mn++;
+                white = !white;
+                first = false;
+            }
+            return html;
+        };
+        const renderVars = (node, moveNum, isWhite) => {
+            if (!node || !node.variations || !node.variations.length) return '';
+            return node.variations.map(v =>
+                `<div style="font-size:0.68rem;color:#94a3b8;padding-left:28px;padding-bottom:3px;line-height:1.35;word-break:break-word;">( ${renderVarLine(v, moveNum, isWhite)} )</div>`
+            ).join('');
+        };
+
         let moveListHtml = '';
         let mIdx = 0;
         let pgnMoveNum = fragment.fromMove;
 
         const rowOpen = `<div style="display:flex; gap:0.3rem; margin-bottom:0.1rem; align-items:center;">`;
         const numSpan = (txt) => `<span style="color:var(--text-muted);font-size:0.75rem;width:24px;text-align:right;">${txt}</span>`;
-        // Černý půltah na vlastním řádku, zarovnaný vpravo (po komentáři bílého nebo jako první půltah)
+        // Černý půltah na vlastním řádku, zarovnaný vpravo (po komentáři/variantě bílého nebo jako první půltah)
         const blackOnlyRow = (idx) => rowOpen + numSpan(`${pgnMoveNum}...`) + `<span style="flex:1;"></span>` + renderMoveSpan(idx, moves[idx]) + `</div>`;
 
         while (mIdx < moves.length) {
+            const moveNum = pgnMoveNum;
             // Fragment začíná černým na tahu
             if (mIdx === 0 && startFenTurn === 'b') {
                 moveListHtml += blackOnlyRow(mIdx);
                 if (moves[mIdx].comment) moveListHtml += renderComment(moves[mIdx]);
+                moveListHtml += renderVars(moves[mIdx], moveNum, false);
                 pgnMoveNum++; mIdx++;
                 continue;
             }
 
             const wIdx = mIdx;
             const wHasComment = !!moves[wIdx].comment;
+            const wHasVars = !!(moves[wIdx].variations && moves[wIdx].variations.length);
             mIdx++;
 
-            // Bez komentáře bílého → černý do stejného řádku (klasický pár)
+            // Černý do stejného řádku jen když bílý nemá komentář ANI varianty
             let bIdx = -1;
-            if (!wHasComment && mIdx < moves.length) { bIdx = mIdx; mIdx++; }
+            if (!wHasComment && !wHasVars && mIdx < moves.length) { bIdx = mIdx; mIdx++; }
 
-            moveListHtml += rowOpen + numSpan(`${pgnMoveNum}.`) + renderMoveSpan(wIdx, moves[wIdx]);
+            moveListHtml += rowOpen + numSpan(`${moveNum}.`) + renderMoveSpan(wIdx, moves[wIdx]);
             if (bIdx !== -1) moveListHtml += renderMoveSpan(bIdx, moves[bIdx]);
             moveListHtml += `</div>`;
 
-            // Komentář bílého → pod tah, a černý až POD něj na vlastní řádek vpravo
-            if (wHasComment) {
-                moveListHtml += renderComment(moves[wIdx]);
-                if (mIdx < moves.length) {
-                    bIdx = mIdx; mIdx++;
-                    moveListHtml += blackOnlyRow(bIdx);
-                }
+            if (wHasComment) moveListHtml += renderComment(moves[wIdx]);
+            moveListHtml += renderVars(moves[wIdx], moveNum, true);
+
+            // Černý na vlastní řádek, pokud bílý měl komentář nebo varianty
+            if ((wHasComment || wHasVars) && mIdx < moves.length) {
+                bIdx = mIdx; mIdx++;
+                moveListHtml += blackOnlyRow(bIdx);
             }
-            if (bIdx !== -1 && moves[bIdx].comment) moveListHtml += renderComment(moves[bIdx]);
+            if (bIdx !== -1) {
+                if (moves[bIdx].comment) moveListHtml += renderComment(moves[bIdx]);
+                moveListHtml += renderVars(moves[bIdx], moveNum, false);
+            }
             pgnMoveNum++;
         }
 
@@ -231,8 +267,11 @@
             const state = { board, moves, startFen, currentIdx: -1, autoplayTimer: null, engineEnabled: false, analyzer: null, lastEngineFen: null };
             window._fragStates = window._fragStates || {};
             window._fragStates[uid] = state;
-            document.querySelectorAll(`[data-frag-uid="${uid}"]`).forEach(el => {
+            document.querySelectorAll(`.frag-move[data-frag-uid="${uid}"]`).forEach(el => {
                 el.addEventListener('click', () => goToMove(uid, parseInt(el.getAttribute('data-move-idx'))));
+            });
+            document.querySelectorAll(`.frag-var-move[data-frag-uid="${uid}"]`).forEach(el => {
+                el.addEventListener('click', () => goToFen(uid, el.getAttribute('data-frag-fen'), el));
             });
             // Ensure board resizes properly
             setTimeout(() => board.resize(), 100);
@@ -251,12 +290,25 @@
         if (state.engineEnabled) runFragEngine(uid);
     }
 
+    // Skok šachovnice na pozici z podvarianty (mimo hlavní linii) — jen zobrazí, nemění currentIdx
+    function goToFen(uid, fen, el) {
+        const state = window._fragStates?.[uid];
+        if (!state || !fen) return;
+        state.board.position(fen, true);
+        document.querySelectorAll(`.frag-move[data-frag-uid="${uid}"], .frag-var-move[data-frag-uid="${uid}"]`).forEach(e => {
+            e.style.background = '';
+            e.style.fontWeight = '';
+            e.style.color = e.classList.contains('frag-var-move') ? '#94a3b8' : '#e0e0e0';
+        });
+        if (el) { el.style.background = 'rgba(125,211,252,0.25)'; el.style.fontWeight = '700'; el.style.color = '#7dd3fc'; }
+    }
+
     function updatePositionDisplay(uid) {
         const state = window._fragStates?.[uid];
         if (!state) return;
         const posEl = document.getElementById(`${uid}-pos`);
         if (posEl) posEl.textContent = `${state.currentIdx + 1}/${state.moves.length}`;
-        document.querySelectorAll(`[data-frag-uid="${uid}"]`).forEach(el => {
+        document.querySelectorAll(`.frag-move[data-frag-uid="${uid}"]`).forEach(el => {
             const idx = parseInt(el.getAttribute('data-move-idx'));
             el.style.background = idx === state.currentIdx ? 'rgba(96,165,250,0.25)' : '';
             el.style.fontWeight = idx === state.currentIdx ? '700' : '';
