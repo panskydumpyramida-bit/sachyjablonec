@@ -395,7 +395,8 @@ body.has-sidebar .admin-container > .admin-nav {
   inset: 0;
   top: var(--admin-header-height);
   background: rgba(0, 0, 0, 0.55);
-  z-index: 90;
+  /* nad publish railem (95) i sheetem (90), pod drawerem (200) — tap vedle menu dřív togglnul publish panel */
+  z-index: 150;
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.25s;

@@ -1292,8 +1292,10 @@ body.editor-focus-mode .editor-layout {
         writing-mode: horizontal-tb;
     }
 
-    .editor-layout > .editor-sidebar:last-child {
+    /* scope #editorView: třídu .editor-layout mají i usersView/eventsView a sheet jim odsouval formuláře mimo obrazovku */
+    #editorView .editor-layout > .editor-sidebar:last-child {
         position: fixed;
+        top: auto; /* jinak dědil top:100px ze sticky pravidla a visel nad spodkem */
         left: 0;
         right: 0;
         bottom: 0;
@@ -1301,6 +1303,7 @@ body.editor-focus-mode .editor-layout {
         width: 100% !important;
         min-width: 0 !important;
         max-height: 82vh;
+        max-height: 82dvh; /* iOS: vh se měří proti velkému viewportu, dvh proti reálnému */
         margin: 0 !important;
         padding: 1rem 1rem 4.75rem;
         border: 1px solid rgba(212, 175, 55, 0.2);
@@ -1309,11 +1312,12 @@ body.editor-focus-mode .editor-layout {
         background: rgba(15, 23, 42, 0.98);
         box-shadow: 0 -18px 48px rgba(0, 0, 0, 0.48);
         overflow-y: auto;
+        overscroll-behavior: contain; /* scroll v panelu neposouvá článek pod ním */
         transform: translateY(100%);
         transition: transform 0.24s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
-    body.editor-publish-open .editor-layout > .editor-sidebar:last-child {
+    body.editor-publish-open #editorView .editor-layout > .editor-sidebar:last-child {
         transform: translateY(0);
     }
 
@@ -3403,7 +3407,7 @@ textarea.auto-resize {
 
 @media (min-width: 1024px) and (max-width: 1399px) {
     .editor-layout { grid-template-columns: 1fr; }
-    .editor-layout > .editor-sidebar:last-child {
+    #editorView .editor-layout > .editor-sidebar:last-child {
         position: fixed;
         top: calc(var(--admin-header-height, 70px) + var(--topbar-height, 60px));
         right: 0;
@@ -3421,7 +3425,7 @@ textarea.auto-resize {
         margin-top: 0;
         order: initial;
     }
-    body.editor-publish-open .editor-layout > .editor-sidebar:last-child { transform: translateX(0); }
+    body.editor-publish-open #editorView .editor-layout > .editor-sidebar:last-child { transform: translateX(0); }
 
     /* Rail — always visible right-edge affordance */
     .editor-publish-rail {
@@ -3468,6 +3472,15 @@ textarea.auto-resize {
 /* Mobil: v režimu psaní nechat publish rail (jinak na mobilu nejde článek uložit) */
 @media (max-width: 768px) {
     body.editor-focus-mode .editor-publish-rail { display: inline-flex !important; }
+    /* …a po kliku na rail panel skutečně otevřít (focus-mode pravidlo ho jinak drží display:none) */
+    body.editor-focus-mode.editor-publish-open #editorView .editor-layout > .editor-sidebar:last-child {
+        display: block !important;
+    }
+
+    /* Připojené partie: řádek se nezalamoval a akční tlačítka (smazat, komentovat) byly oříznuté mimo obrazovku */
+    .game-item { flex-wrap: wrap; }
+    .game-item .game-body { flex-wrap: wrap; min-width: 0; }
+    .game-item .game-actions { margin-left: auto; }
 }
 
 /* Diagram selector: pevný panel — bez pozadí ležel obsah přímo na průhledném overlay */

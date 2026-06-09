@@ -202,10 +202,6 @@ async function verifyToken() {
 function switchTab(tab) {
     if (!currentUser) return; // Guard against unauthenticated access
 
-    if (tab !== 'editor') {
-        document.body.classList.remove('editor-publish-open', 'editor-focus-mode');
-    }
-
     // Check for unsaved changes in Editor
     // 'editor' is the ID of the news editor view.
     // If we are currently ON the editor tab (which is active), and isNewsDirty is true.
@@ -215,6 +211,11 @@ function switchTab(tab) {
     if (editorView && !editorView.classList.contains('hidden') && window.isNewsDirty) {
         showUnsavedChangesModal(tab);
         return;
+    }
+
+    // Až ZA unsaved guardem — když uživatel v modalu zvolí „zůstat", panel/focus mód mu nesmí zmizet
+    if (tab !== 'editor') {
+        document.body.classList.remove('editor-publish-open', 'editor-focus-mode');
     }
 
     // Cleanup any open modals from previous section
