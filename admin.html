@@ -506,9 +506,9 @@
                                 </div>
                                 <div class="form-group" style="margin-bottom: 0.75rem;">
                                     <label style="font-size: 0.8rem;">Krátký
-                                        popis</label><textarea id="newsExcerpt" rows="2" class="auto-resize"
+                                        popis</label><textarea id="newsExcerpt" rows="4" class="auto-resize"
                                         placeholder="Zobrazí se na kartě..." oninput="updatePreview()"
-                                        style="font-size: 0.85rem;"></textarea>
+                                        style="font-size: 0.85rem; min-height: 84px; resize: vertical;"></textarea>
                                 </div><label
                                     style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; font-size: 0.85rem;"><input
                                         type="checkbox" id="publishCheck" style="width: auto;"
@@ -533,7 +533,7 @@
                                 <div id="facebookMessageEditor" style="display: none; margin-top: 0.5rem; padding: 0.75rem; background: rgba(24,119,242,0.08); border: 1px solid rgba(24,119,242,0.3); border-radius: 6px;">
                                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.4rem; flex-wrap: wrap; gap: 0.4rem;">
                                         <label for="facebookMessage" style="font-size: 0.75rem; color: #93c5fd; margin: 0;">Text FB postu</label>
-                                        <div style="display: inline-flex; align-items: center; gap: 0.3rem;">
+                                        <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 0.3rem; width: 100%;">
                                             <div id="fbLengthToggle" role="group" aria-label="Délka postu"
                                                 style="display: inline-flex; background: rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.1); border-radius: 4px; overflow: hidden;">
                                                 <button type="button" data-fb-length="short" onclick="setFbLength('short')"
