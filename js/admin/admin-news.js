@@ -27,6 +27,11 @@ let pendingThumbnailBlob = null;
 
 // Dirty State for Navigation Guard
 window.isNewsDirty = false;
+// Jednotné označení neuložené změny — pro mutace mimo input listenery (partie, galerie, thumbnail, HTML mód)
+window.markNewsDirty = function () {
+    window.isNewsDirty = true;
+    if (typeof updateEditorUXStatus === 'function') updateEditorUXStatus();
+};
 
 // Make state variables globally accessible for other modules
 window.uploadedImageData = null;
@@ -83,33 +88,44 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Auto-save setup
     let saveTimeout;
+    const saveDraftNow = () => {
+        const titleEl = document.getElementById('newsTitle');
+        const contentEl = document.getElementById('articleContent');
+        const excerptEl = document.getElementById('newsExcerpt');
+        const editIdEl = document.getElementById('editNewsId');
+
+        const draft = {
+            title: titleEl?.value || '',
+            content: contentEl?.innerHTML || '',
+            excerpt: excerptEl?.value || '',
+            editId: editIdEl?.value || '',
+            authorId: document.getElementById('newsAuthorId')?.value || '',
+            authorName: document.getElementById('newsAuthorName')?.value || '',
+            coAuthorId: document.getElementById('newsCoAuthorId')?.value || '',
+            coAuthorName: document.getElementById('newsCoAuthorName')?.value || '',
+            savedAt: new Date().toISOString()
+        };
+
+        // Only save if there's actual content
+        if (draft.title || (draft.content && draft.content !== '<br>' && draft.content.trim() !== '')) {
+            localStorage.setItem('newsDraft', JSON.stringify(draft));
+            console.log('📝 Draft auto-saved at', new Date().toLocaleTimeString());
+        }
+    };
+    window.saveDraftNow = saveDraftNow;
     const autoSave = () => {
         clearTimeout(saveTimeout);
-        saveTimeout = setTimeout(() => {
-            const titleEl = document.getElementById('newsTitle');
-            const contentEl = document.getElementById('articleContent');
-            const excerptEl = document.getElementById('newsExcerpt');
-            const editIdEl = document.getElementById('editNewsId');
-
-            const draft = {
-                title: titleEl?.value || '',
-                content: contentEl?.innerHTML || '',
-                excerpt: excerptEl?.value || '',
-                editId: editIdEl?.value || '',
-                authorId: document.getElementById('newsAuthorId')?.value || '',
-                authorName: document.getElementById('newsAuthorName')?.value || '',
-                coAuthorId: document.getElementById('newsCoAuthorId')?.value || '',
-                coAuthorName: document.getElementById('newsCoAuthorName')?.value || '',
-                savedAt: new Date().toISOString()
-            };
-
-            // Only save if there's actual content
-            if (draft.title || (draft.content && draft.content !== '<br>' && draft.content.trim() !== '')) {
-                localStorage.setItem('newsDraft', JSON.stringify(draft));
-                console.log('📝 Draft auto-saved at', new Date().toLocaleTimeString());
-            }
-        }, 2000); // Save 2s after last change
+        saveTimeout = setTimeout(saveDraftNow, 2000); // Save 2s after last change
     };
+
+    // Zavření tabu / F5 s neuloženými změnami: flush draftu + nativní varování prohlížeče
+    window.addEventListener('beforeunload', (e) => {
+        if (window.isNewsDirty) {
+            try { saveDraftNow(); } catch (err) {}
+            e.preventDefault();
+            e.returnValue = '';
+        }
+    });
 
     content.addEventListener('input', () => {
         // Placeholder spany ([Jméno]/[Skóre]): po přepsání obsahu uklidit metadata, ať neprosáknou do uloženého článku
@@ -536,8 +552,12 @@ function resetEditor() {
         if (select.value && window.handleAuthorChange) window.handleAuthorChange();
     }
 
-    // Clear auto-saved draft
-    localStorage.removeItem('newsDraft');
+    // Clear auto-saved draft — ale jen draft NOVÉHO článku; draft editace musí přežít,
+    // protože editNews volá resetEditor před načtením a pak draft nabízí k obnově
+    try {
+        const d = JSON.parse(localStorage.getItem('newsDraft') || 'null');
+        if (!d || !d.editId) localStorage.removeItem('newsDraft');
+    } catch (e) { localStorage.removeItem('newsDraft'); }
     window.isNewsDirty = false;
     updateEditorUXStatus();
 }
@@ -653,6 +673,28 @@ async function editNews(id) {
         updatePublishLabel(); // Update button/checkbox labels based on date
         window.isNewsDirty = false;
         updateEditorUXStatus();
+
+        // Záchrana po pádu/401: existuje k TOMUHLE článku novější lokální draft? Nabídnout obnovu.
+        try {
+            const rawDraft = localStorage.getItem('newsDraft');
+            if (rawDraft) {
+                const draft = JSON.parse(rawDraft);
+                if (String(draft.editId) === String(item.id) && draft.savedAt
+                    && (!item.updatedAt || new Date(draft.savedAt) > new Date(item.updatedAt))) {
+                    const when = new Date(draft.savedAt).toLocaleString('cs-CZ');
+                    if (confirm(`K tomuto článku existuje neuložená lokální verze z ${when} (novější než uložená). Obnovit ji?`)) {
+                        if (draft.title) document.getElementById('newsTitle').value = draft.title;
+                        if (draft.content) document.getElementById('articleContent').innerHTML = draft.content;
+                        if (draft.excerpt) document.getElementById('newsExcerpt').value = draft.excerpt;
+                        updatePreview();
+                        window.isNewsDirty = true;
+                        updateEditorUXStatus();
+                    } else {
+                        localStorage.removeItem('newsDraft');
+                    }
+                }
+            }
+        } catch (e2) { console.warn('draft check failed', e2); }
     } catch (e) {
         console.error(e);
         // Fallback rendering in case of partial failure
@@ -946,6 +988,10 @@ async function saveNews() {
 
             switchTab('dashboard');
             loadDashboard();
+        } else if (res.status === 401) {
+            // Vypršelé přihlášení: obsah NEZAHODIT — flush draftu + návod (re-login v novém tabu, pak uložit znovu)
+            try { window.saveDraftNow && window.saveDraftNow(); } catch (e2) {}
+            showAlert('Vypršelo přihlášení. Obsah zůstává v editoru (a v záloze) — přihlaste se v novém tabu a pak dejte Uložit znovu.', 'error');
         } else {
             // Try to get error details from response
             let errorMsg = 'Chyba při ukládání';
@@ -1050,6 +1096,7 @@ function updatePreview() {
 
 // Note: Uses escapeHtml from utils.js (global)
 function renderGames() {
+    window.markNewsDirty && markNewsDirty();
     console.log('[admin-news] renderGames:', games.length);
     const list = document.getElementById('gamesList');
     if (!list) return;
@@ -1556,6 +1603,7 @@ function removeGame(index) {
 }
 
 function updateGameTitle(index, newTitle) {
+    window.markNewsDirty && markNewsDirty();
     games[index].title = newTitle;
     updatePreview();
 }
@@ -1573,6 +1621,7 @@ function sanitizeGameId(input) {
 }
 
 function updateGameId(index, newId) {
+    window.markNewsDirty && markNewsDirty();
     const cleanId = sanitizeGameId(newId);
     games[index].gameId = cleanId;
     games[index].src = `https://www.chess.com/emboard?id=${cleanId}`;
@@ -1580,10 +1629,12 @@ function updateGameId(index, newId) {
 }
 
 function toggleGameCommented(index, checked) {
+    window.markNewsDirty && markNewsDirty();
     games[index].commented = checked;
 }
 
 function updateGameAvatar(index, avatar) {
+    window.markNewsDirty && markNewsDirty();
     games[index].commentAvatar = avatar || null;
 }
 
@@ -1743,6 +1794,7 @@ async function rotateGalleryImage(index) {
 }
 
 function renderGallery() {
+    window.markNewsDirty && markNewsDirty();
     document.getElementById('galleryPreview').innerHTML = galleryImages.length ? galleryImages.map((item, i) => {
         const url = typeof item === 'string' ? item : item.url;
         const caption = typeof item === 'string' ? '' : (item.caption || '');
@@ -1759,6 +1811,7 @@ function renderGallery() {
 }
 
 function updateGalleryCaption(index, caption) {
+    window.markNewsDirty && markNewsDirty();
     if (typeof galleryImages[index] === 'string') {
         galleryImages[index] = { url: galleryImages[index], caption };
     } else {

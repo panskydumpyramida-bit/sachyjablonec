@@ -88,6 +88,7 @@ function toggleSource() {
 }
 
 function updateContentFromSource() {
+    window.markNewsDirty && markNewsDirty();
     const contentDiv = document.getElementById('articleContent');
     const sourceArea = document.getElementById('articleSource');
     contentDiv.innerHTML = sourceArea.value;
@@ -4685,7 +4686,7 @@ function handleAdminShortcuts(e) {
 
     // Check if user is typing in an input text field
     const tag = e.target.tagName;
-    const isInput = tag === 'INPUT' || tag === 'TEXTAREA' || e.target.isContentEditable;
+    const isInput = tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || e.target.isContentEditable;
 
     // Help (?) - Shift + /
     if (e.key === '?' && !isInput) {
@@ -4696,11 +4697,13 @@ function handleAdminShortcuts(e) {
     // New Article (N)
     if (e.code === 'KeyN' && !isInput && !e.ctrlKey && !e.metaKey && !e.altKey) {
         e.preventDefault();
-        if (typeof window.resetEditor === 'function') {
-            window.resetEditor();
-            showToast('Nový článek', 'info');
-        } else if (typeof resetEditor === 'function') {
-            resetEditor();
+        // omylem zmáčknuté N nesmí tiše zahodit rozepsaný článek (reset maže i localStorage draft)
+        if (window.isNewsDirty && !confirm('Zahodit rozepsaný článek a začít nový?')) return;
+        window.isNewsDirty = false; // potvrzeno — ať switchTab nevyhodí druhý dotaz
+        const doReset = window.resetEditor || (typeof resetEditor === 'function' ? resetEditor : null);
+        if (doReset) {
+            if (window.switchTab) switchTab('editor'); // ať je akce vidět i z dashboardu
+            doReset();
             showToast('Nový článek', 'info');
         }
         return;

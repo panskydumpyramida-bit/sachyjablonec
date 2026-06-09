@@ -50,6 +50,7 @@ function handleImageUrl() {
 }
 
 function displayImage(src) {
+    window.markNewsDirty && markNewsDirty();
     document.getElementById('uploadArea').classList.add('has-image');
     document.getElementById('uploadPlaceholder').style.display = 'none';
     document.getElementById('imageUrlWrapper').style.display = 'none';
@@ -66,6 +67,7 @@ function displayImage(src) {
 }
 
 function removeImage() {
+    window.markNewsDirty && markNewsDirty();
     uploadedImageData = null;
     imageCropPosition = '50%';
     document.getElementById('cropSlider').value = 50;
@@ -84,6 +86,7 @@ function removeImage() {
 }
 
 function updateCropFromSlider(val) {
+    window.markNewsDirty && markNewsDirty();
     imageCropPosition = val + '%';
     document.getElementById('cropValueLabel').textContent = imageCropPosition;
 
