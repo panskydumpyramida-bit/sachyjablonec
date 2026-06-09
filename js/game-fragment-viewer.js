@@ -135,38 +135,43 @@
         let moveListHtml = '';
         let mIdx = 0;
         let pgnMoveNum = fragment.fromMove;
-        
+
+        const rowOpen = `<div style="display:flex; gap:0.3rem; margin-bottom:0.1rem; align-items:center;">`;
+        const numSpan = (txt) => `<span style="color:var(--text-muted);font-size:0.75rem;width:24px;text-align:right;">${txt}</span>`;
+        // Černý půltah na vlastním řádku, zarovnaný vpravo (po komentáři bílého nebo jako první půltah)
+        const blackOnlyRow = (idx) => rowOpen + numSpan(`${pgnMoveNum}...`) + `<span style="flex:1;"></span>` + renderMoveSpan(idx, moves[idx]) + `</div>`;
+
         while (mIdx < moves.length) {
-            moveListHtml += `<div style="display:flex; gap:0.3rem; margin-bottom:0.1rem; align-items:center;">`;
-            let wIdx = -1, bIdx = -1;
-            
+            // Fragment začíná černým na tahu
             if (mIdx === 0 && startFenTurn === 'b') {
-                moveListHtml += `<span style="color:var(--text-muted);font-size:0.75rem;width:24px;text-align:right;">${pgnMoveNum}...</span>`;
-                moveListHtml += `<span style="flex:1;"></span>`;
-                moveListHtml += renderMoveSpan(mIdx, moves[mIdx]);
-                bIdx = mIdx;
-                mIdx++;
-                pgnMoveNum++;
-            } else {
-                moveListHtml += `<span style="color:var(--text-muted);font-size:0.75rem;width:24px;text-align:right;">${pgnMoveNum}.</span>`;
-                moveListHtml += renderMoveSpan(mIdx, moves[mIdx]);
-                wIdx = mIdx;
-                mIdx++;
-                if (mIdx < moves.length) {
-                    moveListHtml += renderMoveSpan(mIdx, moves[mIdx]);
-                    bIdx = mIdx;
-                    mIdx++;
-                }
-                pgnMoveNum++;
+                moveListHtml += blackOnlyRow(mIdx);
+                if (moves[mIdx].comment) moveListHtml += renderComment(moves[mIdx]);
+                pgnMoveNum++; mIdx++;
+                continue;
             }
+
+            const wIdx = mIdx;
+            const wHasComment = !!moves[wIdx].comment;
+            mIdx++;
+
+            // Bez komentáře bílého → černý do stejného řádku (klasický pár)
+            let bIdx = -1;
+            if (!wHasComment && mIdx < moves.length) { bIdx = mIdx; mIdx++; }
+
+            moveListHtml += rowOpen + numSpan(`${pgnMoveNum}.`) + renderMoveSpan(wIdx, moves[wIdx]);
+            if (bIdx !== -1) moveListHtml += renderMoveSpan(bIdx, moves[bIdx]);
             moveListHtml += `</div>`;
-            
-            if (wIdx !== -1 && moves[wIdx].comment) {
+
+            // Komentář bílého → pod tah, a černý až POD něj na vlastní řádek vpravo
+            if (wHasComment) {
                 moveListHtml += renderComment(moves[wIdx]);
+                if (mIdx < moves.length) {
+                    bIdx = mIdx; mIdx++;
+                    moveListHtml += blackOnlyRow(bIdx);
+                }
             }
-            if (bIdx !== -1 && moves[bIdx].comment) {
-                moveListHtml += renderComment(moves[bIdx]);
-            }
+            if (bIdx !== -1 && moves[bIdx].comment) moveListHtml += renderComment(moves[bIdx]);
+            pgnMoveNum++;
         }
 
         let cleanWhite = fragment.white ? fragment.white.replace(/\s*\(\d+\s*[-–]\s*\d+\)/g, '') : '';
