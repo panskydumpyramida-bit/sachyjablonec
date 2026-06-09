@@ -172,6 +172,10 @@ async function handleImageFile(event) {
             const url = data.url.startsWith('http') ? data.url : `${baseUrl}${data.url}`;
             document.getElementById('imgUrlInput').value = url;
             document.getElementById('imgPreviewArea').innerHTML = `<img src="${url}" style="max-width:100%; max-height: 300px;">`;
+        } else {
+            alert(res.status === 401
+                ? 'Nahrávání selhalo: přihlášení vypršelo, přihlaste se znovu.'
+                : `Nahrávání selhalo (HTTP ${res.status}).`);
         }
     } catch (e) {
         console.error(e);

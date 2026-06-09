@@ -3522,3 +3522,11 @@ textarea.auto-resize {
 .wysiwyg-toolbar details.tb-more .tb-more-menu button:hover {
     background: rgba(255, 255, 255, 0.05);
 }
+
+/* HTML source mód: deaktivovat vkládací/formátovací tlačítka (psala by do skrytého editoru) */
+.wysiwyg-toolbar.source-mode button:not(#btnSource),
+.wysiwyg-toolbar.source-mode .toolbar-heading-group,
+.wysiwyg-toolbar.source-mode .dropdown-content {
+    pointer-events: none;
+    opacity: 0.35;
+}

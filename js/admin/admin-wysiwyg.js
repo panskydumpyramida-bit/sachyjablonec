@@ -90,6 +90,7 @@ function toggleSource() {
     const contentDiv = document.getElementById('articleContent');
     const sourceArea = document.getElementById('articleSource');
     const btn = document.getElementById('btnSource');
+    const toolbar = document.querySelector('.wysiwyg-toolbar');
 
     if (sourceArea.classList.contains('hidden')) {
         // Switch to Source
@@ -97,12 +98,15 @@ function toggleSource() {
         contentDiv.classList.add('hidden');
         sourceArea.classList.remove('hidden');
         btn.classList.add('active');
+        // V source módu by vkládací tlačítka psala do skrytého editoru a návrat z textarey by to zahodil
+        if (toolbar) toolbar.classList.add('source-mode');
     } else {
         // Switch to WYSIWYG
         contentDiv.innerHTML = sourceArea.value;
         sourceArea.classList.add('hidden');
         contentDiv.classList.remove('hidden');
         btn.classList.remove('active');
+        if (toolbar) toolbar.classList.remove('source-mode');
         updatePreview();
     }
 }
@@ -1910,9 +1914,17 @@ function showFormatChoiceModal(range) {
  * Uses DOM tree walking to avoid corrupting diagrams, tables, headings, etc.
  * Detects: Results (1-0, 0-1, ½-½) and potential player names (Firstname Lastname)
  */
+// Častá první slova dvouslovných měst/klubů — nejsou to jména hráčů
+const NAME_IGNORE_FIRST = new Set(['Nový', 'Nová', 'Nové', 'Mladá', 'Mladý', 'Mladé', 'Velká', 'Velký', 'Velké',
+    'Stará', 'Starý', 'Staré', 'Dolní', 'Horní', 'Česká', 'Český', 'České', 'Krajský', 'Krajská', 'Krajské',
+    'Šachový', 'Šachová', 'Městská', 'Městský']);
+
 function autoFormatEntireContent() {
     const editor = document.getElementById('articleContent');
     if (!editor) return;
+
+    // Snapshot pro Vrátit zpět — DOM replaceChild nejde vrátit Ctrl+Z
+    const undoSnapshot = editor.innerHTML;
 
     let scoreChanges = 0;
     let nameChanges = 0;
@@ -1967,14 +1979,26 @@ function autoFormatEntireContent() {
         // Remis/remíza
         { regex: /\b(remíza|remis)\b/gi, type: 'score' },
         // Team scores with comma decimals: "1,5 - 1,5", "1,5 : 1,5", "5,5 : 2,5"
-        { regex: /\b(\d+[,]\d+)\s*[:\-–]\s*(\d+[,]\d+)\b/g, type: 'score' },
-        // Team scores integer or dot decimal: "4:4", "3.5 : 2.5", "5 - 3"
-        { regex: /\b(\d+[.]?\d*)\s*[:\-–]\s*(\d+[.]?\d*)\b/g, type: 'score' },
-        // Fraction scores: "3/5", "4,5/6"
-        { regex: /\b(\d+[,.]?\d*)\/(\d+[,.]?\d*)\b/g, type: 'score' },
+        { regex: /\b(\d+[,]\d+)\s*[:\-–]\s*(\d+[,]\d+)\b/g, type: 'score', validate: (m) => scoreSidesOk(m[1], m[2]) },
+        // Team scores integer or dot decimal: "4:4", "3.5 : 2.5", "5 - 3" — NE časy (17:00) a roky (2024-2025)
+        { regex: /\b(\d+[.]?\d*)\s*([:\-–])\s*(\d+[.]?\d*)\b/g, type: 'score', validate: (m) => {
+            if (!scoreSidesOk(m[1], m[3])) return false;
+            // čas HH:MM — dvojtečka + pravá strana se 2 ciframi začínající 0-5 (00, 15, 30, 45…)
+            if (m[2] === ':' && /^[0-5]\d$/.test(m[3])) return false;
+            return true;
+        } },
+        // Fraction scores: "3/5", "4,5/6" — NE sezóny (2024/2025)
+        { regex: /\b(\d+[,.]?\d*)\/(\d+[,.]?\d*)\b/g, type: 'score', validate: (m) => scoreSidesOk(m[1], m[2]) },
         // Player names: FirstName LastName (both starting with uppercase, Czech diacritics)
-        { regex: /(?<![A-ZÁČĎÉĚÍŇÓŘŠŤÚŮÝŽa-záčďéěíňóřšťúůýž])([A-ZÁČĎÉĚÍŇÓŘŠŤÚŮÝŽ][a-záčďéěíňóřšťúůýž]+)\s+([A-ZÁČĎÉĚÍŇÓŘŠŤÚŮÝŽ][a-záčďéěíňóřšťúůýž]+)(?![A-ZÁČĎÉĚÍŇÓŘŠŤÚŮÝŽa-záčďéěíňóřšťúůýž])/g, type: 'name' }
+        { regex: /(?<![A-ZÁČĎÉĚÍŇÓŘŠŤÚŮÝŽa-záčďéěíňóřšťúůýž])([A-ZÁČĎÉĚÍŇÓŘŠŤÚŮÝŽ][a-záčďéěíňóřšťúůýž]+)\s+([A-ZÁČĎÉĚÍŇÓŘŠŤÚŮÝŽ][a-záčďéěíňóřšťúůýž]+)(?![A-ZÁČĎÉĚÍŇÓŘŠŤÚŮÝŽa-záčďéěíňóřšťúůýž])/g, type: 'name', validate: (m) => !NAME_IGNORE_FIRST.has(m[1]) }
     ];
+
+    // Skóre: obě strany rozumně malé (žádné roky/letopočty) — týmové zápasy max ~18 šachovnic
+    function scoreSidesOk(a, b) {
+        const x = parseFloat(String(a).replace(',', '.'));
+        const y = parseFloat(String(b).replace(',', '.'));
+        return x <= 20 && y <= 20 && String(a).replace(/[,.]/g, '').length < 4 && String(b).replace(/[,.]/g, '').length < 4;
+    }
 
     /**
      * Process a single text node: find matches, split, and wrap in highlight spans
@@ -1990,6 +2014,7 @@ function autoFormatEntireContent() {
             p.regex.lastIndex = 0;
             let m;
             while ((m = p.regex.exec(text)) !== null) {
+                if (p.validate && !p.validate(m)) continue;
                 // Check overlap with existing matches
                 const start = m.index;
                 const end = m.index + m[0].length;
@@ -2061,6 +2086,20 @@ function autoFormatEntireContent() {
         if (nameChanges > 0) message.push(`${nameChanges} jmen`);
 
         showToast(`✨ Naformátováno: ${message.join(', ')}`, 'success');
+
+        // Vrátit zpět — Ctrl+Z na DOM změny nefunguje
+        const undoBar = document.createElement('div');
+        undoBar.style.cssText = 'position:fixed; bottom:70px; right:20px; z-index:11000; background:#1e293b; border:1px solid rgba(255,255,255,0.15); border-radius:8px; padding:0.5rem 0.8rem; display:flex; gap:0.6rem; align-items:center; box-shadow:0 8px 24px rgba(0,0,0,0.4);';
+        undoBar.innerHTML = `<span style="color:#cbd5e1; font-size:0.82rem;">Auto-formát hotov.</span>
+            <button style="background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); color:#fff; border-radius:6px; padding:0.3rem 0.7rem; cursor:pointer; font-size:0.8rem;"><i class="fa-solid fa-rotate-left"></i> Vrátit zpět</button>`;
+        undoBar.querySelector('button').onclick = () => {
+            editor.innerHTML = undoSnapshot;
+            updatePreview();
+            undoBar.remove();
+            showToast('Auto-formátování vráceno', 'info');
+        };
+        document.body.appendChild(undoBar);
+        setTimeout(() => undoBar.remove(), 12000);
     } else {
         showToast('Žádné vzory k formátování nenalezeny', 'info');
     }

@@ -111,7 +111,18 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 2000); // Save 2s after last change
     };
 
-    content.addEventListener('input', () => { autoSave(); window.isNewsDirty = true; updateEditorUXStatus(); });
+    content.addEventListener('input', () => {
+        // Placeholder spany ([Jméno]/[Skóre]): po přepsání obsahu uklidit metadata, ať neprosáknou do uloženého článku
+        content.querySelectorAll('span[data-placeholder]').forEach(sp => {
+            if (!/^\[.*\]$/.test(sp.textContent.trim())) {
+                delete sp.dataset.placeholder;
+                sp.removeAttribute('title');
+                sp.style.cursor = '';
+                sp.style.opacity = '';
+            }
+        });
+        autoSave(); window.isNewsDirty = true; updateEditorUXStatus();
+    });
     document.getElementById('newsTitle')?.addEventListener('input', () => { autoSave(); window.isNewsDirty = true; updateEditorUXStatus(); });
     document.getElementById('newsExcerpt')?.addEventListener('input', () => { autoSave(); window.isNewsDirty = true; updateEditorUXStatus(); });
 
@@ -463,6 +474,8 @@ function resetEditor() {
         srcArea.value = '';
         document.getElementById('articleContent').classList.remove('hidden');
         if (srcBtn) srcBtn.classList.remove('active');
+        const tb = document.querySelector('.wysiwyg-toolbar');
+        if (tb) tb.classList.remove('source-mode');
     }
     document.getElementById('editorTitle').textContent = 'Nová novinka';
     document.getElementById('editNewsId').value = '';
