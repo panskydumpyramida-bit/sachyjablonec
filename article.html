@@ -169,9 +169,13 @@
                         </a>
                     </div>
                     <!-- Meta -->
-                    <div style="display: flex; gap: 1.5rem; color: var(--text-muted);">
+                    <div style="display: flex; gap: 1.5rem; align-items: center; color: var(--text-muted);">
                         <span id="articleDate"><i class="fa-regular fa-calendar"></i> </span>
                         <span id="articleCategory"><i class="fa-solid fa-tag"></i> </span>
+                        <a id="adminEditBtn" href="#" title="Upravit tento článek v administraci"
+                            style="display: none; align-items: center; gap: 0.4rem; color: #f59e0b; border: 1px solid rgba(245,158,11,0.45); border-radius: 6px; padding: 2px 10px; text-decoration: none; font-weight: 600;">
+                            <i class="fa-solid fa-pen"></i> Upravit článek
+                        </a>
                     </div>
                 </div>
 
@@ -351,6 +355,18 @@
 
             // Set newsId for comments section
             document.getElementById('comments-section').dataset.newsId = article.id;
+
+            // Admin: tlačítko "Upravit článek" (klientsky dle role v JWT; editor sám vyžaduje přihlášení)
+            try {
+                const tok = window.authToken || localStorage.getItem('auth_token') || localStorage.getItem('authToken') || sessionStorage.getItem('auth_token');
+                if (tok) {
+                    const role = (JSON.parse(atob(tok.split('.')[1])).role || '').toUpperCase();
+                    if (role === 'ADMIN' || role === 'SUPERADMIN') {
+                        const btn = document.getElementById('adminEditBtn');
+                        if (btn) { btn.href = `admin.html?editId=${article.id}`; btn.style.display = 'inline-flex'; }
+                    }
+                }
+            } catch (e) { /* nepřihlášený / nečitelný token → tlačítko zůstane skryté */ }
 
             // Initialize comments (after newsId is set)
             if (typeof CommentsManager !== 'undefined') {
