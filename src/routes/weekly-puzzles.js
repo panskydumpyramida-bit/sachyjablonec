@@ -5,10 +5,22 @@
  */
 
 import express from 'express';
-import { getStoredCandidates, startScan, getScanState, voteCandidate, getRatingInsights, dedupeStoredCandidates } from '../services/weeklyPuzzlesService.js';
+import { getStoredCandidates, startScan, getScanState, voteCandidate, getRatingInsights, dedupeStoredCandidates, getDailyPuzzle } from '../services/weeklyPuzzlesService.js';
 import { requireRole } from '../middleware/auth.js';
 
 const router = express.Router();
+
+// VEŘEJNÉ — Hádanka dne pro homepage modal (bez přihlášení)
+router.get('/daily', async (req, res) => {
+    try {
+        const puzzle = await getDailyPuzzle();
+        if (!puzzle) return res.status(404).json({ error: 'Zatím žádná hádanka' });
+        res.json(puzzle);
+    } catch (error) {
+        console.error('[WeeklyPuzzles] Daily error:', error);
+        res.status(500).json({ error: 'Failed to fetch daily puzzle' });
+    }
+});
 
 // Uložené kombinace (rychlé, z DB)
 router.get('/candidates', requireRole('ADMIN'), async (req, res) => {

@@ -501,3 +501,43 @@ export async function getRatingInsights() {
     });
     return { rated, count: rated.length };
 }
+
+// HÁDANKA DNE (veřejná, pro homepage modal).
+// Mix: pokud admin připnul konkrétní (setting daily_puzzle_pinned), vrátí ji;
+// jinak auto = z nejlépe hodnocených rotace podle dne.
+export async function getDailyPuzzle() {
+    let cand = null;
+    try {
+        const s = await prisma.systemSetting.findUnique({ where: { key: 'daily_puzzle_pinned' } });
+        const pinnedId = s && s.value ? parseInt(s.value) : null;
+        if (pinnedId) cand = await prisma.puzzleCandidate.findFirst({ where: { id: pinnedId, dismissed: false } });
+    } catch { /* setting nemusí existovat */ }
+
+    if (!cand) {
+        const pool = await prisma.puzzleCandidate.findMany({
+            where: { dismissed: false },
+            orderBy: [{ rating: 'desc' }, { score: 'desc' }],
+            take: 14,
+        });
+        if (pool.length) {
+            const dayIdx = Math.floor(Date.now() / 86400000); // pořadové číslo dne → rotace
+            cand = pool[dayIdx % pool.length];
+        }
+    }
+    if (!cand) return null;
+
+    return {
+        id: cand.id,
+        fen: cand.fen,
+        toMove: cand.toMove,
+        solutionUci: cand.bestMoveLan,   // řešení (1. tah) — validace na klientu
+        solutionSan: cand.bestSan,
+        solutionLine: cand.solutionSan,  // celá varianta v SAN pro zobrazení
+        motifs: cand.motifs ? cand.motifs.split(',') : [],
+        white: cand.whitePlayer,
+        black: cand.blackPlayer,
+        moveNo: cand.moveNo,
+        difficulty: cand.difficulty,
+        source: cand.newsTitle || null,
+    };
+}
