@@ -1604,12 +1604,13 @@ document.addEventListener('DOMContentLoaded', () => {
             window.analysisOnly = true;
             // Skryj VŠECHNA ukládací tlačítka — tohle je jen rozbor
             document.querySelectorAll('.main-btn').forEach(b => { b.style.display = 'none'; });
-            // Banner do hlavičky editoru
-            const head = document.querySelector('.editor-header') || document.body;
+            // Banner viditelně pod nadpis "Editor"
             const badge = document.createElement('div');
-            badge.style.cssText = 'background:rgba(167,139,250,0.15); border:1px solid rgba(167,139,250,0.4); color:#c4b5fd; padding:6px 12px; border-radius:6px; font-size:0.85rem; margin:6px 0; display:inline-flex; gap:6px; align-items:center;';
+            badge.style.cssText = 'background:rgba(167,139,250,0.15); border:1px solid rgba(167,139,250,0.4); color:#c4b5fd; padding:8px 14px; border-radius:8px; font-size:0.9rem; margin:8px auto 4px; width:fit-content; max-width:92%; display:flex; gap:8px; align-items:center; justify-content:center; text-align:center;';
             badge.innerHTML = '<i class="fa-solid fa-magnifying-glass-chart"></i> Režim analýzy — zkoušej vlastní varianty a pusť motor. Nic se neukládá.';
-            head.prepend(badge);
+            const editorH = Array.from(document.querySelectorAll('h1,h2')).find(h => /Editor/.test(h.textContent || ''));
+            if (editorH) editorH.insertAdjacentElement('afterend', badge);
+            else (document.querySelector('.container') || document.body).prepend(badge);
             const pgnInput = document.getElementById('importPgnInput');
             if (pgnInput) {
                 pgnInput.value = pgnData;
