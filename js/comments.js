@@ -46,7 +46,6 @@ class CommentsManager {
                 </h3>
                 
                 <div id="comment-form-container"></div>
-                <div id="comment-form-container"></div>
                 <div id="comments-list" class="comments-list"></div>
             </div>
         `;
@@ -56,6 +55,12 @@ class CommentsManager {
 
     renderForm() {
         const formContainer = document.getElementById('comment-form-container');
+
+        // auth.js se načítá dynamicky (layout-loader) — na SSR článku ještě nemusí existovat
+        if (typeof auth === 'undefined') {
+            document.addEventListener('auth:ready', () => this.renderForm(), { once: true });
+            return;
+        }
 
         if (!auth.isLoggedIn()) {
             formContainer.innerHTML = `
