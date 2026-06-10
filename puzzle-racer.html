@@ -74,6 +74,18 @@
             overflow: hidden;
         }
 
+        /* Board se vejde do výšky okna i na desktopu (např. 1280×720 bez fullscreenu) —
+           ~300px rezerva na statistiky, status a tlačítka. Mobilní pravidla níž (!important) mají přednost. */
+        body.game-active #board {
+            max-width: min(500px, calc(100vh - 300px));
+            max-width: min(500px, calc(100dvh - 300px));
+        }
+
+        body.game-active .game-container {
+            margin-top: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
         /* Hide leaderboard during active gameplay (all screens) */
         body.game-active #leaderboardSection,
         body.game-active #hallOfFameSection {
