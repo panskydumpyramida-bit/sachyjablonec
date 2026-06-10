@@ -337,18 +337,9 @@
             setTimeout(() => openDailyPuzzle(), 150);
         }
 
-        // ikonka v hlavičce na homepage: otevřít rovnou, bez reloadu
-        // (hlavička se injektuje async — naváž po jejím načtení)
-        const hookHeaderBtn = () => {
-            const btns = ['dailyPuzzleHeaderBtn', 'dailyPuzzleMenuLink'].map(id => document.getElementById(id)).filter(Boolean);
-            if (!btns.length) return false;
-            btns.forEach(btn => btn.addEventListener('click', (e) => { e.preventDefault(); openDailyPuzzle(); }));
-            return true;
-        };
-        if (!hookHeaderBtn()) {
-            let tries = 0;
-            const iv = setInterval(() => { if (hookHeaderBtn() || ++tries > 20) clearInterval(iv); }, 300);
-        }
+        // tlačítko u hero CTA: otevřít rovnou, bez reloadu
+        const heroBtn = document.getElementById('dailyPuzzleHeroBtn');
+        if (heroBtn) heroBtn.addEventListener('click', (e) => { e.preventDefault(); openDailyPuzzle(); });
     }
 
     if (document.readyState === 'loading') {

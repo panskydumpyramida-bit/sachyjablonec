@@ -1829,17 +1829,3 @@ footer {
     outline: 2px solid var(--primary-color);
     outline-offset: 2px;
 }
-/* Hádanka dne v hlavičce: na desktopu ikonka, na mobilu položka v hamburger menu (ikonka se lepila na logo) */
-.nav-puzzle-link {
-    display: none;
-}
-
-@media (max-width: 768px), (max-height: 520px) and (orientation: landscape) {
-    #dailyPuzzleHeaderBtn {
-        display: none !important;
-    }
-
-    .nav-puzzle-link {
-        display: block;
-    }
-}
