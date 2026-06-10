@@ -44,16 +44,29 @@
         }
         .frag-eval-text.top { top: 2px; color: #fff;}
         .frag-eval-text.bottom { bottom: 2px; color: #000; }
-        /* Mobil: pořádné tap targety + žádný iOS double-tap zoom při krokování tahů */
-        .game-fragment button { min-width: 40px; min-height: 40px; touch-action: manipulation; }
-        /* Telefon: board nad zápisem (vedle sebe se zápis vešel do ~80px a ořezával tahy) */
+        .game-fragment button { touch-action: manipulation; }
+        /* Tap targety jen na dotykových zařízeních — na desktopu v úzkých sloupcích 40px tlačítka přetékala */
+        @media (pointer: coarse) {
+            .game-fragment button { min-width: 40px; min-height: 40px; }
+        }
+        /* Řada tlačítek se zalomí místo přetečení do sloupce vedle */
+        .game-fragment .frag-btns { display: flex; gap: 0.2rem; flex-wrap: wrap; justify-content: center; max-width: 100%; }
+        .game-fragment { container-type: inline-size; }
+        /* FLOW režim (mobil ≤480 / úzký widget ve sloupcích): board nahoře, tahy jako plynulý
+           odstavec — komentáře a varianty inline (knižní notace), žádné odsazené řádky */
         @media (max-width: 480px) {
             .game-fragment .frag-cols { flex-direction: column !important; }
-            .game-fragment .frag-cols > div:first-child {
-                border-right: none !important;
-                border-bottom: 1px solid rgba(255,255,255,0.05);
-            }
-            .game-fragment [id$="-moves"] { max-height: 220px !important; }
+            .game-fragment .frag-cols > div:first-child { border-right: none !important; border-bottom: 1px solid rgba(255,255,255,0.05); max-width: none !important; }
+            .game-fragment [id$="-moves"] { max-height: 240px !important; line-height: 1.9 !important; padding: 0.4rem !important; }
+            .game-fragment [id$="-moves"] > div { display: inline !important; padding: 0 !important; margin-right: 0.3em; }
+            .game-fragment [id$="-moves"] > div > span { width: auto !important; margin-right: 0.18em; }
+        }
+        @container (max-width: 430px) {
+            .game-fragment .frag-cols { flex-direction: column !important; }
+            .game-fragment .frag-cols > div:first-child { border-right: none !important; border-bottom: 1px solid rgba(255,255,255,0.05); max-width: none !important; }
+            .game-fragment [id$="-moves"] { max-height: 240px !important; line-height: 1.9 !important; padding: 0.4rem !important; }
+            .game-fragment [id$="-moves"] > div { display: inline !important; padding: 0 !important; margin-right: 0.3em; }
+            .game-fragment [id$="-moves"] > div > span { width: auto !important; margin-right: 0.18em; }
         }
     `;
     document.head.appendChild(style);
@@ -252,7 +265,7 @@
                         
                         <!-- Nav Controls Bottom (Icons Only) -->
                         <div style="display:flex;justify-content:center;align-items:center;margin-top:0.5rem;">
-                            <div style="display:flex;gap:0.2rem;">
+                            <div class="frag-btns">
                                 <button onclick="toggleFragAutoplay('${uid}')" id="${uid}-autoplay-btn" style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);color:#ccc;border-radius:4px;padding:4px 8px;cursor:pointer;font-size:0.75rem;" title="Autoplay"><i id="${uid}-autoplay-icon" class="fa-solid fa-play"></i></button>
                                 <button onclick="fragNav('${uid}','start')" style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);color:#ccc;border-radius:4px;padding:4px 8px;cursor:pointer;font-size:0.75rem;" title="Začátek"><i class="fa-solid fa-backward-fast"></i></button>
                                 <button onclick="fragNav('${uid}','prev')" style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);color:#ccc;border-radius:4px;padding:4px 8px;cursor:pointer;font-size:0.75rem;" title="Předchozí"><i class="fa-solid fa-backward-step"></i></button>
