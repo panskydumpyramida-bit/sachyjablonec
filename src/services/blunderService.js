@@ -46,6 +46,17 @@ const BLUNDER_MIN_DROP = 2.5;
 const BLUNDER_CLEAR_WIN = 1.5;
 const BLUNDER_CLEAR_LOSS = -1.5;
 
+// Eval → white-perspective pawns pro ULOŽENÍ do DB. Mat = ±999 — dřív se ukládal
+// null a getPlayerBlunders matové blundery (ty nejcennější) navždy odfiltroval.
+function evalToWhitePawns(evalObj) {
+    if (!evalObj) return null;
+    if (evalObj.mate !== undefined && evalObj.mate !== null) {
+        return evalObj.mate > 0 ? 999 : -999;
+    }
+    if (evalObj.cp === undefined || evalObj.cp === null) return null;
+    return evalObj.cp / 100;
+}
+
 // Převede eval na target-perspective pawns (z Lichess white-perspective cp).
 function evalToTargetPawns(evalObj, targetIsWhite) {
     if (!evalObj) return null;
@@ -265,8 +276,8 @@ async function analyzeGame(gameData, playerName) {
                     movePlayed: move.san,
                     movePlayedLAN: moveLAN,
                     bestMoveLAN: curr.bestMove,
-                    evalBefore: curr.cp !== undefined ? curr.cp / 100 : null,
-                    evalAfter: next.cp !== undefined ? next.cp / 100 : null,
+                    evalBefore: evalToWhitePawns(curr),
+                    evalAfter: evalToWhitePawns(next),
                     probDrop: Math.round(probDrop * 10) / 10,
                     white: gameData.whitePlayer,
                     black: gameData.blackPlayer,
@@ -275,18 +286,24 @@ async function analyzeGame(gameData, playerName) {
             }
         }
 
-        if (!isTargetPlayerMove && probDrop <= -MISS_THRESHOLD) {
+        // MISS: soupeř na tahu i ZTRATIL win% (probDrop je z JEHO perspektivy → kladný = chyba)
+        // a náš hráč na tahu i+1 trestající bestMove nezahrál.
+        if (!isTargetPlayerMove && probDrop >= MISS_THRESHOLD) {
             const nextMoveLAN = (i + 1 < history.length) ? getMoveLAN(history[i + 1]) : null;
             if (next.bestMove && nextMoveLAN && next.bestMove !== nextMoveLAN) {
+                // FEN PO soupeřově chybě — pozice, kterou hráč řešil; next.bestMove patří k ní
+                // (dřív se ukládal FEN PŘED soupeřovým tahem → bestMove v něm byl často nelegální)
+                const missChess = new Chess();
+                for (let h = 0; h <= i; h++) missChess.move(history[h]);
                 results.push({
                     type: 'miss',
                     gameId: gameData.id,
-                    fenBefore: next.cp !== undefined ? fenBefore : fenBefore, // FEN after opponent's blunder
-                    movePlayed: (i + 1 < history.length) ? history[i + 1].san : move.san,
-                    movePlayedLAN: nextMoveLAN || moveLAN,
+                    fenBefore: missChess.fen(),
+                    movePlayed: history[i + 1].san,
+                    movePlayedLAN: nextMoveLAN,
                     bestMoveLAN: next.bestMove,
-                    evalBefore: next.cp !== undefined ? next.cp / 100 : null,
-                    evalAfter: evals[i + 2]?.cp !== undefined ? evals[i + 2].cp / 100 : null,
+                    evalBefore: evalToWhitePawns(next),
+                    evalAfter: evalToWhitePawns(evals[i + 2]),
                     probDrop: Math.round(Math.abs(probDrop) * 10) / 10,
                     white: gameData.whitePlayer,
                     black: gameData.blackPlayer,

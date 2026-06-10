@@ -1233,10 +1233,12 @@ async function rescanGame(gameId) {
         if (window.godMode) bodyObj.override = true;
         const res = await fetch(`/api/blunder/${encodeURIComponent(currentPlayer)}/scan`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            // Bearer chyběl → 401: stará analýza už byla smazaná, nová nevznikla a UI lhalo „0 situací"
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${getToken() || ''}` },
             body: JSON.stringify(bodyObj)
         });
-        const result = res.ok ? await res.json() : {};
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const result = await res.json();
         statusText.innerHTML = `<i class="fa-solid fa-check" style="color:#4ade80;"></i> Přeanalyzováno — ${result.newBlunders || 0} situací nalezeno.`;
         loadGamesList(currentPlayer);
         setTimeout(() => selectPlayer(currentPlayer), 500);
