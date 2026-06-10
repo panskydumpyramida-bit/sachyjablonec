@@ -169,10 +169,11 @@
             body.game-active #gameInterface {
                 display: grid !important;
                 grid-template-columns: auto auto;
-                grid-template-rows: 1fr auto;
+                /* minmax(0,1fr): řádek se statistikami se smí zmenšit pod obsah → staty scrollují
+                   uvnitř a tlačítka nelezou přes Rating */
+                grid-template-rows: minmax(0, 1fr) auto;
                 align-items: center;
                 justify-content: center;
-                align-content: center;
                 gap: 0.4rem 1rem;
                 height: 100%;
             }
@@ -188,23 +189,30 @@
                 display: flex;
                 flex-direction: column !important;
                 flex-wrap: nowrap !important;
-                justify-content: center;
-                gap: 0.3rem;
+                justify-content: safe center;
+                gap: 0.25rem;
                 margin: 0 !important;
                 padding: 0 !important;
                 border: none !important;
-                max-height: 80dvh;
+                align-self: stretch;
+                min-height: 0;
+                max-height: none;
                 overflow-y: auto;
-                align-self: end;
             }
 
             body.game-active .game-header .stat-box {
-                padding: 0.25rem 0.6rem !important;
-                min-width: 110px;
+                padding: 0.15rem 0.6rem !important;
+                min-width: 120px;
+                flex: 0 0 auto;
+            }
+
+            body.game-active .game-header .stat-label {
+                font-size: 0.65rem !important;
             }
 
             body.game-active .game-header .stat-value {
-                font-size: 1rem !important;
+                font-size: 0.95rem !important;
+                line-height: 1.2 !important;
             }
 
             body.game-active #board {
