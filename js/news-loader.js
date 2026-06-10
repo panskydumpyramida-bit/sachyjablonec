@@ -254,7 +254,7 @@ async function loadNews(options = {}) {
                 <article class="${cardClass}" onclick="window.location.href='${getArticleUrl(item)}'" style="cursor: pointer;">
                     <div class="card-image">
                         ${(() => {
-                        let thumb = item.thumbnailUrl || 'images/chess_placeholder.jpg';
+                        let thumb = item.thumbnailUrl || '/images/chess_placeholder.jpg';
                         let crop = 'center';
                         if (thumb.includes('#crop=')) {
                             const parts = thumb.split('#crop=');
@@ -280,7 +280,7 @@ async function loadNews(options = {}) {
                                      loading="${actualLoading}"
                                      width="${imgWidth}" height="${imgHeight}"
                                      style="object-position: center ${crop};"
-                                     onerror="this.src='${thumb}'; this.onerror=null; this.src='images/chess_placeholder.jpg'">`;
+                                     onerror="this.src='${thumb}'; this.onerror=null; this.src='/images/chess_placeholder.jpg'">`;
                     })()}
                     </div>
                     <div class="card-content">

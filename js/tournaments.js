@@ -180,7 +180,7 @@ const cityToCoords = {
 };
 
 // Initialize map
-fetch('images/Cesko-kraje.svg')
+fetch('/images/Cesko-kraje.svg')
     .then(r => r.text())
     .then(text => {
         const parser = new DOMParser();

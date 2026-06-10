@@ -4,7 +4,7 @@ async function loadComponent(id, file) {
         if (!element) return;
 
         const version = window.APP_VERSION || Date.now();
-        const response = await fetch(`components/${file}?v=${version}`);
+        const response = await fetch(`/components/${file}?v=${version}`);
         if (response.ok) {
             const html = await response.text();
             element.innerHTML = html;

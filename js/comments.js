@@ -135,10 +135,10 @@ class CommentsManager {
 
         const displayName = this.getDisplayName(user);
         const userAvatars = {
-            'Antonín Duda': 'images/management_antonin.png',
-            'Filip Zadražil': 'images/management_filip.jpg',
-            'Lukáš Sivák': 'images/management_lukas.png',
-            'Radim Podrazký': 'images/management_radim.png'
+            'Antonín Duda': '/images/management_antonin.png',
+            'Filip Zadražil': '/images/management_filip.jpg',
+            'Lukáš Sivák': '/images/management_lukas.png',
+            'Radim Podrazký': '/images/management_radim.png'
         };
 
         const avatarSrc = userAvatars[displayName.trim()];

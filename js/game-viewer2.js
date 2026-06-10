@@ -5,10 +5,10 @@
 
 /* Club Members for Avatar Matching */
 const CLUB_MEMBERS = [
-    { id: 'antonit', keywords: ['antonin', 'duda'], img: 'images/management_antonin.png' },
-    { id: 'filip', keywords: ['filip', 'zadrazil'], img: 'images/management_filip.jpg' },
-    { id: 'lukas', keywords: ['lukas', 'sivak'], img: 'images/management_lukas.png' },
-    { id: 'radim', keywords: ['radim', 'podrazky'], img: 'images/management_radim.png' }
+    { id: 'antonit', keywords: ['antonin', 'duda'], img: '/images/management_antonin.png' },
+    { id: 'filip', keywords: ['filip', 'zadrazil'], img: '/images/management_filip.jpg' },
+    { id: 'lukas', keywords: ['lukas', 'sivak'], img: '/images/management_lukas.png' },
+    { id: 'radim', keywords: ['radim', 'podrazky'], img: '/images/management_radim.png' }
 ];
 
 const STOCKFISH18_VERSION = '18.0.7';
@@ -1078,7 +1078,7 @@ class GameViewer2 {
                     this.board = Chessboard('gv2-board', {
                         position: 'start',
                         draggable: false,
-                        pieceTheme: 'img/chesspieces/wikipedia/{piece}.png',
+                        pieceTheme: '/img/chesspieces/wikipedia/{piece}.png',
                         moveSpeed: 200,
                         appearSpeed: 150,
                         snapSpeed: 50

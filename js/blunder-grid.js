@@ -861,7 +861,7 @@ function initBoard(realIndex, elementId, data) {
             draggable: true,
             position: data.fenBefore,
             orientation: data.playerColor,
-            pieceTheme: 'img/chesspieces/wikipedia/{piece}.png',
+            pieceTheme: '/img/chesspieces/wikipedia/{piece}.png',
             onDragStart: (source, piece) => onDragStart(realIndex, source, piece),
             onDrop: (source, target) => onDrop(realIndex, source, target),
             onSnapEnd: () => onSnapEnd(realIndex)
@@ -874,7 +874,7 @@ function initBoard(realIndex, elementId, data) {
             draggable: false,
             position: game.fen(),
             orientation: data.playerColor,
-            pieceTheme: 'img/chesspieces/wikipedia/{piece}.png'
+            pieceTheme: '/img/chesspieces/wikipedia/{piece}.png'
         };
         boards[realIndex] = Chessboard(elementId, config);
 
