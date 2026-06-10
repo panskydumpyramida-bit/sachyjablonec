@@ -86,6 +86,27 @@
             margin-bottom: 0.5rem;
         }
 
+        /* Řádek 'na tahu' + Přeskočit/Odejít za hry kompaktně přiražený — velká tlačítka
+           ukusovala výšku boardu (poslední řada se usekávala) */
+        body.game-active .controls {
+            gap: 0.5rem !important;
+            margin: 0.15rem 0 0.4rem !important;
+        }
+
+        body.game-active .controls #toMove {
+            font-size: 0.8rem !important;
+        }
+
+        body.game-active .controls .btn-secondary {
+            font-size: 0.78rem !important;
+            padding: 0.3rem 0.7rem !important;
+        }
+
+        body.game-active .game-header {
+            margin-bottom: 0.5rem;
+            padding-bottom: 0.5rem;
+        }
+
         /* Hide leaderboard during active gameplay (all screens) */
         body.game-active #leaderboardSection,
         body.game-active #hallOfFameSection {
