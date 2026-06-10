@@ -257,6 +257,19 @@ async function startRace() {
         // Lock scroll on mobile
         document.body.classList.add('game-active');
 
+        // Otočení/resize během hry: board drží fixní px → bez resize přeteče nebo zmenší mimo layout
+        if (!window.__racerResizeHooked) {
+            window.__racerResizeHooked = true;
+            let rt = null;
+            const onRs = () => {
+                if (!document.body.classList.contains('game-active')) return;
+                clearTimeout(rt);
+                rt = setTimeout(() => { if (board && board.resize) board.resize(); }, 120);
+            };
+            window.addEventListener('resize', onRs);
+            window.addEventListener('orientationchange', onRs);
+        }
+
         // Update lives UI based on settings
         updateLivesUI();
 
@@ -402,6 +415,8 @@ function loadPuzzle(puzzleData) {
             moveSpeed: 300  // 300ms animation
         };
         board = Chessboard('board', config);
+        // board se kreslí dřív, než sedne fullscreen layout (game-active) → bez resize přetejkal viewport
+        requestAnimationFrame(() => { if (board && board.resize) board.resize(); });
     }
 
     // Animate the last move (Opponent's move) after board is ready
