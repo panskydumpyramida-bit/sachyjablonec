@@ -227,6 +227,21 @@ model PuzzleVote {
   @@map("puzzle_votes")
 }
 
+// Vyřešení Hádanky dne — základ pro streak 🔥 a "dnes vyřešili".
+// Bez FK: kandidáti se dedupují/mažou, historie řešení má zůstat.
+model PuzzleSolve {
+  id          Int      @id @default(autoincrement())
+  userId      Int?     @map("user_id")
+  username    String?
+  candidateId Int      @map("candidate_id")
+  dateKey     String   @map("date_key")   // YYYY-MM-DD dne hádanky
+  solvedAt    DateTime @default(now()) @map("solved_at")
+
+  @@unique([userId, dateKey])
+  @@index([dateKey])
+  @@map("puzzle_solves")
+}
+
 model Image {
   id           Int      @id @default(autoincrement())
   filename     String

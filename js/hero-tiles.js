@@ -119,9 +119,12 @@
         statusEl.textContent = ''; solBtn.style.display = 'none'; retryBtn.style.display = 'none';
         promptEl.textContent = 'Načítám…';
 
+        const dpToken = () => localStorage.getItem('auth_token') || localStorage.getItem('authToken') || '';
+        const dpAuthHeaders = () => { const t = dpToken(); return t ? { 'Authorization': 'Bearer ' + t } : {}; };
+
         let puzzle;
         try {
-            const res = await fetch(`${API}/weekly-puzzles/daily?offset=${Math.max(0, offset)}`);
+            const res = await fetch(`${API}/weekly-puzzles/daily?offset=${Math.max(0, offset)}`, { headers: dpAuthHeaders() });
             if (!res.ok) throw new Error('no puzzle');
             puzzle = await res.json();
         } catch (e) {
@@ -142,6 +145,14 @@
         if (prevBtn) { const can = currentOffset < (puzzle.maxOffset || 0); prevBtn.disabled = !can; prevBtn.style.opacity = can ? '1' : '0.3'; }
         if (nextBtn) { const can = currentOffset > 0; nextBtn.disabled = !can; nextBtn.style.opacity = can ? '1' : '0.3'; }
 
+        // streak 🔥 — přihlášení ze serveru, anonym z localStorage
+        const renderStreak = (n) => {
+            if (dateEl && n > 0 && currentOffset === 0) dateEl.innerHTML = `Dnes <span title="${n} dní v řadě" style="color:#fb923c;">🔥${n}</span>`;
+        };
+        const localStreak = () => { try { return JSON.parse(localStorage.getItem('dpStreak') || '{}'); } catch (e) { return {}; } };
+        if (typeof puzzle.streak === 'number') renderStreak(puzzle.streak);
+        else { const ls = localStreak(); const today = puzzle.date; const yest = new Date(Date.now() - 86400000).toISOString().slice(0, 10); if (ls.last === today || ls.last === yest) renderStreak(ls.streak || 0); }
+
         const turn = puzzle.toMove === 'b' ? 'Černý' : 'Bílý';
         promptEl.innerHTML = `<strong>${turn} na tahu</strong> — táhni nebo klikni figurku na cílové pole.`;
         const players = (puzzle.white && puzzle.black) ? `${escapeHtml(puzzle.white)} – ${escapeHtml(puzzle.black)}` : '';
@@ -150,7 +161,10 @@
                 ? `<a href="/article.html?id=${encodeURIComponent(puzzle.newsId)}" style="color:#93c5fd; text-decoration:none;"><i class="fa-regular fa-newspaper"></i> ${escapeHtml(puzzle.source)}</a>`
                 : escapeHtml(puzzle.source))
             : '';
-        metaEl.innerHTML = [players, src].filter(Boolean).join(' · ');
+        const solversInfo = (currentOffset === 0 && puzzle.solveCount)
+            ? `<span style="color:#34d399;" title="${(puzzle.solvers || []).join(', ')}">✓ dnes vyřešilo ${puzzle.solveCount}</span>`
+            : '';
+        metaEl.innerHTML = [players, src, solversInfo].filter(Boolean).join(' · ');
 
         let solved = false;
         let selectedSq = null;
@@ -174,6 +188,30 @@
                 statusEl.innerHTML = '<span style="color:#34d399;"><i class="fa-solid fa-circle-check"></i> Správně! ' + escapeHtml(puzzle.solutionSan || mv.san) + '</span>';
                 if (puzzle.solutionLine) { solBtn.style.display = 'inline-block'; solBtn.textContent = 'Ukázat celou variantu'; }
                 boardObj.position(game.fen());
+
+                // zaznamenat vyřešení dneška → streak + statistika
+                if (currentOffset === 0) {
+                    fetch(`${API}/weekly-puzzles/daily/solve`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', ...dpAuthHeaders() },
+                        body: JSON.stringify({ offset: 0 }),
+                    }).then(r => r.ok ? r.json() : null).then(d => {
+                        if (d && typeof d.streak === 'number' && d.streak > 0) renderStreak(d.streak);
+                    }).catch(() => {});
+                    // anonymní streak lokálně
+                    if (!dpToken()) {
+                        try {
+                            const ls = localStreak();
+                            const today = puzzle.date;
+                            const yest = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
+                            if (ls.last !== today) {
+                                const streak = (ls.last === yest ? (ls.streak || 0) : 0) + 1;
+                                localStorage.setItem('dpStreak', JSON.stringify({ last: today, streak }));
+                                renderStreak(streak);
+                            }
+                        } catch (e) {}
+                    }
+                }
                 return true;
             }
             statusEl.innerHTML = '<span style="color:#f87171;"><i class="fa-solid fa-circle-xmark"></i> Tohle ne. Zkus jiný tah.</span>';

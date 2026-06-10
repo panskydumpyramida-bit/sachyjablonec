@@ -505,8 +505,13 @@ export async function getRatingInsights() {
 // HÁDANKA DNE (veřejná, pro homepage modal).
 // Mix: pokud admin připnul konkrétní (setting daily_puzzle_pinned), vrátí ji;
 // jinak auto = z nejlépe hodnocených rotace podle dne.
+export function dailyDateKey(offset = 0) {
+    return new Date(Date.now() - offset * 86400000).toISOString().slice(0, 10);
+}
+
 export async function getDailyPuzzle(offset = 0) {
     offset = Math.max(0, Math.min(13, parseInt(offset, 10) || 0)); // 0 = dnes, max 13 dní zpět
+    const dateKey = dailyDateKey(offset);
 
     const pool = await prisma.puzzleCandidate.findMany({
         where: { dismissed: false },
@@ -516,7 +521,17 @@ export async function getDailyPuzzle(offset = 0) {
     const maxOffset = Math.max(0, Math.min(13, pool.length - 1));
 
     let cand = null;
-    if (offset === 0) {
+
+    // STABILNÍ rotace: úloha dne se při prvním zobrazení zamkne do SystemSetting,
+    // takže ji hlasy/sken/dedupe nezmění uprostřed dne (a streak dává smysl).
+    const lockKey = `daily_puzzle_day_${dateKey}`;
+    try {
+        const locked = await prisma.systemSetting.findUnique({ where: { key: lockKey } });
+        const lockedId = locked && locked.value ? parseInt(locked.value) : null;
+        if (lockedId) cand = await prisma.puzzleCandidate.findFirst({ where: { id: lockedId, dismissed: false } });
+    } catch { /* tabulka settings je vždy, jen klíč nemusí existovat */ }
+
+    if (!cand && offset === 0) {
         // připnutá hádanka platí jen pro dnešek
         try {
             const s = await prisma.systemSetting.findUnique({ where: { key: 'daily_puzzle_pinned' } });
@@ -530,6 +545,15 @@ export async function getDailyPuzzle(offset = 0) {
         cand = pool[((dayIdx % pool.length) + pool.length) % pool.length];
     }
     if (!cand) return null;
+
+    // zamkni dnešní (a poprvé zobrazené historické) úlohy
+    try {
+        await prisma.systemSetting.upsert({
+            where: { key: lockKey },
+            update: {},
+            create: { key: lockKey, value: String(cand.id) },
+        });
+    } catch { /* závod dvou requestů — neškodí */ }
 
     const date = new Date(Date.now() - offset * 86400000);
 
@@ -674,4 +698,60 @@ export async function generateWeeklyArticle(candidateIds, userId) {
     });
 
     return { newsId: news.id, title, diagramIds: diagramsData.map(d => d.id) };
+}
+
+
+// ============================================================
+// B1: STREAK HÁDANKY DNE — ukládání řešení + statistiky
+// ============================================================
+
+// Spočítá streak: po sobě jdoucí dny s vyřešenou hádankou, konče dneškem
+// (nebo včerejškem, pokud dnešní ještě nevyřešil — streak 'žije').
+export async function getDailyStreak(userId) {
+    if (!userId) return 0;
+    const rows = await prisma.puzzleSolve.findMany({
+        where: { userId },
+        select: { dateKey: true },
+        orderBy: { dateKey: 'desc' },
+        take: 400,
+    });
+    const days = new Set(rows.map(r => r.dateKey));
+    let streak = 0;
+    let cursor = 0;
+    if (!days.has(dailyDateKey(0))) cursor = 1; // dnešek ještě nevyřešen → počítej od včerejška
+    while (days.has(dailyDateKey(cursor))) { streak++; cursor++; }
+    return streak;
+}
+
+export async function recordDailySolve({ userId, username, offset = 0 }) {
+    offset = Math.max(0, Math.min(13, parseInt(offset, 10) || 0));
+    const dateKey = dailyDateKey(offset);
+
+    const lock = await prisma.systemSetting.findUnique({ where: { key: `daily_puzzle_day_${dateKey}` } });
+    const candidateId = lock && lock.value ? parseInt(lock.value) : null;
+    if (!candidateId) throw new Error('Úloha dne není k dispozici');
+
+    if (userId) {
+        await prisma.puzzleSolve.upsert({
+            where: { userId_dateKey: { userId, dateKey } },
+            update: {},
+            create: { userId, username: username || null, candidateId, dateKey },
+        });
+    }
+    return {
+        streak: await getDailyStreak(userId),
+        ...(await getDailySolvers(dateKey)),
+    };
+}
+
+export async function getDailySolvers(dateKey) {
+    const solves = await prisma.puzzleSolve.findMany({
+        where: { dateKey },
+        orderBy: { solvedAt: 'asc' },
+        take: 30,
+    });
+    return {
+        solveCount: solves.length,
+        solvers: solves.map(s => s.username).filter(Boolean).slice(0, 10),
+    };
 }

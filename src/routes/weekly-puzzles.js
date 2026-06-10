@@ -5,20 +5,58 @@
  */
 
 import express from 'express';
-import { getStoredCandidates, startScan, getScanState, voteCandidate, getRatingInsights, dedupeStoredCandidates, getDailyPuzzle, generateWeeklyArticle } from '../services/weeklyPuzzlesService.js';
+import jwt from 'jsonwebtoken';
+import { getStoredCandidates, startScan, getScanState, voteCandidate, getRatingInsights, dedupeStoredCandidates, getDailyPuzzle, generateWeeklyArticle, recordDailySolve, getDailyStreak, getDailySolvers, dailyDateKey } from '../services/weeklyPuzzlesService.js';
 import { requireRole } from '../middleware/auth.js';
 
 const router = express.Router();
+
+// Volitelná auth: Bearer pokud je, jinak anonym (veřejný endpoint se streakem pro přihlášené)
+function optionalUser(req) {
+    try {
+        const token = (req.headers.authorization || '').replace(/^Bearer\s+/i, '');
+        if (!token) return null;
+        const d = jwt.verify(token, process.env.JWT_SECRET);
+        return d && d.id ? { id: d.id, username: d.username || null } : null;
+    } catch { return null; }
+}
 
 // VEŘEJNÉ — Hádanka dne pro homepage modal (bez přihlášení)
 router.get('/daily', async (req, res) => {
     try {
         const puzzle = await getDailyPuzzle(req.query.offset);
         if (!puzzle) return res.status(404).json({ error: 'Zatím žádná hádanka' });
+
+        // streak + "dnes vyřešili" (jen pro dnešek; u historie není relevantní)
+        const user = optionalUser(req);
+        if (puzzle.offset === 0) {
+            const extras = await getDailySolvers(puzzle.date);
+            puzzle.solveCount = extras.solveCount;
+            puzzle.solvers = extras.solvers;
+        }
+        if (user) {
+            puzzle.streak = await getDailyStreak(user.id);
+        }
         res.json(puzzle);
     } catch (error) {
         console.error('[WeeklyPuzzles] Daily error:', error);
         res.status(500).json({ error: 'Failed to fetch daily puzzle' });
+    }
+});
+
+// VEŘEJNÉ — zaznamenat vyřešení (přihlášení → DB/streak; anonym → jen statistika dne nechodí)
+router.post('/daily/solve', async (req, res) => {
+    try {
+        const user = optionalUser(req);
+        const result = await recordDailySolve({
+            userId: user?.id || null,
+            username: user?.username || null,
+            offset: req.body?.offset || 0,
+        });
+        res.json(result);
+    } catch (error) {
+        console.error('[WeeklyPuzzles] Solve error:', error);
+        res.status(500).json({ error: 'Failed to record solve' });
     }
 });
 
