@@ -5,7 +5,7 @@
  */
 
 import express from 'express';
-import { getStoredCandidates, startScan, getScanState, voteCandidate, getRatingInsights, dedupeStoredCandidates, getDailyPuzzle } from '../services/weeklyPuzzlesService.js';
+import { getStoredCandidates, startScan, getScanState, voteCandidate, getRatingInsights, dedupeStoredCandidates, getDailyPuzzle, generateWeeklyArticle } from '../services/weeklyPuzzlesService.js';
 import { requireRole } from '../middleware/auth.js';
 
 const router = express.Router();
@@ -83,6 +83,17 @@ router.post('/dedupe', requireRole('ADMIN'), async (req, res) => {
     } catch (error) {
         console.error('[WeeklyPuzzles] Dedupe error:', error);
         res.status(500).json({ error: 'Failed to dedupe' });
+    }
+});
+
+// F2: z vybraných kandidátů (max 3) vytvoří Diagram záznamy + draft článku s diagram-book blokem.
+router.post('/generate', requireRole('ADMIN'), async (req, res) => {
+    try {
+        const result = await generateWeeklyArticle(req.body.candidateIds, req.user?.id);
+        res.json(result);
+    } catch (error) {
+        console.error('[WeeklyPuzzles] Generate error:', error);
+        res.status(500).json({ error: error.message || 'Failed to generate article' });
     }
 });
 

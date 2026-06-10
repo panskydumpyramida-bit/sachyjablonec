@@ -302,12 +302,29 @@
         tick();
     }
 
-    function generate() {
+    async function generate() {
         if (selected.size === 0) return;
         const picks = lastCandidates.filter(c => selected.has(c.id));
-        alert('F1 hotovo — vybráno ' + picks.length + ' úloh:\n\n' +
-            picks.map((c, i) => `${i + 1}. ${c.toMove === 'w' ? 'Bílý' : 'Černý'} na tahu, ${c.bestSan} (${c.white}–${c.black})`).join('\n') +
-            '\n\nGenerátor draft článku přijde ve F2.');
+        const souhrn = picks.map((c, i) => `${i + 1}. ${c.toMove === 'w' ? 'Bílý' : 'Černý'} na tahu, ${c.bestSan} (${c.white}–${c.black})`).join('\n');
+        if (!confirm(`Vygenerovat draft článku z ${picks.length} úloh?\n\n${souhrn}\n\nVytvoří se diagramy + neopublikovaný článek, který si otevřeš k doladění.`)) return;
+
+        const btn = document.getElementById('wpGenerateBtn');
+        if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Generuji…'; }
+        try {
+            const res = await fetch(`${apiBase()}/weekly-puzzles/generate`, {
+                method: 'POST',
+                headers: { ...authHeaders(), 'Content-Type': 'application/json' },
+                body: JSON.stringify({ candidateIds: picks.map(c => c.id) }),
+            });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
+            if (window.showToast) showToast(`✅ Draft „${data.title}" vytvořen`, 'success');
+            // otevřít draft v editoru k doladění
+            window.location.href = `admin.html?editId=${data.newsId}`;
+        } catch (e) {
+            alert('Generování selhalo: ' + e.message);
+            if (btn) { btn.disabled = false; btn.textContent = `Vygenerovat článek (vybráno ${selected.size}/3)`; }
+        }
     }
 
     window.loadWeeklyPuzzles = load;

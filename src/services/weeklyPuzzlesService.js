@@ -552,3 +552,126 @@ export async function getDailyPuzzle(offset = 0) {
         newsId: cand.newsId || null,
     };
 }
+
+// ============================================================
+// F2: GENERÁTOR ČLÁNKU "ÚLOHA TÝDNE"
+// Z vybraných kandidátů (max 3) vytvoří Diagram záznamy a draft News
+// s diagram-book blokem (stejná struktura, jakou vkládá admin WYSIWYG
+// a kterou na webu renderuje js/diagram-book.js + DiagramViewer).
+// ============================================================
+
+function uciToMoveKey(uci) {
+    return `${uci.slice(0, 2)}-${uci.slice(2, 4)}`;
+}
+
+function escapeAttrJson(s) {
+    return s.replace(/&/g, '&amp;').replace(/'/g, '&#39;');
+}
+
+function escapeHtmlText(s) {
+    return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+export async function generateWeeklyArticle(candidateIds, userId) {
+    const ids = (Array.isArray(candidateIds) ? candidateIds : [])
+        .map(n => parseInt(n, 10)).filter(Boolean).slice(0, 3);
+    if (!ids.length) throw new Error('Nejsou vybrané žádné úlohy');
+
+    const found = await prisma.puzzleCandidate.findMany({ where: { id: { in: ids }, dismissed: false } });
+    const cands = ids.map(id => found.find(c => c.id === id)).filter(Boolean);
+    if (!cands.length) throw new Error('Vybrané úlohy nenalezeny');
+
+    // 1) Diagram záznamy + data pro data-diagrams atribut
+    const diagramsData = [];
+    for (let i = 0; i < cands.length; i++) {
+        const c = cands[i];
+        const lineUci = (c.solutionLine || c.bestMoveLan || '').trim().split(/\s+/).filter(Boolean);
+        const line = lineUci.map(uciToMoveKey);
+        const solution = line.length ? {
+            [line[0]]: {
+                type: 'correct',
+                comment: c.solutionSan ? `Správně! ${c.solutionSan}` : 'Správně!',
+                line,
+            }
+        } : null;
+        const name = `${c.whitePlayer} – ${c.blackPlayer}`;
+        const sideCz = c.toMove === 'w' ? 'Bílý' : 'Černý';
+        const description = `Úloha ${i + 1}/${cands.length}: ${sideCz} na tahu${c.mateIn ? ` — mat ${c.mateIn}. tahem` : ''}.`;
+
+        const d = await prisma.diagram.create({
+            data: {
+                fen: c.fen,
+                annotations: { arrows: [], squares: [], badges: [] },
+                solution,
+                name,
+                description,
+                userId: userId || null,
+            }
+        });
+
+        diagramsData.push({
+            id: d.id,
+            fen: c.fen,
+            title: name,
+            name,
+            toMove: c.toMove,
+            annotations: { arrows: [], squares: [], badges: [] },
+            solution,
+            description,
+            orientation: c.toMove === 'b' ? 'black' : 'white',
+        });
+    }
+
+    // 2) diagram-book HTML (markup kompatibilní s initDiagramBooks + bookNav)
+    const bookId = `diagram-book-${Date.now()}`;
+    const diagramsJson = escapeAttrJson(JSON.stringify(diagramsData));
+    const first = diagramsData[0];
+    const firstSideCz = first.toMove === 'w' ? 'Bílý na tahu' : 'Černý na tahu';
+    const puzzleBadge = `<div class="diagram-type-badge" style="position:absolute; top:-8px; right:-10px; background:rgba(20,20,30,0.95); border:1px solid rgba(212,175,55,0.4); border-radius:8px; padding:5px 10px; font-size:0.8rem; color:#d4af37; z-index:100; pointer-events:none; box-shadow:0 4px 12px rgba(0,0,0,0.5);"><i class="fa-solid fa-puzzle-piece"></i></div>`;
+
+    const bookHtml = `<div class="diagram-book" id="${bookId}" data-diagrams='${diagramsJson}' data-current="0" contenteditable="false" style="max-width:320px; margin:0.75rem auto; overflow:visible;">
+        <div class="book-board-container" style="position:relative; margin:0 auto; overflow:visible; width:100%; aspect-ratio:1/1;">${puzzleBadge}</div>
+        <div class="book-nav" style="display:${diagramsData.length > 1 ? 'flex' : 'none'}; justify-content:space-between; align-items:center; width:100%; padding:0.25rem 0.4rem; border-top:1px solid rgba(255,255,255,0.05);">
+            <button class="book-prev" onclick="bookNav('${bookId}', -1)"><i class="fa-solid fa-chevron-left"></i></button>
+            <div class="book-meta-row" style="display:flex; align-items:center; gap:0.5rem; padding:0.3rem 0.5rem;">
+                <span class="book-to-move" style="font-size:0.8rem; color:rgba(255,255,255,0.6);">${firstSideCz}</span>
+                <span style="opacity:0.3; font-size:0.7rem;">|</span>
+                <span class="book-counter" style="font-size:0.7rem; color:rgba(255,255,255,0.4);">1 / ${diagramsData.length}</span>
+            </div>
+            <button class="book-next" onclick="bookNav('${bookId}', 1)"><i class="fa-solid fa-chevron-right"></i></button>
+        </div>
+        <div class="book-description" style="font-size:0.8rem; color:#e2e8f0; padding:0.4rem 0.65rem; background:rgba(96,165,250,0.06); border-top:1px solid rgba(96,165,250,0.1); text-align:center; min-height:1.2em; line-height:1.3;">${escapeHtmlText(first.description)}</div>
+    </div>`;
+
+    // 3) Draft článku
+    const datum = new Date().toLocaleDateString('cs-CZ', { day: 'numeric', month: 'long', year: 'numeric' });
+    const title = `Úloha týdne (${datum})`;
+    const sources = [...new Set(cands.map(c => c.newsTitle).filter(Boolean))];
+    const intro = `<p>Vybrali jsme pro vás ${cands.length === 1 ? 'taktickou pozici' : `${cands.length} taktické pozice`} z nedávných klubových partií${sources.length ? ` (${escapeHtmlText(sources.join(', '))})` : ''}. Najdete nejlepší tah? Táhněte figurou přímo na diagramu — správné řešení se potvrdí samo.</p>`;
+    const outro = `<p>Jak vám to šlo? Pochlubte se v komentářích — a kdo vyřešil všechny bez nápovědy, má u nás na čtvrtečním tréninku bod k dobru. ♟️</p>`;
+    const content = `${intro}<p><br></p>${bookHtml}<p><br></p>${outro}`;
+
+    // unikátní slug (timestamp sufix — žádná kolize)
+    const baseSlug = `uloha-tydne-${new Date().toISOString().slice(0, 10)}`;
+    const slug = `${baseSlug}-${Date.now().toString(36)}`;
+
+    const news = await prisma.news.create({
+        data: {
+            title,
+            slug,
+            category: 'O nás',
+            excerpt: `${cands.length === 1 ? 'Taktická pozice' : `${cands.length} taktické pozice`} z klubových partií — vyřešíte je přímo v článku?`,
+            content,
+            isPublished: false,
+            publishedDate: new Date(),
+            authorId: userId || null,
+        }
+    });
+
+    await prisma.puzzleCandidate.updateMany({
+        where: { id: { in: cands.map(c => c.id) } },
+        data: { usedInNewsId: news.id },
+    });
+
+    return { newsId: news.id, title, diagramIds: diagramsData.map(d => d.id) };
+}
