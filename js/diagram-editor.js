@@ -215,10 +215,35 @@ function openDiagramEditor() {
  * Called when switching to the Diagram tab
  */
 function initDiagramFromBoard() {
-    // Clear previous annotations
-    clearDiagram();
-    currentDiagramId = null;
-    currentDiagramName = "";
+    // Destruktivní reset JEN při prvním vstupu — přepínání tabů Diagramy↔Hádanky nesmí
+    // mazat rozdělané anotace/řešení ani currentDiagramId (editace pak tvořila duplikát)
+    const firstEntry = !window._diagramSessionStarted;
+    window._diagramSessionStarted = true;
+
+    if (firstEntry) {
+        clearDiagram();
+        currentDiagramId = null;
+        currentDiagramName = "";
+
+        // Reset piece palette selection
+        selectedPalettePiece = null;
+        document.querySelectorAll('.palette-piece').forEach(el => el.classList.remove('active'));
+
+        // Reset castling rights to all checked
+        diagramCastling = { K: true, Q: true, k: true, q: true };
+        ['castleWK', 'castleWQ', 'castleBK', 'castleBQ'].forEach(id => {
+            const cb = document.getElementById(id);
+            if (cb) cb.checked = true;
+        });
+
+        // Default to Anotace tab
+        switchDiagramTab('annotate');
+
+        // Sync turn from game state
+        if (typeof game !== 'undefined') {
+            setDiagramTurn(game.turn());
+        }
+    }
 
     // Setup event listeners on overlay (once)
     if (!window._diagramOverlayInitialized) {
@@ -226,32 +251,24 @@ function initDiagramFromBoard() {
         window._diagramOverlayInitialized = true;
     }
 
-    // Reset piece palette selection
-    selectedPalettePiece = null;
-    document.querySelectorAll('.palette-piece').forEach(el => el.classList.remove('active'));
-
-    // Reset castling rights to all checked
-    diagramCastling = { K: true, Q: true, k: true, q: true };
-    ['castleWK', 'castleWQ', 'castleBK', 'castleBQ'].forEach(id => {
-        const cb = document.getElementById(id);
-        if (cb) cb.checked = true;
-    });
-
-    // Default to Anotace tab
-    switchDiagramTab('annotate');
-
     // Initialize piece palette
     initPiecePalette();
 
-    // Sync turn from game state
+    // Populate FEN input with current position (jen zobrazení — needestruktivní)
     if (typeof game !== 'undefined') {
-        setDiagramTurn(game.turn());
-
-        // Populate FEN input with current position
         const fenInput = document.getElementById('diagramFenInput');
         if (fenInput) fenInput.value = game.fen();
     }
 }
+
+/**
+ * Explicitní start nového diagramu — jediná cesta k plnému resetu rozdělané práce
+ */
+function startNewDiagram() {
+    window._diagramSessionStarted = false;
+    initDiagramFromBoard();
+}
+window.startNewDiagram = startNewDiagram;
 window.initDiagramFromBoard = initDiagramFromBoard;
 
 /**
