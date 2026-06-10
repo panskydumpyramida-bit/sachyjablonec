@@ -154,7 +154,8 @@
         else { const ls = localStreak(); const today = puzzle.date; const yest = new Date(Date.now() - 86400000).toISOString().slice(0, 10); if (ls.last === today || ls.last === yest) renderStreak(ls.streak || 0); }
 
         const turn = puzzle.toMove === 'b' ? 'Černý' : 'Bílý';
-        promptEl.innerHTML = `<strong>${turn} na tahu</strong> — táhni nebo klikni figurku na cílové pole.`;
+        const dpMoveCount = Math.ceil(((Array.isArray(puzzle.lineUci) && puzzle.lineUci.length) || 1) / 2);
+        promptEl.innerHTML = `<strong>${turn} na tahu</strong> — ${dpMoveCount > 1 ? `najdi ${dpMoveCount} ${dpMoveCount >= 5 ? 'tahů' : 'tahy'} hlavní varianty` : 'najdi nejlepší tah'}. Táhni nebo klikni figurku.`;
         const players = (puzzle.white && puzzle.black) ? `${escapeHtml(puzzle.white)} – ${escapeHtml(puzzle.black)}` : '';
         const src = puzzle.source
             ? (puzzle.newsId
@@ -166,8 +167,18 @@
             : '';
         metaEl.innerHTML = [players, src, solversInfo].filter(Boolean).join(' · ');
 
+        // VÍCETAHOVÉ řešení jako v Puzzle Raceru: hádáš celou hlavní variantu,
+        // soupeř po každém správném tahu sám odpoví.
         let solved = false;
+        let animating = false;
         let selectedSq = null;
+        const lineUci = (Array.isArray(puzzle.lineUci) && puzzle.lineUci.length
+            ? puzzle.lineUci : [puzzle.solutionUci]).filter(Boolean);
+        let lineIdx = 0;           // index dalšího očekávaného tahu HRÁČE v linii
+        let liveGame = null;       // stav partie přes celou variantu
+        const playerColor = puzzle.toMove;
+        const playerMovesTotal = Math.ceil(lineUci.length / 2);
+
         const sqEl = (sq) => document.querySelector(`#dpBoard [data-square="${sq}"]`);
         const clearSel = () => { document.querySelectorAll('#dpBoard [data-square]').forEach(s => { s.style.boxShadow = ''; }); selectedSq = null; };
         const highlight = (sq) => { const el = sqEl(sq); if (el) el.style.boxShadow = 'inset 0 0 0 3px rgba(96,165,250,0.9)'; };
@@ -180,43 +191,76 @@
             document.head.appendChild(zf);
         }
 
-        // Sdílené vyhodnocení tahu (klik i drag)
-        const applyVerdict = (userUci, mv, game) => {
-            clearSel();
-            if (userUci === (puzzle.solutionUci || '').slice(0, 4)) {
-                solved = true;
-                statusEl.innerHTML = '<span style="color:#34d399;"><i class="fa-solid fa-circle-check"></i> Správně! ' + escapeHtml(puzzle.solutionSan || mv.san) + '</span>';
-                if (puzzle.solutionLine) { solBtn.style.display = 'inline-block'; solBtn.textContent = 'Ukázat celou variantu'; }
-                boardObj.position(game.fen());
-
-                // zaznamenat vyřešení dneška → streak + statistika
-                if (currentOffset === 0) {
-                    fetch(`${API}/weekly-puzzles/daily/solve`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json', ...dpAuthHeaders() },
-                        body: JSON.stringify({ offset: 0 }),
-                    }).then(r => r.ok ? r.json() : null).then(d => {
-                        if (d && typeof d.streak === 'number' && d.streak > 0) renderStreak(d.streak);
-                    }).catch(() => {});
-                    // anonymní streak lokálně
-                    if (!dpToken()) {
-                        try {
-                            const ls = localStreak();
-                            const today = puzzle.date;
-                            const yest = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
-                            if (ls.last !== today) {
-                                const streak = (ls.last === yest ? (ls.streak || 0) : 0) + 1;
-                                localStorage.setItem('dpStreak', JSON.stringify({ last: today, streak }));
-                                renderStreak(streak);
-                            }
-                        } catch (e) {}
+        const recordSolve = () => {
+            if (currentOffset !== 0) return;
+            fetch(`${API}/weekly-puzzles/daily/solve`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', ...dpAuthHeaders() },
+                body: JSON.stringify({ offset: 0 }),
+            }).then(r => r.ok ? r.json() : null).then(d => {
+                if (d && typeof d.streak === 'number' && d.streak > 0) renderStreak(d.streak);
+            }).catch(() => {});
+            if (!dpToken()) {
+                try {
+                    const ls = localStreak();
+                    const today = puzzle.date;
+                    const yest = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
+                    if (ls.last !== today) {
+                        const streak = (ls.last === yest ? (ls.streak || 0) : 0) + 1;
+                        localStorage.setItem('dpStreak', JSON.stringify({ last: today, streak }));
+                        renderStreak(streak);
                     }
+                } catch (e) {}
+            }
+        };
+
+        const finishSolved = () => {
+            solved = true;
+            statusEl.innerHTML = '<span style="color:#34d399;"><i class="fa-solid fa-circle-check"></i> Vyřešeno! 🎉 ' + escapeHtml(puzzle.solutionLine || puzzle.solutionSan || '') + '</span>';
+            if (puzzle.solutionLine) { solBtn.style.display = 'none'; }
+            recordSolve();
+        };
+
+        // Pokus hráče o tah from→to; vrací true = tah přijat (sedí s linií)
+        const attemptMove = (from, to) => {
+            if (solved || animating || !liveGame) return false;
+            const exp = lineUci[lineIdx] || '';
+            if (`${from}${to}` !== exp.slice(0, 4)) {
+                // legální, ale mimo linii → chyba
+                let legal = null;
+                try { const probe = new Chess(liveGame.fen()); legal = probe.move({ from, to, promotion: 'q' }); } catch (e) { legal = null; }
+                if (legal) {
+                    statusEl.innerHTML = '<span style="color:#f87171;"><i class="fa-solid fa-circle-xmark"></i> Tohle ne. Zkus jiný tah.</span>';
+                    retryBtn.style.display = 'inline-block';
                 }
+                clearSel();
+                return false;
+            }
+            let mv;
+            try { mv = liveGame.move({ from, to, promotion: exp.slice(4) || 'q' }); } catch (e) { mv = null; }
+            if (!mv) { clearSel(); return false; }
+            clearSel();
+            lineIdx++;
+
+            if (lineIdx >= lineUci.length) {
+                boardObj.position(liveGame.fen());
+                finishSolved();
                 return true;
             }
-            statusEl.innerHTML = '<span style="color:#f87171;"><i class="fa-solid fa-circle-xmark"></i> Tohle ne. Zkus jiný tah.</span>';
-            retryBtn.style.display = 'inline-block';
-            return false;
+
+            // soupeřova odpověď z linie
+            const solvedSoFar = Math.ceil(lineIdx / 2);
+            statusEl.innerHTML = `<span style="color:#34d399;"><i class="fa-solid fa-circle-check"></i> Správně! (${solvedSoFar}/${playerMovesTotal}) Pokračuj…</span>`;
+            animating = true;
+            setTimeout(() => {
+                const opp = lineUci[lineIdx];
+                try { liveGame.move({ from: opp.slice(0, 2), to: opp.slice(2, 4), promotion: opp.slice(4) || 'q' }); } catch (e) {}
+                lineIdx++;
+                boardObj.position(liveGame.fen());
+                animating = false;
+                if (lineIdx >= lineUci.length) finishSolved();
+            }, 450);
+            return true;
         };
 
         const renderBoard = () => {
@@ -226,23 +270,26 @@
             }
             if (boardObj && boardObj.destroy) { try { boardObj.destroy(); } catch (e) {} }
             selectedSq = null;
+            liveGame = new Chess(puzzle.fen);
+            lineIdx = 0;
+            animating = false;
             // Drag I klikání: táhni figurku, NEBO klikni figurku → cílové pole
             boardObj = Chessboard('dpBoard', {
                 position: puzzle.fen.split(' ')[0],
-                orientation: puzzle.toMove === 'b' ? 'black' : 'white',
+                orientation: playerColor === 'b' ? 'black' : 'white',
                 draggable: true,
                 pieceTheme: PIECE_THEME,
                 onDragStart: (src, piece) => {
-                    if (solved) return false;
-                    return (piece[0] === 'w') === (puzzle.toMove === 'w'); // jen strana na tahu
+                    if (solved || animating) return false;
+                    return (piece[0] === 'w') === (playerColor === 'w'); // jen hráčova strana
                 },
                 onDrop: (src, tgt) => {
-                    if (solved || src === tgt) return 'snapback'; // klik beze změny pole řeší click handler
-                    const game = new Chess(puzzle.fen);
-                    let mv;
-                    try { mv = game.move({ from: src, to: tgt, promotion: 'q' }); } catch (e) { mv = null; }
-                    if (!mv) return 'snapback';
-                    return applyVerdict(src + tgt, mv, game) ? undefined : 'snapback';
+                    if (solved || animating || src === tgt) return 'snapback';
+                    const ok = attemptMove(src, tgt);
+                    if (!ok) return 'snapback';
+                    // sync (rošáda/proměna/braní mimochodem)
+                    boardObj.position(liveGame.fen(), false);
+                    return undefined;
                 },
             });
             setTimeout(() => { if (boardObj && boardObj.resize) boardObj.resize(); }, 80);
@@ -253,26 +300,25 @@
         const boardContainer = document.getElementById('dpBoard');
         if (boardContainer.__dpHandler) boardContainer.removeEventListener('click', boardContainer.__dpHandler);
         const handler = (e) => {
-            if (solved) return;
+            if (solved || animating || !liveGame) return;
             const cell = e.target.closest('[data-square]');
             if (!cell) return;
             const square = cell.getAttribute('data-square');
-            const game = new Chess(puzzle.fen);
             if (!selectedSq) {
-                const pc = game.get(square);
-                if (pc && pc.color === puzzle.toMove) { selectedSq = square; highlight(square); }
+                const pc = liveGame.get(square);
+                if (pc && pc.color === playerColor) { selectedSq = square; highlight(square); }
                 return;
             }
             if (square === selectedSq) { clearSel(); return; }
-            let mv;
-            try { mv = game.move({ from: selectedSq, to: square, promotion: 'q' }); } catch (e2) { mv = null; }
-            if (!mv) {
-                clearSel();
-                const pc = game.get(square);
-                if (pc && pc.color === puzzle.toMove) { selectedSq = square; highlight(square); }
-                return;
+            const from = selectedSq;
+            const accepted = attemptMove(from, square);
+            if (accepted) {
+                boardObj.position(liveGame.fen(), false);
+            } else {
+                // klik na vlastní figuru = přepnout výběr
+                const pc = liveGame.get(square);
+                if (pc && pc.color === playerColor) { selectedSq = square; highlight(square); }
             }
-            applyVerdict(selectedSq + square, mv, game);
         };
         boardContainer.__dpHandler = handler;
         boardContainer.addEventListener('click', handler);

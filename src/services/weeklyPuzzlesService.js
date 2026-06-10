@@ -567,6 +567,7 @@ export async function getDailyPuzzle(offset = 0) {
         solutionUci: cand.bestMoveLan,   // řešení (1. tah) — validace na klientu
         solutionSan: cand.bestSan,
         solutionLine: cand.solutionSan,  // celá varianta v SAN pro zobrazení
+        lineUci: cand.solutionLine ? cand.solutionLine.split(/\s+/).filter(Boolean) : [cand.bestMoveLan], // celá linie pro vícetahové řešení
         motifs: cand.motifs ? cand.motifs.split(',') : [],
         white: cand.whitePlayer,
         black: cand.blackPlayer,
