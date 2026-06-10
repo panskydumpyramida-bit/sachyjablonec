@@ -14,6 +14,7 @@ import authRoutes from './routes/auth.js';
 import { authMiddleware } from './middleware/auth.js';
 import { requireAdmin, requireSuperadmin } from './middleware/rbac.js';
 import newsRoutes from './routes/news.js';
+import { renderArticlePage, redirectLegacyArticle, serveSitemap } from './controllers/newsController.js';
 import reportsRoutes from './routes/reports.js';
 import imagesRoutes from './routes/images.js';
 import userRoutes from './routes/users.js';
@@ -197,7 +198,8 @@ app.use('/prototypes', express.static(path.join(__dirname, '../prototypes'), sta
 
 // SEO Files - Explicit rules to ensure they are served correctly
 app.get('/robots.txt', (req, res) => res.sendFile(path.join(__dirname, '../robots.txt')));
-app.get('/sitemap.xml', (req, res) => res.sendFile(path.join(__dirname, '../sitemap.xml')));
+// Dynamická sitemap: statické stránky + publikované články se slugy
+app.get('/sitemap.xml', serveSitemap);
 
 // Serve specific HTML pages (since they are in root)
 // Serve specific HTML pages (Clean URLs support)
@@ -287,9 +289,7 @@ app.get('/member-gallery.html', servePage('member-gallery.html'));
 app.get('/blicak', servePage('blicak.html'));
 app.get('/blicak.html', servePage('blicak.html'));
 
-app.get('/bleskovy_report', (req, res) => {
-    res.redirect(301, '/article.html?id=54');
-});
+app.get('/bleskovy_report', redirectLegacyArticle(54));
 
 app.get('/puzzle-racer', servePage('puzzle-racer.html'));
 app.get('/puzzle-racer.html', servePage('puzzle-racer.html'));
@@ -309,8 +309,12 @@ app.get('/games.html', (req, res) => res.redirect(301, '/partie'));
 app.get('/chess-database', servePage('chess-database.html'));
 app.get('/chess-database.html', servePage('chess-database.html'));
 
-app.get('/article', servePage('article.html')); // Dynamic article page often uses query params
-app.get('/article.html', servePage('article.html'));
+// Staré ?id= URL článků → 301 na /novinky/<slug>
+app.get(['/article', '/article.html'], redirectLegacyArticle());
+
+// SEO: článek se server-side prerenderem (title, meta, og, JSON-LD, obsah)
+app.get('/novinky/:slug', renderArticlePage);
+
 
 app.get('/rapidy', servePage('rapidy.html'));
 app.get('/rapidy.html', servePage('rapidy.html'));

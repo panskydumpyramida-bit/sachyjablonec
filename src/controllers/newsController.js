@@ -1,15 +1,28 @@
 import { PrismaClient } from '@prisma/client';
+import { readFileSync } from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import { shareNewsToFacebook } from '../services/facebookService.js';
 import { shareNewsToInstagramStories } from '../services/instagramService.js';
+import { createSlug } from '../utils/slug.js';
 
 const prisma = new PrismaClient();
 
-// Create slug from title
-const createSlug = (title) => {
-    return title
-        .toLowerCase()
-        .replace(/[^a-z0-9]+/g, '-')
-        .replace(/^-+|-+$/g, '');
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const SITE_URL = 'https://www.sachyjablonec.cz';
+const SITE_NAME = 'Šachový oddíl TJ Bižuterie Jablonec';
+
+// Unikátní slug (volitelně s vyloučením vlastního id při update)
+const ensureUniqueSlug = async (base, excludeId = null) => {
+    let candidate = base;
+    let counter = 1;
+    while (await prisma.news.findFirst({
+        where: { slug: candidate, ...(excludeId ? { NOT: { id: excludeId } } : {}) },
+        select: { id: true }
+    })) {
+        candidate = `${base}-${counter++}`;
+    }
+    return candidate;
 };
 
 export const getAllNews = async (req, res) => {
@@ -167,7 +180,7 @@ export const getNewsById = async (req, res) => {
             orderBy: {
                 publishedDate: 'asc'
             },
-            select: { id: true, title: true }
+            select: { id: true, title: true, slug: true }
         });
 
         // Fetch Previous Article (Older)
@@ -182,7 +195,7 @@ export const getNewsById = async (req, res) => {
             orderBy: {
                 publishedDate: 'desc'
             },
-            select: { id: true, title: true }
+            select: { id: true, title: true, slug: true }
         });
 
         res.json({ ...news, nextArticle, prevArticle });
@@ -318,15 +331,9 @@ export const createNews = async (req, res) => {
         const finalExcerpt = excerpt || '';
         const finalPublishedDate = publishedDate ? new Date(publishedDate) : new Date();
 
-        let slug = createSlug(title); // Using existing createSlug
-
-        // Ensure unique slug
-        let uniqueSlug = slug;
-        let counter = 1;
-        while (await prisma.news.findUnique({ where: { slug: uniqueSlug } })) {
-            uniqueSlug = `${slug}-${counter}`;
-            counter++;
-        }
+        // Slug: ruční z adminu (req.body.slug), jinak automaticky z titulku
+        const requestedSlug = req.body.slug && createSlug(req.body.slug) ? createSlug(req.body.slug) : createSlug(title);
+        const uniqueSlug = await ensureUniqueSlug(requestedSlug);
 
         const news = await prisma.news.create({
             data: {
@@ -374,18 +381,10 @@ export const updateNews = async (req, res) => {
         const { title, category, excerpt, content, thumbnailUrl, linkUrl, publishedDate, isPublished, gamesJson, teamsJson, galleryJson, introJson, authorId, authorName, coAuthorId, coAuthorName, facebookMessage } = req.body;
 
         const updateData = {};
-        if (title) {
-            updateData.title = title;
-            let slug = createSlug(title);
-
-            // Ensure unique slug (exclude current news id)
-            let uniqueSlug = slug;
-            let counter = 1;
-            while (await prisma.news.findFirst({ where: { slug: uniqueSlug, NOT: { id: parseInt(id) } } })) {
-                uniqueSlug = `${slug}-${counter}`;
-                counter++;
-            }
-            updateData.slug = uniqueSlug;
+        if (title) updateData.title = title;
+        // Slug se při změně titulku NEMĚNÍ (stabilní URL); přegenerovat jde jen explicitně přes req.body.slug
+        if (req.body.slug && createSlug(req.body.slug)) {
+            updateData.slug = await ensureUniqueSlug(createSlug(req.body.slug), parseInt(id));
         }
         if (category) updateData.category = category;
         if (excerpt) updateData.excerpt = excerpt;
@@ -593,5 +592,163 @@ export const incrementViewCount = async (req, res) => {
     } catch (error) {
         console.error('Increment view error:', error);
         res.status(500).json({ error: 'Failed to increment view count' });
+    }
+};
+
+
+// ===== SEO: server-side render článku na /novinky/:slug =====
+
+let articleTemplateCache = null;
+const getArticleTemplate = () => {
+    if (!articleTemplateCache) {
+        articleTemplateCache = readFileSync(path.join(__dirname, '../../article.html'), 'utf8');
+    }
+    return articleTemplateCache;
+};
+
+const escapeHtml = (s = '') => String(s)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+
+const stripHtml = (s = '') => String(s).replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+
+const absoluteUrl = (u) => {
+    if (!u) return null;
+    if (u.startsWith('http://') || u.startsWith('https://')) return u;
+    return `${SITE_URL}${u.startsWith('/') ? '' : '/'}${u}`;
+};
+
+// JSON bezpečný pro inline <script> (zabrání </script> breakoutu)
+const inlineJson = (obj) => JSON.stringify(obj).replace(/</g, '\\u003c');
+
+export const renderArticlePage = async (req, res) => {
+    try {
+        const { slug } = req.params;
+        const news = await prisma.news.findUnique({
+            where: { slug },
+            include: {
+                author: { select: { id: true, username: true, realName: true } },
+                coAuthor: { select: { id: true, username: true, realName: true } },
+                matchReport: { include: { games: { orderBy: { positionOrder: 'asc' } } } }
+            }
+        });
+
+        if (!news) {
+            return res.status(404).sendFile(path.join(__dirname, '../../404.html'));
+        }
+
+        let html = getArticleTemplate();
+
+        // Nepublikovaný/naplánovaný článek: bez prerenderu, noindex, klient si ho stáhne přes API (admin preview)
+        if (!news.isPublished || news.publishedDate > new Date()) {
+            html = html.replace('</head>',
+                `    <meta name="robots" content="noindex">\n    <script>window.__ARTICLE_META__ = { id: ${news.id} };</script>\n</head>`);
+            return res.send(html);
+        }
+
+        const [nextArticle, prevArticle] = await Promise.all([
+            prisma.news.findFirst({
+                where: { category: news.category, isPublished: true, publishedDate: { gt: news.publishedDate } },
+                orderBy: { publishedDate: 'asc' },
+                select: { id: true, title: true, slug: true }
+            }),
+            prisma.news.findFirst({
+                where: { category: news.category, isPublished: true, publishedDate: { lt: news.publishedDate } },
+                orderBy: { publishedDate: 'desc' },
+                select: { id: true, title: true, slug: true }
+            })
+        ]);
+
+        const article = { ...news, nextArticle, prevArticle };
+        const description = stripHtml(news.excerpt || news.title).slice(0, 160);
+        const canonicalUrl = `${SITE_URL}/novinky/${news.slug}`;
+        const image = absoluteUrl(news.thumbnailUrl) || `${SITE_URL}/images/og-default.png`;
+        const authorName = news.authorName || news.author?.realName || news.author?.username || SITE_NAME;
+
+        const jsonLd = {
+            '@context': 'https://schema.org',
+            '@type': 'NewsArticle',
+            headline: news.title,
+            description,
+            image: [image],
+            datePublished: news.publishedDate.toISOString(),
+            dateModified: news.updatedAt.toISOString(),
+            author: [{ '@type': 'Person', name: authorName }],
+            publisher: { '@type': 'Organization', name: SITE_NAME, url: SITE_URL },
+            mainEntityOfPage: canonicalUrl
+        };
+
+        const headExtras = [
+            `<meta name="description" content="${escapeHtml(description)}">`,
+            `<link rel="canonical" href="${canonicalUrl}">`,
+            `<meta property="og:title" content="${escapeHtml(news.title)}">`,
+            `<meta property="og:description" content="${escapeHtml(description)}">`,
+            `<meta property="og:url" content="${canonicalUrl}">`,
+            `<meta property="article:published_time" content="${news.publishedDate.toISOString()}">`,
+            `<script type="application/ld+json">${inlineJson(jsonLd)}</script>`,
+            `<script>window.__ARTICLE__ = ${inlineJson(article)};</script>`
+        ].join('\n    ');
+
+        const dateCz = news.publishedDate.toLocaleDateString('cs-CZ');
+
+        html = html
+            .replace('<title>Článek - Šachový oddíl TJ Bižuterie Jablonec</title>',
+                `<title>${escapeHtml(news.title)} — ${SITE_NAME}</title>`)
+            .replace('content="https://sachyjablonec.cz/images/og-default.png"', `content="${image}"`)
+            .replace('</head>', `    ${headExtras}\n</head>`)
+            // Prerender pro crawlery bez JS; klientský renderArticle() pak tytéž uzly přepíše identickým obsahem
+            .replace('<div id="loading" style="text-align: center; padding: 4rem;">', '<div id="loading" style="display: none;">')
+            .replace('<article id="article" class="hidden">', '<article id="article">')
+            .replace('<span id="articleDate"><i class="fa-regular fa-calendar"></i> </span>',
+                `<span id="articleDate"><i class="fa-regular fa-calendar"></i> ${dateCz}</span>`)
+            .replace('<span id="articleCategory"><i class="fa-solid fa-tag"></i> </span>',
+                `<span id="articleCategory"><i class="fa-solid fa-tag"></i> ${escapeHtml(news.category)}</span>`)
+            .replace('<h1 id="articleTitle" style="font-size: 2.25rem; margin-bottom: 1.5rem;"></h1>',
+                `<h1 id="articleTitle" style="font-size: 2.25rem; margin-bottom: 1.5rem;">${escapeHtml(news.title)}</h1>`)
+            .replace('<div class="article-content" id="articleBody"></div>',
+                `<div class="article-content" id="articleBody">${news.content || ''}</div>`);
+
+        res.send(html);
+    } catch (error) {
+        console.error('Render article page error:', error);
+        res.status(500).send('Internal server error');
+    }
+};
+
+// 301 ze starých /article(.html)?id=X na /novinky/<slug>; defaultId pro pevné aliasy (bleskovy_report)
+export const redirectLegacyArticle = (defaultId = null) => async (req, res) => {
+    const id = parseInt(req.query.id || defaultId);
+    if (!id) return res.redirect(301, '/');
+    try {
+        const news = await prisma.news.findUnique({ where: { id }, select: { slug: true } });
+        if (!news || !news.slug) return res.redirect(301, '/');
+        return res.redirect(301, `/novinky/${news.slug}`);
+    } catch (error) {
+        console.error('Legacy article redirect error:', error);
+        return res.redirect(301, '/');
+    }
+};
+
+// Dynamická sitemap: statické stránky + publikované články
+const STATIC_PAGES = ['', '/about', '/teams', '/tournaments', '/youth', '/blicak', '/rapidy',
+    '/calendar', '/gallery', '/training', '/partie', '/individual-competitions',
+    '/club-tournaments', '/chess-database', '/puzzle-racer', '/privacy'];
+
+export const serveSitemap = async (req, res) => {
+    try {
+        const articles = await prisma.news.findMany({
+            where: { isPublished: true, publishedDate: { lte: new Date() } },
+            select: { slug: true, updatedAt: true },
+            orderBy: { publishedDate: 'desc' }
+        });
+        const urls = [
+            ...STATIC_PAGES.map(p => `    <url><loc>${SITE_URL}${p || '/'}</loc></url>`),
+            ...articles.map(a => `    <url><loc>${SITE_URL}/novinky/${a.slug}</loc><lastmod>${a.updatedAt.toISOString().slice(0, 10)}</lastmod></url>`)
+        ];
+        res.type('application/xml').send(
+            `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.join('\n')}\n</urlset>\n`);
+    } catch (error) {
+        console.error('Sitemap error:', error);
+        res.status(500).send('Internal server error');
     }
 };

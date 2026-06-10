@@ -409,8 +409,8 @@ async function loadNews(options = {}) {
 }
 
 function getArticleUrl(item) {
-    // Always use article.html with ID for proper detail view
-    return `article.html?id=${item.id}`;
+    // SEO URL se slugem; fallback na staré ?id= (server je 301ne)
+    return item.slug ? `/novinky/${item.slug}` : `article.html?id=${item.id}`;
 }
 
 

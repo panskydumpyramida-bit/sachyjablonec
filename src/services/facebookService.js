@@ -106,7 +106,7 @@ async function collectPhotoPaths(news) {
 }
 
 function buildMessage(news, frontendUrl) {
-    const articleUrl = `${frontendUrl}/article.html?id=${news.id}`;
+    const articleUrl = news.slug ? `${frontendUrl}/novinky/${news.slug}` : `${frontendUrl}/article.html?id=${news.id}`;
 
     // Always append the article URL unless this exact URL is already present
     // in the admin-provided text. We deliberately don't treat arbitrary http://
@@ -183,7 +183,7 @@ export async function shareNewsToFacebook(news) {
         });
     } else {
         // Text-only post: include link explicitly so FB renders a preview card
-        feedForm.append('link', `${cfg.frontendUrl}/article.html?id=${news.id}`);
+        feedForm.append('link', news.slug ? `${cfg.frontendUrl}/novinky/${news.slug}` : `${cfg.frontendUrl}/article.html?id=${news.id}`);
     }
 
     const post = await fbFetch(

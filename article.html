@@ -231,8 +231,14 @@
     <script>
         // Article Loader
         document.addEventListener('DOMContentLoaded', async () => {
+            // Server-side render (/novinky/<slug>): data jsou inline, žádný fetch
+            if (window.__ARTICLE__) {
+                renderArticle(window.__ARTICLE__);
+                return;
+            }
+
             const params = new URLSearchParams(window.location.search);
-            const id = params.get('id');
+            const id = params.get('id') || (window.__ARTICLE_META__ && window.__ARTICLE_META__.id);
 
             if (!id) {
                 showError();
@@ -263,7 +269,7 @@
                 title.length > maxLen ? title.slice(0, maxLen) + '...' : title;
 
             if (article.prevArticle) {
-                prevLink.href = `article.html?id=${article.prevArticle.id}`;
+                prevLink.href = article.prevArticle.slug ? `/novinky/${article.prevArticle.slug}` : `article.html?id=${article.prevArticle.id}`;
                 document.getElementById('prevArticleTitle').textContent = truncateTitle(article.prevArticle.title);
                 prevLink.style.display = 'flex';
                 prevLink.title = article.prevArticle.title;
@@ -272,7 +278,7 @@
             }
 
             if (article.nextArticle) {
-                nextLink.href = `article.html?id=${article.nextArticle.id}`;
+                nextLink.href = article.nextArticle.slug ? `/novinky/${article.nextArticle.slug}` : `article.html?id=${article.nextArticle.id}`;
                 document.getElementById('nextArticleTitle').textContent = truncateTitle(article.nextArticle.title);
                 nextLink.style.display = 'flex';
                 nextLink.title = article.nextArticle.title;

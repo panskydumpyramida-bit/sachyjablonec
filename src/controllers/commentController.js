@@ -121,7 +121,7 @@ export const createComment = async (req, res) => {
             const commenterName = comment.author.useRealName && comment.author.realName
                 ? comment.author.realName
                 : comment.author.username;
-            const articleUrl = `https://sachyjablonec.cz/novinky/${news.slug || news.id}`;
+            const articleUrl = `https://www.sachyjablonec.cz/novinky/${news.slug || news.id}`;
 
             sendEmail(
                 news.author.email,

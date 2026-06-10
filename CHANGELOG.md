@@ -1,5 +1,16 @@
 # 📋 Changelog
 
+## 10. června 2026 (v39)
+
+### 🔗 Hezké adresy článků a viditelnost pro vyhledávače
+- **Nové adresy článků:** Články mají URL s názvem místo čísla — `/novinky/jablonecke-velikonocni-vejce-2026` místo `article.html?id=110`. Adresa se tvoří automaticky z titulku (včetně správného přepisu diakritiky), staré odkazy se samy přesměrují, takže nic nikde nepřestane fungovat.
+- **Články čitelné pro Google i Seznam:** Server nově vkládá do stránky článku titulek, popisek, náhledový obrázek pro sdílení i samotný obsah — článek je tak viditelný pro vyhledávače a náhledy na Facebooku/WhatsAppu ukážou správný titulek. Platí i zpětně pro všechny starší články.
+- **Stabilní adresy:** Přejmenování článku v adminu už nezmění jeho adresu (odkazy zůstávají platné).
+- **Automatická mapa webu:** sitemap.xml se nově generuje sama včetně všech publikovaných článků — Google se o novém článku dozví bez ručního zásahu. Opraven i rozpor s robots.txt.
+- **Adresa hrací místnosti:** Opraveno PSČ Městské haly v sekci O nás (466 02).
+
+---
+
 ## 8. června 2026 (v38)
 
 ### ♟️ Úloha týdne — slučování duplicit
