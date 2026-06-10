@@ -234,11 +234,6 @@
                 margin: 0 auto;
             }
 
-            body.game-active #gameArea > div:last-child {
-                margin-top: 0.3rem !important;
-                font-size: 0.8rem;
-            }
-
             body.game-active .controls {
                 grid-column: 2;
                 grid-row: 2;
@@ -1009,20 +1004,9 @@
                         </div>
                     </div>
 
-                    <div id="gameArea" style="position: relative;">
-                        <!-- Feedback overlay -->
-                        <div id="feedbackOverlay"
-                            style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; pointer-events: none; z-index: 10;">
-                        </div>
-
-                        <div id="board"></div>
-
-                        <div style="text-align: center; margin-top: 1rem; color: var(--text-muted); font-size: 0.9rem;">
-                            <span id="toMove">Bílý na tahu</span>
-                        </div>
-                    </div>
-
-                    <div class="controls" style="display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap;">
+                    <!-- Status + ovládání NAD šachovnicí — pod boardem padaly pod fold (scroll je za hry zamčený) -->
+                    <div class="controls" style="display: flex; gap: 0.75rem; justify-content: center; align-items: center; flex-wrap: wrap; margin: 0.4rem 0 0.6rem;">
+                        <span id="toMove" style="color: var(--text-muted); font-size: 0.9rem; font-weight: 600;">Bílý na tahu</span>
                         <button class="btn-secondary" onclick="window.skipPuzzle()" style="font-size: 0.9rem;">
                             <i class="fa-solid fa-forward"></i> Přeskočit (-5s)
                         </button>
@@ -1030,6 +1014,15 @@
                             style="font-size: 0.9rem; background: rgba(255, 0, 0, 0.2); border-color: rgba(255, 0, 0, 0.3); color: #fca5a5; text-decoration: none; display: inline-flex; align-items: center;">
                             <i class="fa-solid fa-right-from-bracket"></i> Odejít
                         </a>
+                    </div>
+
+                    <div id="gameArea" style="position: relative;">
+                        <!-- Feedback overlay -->
+                        <div id="feedbackOverlay"
+                            style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; pointer-events: none; z-index: 10;">
+                        </div>
+
+                        <div id="board"></div>
                     </div>
                 </div>
 
