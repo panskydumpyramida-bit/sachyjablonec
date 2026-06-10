@@ -810,8 +810,8 @@ footer {
     }
 }
 
-/* Mobile Responsive */
-@media (max-width: 768px) {
+/* Mobile Responsive — i landscape telefony (šířka >768px, ale plná navigace se do nízkého okna nevejde) */
+@media (max-width: 768px), (max-height: 520px) and (orientation: landscape) {
 
     /* Mobile Menu Overlay */
     .mobile-menu-overlay {
