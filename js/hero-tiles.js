@@ -340,9 +340,9 @@
         // ikonka v hlavičce na homepage: otevřít rovnou, bez reloadu
         // (hlavička se injektuje async — naváž po jejím načtení)
         const hookHeaderBtn = () => {
-            const btn = document.getElementById('dailyPuzzleHeaderBtn');
-            if (!btn) return false;
-            btn.addEventListener('click', (e) => { e.preventDefault(); openDailyPuzzle(); });
+            const btns = ['dailyPuzzleHeaderBtn', 'dailyPuzzleMenuLink'].map(id => document.getElementById(id)).filter(Boolean);
+            if (!btns.length) return false;
+            btns.forEach(btn => btn.addEventListener('click', (e) => { e.preventDefault(); openDailyPuzzle(); }));
             return true;
         };
         if (!hookHeaderBtn()) {
