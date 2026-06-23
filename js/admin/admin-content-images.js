@@ -90,6 +90,13 @@ function showImageModal(existingImg = null) {
                     <label style="display:block;margin-bottom:0.5rem; font-size: 0.8rem; color: var(--text-muted);">Popisek / titulek <span style="opacity:0.6;">(zobrazí se pod obrázkem)</span></label>
                     <input type="text" id="imgCaptionInput" placeholder="Např. Vítězové turnaje zleva…" style="width: 100%; box-sizing: border-box; font-size: 0.9rem;">
                 </div>
+                <div style="margin-bottom: 1rem;">
+                    <label style="display:flex;align-items:center;gap:0.5rem;cursor:pointer; font-size: 0.85rem; color: var(--text-color);">
+                        <input type="checkbox" id="imgAddToGallery" style="width:auto;">
+                        Zobrazit i ve fotogalerii pod článkem
+                    </label>
+                    <div style="font-size: 0.72rem; color: var(--text-muted); margin-top: 0.25rem; padding-left: 1.6rem;">Přidá se i do galerie článku (a tím do veřejné fotogalerie).</div>
+                </div>
                 <div style="display: flex; justify-content: space-between;">
                     <button type="button" class="btn-custom btn-delete" onclick="deleteImage()" ${existingImg ? '' : 'style="display:none;"'}>Odstranit</button>
                     <div style="display: flex; gap: 0.5rem;">
@@ -298,6 +305,11 @@ async function saveImageInsertion() {
             content.appendChild(node);
         }
     }
+    // Volitelně přidat i do spodní fotogalerie článku
+    if (document.getElementById('imgAddToGallery')?.checked && typeof window.addImageToGallery === 'function') {
+        window.addImageToGallery(url, caption);
+    }
+
     updatePreview();
     closeImageModal();
 }

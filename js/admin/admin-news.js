@@ -1968,6 +1968,16 @@ window.toggleGameCommented = toggleGameCommented;
 window.updateGameAvatar = updateGameAvatar;
 window.addHeader = addHeader;
 
+// Přidá obrázek do spodní galerie článku (z modalu vkládání obrázku). Dedup dle URL.
+window.addImageToGallery = (url, caption = '') => {
+    if (!url) return false;
+    const exists = galleryImages.some(it => (typeof it === 'string' ? it : it.url) === url);
+    if (exists) return false;
+    galleryImages.push({ url, caption: caption || '' });
+    renderGallery();
+    return true;
+};
+
 // Gallery exports
 window.toggleGalleryUrlInput = toggleGalleryUrlInput;
 window.addGalleryFromUrl = addGalleryFromUrl;
