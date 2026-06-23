@@ -302,30 +302,30 @@ function insertLink() {
     // Create modal
     const modal = document.createElement('div');
     modal.id = 'linkModal';
+    const inputStyle = 'width:100%;box-sizing:border-box;padding:0.7rem 0.85rem;background:rgba(0,0,0,0.35);border:1px solid rgba(255,255,255,0.12);border-radius:8px;color:#fff;font-size:0.95rem;transition:border-color 0.2s,box-shadow 0.2s;';
     modal.innerHTML = `
-        <div class="modal-overlay" onclick="document.getElementById('linkModal').remove()"></div>
-        <div class="modal-content" style="max-width: 400px;">
-            <h3 style="margin-bottom:1rem;">Vložit odkaz</h3>
-            <div style="margin-bottom:0.4rem;">
-                <label style="display:block;margin-bottom:0.3rem;color:var(--text-muted);font-size:0.85rem;">URL *</label>
-                <input type="text" id="linkUrl" placeholder="https://…  nebo  /novinky/nazev-clanku" style="width:100%;box-sizing:border-box;">
+        <div class="modal-overlay" onclick="document.getElementById('linkModal').remove()" style="position:fixed;inset:0;background:rgba(8,8,12,0.7);backdrop-filter:blur(3px);z-index:9998;"></div>
+        <div class="modal-content" style="position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:9999;width:92%;max-width:440px;max-height:90vh;overflow-y:auto;background:#15151f;border:1px solid rgba(212,175,55,0.25);border-radius:14px;padding:1.5rem;box-shadow:0 24px 60px rgba(0,0,0,0.55);">
+            <h3 style="margin:0 0 1.25rem;display:flex;align-items:center;gap:0.6rem;color:var(--primary-color,#d4af37);font-size:1.2rem;"><i class="fa-solid fa-link"></i> Vložit odkaz</h3>
+            <div style="margin-bottom:0.5rem;">
+                <label style="display:block;margin-bottom:0.4rem;color:#cbd5e1;font-size:0.85rem;font-weight:500;">Kam odkaz vede <span style="color:var(--primary-color,#d4af37);">*</span></label>
+                <input type="text" id="linkUrl" placeholder="https://…   nebo   /novinky/nazev-clanku" style="${inputStyle}">
             </div>
-            <p style="margin:0 0 1rem;color:var(--text-muted);font-size:0.75rem;opacity:0.8;">
-                <i class="fa-solid fa-circle-info"></i> Interní odkaz na náš web zadej cestou začínající lomítkem (např. <code>/partie</code>, <code>/novinky/…</code>). Externí web jako <code>https://…</code>.
+            <p style="margin:0 0 1.1rem;color:#94a3b8;font-size:0.78rem;line-height:1.5;display:flex;gap:0.45rem;">
+                <i class="fa-solid fa-circle-info" style="color:var(--primary-color,#d4af37);margin-top:0.15rem;"></i>
+                <span>Odkaz na náš web zadej cestou s lomítkem (<code style="background:rgba(255,255,255,0.07);padding:0.05rem 0.3rem;border-radius:3px;">/partie</code>, <code style="background:rgba(255,255,255,0.07);padding:0.05rem 0.3rem;border-radius:3px;">/novinky/…</code>). Externí web jako <code style="background:rgba(255,255,255,0.07);padding:0.05rem 0.3rem;border-radius:3px;">https://…</code></span>
             </p>
-            <div style="margin-bottom:1rem;">
-                <label style="display:block;margin-bottom:0.3rem;color:var(--text-muted);font-size:0.85rem;">Text odkazu</label>
-                <input type="text" id="linkText" value="${selectedText.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;')}" placeholder="Zobrazovaný text" style="width:100%;box-sizing:border-box;">
+            <div style="margin-bottom:1.1rem;">
+                <label style="display:block;margin-bottom:0.4rem;color:#cbd5e1;font-size:0.85rem;font-weight:500;">Text odkazu</label>
+                <input type="text" id="linkText" value="${selectedText.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;')}" placeholder="Zobrazovaný text" style="${inputStyle}">
             </div>
-            <div style="margin-bottom:1rem;">
-                <label style="display:flex;align-items:center;gap:0.5rem;cursor:pointer;color:var(--text-muted);font-size:0.85rem;">
-                    <input type="checkbox" id="linkNewTab" checked style="width:auto;">
-                    Otevřít v novém okně <span id="linkTabHint" style="opacity:0.6;"></span>
-                </label>
-            </div>
-            <div style="display:flex;gap:0.5rem;justify-content:flex-end;">
+            <label style="display:flex;align-items:center;gap:0.6rem;cursor:pointer;color:#cbd5e1;font-size:0.88rem;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:0.6rem 0.8rem;margin-bottom:1.4rem;">
+                <input type="checkbox" id="linkNewTab" checked style="width:18px;height:18px;accent-color:var(--primary-color,#d4af37);cursor:pointer;">
+                <span>Otevřít v novém okně <span id="linkTabHint" style="opacity:0.65;font-size:0.8rem;"></span></span>
+            </label>
+            <div style="display:flex;gap:0.6rem;justify-content:flex-end;">
                 <button id="linkCancel" class="btn-secondary">Zrušit</button>
-                <button id="linkInsert" class="btn-primary">Vložit</button>
+                <button id="linkInsert" class="btn-primary"><i class="fa-solid fa-check"></i> Vložit</button>
             </div>
         </div>
     `;
@@ -334,6 +334,12 @@ function insertLink() {
     const urlInput = modal.querySelector('#linkUrl');
     const textInput = modal.querySelector('#linkText');
     const newTabCheck = modal.querySelector('#linkNewTab');
+
+    // Zlatý focus rámeček
+    [urlInput, textInput].forEach(inp => {
+        inp.addEventListener('focus', () => { inp.style.borderColor = 'var(--primary-color, #d4af37)'; inp.style.boxShadow = '0 0 0 3px rgba(212,175,55,0.15)'; });
+        inp.addEventListener('blur', () => { inp.style.borderColor = 'rgba(255,255,255,0.12)'; inp.style.boxShadow = 'none'; });
+    });
 
     urlInput.focus();
 
