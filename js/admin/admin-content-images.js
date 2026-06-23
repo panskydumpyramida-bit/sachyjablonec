@@ -45,7 +45,7 @@ function showImageModal(existingImg = null) {
         modal.id = 'imageModal';
         modal.innerHTML = `
             <div class="modal-overlay" onclick="closeImageModal()" style="position: fixed !important; top: 0 !important; left: 0 !important; right: 0 !important; bottom: 0 !important; background: rgba(0,0,0,0.8) !important; z-index: 9998 !important;"></div>
-            <div class="modal-content" style="position: fixed !important; top: 50% !important; left: 50% !important; transform: translate(-50%, -50%) !important; z-index: 9999 !important; background: #1a1a2e !important; border-radius: 12px !important; padding: 1.5rem !important; max-width: 500px !important; width: 90% !important; box-shadow: 0 20px 60px rgba(0,0,0,0.5) !important;">
+            <div class="modal-content" style="position: fixed !important; top: 50% !important; left: 50% !important; transform: translate(-50%, -50%) !important; z-index: 9999 !important; background: #1a1a2e !important; border-radius: 12px !important; padding: 1.5rem !important; max-width: 500px !important; width: 90% !important; max-height: 90vh !important; overflow-y: auto !important; box-shadow: 0 20px 60px rgba(0,0,0,0.5) !important;">
                 <h3 style="margin-bottom: 1rem; color: #d4af37;">${existingImg ? 'Upravit obrázek' : 'Vložit obrázek'}</h3>
                 <div style="display: flex; gap: 0.5rem; margin-bottom: 1rem;">
                     <input type="text" id="imgUrlInput" placeholder="URL obrázku" style="flex: 1;">
@@ -86,6 +86,10 @@ function showImageModal(existingImg = null) {
                         </select>
                     </div>
                 </div>
+                <div style="margin-bottom: 1rem;">
+                    <label style="display:block;margin-bottom:0.5rem; font-size: 0.8rem; color: var(--text-muted);">Popisek / titulek <span style="opacity:0.6;">(zobrazí se pod obrázkem)</span></label>
+                    <input type="text" id="imgCaptionInput" placeholder="Např. Vítězové turnaje zleva…" style="width: 100%; box-sizing: border-box; font-size: 0.9rem;">
+                </div>
                 <div style="display: flex; justify-content: space-between;">
                     <button type="button" class="btn-custom btn-delete" onclick="deleteImage()" ${existingImg ? '' : 'style="display:none;"'}>Odstranit</button>
                     <div style="display: flex; gap: 0.5rem;">
@@ -108,33 +112,35 @@ function showImageModal(existingImg = null) {
     const imgSizeInput = document.getElementById('imgSizeInput');
     contentPendingImageBlob = null; // Reset any pending rotated image
 
+    const imgCaptionInput = document.getElementById('imgCaptionInput');
+
     if (existingImg) {
+        // Obrázek s popiskem je zabalený do <figure> — zarovnání/velikost čteme z něj
+        const fig = existingImg.closest('figure[data-img-figure]');
+        const styleHost = fig || existingImg;
         const src = existingImg.getAttribute('src');
         imgUrlInput.value = src;
         imgPreviewArea.innerHTML = `<img src="${src}" style="max-width:100%; max-height: 300px;">`;
 
-        if (existingImg.style.float === 'left') imgAlignInput.value = 'left';
-        else if (existingImg.style.float === 'right') imgAlignInput.value = 'right';
-        else if (existingImg.style.width === '100%' && existingImg.style.display === 'block') imgAlignInput.value = 'full';
+        if (imgCaptionInput) {
+            const cap = fig ? (fig.querySelector('figcaption')?.textContent || '')
+                : (existingImg.alt && existingImg.alt !== 'Obrázek' ? existingImg.alt : '');
+            imgCaptionInput.value = cap;
+        }
+
+        if (styleHost.style.float === 'left') imgAlignInput.value = 'left';
+        else if (styleHost.style.float === 'right') imgAlignInput.value = 'right';
+        else if (styleHost.style.width === '100%' && styleHost.style.display === 'block') imgAlignInput.value = 'full';
         else imgAlignInput.value = 'center';
 
         // Detect size
-        // If width is set, try to match option, otherwise default 100%
-        if (existingImg.style.width) {
-            // Check if matches one of our options
-            const w = existingImg.style.width;
-            if (['100%', '75%', '50%', '33%', '25%'].includes(w)) {
-                imgSizeInput.value = w;
-            } else {
-                imgSizeInput.value = '100%'; // Custom or unset
-            }
-        } else {
-            imgSizeInput.value = '100%';
-        }
+        const w = styleHost.style.width;
+        imgSizeInput.value = (w && ['100%', '75%', '50%', '33%', '25%'].includes(w)) ? w : '100%';
 
     } else {
         imgUrlInput.value = '';
         imgPreviewArea.innerHTML = '<p style="color: var(--text-muted);">Náhled obrázku</p>';
+        if (imgCaptionInput) imgCaptionInput.value = '';
         imgAlignInput.value = 'center';
         imgSizeInput.value = '100%';
     }
@@ -221,39 +227,75 @@ async function saveImageInsertion() {
         return;
     }
 
-    // Base style
-    let style = `width: ${size}; max-width: 100%; height: auto; border-radius: 8px;`;
+    const caption = (document.getElementById('imgCaptionInput')?.value || '').trim();
 
-    // Logic for alignment + size
-    if (align === 'center') {
-        style += ' display: block; margin: 1rem auto;';
-    } else if (align === 'full') {
-        // Full width overrides size selection usually, or acts as 100%
-        style = 'width: 100%; height: auto; border-radius: 8px; display: block; margin: 1rem 0;';
-    } else if (align === 'left') {
-        style += ' float: left; margin: 0 1rem 1rem 0;';
-    } else if (align === 'right') {
-        style += ' float: right; margin: 0 0 1rem 1rem;';
-    }
+    // Styl pro samotný <img> (bez popisku)
+    let imgStyle = `width: ${size}; max-width: 100%; height: auto; border-radius: 8px;`;
+    if (align === 'center') imgStyle += ' display: block; margin: 1rem auto;';
+    else if (align === 'full') imgStyle = 'width: 100%; height: auto; border-radius: 8px; display: block; margin: 1rem 0;';
+    else if (align === 'left') imgStyle += ' float: left; margin: 0 1rem 1rem 0;';
+    else if (align === 'right') imgStyle += ' float: right; margin: 0 0 1rem 1rem;';
 
-    if (contentSelectedImage) {
-        contentSelectedImage.src = url;
-        contentSelectedImage.style.cssText = style;
-    } else {
+    // Styl pro <figure> obal (s popiskem) — zarovnání/velikost nese obal, obrázek je 100 % obalu
+    const figWidth = align === 'full' ? '100%' : size;
+    let figStyle = `width: ${figWidth}; max-width: 100%; margin: 1rem auto;`;
+    if (align === 'left') figStyle = `width: ${size}; max-width: 100%; float: left; margin: 0 1rem 1rem 0;`;
+    else if (align === 'right') figStyle = `width: ${size}; max-width: 100%; float: right; margin: 0 0 1rem 1rem;`;
+    else if (align === 'full') figStyle = 'width: 100%; margin: 1rem 0; display: block;';
+
+    const buildFigure = () => {
+        const fig = document.createElement('figure');
+        fig.setAttribute('data-img-figure', '1');
+        fig.style.cssText = figStyle;
         const img = document.createElement('img');
         img.src = url;
-        img.alt = 'Obrázek';
-        img.style.cssText = style;
+        img.alt = caption || 'Obrázek';
+        img.style.cssText = 'width: 100%; height: auto; border-radius: 8px; display: block;';
+        const cap = document.createElement('figcaption');
+        cap.textContent = caption;
+        cap.style.cssText = 'font-size: 0.85rem; color: var(--text-muted, #9aa); text-align: center; font-style: italic; margin-top: 0.4rem;';
+        fig.appendChild(img);
+        fig.appendChild(cap);
+        return fig;
+    };
 
-        const content = document.getElementById('articleContent');
+    const content = document.getElementById('articleContent');
+
+    if (contentSelectedImage) {
+        // Úprava existujícího — existující obal figure (pokud je)
+        const existingFig = contentSelectedImage.closest('figure[data-img-figure]');
+        if (caption) {
+            const fig = buildFigure();
+            (existingFig || contentSelectedImage).replaceWith(fig);
+        } else if (existingFig) {
+            // Popisek smazán → rozbalit zpět na prostý obrázek
+            contentSelectedImage.src = url;
+            contentSelectedImage.alt = 'Obrázek';
+            contentSelectedImage.style.cssText = imgStyle;
+            existingFig.replaceWith(contentSelectedImage);
+        } else {
+            contentSelectedImage.src = url;
+            contentSelectedImage.alt = 'Obrázek';
+            contentSelectedImage.style.cssText = imgStyle;
+        }
+    } else {
+        let node;
+        if (caption) {
+            node = buildFigure();
+        } else {
+            node = document.createElement('img');
+            node.src = url;
+            node.alt = 'Obrázek';
+            node.style.cssText = imgStyle;
+        }
         if (contentSavedRange && content.contains(contentSavedRange.commonAncestorContainer)) {
             const sel = window.getSelection();
             sel.removeAllRanges();
             sel.addRange(contentSavedRange);
-            contentSavedRange.insertNode(img);
+            contentSavedRange.insertNode(node);
             contentSavedRange.collapse(false);
         } else {
-            content.appendChild(img);
+            content.appendChild(node);
         }
     }
     updatePreview();

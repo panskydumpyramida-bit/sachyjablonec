@@ -433,8 +433,9 @@
                             <div id="galleryPreview" style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
                             </div>
                         </div>
-                        <div class="editor-primary-actions" style="margin-top: 2rem; display: flex; gap: 1rem;"><button class="btn-primary"
-                                onclick="saveNews()"><i class="fa-solid fa-save"></i>Uložit</button><button
+                        <div class="editor-primary-actions" style="margin-top: 2rem; display: flex; gap: 1rem; flex-wrap: wrap;"><button class="btn-primary"
+                                onclick="saveNews()"><i class="fa-solid fa-save"></i>Uložit</button><button type="button"
+                                class="btn-secondary" onclick="previewArticle()"><i class="fa-solid fa-eye"></i>Náhled článku</button><button
                                 class="btn-secondary" onclick="switchTab('dashboard')">Zrušit</button></div>
                     </div>
                     <!-- Sidebar (30%) -->
@@ -561,6 +562,9 @@
                                     style="width: 100%; margin-top: 1rem; justify-content: center;"><i
                                         class="fa-solid fa-save" id="saveNewsBtnIcon"></i><span
                                         id="saveNewsBtnText">Uložit</span></button>
+                                <button type="button" class="btn-secondary" onclick="previewArticle()"
+                                    style="width: 100%; margin-top: 0.5rem; justify-content: center;"><i
+                                        class="fa-solid fa-eye"></i>Náhled článku</button>
                                 <button type="button" class="btn-secondary editor-cancel-mobile" onclick="document.body.classList.remove('editor-publish-open')">
                                     <i class="fa-solid fa-arrow-left"></i>Zpět k článku
                                 </button>

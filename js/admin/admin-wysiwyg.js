@@ -306,10 +306,13 @@ function insertLink() {
         <div class="modal-overlay" onclick="document.getElementById('linkModal').remove()"></div>
         <div class="modal-content" style="max-width: 400px;">
             <h3 style="margin-bottom:1rem;">Vložit odkaz</h3>
-            <div style="margin-bottom:1rem;">
+            <div style="margin-bottom:0.4rem;">
                 <label style="display:block;margin-bottom:0.3rem;color:var(--text-muted);font-size:0.85rem;">URL *</label>
-                <input type="url" id="linkUrl" placeholder="https://..." style="width:100%;box-sizing:border-box;">
+                <input type="text" id="linkUrl" placeholder="https://…  nebo  /novinky/nazev-clanku" style="width:100%;box-sizing:border-box;">
             </div>
+            <p style="margin:0 0 1rem;color:var(--text-muted);font-size:0.75rem;opacity:0.8;">
+                <i class="fa-solid fa-circle-info"></i> Interní odkaz na náš web zadej cestou začínající lomítkem (např. <code>/partie</code>, <code>/novinky/…</code>). Externí web jako <code>https://…</code>.
+            </p>
             <div style="margin-bottom:1rem;">
                 <label style="display:block;margin-bottom:0.3rem;color:var(--text-muted);font-size:0.85rem;">Text odkazu</label>
                 <input type="text" id="linkText" value="${selectedText.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;')}" placeholder="Zobrazovaný text" style="width:100%;box-sizing:border-box;">
@@ -317,7 +320,7 @@ function insertLink() {
             <div style="margin-bottom:1rem;">
                 <label style="display:flex;align-items:center;gap:0.5rem;cursor:pointer;color:var(--text-muted);font-size:0.85rem;">
                     <input type="checkbox" id="linkNewTab" checked style="width:auto;">
-                    Otevřít v novém okně
+                    Otevřít v novém okně <span id="linkTabHint" style="opacity:0.6;"></span>
                 </label>
             </div>
             <div style="display:flex;gap:0.5rem;justify-content:flex-end;">
@@ -334,11 +337,34 @@ function insertLink() {
 
     urlInput.focus();
 
+    // Doplní schéma a rozpozná interní odkaz (začíná lomítkem). Vrací { href, internal }.
+    const normalizeUrl = (raw) => {
+        let v = raw.trim();
+        if (!v) return { href: '', internal: false };
+        // kotva, e-mail, tel, plné schéma → nech být
+        if (/^(#|mailto:|tel:|https?:\/\/)/i.test(v)) return { href: v, internal: false };
+        // interní cesta
+        if (v.startsWith('/')) return { href: v, internal: true };
+        // vypadá jako doména bez schématu (např. example.com/x) → doplň https://
+        if (/^[a-z0-9.-]+\.[a-z]{2,}(\/|$)/i.test(v)) return { href: 'https://' + v, internal: false };
+        // jinak ber jako interní cestu
+        return { href: '/' + v.replace(/^\/+/, ''), internal: true };
+    };
+
+    // Interní odkaz defaultně ve stejné kartě (navigace po webu)
+    const syncTabDefault = () => {
+        const { internal } = normalizeUrl(urlInput.value);
+        newTabCheck.checked = !internal;
+        const hint = modal.querySelector('#linkTabHint');
+        if (hint) hint.textContent = internal ? '(interní — doporučeno vypnout)' : '';
+    };
+    urlInput.addEventListener('input', syncTabDefault);
+
     modal.querySelector('#linkCancel').onclick = () => modal.remove();
     modal.onclick = (e) => { if (e.target === modal) modal.remove(); };
 
     modal.querySelector('#linkInsert').onclick = () => {
-        const url = urlInput.value.trim();
+        const { href: url } = normalizeUrl(urlInput.value);
         const text = textInput.value.trim() || url;
         const newTab = newTabCheck.checked;
 
@@ -4173,6 +4199,60 @@ window.checkToolbarState = checkToolbarState;
 window.applyHeading = applyHeading;
 window.insertList = insertList;
 window.insertLink = insertLink;
+
+// Náhled celého článku — jak ho uvidí čtenář (ne jen karta na titulce)
+function previewArticle() {
+    const title = (document.getElementById('newsTitle')?.value || '').trim() || 'Bez názvu';
+    const category = document.getElementById('newsCategory')?.value || '';
+    const excerpt = (document.getElementById('newsExcerpt')?.value || '').trim();
+    const dateVal = document.getElementById('newsDate')?.value;
+    const dateStr = dateVal ? new Date(dateVal).toLocaleDateString('cs-CZ') : new Date().toLocaleDateString('cs-CZ');
+    const contentHtml = document.getElementById('articleContent')?.innerHTML || '';
+
+    document.getElementById('articlePreviewOverlay')?.remove();
+
+    const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+    const overlay = document.createElement('div');
+    overlay.id = 'articlePreviewOverlay';
+    overlay.style.cssText = 'position:fixed; inset:0; z-index:100000; background:rgba(8,8,12,0.92); overflow-y:auto; -webkit-overflow-scrolling:touch;';
+    overlay.innerHTML = `
+        <div style="position:sticky; top:0; z-index:2; display:flex; align-items:center; justify-content:space-between; gap:1rem; padding:0.7rem 1rem; background:rgba(20,20,28,0.95); border-bottom:1px solid rgba(212,175,55,0.25); backdrop-filter:blur(6px);">
+            <span style="color:var(--primary-color,#d4af37); font-weight:600;"><i class="fa-solid fa-eye"></i> Náhled článku <span style="color:#94a3b8; font-weight:400; font-size:0.85rem;">— takhle ho uvidí čtenář</span></span>
+            <button type="button" id="articlePreviewClose" class="btn-secondary" style="white-space:nowrap;"><i class="fa-solid fa-xmark"></i> Zavřít náhled</button>
+        </div>
+        <div style="max-width:820px; margin:0 auto; padding:2rem 1.25rem 5rem;">
+            <div style="color:var(--primary-color,#d4af37); font-size:0.8rem; letter-spacing:0.05em; text-transform:uppercase; margin-bottom:0.5rem;">${esc(category)} &middot; ${esc(dateStr)}</div>
+            <h1 style="font-family:'Playfair Display',serif; color:#fff; font-size:2rem; line-height:1.2; margin:0 0 0.75rem;">${esc(title)}</h1>
+            ${excerpt ? `<p style="color:#cbd5e1; font-size:1.1rem; line-height:1.6; border-left:3px solid var(--primary-color,#d4af37); padding-left:1rem; margin:0 0 1.75rem;">${esc(excerpt)}</p>` : ''}
+            <div class="article-content" id="articlePreviewBody" style="color:#e2e8f0; line-height:1.8; font-size:1.05rem;">${contentHtml}</div>
+        </div>
+    `;
+    document.body.appendChild(overlay);
+    document.body.style.overflow = 'hidden';
+
+    const close = () => { overlay.remove(); document.body.style.overflow = ''; document.removeEventListener('keydown', onKey); };
+    const onKey = (e) => { if (e.key === 'Escape') close(); };
+    overlay.querySelector('#articlePreviewClose').onclick = close;
+    overlay.addEventListener('click', (e) => { if (e.target === overlay) close(); });
+    document.addEventListener('keydown', onKey);
+
+    // Diagramy překreslit na šířku náhledu (klonovaný board z editoru by byl rozházený)
+    const body = overlay.querySelector('#articlePreviewBody');
+    body.querySelectorAll('.diagram-book').forEach((book, i) => {
+        try {
+            const data = JSON.parse(book.dataset.diagrams || '[]');
+            if (!data.length) return;
+            const boardEl = book.querySelector('.book-board-container');
+            if (!boardEl || typeof DiagramViewer === 'undefined') return;
+            boardEl.innerHTML = '';
+            boardEl.id = 'preview-book-' + i + '-' + Date.now();
+            const v = new DiagramViewer(boardEl.id);
+            v.load(data[0]);
+        } catch (e) { /* náhled diagramu nedostupný */ }
+    });
+}
+window.previewArticle = previewArticle;
 window.insertCollapsibleBlock = insertCollapsibleBlock;
 window.insertIntroBlock = insertIntroBlock;
 window.initFloatingToolbar = initFloatingToolbar;
