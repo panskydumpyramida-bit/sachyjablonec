@@ -311,10 +311,18 @@ function insertLink() {
                 <label style="display:block;margin-bottom:0.4rem;color:#cbd5e1;font-size:0.85rem;font-weight:500;">Kam odkaz vede <span style="color:var(--primary-color,#d4af37);">*</span></label>
                 <input type="text" id="linkUrl" placeholder="https://…   nebo   /novinky/nazev-clanku" style="${inputStyle}">
             </div>
-            <p style="margin:0 0 1.1rem;color:#94a3b8;font-size:0.78rem;line-height:1.5;display:flex;gap:0.45rem;">
+            <p style="margin:0 0 0.8rem;color:#94a3b8;font-size:0.78rem;line-height:1.5;display:flex;gap:0.45rem;">
                 <i class="fa-solid fa-circle-info" style="color:var(--primary-color,#d4af37);margin-top:0.15rem;"></i>
-                <span>Odkaz na náš web zadej cestou s lomítkem (<code style="background:rgba(255,255,255,0.07);padding:0.05rem 0.3rem;border-radius:3px;">/partie</code>, <code style="background:rgba(255,255,255,0.07);padding:0.05rem 0.3rem;border-radius:3px;">/novinky/…</code>). Externí web jako <code style="background:rgba(255,255,255,0.07);padding:0.05rem 0.3rem;border-radius:3px;">https://…</code></span>
+                <span>Externí web jako <code style="background:rgba(255,255,255,0.07);padding:0.05rem 0.3rem;border-radius:3px;">https://…</code>, nebo si vyber stránku či článek z nabídky:</span>
             </p>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.6rem;margin-bottom:1.1rem;">
+                <select id="linkPickPage" style="${inputStyle}padding:0.6rem 0.5rem;cursor:pointer;">
+                    <option value="">📄 Stránka webu…</option>
+                </select>
+                <select id="linkPickArticle" style="${inputStyle}padding:0.6rem 0.5rem;cursor:pointer;">
+                    <option value="">📰 Článek…</option>
+                </select>
+            </div>
             <div style="margin-bottom:1.1rem;">
                 <label style="display:block;margin-bottom:0.4rem;color:#cbd5e1;font-size:0.85rem;font-weight:500;">Text odkazu</label>
                 <input type="text" id="linkText" value="${selectedText.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;')}" placeholder="Zobrazovaný text" style="${inputStyle}">
@@ -342,6 +350,60 @@ function insertLink() {
     });
 
     urlInput.focus();
+
+    // Rychlý výběr: stránky z menu
+    const pagePick = modal.querySelector('#linkPickPage');
+    const articlePick = modal.querySelector('#linkPickArticle');
+    const MENU_PAGES = [
+        ['Domů', '/'], ['O nás', '/about'], ['Kalendář', '/calendar'],
+        ['Soutěže družstev', '/teams'], ['Oddílový přebor', '/club-tournaments'],
+        ['Soutěže jednotlivců', '/individual-competitions.html'], ['Mládež', '/youth'],
+        ['Partie', '/partie'], ['Databáze partií', '/chess-database.html'],
+        ['Puzzle Racer', '/puzzle-racer'], ['Galerie', '/gallery'], ['Blicák', '/blicak'],
+    ];
+    MENU_PAGES.forEach(([label, path]) => {
+        const o = document.createElement('option');
+        o.value = path; o.textContent = label; o.dataset.label = label;
+        pagePick.appendChild(o);
+    });
+
+    // Vyplní URL (+ text, pokud prázdný) z vybrané položky
+    const applyPick = (path, label) => {
+        if (!path) return;
+        urlInput.value = path;
+        if (!textInput.value.trim() && label) textInput.value = label;
+        syncTabDefault();
+    };
+    pagePick.addEventListener('change', () => {
+        const opt = pagePick.selectedOptions[0];
+        applyPick(pagePick.value, opt?.dataset.label);
+        articlePick.value = '';
+    });
+
+    // Rychlý výběr: publikované články (z veřejného API)
+    articlePick.addEventListener('change', () => {
+        const opt = articlePick.selectedOptions[0];
+        applyPick(articlePick.value, opt?.dataset.label);
+        pagePick.value = '';
+    });
+    (async () => {
+        try {
+            const base = window.API_URL || (typeof API_URL !== 'undefined' ? API_URL : '/api');
+            const res = await fetch(`${base}/news`);
+            if (!res.ok) return;
+            const list = await res.json();
+            (Array.isArray(list) ? list : (list.news || []))
+                .filter(a => a.isPublished && a.slug)
+                .slice(0, 60)
+                .forEach(a => {
+                    const o = document.createElement('option');
+                    o.value = `/novinky/${a.slug}`;
+                    o.textContent = a.title.length > 48 ? a.title.slice(0, 47) + '…' : a.title;
+                    o.dataset.label = a.title;
+                    articlePick.appendChild(o);
+                });
+        } catch (e) { /* nabídka článků nedostupná — uživatel napíše ručně */ }
+    })();
 
     // Doplní schéma a rozpozná interní odkaz (začíná lomítkem). Vrací { href, internal }.
     const normalizeUrl = (raw) => {
