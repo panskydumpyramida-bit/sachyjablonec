@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="cs">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Přestup Radomír Vacek - Členská sekce</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Open+Sans:wght@400;600;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/member.css">
+    <link rel="icon" type="image/png" href="images/favicon.png">
+</head>
+
+<body>
+    <header id="global-header"></header>
+
+    <main class="page-content" style="padding-top: 100px; min-height: 80vh;">
+        <div class="section-view transfer-workspace">
+            <div class="section-header">
+                <a href="member-bulletin.html" class="back-btn">
+                    <i class="fa-solid fa-arrow-left"></i>
+                </a>
+                <h2 class="section-title" style="color: #fcd34d;">
+                    <i class="fa-solid fa-file-signature"></i> Přestup Radomír Vacek
+                </h2>
+            </div>
+
+            <div id="transferGuard" class="transfer-status">
+                <i class="fa-solid fa-spinner fa-spin"></i> Kontroluji přístup...
+            </div>
+
+            <div id="transferApp" class="transfer-grid hidden">
+                <section class="transfer-panel transfer-preview-panel">
+                    <div class="transfer-panel-head">
+                        <div>
+                            <h3>Předvyplněný lístek</h3>
+                            <p>Radomír Vacek, z Bakova do TJ Bižuterie Jablonec</p>
+                        </div>
+                        <div class="transfer-actions">
+                            <button type="button" class="btn-secondary" id="openBasePdfBtn">
+                                <i class="fa-solid fa-up-right-from-square"></i> Otevřít PDF
+                            </button>
+                            <button type="button" class="btn-secondary" id="downloadBasePdfBtn">
+                                <i class="fa-solid fa-download"></i> Stáhnout
+                            </button>
+                        </div>
+                    </div>
+                    <div class="transfer-preview">
+                        <img id="vacekPreview" alt="Náhled přestupního lístku Radomíra Vacka">
+                    </div>
+                </section>
+
+                <section class="transfer-panel">
+                    <div class="transfer-panel-head">
+                        <div>
+                            <h3>Podpis hráče</h3>
+                            <p>Podpis se vloží do pole „Podpis hráče“ ve spodní části PDF.</p>
+                        </div>
+                    </div>
+
+                    <div class="signature-pad-wrap">
+                        <canvas id="signatureCanvas" width="900" height="260"></canvas>
+                    </div>
+
+                    <div class="transfer-actions transfer-actions-full">
+                        <button type="button" class="btn-secondary" id="clearSignatureBtn">
+                            <i class="fa-solid fa-eraser"></i> Vymazat
+                        </button>
+                        <button type="button" class="btn-primary" id="generateSignedPdfBtn">
+                            <i class="fa-solid fa-file-circle-check"></i> Vložit podpis do PDF
+                        </button>
+                    </div>
+
+                    <div id="signedPdfActions" class="transfer-result hidden">
+                        <div>
+                            <strong>Podepsané PDF je připravené.</strong>
+                            <span id="signedPdfStatus">Můžeš ho stáhnout nebo rovnou uložit mezi dokumenty.</span>
+                        </div>
+                        <div class="transfer-actions">
+                            <button type="button" class="btn-secondary" id="openSignedPdfBtn">
+                                <i class="fa-solid fa-up-right-from-square"></i> Otevřít
+                            </button>
+                            <button type="button" class="btn-secondary" id="downloadSignedPdfBtn">
+                                <i class="fa-solid fa-download"></i> Stáhnout
+                            </button>
+                            <button type="button" class="btn-primary" id="saveSignedPdfBtn">
+                                <i class="fa-solid fa-cloud-arrow-up"></i> Uložit do dokumentů
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="transfer-upload-scan">
+                        <div>
+                            <h3>Hotový scan</h3>
+                            <p>Pokud podepíše papír bokem, nahraj scan sem. Uloží se jen pro adminy.</p>
+                        </div>
+                        <div class="transfer-actions transfer-actions-full">
+                            <button type="button" class="btn-secondary" id="pickScanBtn">
+                                <i class="fa-solid fa-file-image"></i> Vybrat scan
+                            </button>
+                            <button type="button" class="btn-primary" id="uploadScanBtn" disabled>
+                                <i class="fa-solid fa-cloud-arrow-up"></i> Uložit scan
+                            </button>
+                            <input type="file" id="signedScanInput" accept="image/*,.pdf" hidden>
+                        </div>
+                        <div id="scanFileName" class="transfer-muted">Zatím není vybraný žádný soubor.</div>
+                    </div>
+
+                    <div id="transferMessage" class="transfer-message hidden"></div>
+                </section>
+            </div>
+        </div>
+    </main>
+
+    <footer id="global-footer"></footer>
+
+    <script src="js/config.js"></script>
+    <script src="js/layout-loader.js"></script>
+    <script src="js/member-auth.js"></script>
+    <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+    <script src="js/member-transfer-vacek.js"></script>
+</body>
+
+</html>

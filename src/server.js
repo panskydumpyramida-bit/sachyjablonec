@@ -32,6 +32,7 @@ import aiRoutes from './routes/ai.js';
 import oauthRoutes from './routes/oauth.js';
 import announcementRoutes from './routes/api-announcements.js';
 import documentRoutes from './routes/api-documents.js';
+import transferFormRoutes from './routes/api-transfer-forms.js';
 import travelReportRoutes from './routes/api-travel-reports.js';
 import forumRoutes from './routes/api-forum.js';
 import diagramsRoutes from './routes/api-diagrams.js';
@@ -286,6 +287,9 @@ app.get('/member-wishlist.html', servePage('member-wishlist.html'));
 app.get('/member-gallery', servePage('member-gallery.html'));
 app.get('/member-gallery.html', servePage('member-gallery.html'));
 
+app.get('/member-transfer-vacek', servePage('member-transfer-vacek.html'));
+app.get('/member-transfer-vacek.html', servePage('member-transfer-vacek.html'));
+
 app.get('/blicak', servePage('blicak.html'));
 app.get('/blicak.html', servePage('blicak.html'));
 
@@ -372,6 +376,7 @@ app.use('/api/chess', chessRoutes);
 app.use('/api/ai', authMiddleware, aiRoutes); // require login — the AI proxy spends the OpenAI key
 app.use('/api/announcements', announcementRoutes);
 app.use('/api/documents', documentRoutes);
+app.use('/api/transfer-forms', transferFormRoutes);
 app.use('/api/travel-reports', travelReportRoutes);
 app.use('/api/forum', forumRoutes);
 app.use('/api', diagramsRoutes);
@@ -403,7 +408,7 @@ const allowedHtmlFiles = [
     'form-scanner.html', 'game-recorder.html', 'puzzle-racer.html',
     'blunder-grid.html', 'member-games.html', 'training.html', 'account.html',
     '404.html', 'reset-password.html', 'member-bulletin.html', 
-    'member-wishlist.html', 'member-gallery.html'
+    'member-wishlist.html', 'member-gallery.html', 'member-transfer-vacek.html'
 ];
 
 // --- Blicak Registration Endpoints ---

@@ -491,6 +491,7 @@ model Document {
   filename     String
   url          String
   category     String   @default("other") // stanovy, zapisy, formulare, other
+  visibility   String   @default("members") // members, admin
   uploadedById Int      @map("uploaded_by_id")
   createdAt    DateTime @default(now()) @map("created_at")
   

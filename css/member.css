@@ -457,8 +457,155 @@
     border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
+.admin-only-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    margin-left: 0.4rem;
+    padding: 0.15rem 0.45rem;
+    border-radius: 999px;
+    border: 1px solid rgba(252, 211, 77, 0.35);
+    background: rgba(252, 211, 77, 0.1);
+    color: #fcd34d;
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+.transfer-workspace {
+    max-width: 1280px;
+}
+
+.transfer-status,
+.transfer-message {
+    padding: 1rem 1.1rem;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--text-muted, #9ca3af);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.transfer-message.success {
+    color: #86efac;
+    border-color: rgba(16, 185, 129, 0.35);
+    background: rgba(16, 185, 129, 0.1);
+}
+
+.transfer-message.error {
+    color: #fca5a5;
+    border-color: rgba(239, 68, 68, 0.35);
+    background: rgba(239, 68, 68, 0.1);
+}
+
+.transfer-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.05fr) minmax(360px, 0.95fr);
+    gap: 1rem;
+    align-items: start;
+}
+
+.transfer-panel,
+.vacek-transfer-card {
+    background: rgba(255, 255, 255, 0.045);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    padding: 1rem;
+}
+
+.vacek-transfer-card {
+    border-color: rgba(252, 211, 77, 0.28);
+    background: rgba(252, 211, 77, 0.07);
+}
+
+.transfer-panel-head,
+.vacek-transfer-card {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+}
+
+.transfer-panel h3,
+.vacek-transfer-card h3 {
+    margin: 0 0 0.25rem;
+    color: var(--text-main, #f8fafc);
+    font-size: 1.05rem;
+}
+
+.transfer-panel p,
+.vacek-transfer-card p,
+.transfer-muted {
+    margin: 0;
+    color: var(--text-muted, #9ca3af);
+    font-size: 0.88rem;
+    line-height: 1.45;
+}
+
+.transfer-preview {
+    margin-top: 1rem;
+    background: #111827;
+    border-radius: 8px;
+    overflow: auto;
+    max-height: 78vh;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.transfer-preview img {
+    display: block;
+    width: 100%;
+    height: auto;
+}
+
+.signature-pad-wrap {
+    margin: 1rem 0;
+    background: #f8fafc;
+    border: 2px dashed rgba(15, 23, 42, 0.25);
+    border-radius: 8px;
+    overflow: hidden;
+    touch-action: none;
+}
+
+.signature-pad-wrap canvas {
+    display: block;
+    width: 100%;
+    aspect-ratio: 900 / 260;
+    cursor: crosshair;
+}
+
+.transfer-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+.transfer-actions-full {
+    width: 100%;
+}
+
+.transfer-result,
+.transfer-upload-scan {
+    display: grid;
+    gap: 0.8rem;
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
 .hidden {
     display: none !important;
+}
+
+@media (max-width: 960px) {
+    .transfer-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .transfer-panel-head,
+    .vacek-transfer-card {
+        align-items: flex-start;
+        flex-direction: column;
+    }
 }
 
 @media (max-width: 480px) {

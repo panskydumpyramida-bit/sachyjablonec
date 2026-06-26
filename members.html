@@ -88,6 +88,10 @@
                                 <i class="fa-solid fa-file-lines"></i>
                                 <span style="text-align: center;">Skenovat<br>přihlášky</span>
                             </a>
+                            <a href="member-transfer-vacek.html" id="adminTransferVacekTile" class="hub-tile tile-scanner hidden">
+                                <i class="fa-solid fa-file-signature"></i>
+                                <span style="text-align: center;">Přestup<br>Vacek</span>
+                            </a>
                             <a href="blunder-grid.html" class="hub-tile tile-blundercheck">
                                 <i class="fa-solid fa-triangle-exclamation"></i>
                                 <span>Blundercheck</span>
@@ -201,6 +205,7 @@
                 document.getElementById('userRoleBadge').textContent = user.role;
                 if (user.role === 'ADMIN' || user.role === 'SUPERADMIN') {
                     document.getElementById('userRoleBadge').style.color = '#fcd34d';
+                    document.getElementById('adminTransferVacekTile')?.classList.remove('hidden');
                 }
 
                 // Logged in but not a member yet → explain why the member tiles won't open.

@@ -7,6 +7,7 @@ import { authMiddleware } from '../middleware/auth.js';
 import { requireAdmin, requireMember } from '../middleware/rbac.js';
 import {
     getDocuments,
+    getDocumentFile,
     uploadDocument,
     deleteDocument
 } from '../controllers/documentController.js';
@@ -64,6 +65,7 @@ const router = express.Router();
 
 // Routes
 router.get('/', authMiddleware, requireMember, getDocuments);
+router.get('/:id/file', authMiddleware, requireMember, getDocumentFile);
 router.post('/', authMiddleware, requireAdmin, upload.single('file'), uploadDocument);
 router.delete('/:id', authMiddleware, requireAdmin, deleteDocument);
 

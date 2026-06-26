@@ -148,7 +148,13 @@
                     <option value="zapisy">Zápisy ze schůzí</option>
                     <option value="stanovy">Stanovy a řády</option>
                     <option value="formulare">Formuláře</option>
+                    <option value="prestupy">Přestupy</option>
                     <option value="other">Ostatní</option>
+                </select>
+                <select id="docVisibility"
+                    style="width: 100%; margin-bottom: 1.5rem; padding: 0.8rem; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); color: white; border-radius: 0.5rem;">
+                    <option value="members">Viditelné pro členy</option>
+                    <option value="admin">Jen adminové</option>
                 </select>
                 <button id="docSubmitBtn" class="btn-primary" onclick="uploadDocument()"
                     style="width: 100%;">Nahrát</button>

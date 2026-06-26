@@ -122,6 +122,75 @@ async function postAnnouncement() {
 }
 
 // --- Documents ---
+function isCurrentUserAdmin() {
+    return currentUserRole === 'ADMIN' || currentUserRole === 'SUPERADMIN';
+}
+
+function renderVacekTransferCard() {
+    if (!isCurrentUserAdmin()) return '';
+
+    return `
+        <div class="vacek-transfer-card">
+            <div>
+                <h3><i class="fa-solid fa-file-signature" style="color:#fcd34d;"></i> Přestup Radomír Vacek <span class="admin-only-badge"><i class="fa-solid fa-lock"></i> admin</span></h3>
+                <p>Předvyplněný lístek z Bakova do Bižuterie, podpis hráče a uložení podepsaného PDF.</p>
+            </div>
+            <div class="transfer-actions">
+                <a href="member-transfer-vacek.html" class="btn-primary" style="text-decoration:none; padding:0.55rem 0.9rem;">
+                    <i class="fa-solid fa-pen-nib"></i> Otevřít podpis
+                </a>
+            </div>
+        </div>
+    `;
+}
+
+function documentFilename(doc) {
+    return doc.filename || `${doc.title || 'dokument'}.pdf`;
+}
+
+async function fetchDocumentBlob(id) {
+    const token = getAuthToken();
+    const res = await fetch(`${API_URL}/documents/${id}/file`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+    });
+
+    if (!res.ok) {
+        throw new Error(`Nepodařilo se načíst dokument (${res.status})`);
+    }
+
+    return res.blob();
+}
+
+async function openDocumentFile(id) {
+    try {
+        const blob = await fetchDocumentBlob(id);
+        const url = URL.createObjectURL(blob);
+        window.open(url, '_blank');
+        setTimeout(() => URL.revokeObjectURL(url), 60000);
+    } catch (error) {
+        console.error(error);
+        alert(error.message || 'Dokument nejde otevřít.');
+    }
+}
+
+async function downloadDocumentFile(id) {
+    try {
+        const doc = (window.memberDocumentsById || {})[id] || {};
+        const blob = await fetchDocumentBlob(id);
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = documentFilename(doc);
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        setTimeout(() => URL.revokeObjectURL(url), 5000);
+    } catch (error) {
+        console.error(error);
+        alert(error.message || 'Dokument nejde stáhnout.');
+    }
+}
+
 async function loadDocuments() {
     const container = document.getElementById('documentsList');
     container.innerHTML = '<p class="text-muted"><i class="fa-solid fa-spinner fa-spin"></i> Načítám...</p>';
@@ -131,19 +200,22 @@ async function loadDocuments() {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         const data = await res.json();
+        window.memberDocumentsById = Object.fromEntries(data.map(doc => [doc.id, doc]));
+        const vacekCard = renderVacekTransferCard();
 
         if (data.length === 0) {
-            container.innerHTML = '<p class="text-muted text-center" style="color: var(--text-muted);">Žádné dokumenty.</p>';
+            container.innerHTML = `${vacekCard}<p class="text-muted text-center" style="color: var(--text-muted);">Žádné dokumenty.</p>`;
             return;
         }
 
-        container.innerHTML = data.map(doc => {
+        container.innerHTML = vacekCard + data.map(doc => {
             let icon = 'fa-file';
             let iconClass = 'file';
-            if (doc.filename.endsWith('.pdf')) { icon = 'fa-file-pdf'; iconClass = 'pdf'; }
-            else if (doc.filename.match(/\.(doc|docx)$/)) { icon = 'fa-file-word'; iconClass = 'word'; }
-            else if (doc.filename.match(/\.(xls|xlsx)$/)) { icon = 'fa-file-excel'; iconClass = 'excel'; }
-            else if (doc.filename.match(/\.(jpg|png|webp)$/)) { icon = 'fa-file-image'; iconClass = 'image'; }
+            const filename = doc.filename.toLowerCase();
+            if (filename.endsWith('.pdf')) { icon = 'fa-file-pdf'; iconClass = 'pdf'; }
+            else if (filename.match(/\.(doc|docx)$/)) { icon = 'fa-file-word'; iconClass = 'word'; }
+            else if (filename.match(/\.(xls|xlsx)$/)) { icon = 'fa-file-excel'; iconClass = 'excel'; }
+            else if (filename.match(/\.(jpg|jpeg|png|webp)$/)) { icon = 'fa-file-image'; iconClass = 'image'; }
 
             return `
             <div class="document-row">
@@ -152,17 +224,23 @@ async function loadDocuments() {
                         <i class="fa-solid ${icon}"></i>
                     </div>
                     <div>
-                        <div style="font-weight: 600; color: var(--text-main);">${escapeHtml(doc.title)}</div>
+                        <div style="font-weight: 600; color: var(--text-main);">
+                            ${escapeHtml(doc.title)}
+                            ${doc.visibility === 'admin' ? '<span class="admin-only-badge"><i class="fa-solid fa-lock"></i> admin</span>' : ''}
+                        </div>
                         <div style="font-size: 0.8rem; color: var(--text-muted);">
                             ${new Date(doc.createdAt).toLocaleDateString('cs-CZ')} • ${doc.category || 'Ostatní'}
                         </div>
                     </div>
                 </div>
                 <div style="display: flex; gap: 0.5rem;">
-                    <a href="${doc.url}" target="_blank" class="btn-secondary" style="padding: 0.4rem 0.8rem; font-size: 0.9rem; text-decoration: none;" download>
+                    <button type="button" class="btn-secondary" style="padding: 0.4rem 0.8rem; font-size: 0.9rem;" onclick="openDocumentFile(${doc.id})">
+                        <i class="fa-solid fa-up-right-from-square"></i> Otevřít
+                    </button>
+                    <button type="button" class="btn-secondary" style="padding: 0.4rem 0.8rem; font-size: 0.9rem;" onclick="downloadDocumentFile(${doc.id})">
                         <i class="fa-solid fa-download"></i> Stáhnout
-                    </a>
-                    ${currentUserRole === 'ADMIN' || currentUserRole === 'SUPERADMIN' ? `
+                    </button>
+                    ${isCurrentUserAdmin() ? `
                         <button class="btn-secondary" style="background: rgba(220, 38, 38, 0.2); color: #fca5a5; border-color: rgba(220, 38, 38, 0.4); padding: 0.4rem 0.6rem;" onclick="deleteDocument(${doc.id})">
                             <i class="fa-solid fa-trash"></i>
                         </button>
@@ -171,7 +249,7 @@ async function loadDocuments() {
             </div>
         `}).join('');
 
-        if (currentUserRole === 'ADMIN' || currentUserRole === 'SUPERADMIN') {
+        if (isCurrentUserAdmin()) {
             document.getElementById('adminDocumentActions')?.classList.remove('hidden');
         }
     } catch (e) {
@@ -202,6 +280,7 @@ async function uploadDocument() {
     const file = fileInput.files[0];
     const title = document.getElementById('docTitle').value;
     const category = document.getElementById('docCategory').value;
+    const visibility = document.getElementById('docVisibility')?.value || 'members';
 
     if (!file) return alert('Vyberte soubor.');
 
@@ -209,6 +288,7 @@ async function uploadDocument() {
     formData.append('file', file);
     if (title) formData.append('title', title);
     formData.append('category', category);
+    formData.append('visibility', visibility);
 
     const btn = document.getElementById('docSubmitBtn');
     btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
@@ -226,6 +306,8 @@ async function uploadDocument() {
             closeDocumentUploadModal();
             fileInput.value = '';
             document.getElementById('docTitle').value = '';
+            document.getElementById('docFileName').textContent = 'Klikněte pro výběr souboru';
+            if (document.getElementById('docVisibility')) document.getElementById('docVisibility').value = 'members';
             loadDocuments();
         } else {
             alert('Chyba při nahrávání.');
