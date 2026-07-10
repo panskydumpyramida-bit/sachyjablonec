@@ -618,6 +618,13 @@ const absoluteUrl = (u) => {
     return `${SITE_URL}${u.startsWith('/') ? '' : '/'}${u}`;
 };
 
+// Starší články mohou mít kořenové assety uložené jako images/foo.jpg.
+// Na SEO URL /novinky/:slug by se jinak chybně hledaly pod /novinky/images/.
+const normalizeArticleContent = (content = '') => String(content).replace(
+    /\b(src|poster)=(["'])(?!(?:https?:|data:|blob:|\/))((?:images|uploads|documents)\/)/gi,
+    '$1=$2/$3'
+);
+
 // JSON bezpečný pro inline <script> (zabrání </script> breakoutu)
 const inlineJson = (obj) => JSON.stringify(obj).replace(/</g, '\\u003c');
 
@@ -659,7 +666,8 @@ export const renderArticlePage = async (req, res) => {
             })
         ]);
 
-        const article = { ...news, nextArticle, prevArticle };
+        const normalizedContent = normalizeArticleContent(news.content);
+        const article = { ...news, content: normalizedContent, nextArticle, prevArticle };
         const description = stripHtml(news.excerpt || news.title).slice(0, 160);
         const canonicalUrl = `${SITE_URL}/novinky/${news.slug}`;
         const image = absoluteUrl(news.thumbnailUrl) || `${SITE_URL}/images/og-default.png`;
@@ -706,7 +714,7 @@ export const renderArticlePage = async (req, res) => {
             .replace('<h1 id="articleTitle" style="font-size: 2.25rem; margin-bottom: 1.5rem;"></h1>',
                 `<h1 id="articleTitle" style="font-size: 2.25rem; margin-bottom: 1.5rem;">${escapeHtml(news.title)}</h1>`)
             .replace('<div class="article-content" id="articleBody"></div>',
-                `<div class="article-content" id="articleBody">${news.content || ''}</div>`);
+                `<div class="article-content" id="articleBody">${normalizedContent}</div>`);
 
         res.send(html);
     } catch (error) {

@@ -76,7 +76,7 @@ function renderPaginator(meta, options) {
     // Prev Button
     if (page > 1) {
         html += `
-            <button onclick="loadNews({ containerId: '${containerId}', category: ${catArg}, displayMode: '${displayMode}', limit: ${limit}, page: ${page - 1} })"
+            <button type="button" aria-label="Předchozí stránka" onclick="loadNews({ containerId: '${containerId}', category: ${catArg}, displayMode: '${displayMode}', limit: ${limit}, page: ${page - 1} })"
                 class="pagination-btn" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: var(--text-color); padding: 0.5rem 1rem; border-radius: 4px; cursor: pointer; transition: all 0.2s;">
                 <i class="fa-solid fa-chevron-left"></i>
             </button>
@@ -111,7 +111,7 @@ function renderPaginator(meta, options) {
                 : 'background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: var(--text-color);';
 
             html += `
-                <button onclick="loadNews({ containerId: '${containerId}', category: ${catArg}, displayMode: '${displayMode}', limit: ${limit}, page: ${p} })"
+                <button type="button" aria-label="Strana ${p}" aria-current="${isActive ? 'page' : 'false'}" onclick="loadNews({ containerId: '${containerId}', category: ${catArg}, displayMode: '${displayMode}', limit: ${limit}, page: ${p} })"
                     class="pagination-btn" style="${style} padding: 0.5rem 1rem; border-radius: 4px; cursor: pointer; transition: all 0.2s;">
                     ${p}
                 </button>
@@ -122,7 +122,7 @@ function renderPaginator(meta, options) {
     // Next Button
     if (page < lastPage) {
         html += `
-            <button onclick="loadNews({ containerId: '${containerId}', category: ${catArg}, displayMode: '${displayMode}', limit: ${limit}, page: ${page + 1} })"
+            <button type="button" aria-label="Další stránka" onclick="loadNews({ containerId: '${containerId}', category: ${catArg}, displayMode: '${displayMode}', limit: ${limit}, page: ${page + 1} })"
                 class="pagination-btn" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: var(--text-color); padding: 0.5rem 1rem; border-radius: 4px; cursor: pointer; transition: all 0.2s;">
                 <i class="fa-solid fa-chevron-right"></i>
             </button>
@@ -150,18 +150,14 @@ async function loadNews(options = {}) {
     // Use default limit = 6 if not specified, especially for paginated views
     const effectiveLimit = limit || 6;
 
-    // Show loading state
-    container.innerHTML = '<div class="loading-spinner" style="grid-column: 1 / -1; text-align: center; padding: 4rem;"><i class="fa-solid fa-chess-knight fa-spin" style="font-size: 2rem; color: var(--primary-color);"></i></div>';
-
-    // Scroll to top of container if page > 1 (pagination navigation)
-    if (page > 1) {
-        const headerOffset = 100;
-        const elementPosition = container.getBoundingClientRect().top;
-        const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
-        window.scrollTo({
-            top: offsetPosition,
-            behavior: "smooth"
-        });
+    const isPageChange = container.dataset.newsLoaded === 'true';
+    if (isPageChange) {
+        // Při stránkování necháváme staré karty na místě. Grid se tak nezhroutí
+        // na výšku spinneru a prohlížeč uživatele neodhodí do prázdného footeru.
+        container.classList.add('news-page-loading');
+        container.setAttribute('aria-busy', 'true');
+    } else {
+        container.innerHTML = '<div class="loading-spinner" style="grid-column: 1 / -1; text-align: center; padding: 4rem;"><i class="fa-solid fa-chess-knight fa-spin" style="font-size: 2rem; color: var(--primary-color);"></i></div>';
     }
 
     try {
@@ -190,6 +186,10 @@ async function loadNews(options = {}) {
         } else {
             news = jsonResponse.data;
             meta = jsonResponse.meta;
+        }
+
+        if (meta && page > meta.lastPage && meta.lastPage > 0) {
+            return loadNews({ ...options, page: meta.lastPage });
         }
 
         // Filter out empty news (no title)
@@ -387,9 +387,25 @@ async function loadNews(options = {}) {
         }
 
         container.innerHTML = statsHtml + htmlContent + paginatorHtml;
+        container.dataset.newsLoaded = 'true';
+        container.classList.remove('news-page-loading');
+        container.removeAttribute('aria-busy');
+
+        if (page > 1) {
+            requestAnimationFrame(() => {
+                const headerOffset = 100;
+                const elementPosition = container.getBoundingClientRect().top;
+                window.scrollTo({
+                    top: elementPosition + window.pageYOffset - headerOffset,
+                    behavior: 'smooth'
+                });
+            });
+        }
 
     } catch (error) {
         console.error('Error loading news:', error);
+        container.classList.remove('news-page-loading');
+        container.removeAttribute('aria-busy');
         if (displayMode === 'cards') {
             container.innerHTML = `
                 <div style="grid-column: 1 / -1; text-align: center; padding: 4rem;">
@@ -462,6 +478,12 @@ const style = document.createElement('style');
 style.textContent = `
     @keyframes spin {
         to { transform: rotate(360deg); }
+    }
+
+    #newsGrid.news-page-loading {
+        opacity: .5;
+        pointer-events: none;
+        transition: opacity .18s ease;
     }
     
     .news-cols-layout {

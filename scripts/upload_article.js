@@ -103,14 +103,14 @@ async function main() {
 
             <div class="article-gallery">
                 <div class="article-image-card">
-                    <img src="images/predavani_sportovec_2025.jpg" alt="Předávání ceny">
+                    <img src="/images/predavani_sportovec_2025.jpg" alt="Předávání ceny">
                     <div class="article-image-caption">
                         Cenu přebírá předseda oddílu Antonín Duda<br>
                         <span style="font-size: 0.8em; opacity: 0.8;">📸 foto: Liberecký kraj</span>
                     </div>
                 </div>
                 <div class="article-image-card">
-                    <img src="images/plaketa_sportovec_2025.png" alt="Plaketa Síň slávy - Čestmír Drobník">
+                    <img src="/images/plaketa_sportovec_2025.png" alt="Plaketa Síň slávy - Čestmír Drobník">
                     <div class="article-image-caption">
                         Pamětní plaketa In Memoriam
                     </div>
