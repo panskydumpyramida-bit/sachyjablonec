@@ -30,17 +30,33 @@ export const getTimelineEntryById = async (req, res) => {
 
 export const createTimelineEntry = async (req, res) => {
     try {
-        const { year, event, icon, sortOrder, isFuture } = req.body;
+        const {
+            year,
+            yearLabel,
+            event,
+            description,
+            category,
+            icon,
+            imageUrl,
+            imageAlt,
+            sortOrder,
+            isFuture,
+        } = req.body;
         if (!year || !event) {
             return res.status(400).json({ error: 'year a event jsou povinné' });
         }
         const entry = await prisma.timelineEntry.create({
             data: {
                 year: parseInt(year, 10),
-                event,
+                yearLabel: yearLabel?.trim() || null,
+                event: event.trim(),
+                description: description?.trim() || null,
+                category: category?.trim() || null,
                 icon: icon || 'fa-chess-pawn',
+                imageUrl: imageUrl?.trim() || null,
+                imageAlt: imageAlt?.trim() || null,
                 sortOrder: sortOrder != null ? parseInt(sortOrder, 10) : 0,
-                isFuture: Boolean(isFuture),
+                isFuture: isFuture === true || isFuture === 'true' || isFuture === 1,
             },
         });
         res.status(201).json(entry);
@@ -53,13 +69,29 @@ export const createTimelineEntry = async (req, res) => {
 export const updateTimelineEntry = async (req, res) => {
     try {
         const { id } = req.params;
-        const { year, event, icon, sortOrder, isFuture } = req.body;
+        const {
+            year,
+            yearLabel,
+            event,
+            description,
+            category,
+            icon,
+            imageUrl,
+            imageAlt,
+            sortOrder,
+            isFuture,
+        } = req.body;
         const data = {};
         if (year != null) data.year = parseInt(year, 10);
-        if (event != null) data.event = event;
+        if (yearLabel != null) data.yearLabel = yearLabel.trim() || null;
+        if (event != null) data.event = event.trim();
+        if (description != null) data.description = description.trim() || null;
+        if (category != null) data.category = category.trim() || null;
         if (icon != null) data.icon = icon;
+        if (imageUrl != null) data.imageUrl = imageUrl.trim() || null;
+        if (imageAlt != null) data.imageAlt = imageAlt.trim() || null;
         if (sortOrder != null) data.sortOrder = parseInt(sortOrder, 10);
-        if (isFuture != null) data.isFuture = Boolean(isFuture);
+        if (isFuture != null) data.isFuture = isFuture === true || isFuture === 'true' || isFuture === 1;
 
         const entry = await prisma.timelineEntry.update({
             where: { id: parseInt(id, 10) },

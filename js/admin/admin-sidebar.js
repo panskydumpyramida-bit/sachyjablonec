@@ -10,7 +10,7 @@
         content: [
             { tab: 'dashboard',   label: 'Články & přehled', icon: 'fa-newspaper' },
             { tab: 'games',       label: 'Partie',           icon: 'fa-chess-board' },
-            { tab: 'timeline',    label: 'Timeline',         icon: 'fa-timeline' },
+            { tab: 'timeline',    label: 'Časová osa',       icon: 'fa-timeline' },
             { tab: 'gallery',     label: 'Galerie',          icon: 'fa-images' },
         ],
         community: [

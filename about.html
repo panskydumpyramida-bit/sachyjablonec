@@ -22,7 +22,7 @@
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/auth.css?v=7">
     <link rel="stylesheet" href="css/about-styles.css">
-    <link rel="stylesheet" href="css/hero-v2.css">
+    <link rel="stylesheet" href="css/hero-v2.css?v=timeline2">
     <link rel="icon" type="image/png" href="images/favicon.png">
     <script type="application/ld+json">
     {
@@ -61,7 +61,7 @@
                         <span class="line line--2"><span><span class="gold">tradice</span> potkává</span></span>
                         <span class="line line--3"><span>s novou generací</span></span>
                     </h1>
-                    <p class="hero-sub">Přes padesát let šachu v Jablonci. Čtyři družstva v Krajském přeboru, silná mládež, otevřené turnaje pro všechny.</p>
+                    <p class="hero-sub">Přes sedmdesát pět let jabloneckého šachu. Oddíl Bižuterie od 70. let, silná mládež a otevřené turnaje pro všechny generace.</p>
                     <!-- HIDDEN: hero-stats (vrátit smazáním komentářů)
                     <div class="hero-stats">
                         <div class="hero-stat"><strong>70+</strong><span>aktivních členů</span></div>
@@ -75,36 +75,118 @@
         </section>
 
         <!-- Timeline -->
-        <section class="about-timeline-section">
-            <h2 class="about-head">Milníky klubu <em>od roku 1991</em></h2>
-
+        <section class="about-timeline-section" aria-labelledby="timeline-heading">
+            <header class="timeline-intro">
+                <p class="about-eyebrow"><span></span>Klubová kronika<span></span></p>
+                <h2 class="about-head" id="timeline-heading">Historie, která se <em>stále píše</em></h2>
+                <p class="about-lead">Šachy mají v Jablonci kořeny nejméně od roku 1948. Oddíl TJ Bižuterie na ně navazuje od 70. let — a každý další tah přidává novou kapitolu.</p>
+                <div class="timeline-range" aria-label="Rozsah klubové kroniky">
+                    <span><strong>1948</strong> první dochovaná stopa</span>
+                    <i class="fa-solid fa-chess-knight" aria-hidden="true"></i>
+                    <span><strong>2025</strong> nová generace vedení</span>
+                </div>
+            </header>
             <div class="tl">
-                <div class="tl-track"></div>
                 <div class="tl-items" id="timeline-items">
-                    <!-- Milníky se dynamicky načítají přes /api/timeline (js/timeline-loader.js).
-                         Fallback pokud API selže = tyto statické položky. -->
+                    <!-- Dynamicky se načítá přes /api/timeline. Níže je plnohodnotný fallback. -->
                     <div class="tl-item">
-                        <div class="tl-marker" title="Založení TJ Bižuterie"><i class="fa-solid fa-chess-pawn"></i></div>
-                        <div class="tl-year">1991</div>
-                        <div class="tl-event">Založení TJ Bižuterie (občanské sdružení)</div>
+                        <div class="tl-marker"><i class="fa-solid fa-chess-rook"></i></div>
+                        <article class="tl-card tl-card--media">
+                            <figure class="tl-photo"><img src="images/timeline/archive-1948.webp" alt="Archivní obálka I. sjezdu SŽS v Jablonci nad Nisou z roku 1948" loading="lazy"></figure>
+                            <div class="tl-copy">
+                                <div class="tl-meta"><span class="tl-year">1948</span><span class="tl-category">Jablonecký šach</span></div>
+                                <h3 class="tl-event">První velká šachová stopa</h3>
+                                <p class="tl-description">Jablonec hostí I. sjezd SŽS. Dochovaná obálka připomíná, že zdejší šachová tradice sahá hluboko před vznik oddílu Bižuterie.</p>
+                            </div>
+                        </article>
                     </div>
                     <div class="tl-item">
-                        <div class="tl-marker" title="Přestěhování z věže Sokolovny"><i class="fa-solid fa-chess-rook"></i></div>
-                        <div class="tl-year">2006</div>
-                        <div class="tl-event">Přestěhování z věže Sokolovny</div>
+                        <div class="tl-marker"><i class="fa-solid fa-chess-pawn"></i></div>
+                        <article class="tl-card tl-card--media">
+                            <figure class="tl-photo"><img src="images/timeline/archive-1955.webp" alt="Archivní obálka finále dorostu ČSR v Jablonci z roku 1955" loading="lazy"></figure>
+                            <div class="tl-copy">
+                                <div class="tl-meta"><span class="tl-year">1955</span><span class="tl-category">Jablonecký šach</span></div>
+                                <h3 class="tl-event">Finále dorostu ČSR v Jablonci</h3>
+                                <p class="tl-description">Od 20. do 28. srpna se v Jablonci hraje celostátní finále dorostu. Město už tehdy patří k výrazným šachovým místům regionu.</p>
+                            </div>
+                        </article>
                     </div>
                     <div class="tl-item">
-                        <div class="tl-marker" title="Postup do 1. ligy mládeže"><i class="fa-solid fa-chess-knight"></i></div>
-                        <div class="tl-year">2025</div>
-                        <div class="tl-event">Postup do 1. ligy mládeže</div>
+                        <div class="tl-marker"><i class="fa-solid fa-chess-bishop"></i></div>
+                        <article class="tl-card">
+                            <div class="tl-copy">
+                                <div class="tl-meta"><span class="tl-year">70. léta</span><span class="tl-category">TJ Bižuterie</span></div>
+                                <h3 class="tl-event">Začátky oddílu TJ Bižuterie</h3>
+                                <p class="tl-description">Dochované klubové materiály potvrzují činnost šachového oddílu Bižuterie nejpozději od 70. let.</p>
+                            </div>
+                        </article>
+                    </div>
+                    <div class="tl-item">
+                        <div class="tl-marker"><i class="fa-solid fa-chess-king"></i></div>
+                        <article class="tl-card tl-card--media">
+                            <figure class="tl-photo"><img src="images/timeline/archive-1980.webp" alt="Klubová fotokronika TJ Bižuterie s Čestmírem Drobníkem při tréninku mládeže" loading="lazy"></figure>
+                            <div class="tl-copy">
+                                <div class="tl-meta"><span class="tl-year">1980</span><span class="tl-category">Vedení klubu</span></div>
+                                <h3 class="tl-event">Čestmír Drobník předsedou</h3>
+                                <p class="tl-description">Začíná dlouhá éra vedení spojená s klubovým životem, turnaji a systematickou prací s mládeží.</p>
+                            </div>
+                        </article>
+                    </div>
+                    <div class="tl-item">
+                        <div class="tl-marker"><i class="fa-solid fa-people-group"></i></div>
+                        <article class="tl-card tl-card--media">
+                            <figure class="tl-photo"><img src="images/timeline/archive-1988.webp" alt="Novinový článek Šachové veloutkání s datem 27. října 1988" loading="lazy"></figure>
+                            <div class="tl-copy">
+                                <div class="tl-meta"><span class="tl-year">1988</span><span class="tl-category">Velká utkání</span></div>
+                                <h3 class="tl-event">Šachové veloutkání</h3>
+                                <p class="tl-description">Jablonečtí organizují mimořádné utkání s Libercem na 100 šachovnicích. Padesát dvojic hrálo dvakrát po třiceti minutách.</p>
+                            </div>
+                        </article>
+                    </div>
+                    <div class="tl-item">
+                        <div class="tl-marker"><i class="fa-solid fa-chess-pawn"></i></div>
+                        <article class="tl-card">
+                            <div class="tl-copy">
+                                <div class="tl-meta"><span class="tl-year">1991</span><span class="tl-category">Klub</span></div>
+                                <h3 class="tl-event">Založení TJ Bižuterie</h3>
+                                <p class="tl-description">Samostatná TJ Bižuterie získává podobu občanského sdružení a navazuje na dlouhou oddílovou tradici.</p>
+                            </div>
+                        </article>
+                    </div>
+                    <div class="tl-item">
+                        <div class="tl-marker"><i class="fa-solid fa-chess-rook"></i></div>
+                        <article class="tl-card">
+                            <div class="tl-copy">
+                                <div class="tl-meta"><span class="tl-year">2006</span><span class="tl-category">Klub</span></div>
+                                <h3 class="tl-event">Stěhování ze Sokolovny</h3>
+                                <p class="tl-description">Oddíl opouští legendární věž Sokolovny a stěhuje své zázemí do nových prostor.</p>
+                            </div>
+                        </article>
+                    </div>
+                    <div class="tl-item">
+                        <div class="tl-marker"><i class="fa-solid fa-chess-knight"></i></div>
+                        <article class="tl-card tl-card--media">
+                            <figure class="tl-photo"><img src="images/management_antonin.webp" alt="Antonín Duda, předseda šachového oddílu TJ Bižuterie Jablonec" loading="lazy"></figure>
+                            <div class="tl-copy">
+                                <div class="tl-meta"><span class="tl-year">2025</span><span class="tl-category">Současnost</span></div>
+                                <h3 class="tl-event">Nová generace vedení</h3>
+                                <p class="tl-description">Předsedou oddílu se stává Antonín Duda. Ve stejné sezoně mládež postupuje do 1. ligy.</p>
+                            </div>
+                        </article>
                     </div>
                     <div class="tl-item tl-item--future">
-                        <div class="tl-marker" title="Cíl: postup do Extraligy ČR"><i class="fa-solid fa-chess-king"></i></div>
-                        <div class="tl-year">2030</div>
-                        <div class="tl-event">Cíl: postup do Extraligy ČR</div>
+                        <div class="tl-marker"><i class="fa-solid fa-chess-king"></i></div>
+                        <article class="tl-card">
+                            <div class="tl-copy">
+                                <div class="tl-meta"><span class="tl-year">2030</span><span class="tl-category">Budoucnost</span></div>
+                                <h3 class="tl-event">Cíl: postup do Extraligy ČR</h3>
+                                <p class="tl-description">Směr, ke kterému chceme klub společně dovést.</p>
+                            </div>
+                        </article>
                     </div>
                 </div>
             </div>
+            <p class="timeline-source"><i class="fa-solid fa-box-archive" aria-hidden="true"></i> Z klubové kroniky a dobového tisku</p>
         </section>
 
         <!-- 2. Split Section: Location & Management -->
@@ -290,7 +372,7 @@
     <script src="js/layout-loader.js?v=7" defer></script>
     <script src="js/main.js" defer></script>
     <script src="js/about-loader.js" defer></script>
-    <script src="js/timeline-loader.js" defer></script>
+    <script src="js/timeline-loader.js?v=timeline2" defer></script>
 </body>
 
 </html>

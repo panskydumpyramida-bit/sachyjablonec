@@ -10,7 +10,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="css/style.css?v=ux12">
-    <link rel="stylesheet" href="css/admin.css?v=ux19">
+    <link rel="stylesheet" href="css/admin.css?v=timeline2">
     <link rel="stylesheet" href="css/admin-sidebar.css?v=ux3">
     <script src="js/version.js?v=ux12"></script>
     <script src="js/modal-manager.js?v=ux12"></script>
@@ -144,7 +144,7 @@
                         class="fa-regular fa-calendar-days"></i>Události
                 </div>
                 <div class="nav-tab" onclick="switchTab('timeline')" id="timelineTab"><i
-                        class="fa-solid fa-timeline"></i>Timeline
+                        class="fa-solid fa-timeline"></i>Časová osa
                 </div>
                 <div class="nav-divider"></div>
                 <div class="nav-tab secondary" onclick="switchTab('games')" id="gamesTab"><i
@@ -1298,74 +1298,175 @@
 
     <!-- Timeline View (admin správa klubové timeliny v about.html) -->
     <div id="timelineView" class="hidden">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
-            <h2 style="margin: 0;"><i class="fa-solid fa-timeline"></i>Správa Timeliny</h2>
-            <button class="btn-secondary" onclick="AdminTimeline.load()"><i class="fa-solid fa-sync"></i>Obnovit</button>
+        <div class="timeline-admin-hero">
+            <div>
+                <p class="timeline-admin-eyebrow">Klubová kronika</p>
+                <h2><i class="fa-solid fa-timeline"></i>Časová osa</h2>
+                <p>Spravujte příběh klubu, archivní fotografie i budoucí cíle na jednom místě.</p>
+            </div>
+            <div class="timeline-admin-actions">
+                <a class="btn-secondary" href="/about#timeline-heading" target="_blank" rel="noopener">
+                    <i class="fa-solid fa-arrow-up-right-from-square"></i>Zobrazit na webu
+                </a>
+                <button class="btn-secondary" onclick="AdminTimeline.load()"><i class="fa-solid fa-sync"></i>Obnovit</button>
+            </div>
         </div>
 
-        <div class="card" style="margin-bottom: 2rem;">
-            <h3 id="timeline-form-title" style="margin-top: 0; color: var(--primary-color);">
-                <i class="fa-solid fa-plus"></i>Nový milník
-            </h3>
-            <form id="timeline-form">
-                <input type="hidden" name="id">
-                <div style="display: grid; grid-template-columns: 120px 1fr 200px; gap: 1rem;">
-                    <div class="form-group">
-                        <label>Rok *</label>
-                        <input type="number" name="year" required placeholder="např. 1991">
-                    </div>
-                    <div class="form-group">
-                        <label>Událost *</label>
-                        <input type="text" name="event" required maxlength="120" placeholder="např. Založení TJ Bižuterie">
-                    </div>
-                    <div class="form-group">
-                        <label>Ikona (FontAwesome)</label>
-                        <select name="icon">
-                            <option value="fa-chess-pawn">♙ Pěšec</option>
-                            <option value="fa-chess-knight">♘ Jezdec</option>
-                            <option value="fa-chess-bishop">♗ Střelec</option>
-                            <option value="fa-chess-rook">♖ Věž</option>
-                            <option value="fa-chess-queen">♕ Dáma</option>
-                            <option value="fa-chess-king">♔ Král</option>
-                            <option value="fa-trophy">🏆 Pohár</option>
-                            <option value="fa-flag">🚩 Vlajka</option>
-                            <option value="fa-star">⭐ Hvězda</option>
-                        </select>
-                    </div>
-                </div>
-                <div style="display: grid; grid-template-columns: 150px 1fr; gap: 1rem; align-items: end;">
-                    <div class="form-group">
-                        <label>Pořadí</label>
-                        <input type="number" name="sortOrder" value="0" placeholder="0">
-                    </div>
-                    <div class="form-group" style="background: rgba(255,255,255,0.02); padding: 0.75rem; border-radius: 6px; border: 1px solid rgba(255,255,255,0.05);">
-                        <label style="display: flex; align-items: center; gap: 0.75rem; cursor: pointer; margin: 0;">
-                            <input type="checkbox" name="isFuture" style="width: auto;">
-                            <span style="font-weight: normal;">Budoucí cíl (vizuálně dashed + italic)</span>
-                        </label>
-                    </div>
-                </div>
-                <div style="display: flex; gap: 0.5rem; margin-top: 1rem;">
-                    <button type="submit" class="btn-primary"><i class="fa-solid fa-save"></i>Uložit</button>
-                    <button type="button" id="timeline-cancel-btn" class="btn-secondary" style="display: none;" onclick="AdminTimeline.cancelEdit()">
-                        <i class="fa-solid fa-times"></i>Zrušit úpravy
-                    </button>
-                </div>
-            </form>
+        <div class="timeline-admin-stats" aria-label="Souhrn časové osy">
+            <div><i class="fa-solid fa-diamond"></i><strong id="timeline-total">0</strong><span>milníků</span></div>
+            <div><i class="fa-solid fa-images"></i><strong id="timeline-with-photo">0</strong><span>s fotografií</span></div>
+            <div><i class="fa-solid fa-hourglass-half"></i><strong id="timeline-years">0</strong><span>let příběhu</span></div>
         </div>
 
-        <div class="card">
-            <h3 style="margin-top: 0;"><i class="fa-solid fa-list"></i>Milníky</h3>
-            <div class="desktop-view">
-                <table class="data-table">
+        <div class="timeline-admin-layout">
+            <div class="card timeline-editor-card">
+                <div class="timeline-card-heading">
+                    <div>
+                        <p>Editor milníku</p>
+                        <h3 id="timeline-form-title"><i class="fa-solid fa-plus"></i>Nový milník</h3>
+                    </div>
+                    <span>Všechna pole kromě roku a názvu jsou volitelná.</span>
+                </div>
+
+                <form id="timeline-form">
+                    <input type="hidden" name="id">
+                    <div class="timeline-form-row timeline-form-row--date">
+                        <div class="form-group">
+                            <label for="timeline-year">Rok *</label>
+                            <input id="timeline-year" type="number" name="year" required min="1800" max="2200" placeholder="např. 1980">
+                        </div>
+                        <div class="form-group">
+                            <label for="timeline-year-label">Text roku</label>
+                            <input id="timeline-year-label" type="text" name="yearLabel" maxlength="30" placeholder="např. 70. léta">
+                            <small>Na webu nahradí číselný rok, řazení zůstane podle roku.</small>
+                        </div>
+                        <div class="form-group">
+                            <label for="timeline-order">Pořadí</label>
+                            <input id="timeline-order" type="number" name="sortOrder" value="0" step="10" placeholder="0">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="timeline-event">Název události *</label>
+                        <input id="timeline-event" type="text" name="event" required maxlength="120" placeholder="např. Čestmír Drobník předsedou">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="timeline-description">Příběh</label>
+                        <textarea id="timeline-description" name="description" rows="4" maxlength="600" placeholder="Stručně vysvětlete, proč je tento moment důležitý…"></textarea>
+                    </div>
+
+                    <div class="timeline-form-row">
+                        <div class="form-group">
+                            <label for="timeline-category">Štítek</label>
+                            <input id="timeline-category" type="text" name="category" maxlength="40" list="timeline-category-options" placeholder="např. Vedení klubu">
+                            <datalist id="timeline-category-options">
+                                <option value="Jablonecký šach"></option>
+                                <option value="TJ Bižuterie"></option>
+                                <option value="Vedení klubu"></option>
+                                <option value="Velká utkání"></option>
+                                <option value="Sportovní úspěch"></option>
+                                <option value="Současnost"></option>
+                                <option value="Budoucnost"></option>
+                            </datalist>
+                        </div>
+                        <div class="form-group">
+                            <label for="timeline-icon">Ikona</label>
+                            <select id="timeline-icon" name="icon">
+                                <option value="fa-chess-pawn">♙ Pěšec</option>
+                                <option value="fa-chess-knight">♘ Jezdec</option>
+                                <option value="fa-chess-bishop">♗ Střelec</option>
+                                <option value="fa-chess-rook">♖ Věž</option>
+                                <option value="fa-chess-queen">♕ Dáma</option>
+                                <option value="fa-chess-king">♔ Král</option>
+                                <option value="fa-people-group">Lidé</option>
+                                <option value="fa-trophy">Pohár</option>
+                                <option value="fa-flag">Vlajka</option>
+                                <option value="fa-star">Hvězda</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Archivní fotografie</label>
+                        <input type="file" id="timeline-image-file" accept="image/jpeg,image/png,image/webp" hidden>
+                        <button type="button" class="timeline-image-drop" id="timeline-image-drop" onclick="document.getElementById('timeline-image-file').click()">
+                            <img id="timeline-image-preview" alt="" hidden>
+                            <span id="timeline-image-placeholder">
+                                <i class="fa-solid fa-cloud-arrow-up"></i>
+                                <strong>Nahrát fotografii</strong>
+                                <small>Klikněte nebo obrázek přetáhněte sem</small>
+                            </span>
+                        </button>
+                        <div class="timeline-image-url-row">
+                            <input type="text" id="timeline-image-url" name="imageUrl" placeholder="nebo /images/… či https://…">
+                            <button type="button" class="btn-secondary timeline-image-clear" id="timeline-image-clear" title="Odebrat fotografii">
+                                <i class="fa-solid fa-xmark"></i>
+                            </button>
+                        </div>
+                        <small id="timeline-upload-status">Doporučený poměr 16 : 10, minimálně 1200 px na šířku.</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="timeline-image-alt">Popis fotografie</label>
+                        <input id="timeline-image-alt" type="text" name="imageAlt" maxlength="180" placeholder="Co je na fotografii — důležité pro přístupnost">
+                    </div>
+
+                    <label class="timeline-future-switch">
+                        <input type="checkbox" name="isFuture">
+                        <span class="timeline-switch-ui"></span>
+                        <span>
+                            <strong>Budoucí cíl</strong>
+                            <small>Zobrazí se odlišeně přerušovaným rámečkem.</small>
+                        </span>
+                    </label>
+
+                    <div class="timeline-form-actions">
+                        <button type="submit" class="btn-primary"><i class="fa-solid fa-save"></i>Uložit milník</button>
+                        <button type="button" id="timeline-cancel-btn" class="btn-secondary" hidden onclick="AdminTimeline.cancelEdit()">
+                            <i class="fa-solid fa-times"></i>Zrušit úpravy
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <aside class="card timeline-preview-card">
+                <div class="timeline-card-heading">
+                    <div>
+                        <p>Živý náhled</p>
+                        <h3><i class="fa-solid fa-eye"></i>Podoba na webu</h3>
+                    </div>
+                </div>
+                <div class="timeline-admin-preview" id="timeline-live-preview">
+                    <div class="timeline-admin-preview-image" id="timeline-live-image" hidden></div>
+                    <div class="timeline-admin-preview-body">
+                        <div><strong id="timeline-live-year">Rok</strong><span id="timeline-live-category">Klub</span></div>
+                        <h4 id="timeline-live-event">Název události</h4>
+                        <p id="timeline-live-description">Tady se průběžně ukáže příběh milníku.</p>
+                    </div>
+                </div>
+                <p class="timeline-preview-help"><i class="fa-solid fa-circle-info"></i>Náhled se mění při psaní. Skutečné rozložení na webu se střídá vlevo a vpravo.</p>
+            </aside>
+        </div>
+
+        <div class="card timeline-list-card">
+            <div class="timeline-card-heading timeline-card-heading--list">
+                <div>
+                    <p>Publikovaná kronika</p>
+                    <h3><i class="fa-solid fa-list"></i>Milníky</h3>
+                </div>
+                <span>Šipkami můžete upravit pořadí bez otevírání editoru.</span>
+            </div>
+            <div class="timeline-table-wrap">
+                <table class="data-table timeline-table">
                     <thead>
                         <tr>
-                            <th style="width: 80px;">Pořadí</th>
-                            <th style="width: 80px;">Rok</th>
-                            <th style="width: 50px;">Ikona</th>
+                            <th style="width: 110px;">Pořadí</th>
+                            <th style="width: 92px;">Rok</th>
+                            <th style="width: 84px;">Foto</th>
                             <th>Událost</th>
-                            <th style="width: 100px;">Typ</th>
-                            <th style="width: 120px;">Akce</th>
+                            <th style="width: 110px;">Typ</th>
+                            <th style="width: 130px;">Akce</th>
                         </tr>
                     </thead>
                     <tbody id="timeline-table-body"></tbody>
@@ -2626,7 +2727,7 @@
     <script src="js/admin/admin-competitions.js?v=ux12"></script>
     <script src="js/admin/admin-games.js?v=ux12"></script>
     <script src="js/admin/admin-events.js?v=ux12"></script>
-    <script src="js/admin/admin-timeline.js"></script>
+    <script src="js/admin/admin-timeline.js?v=timeline2"></script>
     <script src="js/admin/admin-sidebar.js?v=ux3"></script>
     <script src="js/admin/admin-users.js?v=ux12"></script>
     <script src="js/admin/admin-blicak.js?v=ux12"></script>
