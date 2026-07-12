@@ -53,10 +53,10 @@
         const p = e.touches ? e.touches[0] : e;
         return { x: p.clientX - r.left, y: p.clientY - r.top };
     };
-    canvas.addEventListener('mousedown', (e) => { e.preventDefault(); drawing = true; const { x, y } = pos(e); ctx.beginPath(); ctx.moveTo(x, y); });
+    canvas.addEventListener('mousedown', (e) => { e.preventDefault(); if (canvas.width === 0 || canvas.height === 0) resizeCanvas(); drawing = true; const { x, y } = pos(e); ctx.beginPath(); ctx.moveTo(x, y); });
     canvas.addEventListener('mousemove', (e) => { if (!drawing) return; e.preventDefault(); const { x, y } = pos(e); ctx.lineTo(x, y); ctx.stroke(); hasSignature = true; });
     window.addEventListener('mouseup', () => { drawing = false; });
-    canvas.addEventListener('touchstart', (e) => { e.preventDefault(); drawing = true; const { x, y } = pos(e); ctx.beginPath(); ctx.moveTo(x, y); }, { passive: false });
+    canvas.addEventListener('touchstart', (e) => { e.preventDefault(); if (canvas.width === 0 || canvas.height === 0) resizeCanvas(); drawing = true; const { x, y } = pos(e); ctx.beginPath(); ctx.moveTo(x, y); }, { passive: false });
     canvas.addEventListener('touchmove', (e) => { if (!drawing) return; e.preventDefault(); const { x, y } = pos(e); ctx.lineTo(x, y); ctx.stroke(); hasSignature = true; }, { passive: false });
     canvas.addEventListener('touchend', () => { drawing = false; });
     document.getElementById('sigClear').addEventListener('click', () => {
@@ -65,6 +65,7 @@
         ctx.fillRect(0, 0, canvas.offsetWidth, canvas.offsetHeight);
     });
     window.addEventListener('resize', resizeCanvas);
+    document.addEventListener('visibilitychange', () => { if (!document.hidden && canvas.width === 0) resizeCanvas(); });
 
     // ---- inicializace dle stavu ----
     (async () => {
