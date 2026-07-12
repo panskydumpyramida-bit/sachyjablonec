@@ -331,6 +331,18 @@ app.get('/propozice_rapidy_tisk.html', servePage('propozice_rapidy_tisk.html'));
 app.get('/index', servePage('index.html'));
 app.get('/index.html', servePage('index.html'));
 
+app.get('/registrace', servePage('registrace.html'));
+app.get('/registrace.html', servePage('registrace.html'));
+
+app.get('/prestup', servePage('prestup.html'));
+app.get('/prestup.html', servePage('prestup.html'));
+
+app.get('/member-registrations', servePage('member-registrations.html'));
+app.get('/member-registrations.html', servePage('member-registrations.html'));
+
+app.get('/training', servePage('training.html'));
+app.get('/training.html', servePage('training.html'));
+
 // Initialize Passport for OAuth
 app.use(passport.initialize());
 
