@@ -34,19 +34,19 @@ export async function generateRegistrationPdf(d) {
     const Y = (yTop) => TOP - yTop;
 
     const text = (str, x, yTop, opts = {}) => page.drawText(String(str ?? ''), {
-        x: M + x, y: Y(yTop), size: opts.size || 8.4,
+        x: M + x, y: Y(yTop), size: opts.size || 8.9,
         font: opts.bold ? bold : font, color: opts.color || BLACK,
     });
     const textRight = (str, xRight, yTop, opts = {}) => {
         const f = opts.bold ? bold : font;
-        const w = f.widthOfTextAtSize(String(str), opts.size || 8.4);
+        const w = f.widthOfTextAtSize(String(str), opts.size || 8.9);
         text(str, xRight - w, yTop, opts);
     };
 
     // zaoblený rámeček (jako v DOCX) — SVG path, y roste dolů od kotvy
-    const rrect = (x, yTop, w, h, r = 7) => {
+    const rrect = (x, yTop, w, h, r = 5) => {
         const p = `M ${r} 0 L ${w - r} 0 Q ${w} 0 ${w} ${r} L ${w} ${h - r} Q ${w} ${h} ${w - r} ${h} L ${r} ${h} Q 0 ${h} 0 ${h - r} L 0 ${r} Q 0 0 ${r} 0 Z`;
-        page.drawSvgPath(p, { x: M + x, y: Y(yTop), borderColor: BOX, borderWidth: 1.1 });
+        page.drawSvgPath(p, { x: M + x, y: Y(yTop), borderColor: BOX, borderWidth: 0.85 });
     };
     // rámeček s vepsanou hodnotou
     const fbox = (x, yTop, w, val, h = 19) => {
@@ -60,11 +60,16 @@ export async function generateRegistrationPdf(d) {
 
     // ---------- hlavička ----------
     const logo = await pdf.embedPng(fs.readFileSync(path.join(ASSETS, 'logo-sscr.png')));
-    const logoW = 100;
-    page.drawImage(logo, { x: M + 15, y: Y(44), width: logoW, height: logoW * (logo.height / logo.width) });
+    const logoW = 135;
+    page.drawImage(logo, { x: M + 10, y: Y(52), width: logoW, height: logoW * (logo.height / logo.width) });
 
     textRight('Kontaktní osoba: Trang Křivánek Nguyenová', W, 4);
-    textRight('Email: registrace@chess.cz', W, 15, { color: rgb(0.2, 0.45, 0.55) });
+    {
+        const linkColor = rgb(0.16, 0.42, 0.68);
+        textRight('Email: registrace@chess.cz', W, 15, { color: linkColor });
+        const lw = font.widthOfTextAtSize('registrace@chess.cz', 8.9);
+        page.drawLine({ start: { x: M + W - lw, y: Y(16.5) }, end: { x: M + W, y: Y(16.5) }, thickness: 0.6, color: linkColor });
+    }
     textRight('Tel.:776 005 069', W, 26);
     textRight('ŽÁDOST O ČLENSTVÍ V ŠSČR', W, 50, { size: 14.5, bold: true });
 
