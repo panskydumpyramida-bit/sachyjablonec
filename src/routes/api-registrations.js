@@ -17,6 +17,8 @@ const prisma = new PrismaClient();
 const router = express.Router();
 
 const CHAIRMAN_EMAIL = process.env.REGISTRATION_EMAIL || 'info@sachyjablonec.cz';
+// Obecný trvalý odkaz: lze použít opakovaně, záznam v DB vzniká až při odeslání
+const GENERAL_TOKEN = 'obecna-registrace';
 const FRONTEND = (process.env.FRONTEND_URL || 'https://www.sachyjablonec.cz').replace(/\/$/, '');
 
 // ---- ČLENSKÁ ČÁST ----
@@ -120,6 +122,7 @@ router.post('/:id(\\d+)/send', authMiddleware, requireMember, async (req, res) =
 // Ověření platnosti odkazu
 router.get('/form/:token', async (req, res) => {
     try {
+        if (req.params.token === GENERAL_TOKEN) return res.json({ ok: true, general: true });
         const reg = await prisma.memberRegistration.findUnique({ where: { token: req.params.token } });
         if (!reg) return res.status(404).json({ error: 'Neplatný odkaz' });
         if (reg.status === 'submitted') return res.status(410).json({ error: 'Tato žádost už byla odeslána' });
@@ -132,9 +135,13 @@ router.get('/form/:token', async (req, res) => {
 // Odeslání vyplněného formuláře
 router.post('/form/:token', async (req, res) => {
     try {
-        const reg = await prisma.memberRegistration.findUnique({ where: { token: req.params.token } });
-        if (!reg) return res.status(404).json({ error: 'Neplatný odkaz' });
-        if (reg.status === 'submitted') return res.status(410).json({ error: 'Tato žádost už byla odeslána' });
+        const isGeneral = req.params.token === GENERAL_TOKEN;
+        let reg = null;
+        if (!isGeneral) {
+            reg = await prisma.memberRegistration.findUnique({ where: { token: req.params.token } });
+            if (!reg) return res.status(404).json({ error: 'Neplatný odkaz' });
+            if (reg.status === 'submitted') return res.status(410).json({ error: 'Tato žádost už byla odeslána' });
+        }
 
         const b = req.body || {};
         const required = ['lastName', 'firstName', 'street', 'houseNumber', 'city', 'zip'];
@@ -166,16 +173,28 @@ router.post('/form/:token', async (req, res) => {
 
         const pdf = await generateRegistrationPdf({ ...data, signaturePng });
 
-        await prisma.memberRegistration.update({
-            where: { id: reg.id },
-            data: { status: 'submitted', data, pdf, submittedAt: new Date() },
-        });
+        if (isGeneral) {
+            // záznam vzniká až teď — obecný odkaz nezanechává pending řádky
+            const crypto2 = await import('crypto');
+            reg = await prisma.memberRegistration.create({
+                data: {
+                    token: 'gen-' + crypto2.randomBytes(12).toString('hex'),
+                    note: 'obecný odkaz',
+                    status: 'submitted', data, pdf, submittedAt: new Date(),
+                },
+            });
+        } else {
+            await prisma.memberRegistration.update({
+                where: { id: reg.id },
+                data: { status: 'submitted', data, pdf, submittedAt: new Date() },
+            });
+        }
 
         // mail předsedovi s PDF přílohou
         const fullName = `${data.firstName} ${data.lastName}`.trim();
         await sendEmail(
             CHAIRMAN_EMAIL,
-            `Nová žádost o registraci ŠSČR — ${fullName}`,
+            `Nová žádost o registraci ŠSČR — ${fullName}${isGeneral ? ' (přes obecný odkaz)' : ''}`,
             `<p>Dobrý den,</p>
              <p>přes web přišla nová vyplněná žádost o členství v ŠSČR:</p>
              <ul>
