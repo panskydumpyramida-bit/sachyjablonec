@@ -155,7 +155,13 @@ export async function generateRegistrationPdf(d) {
     const stW = 180; // 60×20 mm razítko přes celý rámeček
     const stH = stW * (stamp.height / stamp.width);
     page.drawImage(stamp, { x: M + 48 + (200 - stW) / 2, y: Y(y + 3 + stH), width: stW, height: stH });
-    text('Antonín Duda v. r.', 48 + 68, y + 76, { size: 7 });
+    // podpisový klikyhák (stylizované „D") přes střed razítka, modrý inkoust
+    const INK = rgb(0.13, 0.19, 0.52);
+    const squiggle = 'M 6 30 C 10 12, 16 2, 22 6 C 30 11, 30 30, 20 34 C 12 37, 8 30, 14 26 C 26 18, 44 22, 56 20 C 66 18, 72 21, 80 16';
+    page.drawSvgPath(squiggle, {
+        x: M + 48 + 100 - 28, y: Y(y + 12), scale: 1.1,
+        borderColor: INK, borderWidth: 1.7, rotate: { type: 'degrees', angle: -6 },
+    });
 
     // podpis hráče (obrázek nad čarou)
     if (d.signaturePng) {

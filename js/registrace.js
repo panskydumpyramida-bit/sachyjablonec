@@ -99,7 +99,8 @@
     document.getElementById('langSelect')?.addEventListener('change', (e) => applyLang(e.target.value));
     applyLang(lang);
 
-    const token = new URLSearchParams(location.search).get('t');
+    // bez tokenu = obecný (trvalý) odkaz — nejkratší adresa sachyjablonec.cz/registrace
+    const token = new URLSearchParams(location.search).get('t') || 'obecna-registrace';
 
     const form = document.getElementById('regForm');
     const invalidBox = document.getElementById('regInvalid');
@@ -170,7 +171,6 @@
 
     // ---- validace odkazu ----
     (async () => {
-        if (!token) return showInvalid(t('invalidMissing'));
         try {
             const res = await fetch(`${API}/registrations/form/${encodeURIComponent(token)}`);
             if (res.status === 410) return showInvalid(t('invalidUsed'));
