@@ -229,58 +229,43 @@
                 <p style="color:var(--text-muted); font-size:0.85rem; margin-bottom:0.6rem;"><i class="fa-solid fa-eye"
                         style="color:var(--primary-color);"></i> Náhled žádosti — takhle bude vypadat dokument, který
                     odejde na svaz (razítko a podpisy se doplní automaticky):</p>
-                <div id="paperPreview" style="background:#fff; color:#111; border-radius:6px; padding:1.75rem 1.5rem; font-family: Georgia, 'Times New Roman', serif; box-shadow:0 10px 30px rgba(0,0,0,0.45); font-size:0.85rem; line-height:1.35; overflow-x:auto;">
-                    <div style="font-size:0.7rem; color:#666;">Šachový svaz České republiky · registrace@chess.cz · 776 005 069</div>
-                    <div style="font-size:1.25rem; font-weight:bold; color:#1a1a66; margin:0.8rem 0 1.1rem; letter-spacing:0.03em;">ŽÁDOST O ČLENSTVÍ V ŠSČR</div>
-                    <table style="width:100%; border-collapse:collapse;" id="ppTable">
-                        <tr>
-                            <td colspan="2" style="padding:0.45rem 0.6rem 0.3rem 0;"><div class="pp-l">Šachový oddíl</div><div class="pp-v" style="font-weight:bold;">TJ Bižuterie Jablonec nad Nisou</div></td>
-                            <td style="padding:0.45rem 0 0.3rem;"><div class="pp-l">Kód oddílu</div><div class="pp-v" style="font-weight:bold;">17 052</div></td>
-                        </tr>
-                        <tr>
-                            <td style="padding:0.45rem 0.6rem 0.3rem 0;"><div class="pp-l">Příjmení</div><div class="pp-v" data-pp="lastName">&nbsp;</div></td>
-                            <td style="padding:0.45rem 0.6rem 0.3rem 0;"><div class="pp-l">Jméno</div><div class="pp-v" data-pp="firstName">&nbsp;</div></td>
-                            <td style="padding:0.45rem 0 0.3rem;"><div class="pp-l">Další jméno / titul</div><div class="pp-v" data-pp="middleName+title">&nbsp;</div></td>
-                        </tr>
-                        <tr>
-                            <td style="padding:0.45rem 0.6rem 0.3rem 0;"><div class="pp-l">Rodné číslo (u cizinců datum narození)</div><div class="pp-v" data-pp="birthNumber|birthDateCz">&nbsp;</div></td>
-                            <td style="padding:0.45rem 0.6rem 0.3rem 0;"><div class="pp-l">Stát narození*</div><div class="pp-v" data-pp="birthCountry">&nbsp;</div></td>
-                            <td style="padding:0.45rem 0 0.3rem;"><div class="pp-l">Státní občanství*</div><div class="pp-v" data-pp="citizenship">&nbsp;</div></td>
-                        </tr>
-                        <tr>
-                            <td colspan="2" style="padding:0.45rem 0.6rem 0.3rem 0;"><div class="pp-l">Adresa trvalého pobytu — ulice</div><div class="pp-v" data-pp="street">&nbsp;</div></td>
-                            <td style="padding:0.45rem 0 0.3rem;"><div class="pp-l">Č. popisné/orientační</div><div class="pp-v" data-pp="houseNumber">&nbsp;</div></td>
-                        </tr>
-                        <tr>
-                            <td style="padding:0.45rem 0.6rem 0.3rem 0;"><div class="pp-l">Město</div><div class="pp-v" data-pp="city">&nbsp;</div></td>
-                            <td style="padding:0.45rem 0.6rem 0.3rem 0;"><div class="pp-l">Část obce</div><div class="pp-v" data-pp="cityPart">&nbsp;</div></td>
-                            <td style="padding:0.45rem 0 0.3rem;"><div class="pp-l">PSČ</div><div class="pp-v" data-pp="zip">&nbsp;</div></td>
-                        </tr>
-                        <tr>
-                            <td style="padding:0.45rem 0.6rem 0.3rem 0;"><div class="pp-l">Telefon*</div><div class="pp-v" data-pp="phone">&nbsp;</div></td>
-                            <td colspan="2" style="padding:0.45rem 0 0.3rem;"><div class="pp-l">E-mail*</div><div class="pp-v" data-pp="email">&nbsp;</div></td>
-                        </tr>
-                    </table>
-                    <div style="margin-top:0.9rem;"><span id="ppRegYear">☐</span> <strong>Registrovat pro aktuální rok</strong> <span style="font-size:0.7rem; color:#666;">(spojeno s povinností úhrady členských příspěvků dle ES ŠSČR)</span></div>
-                    <div style="margin-top:0.8rem; font-size:0.75rem;">Žadatel o členství prohlašuje, že se seznámil se Stanovami ŠSČR, včetně ustanovení o nakládání s osobními údaji, a souhlasí s nimi.</div>
-                    <table style="width:100%; margin-top:1rem;">
-                        <tr>
-                            <td style="width:33%; vertical-align:bottom;"><div class="pp-l">Datum</div><div class="pp-v" id="ppDate"></div></td>
-                            <td style="width:34%; text-align:center; vertical-align:bottom;">
-                                <img src="/documents/razitko-nahled.png" alt="razítko" style="max-width:150px; opacity:0.9;" onerror="this.style.display='none'">
-                                <div class="pp-l" style="text-align:center;">Razítko a podpis oddílu</div>
-                            </td>
-                            <td style="width:33%; vertical-align:bottom;">
-                                <div id="ppSig" style="height:44px; display:flex; align-items:flex-end;"><span style="color:#bbb; font-size:0.7rem;">— podpis se doplní z podpisového pole —</span></div>
-                                <div class="pp-l" style="border-top:1px solid #999; padding-top:2px;">Podpis hráče (u ml. 18 let zák. zástupce)</div>
-                            </td>
-                        </tr>
-                    </table>
+                <div id="paperPreview" style="background:#fff; color:#111; border-radius:6px; padding:1.5rem 1.4rem; font-family:'Segoe UI', 'Helvetica Neue', Arial, sans-serif; box-shadow:0 10px 30px rgba(0,0,0,0.45); font-size:0.8rem; line-height:1.3; overflow-x:auto;">
+                    <div style="min-width:560px;">
+                    <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:0.9rem;">
+                        <img src="/documents/logo-sscr.png" alt="ŠSČR" style="width:120px; margin-top:0.6rem;" onerror="this.style.display='none'">
+                        <div style="text-align:right;">
+                            <div style="font-size:0.72rem;">Kontaktní osoba: Trang Křivánek Nguyenová<br>Email: <span style="color:#2b7a8c; text-decoration:underline;">registrace@chess.cz</span><br>Tel.:776 005 069</div>
+                            <div style="font-size:1.15rem; font-weight:800; margin-top:0.5rem;">ŽÁDOST O ČLENSTVÍ V ŠSČR</div>
+                        </div>
+                    </div>
+                    <div class="pp-row"><span class="pp-lab">šachový<br>Oddíl</span><span class="pp-box" style="flex:3.2; font-weight:600;">TJ Bižuterie Jablonec nad Nisou</span><span class="pp-lab">Kód<br>oddílu</span><span class="pp-box" style="flex:0.9; font-weight:600;">17 052</span></div>
+                    <div class="pp-row"><span class="pp-lab">Příjmení</span><span class="pp-box" data-pp="lastName"></span><span class="pp-lab">Jméno</span><span class="pp-box" data-pp="firstName"></span><span class="pp-lab">Další<br>jméno*</span><span class="pp-box" style="flex:0.7;" data-pp="middleName"></span></div>
+                    <div class="pp-row"><span class="pp-lab">Rodné<br>Číslo</span><span class="pp-box" data-pp="birthNumber|birthDateCz"></span><span style="flex:1.3; font-size:0.66rem; padding:0 0.3rem;">- u občanů jiného státu než ČR<br>je povinné uvést datum narození</span><span class="pp-lab">Titul*</span><span class="pp-box" style="flex:0.7;" data-pp="title"></span></div>
+                    <div class="pp-row"><span class="pp-lab" style="flex:1.4;">Adresa trvalého<br>Pobytu v ČR: &nbsp;Ulice</span><span class="pp-box" style="flex:1.6;" data-pp="street"></span><span class="pp-lab" style="font-size:0.66rem;">číslo popisné/<br>číslo orientační</span><span class="pp-box" style="flex:0.9;" data-pp="houseNumber"></span></div>
+                    <div class="pp-row"><span class="pp-lab">Město</span><span class="pp-box" data-pp="city"></span><span class="pp-lab">Část obce</span><span class="pp-box" data-pp="cityPart"></span><span class="pp-lab">PSČ</span><span class="pp-box" style="flex:0.7;" data-pp="zip"></span></div>
+                    <div class="pp-row"><span class="pp-lab">Stát<br>narození*</span><span class="pp-box" data-pp="birthCountry"></span><span class="pp-lab" style="flex:1.2;">Státní občanství*<br><span style="font-size:0.62rem;">(povinné jen není-li ČR)</span></span><span class="pp-box" style="flex:1.6;" data-pp="citizenship"></span></div>
+                    <div class="pp-row"><span class="pp-lab">Telefon*</span><span class="pp-box" data-pp="phone"></span><span class="pp-lab">E-mail*</span><span class="pp-box" style="flex:2.2;" data-pp="email"></span></div>
+                    <div style="margin-top:0.6rem;">Registrovat pro aktuální rok?<br>Registrace je spojena s povinností úhrady členských příspěvků dle ES. Pokud ano, zakřížkujte: <span id="ppRegYear">☐</span></div>
+                    <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-top:0.5rem;">
+                        <div>Žadatel o členství prohlašuje, že se seznámil se Stanovami ŠSČR,<br>Včetně ustanovení o nakládání s osobními údaji, a souhlasí s nimi.</div>
+                        <div style="display:flex; align-items:center; gap:0.4rem;"><span>Datum</span><span class="pp-box" style="min-width:90px;" id="ppDate"></span></div>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-top:0.7rem;">
+                        <div style="display:flex; gap:0.5rem; align-items:flex-start;">
+                            <span class="pp-lab" style="flex:none;">Razítko<br>a podpis<br>oddílu</span>
+                            <span style="border:1.4px solid #222; border-radius:10px; width:215px; height:78px; display:flex; align-items:center; justify-content:center;"><img src="/documents/razitko-nahled.png" alt="razítko" style="max-width:165px;" onerror="this.style.display='none'"></span>
+                        </div>
+                        <div style="width:220px; text-align:center;">
+                            <div id="ppSig" style="height:44px; display:flex; align-items:flex-end; justify-content:center;"><span style="color:#bbb; font-size:0.65rem;">— podpis se doplní z podpisového pole —</span></div>
+                            <div style="border-top:1.2px solid #222; font-size:0.7rem; padding-top:2px;">Podpis hráče (u ml. 18 let zák. zástupce)</div>
+                        </div>
+                    </div>
+                    </div>
                 </div>
                 <style>
-                    .pp-l { font-size: 0.62rem; color: #777; }
-                    .pp-v { border-bottom: 1px solid #999; min-height: 1.25em; padding: 0.05rem 0.15rem 0.1rem; font-size: 0.95rem; }
-                    @media (max-width: 560px) { #paperPreview { font-size: 0.75rem; } .pp-v { font-size: 0.85rem; } }
+                    .pp-row { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.55rem; }
+                    .pp-lab { flex: 0.8; font-size: 0.74rem; line-height: 1.15; }
+                    .pp-box { flex: 1.4; border: 1.4px solid #222; border-radius: 8px; min-height: 1.55em; padding: 0.18rem 0.45rem; font-size: 0.82rem; white-space: nowrap; overflow: hidden; }
                 </style>
             </div>
         </div>

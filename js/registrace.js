@@ -109,8 +109,7 @@
         document.querySelectorAll('#paperPreview [data-pp]').forEach(el => {
             const spec = el.getAttribute('data-pp');
             let out = '';
-            if (spec === 'middleName+title') out = [v('middleName'), v('title')].filter(Boolean).join(', ');
-            else if (spec === 'birthNumber|birthDateCz') out = v('birthNumber') || czDate(v('birthDate'));
+            if (spec === 'birthNumber|birthDateCz') out = v('birthNumber') || czDate(v('birthDate'));
             else out = v(spec);
             el.textContent = out || '\u00A0';
         });
