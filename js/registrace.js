@@ -212,6 +212,8 @@
             const spec = el.getAttribute('data-pp');
             let out = '';
             if (spec === 'birthNumber|birthDateCz') out = v('birthNumber') || czDate(v('birthDate'));
+            else if (spec === 'houseNumberCp') out = (v('houseNumber').split('/')[0] || '').trim();
+            else if (spec === 'houseNumberCo') out = (v('houseNumber').split('/')[1] || '').trim();
             else out = v(spec);
             el.textContent = out || '\u00A0';
         });
