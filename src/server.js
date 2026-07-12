@@ -494,7 +494,7 @@ app.use((req, res, next) => {
 
     // Check if this is an allowed HTML file
     if (allowedHtmlFiles.includes(htmlFile)) {
-        return res.sendFile(path.join(__dirname, `../${htmlFile}`));
+        return servePage(htmlFile)(req, res); // servePage = auto ?v= verzování skriptů + cache headers
     }
 
     next();
@@ -511,7 +511,7 @@ app.use((req, res, next) => {
     // check if it's an allowed html file
     const filename = reqPath.split('/').pop();
     if (allowedHtmlFiles.includes(filename) && reqPath.split('/').length === 2) {
-        return res.sendFile(path.join(__dirname, `../${filename}`));
+        return servePage(filename)(req, res); // servePage = auto ?v= verzování skriptů + cache headers
     }
 
     next();
