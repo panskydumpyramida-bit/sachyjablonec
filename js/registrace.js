@@ -93,14 +93,10 @@
         document.documentElement.lang = lang;
         document.querySelectorAll('[data-i18n]').forEach(el => { el.textContent = t(el.getAttribute('data-i18n')); });
         document.querySelectorAll('[data-i18n-html]').forEach(el => { el.innerHTML = t(el.getAttribute('data-i18n-html')); });
-        document.querySelectorAll('#langSwitch [data-lang]').forEach(b => {
-            const active = b.getAttribute('data-lang') === lang;
-            b.style.background = active ? 'rgba(212,175,55,0.25)' : '';
-            b.style.borderColor = active ? 'var(--primary-color)' : '';
-        });
+        const sel = document.getElementById('langSelect');
+        if (sel) sel.value = lang;
     }
-    document.querySelectorAll('#langSwitch [data-lang]').forEach(b =>
-        b.addEventListener('click', () => applyLang(b.getAttribute('data-lang'))));
+    document.getElementById('langSelect')?.addEventListener('change', (e) => applyLang(e.target.value));
     applyLang(lang);
 
     const token = new URLSearchParams(location.search).get('t');
