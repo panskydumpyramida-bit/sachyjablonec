@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="cs">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ohlášení přestupu – Šachový oddíl TJ Bižuterie Jablonec</title>
+    <meta name="robots" content="noindex">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="icon" type="image/png" href="images/favicon.png">
+    <style>
+        .reg-wrap {
+            max-width: 720px;
+            margin: 0 auto;
+            padding: 110px 1.25rem 4rem;
+        }
+
+        .reg-card {
+            background: var(--surface-color, #1e1e1e);
+            border: 1px solid rgba(212, 175, 55, 0.2);
+            border-radius: 14px;
+            padding: 1.75rem;
+        }
+
+        .reg-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        .reg-grid .full {
+            grid-column: 1 / -1;
+        }
+
+        @media (max-width: 560px) {
+            .reg-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .reg-field label {
+            display: block;
+            font-size: 0.82rem;
+            color: var(--text-muted);
+            margin-bottom: 0.3rem;
+        }
+
+        .reg-field input {
+            width: 100%;
+            box-sizing: border-box;
+            padding: 0.7rem 0.85rem;
+            background: rgba(0, 0, 0, 0.35);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 8px;
+            color: #fff;
+            font-size: 0.95rem;
+            font-family: inherit;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .reg-field input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.15);
+        }
+
+        #sigCanvas {
+            width: 100%;
+            height: 140px;
+            background: #fff;
+            border-radius: 8px;
+            cursor: crosshair;
+            touch-action: none;
+            display: block;
+        }
+
+        h2.reg-section {
+            font-size: 1.05rem;
+            margin: 1.75rem 0 1rem;
+            padding-bottom: 0.4rem;
+            border-bottom: 1px solid rgba(212, 175, 55, 0.25);
+        }
+
+        h2.reg-section:first-of-type {
+            margin-top: 0;
+        }
+
+        .step-list {
+            counter-reset: step;
+            display: grid;
+            gap: 0.9rem;
+            margin: 1.25rem 0;
+        }
+
+        .step-list li {
+            list-style: none;
+            display: flex;
+            gap: 0.9rem;
+            align-items: flex-start;
+            line-height: 1.55;
+        }
+
+        .step-list li::before {
+            counter-increment: step;
+            content: counter(step);
+            flex-shrink: 0;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: rgba(212, 175, 55, 0.15);
+            color: var(--primary-color);
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+    </style>
+</head>
+
+<body>
+    <header id="global-header"></header>
+
+    <main>
+        <div class="reg-wrap">
+            <h1 style="font-size:1.9rem; margin-bottom:0.4rem;">Ohlášení přestupu v šachu</h1>
+            <p style="color:var(--text-muted); margin-bottom:1.75rem;">Přestup do oddílu <strong>TJ Bižuterie Jablonec
+                    nad Nisou</strong>. Z formuláře se generuje oficiální ohlášení přestupu ŠSČR.</p>
+
+            <div id="trInvalid" class="reg-card" style="display:none; text-align:center;">
+                <i class="fa-solid fa-link-slash" style="font-size:2rem; color:#f87171;"></i>
+                <p style="margin-top:1rem;" id="trInvalidMsg">Tento odkaz není platný.</p>
+                <p style="color:var(--text-muted); font-size:0.9rem;">Požádejte prosím oddíl o nový odkaz
+                    (info@sachyjablonec.cz).</p>
+            </div>
+
+            <!-- FÁZE 1: vyplnění hráčem -->
+            <form id="trForm" class="reg-card" style="display:none;">
+                <h2 class="reg-section"><i class="fa-solid fa-user" style="color:var(--primary-color);"></i> Hráč</h2>
+                <div class="reg-grid">
+                    <div class="reg-field"><label>Příjmení *</label><input type="text" name="lastName" required></div>
+                    <div class="reg-field"><label>Jméno *</label><input type="text" name="firstName" required></div>
+                    <div class="reg-field"><label>Titul <span style="opacity:0.7;">(šachový, např. KM)</span></label>
+                        <input type="text" name="title"></div>
+                    <div class="reg-field"><label>Rodné číslo * <span style="opacity:0.7;">(občané ČR)</span></label>
+                        <input type="text" name="birthNumber" placeholder="XXXXXX/XXXX"></div>
+                    <div class="reg-field"><label>Datum narození <span style="opacity:0.7;">(povinné u
+                                cizinců)</span></label><input type="date" name="birthDate"></div>
+                    <div class="reg-field"><label>Evidenční číslo LOK</label><input type="text" name="lokId"
+                            inputmode="numeric"></div>
+                    <div class="reg-field"><label>ELO ČR ke dni přestupu</label><input type="text" name="elo"
+                            inputmode="numeric"></div>
+                </div>
+
+                <h2 class="reg-section"><i class="fa-solid fa-right-left" style="color:var(--primary-color);"></i>
+                    Z jakého oddílu přestupujete</h2>
+                <div class="reg-grid">
+                    <div class="reg-field"><label>Název oddílu *</label><input type="text" name="fromClub" required
+                            placeholder="např. ŠK Česká Lípa"></div>
+                    <div class="reg-field"><label>Kód oddílu <span style="opacity:0.7;">(pokud znáte)</span></label>
+                        <input type="text" name="fromClubCode"></div>
+                </div>
+
+                <h2 class="reg-section"><i class="fa-solid fa-envelope" style="color:var(--primary-color);"></i>
+                    Kontakt na vás</h2>
+                <div class="reg-grid">
+                    <div class="reg-field"><label>E-mail</label><input type="email" name="email"></div>
+                    <div class="reg-field"><label>Telefon</label><input type="tel" name="phone"></div>
+                </div>
+
+                <div style="margin-top:1.25rem;">
+                    <label style="display:block; font-size:0.82rem; color:var(--text-muted); margin-bottom:0.3rem;">
+                        Podpis hráče (u mladších 18 let podepisuje zákonný zástupce) — podepište se prstem nebo myší:
+                    </label>
+                    <canvas id="sigCanvas"></canvas>
+                    <button type="button" id="sigClear" class="btn-secondary"
+                        style="margin-top:0.5rem; font-size:0.85rem;"><i class="fa-solid fa-eraser"></i> Smazat
+                        podpis</button>
+                </div>
+
+                <div id="trError"
+                    style="display:none; margin-top:1rem; padding:0.75rem 1rem; background:rgba(248,113,113,0.1); border:1px solid rgba(248,113,113,0.3); border-radius:8px; color:#fca5a5; font-size:0.9rem;">
+                </div>
+
+                <button type="submit" id="trSubmit" class="btn-primary"
+                    style="width:100%; margin-top:1.5rem; justify-content:center; padding:0.9rem; font-size:1.05rem;">
+                    <i class="fa-solid fa-paper-plane"></i> Odeslat a vygenerovat ohlášení
+                </button>
+                <p style="text-align:center; color:var(--text-muted); font-size:0.8rem; margin-top:0.75rem;">
+                    V dalším kroku dostanete PDF pro potvrzení mateřským oddílem.</p>
+            </form>
+
+            <!-- FÁZE 2: razítko mateřského oddílu + sken zpět -->
+            <div id="trPhase2" class="reg-card" style="display:none;">
+                <h2 class="reg-section"><i class="fa-solid fa-stamp" style="color:var(--primary-color);"></i>
+                    Zbývá potvrzení mateřského oddílu</h2>
+                <p style="color:var(--text-muted);" id="trPhase2Who"></p>
+                <ol class="step-list">
+                    <li><span><strong>Stáhněte si vyplněné ohlášení</strong> — naše část (razítko a souhlas Bižuterie)
+                            už je v něm.</span></li>
+                    <li><span><strong>Vytiskněte ho a nechte potvrdit mateřským oddílem</strong> — vyjádření
+                            k přestupu, případné odstupné, razítko a podpis.</span></li>
+                    <li><span><strong>Potvrzený dokument vyfoťte nebo naskenujte</strong> a nahrajte zpět tímto
+                            odkazem.</span></li>
+                </ol>
+
+                <a id="trPdfLink" class="btn-primary"
+                    style="display:inline-flex; align-items:center; gap:0.5rem; text-decoration:none; margin-bottom:1.5rem;">
+                    <i class="fa-solid fa-file-pdf"></i> Stáhnout ohlášení (PDF)
+                </a>
+
+                <div style="border-top:1px solid rgba(255,255,255,0.08); padding-top:1.25rem;">
+                    <label style="display:block; font-size:0.9rem; margin-bottom:0.6rem;"><strong>Nahrát potvrzený
+                            sken</strong> <span style="color:var(--text-muted);">(PDF nebo fotka, max ~12 MB)</span></label>
+                    <div style="display:flex; gap:0.6rem; flex-wrap:wrap; align-items:center;">
+                        <button type="button" class="btn-secondary" id="scanPickBtn"><i
+                                class="fa-solid fa-folder-open"></i> Vybrat soubor</button>
+                        <span id="scanFileName" style="color:var(--text-muted); font-size:0.85rem;">Žádný soubor</span>
+                        <input type="file" id="scanInput" accept="image/*,.pdf" hidden>
+                    </div>
+                    <div id="trError2"
+                        style="display:none; margin-top:1rem; padding:0.75rem 1rem; background:rgba(248,113,113,0.1); border:1px solid rgba(248,113,113,0.3); border-radius:8px; color:#fca5a5; font-size:0.9rem;">
+                    </div>
+                    <button type="button" id="scanUploadBtn" class="btn-primary" disabled
+                        style="width:100%; margin-top:1rem; justify-content:center; padding:0.9rem;">
+                        <i class="fa-solid fa-cloud-arrow-up"></i> Odeslat potvrzené ohlášení oddílu
+                    </button>
+                </div>
+            </div>
+
+            <div id="trDone" class="reg-card" style="display:none; text-align:center;">
+                <i class="fa-solid fa-circle-check" style="font-size:2.5rem; color:#34d399;"></i>
+                <h2 style="margin-top:1rem;">Hotovo!</h2>
+                <p style="color:var(--text-muted);">Potvrzené ohlášení jsme předali oddílu. Předseda ho zkontroluje a
+                    odešle na Šachový svaz ČR. Vítejte v Bižuterii! ♟️</p>
+            </div>
+        </div>
+    </main>
+
+    <footer id="global-footer"></footer>
+
+    <script src="js/config.js"></script>
+    <script src="js/layout-loader.js" defer></script>
+    <script src="js/main.js" defer></script>
+    <script src="js/prestup.js"></script>
+</body>
+
+</html>

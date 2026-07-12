@@ -34,6 +34,7 @@ import announcementRoutes from './routes/api-announcements.js';
 import documentRoutes from './routes/api-documents.js';
 import transferFormRoutes from './routes/api-transfer-forms.js';
 import registrationRoutes from './routes/api-registrations.js';
+import memberTransferRoutes from './routes/api-member-transfers.js';
 import travelReportRoutes from './routes/api-travel-reports.js';
 import forumRoutes from './routes/api-forum.js';
 import diagramsRoutes from './routes/api-diagrams.js';
@@ -379,6 +380,7 @@ app.use('/api/announcements', announcementRoutes);
 app.use('/api/documents', documentRoutes);
 app.use('/api/transfer-forms', transferFormRoutes);
 app.use('/api/registrations', registrationRoutes);
+app.use('/api/transfers', memberTransferRoutes);
 app.use('/api/travel-reports', travelReportRoutes);
 app.use('/api/forum', forumRoutes);
 app.use('/api', diagramsRoutes);
@@ -411,7 +413,7 @@ const allowedHtmlFiles = [
     'blunder-grid.html', 'member-games.html', 'training.html', 'account.html',
     '404.html', 'reset-password.html', 'member-bulletin.html', 
     'member-wishlist.html', 'member-gallery.html', 'member-transfer-vacek.html',
-    'registrace.html', 'member-registrations.html'
+    'registrace.html', 'member-registrations.html', 'prestup.html'
 ];
 
 // --- Blicak Registration Endpoints ---

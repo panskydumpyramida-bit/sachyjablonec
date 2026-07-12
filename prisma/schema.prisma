@@ -274,6 +274,25 @@ model MemberRegistration {
   @@map("member_registrations")
 }
 
+// Univerzální ohlášení přestupu: token → hráč vyplní+podepíše → PDF s naším razítkem →
+// starý oddíl vytiskne, orazítkuje → sken zpět stejným odkazem → mail předsedovi
+model MemberTransfer {
+  id          Int       @id @default(autoincrement())
+  token       String    @unique
+  status      String    @default("pending") // pending | filled | completed
+  note        String?
+  data        Json?
+  pdf         Bytes?    // vygenerované ohlášení (podpis hráče + razítko Bižuterie)
+  scan        Bytes?    // sken potvrzený mateřským oddílem
+  scanMime    String?   @map("scan_mime")
+  createdBy   Int?      @map("created_by")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  filledAt    DateTime? @map("filled_at")
+  completedAt DateTime? @map("completed_at")
+
+  @@map("member_transfers")
+}
+
 model Member {
   id        Int     @id @default(autoincrement())
   firstName String  @map("first_name")

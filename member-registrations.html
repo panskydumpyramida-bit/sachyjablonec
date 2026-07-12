@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Registrace členů – TJ Bižuterie Jablonec</title>
+    <title>Registrace a přestupy – TJ Bižuterie Jablonec</title>
     <meta name="robots" content="noindex">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -90,7 +90,7 @@
     <main>
         <div class="regs-wrap">
             <h1 style="font-size:1.9rem; margin-bottom:0.4rem;"><i class="fa-solid fa-id-card"
-                    style="color:var(--primary-color);"></i> Registrace členů ŠSČR</h1>
+                    style="color:var(--primary-color);"></i> Registrace a přestupy ŠSČR</h1>
             <p style="color:var(--text-muted); margin-bottom:1.5rem;">Vytvoř registrační odkaz a pošli ho zájemci o
                 členství. Až formulář vyplní, přijde vyplněná žádost s razítkem na
                 <strong>info@sachyjablonec.cz</strong> — po kontrole ji stačí přeposlat na
@@ -123,6 +123,29 @@
                             class="fa-solid fa-spinner fa-spin"></i> Načítám…</p></div>
             </div>
 
+            <div class="regs-card">
+                <h3 style="margin-bottom:1rem;"><i class="fa-solid fa-right-left" style="color:var(--primary-color);"></i>
+                    Přestupy — nový odkaz</h3>
+                <p style="color:var(--text-muted); font-size:0.85rem; margin-bottom:1rem;">Hráč vyplní ohlášení a
+                    podepíše, PDF s naším razítkem si vytiskne, nechá potvrdit mateřským oddílem a sken nahraje zpátky
+                    stejným odkazem.</p>
+                <div style="display:flex; gap:0.75rem; flex-wrap:wrap;">
+                    <input type="text" id="newTransferNote" placeholder="Poznámka — kdo přestupuje (např. Novák z Č. Lípy)"
+                        style="flex:1; min-width:200px; padding:0.7rem 0.85rem; background:rgba(0,0,0,0.35); border:1px solid rgba(255,255,255,0.12); border-radius:8px; color:#fff; font-family:inherit;">
+                    <button class="btn-primary" id="createTransferBtn" onclick="createTransfer()">
+                        <i class="fa-solid fa-link"></i> Vytvořit odkaz
+                    </button>
+                </div>
+                <div id="newTransferBox" style="display:none; margin-top:1rem; padding:0.9rem 1rem; background:rgba(52,211,153,0.08); border:1px solid rgba(52,211,153,0.25); border-radius:8px;">
+                    <div style="font-size:0.85rem; color:#34d399; margin-bottom:0.4rem;"><i class="fa-solid fa-circle-check"></i> Odkaz vytvořen — pošli ho hráči:</div>
+                    <div style="display:flex; gap:0.5rem; flex-wrap:wrap; align-items:center;">
+                        <code id="newTransferUrl" style="flex:1; min-width:220px; font-size:0.8rem; word-break:break-all; background:rgba(0,0,0,0.3); padding:0.5rem 0.7rem; border-radius:6px;"></code>
+                        <button class="btn-secondary" onclick="copyNewTransfer()" id="copyTransferBtn"><i class="fa-regular fa-copy"></i> Kopírovat</button>
+                    </div>
+                </div>
+                <div id="transfersList" style="margin-top:1rem;"></div>
+            </div>
+
             <p style="color:var(--text-muted); font-size:0.85rem;">
                 <i class="fa-solid fa-camera" style="color:var(--primary-color);"></i>
                 Papírovou přihlášku vyfocenou mobilem dál zpracuje <a href="/form-scanner.html"
@@ -140,7 +163,7 @@
     <script>
         document.addEventListener('DOMContentLoaded', async () => {
             const user = await checkAuth(true, true);
-            if (user) loadRegistrations();
+            if (user) { loadRegistrations(); loadTransfers(); }
         });
     </script>
 </body>
