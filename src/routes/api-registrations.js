@@ -141,8 +141,8 @@ router.post('/form/:token', async (req, res) => {
         for (const f of required) {
             if (!b[f] || !String(b[f]).trim()) return res.status(400).json({ error: 'Chybí povinná pole' });
         }
-        if (!b.birthNumber && !b.birthDate) {
-            return res.status(400).json({ error: 'Vyplňte rodné číslo (nebo datum narození u cizinců)' });
+        if (!b.birthDate) {
+            return res.status(400).json({ error: 'Vyplňte datum narození' });
         }
         if (!b.agreeStatutes) return res.status(400).json({ error: 'Je nutný souhlas se stanovami ŠSČR' });
 
