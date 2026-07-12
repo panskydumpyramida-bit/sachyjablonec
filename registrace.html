@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="cs">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registrace člena ŠSČR – Šachový oddíl TJ Bižuterie Jablonec</title>
+    <meta name="robots" content="noindex">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="icon" type="image/png" href="images/favicon.png">
+    <style>
+        .reg-wrap {
+            max-width: 720px;
+            margin: 0 auto;
+            padding: 110px 1.25rem 4rem;
+        }
+
+        .reg-card {
+            background: var(--surface-color, #1e1e1e);
+            border: 1px solid rgba(212, 175, 55, 0.2);
+            border-radius: 14px;
+            padding: 1.75rem;
+        }
+
+        .reg-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        .reg-grid .full {
+            grid-column: 1 / -1;
+        }
+
+        @media (max-width: 560px) {
+            .reg-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .reg-field label {
+            display: block;
+            font-size: 0.82rem;
+            color: var(--text-muted);
+            margin-bottom: 0.3rem;
+        }
+
+        .reg-field input[type="text"],
+        .reg-field input[type="email"],
+        .reg-field input[type="tel"],
+        .reg-field input[type="date"] {
+            width: 100%;
+            box-sizing: border-box;
+            padding: 0.7rem 0.85rem;
+            background: rgba(0, 0, 0, 0.35);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 8px;
+            color: #fff;
+            font-size: 0.95rem;
+            font-family: inherit;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .reg-field input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.15);
+        }
+
+        .reg-check {
+            display: flex;
+            gap: 0.6rem;
+            align-items: flex-start;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 8px;
+            padding: 0.75rem 0.9rem;
+            cursor: pointer;
+            font-size: 0.9rem;
+            line-height: 1.5;
+        }
+
+        .reg-check input {
+            width: 18px;
+            height: 18px;
+            margin-top: 2px;
+            accent-color: var(--primary-color);
+            flex-shrink: 0;
+            cursor: pointer;
+        }
+
+        #sigCanvas {
+            width: 100%;
+            height: 140px;
+            background: #fff;
+            border-radius: 8px;
+            cursor: crosshair;
+            touch-action: none;
+            display: block;
+        }
+
+        h2.reg-section {
+            font-size: 1.05rem;
+            margin: 1.75rem 0 1rem;
+            padding-bottom: 0.4rem;
+            border-bottom: 1px solid rgba(212, 175, 55, 0.25);
+        }
+
+        h2.reg-section:first-of-type {
+            margin-top: 0;
+        }
+    </style>
+</head>
+
+<body>
+    <header id="global-header"></header>
+
+    <main>
+        <div class="reg-wrap">
+            <h1 style="font-size:1.9rem; margin-bottom:0.4rem;">Žádost o členství v ŠSČR</h1>
+            <p style="color:var(--text-muted); margin-bottom:1.75rem;">Šachový oddíl <strong>TJ Bižuterie Jablonec nad
+                    Nisou</strong>. Vyplňte prosím údaje přesně podle dokladů — z formuláře se generuje oficiální
+                registrační žádost Šachového svazu ČR.</p>
+
+            <div id="regInvalid" class="reg-card" style="display:none; text-align:center;">
+                <i class="fa-solid fa-link-slash" style="font-size:2rem; color:#f87171;"></i>
+                <p style="margin-top:1rem;" id="regInvalidMsg">Tento odkaz není platný.</p>
+                <p style="color:var(--text-muted); font-size:0.9rem;">Požádejte prosím oddíl o nový registrační odkaz
+                    (info@sachyjablonec.cz).</p>
+            </div>
+
+            <div id="regDone" class="reg-card" style="display:none; text-align:center;">
+                <i class="fa-solid fa-circle-check" style="font-size:2.5rem; color:#34d399;"></i>
+                <h2 style="margin-top:1rem;">Odesláno!</h2>
+                <p style="color:var(--text-muted);">Žádost jsme předali oddílu. Předseda ji potvrdí razítkem a odešle na
+                    Šachový svaz ČR. O dalším postupu vás budeme informovat.</p>
+            </div>
+
+            <form id="regForm" class="reg-card" style="display:none;">
+                <h2 class="reg-section"><i class="fa-solid fa-user" style="color:var(--primary-color);"></i> Osobní
+                    údaje</h2>
+                <div class="reg-grid">
+                    <div class="reg-field"><label>Příjmení *</label><input type="text" name="lastName" required
+                            autocomplete="family-name"></div>
+                    <div class="reg-field"><label>Jméno *</label><input type="text" name="firstName" required
+                            autocomplete="given-name"></div>
+                    <div class="reg-field"><label>Další jméno</label><input type="text" name="middleName"></div>
+                    <div class="reg-field"><label>Titul</label><input type="text" name="title" placeholder="Ing., Mgr.…">
+                    </div>
+                    <div class="reg-field"><label>Rodné číslo * <span style="opacity:0.7;">(občané ČR)</span></label>
+                        <input type="text" name="birthNumber" placeholder="XXXXXX/XXXX" inputmode="numeric"></div>
+                    <div class="reg-field"><label>Datum narození <span style="opacity:0.7;">(povinné u cizinců)</span></label>
+                        <input type="date" name="birthDate"></div>
+                    <div class="reg-field"><label>Stát narození <span style="opacity:0.7;">(není-li ČR)</span></label>
+                        <input type="text" name="birthCountry"></div>
+                    <div class="reg-field"><label>Státní občanství <span style="opacity:0.7;">(není-li ČR)</span></label>
+                        <input type="text" name="citizenship"></div>
+                </div>
+
+                <h2 class="reg-section"><i class="fa-solid fa-house" style="color:var(--primary-color);"></i> Trvalý
+                    pobyt v ČR</h2>
+                <div class="reg-grid">
+                    <div class="reg-field"><label>Ulice *</label><input type="text" name="street" required
+                            autocomplete="street-address"></div>
+                    <div class="reg-field"><label>Číslo popisné/orientační *</label><input type="text" name="houseNumber"
+                            required></div>
+                    <div class="reg-field"><label>Město *</label><input type="text" name="city" required></div>
+                    <div class="reg-field"><label>Část obce</label><input type="text" name="cityPart"></div>
+                    <div class="reg-field"><label>PSČ *</label><input type="text" name="zip" required inputmode="numeric"
+                            autocomplete="postal-code"></div>
+                </div>
+
+                <h2 class="reg-section"><i class="fa-solid fa-envelope" style="color:var(--primary-color);"></i>
+                    Kontakty</h2>
+                <div class="reg-grid">
+                    <div class="reg-field"><label>Telefon</label><input type="tel" name="phone" autocomplete="tel"></div>
+                    <div class="reg-field"><label>E-mail</label><input type="email" name="email" autocomplete="email">
+                    </div>
+                </div>
+
+                <h2 class="reg-section"><i class="fa-solid fa-file-signature" style="color:var(--primary-color);"></i>
+                    Souhlasy a podpis</h2>
+                <div style="display:grid; gap:0.75rem;">
+                    <label class="reg-check">
+                        <input type="checkbox" name="registerThisYear" checked>
+                        <span><strong>Registrovat pro aktuální rok.</strong> Registrace je spojena s povinností úhrady
+                            členských příspěvků dle ekonomické směrnice ŠSČR.</span>
+                    </label>
+                    <label class="reg-check">
+                        <input type="checkbox" name="agreeStatutes" required>
+                        <span>Prohlašuji, že jsem se seznámil/a se <a href="https://www.chess.cz/sachovy-svaz-cr/legislativa/" target="_blank"
+                                rel="noopener" style="color:#93c5fd;">Stanovami ŠSČR</a>, včetně ustanovení o nakládání
+                            s osobními údaji, a souhlasím s nimi. *</span>
+                    </label>
+                </div>
+
+                <div style="margin-top:1.25rem;">
+                    <label style="display:block; font-size:0.82rem; color:var(--text-muted); margin-bottom:0.3rem;">
+                        Podpis hráče (u mladších 18 let podepisuje zákonný zástupce) — podepište se prstem nebo myší:
+                    </label>
+                    <canvas id="sigCanvas"></canvas>
+                    <button type="button" id="sigClear" class="btn-secondary"
+                        style="margin-top:0.5rem; font-size:0.85rem;"><i class="fa-solid fa-eraser"></i> Smazat
+                        podpis</button>
+                </div>
+
+                <div id="regError"
+                    style="display:none; margin-top:1rem; padding:0.75rem 1rem; background:rgba(248,113,113,0.1); border:1px solid rgba(248,113,113,0.3); border-radius:8px; color:#fca5a5; font-size:0.9rem;">
+                </div>
+
+                <button type="submit" id="regSubmit" class="btn-primary"
+                    style="width:100%; margin-top:1.5rem; justify-content:center; padding:0.9rem; font-size:1.05rem;">
+                    <i class="fa-solid fa-paper-plane"></i> Odeslat žádost oddílu
+                </button>
+                <p style="text-align:center; color:var(--text-muted); font-size:0.8rem; margin-top:0.75rem;">
+                    Žádost zkontroluje předseda oddílu a s razítkem ji odešle na Šachový svaz ČR.</p>
+            </form>
+        </div>
+    </main>
+
+    <footer id="global-footer"></footer>
+
+    <script src="js/config.js"></script>
+    <script src="js/layout-loader.js" defer></script>
+    <script src="js/main.js" defer></script>
+    <script src="js/registrace.js"></script>
+</body>
+
+</html>

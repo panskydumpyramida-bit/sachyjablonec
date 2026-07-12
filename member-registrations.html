@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="cs">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registrace členů – TJ Bižuterie Jablonec</title>
+    <meta name="robots" content="noindex">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="icon" type="image/png" href="images/favicon.png">
+    <style>
+        .regs-wrap {
+            max-width: 860px;
+            margin: 0 auto;
+            padding: 110px 1.25rem 4rem;
+        }
+
+        .regs-card {
+            background: var(--surface-color, #1e1e1e);
+            border: 1px solid rgba(212, 175, 55, 0.2);
+            border-radius: 14px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .reg-row {
+            display: flex;
+            align-items: center;
+            gap: 0.9rem;
+            padding: 0.85rem 0.5rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+            flex-wrap: wrap;
+        }
+
+        .reg-row:last-child {
+            border-bottom: none;
+        }
+
+        .reg-status {
+            font-size: 0.72rem;
+            padding: 0.2rem 0.6rem;
+            border-radius: 99px;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .reg-status.pending {
+            background: rgba(251, 191, 36, 0.15);
+            color: #fbbf24;
+        }
+
+        .reg-status.submitted {
+            background: rgba(52, 211, 153, 0.15);
+            color: #34d399;
+        }
+
+        .reg-actions {
+            margin-left: auto;
+            display: flex;
+            gap: 0.4rem;
+            flex-wrap: wrap;
+        }
+
+        .reg-actions button,
+        .reg-actions a {
+            font-size: 0.8rem;
+            padding: 0.35rem 0.7rem;
+        }
+
+        #newNote {
+            flex: 1;
+            min-width: 200px;
+            padding: 0.7rem 0.85rem;
+            background: rgba(0, 0, 0, 0.35);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 8px;
+            color: #fff;
+            font-family: inherit;
+        }
+    </style>
+</head>
+
+<body>
+    <header id="global-header"></header>
+
+    <main>
+        <div class="regs-wrap">
+            <h1 style="font-size:1.9rem; margin-bottom:0.4rem;"><i class="fa-solid fa-id-card"
+                    style="color:var(--primary-color);"></i> Registrace členů ŠSČR</h1>
+            <p style="color:var(--text-muted); margin-bottom:1.5rem;">Vytvoř registrační odkaz a pošli ho zájemci o
+                členství. Až formulář vyplní, přijde vyplněná žádost s razítkem na
+                <strong>info@sachyjablonec.cz</strong> — po kontrole ji stačí přeposlat na
+                <strong>registrace@chess.cz</strong>.</p>
+
+            <div class="regs-card">
+                <h3 style="margin-bottom:1rem;"><i class="fa-solid fa-plus" style="color:var(--primary-color);"></i>
+                    Nová žádost</h3>
+                <div style="display:flex; gap:0.75rem; flex-wrap:wrap;">
+                    <input type="text" id="newNote" placeholder="Poznámka — pro koho odkaz je (např. Novák ml.)">
+                    <button class="btn-primary" id="createBtn" onclick="createRegistration()">
+                        <i class="fa-solid fa-link"></i> Vytvořit odkaz
+                    </button>
+                </div>
+                <div id="newLinkBox" style="display:none; margin-top:1rem; padding:0.9rem 1rem; background:rgba(52,211,153,0.08); border:1px solid rgba(52,211,153,0.25); border-radius:8px;">
+                    <div style="font-size:0.85rem; color:#34d399; margin-bottom:0.4rem;"><i
+                            class="fa-solid fa-circle-check"></i> Odkaz vytvořen — pošli ho žadateli:</div>
+                    <div style="display:flex; gap:0.5rem; flex-wrap:wrap; align-items:center;">
+                        <code id="newLinkUrl" style="flex:1; min-width:220px; font-size:0.8rem; word-break:break-all; background:rgba(0,0,0,0.3); padding:0.5rem 0.7rem; border-radius:6px;"></code>
+                        <button class="btn-secondary" onclick="copyNewLink()" id="copyBtn"><i
+                                class="fa-regular fa-copy"></i> Kopírovat</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="regs-card">
+                <h3 style="margin-bottom:0.5rem;"><i class="fa-solid fa-list"
+                        style="color:var(--primary-color);"></i> Přehled žádostí</h3>
+                <div id="regsList"><p style="color:var(--text-muted); padding:1rem 0.5rem;"><i
+                            class="fa-solid fa-spinner fa-spin"></i> Načítám…</p></div>
+            </div>
+
+            <p style="color:var(--text-muted); font-size:0.85rem;">
+                <i class="fa-solid fa-camera" style="color:var(--primary-color);"></i>
+                Papírovou přihlášku vyfocenou mobilem dál zpracuje <a href="/form-scanner.html"
+                    style="color:#93c5fd;">skener přihlášek</a>.
+            </p>
+        </div>
+    </main>
+
+    <footer id="global-footer"></footer>
+
+    <script src="js/config.js"></script>
+    <script src="js/layout-loader.js"></script>
+    <script src="js/member-auth.js"></script>
+    <script src="js/member-registrations.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            const user = await checkAuth(true, true);
+            if (user) loadRegistrations();
+        });
+    </script>
+</body>
+
+</html>

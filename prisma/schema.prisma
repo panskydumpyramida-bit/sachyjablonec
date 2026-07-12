@@ -259,6 +259,21 @@ model Image {
   @@map("images")
 }
 
+// Online žádost o registraci člena ŠSČR: token → veřejný formulář → PDF → mail předsedovi
+model MemberRegistration {
+  id          Int       @id @default(autoincrement())
+  token       String    @unique
+  status      String    @default("pending") // pending | submitted
+  note        String?   // pro koho odkaz je (interní poznámka)
+  data        Json?     // vyplněná pole žadatele
+  pdf         Bytes?    // vygenerovaná žádost (PDF)
+  createdBy   Int?      @map("created_by")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  submittedAt DateTime? @map("submitted_at")
+
+  @@map("member_registrations")
+}
+
 model Member {
   id        Int     @id @default(autoincrement())
   firstName String  @map("first_name")

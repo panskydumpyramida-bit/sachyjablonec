@@ -12,7 +12,7 @@ const getResend = () => {
     return resend;
 };
 
-export const sendEmail = async (to, subject, html) => {
+export const sendEmail = async (to, subject, html, attachments = null) => {
     // Skip if no API key configured
     if (!process.env.RESEND_API_KEY) {
         console.warn('[Mailer] Resend API key not configured, skipping email');
@@ -28,12 +28,21 @@ export const sendEmail = async (to, subject, html) => {
             return null;
         }
 
-        const { data, error } = await client.emails.send({
+        const payload = {
             from: 'Šachový oddíl Bižuterie <notifikace@sachyjablonec.cz>',
             to: [to],
             subject,
             html
-        });
+        };
+        // attachments: [{ filename, content (Buffer | base64 string) }]
+        if (attachments && attachments.length) {
+            payload.attachments = attachments.map(a => ({
+                filename: a.filename,
+                content: Buffer.isBuffer(a.content) ? a.content.toString('base64') : a.content,
+            }));
+        }
+
+        const { data, error } = await client.emails.send(payload);
 
         if (error) {
             console.error('[Resend] Error:', error);
