@@ -9,7 +9,7 @@ import express from 'express';
 import crypto from 'crypto';
 import { PrismaClient } from '@prisma/client';
 import { authMiddleware } from '../middleware/auth.js';
-import { requireMember } from '../middleware/rbac.js';
+import { requireMember, hasRole } from '../middleware/rbac.js';
 import { generateRegistrationPdf } from '../services/registrationPdf.js';
 import { sendEmail } from '../utils/mailer.js';
 
@@ -85,6 +85,66 @@ router.delete('/:id', authMiddleware, requireMember, async (req, res) => {
         res.json({ ok: true });
     } catch (e) {
         res.status(500).json({ error: 'Nepodařilo se smazat' });
+    }
+});
+
+// Detail žádosti pro editaci (jen superadmin nebo autor odkazu)
+const canEdit = (user, reg) => hasRole(user, 'SUPERADMIN') || reg.createdBy === user.id;
+
+router.get('/:id(\\d+)', authMiddleware, requireMember, async (req, res) => {
+    try {
+        const reg = await prisma.memberRegistration.findUnique({ where: { id: parseInt(req.params.id) } });
+        if (!reg) return res.status(404).json({ error: 'Žádost nenalezena' });
+        if (!canEdit(req.user, reg)) return res.status(403).json({ error: 'Upravit může jen autor odkazu nebo superadmin' });
+        const data = { ...(reg.data || {}) };
+        delete data.signaturePng;
+        res.json({ id: reg.id, status: reg.status, note: reg.note, data });
+    } catch (e) {
+        res.status(500).json({ error: 'Chyba serveru' });
+    }
+});
+
+// Úprava žádosti: pending → prefill/poznámka; submitted → data žadatele + přegenerování PDF
+router.put('/:id(\\d+)', authMiddleware, requireMember, async (req, res) => {
+    try {
+        const reg = await prisma.memberRegistration.findUnique({ where: { id: parseInt(req.params.id) } });
+        if (!reg) return res.status(404).json({ error: 'Žádost nenalezena' });
+        if (!canEdit(req.user, reg)) return res.status(403).json({ error: 'Upravit může jen autor odkazu nebo superadmin' });
+
+        const b = req.body || {};
+        const clean = (v, max = 120) => String(v ?? '').trim().slice(0, max);
+
+        if (reg.status === 'pending') {
+            const firstName = clean(b.firstName, 60);
+            const lastName = clean(b.lastName, 60);
+            const note = clean(b.note, 200) || [lastName, firstName].filter(Boolean).join(' ') || null;
+            await prisma.memberRegistration.update({
+                where: { id: reg.id },
+                data: {
+                    note,
+                    data: (firstName || lastName) ? { ...(reg.data || {}), prefill: { firstName, lastName } } : reg.data,
+                },
+            });
+            return res.json({ ok: true });
+        }
+
+        // submitted — úprava dat a nové PDF (podpis hráče zůstává, pokud byl uložen)
+        const fields = ['lastName', 'firstName', 'middleName', 'title', 'birthNumber', 'birthDate', 'street',
+            'houseNumber', 'city', 'cityPart', 'zip', 'birthCountry', 'citizenship', 'phone', 'email'];
+        const data = { ...(reg.data || {}) };
+        for (const f of fields) if (b[f] !== undefined) data[f] = clean(b[f]);
+        if (b.registerThisYear !== undefined) data.registerThisYear = !!b.registerThisYear;
+        if (!data.lastName || !data.firstName) return res.status(400).json({ error: 'Jméno a příjmení nesmí být prázdné' });
+
+        const pdf = await generateRegistrationPdf({ ...data, signaturePng: data.signaturePng || null });
+        await prisma.memberRegistration.update({
+            where: { id: reg.id },
+            data: { data, pdf, note: clean(b.note, 200) || reg.note },
+        });
+        res.json({ ok: true, pdfRegenerated: true });
+    } catch (e) {
+        console.error('[Registrations] edit error:', e);
+        res.status(500).json({ error: 'Úprava se nepodařila' });
     }
 });
 
@@ -171,6 +231,7 @@ router.post('/form/:token', async (req, res) => {
             signaturePng = b.signaturePng;
         }
 
+        if (signaturePng) data.signaturePng = signaturePng; // kvůli případnému přegenerování PDF po úpravě
         const pdf = await generateRegistrationPdf({ ...data, signaturePng });
 
         if (isGeneral) {
