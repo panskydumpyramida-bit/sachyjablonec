@@ -15,7 +15,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ASSETS = path.join(__dirname, '../assets');
 
 const CLUB_NAME = 'TJ Bižuterie Jablonec nad Nisou';
-const CLUB_CODE = process.env.SSCR_CLUB_CODE || ''; // kód oddílu ŠSČR (env, jinak doplní předseda)
+const CLUB_CODE = process.env.SSCR_CLUB_CODE || '17 052'; // kód oddílu ŠSČR
 
 const GRAY = rgb(0.45, 0.45, 0.45);
 const BLACK = rgb(0.05, 0.05, 0.05);
@@ -118,12 +118,14 @@ export async function generateRegistrationPdf(d) {
     text(d.date, M, y, { size: 11 });
     line(M, y - 3, M + 120);
 
-    // Razítko a podpis oddílu
-    const stampBytes = fs.readFileSync(path.join(ASSETS, 'razitko-oddil.png'));
+    // Razítko a podpis oddílu (oficiální hranaté razítko s IČO)
+    const stampBytes = fs.readFileSync(path.join(ASSETS, 'razitko-oficialni.png'));
     const stamp = await pdf.embedPng(stampBytes);
-    const stampW = 150, stampH = 150;
-    page.drawImage(stamp, { x: M + 160, y: y - 105, width: stampW, height: stampH });
-    label('Razítko a podpis oddílu', M + 190, y - 112);
+    const stampW = 170;
+    const stampH = stampW * (stamp.height / stamp.width);
+    page.drawImage(stamp, { x: M + 170, y: y - 55, width: stampW, height: stampH });
+    text('Antonín Duda v. r., předseda oddílu', M + 175, y - 70, { size: 8.5 });
+    label('Razítko a podpis oddílu', M + 190, y - 84);
 
     // Podpis hráče (canvas PNG z formuláře)
     if (d.signaturePng) {

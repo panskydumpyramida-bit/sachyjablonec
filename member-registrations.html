@@ -100,7 +100,9 @@
                 <h3 style="margin-bottom:1rem;"><i class="fa-solid fa-plus" style="color:var(--primary-color);"></i>
                     Nová žádost</h3>
                 <div style="display:flex; gap:0.75rem; flex-wrap:wrap;">
-                    <input type="text" id="newNote" placeholder="Poznámka — pro koho odkaz je (např. Novák ml.)">
+                    <input type="text" id="newFirstName" placeholder="Jméno žadatele" style="flex:1; min-width:140px; padding:0.7rem 0.85rem; background:rgba(0,0,0,0.35); border:1px solid rgba(255,255,255,0.12); border-radius:8px; color:#fff; font-family:inherit;">
+                    <input type="text" id="newLastName" placeholder="Příjmení žadatele" style="flex:1; min-width:140px; padding:0.7rem 0.85rem; background:rgba(0,0,0,0.35); border:1px solid rgba(255,255,255,0.12); border-radius:8px; color:#fff; font-family:inherit;">
+                    <input type="text" id="newNote" placeholder="Poznámka (nepovinná)" style="flex:1;">
                     <button class="btn-primary" id="createBtn" onclick="createRegistration()">
                         <i class="fa-solid fa-link"></i> Vytvořit odkaz
                     </button>
@@ -112,6 +114,11 @@
                         <code id="newLinkUrl" style="flex:1; min-width:220px; font-size:0.8rem; word-break:break-all; background:rgba(0,0,0,0.3); padding:0.5rem 0.7rem; border-radius:6px;"></code>
                         <button class="btn-secondary" onclick="copyNewLink()" id="copyBtn"><i
                                 class="fa-regular fa-copy"></i> Kopírovat</button>
+                        <button class="btn-secondary" onclick="shareLink(window.lastRegUrl)" title="Sdílet (na mobilu i SMS/WhatsApp)"><i class="fa-solid fa-share-nodes"></i></button>
+                    </div>
+                    <div style="display:flex; gap:0.5rem; flex-wrap:wrap; align-items:center; margin-top:0.6rem;">
+                        <input type="email" id="sendRegEmail" placeholder="E-mail žadatele" style="flex:1; min-width:180px; padding:0.55rem 0.75rem; background:rgba(0,0,0,0.35); border:1px solid rgba(255,255,255,0.12); border-radius:8px; color:#fff; font-family:inherit; font-size:0.85rem;">
+                        <button class="btn-primary" id="sendRegBtn" onclick="sendRegEmail()" style="font-size:0.85rem;"><i class="fa-solid fa-envelope"></i> Poslat mailem</button>
                     </div>
                 </div>
             </div>
@@ -141,6 +148,11 @@
                     <div style="display:flex; gap:0.5rem; flex-wrap:wrap; align-items:center;">
                         <code id="newTransferUrl" style="flex:1; min-width:220px; font-size:0.8rem; word-break:break-all; background:rgba(0,0,0,0.3); padding:0.5rem 0.7rem; border-radius:6px;"></code>
                         <button class="btn-secondary" onclick="copyNewTransfer()" id="copyTransferBtn"><i class="fa-regular fa-copy"></i> Kopírovat</button>
+                        <button class="btn-secondary" onclick="shareLink(window.lastTransferUrlPub)" title="Sdílet (na mobilu i SMS/WhatsApp)"><i class="fa-solid fa-share-nodes"></i></button>
+                    </div>
+                    <div style="display:flex; gap:0.5rem; flex-wrap:wrap; align-items:center; margin-top:0.6rem;">
+                        <input type="email" id="sendTransferEmail" placeholder="E-mail hráče" style="flex:1; min-width:180px; padding:0.55rem 0.75rem; background:rgba(0,0,0,0.35); border:1px solid rgba(255,255,255,0.12); border-radius:8px; color:#fff; font-family:inherit; font-size:0.85rem;">
+                        <button class="btn-primary" id="sendTransferBtn" onclick="sendTransferEmail()" style="font-size:0.85rem;"><i class="fa-solid fa-envelope"></i> Poslat mailem</button>
                     </div>
                 </div>
                 <div id="transfersList" style="margin-top:1rem;"></div>

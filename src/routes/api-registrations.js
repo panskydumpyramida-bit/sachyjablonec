@@ -25,8 +25,14 @@ const FRONTEND = (process.env.FRONTEND_URL || 'https://www.sachyjablonec.cz').re
 router.post('/', authMiddleware, requireMember, async (req, res) => {
     try {
         const token = crypto.randomBytes(16).toString('hex');
+        const firstName = (req.body?.firstName || '').trim().slice(0, 60);
+        const lastName = (req.body?.lastName || '').trim().slice(0, 60);
+        const note = (req.body?.note || '').trim().slice(0, 200) || [lastName, firstName].filter(Boolean).join(' ') || null;
         const reg = await prisma.memberRegistration.create({
-            data: { token, note: (req.body?.note || '').slice(0, 200) || null, createdBy: req.user.id },
+            data: {
+                token, note, createdBy: req.user.id,
+                data: (firstName || lastName) ? { prefill: { firstName, lastName } } : undefined,
+            },
         });
         res.json({ id: reg.id, token, url: `${FRONTEND}/registrace.html?t=${token}` });
     } catch (e) {
@@ -46,7 +52,7 @@ router.get('/', authMiddleware, requireMember, async (req, res) => {
         res.json(regs.map(r => ({
             ...r,
             url: `${FRONTEND}/registrace.html?t=${r.token}`,
-            applicant: r.data ? `${r.data.lastName || ''} ${r.data.firstName || ''}`.trim() : null,
+            applicant: r.data ? `${(r.data.lastName || r.data.prefill?.lastName || '')} ${(r.data.firstName || r.data.prefill?.firstName || '')}`.trim() || null : null,
             data: undefined,
         })));
     } catch (e) {
@@ -80,6 +86,35 @@ router.delete('/:id', authMiddleware, requireMember, async (req, res) => {
     }
 });
 
+// Poslat registrační odkaz žadateli e-mailem
+router.post('/:id(\\d+)/send', authMiddleware, requireMember, async (req, res) => {
+    try {
+        const email = String(req.body?.email || '').trim();
+        if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return res.status(400).json({ error: 'Neplatný e-mail' });
+        const reg = await prisma.memberRegistration.findUnique({ where: { id: parseInt(req.params.id) } });
+        if (!reg) return res.status(404).json({ error: 'Žádost nenalezena' });
+        if (reg.status === 'submitted') return res.status(410).json({ error: 'Žádost už byla vyplněna' });
+        const url = `${FRONTEND}/registrace.html?t=${reg.token}`;
+        const who = reg.data?.prefill ? `${reg.data.prefill.firstName} ${reg.data.prefill.lastName}`.trim() : '';
+        const sent = await sendEmail(
+            email,
+            'Registrace do šachového oddílu TJ Bižuterie Jablonec',
+            `<p>Dobrý den${who ? ' ' + who.split(' ')[0] : ''},</p>
+             <p>zveme vás k registraci do Šachového svazu ČR pod oddílem
+             <strong>TJ Bižuterie Jablonec nad Nisou</strong>. Žádost vyplníte online — zabere to pár minut
+             a podepíšete se přímo na obrazovce:</p>
+             <p style="margin:1.5em 0;"><a href="${url}" style="background:#d4af37;color:#1a1a1a;font-weight:bold;padding:12px 24px;border-radius:8px;text-decoration:none;">Vyplnit žádost o členství</a></p>
+             <p>Nebo použijte odkaz: <a href="${url}">${url}</a></p>
+             <p>Na viděnou u šachovnice!<br>Šachový oddíl TJ Bižuterie Jablonec</p>`
+        );
+        if (!sent) return res.status(502).json({ error: 'E-mail se nepodařilo odeslat (mailer není nakonfigurován)' });
+        res.json({ ok: true });
+    } catch (e) {
+        console.error('[Registrations] send error:', e);
+        res.status(500).json({ error: 'Odeslání se nepodařilo' });
+    }
+});
+
 // ---- VEŘEJNÁ ČÁST (žadatel s tokenem) ----
 
 // Ověření platnosti odkazu
@@ -88,7 +123,7 @@ router.get('/form/:token', async (req, res) => {
         const reg = await prisma.memberRegistration.findUnique({ where: { token: req.params.token } });
         if (!reg) return res.status(404).json({ error: 'Neplatný odkaz' });
         if (reg.status === 'submitted') return res.status(410).json({ error: 'Tato žádost už byla odeslána' });
-        res.json({ ok: true });
+        res.json({ ok: true, prefill: reg.data?.prefill || null });
     } catch (e) {
         res.status(500).json({ error: 'Chyba serveru' });
     }

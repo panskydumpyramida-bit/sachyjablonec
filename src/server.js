@@ -73,7 +73,7 @@ app.use(helmet({
     contentSecurityPolicy: {
         directives: {
             defaultSrc: ["'self'"],
-            scriptSrc: ["'self'", "'unsafe-inline'", "'wasm-unsafe-eval'", "https://code.jquery.com", "https://cdnjs.cloudflare.com", "https://www.googletagmanager.com", "https://www.google-analytics.com", "https://unpkg.com", "https://static.hotjar.com", "https://script.hotjar.com", "https://cdn.tailwindcss.com"],
+            scriptSrc: ["'self'", "'unsafe-inline'", "'wasm-unsafe-eval'", "https://code.jquery.com", "https://cdnjs.cloudflare.com", "https://www.googletagmanager.com", "https://www.google-analytics.com", "https://unpkg.com", "https://static.hotjar.com", "https://script.hotjar.com", "https://cdn.tailwindcss.com", "https://docs.opencv.org"],
             scriptSrcAttr: ["'unsafe-inline'"],
             styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com", "https://cdnjs.cloudflare.com", "https://unpkg.com", "https://cdn.tailwindcss.com"],
             imgSrc: ["'self'", "data:", "https:", "blob:", "https://chessboardjs.com"],

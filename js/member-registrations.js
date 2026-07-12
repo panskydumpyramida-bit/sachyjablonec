@@ -12,14 +12,22 @@
             const res = await fetch(`${API}/registrations`, {
                 method: 'POST',
                 headers: headers(),
-                body: JSON.stringify({ note: document.getElementById('newNote').value.trim() }),
+                body: JSON.stringify({
+                    note: document.getElementById('newNote').value.trim(),
+                    firstName: document.getElementById('newFirstName').value.trim(),
+                    lastName: document.getElementById('newLastName').value.trim(),
+                }),
             });
             const data = await res.json();
             if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
             lastCreatedUrl = data.url;
+            window.lastRegUrl = data.url;
+            window.lastRegId = data.id;
             document.getElementById('newLinkUrl').textContent = data.url;
             document.getElementById('newLinkBox').style.display = 'block';
             document.getElementById('newNote').value = '';
+            document.getElementById('newFirstName').value = '';
+            document.getElementById('newLastName').value = '';
             loadRegistrations();
         } catch (e) {
             alert('Nepodařilo se vytvořit odkaz: ' + e.message);
@@ -112,6 +120,38 @@
         }
     };
 
+    // ---- sdílení a e-mail ----
+    window.shareLink = async (url) => {
+        if (!url) return;
+        if (navigator.share) {
+            try { await navigator.share({ title: 'Šachy Bižuterie Jablonec', url }); } catch (e) { /* zrušeno */ }
+        } else {
+            prompt('Zkopíruj odkaz (sdílení podporuje mobil):', url);
+        }
+    };
+
+    const sendLinkMail = async (endpoint, id, inputId, btnId) => {
+        const email = document.getElementById(inputId).value.trim();
+        const btn = document.getElementById(btnId);
+        if (!id) return alert('Nejdřív vytvoř odkaz.');
+        if (!email) return alert('Vyplň e-mail.');
+        btn.disabled = true;
+        try {
+            const res = await fetch(`${API}/${endpoint}/${id}/send`, {
+                method: 'POST', headers: headers(), body: JSON.stringify({ email }),
+            });
+            const data = await res.json().catch(() => ({}));
+            if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
+            btn.innerHTML = '<i class="fa-solid fa-check"></i> Odesláno';
+            setTimeout(() => { btn.innerHTML = '<i class="fa-solid fa-envelope"></i> Poslat mailem'; btn.disabled = false; }, 2500);
+        } catch (e) {
+            alert('E-mail se nepodařilo odeslat: ' + e.message);
+            btn.disabled = false;
+        }
+    };
+    window.sendRegEmail = () => sendLinkMail('registrations', window.lastRegId, 'sendRegEmail', 'sendRegBtn');
+    window.sendTransferEmail = () => sendLinkMail('transfers', window.lastTransferId, 'sendTransferEmail', 'sendTransferBtn');
+
     // ============ PŘESTUPY ============
     let lastTransferUrl = '';
 
@@ -127,6 +167,8 @@
             const data = await res.json();
             if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
             lastTransferUrl = data.url;
+            window.lastTransferUrlPub = data.url;
+            window.lastTransferId = data.id;
             document.getElementById('newTransferUrl').textContent = data.url;
             document.getElementById('newTransferBox').style.display = 'block';
             document.getElementById('newTransferNote').value = '';

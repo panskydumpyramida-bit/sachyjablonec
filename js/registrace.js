@@ -71,12 +71,70 @@
             const res = await fetch(`${API}/registrations/form/${encodeURIComponent(token)}`);
             if (res.status === 410) return showInvalid('Tato žádost už byla odeslána — odkaz je jednorázový.');
             if (!res.ok) return showInvalid();
+            const info = await res.json().catch(() => ({}));
+            if (info.prefill) {
+                if (info.prefill.firstName) form.firstName.value = info.prefill.firstName;
+                if (info.prefill.lastName) form.lastName.value = info.prefill.lastName;
+            }
             form.style.display = 'block';
+            document.getElementById('paperPreviewWrap').style.display = 'block';
             resizeCanvas();
+            updatePaper();
         } catch (e) {
             showInvalid('Server je nedostupný, zkuste to prosím později.');
         }
     })();
+
+    // ---- cizinec bez RČ ----
+    const foreignerCheck = document.getElementById('foreignerCheck');
+    foreignerCheck.addEventListener('change', () => {
+        const isF = foreignerCheck.checked;
+        document.getElementById('rcField').style.display = isF ? 'none' : '';
+        if (isF) form.birthNumber.value = '';
+        form.birthDate.required = isF;
+        form.birthCountry.required = isF;
+        form.citizenship.required = isF;
+        document.getElementById('birthDateReq').textContent = isF ? '*' : '(povinné u cizinců)';
+        updatePaper();
+    });
+
+    // ---- živý náhled „papíru" ----
+    const czDate = (iso) => {
+        if (!iso) return '';
+        const [yy, mm, dd] = iso.split('-');
+        return dd ? `${parseInt(dd)}. ${parseInt(mm)}. ${yy}` : iso;
+    };
+    function updatePaper() {
+        const v = (n) => (form[n] ? form[n].value.trim() : '');
+        document.querySelectorAll('#paperPreview [data-pp]').forEach(el => {
+            const spec = el.getAttribute('data-pp');
+            let out = '';
+            if (spec === 'middleName+title') out = [v('middleName'), v('title')].filter(Boolean).join(', ');
+            else if (spec === 'birthNumber|birthDateCz') out = v('birthNumber') || czDate(v('birthDate'));
+            else out = v(spec);
+            el.textContent = out || '\u00A0';
+        });
+        document.getElementById('ppRegYear').textContent = form.registerThisYear.checked ? '☒' : '☐';
+        document.getElementById('ppDate').textContent = new Date().toLocaleDateString('cs-CZ');
+    }
+    form.addEventListener('input', updatePaper);
+    form.addEventListener('change', updatePaper);
+
+    // podpis do náhledu po dokreslení
+    const syncSigPreview = () => {
+        if (!hasSignature) return;
+        const box = document.getElementById('ppSig');
+        box.innerHTML = '';
+        const img = new Image();
+        img.src = canvas.toDataURL('image/png');
+        img.style.cssText = 'max-height:44px; max-width:100%;';
+        box.appendChild(img);
+    };
+    canvas.addEventListener('mouseup', syncSigPreview);
+    canvas.addEventListener('touchend', syncSigPreview);
+    document.getElementById('sigClear').addEventListener('click', () => {
+        document.getElementById('ppSig').innerHTML = '<span style="color:#bbb; font-size:0.7rem;">— podpis se doplní z podpisového pole —</span>';
+    });
 
     // ---- odeslání ----
     form.addEventListener('submit', async (e) => {

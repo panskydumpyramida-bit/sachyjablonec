@@ -81,6 +81,33 @@ router.delete('/:id(\\d+)', authMiddleware, requireMember, async (req, res) => {
     }
 });
 
+// Poslat odkaz hráči e-mailem
+router.post('/:id(\\d+)/send', authMiddleware, requireMember, async (req, res) => {
+    try {
+        const email = String(req.body?.email || '').trim();
+        if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return res.status(400).json({ error: 'Neplatný e-mail' });
+        const t = await prisma.memberTransfer.findUnique({ where: { id: parseInt(req.params.id) } });
+        if (!t) return res.status(404).json({ error: 'Přestup nenalezen' });
+        const url = `${FRONTEND}/prestup.html?t=${t.token}`;
+        const sent = await sendEmail(
+            email,
+            'Přestup do šachového oddílu TJ Bižuterie Jablonec',
+            `<p>Dobrý den,</p>
+             <p>posíláme odkaz na online ohlášení přestupu do oddílu
+             <strong>TJ Bižuterie Jablonec nad Nisou</strong>. Vyplníte ho za pár minut,
+             podepíšete přímo na obrazovce a dál vás povede krok za krokem:</p>
+             <p style="margin:1.5em 0;"><a href="${url}" style="background:#d4af37;color:#1a1a1a;font-weight:bold;padding:12px 24px;border-radius:8px;text-decoration:none;">Vyplnit ohlášení přestupu</a></p>
+             <p>Nebo použijte odkaz: <a href="${url}">${url}</a></p>
+             <p>Na viděnou u šachovnice!<br>Šachový oddíl TJ Bižuterie Jablonec</p>`
+        );
+        if (!sent) return res.status(502).json({ error: 'E-mail se nepodařilo odeslat (mailer není nakonfigurován)' });
+        res.json({ ok: true });
+    } catch (e) {
+        console.error('[Transfers] send error:', e);
+        res.status(500).json({ error: 'Odeslání se nepodařilo' });
+    }
+});
+
 // ---- VEŘEJNÁ ČÁST (token) ----
 
 // Stav odkazu → frontend zvolí fázi
