@@ -145,12 +145,12 @@ export async function generateRegistrationPdf(d) {
 
     // Razítko a podpis oddílu + podpis hráče
     text('Razítko', 0, y + 10); text('a podpis', 0, y + 20); text('oddílu', 0, y + 30);
-    rrect(48, y, 200, 62, 10);
+    rrect(48, y, 200, 66, 10);
     const stamp = await pdf.embedPng(fs.readFileSync(path.join(ASSETS, 'razitko-oficialni.png')));
-    const stW = 145;
+    const stW = 180; // 60×20 mm razítko přes celý rámeček
     const stH = stW * (stamp.height / stamp.width);
-    page.drawImage(stamp, { x: M + 48 + (200 - stW) / 2, y: Y(y + 6 + stH), width: stW, height: stH });
-    text('Antonín Duda v. r.', 48 + 68, y + 71, { size: 7 });
+    page.drawImage(stamp, { x: M + 48 + (200 - stW) / 2, y: Y(y + 3 + stH), width: stW, height: stH });
+    text('Antonín Duda v. r.', 48 + 68, y + 76, { size: 7 });
 
     // podpis hráče (obrázek nad čarou)
     if (d.signaturePng) {
