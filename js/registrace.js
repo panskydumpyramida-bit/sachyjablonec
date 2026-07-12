@@ -45,7 +45,12 @@
         const p = e.touches ? e.touches[0] : e;
         return { x: p.clientX - r.left, y: p.clientY - r.top };
     };
-    const start = (e) => { e.preventDefault(); drawing = true; const { x, y } = pos(e); ctx.beginPath(); ctx.moveTo(x, y); };
+    const start = (e) => {
+        e.preventDefault();
+        // canvas inicializovaný ve skrytém tabu má 0×0 — před kresbou dorovnej rozměry
+        if (canvas.width === 0 || canvas.height === 0) resizeCanvas();
+        drawing = true; const { x, y } = pos(e); ctx.beginPath(); ctx.moveTo(x, y);
+    };
     const move = (e) => { if (!drawing) return; e.preventDefault(); const { x, y } = pos(e); ctx.lineTo(x, y); ctx.stroke(); hasSignature = true; };
     const end = () => { drawing = false; };
 
@@ -63,6 +68,7 @@
     });
 
     window.addEventListener('resize', resizeCanvas);
+    document.addEventListener('visibilitychange', () => { if (!document.hidden && canvas.width === 0) resizeCanvas(); });
 
     // ---- validace odkazu ----
     (async () => {
