@@ -2058,6 +2058,13 @@ function campFormatSeconds(milliseconds) {
     return `${(milliseconds / 1000).toFixed(milliseconds < 10000 ? 1 : 0)} s`;
 }
 
+function renderCampMotivationalBadges(badges = [], limit = 3) {
+    if (!badges.length) return '';
+    return `<span class="camp-motivation-badges">${badges.slice(0, limit).map(badge => `
+        <span class="camp-motivation-badge" title="${escapeHtml(badge.description)}"><b>${escapeHtml(badge.icon)}</b>${escapeHtml(badge.name)}</span>
+    `).join('')}</span>`;
+}
+
 function renderPuzzleCampLeaderboard(data) {
     puzzleCampLeaderboardData = data;
     const section = document.getElementById('campLeaderboardSection');
@@ -2075,14 +2082,15 @@ function renderPuzzleCampLeaderboard(data) {
         <div class="camp-podium-card">
             <span class="camp-podium-card__rank">${medals[index]}</span>
             <strong>${escapeHtml(player.playerName)}</strong>
-            <span>${player.level.icon} ${escapeHtml(player.level.name)} · ${player.score} bodů · ${player.correctCount} úloh</span>
+            <span class="camp-podium-card__meta">${player.level.icon} ${escapeHtml(player.level.name)} · ${player.score} bodů · ${player.correctCount} úloh</span>
+            ${renderCampMotivationalBadges(player.badges, 2)}
         </div>
     `).join('') || '<div class="camp-matrix-empty" style="grid-column:1/-1">První body teprve čekají na svého majitele.</div>';
 
     standingsBody.innerHTML = data.standings.map(player => `
         <tr class="${player.userId === loggedInUser?.id ? 'is-current-player' : ''}">
             <td>${player.rank}</td>
-            <td>${escapeHtml(player.playerName)}${player.userId === loggedInUser?.id ? ' · vy' : ''}<small class="camp-level-tag">${player.level.icon} ${escapeHtml(player.level.name)}</small></td>
+            <td>${escapeHtml(player.playerName)}${player.userId === loggedInUser?.id ? ' · vy' : ''}<small class="camp-level-tag">${player.level.icon} ${escapeHtml(player.level.name)}</small>${renderCampMotivationalBadges(player.badges)}</td>
             <td><strong>${player.score}</strong></td>
             <td>${player.correctCount}</td>
             <td>${player.attendance}×</td>

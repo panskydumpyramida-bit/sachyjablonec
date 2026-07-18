@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+    buildCampMotivationalBadges,
     buildDifficultyPlan,
     calculateAttemptSummary,
     calculatePuzzlePoints,
@@ -87,5 +88,16 @@ describe('Pardubice 2026 puzzle camp service', () => {
             durationMs: 100000,
             puzzleCount: 40
         }).map(item => item.code)).toEqual(['clean', 'combo10', 'engine', 'flash', 'finisher']);
+    });
+
+    it('gives inclusive motivational badges for progress, persistence and first participation', () => {
+        const badges = buildCampMotivationalBadges([
+            { userId: 1, startsAt: '2026-07-13', score: 100, correctCount: 2, puzzleCount: 10, sessionPuzzleCount: 10 },
+            { userId: 1, startsAt: '2026-07-14', score: 400, correctCount: 6, puzzleCount: 10, sessionPuzzleCount: 10 },
+            { userId: 2, startsAt: '2026-07-14', score: 50, correctCount: 2, puzzleCount: 10, sessionPuzzleCount: 10 }
+        ]);
+
+        expect(badges[1].map(item => item.code)).toEqual(['regular', 'jumper', 'personal-best']);
+        expect(badges[2].map(item => item.code)).toEqual(['first-step', 'fighter']);
     });
 });

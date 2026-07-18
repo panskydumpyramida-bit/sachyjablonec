@@ -1239,6 +1239,29 @@
                     </div>
                 </div>
             </div>
+
+            <section class="camp-racer-history" aria-labelledby="prCampHistoryHeading">
+                <div class="camp-racer-history__header">
+                    <div>
+                        <span class="camp-racer-admin__eyebrow"><i class="fa-solid fa-clock-rotate-left"></i> Archiv rozcviček</span>
+                        <h3 id="prCampHistoryHeading">Všechny dny a všichni hráči</h3>
+                        <p>Vyberte den a rozbalte hráče. Uvidíte skóre, odznaky i každou jednotlivou úlohu.</p>
+                    </div>
+                    <label class="camp-racer-history__picker" for="prCampHistorySelect">
+                        <span>Den rozcvičky</span>
+                        <select id="prCampHistorySelect" onchange="selectPuzzleCampHistory(this.value)"></select>
+                    </label>
+                </div>
+                <div id="prCampHistorySummary" class="camp-racer-history__summary">
+                    <div><strong>–</strong><span>účastníků</span></div>
+                    <div><strong>–</strong><span>průměrně vyřešeno</span></div>
+                    <div><strong>–</strong><span>úloh v sadě</span></div>
+                    <div><strong>–</strong><span>nejvyšší skóre</span></div>
+                </div>
+                <div id="prCampHistoryPlayers" class="camp-racer-history__players">
+                    <div class="camp-racer-empty"><i class="fa-solid fa-list-check"></i><span>Vyberte rozcvičku pro zobrazení detailu.</span></div>
+                </div>
+            </section>
         </div>
 
         <div class="card">

@@ -1988,6 +1988,133 @@ input:checked+.slider:before {
     padding: 0.55rem 0.8rem;
 }
 
+.camp-racer-history {
+    margin-top: 1.25rem;
+    padding: 1.15rem;
+    border: 1px solid rgba(148, 163, 184, 0.14);
+    border-radius: 16px;
+    background: rgba(2, 8, 23, 0.5);
+}
+
+.camp-racer-history__header {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 1rem;
+}
+
+.camp-racer-history__header h3 { margin: 0.55rem 0 0.25rem; color: #fff; }
+.camp-racer-history__header p { margin: 0; color: #94a3b8; font-size: 0.78rem; }
+
+.camp-racer-history__picker {
+    display: grid;
+    min-width: min(330px, 100%);
+    gap: 0.35rem;
+    color: #94a3b8;
+    font-size: 0.68rem;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+
+.camp-racer-history__picker select {
+    min-height: 44px;
+    padding: 0.65rem 2.2rem 0.65rem 0.8rem;
+    border: 1px solid rgba(245, 184, 65, 0.3);
+    border-radius: 10px;
+    color: #f8fafc;
+    background: #111b2b;
+    font: inherit;
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: normal;
+    text-transform: none;
+}
+
+.camp-racer-history__summary {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.6rem;
+    margin: 1rem 0 0.8rem;
+}
+
+.camp-racer-history__summary > div {
+    padding: 0.72rem;
+    border: 1px solid rgba(148, 163, 184, 0.12);
+    border-radius: 11px;
+    background: rgba(15, 23, 42, 0.62);
+}
+
+.camp-racer-history__summary strong,
+.camp-racer-history__summary span { display: block; }
+.camp-racer-history__summary strong { color: #f8cc6a; font-size: 1.05rem; }
+.camp-racer-history__summary span { margin-top: 0.15rem; color: #8494a8; font-size: 0.62rem; text-transform: uppercase; }
+
+.camp-racer-history__players { display: grid; gap: 0.45rem; }
+.camp-racer-history__players[aria-busy="true"] { opacity: 0.6; }
+
+.camp-racer-history-player {
+    overflow: hidden;
+    border: 1px solid rgba(148, 163, 184, 0.13);
+    border-radius: 12px;
+    background: rgba(15, 23, 42, 0.48);
+}
+
+.camp-racer-history-player summary {
+    display: grid;
+    grid-template-columns: 32px minmax(0, 1fr) 72px 78px 18px;
+    align-items: center;
+    gap: 0.65rem;
+    min-height: 58px;
+    padding: 0.6rem 0.75rem;
+    cursor: pointer;
+    list-style: none;
+}
+
+.camp-racer-history-player summary::-webkit-details-marker { display: none; }
+.camp-racer-history-player summary:hover { background: rgba(245, 184, 65, 0.045); }
+.camp-racer-history-player summary > i { color: #64748b; transition: transform 0.18s ease; }
+.camp-racer-history-player[open] summary > i { color: #f8cc6a; transform: rotate(180deg); }
+.camp-racer-history-player__rank { color: #f8cc6a; font-weight: 850; text-align: center; }
+.camp-racer-history-player__name { min-width: 0; }
+.camp-racer-history-player__name > strong { display: block; overflow: hidden; color: #f8fafc; font-size: 0.82rem; text-overflow: ellipsis; white-space: nowrap; }
+.camp-racer-history-player__metric { text-align: right; }
+.camp-racer-history-player__metric strong,
+.camp-racer-history-player__metric small { display: block; }
+.camp-racer-history-player__metric strong { color: #e2e8f0; font-size: 0.8rem; }
+.camp-racer-history-player__metric small { color: #64748b; font-size: 0.56rem; text-transform: uppercase; }
+
+.camp-racer-badges { display: flex; flex-wrap: wrap; gap: 0.25rem; margin-top: 0.28rem; }
+.camp-racer-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.2rem;
+    padding: 0.2rem 0.38rem;
+    border: 1px solid rgba(245, 184, 65, 0.2);
+    border-radius: 999px;
+    color: #f9e5ac;
+    background: rgba(245, 184, 65, 0.08);
+    font-size: 0.56rem;
+    font-weight: 750;
+}
+.camp-racer-badge b { font-size: 0.7rem; }
+.camp-racer-no-badge { display: block; margin-top: 0.25rem; color: #64748b; font-size: 0.58rem; }
+
+.camp-racer-history-player__detail { padding: 0.8rem; border-top: 1px solid rgba(148, 163, 184, 0.1); background: rgba(2, 8, 23, 0.35); }
+.camp-racer-history-player__stats { display: flex; flex-wrap: wrap; gap: 0.45rem; margin-bottom: 0.7rem; }
+.camp-racer-history-player__stats span { padding: 0.32rem 0.5rem; border-radius: 7px; color: #94a3b8; background: rgba(148, 163, 184, 0.07); font-size: 0.64rem; }
+.camp-racer-history-player__stats b { color: #e2e8f0; }
+.camp-racer-puzzles { display: grid; grid-template-columns: repeat(auto-fill, minmax(68px, 1fr)); gap: 0.38rem; }
+.camp-racer-puzzle { display: grid; min-height: 46px; align-content: center; padding: 0.34rem 0.42rem; border: 1px solid transparent; border-radius: 8px; }
+.camp-racer-puzzle b,
+.camp-racer-puzzle small { display: block; }
+.camp-racer-puzzle b { font-size: 0.63rem; }
+.camp-racer-puzzle small { overflow: hidden; margin-top: 0.1rem; font-size: 0.56rem; text-overflow: ellipsis; white-space: nowrap; }
+.camp-racer-puzzle--correct { border-color: rgba(74, 222, 128, 0.2); color: #86efac; background: rgba(74, 222, 128, 0.09); }
+.camp-racer-puzzle--wrong { border-color: rgba(248, 113, 113, 0.18); color: #fca5a5; background: rgba(248, 113, 113, 0.08); }
+.camp-racer-puzzle--skipped { border-color: rgba(251, 146, 60, 0.18); color: #fdba74; background: rgba(251, 146, 60, 0.08); }
+.camp-racer-puzzle--empty { color: #64748b; background: rgba(71, 85, 105, 0.08); }
+
 @media (max-width: 1050px) {
     .camp-racer-admin__grid { grid-template-columns: 1fr; }
 }
@@ -2002,6 +2129,13 @@ input:checked+.slider:before {
     .camp-racer-admin { padding: 1rem; }
     .camp-racer-actions > button { flex: 1 1 120px; }
     .camp-racer-actions .btn-danger { margin-left: 0; }
+    .camp-racer-history { padding: 0.8rem; }
+    .camp-racer-history__header { align-items: stretch; flex-direction: column; }
+    .camp-racer-history__picker { width: 100%; min-width: 0; }
+    .camp-racer-history__summary { grid-template-columns: repeat(2, 1fr); }
+    .camp-racer-history-player summary { grid-template-columns: 26px minmax(0, 1fr) 60px 16px; gap: 0.45rem; min-height: 62px; padding-inline: 0.55rem; }
+    .camp-racer-history-player__metric:nth-of-type(4) { display: none; }
+    .camp-racer-puzzles { grid-template-columns: repeat(auto-fill, minmax(62px, 1fr)); }
 }
 .settings-grid {
     display: grid;

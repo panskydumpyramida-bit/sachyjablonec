@@ -5,6 +5,7 @@ import { authMiddleware, requireRole } from '../middleware/auth.js';
 import {
     CAMP_CODE,
     buildDifficultyPlan,
+    buildCampMotivationalBadges,
     calculateAttemptSummary,
     calculatePuzzlePoints,
     getCampAchievements,
@@ -829,9 +830,8 @@ router.get('/camp/admin', requireRole('ADMIN'), async (req, res) => {
     try {
         const now = new Date();
         const sessions = await prisma.puzzleCampSession.findMany({
-            where: { campCode: CAMP_CODE },
+            where: { campCode: CAMP_CODE, status: { not: 'cancelled' } },
             orderBy: { startsAt: 'desc' },
-            take: 12,
             include: { _count: { select: { attempts: true } } }
         });
         res.json({
@@ -1061,10 +1061,19 @@ router.get('/camp/leaderboard', authMiddleware, async (req, res) => {
             || null;
 
         const standingsByUser = new Map();
+        const badgeAttempts = [];
         for (const session of sessions) {
             const ranked = [...session.attempts].sort((a, b) => b.score - a.score || b.correctCount - a.correctCount || a.durationMs - b.durationMs);
             ranked.forEach((attempt, index) => {
                 if (attempt.puzzleResults.length === 0) return;
+                badgeAttempts.push({
+                    userId: attempt.userId,
+                    startsAt: session.startsAt,
+                    score: attempt.score,
+                    correctCount: attempt.correctCount,
+                    puzzleCount: attempt.puzzleCount || attempt.puzzleResults.length,
+                    sessionPuzzleCount: session.puzzleCount
+                });
                 const row = standingsByUser.get(attempt.userId) || {
                     userId: attempt.userId,
                     playerName: campDisplayName(attempt.user),
@@ -1089,9 +1098,16 @@ router.get('/camp/leaderboard', authMiddleware, async (req, res) => {
             });
         }
 
+        const motivationalBadges = buildCampMotivationalBadges(badgeAttempts);
+
         const standings = [...standingsByUser.values()]
             .sort((a, b) => b.score - a.score || b.correctCount - a.correctCount || a.durationMs - b.durationMs)
-            .map((row, index) => ({ ...row, rank: index + 1, level: getCampLevel(row.score) }));
+            .map((row, index) => ({
+                ...row,
+                rank: index + 1,
+                level: getCampLevel(row.score),
+                badges: motivationalBadges[row.userId] || []
+            }));
 
         let sessionDetail = null;
         if (selected) {
@@ -1109,6 +1125,11 @@ router.get('/camp/leaderboard', authMiddleware, async (req, res) => {
                     wrongCount: attempt.wrongCount,
                     skippedCount: attempt.skippedCount,
                     maxStreak: attempt.maxStreak,
+                    durationMs: attempt.durationMs,
+                    badges: [
+                        ...getCampAchievements(attempt),
+                        ...(motivationalBadges[attempt.userId] || [])
+                    ],
                     cells: attempt.puzzleResults.map(result => ({
                         puzzleIndex: result.puzzleIndex,
                         correct: result.correct,

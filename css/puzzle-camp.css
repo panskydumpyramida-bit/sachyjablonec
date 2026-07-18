@@ -348,7 +348,30 @@ body.camp-mode-active #gameOverScreen {
 
 .camp-podium-card__rank { color: #f2c552; font-size: 1.3rem; }
 .camp-podium-card strong { display: block; margin-top: 0.3rem; color: #fff; }
-.camp-podium-card span:last-child { display: block; margin-top: 0.2rem; color: #94a3b8; font-size: 0.72rem; }
+.camp-podium-card__meta { display: block; margin-top: 0.2rem; color: #94a3b8; font-size: 0.72rem; }
+
+.camp-motivation-badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem;
+    margin-top: 0.35rem;
+}
+
+.camp-motivation-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.2rem;
+    padding: 0.2rem 0.4rem;
+    border: 1px solid rgba(242, 197, 82, 0.22);
+    border-radius: 999px;
+    color: #f8e7b5;
+    background: rgba(242, 197, 82, 0.08);
+    font-size: 0.56rem;
+    font-weight: 750;
+    line-height: 1.2;
+}
+
+.camp-motivation-badge b { font-size: 0.7rem; }
 
 .camp-leaderboard__toolbar,
 .camp-matrix-card__heading {

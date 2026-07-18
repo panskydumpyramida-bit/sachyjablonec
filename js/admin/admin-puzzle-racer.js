@@ -207,6 +207,8 @@ let activePuzzleCampSession = null;
 let puzzleCampServerOffset = 0;
 let puzzleCampClockTimer = null;
 let puzzleCampPollTimer = null;
+let selectedPuzzleCampHistoryId = null;
+let loadedPuzzleCampHistoryId = null;
 
 function campAdminEscape(value) {
     const div = document.createElement('div');
@@ -225,6 +227,130 @@ function formatCampCountdown(milliseconds) {
     const minutes = Math.floor(totalSeconds / 60);
     const seconds = totalSeconds % 60;
     return `${minutes}:${String(seconds).padStart(2, '0')}`;
+}
+
+function formatCampAdminDuration(milliseconds) {
+    const seconds = Math.max(0, Math.round((Number(milliseconds) || 0) / 1000));
+    const minutes = Math.floor(seconds / 60);
+    return minutes ? `${minutes}:${String(seconds % 60).padStart(2, '0')}` : `${seconds} s`;
+}
+
+function formatCampAdminDate(value) {
+    return new Date(value).toLocaleDateString('cs-CZ', { weekday: 'short', day: 'numeric', month: 'numeric' });
+}
+
+function renderCampAdminBadges(badges = []) {
+    if (!badges.length) return '<span class="camp-racer-no-badge">Zatím bez odznaku</span>';
+    return `<span class="camp-racer-badges">${badges.map(badge => `
+        <span class="camp-racer-badge" title="${campAdminEscape(badge.description)}"><b>${campAdminEscape(badge.icon)}</b>${campAdminEscape(badge.name)}</span>
+    `).join('')}</span>`;
+}
+
+function renderPuzzleCampHistorySelector(sessions = []) {
+    const select = document.getElementById('prCampHistorySelect');
+    if (!select) return;
+    if (!sessions.length) {
+        selectedPuzzleCampHistoryId = null;
+        select.innerHTML = '<option value="">Zatím žádná rozcvička</option>';
+        select.disabled = true;
+        return;
+    }
+
+    select.disabled = false;
+    if (!sessions.some(session => session.id === selectedPuzzleCampHistoryId)) {
+        selectedPuzzleCampHistoryId = sessions[0].id;
+    }
+    const labels = { scheduled: 'čeká', live: 'živě', finished: 'hotovo' };
+    select.innerHTML = sessions.map(session => `
+        <option value="${session.id}" ${session.id === selectedPuzzleCampHistoryId ? 'selected' : ''}>
+            ${formatCampAdminDate(session.startsAt)} · ${campAdminEscape(session.title)} · ${labels[session.status] || session.status}
+        </option>
+    `).join('');
+}
+
+function renderPuzzleCampHistory(detail) {
+    const summary = document.getElementById('prCampHistorySummary');
+    const players = document.getElementById('prCampHistoryPlayers');
+    if (!summary || !players) return;
+    if (!detail) {
+        summary.innerHTML = '<div><strong>–</strong><span>účastníků</span></div><div><strong>–</strong><span>průměrně vyřešeno</span></div><div><strong>–</strong><span>úloh v sadě</span></div><div><strong>–</strong><span>nejvyšší skóre</span></div>';
+        players.innerHTML = '<div class="camp-racer-empty"><i class="fa-solid fa-list-check"></i><span>Pro tento den zatím nejsou dostupná data.</span></div>';
+        return;
+    }
+
+    const participants = detail.participants || [];
+    const puzzleCount = detail.puzzles?.length || detail.session?.puzzleCount || 0;
+    const averageCorrect = participants.length
+        ? (participants.reduce((sum, player) => sum + player.correctCount, 0) / participants.length).toFixed(1).replace('.0', '')
+        : '0';
+    const bestScore = participants.length ? Math.max(...participants.map(player => player.score)) : 0;
+    summary.innerHTML = `
+        <div><strong>${participants.length}</strong><span>účastníků</span></div>
+        <div><strong>${averageCorrect}</strong><span>průměrně vyřešeno</span></div>
+        <div><strong>${puzzleCount}</strong><span>úloh v sadě</span></div>
+        <div><strong>${bestScore}</strong><span>nejvyšší skóre</span></div>
+    `;
+
+    if (!participants.length) {
+        players.innerHTML = '<div class="camp-racer-empty"><i class="fa-solid fa-user-clock"></i><span>Do této rozcvičky se nikdo nepřipojil.</span></div>';
+        return;
+    }
+
+    players.innerHTML = participants.map(player => {
+        const cellsByIndex = new Map((player.cells || []).map(cell => [cell.puzzleIndex, cell]));
+        const puzzleCells = detail.puzzles.map(puzzle => {
+            const cell = cellsByIndex.get(puzzle.index);
+            if (!cell) return `<span class="camp-racer-puzzle camp-racer-puzzle--empty" title="Úloha ${puzzle.index + 1} · bez pokusu"><b>${puzzle.index + 1}</b><small>—</small></span>`;
+            const state = cell.correct ? 'correct' : cell.skipped ? 'skipped' : 'wrong';
+            const value = cell.correct ? formatCampAdminDuration(cell.responseMs) : cell.skipped ? 'přeskočeno' : 'chyba';
+            const detailText = `${cell.wrongAttempts || 0} chyb · ${cell.points || 0} bodů`;
+            return `<span class="camp-racer-puzzle camp-racer-puzzle--${state}" title="Úloha ${puzzle.index + 1} · ${value} · ${detailText}"><b>${puzzle.index + 1}</b><small>${value}</small></span>`;
+        }).join('');
+
+        return `
+            <details class="camp-racer-history-player">
+                <summary>
+                    <span class="camp-racer-history-player__rank">${player.rank}.</span>
+                    <span class="camp-racer-history-player__name"><strong>${campAdminEscape(player.playerName)}</strong>${renderCampAdminBadges(player.badges)}</span>
+                    <span class="camp-racer-history-player__metric"><strong>${player.score}</strong><small>bodů</small></span>
+                    <span class="camp-racer-history-player__metric"><strong>${player.correctCount}/${puzzleCount}</strong><small>vyřešeno</small></span>
+                    <i class="fa-solid fa-chevron-down"></i>
+                </summary>
+                <div class="camp-racer-history-player__detail">
+                    <div class="camp-racer-history-player__stats">
+                        <span><b>${player.wrongCount}</b> chybné tahy</span>
+                        <span><b>${player.skippedCount}</b> přeskočeno</span>
+                        <span><b>${player.maxStreak}</b> nejdelší série</span>
+                        <span><b>${formatCampAdminDuration(player.durationMs)}</b> čas v úlohách</span>
+                    </div>
+                    <div class="camp-racer-puzzles">${puzzleCells}</div>
+                </div>
+            </details>
+        `;
+    }).join('');
+}
+
+async function loadPuzzleCampHistory(sessionId) {
+    if (!sessionId) return renderPuzzleCampHistory(null);
+    const players = document.getElementById('prCampHistoryPlayers');
+    if (players) players.setAttribute('aria-busy', 'true');
+    try {
+        const res = await fetch(`${API_URL}/racer/camp/leaderboard?sessionId=${sessionId}`, { headers: campAdminTokenHeaders() });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+        loadedPuzzleCampHistoryId = Number(sessionId);
+        renderPuzzleCampHistory(data.sessionDetail);
+    } catch (error) {
+        console.error('Camp history load error:', error);
+        renderPuzzleCampHistory(null);
+    } finally {
+        if (players) players.setAttribute('aria-busy', 'false');
+    }
+}
+
+function selectPuzzleCampHistory(value) {
+    selectedPuzzleCampHistoryId = Number.parseInt(value, 10) || null;
+    return loadPuzzleCampHistory(selectedPuzzleCampHistoryId);
 }
 
 function renderPuzzleCampClock() {
@@ -338,9 +464,16 @@ async function loadPuzzleCampAdmin(scheduleNext = true) {
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data = await res.json();
         puzzleCampServerOffset = new Date(data.serverTime).getTime() - Date.now();
+        renderPuzzleCampHistorySelector(data.sessions);
         const session = data.sessions.find(item => ['scheduled', 'live'].includes(item.status)) || data.sessions[0] || null;
+        const selectedHistory = data.sessions.find(item => item.id === selectedPuzzleCampHistoryId);
+        const shouldRefreshHistory = loadedPuzzleCampHistoryId !== selectedPuzzleCampHistoryId
+            || ['scheduled', 'live'].includes(selectedHistory?.status);
         renderPuzzleCampStatus(session, session?.participantCount || 0);
-        await loadPuzzleCampLeaderboard(session?.id);
+        await Promise.all([
+            loadPuzzleCampLeaderboard(session?.id),
+            shouldRefreshHistory ? loadPuzzleCampHistory(selectedPuzzleCampHistoryId) : Promise.resolve()
+        ]);
 
         clearInterval(puzzleCampClockTimer);
         puzzleCampClockTimer = setInterval(renderPuzzleCampClock, 250);
@@ -438,3 +571,4 @@ window.createPuzzleCampSession = createPuzzleCampSession;
 window.startPuzzleCampNow = startPuzzleCampNow;
 window.finishPuzzleCampNow = finishPuzzleCampNow;
 window.cancelPuzzleCampSession = cancelPuzzleCampSession;
+window.selectPuzzleCampHistory = selectPuzzleCampHistory;

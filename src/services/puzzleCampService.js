@@ -90,6 +90,63 @@ export function getCampAchievements(attempt = {}) {
     return achievements;
 }
 
+export function buildCampMotivationalBadges(attempts = []) {
+    const histories = new Map();
+    for (const attempt of attempts) {
+        const userId = Number(attempt.userId);
+        const sessionPuzzleCount = Math.max(1, Number(attempt.sessionPuzzleCount) || Number(attempt.puzzleCount) || 1);
+        if (!userId || Number(attempt.puzzleCount) <= 0) continue;
+        const history = histories.get(userId) || [];
+        history.push({
+            ...attempt,
+            sessionPuzzleCount,
+            accuracy: Math.max(0, Number(attempt.correctCount) || 0) / sessionPuzzleCount,
+            scoreRate: Math.max(0, Number(attempt.score) || 0) / sessionPuzzleCount,
+            completionRate: Math.max(0, Number(attempt.puzzleCount) || 0) / sessionPuzzleCount
+        });
+        histories.set(userId, history);
+    }
+
+    histories.forEach(history => history.sort((a, b) => new Date(a.startsAt) - new Date(b.startsAt)));
+    const maxAttendance = Math.max(0, ...[...histories.values()].map(history => history.length));
+    const improvements = new Map();
+    let bestImprovement = 0;
+    histories.forEach((history, userId) => {
+        if (history.length < 2) return;
+        const improvement = history.at(-1).accuracy - history.at(-2).accuracy;
+        improvements.set(userId, improvement);
+        bestImprovement = Math.max(bestImprovement, improvement);
+    });
+
+    const badgesByUser = {};
+    histories.forEach((history, userId) => {
+        const latest = history.at(-1);
+        const badges = [];
+        if (history.length === 1) {
+            badges.push({ code: 'first-step', icon: '🌱', name: 'První krok', description: 'První společná rozcvička je za vámi' });
+        }
+        if (history.length >= 2 && history.length === maxAttendance) {
+            badges.push({ code: 'regular', icon: '🧭', name: 'Vytrvalec', description: 'Patří mezi nejpravidelnější účastníky týdne' });
+        }
+        const improvement = improvements.get(userId) || 0;
+        if (bestImprovement >= 0.05 && Math.abs(improvement - bestImprovement) < 0.0001) {
+            badges.push({ code: 'jumper', icon: '🚀', name: 'Skokan týdne', description: 'Největší zlepšení úspěšnosti proti předchozí rozcvičce' });
+        }
+        if (latest.completionRate >= 0.8 && latest.accuracy < 0.5) {
+            badges.push({ code: 'fighter', icon: '💪', name: 'Nevzdává se', description: 'Dokončil většinu sady i přes těžké pozice' });
+        }
+        if (history.length >= 2) {
+            const previousBest = Math.max(...history.slice(0, -1).map(attempt => attempt.scoreRate));
+            if (latest.scoreRate > previousBest) {
+                badges.push({ code: 'personal-best', icon: '✨', name: 'Osobák', description: 'Nejlepší bodový výkon v dosavadních rozcvičkách' });
+            }
+        }
+        badgesByUser[userId] = badges;
+    });
+
+    return badgesByUser;
+}
+
 export function calculatePuzzlePoints({ correct, skipped, responseMs, wrongAttempts }) {
     if (!correct || skipped) return 0;
     const safeResponse = clampInt(responseMs, 0, 0, 900000);
