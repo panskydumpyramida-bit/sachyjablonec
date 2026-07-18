@@ -1699,6 +1699,288 @@ input:checked+.slider:before {
 }
 
 /* Puzzle Racer Admin Styles */
+
+.camp-racer-admin {
+    position: relative;
+    overflow: hidden;
+    margin-bottom: 1.5rem;
+    border: 1px solid rgba(245, 184, 65, 0.28);
+    background:
+        radial-gradient(circle at 90% -10%, rgba(245, 184, 65, 0.2), transparent 32%),
+        linear-gradient(145deg, rgba(18, 29, 44, 0.98), rgba(10, 18, 30, 0.98));
+}
+
+.camp-racer-admin::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0.035;
+    background-size: 32px 32px;
+    background-image:
+        linear-gradient(45deg, #fff 25%, transparent 25%, transparent 75%, #fff 75%),
+        linear-gradient(45deg, #fff 25%, transparent 25%, transparent 75%, #fff 75%);
+    background-position: 0 0, 16px 16px;
+}
+
+.camp-racer-admin > * {
+    position: relative;
+    z-index: 1;
+}
+
+.camp-racer-admin__header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 1.25rem;
+}
+
+.camp-racer-admin__eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.28rem 0.65rem;
+    border-radius: 999px;
+    color: #f8cc6a;
+    background: rgba(245, 184, 65, 0.12);
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.camp-racer-admin__header h2 {
+    margin: 0.55rem 0 0.3rem;
+    color: #fff;
+}
+
+.camp-racer-admin__header p {
+    margin: 0;
+    color: var(--text-muted);
+}
+
+.camp-racer-status {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    margin-bottom: 1.25rem;
+    padding: 0.9rem 1rem;
+    border: 1px solid rgba(148, 163, 184, 0.18);
+    border-radius: 14px;
+    background: rgba(15, 23, 42, 0.64);
+}
+
+.camp-racer-status__icon {
+    display: grid;
+    width: 42px;
+    height: 42px;
+    flex: 0 0 42px;
+    place-items: center;
+    border-radius: 12px;
+    color: #f8cc6a;
+    background: rgba(245, 184, 65, 0.12);
+}
+
+.camp-racer-status strong,
+.camp-racer-status span {
+    display: block;
+}
+
+.camp-racer-status span {
+    margin-top: 0.15rem;
+    color: var(--text-muted);
+    font-size: 0.85rem;
+}
+
+.camp-racer-status--scheduled { border-color: rgba(59, 130, 246, 0.42); }
+.camp-racer-status--scheduled .camp-racer-status__icon { color: #60a5fa; background: rgba(59, 130, 246, 0.16); }
+.camp-racer-status--live { border-color: rgba(74, 222, 128, 0.5); box-shadow: 0 0 24px rgba(74, 222, 128, 0.08); }
+.camp-racer-status--live .camp-racer-status__icon { color: #4ade80; background: rgba(74, 222, 128, 0.15); }
+.camp-racer-status--finished .camp-racer-status__icon { color: #c4b5fd; background: rgba(139, 92, 246, 0.15); }
+
+.camp-racer-admin__grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.15fr) minmax(320px, 0.85fr);
+    gap: 1.2rem;
+}
+
+.camp-racer-builder,
+.camp-racer-live {
+    padding: 1.15rem;
+    border: 1px solid rgba(148, 163, 184, 0.14);
+    border-radius: 16px;
+    background: rgba(2, 8, 23, 0.45);
+}
+
+.camp-racer-builder h3 {
+    margin: 0 0 1rem;
+    color: #f8cc6a;
+    font-size: 1rem;
+}
+
+.camp-racer-form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.8rem;
+}
+
+.camp-racer-form-grid__wide { grid-column: 1 / -1; }
+
+.camp-racer-input-unit {
+    display: flex;
+    align-items: stretch;
+}
+
+.camp-racer-input-unit input {
+    min-width: 0;
+    border-radius: 8px 0 0 8px !important;
+}
+
+.camp-racer-input-unit span {
+    display: grid;
+    min-width: 44px;
+    padding: 0 0.6rem;
+    place-items: center;
+    border: 1px solid rgba(148, 163, 184, 0.22);
+    border-left: 0;
+    border-radius: 0 8px 8px 0;
+    color: #94a3b8;
+    background: rgba(15, 23, 42, 0.9);
+    font-size: 0.8rem;
+    font-weight: 700;
+}
+
+.camp-racer-input-unit--small { width: 88px; }
+.camp-racer-input-unit--small input { width: 48px; padding-inline: 0.5rem; }
+.camp-racer-input-unit--small span { min-width: 32px; padding-inline: 0.35rem; }
+
+.camp-racer-rules {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+    align-items: center;
+    gap: 0.7rem;
+    margin-top: 0.9rem;
+    padding: 0.8rem;
+    border-radius: 12px;
+    background: rgba(15, 23, 42, 0.7);
+}
+
+.camp-racer-rules > label {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    cursor: pointer;
+}
+
+.camp-racer-rules input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    flex: 0 0 18px;
+    accent-color: #d6a83a;
+}
+
+.camp-racer-rules strong,
+.camp-racer-rules small {
+    display: block;
+}
+
+.camp-racer-rules strong { font-size: 0.82rem; }
+.camp-racer-rules small { margin-top: 0.1rem; color: var(--text-muted); font-size: 0.68rem; }
+
+.camp-racer-create {
+    width: 100%;
+    margin-top: 1rem;
+    justify-content: center;
+    background: linear-gradient(135deg, #d5a52f, #f2c75c);
+    color: #111827;
+}
+
+.camp-racer-result {
+    min-height: 1.1rem;
+    margin-top: 0.65rem;
+    text-align: center;
+    font-size: 0.8rem;
+}
+
+.camp-racer-live__heading {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0.75rem;
+    margin-bottom: 0.9rem;
+}
+
+.camp-racer-live__heading span {
+    color: #94a3b8;
+    font-size: 0.68rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.camp-racer-live__heading h3 { margin: 0.2rem 0 0; font-size: 1rem; }
+.camp-racer-live__heading > strong {
+    padding: 0.35rem 0.65rem;
+    border-radius: 999px;
+    color: #4ade80;
+    background: rgba(74, 222, 128, 0.12);
+    white-space: nowrap;
+    font-size: 0.75rem;
+}
+
+.camp-racer-live__board { min-height: 190px; }
+
+.camp-racer-empty {
+    display: grid;
+    min-height: 190px;
+    place-content: center;
+    gap: 0.6rem;
+    color: var(--text-muted);
+    text-align: center;
+}
+
+.camp-racer-empty i { color: rgba(245, 184, 65, 0.5); font-size: 1.8rem; }
+.camp-racer-empty span { max-width: 240px; font-size: 0.82rem; }
+
+.camp-racer-player-row {
+    display: grid;
+    grid-template-columns: 28px minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 0.55rem;
+    padding: 0.58rem 0;
+    border-bottom: 1px solid rgba(148, 163, 184, 0.1);
+}
+
+.camp-racer-player-row__rank { color: #f8cc6a; font-weight: 800; text-align: center; }
+.camp-racer-player-row__name { overflow: hidden; font-size: 0.82rem; font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }
+.camp-racer-player-row__meta { color: #94a3b8; font-size: 0.7rem; }
+.camp-racer-player-row__score { color: #4ade80; font-size: 0.8rem; font-weight: 800; }
+
+.camp-racer-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 0.9rem;
+}
+
+.camp-racer-actions .btn-danger {
+    margin-left: auto;
+    padding: 0.55rem 0.8rem;
+}
+
+@media (max-width: 1050px) {
+    .camp-racer-admin__grid { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 700px) {
+    .camp-racer-admin__header { flex-direction: column; }
+    .camp-racer-form-grid { grid-template-columns: 1fr; }
+    .camp-racer-form-grid__wide { grid-column: auto; }
+    .camp-racer-rules { grid-template-columns: minmax(0, 1fr) auto; }
+    .camp-racer-rules > label:nth-of-type(2) { grid-column: 1 / -1; }
+    .camp-racer-admin { padding: 1rem; }
+}
 .settings-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));

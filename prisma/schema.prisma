@@ -34,7 +34,9 @@ model User {
   
   authoredNews    News[]   @relation("NewsAuthor")
   coAuthoredNews  News[]   @relation("NewsCoAuthor")
-  puzzleResults   PuzzleRaceResult[]
+  puzzleResults             PuzzleRaceResult[]
+  puzzleCampAttempts        PuzzleCampAttempt[]
+  createdPuzzleCampSessions PuzzleCampSession[] @relation("PuzzleCampCreator")
   recordedGames   GameRecorded[]
   comments        Comment[]
   announcements   Announcement[]
@@ -416,6 +418,81 @@ model PuzzleRacerSettings {
   updatedAt             DateTime @updatedAt @map("updated_at")
 
   @@map("puzzle_racer_settings")
+}
+
+model PuzzleCampSession {
+  id              Int      @id @default(autoincrement())
+  campCode        String   @default("pardubice-2026") @map("camp_code")
+  campName        String   @default("Pardubice 2026") @map("camp_name")
+  title           String
+  status          String   @default("scheduled")
+  startsAt        DateTime @map("starts_at")
+  durationSeconds Int      @default(240) @map("duration_seconds")
+  puzzleCount     Int      @default(40) @map("puzzle_count")
+  puzzleTheme     String   @default("mix") @map("puzzle_theme")
+  livesEnabled    Boolean  @default(false) @map("lives_enabled")
+  maxLives        Int      @default(5) @map("max_lives")
+  penaltyEnabled  Boolean  @default(true) @map("penalty_enabled")
+  penaltySeconds  Int      @default(3) @map("penalty_seconds")
+  skipOnMistake   Boolean  @default(true) @map("skip_on_mistake")
+  puzzles         Json
+  createdById     Int      @map("created_by_id")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  createdBy User                @relation("PuzzleCampCreator", fields: [createdById], references: [id])
+  attempts  PuzzleCampAttempt[]
+
+  @@index([campCode, startsAt])
+  @@index([status, startsAt])
+  @@map("puzzle_camp_sessions")
+}
+
+model PuzzleCampAttempt {
+  id           Int       @id @default(autoincrement())
+  sessionId    Int       @map("session_id")
+  userId       Int       @map("user_id")
+  status       String    @default("waiting")
+  joinedAt     DateTime  @default(now()) @map("joined_at")
+  startedAt    DateTime? @map("started_at")
+  finishedAt   DateTime? @map("finished_at")
+  score        Int       @default(0)
+  correctCount Int       @default(0) @map("correct_count")
+  wrongCount   Int       @default(0) @map("wrong_count")
+  skippedCount Int       @default(0) @map("skipped_count")
+  maxStreak    Int       @default(0) @map("max_streak")
+  puzzleCount  Int       @default(0) @map("puzzle_count")
+  durationMs   Int       @default(0) @map("duration_ms")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
+
+  session       PuzzleCampSession        @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  user          User                     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  puzzleResults PuzzleCampPuzzleResult[]
+
+  @@unique([sessionId, userId])
+  @@index([sessionId, score])
+  @@index([userId, joinedAt])
+  @@map("puzzle_camp_attempts")
+}
+
+model PuzzleCampPuzzleResult {
+  id            Int      @id @default(autoincrement())
+  attemptId     Int      @map("attempt_id")
+  puzzleIndex   Int      @map("puzzle_index")
+  puzzleId      String   @map("puzzle_id")
+  rating        Int?
+  correct       Boolean  @default(false)
+  skipped       Boolean  @default(false)
+  wrongAttempts Int      @default(0) @map("wrong_attempts")
+  responseMs    Int      @default(0) @map("response_ms")
+  points        Int      @default(0)
+  answeredAt    DateTime @default(now()) @map("answered_at")
+
+  attempt PuzzleCampAttempt @relation(fields: [attemptId], references: [id], onDelete: Cascade)
+
+  @@unique([attemptId, puzzleIndex])
+  @@index([attemptId, puzzleIndex])
+  @@map("puzzle_camp_puzzle_results")
 }
 
 model Event {

@@ -50,6 +50,20 @@ let gameWrongCount = 0;
 let currentStreak = 0;
 let gameMaxStreak = 0;
 
+// Pardubice 2026 - synchronizovaný táborový režim
+let campSession = null;
+let campAttempt = null;
+let campServerOffset = 0;
+let campStatePollTimer = null;
+let campCountdownTimer = null;
+let campLiveStatePollTimer = null;
+let campRaceStarting = false;
+let campRaceFinished = false;
+let campProgressQueue = Promise.resolve();
+let currentPuzzleStartedAt = 0;
+let currentCampWrongAttempts = 0;
+let campTimePenaltySeconds = 0;
+
 // Vanilla defaults (fixed, not affected by admin settings)
 const VANILLA_DEFAULTS = {
     puzzleTheme: 'mix',
@@ -66,7 +80,7 @@ const VANILLA_DEFAULTS = {
 function detectGameMode() {
     const urlParams = new URLSearchParams(window.location.search);
     const mode = urlParams.get('mode');
-    gameMode = mode === 'thematic' ? 'thematic' : 'vanilla';
+    gameMode = mode === 'pardubice2026' ? 'pardubice2026' : mode === 'thematic' ? 'thematic' : 'vanilla';
     console.log('Game mode:', gameMode);
     return gameMode;
 }
@@ -146,6 +160,7 @@ const FALLBACK_PUZZLES_FINAL = [
 
 // Fetch more puzzles from server
 async function fetchMorePuzzles() {
+    if (gameMode === 'pardubice2026') return;
     if (isFetchingPuzzles) return;
     isFetchingPuzzles = true;
 
@@ -186,8 +201,20 @@ async function fetchMorePuzzles() {
 
 // Load game settings based on mode
 async function loadGameSettings() {
+    if (gameMode === 'pardubice2026' && campSession) {
+        gameSettings = {
+            puzzleTheme: campSession.puzzleTheme,
+            timeLimitSeconds: campSession.durationSeconds,
+            livesEnabled: campSession.livesEnabled,
+            maxLives: campSession.maxLives,
+            puzzlesPerDifficulty: Math.max(1, Math.ceil(campSession.puzzleCount / DIFFICULTIES.length)),
+            penaltyEnabled: campSession.penaltyEnabled,
+            penaltySeconds: campSession.penaltySeconds,
+            skipOnMistake: campSession.skipOnMistake
+        };
+    }
     // Vanilla mode uses fixed defaults (no API call needed)
-    if (gameMode === 'vanilla') {
+    else if (gameMode === 'vanilla') {
         gameSettings = { ...VANILLA_DEFAULTS };
         console.log('Using vanilla defaults:', gameSettings);
     } else {
@@ -217,14 +244,16 @@ async function loadGameSettings() {
 }
 
 async function startRace() {
+    detectGameMode();
+    if (gameMode === 'pardubice2026') {
+        return startPuzzleCampRace();
+    }
+
     const startBtn = document.querySelector('#startScreen button');
     const loading = document.getElementById('loadingIndicator');
 
     startBtn.style.display = 'none';
     loading.classList.remove('hidden');
-
-    // Detect mode from URL parameter
-    detectGameMode();
 
     // Load settings based on mode
     await loadGameSettings();
@@ -285,34 +314,67 @@ async function startRace() {
 }
 
 function startGameLoop() {
-    score = 0;
+    const savedCampResults = gameMode === 'pardubice2026' && Array.isArray(campAttempt?.puzzleResults)
+        ? campAttempt.puzzleResults
+        : [];
+    const answeredCampIndexes = new Set(savedCampResults.map(result => result.puzzleIndex));
+    let resumedCampStreak = 0;
+    for (const result of [...savedCampResults].sort((a, b) => b.puzzleIndex - a.puzzleIndex)) {
+        if (result.correct !== true || result.skipped === true) break;
+        resumedCampStreak++;
+    }
+    const firstUnansweredCampIndex = gameMode === 'pardubice2026'
+        ? puzzles.findIndex((puzzle, index) => !answeredCampIndexes.has(index))
+        : 0;
+
+    score = gameMode === 'pardubice2026' ? (campAttempt?.correctCount || 0) : 0;
     // timeLeft is already set by loadGameSettings()
-    currentPuzzleIndex = 0;
+    currentPuzzleIndex = gameMode === 'pardubice2026'
+        ? (firstUnansweredCampIndex === -1 ? puzzles.length : firstUnansweredCampIndex)
+        : 0;
     isGameActive = true;
 
     // Reset per-game stats
-    gameCorrectCount = 0;
-    gameWrongCount = 0;
-    currentStreak = 0;
-    gameMaxStreak = 0;
+    gameCorrectCount = gameMode === 'pardubice2026' ? (campAttempt?.correctCount || 0) : 0;
+    gameWrongCount = gameMode === 'pardubice2026' ? (campAttempt?.wrongCount || 0) : 0;
+    currentStreak = gameMode === 'pardubice2026' ? resumedCampStreak : 0;
+    gameMaxStreak = gameMode === 'pardubice2026' ? (campAttempt?.maxStreak || 0) : 0;
     puzzleHistory = [];
+    campRaceFinished = false;
+    campTimePenaltySeconds = gameMode === 'pardubice2026' && campSession?.penaltyEnabled
+        ? (campAttempt?.wrongCount || 0) * campSession.penaltySeconds
+        : 0;
+    clearInterval(campLiveStatePollTimer);
 
     updateScore();
     updateTimer();
     resetLives(); // Reset lives display
+
+    if (currentPuzzleIndex >= puzzles.length) {
+        endGame();
+        return;
+    }
 
     // Initialize first puzzle
     loadPuzzle(puzzles[currentPuzzleIndex]);
 
     // Start timer
     timerInterval = setInterval(() => {
-        timeLeft--;
+        if (gameMode === 'pardubice2026' && campSession) {
+            timeLeft = Math.max(0, Math.ceil((new Date(campSession.endsAt).getTime() - (Date.now() + campServerOffset)) / 1000) - campTimePenaltySeconds);
+        } else {
+            timeLeft--;
+        }
         updateTimer();
 
         if (timeLeft <= 0) {
             endGame();
         }
     }, 1000);
+
+    if (gameMode === 'pardubice2026') {
+        campLiveStatePollTimer = setInterval(pollLivePuzzleCampState, 3000);
+    }
 }
 
 function loadPuzzle(puzzleData) {
@@ -323,9 +385,17 @@ function loadPuzzle(puzzleData) {
         return;
     }
 
+    currentPuzzleStartedAt = performance.now();
+    currentCampWrongAttempts = 0;
+    if (gameMode === 'pardubice2026' && puzzleData.campDifficulty) {
+        const campDifficultyIndex = DIFFICULTIES.indexOf(puzzleData.campDifficulty);
+        if (campDifficultyIndex >= 0) currentDifficultyIndex = campDifficultyIndex;
+        updateDifficultyDisplay();
+    }
+
     // Prefetch more puzzles when we're getting low (when loading puzzle and only 5 left)
     const puzzlesRemaining = puzzles.length - currentPuzzleIndex;
-    if (puzzlesRemaining <= 5 && !isFetchingPuzzles) {
+    if (gameMode !== 'pardubice2026' && puzzlesRemaining <= 5 && !isFetchingPuzzles) {
         console.log(`Only ${puzzlesRemaining} puzzles remaining, prefetching more...`);
         fetchMorePuzzles();
     }
@@ -690,16 +760,33 @@ function handleCorrectPuzzle() {
     // Track puzzle for post-solve review
     const currentPuzzle = puzzles[currentPuzzleIndex];
     if (currentPuzzle) {
-        puzzleHistory.push({
+        const historyEntry = {
             fen: game.fen(),
             initialFen: getInitialFen(currentPuzzle),
             solution: currentPuzzle.puzzle.solution,
             rating: currentPuzzle.puzzle.rating,
             puzzleId: currentPuzzle.puzzle.id,
-            correct: true
-        });
+            correct: true,
+            skipped: false,
+            responseMs: Math.max(0, Math.round(performance.now() - currentPuzzleStartedAt)),
+            wrongAttempts: currentCampWrongAttempts
+        };
+        const previousEntry = gameMode === 'pardubice2026'
+            ? puzzleHistory.find(entry => entry.puzzleId === currentPuzzle.puzzle.id)
+            : null;
+        if (previousEntry) Object.assign(previousEntry, historyEntry);
+        else puzzleHistory.push(historyEntry);
+
+        if (gameMode === 'pardubice2026') {
+            reportCampPuzzleOutcome(currentPuzzleIndex, historyEntry);
+        }
     }
     showFeedback('correct');
+
+    if (gameMode === 'pardubice2026' && currentPuzzleIndex >= puzzles.length - 1) {
+        setTimeout(endGame, 350);
+        return;
+    }
 
     // Easter egg: Completed all difficulty levels! (5 × 6 = 30 puzzles)
     const totalPuzzlesForAllLevels = DIFFICULTIES.length * puzzlesPerDifficultyLevel;
@@ -719,7 +806,7 @@ function handleCorrectPuzzle() {
 
     // Check if we need to fetch more puzzles (fetch early when only 1-2 remaining)
     const puzzlesRemaining = puzzles.length - currentPuzzleIndex - 1;
-    if (puzzlesRemaining <= 2 && !isFetchingPuzzles) {
+    if (gameMode !== 'pardubice2026' && puzzlesRemaining <= 2 && !isFetchingPuzzles) {
         fetchMorePuzzles(); // Fetch in background
     }
 
@@ -735,6 +822,10 @@ function handleCorrectPuzzle() {
 
 // Easter egg for completing all puzzles!
 function showEasterEgg() {
+    if (gameMode === 'pardubice2026') {
+        endGame();
+        return;
+    }
     isGameActive = false;
     clearInterval(timerInterval);
     document.body.classList.remove('game-active');
@@ -762,6 +853,10 @@ function loadNextPuzzleOrWait() {
         // Have more puzzles ready
         loadPuzzle(puzzles[currentPuzzleIndex]);
     } else {
+        if (gameMode === 'pardubice2026') {
+            endGame();
+            return;
+        }
         // No puzzles - show feedback
         console.log('Waiting for more puzzles...');
         const toMove = document.getElementById('toMove');
@@ -780,6 +875,7 @@ function loadNextPuzzleOrWait() {
 function handleWrongMove() {
     mistakeCount++;
     gameWrongCount++;
+    if (gameMode === 'pardubice2026') currentCampWrongAttempts++;
     currentStreak = 0;
     updateLivesDisplay();
     showFeedback('wrong');
@@ -796,13 +892,25 @@ function handleWrongMove() {
                 solution: currentPuzzle.puzzle.solution,
                 rating: currentPuzzle.puzzle.rating,
                 puzzleId: currentPuzzle.puzzle.id,
-                correct: false
+                correct: false,
+                skipped: false,
+                responseMs: Math.max(0, Math.round(performance.now() - currentPuzzleStartedAt)),
+                wrongAttempts: currentCampWrongAttempts
             });
         }
     }
 
     // Check if lives system is enabled and we're out of lives
     if (livesEnabled && mistakeCount >= MAX_MISTAKES) {
+        if (gameMode === 'pardubice2026' && currentPuzzle) {
+            reportCampPuzzleOutcome(currentPuzzleIndex, {
+                puzzleId: currentPuzzle.puzzle.id,
+                correct: false,
+                skipped: false,
+                responseMs: Math.max(0, Math.round(performance.now() - currentPuzzleStartedAt)),
+                wrongAttempts: currentCampWrongAttempts
+            });
+        }
         setTimeout(() => {
             endGame();
         }, 500);
@@ -811,6 +919,7 @@ function handleWrongMove() {
 
     // Apply time penalty if enabled
     if (penaltyEnabled) {
+        if (gameMode === 'pardubice2026') campTimePenaltySeconds += penaltySeconds;
         timeLeft = Math.max(0, timeLeft - penaltySeconds);
         updateTimer();
 
@@ -825,6 +934,15 @@ function handleWrongMove() {
 
     // Skip to next puzzle if enabled (without requiring user to solve current one)
     if (skipOnMistake) {
+        if (gameMode === 'pardubice2026' && currentPuzzle) {
+            reportCampPuzzleOutcome(currentPuzzleIndex, {
+                puzzleId: currentPuzzle.puzzle.id,
+                correct: false,
+                skipped: false,
+                responseMs: Math.max(0, Math.round(performance.now() - currentPuzzleStartedAt)),
+                wrongAttempts: currentCampWrongAttempts
+            });
+        }
         setTimeout(() => {
             currentPuzzleIndex++;
             loadNextPuzzleOrWait();
@@ -873,7 +991,7 @@ function updateLivesUI() {
 
 // Reset lives at game start
 function resetLives() {
-    mistakeCount = 0;
+    mistakeCount = gameMode === 'pardubice2026' ? (campAttempt?.wrongCount || 0) : 0;
     updateLivesDisplay();
 }
 
@@ -886,10 +1004,29 @@ function showFeedback(type) {
 
 function skipPuzzle() {
     if (!isGameActive) return;
-    timeLeft = Math.max(0, timeLeft - 5);
+    const currentPuzzle = puzzles[currentPuzzleIndex];
+    if (gameMode === 'pardubice2026' && currentPuzzle) {
+        const entry = {
+            fen: game?.fen(),
+            initialFen: getInitialFen(currentPuzzle),
+            solution: currentPuzzle.puzzle.solution,
+            rating: currentPuzzle.puzzle.rating,
+            puzzleId: currentPuzzle.puzzle.id,
+            correct: false,
+            skipped: true,
+            responseMs: Math.max(0, Math.round(performance.now() - currentPuzzleStartedAt)),
+            wrongAttempts: currentCampWrongAttempts
+        };
+        const previousEntry = puzzleHistory.find(item => item.puzzleId === entry.puzzleId);
+        if (previousEntry) Object.assign(previousEntry, entry);
+        else puzzleHistory.push(entry);
+        reportCampPuzzleOutcome(currentPuzzleIndex, entry);
+    } else {
+        timeLeft = Math.max(0, timeLeft - 5);
+    }
     updateTimer();
     currentPuzzleIndex++;
-    loadPuzzle(puzzles[currentPuzzleIndex]);
+    loadNextPuzzleOrWait();
 }
 
 function updateScore() {
@@ -941,8 +1078,33 @@ function updateTimer() {
 }
 
 function endGame() {
+    if (gameMode === 'pardubice2026' && campRaceFinished) return;
+    if (gameMode === 'pardubice2026') campRaceFinished = true;
     isGameActive = false;
     clearInterval(timerInterval);
+    clearInterval(campLiveStatePollTimer);
+
+    if (gameMode === 'pardubice2026') {
+        const currentPuzzle = puzzles[currentPuzzleIndex];
+        const alreadyReported = currentPuzzle && puzzleHistory.some(entry => entry.puzzleId === currentPuzzle.puzzle.id && (entry.correct || entry.skipped));
+        if (currentPuzzle && !alreadyReported) {
+            const entry = {
+                fen: game?.fen(),
+                initialFen: getInitialFen(currentPuzzle),
+                solution: currentPuzzle.puzzle.solution,
+                rating: currentPuzzle.puzzle.rating,
+                puzzleId: currentPuzzle.puzzle.id,
+                correct: false,
+                skipped: false,
+                responseMs: Math.max(0, Math.round(performance.now() - currentPuzzleStartedAt)),
+                wrongAttempts: currentCampWrongAttempts
+            };
+            const existingEntry = puzzleHistory.find(item => item.puzzleId === entry.puzzleId);
+            if (existingEntry) Object.assign(existingEntry, entry);
+            else puzzleHistory.push(entry);
+            reportCampPuzzleOutcome(currentPuzzleIndex, entry);
+        }
+    }
 
     // Unlock scroll
     document.body.classList.remove('game-active');
@@ -950,6 +1112,16 @@ function endGame() {
     document.getElementById('gameInterface').classList.add('hidden');
     document.getElementById('gameOverScreen').classList.remove('hidden');
     document.getElementById('finalScore').innerText = score;
+
+    if (gameMode === 'pardubice2026') {
+        const recordBanner = document.getElementById('newRecordBanner');
+        const nameWrapper = document.getElementById('nameInputWrapper');
+        if (recordBanner) recordBanner.classList.add('hidden');
+        if (nameWrapper) nameWrapper.classList.add('hidden');
+        renderPuzzleReview();
+        finishCampAttempt();
+        return;
+    }
 
     // Check for new personal best
     const isNewRecord = score > personalBest && score > 0;
@@ -1359,6 +1531,452 @@ async function loadHallOfFame() {
     }
 }
 
+// --- PARDUBICE 2026 · SYNCHRONIZOVANÁ ROZCVIČKA ---
+
+function getRacerAuthToken() {
+    return localStorage.getItem('auth_token')
+        || localStorage.getItem('authToken')
+        || localStorage.getItem('token')
+        || sessionStorage.getItem('auth_token');
+}
+
+function campAuthHeaders(json = false) {
+    const headers = { 'Authorization': `Bearer ${getRacerAuthToken() || ''}` };
+    if (json) headers['Content-Type'] = 'application/json';
+    return headers;
+}
+
+function formatCampClock(milliseconds) {
+    const secondsTotal = Math.max(0, Math.ceil(milliseconds / 1000));
+    const minutes = Math.floor(secondsTotal / 60);
+    const seconds = secondsTotal % 60;
+    return `${minutes}:${String(seconds).padStart(2, '0')}`;
+}
+
+function setCampLobbyElement(id, value) {
+    const element = document.getElementById(id);
+    if (element) element.textContent = value;
+}
+
+function renderCampLobby() {
+    const lobby = document.getElementById('campLobby');
+    const countdown = document.getElementById('campCountdown');
+    const joinButton = document.getElementById('campJoinButton');
+    const joinedBadge = document.getElementById('campJoinedBadge');
+    const loginLink = document.getElementById('campLoginLink');
+    if (!lobby || !countdown || !joinButton || !joinedBadge || !loginLink) return;
+
+    lobby.classList.remove('hidden');
+    joinButton.classList.add('hidden');
+    joinedBadge.classList.add('hidden');
+    loginLink.classList.add('hidden');
+    countdown.classList.add('hidden');
+
+    if (!loggedInUser) {
+        setCampLobbyElement('campLobbyStatus', 'Pouze pro přihlášené');
+        setCampLobbyElement('campLobbyTitle', 'Pardubice 2026');
+        setCampLobbyElement('campLobbyMessage', 'Přihlaste se klubovým účtem. Pak uvidíte společný odpočet, denní výsledky i celotýdenní pořadí.');
+        loginLink.classList.remove('hidden');
+        return;
+    }
+
+    if (!campSession) {
+        setCampLobbyElement('campLobbyStatus', 'Čekáme na trenéra');
+        setCampLobbyElement('campLobbyTitle', 'Další rozcvička zatím není připravená');
+        setCampLobbyElement('campLobbyMessage', 'Až trenér v administraci spustí denní rozcvičku, objeví se zde společný odpočet.');
+        return;
+    }
+
+    setCampLobbyElement('campLobbyTitle', campSession.title);
+    setCampLobbyElement('campLobbyPlayers', campSession.participantCount || 0);
+    setCampLobbyElement('campLobbyPuzzles', campSession.puzzleCount);
+    setCampLobbyElement('campLobbyDuration', formatCampClock(campSession.durationSeconds * 1000));
+
+    if (campSession.status === 'scheduled') {
+        setCampLobbyElement('campLobbyStatus', 'Čekárna otevřena');
+        setCampLobbyElement('campLobbyMessage', campAttempt
+            ? 'Jste připojeni. Nechte stránku otevřenou — šachovnice se všem spustí automaticky.'
+            : `Připojte se na startovní listinu. Všichni dostanou stejných ${campSession.puzzleCount} úloh a stejný čas.`);
+        countdown.classList.remove('hidden');
+        if (campAttempt) joinedBadge.classList.remove('hidden');
+        else joinButton.classList.remove('hidden');
+    } else if (campSession.status === 'live') {
+        setCampLobbyElement('campLobbyStatus', 'Rozcvička právě běží');
+        setCampLobbyElement('campLobbyMessage', campAttempt?.status === 'finished'
+            ? 'Dnešní jízdu už máte za sebou. Podívejte se na průběžné pořadí.'
+            : 'Start už proběhl. Můžete se ještě přidat, ale poběží vám jen společný zbývající čas.');
+        countdown.classList.remove('hidden');
+        if (campAttempt?.status === 'finished') joinedBadge.classList.remove('hidden');
+        else if (campAttempt) joinedBadge.classList.remove('hidden');
+        else joinButton.classList.remove('hidden');
+    } else {
+        setCampLobbyElement('campLobbyStatus', 'Dnešní rozcvička skončila');
+        setCampLobbyElement('campLobbyMessage', campAttempt
+            ? 'Výsledek je uložený. Níže vidíte celotýdenní pořadí i časy u každé úlohy.'
+            : 'Dnešní start už je uzavřený. Další šance bude při příští rozcvičce.');
+        if (campAttempt) joinedBadge.classList.remove('hidden');
+    }
+
+    tickCampCountdown();
+}
+
+function tickCampCountdown() {
+    if (!campSession) return;
+    const now = Date.now() + campServerOffset;
+    const value = document.getElementById('campCountdownValue');
+    const label = document.querySelector('#campCountdown .camp-countdown__label');
+    const pulse = document.getElementById('campCountdownPulse');
+    if (!value || !label || !pulse) return;
+
+    if (campSession.status === 'scheduled') {
+        const remaining = new Date(campSession.startsAt).getTime() - now;
+        label.textContent = 'Hromadný start za';
+        value.textContent = formatCampClock(remaining);
+        pulse.innerHTML = '<i class="fa-solid fa-circle"></i> čekárna otevřena';
+        if (remaining <= 0 && campAttempt && !campRaceStarting && !isGameActive) loadPuzzleCampState();
+    } else if (campSession.status === 'live') {
+        const remaining = new Date(campSession.endsAt).getTime() - now;
+        label.textContent = 'Do konce zbývá';
+        value.textContent = formatCampClock(remaining);
+        pulse.innerHTML = '<i class="fa-solid fa-circle"></i> závod běží';
+        if (remaining <= 0 && isGameActive) endGame();
+    }
+}
+
+function scheduleCampStatePoll() {
+    clearTimeout(campStatePollTimer);
+    if (gameMode !== 'pardubice2026' || isGameActive) return;
+    campStatePollTimer = setTimeout(loadPuzzleCampState, 3000);
+}
+
+async function pollLivePuzzleCampState() {
+    if (!isGameActive || gameMode !== 'pardubice2026' || !campSession) return;
+    const playingSessionId = campSession.id;
+
+    try {
+        const res = await fetch(`${API_URL}/racer/camp/active`, { headers: campAuthHeaders() });
+        if (!res.ok) return;
+        const data = await res.json();
+        campServerOffset = new Date(data.serverTime).getTime() - Date.now();
+        if (!data.session || data.session.id !== playingSessionId || data.session.status !== 'live') {
+            endGame();
+        }
+    } catch (error) {
+        console.warn('Camp live state check failed:', error);
+    }
+}
+
+async function loadPuzzleCampState() {
+    if (gameMode !== 'pardubice2026') return;
+    if (!loggedInUser) {
+        renderCampLobby();
+        return;
+    }
+
+    try {
+        const res = await fetch(`${API_URL}/racer/camp/active`, { headers: campAuthHeaders() });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+        campServerOffset = new Date(data.serverTime).getTime() - Date.now();
+        campSession = data.session ? { ...data.session, participantCount: data.participantCount } : null;
+        campAttempt = data.attempt;
+        renderCampLobby();
+
+        clearInterval(campCountdownTimer);
+        campCountdownTimer = setInterval(tickCampCountdown, 250);
+
+        if (campSession?.status === 'live' && campAttempt && campAttempt.status !== 'finished' && !isGameActive) {
+            await startPuzzleCampRace();
+        }
+        if (!puzzleCampLeaderboardData || campSession?.status === 'finished') {
+            if (campSession) loadPuzzleCampLeaderboard(campSession.id);
+            else loadPuzzleCampLeaderboard();
+        }
+    } catch (error) {
+        console.error('Camp state error:', error);
+        setCampLobbyElement('campLobbyStatus', 'Spojení přerušeno');
+        setCampLobbyElement('campLobbyMessage', 'Zkouším znovu načíst společný čas ze serveru…');
+    } finally {
+        scheduleCampStatePoll();
+    }
+}
+
+async function joinPuzzleCamp() {
+    const button = document.getElementById('campJoinButton');
+    if (!campSession || !loggedInUser || !button) return;
+    const original = button.innerHTML;
+    button.disabled = true;
+    button.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Připojuji…';
+
+    try {
+        const res = await fetch(`${API_URL}/racer/camp/sessions/${campSession.id}/join`, {
+            method: 'POST',
+            headers: campAuthHeaders()
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Připojení se nezdařilo');
+        campServerOffset = new Date(data.serverTime).getTime() - Date.now();
+        campSession = { ...data.session, participantCount: data.participantCount };
+        campAttempt = data.attempt;
+        renderCampLobby();
+        if (campSession.status === 'live') await startPuzzleCampRace();
+    } catch (error) {
+        alert(error.message);
+    } finally {
+        button.disabled = false;
+        button.innerHTML = original;
+    }
+}
+
+async function startPuzzleCampRace() {
+    if (campRaceStarting || isGameActive || !campSession || !loggedInUser || campAttempt?.status === 'finished') return;
+    campRaceStarting = true;
+    clearTimeout(campStatePollTimer);
+
+    const joinButton = document.getElementById('campJoinButton');
+    const loading = document.getElementById('loadingIndicator');
+    if (joinButton) joinButton.classList.add('hidden');
+    if (loading) {
+        loading.classList.remove('hidden');
+        loading.querySelector('p').textContent = 'Načítám společnou pardubickou sadu…';
+    }
+
+    try {
+        const res = await fetch(`${API_URL}/racer/camp/sessions/${campSession.id}/play`, {
+            headers: campAuthHeaders()
+        });
+        const data = await res.json();
+        if (!res.ok) {
+            if (res.status === 425) {
+                campRaceStarting = false;
+                return loadPuzzleCampState();
+            }
+            throw new Error(data.error || 'Společnou sadu se nepodařilo načíst');
+        }
+
+        campServerOffset = new Date(data.serverTime).getTime() - Date.now();
+        campSession = { ...data.session, participantCount: campSession.participantCount };
+        campAttempt = data.attempt;
+        puzzles = data.puzzles || [];
+        if (!puzzles.length) throw new Error('Společná sada je prázdná');
+
+        await loadGameSettings();
+        timeLeft = Math.max(0, Math.ceil((new Date(campSession.endsAt).getTime() - (Date.now() + campServerOffset)) / 1000));
+        currentPuzzleIndex = 0;
+        currentDifficultyIndex = 0;
+        totalPuzzlesSolved = 0;
+        puzzleHistory = [];
+
+        document.getElementById('startScreen').classList.add('hidden');
+        document.getElementById('gameInterface').classList.remove('hidden');
+        document.body.classList.add('game-active');
+        document.getElementById('campLiveRankBox')?.classList.remove('hidden');
+        const scoreLabel = document.querySelector('#score')?.previousElementSibling;
+        if (scoreLabel) scoreLabel.textContent = 'Vyřešeno';
+        setCampLobbyElement('skipButtonLabel', 'Přeskočit úlohu');
+
+        if (!window.__racerResizeHooked) {
+            window.__racerResizeHooked = true;
+            let resizeTimer = null;
+            const resizeBoard = () => {
+                if (!document.body.classList.contains('game-active')) return;
+                clearTimeout(resizeTimer);
+                resizeTimer = setTimeout(() => { if (board?.resize) board.resize(); }, 120);
+            };
+            window.addEventListener('resize', resizeBoard);
+            window.addEventListener('orientationchange', resizeBoard);
+        }
+
+        updateLivesUI();
+        updateDifficultyDisplay();
+        clearInterval(campCountdownTimer);
+        startGameLoop();
+    } catch (error) {
+        console.error('Camp start error:', error);
+        alert(error.message);
+        if (loading) loading.classList.add('hidden');
+        scheduleCampStatePoll();
+    } finally {
+        campRaceStarting = false;
+    }
+}
+
+async function saveCampPuzzleOutcome(puzzleIndex, result) {
+    let lastError = null;
+    for (let retry = 0; retry < 3; retry++) {
+        try {
+            const res = await fetch(`${API_URL}/racer/camp/sessions/${campSession.id}/progress`, {
+                method: 'PUT',
+                headers: campAuthHeaders(true),
+                body: JSON.stringify({
+                    puzzleIndex,
+                    puzzleId: result.puzzleId,
+                    correct: result.correct === true,
+                    skipped: result.skipped === true,
+                    wrongAttempts: result.wrongAttempts || 0,
+                    responseMs: result.responseMs || 0
+                })
+            });
+            if (res.ok) return res.json();
+            const data = await res.json().catch(() => ({}));
+            lastError = new Error(data.error || 'Průběžný výsledek se nepodařilo uložit');
+            if (res.status < 500 && res.status !== 429) throw lastError;
+        } catch (error) {
+            lastError = error;
+        }
+        if (retry < 2) await new Promise(resolve => setTimeout(resolve, 400 * (retry + 1)));
+    }
+    throw lastError || new Error('Průběžný výsledek se nepodařilo uložit');
+}
+
+function reportCampPuzzleOutcome(puzzleIndex, result) {
+    if (!campSession || !loggedInUser) return campProgressQueue;
+    campProgressQueue = campProgressQueue.catch(() => null).then(async () => {
+        const data = await saveCampPuzzleOutcome(puzzleIndex, result);
+        campAttempt = data.attempt;
+        setCampLobbyElement('campLiveRank', `#${data.rank}`);
+        return data;
+    }).catch(error => {
+        console.error('Camp progress save error:', error);
+        return null;
+    });
+    return campProgressQueue;
+}
+
+async function finishCampAttempt() {
+    const summary = document.getElementById('campFinishSummary');
+    if (summary) {
+        summary.classList.remove('hidden');
+        summary.innerHTML = '<div style="grid-column:1/-1"><strong><i class="fa-solid fa-spinner fa-spin"></i></strong><span>Ukládám výsledky</span></div>';
+    }
+
+    try {
+        await campProgressQueue;
+        const res = await fetch(`${API_URL}/racer/camp/sessions/${campSession.id}/finish`, {
+            method: 'POST',
+            headers: campAuthHeaders()
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Výsledek se nepodařilo uložit');
+        campAttempt = data.attempt;
+        document.getElementById('finalScore').textContent = `${campAttempt.score} bodů`;
+        if (summary) {
+            const achievements = (data.achievements || []).map(item => `
+                <span class="camp-achievement" title="${escapeHtml(item.description)}"><b>${item.icon}</b>${escapeHtml(item.name)}</span>
+            `).join('');
+            summary.innerHTML = `
+                <div><strong>${campAttempt.correctCount}</strong><span>vyřešeno</span></div>
+                <div><strong>${campAttempt.maxStreak}</strong><span>nejdelší série</span></div>
+                <div><strong>${campAttempt.wrongCount}</strong><span>chybné tahy</span></div>
+                ${achievements ? `<div class="camp-achievements"><strong>Odemčeno</strong><div>${achievements}</div></div>` : ''}
+            `;
+        }
+        await loadPuzzleCampLeaderboard(campSession.id);
+    } catch (error) {
+        console.error('Camp finish save error:', error);
+        if (summary) summary.innerHTML = '<div style="grid-column:1/-1"><strong>!</strong><span>Výsledek čeká na opětovné spojení</span></div>';
+    }
+}
+
+let puzzleCampLeaderboardData = null;
+
+function campFormatSeconds(milliseconds) {
+    if (!milliseconds) return '—';
+    return `${(milliseconds / 1000).toFixed(milliseconds < 10000 ? 1 : 0)} s`;
+}
+
+function renderPuzzleCampLeaderboard(data) {
+    puzzleCampLeaderboardData = data;
+    const section = document.getElementById('campLeaderboardSection');
+    const standingsBody = document.getElementById('campStandingsBody');
+    const podium = document.getElementById('campWeekPodium');
+    const tabs = document.getElementById('campSessionTabs');
+    if (!section || !standingsBody || !podium || !tabs) return;
+    section.classList.remove('hidden');
+    document.getElementById('leaderboardSection')?.classList.add('hidden');
+    document.getElementById('hallOfFameSection')?.classList.add('hidden');
+    setCampLobbyElement('campCurrentPlayer', loggedInUser?.realName || loggedInUser?.username || 'Hráč');
+
+    const medals = ['🥇', '🥈', '🥉'];
+    podium.innerHTML = data.standings.slice(0, 3).map((player, index) => `
+        <div class="camp-podium-card">
+            <span class="camp-podium-card__rank">${medals[index]}</span>
+            <strong>${escapeHtml(player.playerName)}</strong>
+            <span>${player.level.icon} ${escapeHtml(player.level.name)} · ${player.score} bodů · ${player.correctCount} úloh</span>
+        </div>
+    `).join('') || '<div class="camp-matrix-empty" style="grid-column:1/-1">První body teprve čekají na svého majitele.</div>';
+
+    standingsBody.innerHTML = data.standings.map(player => `
+        <tr class="${player.userId === loggedInUser?.id ? 'is-current-player' : ''}">
+            <td>${player.rank}</td>
+            <td>${escapeHtml(player.playerName)}${player.userId === loggedInUser?.id ? ' · vy' : ''}<small class="camp-level-tag">${player.level.icon} ${escapeHtml(player.level.name)}</small></td>
+            <td><strong>${player.score}</strong></td>
+            <td>${player.correctCount}</td>
+            <td>${player.attendance}×</td>
+            <td>${player.wins}</td>
+            <td>${player.maxStreak}</td>
+        </tr>
+    `).join('') || '<tr><td colspan="7">Zatím nejsou zapsané žádné výsledky.</td></tr>';
+
+    const selectedId = data.sessionDetail?.session?.id;
+    tabs.innerHTML = data.sessions.map((session, index) => {
+        const date = new Date(session.startsAt).toLocaleDateString('cs-CZ', { weekday: 'short', day: 'numeric', month: 'numeric' });
+        return `<button class="camp-session-tab ${session.id === selectedId ? 'active' : ''}" onclick="window.switchPuzzleCampSession(${session.id})">${index + 1}. ${date}</button>`;
+    }).join('');
+
+    renderPuzzleCampMatrix(data.sessionDetail);
+}
+
+function renderPuzzleCampMatrix(detail) {
+    const matrix = document.getElementById('campPuzzleMatrix');
+    const title = document.getElementById('campMatrixTitle');
+    if (!matrix || !title) return;
+    if (!detail) {
+        title.textContent = 'Úloha po úloze';
+        matrix.innerHTML = '<div class="camp-matrix-empty">Zatím není připravená žádná rozcvička.</div>';
+        return;
+    }
+
+    title.textContent = detail.session.title;
+    if (!detail.participants.length) {
+        matrix.innerHTML = '<div class="camp-matrix-empty">Na výsledky této rozcvičky zatím čekáme.</div>';
+        return;
+    }
+
+    const head = detail.puzzles.map(puzzle => `<th title="Rating ${puzzle.rating || '–'}">${puzzle.index + 1}</th>`).join('');
+    const rows = detail.participants.map(player => {
+        const cellsByIndex = new Map(player.cells.map(cell => [cell.puzzleIndex, cell]));
+        const cells = detail.puzzles.map(puzzle => {
+            const cell = cellsByIndex.get(puzzle.index);
+            if (!cell) return '<td><span class="camp-matrix-cell camp-matrix-cell--empty">—</span></td>';
+            if (cell.correct) {
+                return `<td><span class="camp-matrix-cell camp-matrix-cell--correct" title="Správně · ${cell.wrongAttempts} chyb · ${cell.points} bodů">${campFormatSeconds(cell.responseMs)}</span></td>`;
+            }
+            const label = cell.skipped ? '↷' : '×';
+            return `<td><span class="camp-matrix-cell camp-matrix-cell--wrong" title="${cell.skipped ? 'Přeskočeno' : 'Nevyřešeno'} · ${cell.wrongAttempts} chyb">${label}</span></td>`;
+        }).join('');
+        return `<tr><td>${player.rank}. ${escapeHtml(player.playerName)}</td>${cells}</tr>`;
+    }).join('');
+
+    matrix.innerHTML = `<table class="camp-matrix-table"><thead><tr><th>Hráč / úloha</th>${head}</tr></thead><tbody>${rows}</tbody></table>`;
+}
+
+async function loadPuzzleCampLeaderboard(sessionId) {
+    if (!loggedInUser) return;
+    try {
+        const query = sessionId ? `?sessionId=${sessionId}` : '';
+        const res = await fetch(`${API_URL}/racer/camp/leaderboard${query}`, { headers: campAuthHeaders() });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        renderPuzzleCampLeaderboard(await res.json());
+    } catch (error) {
+        console.error('Camp leaderboard error:', error);
+    }
+}
+
+function switchPuzzleCampSession(sessionId) {
+    return loadPuzzleCampLeaderboard(sessionId);
+}
+
 // Detect logged-in user from JWT in localStorage
 function detectLoggedInUser() {
     try {
@@ -1701,13 +2319,18 @@ document.addEventListener('DOMContentLoaded', () => {
     window.skipPuzzle = skipPuzzle;
     window.switchLeaderboard = switchLeaderboard;
     window.showPuzzleDetail = showPuzzleDetail;
+    window.joinPuzzleCamp = joinPuzzleCamp;
+    window.switchPuzzleCampSession = switchPuzzleCampSession;
 
     // Detect logged-in user
     loggedInUser = detectLoggedInUser();
+    detectGameMode();
 
     // Load leaderboard, hall of fame, and player name on init
-    loadLeaderboard();
-    loadHallOfFame();
+    if (gameMode !== 'pardubice2026') {
+        loadLeaderboard();
+        loadHallOfFame();
+    }
 
     // Auto-fill name from user or localStorage
     if (loggedInUser) {
@@ -1725,7 +2348,7 @@ document.addEventListener('DOMContentLoaded', () => {
             `;
         }
         // Load personal stats (also sets personalBest)
-        loadPersonalStats();
+        if (gameMode !== 'pardubice2026') loadPersonalStats();
         // Hide anonymous CTA
         const anonCta = document.getElementById('anonCta');
         if (anonCta) anonCta.classList.add('hidden');
@@ -1736,8 +2359,10 @@ document.addEventListener('DOMContentLoaded', () => {
             if (nameInput) nameInput.value = savedName;
         }
         // Load personal best from localStorage for anonymous users
-        const mode = new URLSearchParams(window.location.search).get('mode') === 'thematic' ? 'thematic' : 'vanilla';
-        personalBest = parseInt(localStorage.getItem(`puzzle_racer_best_${mode}`)) || 0;
+        if (gameMode !== 'pardubice2026') {
+            const mode = new URLSearchParams(window.location.search).get('mode') === 'thematic' ? 'thematic' : 'vanilla';
+            personalBest = parseInt(localStorage.getItem(`puzzle_racer_best_${mode}`)) || 0;
+        }
         // Show anonymous CTA
         const anonCta = document.getElementById('anonCta');
         if (anonCta) anonCta.classList.remove('hidden');
@@ -1779,17 +2404,27 @@ async function initModeUI() {
     const urlParams = new URLSearchParams(window.location.search);
     const mode = urlParams.get('mode');
     const isThematic = mode === 'thematic';
+    const isCamp = mode === 'pardubice2026';
 
     // Show correct badge
     const vanillaBadge = document.getElementById('vanillaBadge');
     const thematicBadge = document.getElementById('thematicBadge');
+    const campBadge = document.getElementById('campBadge');
     const modeDesc = document.getElementById('modeDescription');
+    const normalStartButton = document.querySelector('#startScreen > button.btn-primary');
+
+    document.body.classList.toggle('camp-mode-active', isCamp);
+    document.getElementById('campLobby')?.classList.toggle('hidden', !isCamp);
+    document.getElementById('campLeaderboardSection')?.classList.toggle('hidden', !isCamp || !loggedInUser);
+    document.getElementById('leaderboardSection')?.classList.toggle('hidden', isCamp);
+    document.getElementById('hallOfFameSection')?.classList.toggle('hidden', isCamp);
+    if (normalStartButton) normalStartButton.classList.toggle('hidden', isCamp);
 
     // Update Tab UI (Visual Selection)
     if (vanillaBadge) {
-        vanillaBadge.style.opacity = isThematic ? '0.5' : '1';
-        vanillaBadge.style.boxShadow = isThematic ? 'none' : '0 0 15px rgba(59, 130, 246, 0.5)';
-        vanillaBadge.style.transform = isThematic ? 'scale(0.95)' : 'scale(1.05)';
+        vanillaBadge.style.opacity = (isThematic || isCamp) ? '0.5' : '1';
+        vanillaBadge.style.boxShadow = (isThematic || isCamp) ? 'none' : '0 0 15px rgba(59, 130, 246, 0.5)';
+        vanillaBadge.style.transform = (isThematic || isCamp) ? 'scale(0.95)' : 'scale(1.05)';
         vanillaBadge.style.transition = 'all 0.3s ease';
     }
 
@@ -1800,9 +2435,18 @@ async function initModeUI() {
         thematicBadge.style.transition = 'all 0.3s ease';
     }
 
+    if (campBadge) {
+        campBadge.style.opacity = isCamp ? '1' : '0.5';
+        campBadge.style.boxShadow = isCamp ? '0 0 18px rgba(242, 197, 82, 0.45)' : 'none';
+        campBadge.style.transform = isCamp ? 'scale(1.05)' : 'scale(0.95)';
+        campBadge.style.transition = 'all 0.3s ease';
+    }
+
     // Update description - for thematic mode, fetch and show current settings
     if (modeDesc) {
-        if (isThematic) {
+        if (isCamp) {
+            modeDesc.innerHTML = '<strong>Pardubice 2026:</strong> jedna sada, jeden start, celý týden jeden společný žebříček.';
+        } else if (isThematic) {
             try {
                 const res = await fetch(`${API_URL}/racer/settings`);
                 if (res.ok) {
@@ -1829,6 +2473,14 @@ async function initModeUI() {
         } else {
             modeDesc.textContent = 'Vyřešte co nejvíce taktických úloh během 3 minut! Obtížnost se postupně zvyšuje.';
         }
+    }
+
+
+    if (isCamp) {
+        document.getElementById('personalStatsPanel')?.classList.add('hidden');
+        document.getElementById('anonCta')?.classList.add('hidden');
+        renderCampLobby();
+        loadPuzzleCampState();
     }
 }
 

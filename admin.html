@@ -1155,6 +1155,92 @@
     </div>
     <!-- Puzzle Racer Settings View -->
     <div id="puzzleRacerView" class="hidden">
+        <div class="card camp-racer-admin">
+            <div class="camp-racer-admin__header">
+                <div>
+                    <span class="camp-racer-admin__eyebrow"><i class="fa-solid fa-location-dot"></i> Soustředění</span>
+                    <h2>Pardubice 2026 · denní rozcvička</h2>
+                    <p>Vytvořte společnou sadu, nechte hráče připojit se a odstartujte všem ve stejný okamžik.</p>
+                </div>
+                <a href="/puzzle-racer?mode=pardubice2026" class="btn-secondary" target="_blank" rel="noopener">
+                    <i class="fa-solid fa-arrow-up-right-from-square"></i> Hráčský režim
+                </a>
+            </div>
+
+            <div id="prCampStatus" class="camp-racer-status camp-racer-status--idle">
+                <div class="camp-racer-status__icon"><i class="fa-solid fa-mug-hot"></i></div>
+                <div>
+                    <strong>Zatím není naplánovaná rozcvička</strong>
+                    <span>Vyplňte parametry a připravte dnešní společný start.</span>
+                </div>
+            </div>
+
+            <div class="camp-racer-admin__grid">
+                <div class="camp-racer-builder">
+                    <h3><i class="fa-solid fa-wand-magic-sparkles"></i> Připravit novou rozcvičku</h3>
+                    <div class="camp-racer-form-grid">
+                        <div class="form-group camp-racer-form-grid__wide">
+                            <label for="prCampTitle">Název dne</label>
+                            <input id="prCampTitle" type="text" maxlength="80" value="Denní rozcvička" placeholder="Např. Úterní rozcvička">
+                        </div>
+                        <div class="form-group">
+                            <label for="prCampStartDelay">Hromadný start za</label>
+                            <div class="camp-racer-input-unit"><input id="prCampStartDelay" type="number" min="0.2" max="60" step="0.1" value="3"><span>min</span></div>
+                        </div>
+                        <div class="form-group">
+                            <label for="prCampDuration">Délka závodu</label>
+                            <div class="camp-racer-input-unit"><input id="prCampDuration" type="number" min="1" max="15" step="0.5" value="4"><span>min</span></div>
+                        </div>
+                        <div class="form-group">
+                            <label for="prCampPuzzleCount">Počet úloh</label>
+                            <input id="prCampPuzzleCount" type="number" min="5" max="100" value="40">
+                        </div>
+                        <div class="form-group">
+                            <label for="prCampTheme">Téma</label>
+                            <select id="prCampTheme">
+                                <option value="mix">Smíšené</option>
+                                <option value="opening">Zahájení</option>
+                                <option value="middlegame">Střední hra</option>
+                                <option value="endgame">Koncovky</option>
+                                <option value="mate">Matové motivy</option>
+                                <option value="short">Krátké kombinace</option>
+                                <option value="advancedPawn">Volný pěšec</option>
+                                <option value="defensiveMove">Obrana</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="camp-racer-rules">
+                        <label><input type="checkbox" id="prCampPenalty" checked><span><strong>Časová penalizace</strong><small>Za chybný tah odečíst</small></span></label>
+                        <div class="camp-racer-input-unit camp-racer-input-unit--small"><input id="prCampPenaltySeconds" type="number" min="1" max="60" value="3"><span>s</span></div>
+                        <label><input type="checkbox" id="prCampSkip" checked><span><strong>Po chybě dál</strong><small>Chybnou úlohu hned přeskočit</small></span></label>
+                        <label><input type="checkbox" id="prCampLives"><span><strong>Omezené životy</strong><small>Ukončit po počtu chyb</small></span></label>
+                        <div class="camp-racer-input-unit camp-racer-input-unit--small"><input id="prCampMaxLives" type="number" min="1" max="20" value="5"><span>×</span></div>
+                    </div>
+
+                    <button id="prCampCreateBtn" class="btn-primary camp-racer-create" onclick="createPuzzleCampSession()">
+                        <i class="fa-solid fa-flag-checkered"></i> Vygenerovat sadu a spustit odpočet
+                    </button>
+                    <div id="prCampCreateResult" class="camp-racer-result" aria-live="polite"></div>
+                </div>
+
+                <div class="camp-racer-live">
+                    <div class="camp-racer-live__heading">
+                        <div><span>Živý přehled</span><h3 id="prCampLiveTitle">Čekáme na další den</h3></div>
+                        <strong id="prCampParticipantCount">0 hráčů</strong>
+                    </div>
+                    <div id="prCampLiveBoard" class="camp-racer-live__board">
+                        <div class="camp-racer-empty"><i class="fa-solid fa-users"></i><span>Po naplánování se zde ukážou připojení hráči.</span></div>
+                    </div>
+                    <div id="prCampActions" class="camp-racer-actions hidden">
+                        <button class="btn-secondary" onclick="startPuzzleCampNow()"><i class="fa-solid fa-bolt"></i> Start teď</button>
+                        <button class="btn-secondary" onclick="finishPuzzleCampNow()"><i class="fa-solid fa-flag-checkered"></i> Ukončit</button>
+                        <button class="btn-danger" onclick="cancelPuzzleCampSession()"><i class="fa-solid fa-ban"></i> Zrušit</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <div class="card">
             <div
                 style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
@@ -2731,7 +2817,7 @@
     <script src="js/admin/admin-sidebar.js?v=ux3"></script>
     <script src="js/admin/admin-users.js?v=ux12"></script>
     <script src="js/admin/admin-blicak.js?v=ux12"></script>
-    <script src="js/admin/admin-puzzle-racer.js?v=ux12"></script>
+    <script src="js/admin/admin-puzzle-racer.js?v=pardubice1"></script>
     <script src="js/admin/admin-chessdb.js?v=ux12"></script>
     <script src="js/admin/admin-weekly-puzzles.js?v=ux15"></script>
     <script src="js/admin/admin-home-tiles.js?v=1"></script>

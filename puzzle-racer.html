@@ -10,6 +10,7 @@
         rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/puzzle-camp.css?v=1">
 
     <!-- Chess Libraries -->
     <link rel="stylesheet" href="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.css">
@@ -140,6 +141,12 @@
                 padding-top: 5px !important;
                 height: 100vh;
                 overflow: hidden;
+            }
+
+            body.game-active main>.container {
+                width: 100%;
+                max-width: none;
+                padding: 0;
             }
 
             body.game-active .game-container {
@@ -967,12 +974,42 @@
                             style="cursor: pointer; opacity: 0.5;">
                             <i class="fa-solid fa-palette"></i> Tématický mód
                         </div>
+                        <div id="campBadge" class="mode-badge camp-mode"
+                            onclick="window.location.href='/puzzle-racer?mode=pardubice2026'"
+                            style="cursor: pointer; opacity: 0.5;">
+                            <i class="fa-solid fa-location-dot"></i> Pardubice 2026
+                        </div>
                     </div>
 
                     <p id="modeDescription"
                         style="font-size: 1.1rem; color: var(--text-muted); margin-bottom: 2rem; max-width: 500px; margin-left: auto; margin-right: auto;">
                         Vyřešte co nejvíce taktických úloh během 3 minut! Obtížnost se postupně zvyšuje.
                     </p>
+
+                    <section id="campLobby" class="camp-lobby hidden" aria-live="polite">
+                        <div class="camp-lobby__glow"></div>
+                        <div class="camp-lobby__topline">
+                            <span><i class="fa-solid fa-sun"></i> Denní rozcvička</span>
+                            <strong id="campLobbyStatus">Čekáme na trenéra</strong>
+                        </div>
+                        <h3 id="campLobbyTitle">Pardubice 2026</h3>
+                        <p id="campLobbyMessage">Jakmile trenér připraví dnešní sadu, objeví se zde společný odpočet.</p>
+                        <div id="campCountdown" class="camp-countdown hidden">
+                            <span class="camp-countdown__label">Hromadný start za</span>
+                            <strong id="campCountdownValue">3:00</strong>
+                            <span id="campCountdownPulse" class="camp-countdown__pulse"><i class="fa-solid fa-circle"></i> čekárna otevřena</span>
+                        </div>
+                        <div class="camp-lobby__stats">
+                            <div><i class="fa-solid fa-users"></i><strong id="campLobbyPlayers">0</strong><span>připojeno</span></div>
+                            <div><i class="fa-solid fa-puzzle-piece"></i><strong id="campLobbyPuzzles">40</strong><span>úloh</span></div>
+                            <div><i class="fa-solid fa-stopwatch"></i><strong id="campLobbyDuration">4:00</strong><span>čas</span></div>
+                        </div>
+                        <button id="campJoinButton" class="btn-primary camp-join-button hidden" onclick="window.joinPuzzleCamp()">
+                            <i class="fa-solid fa-right-to-bracket"></i> Připojit se k rozcvičce
+                        </button>
+                        <div id="campJoinedBadge" class="camp-joined-badge hidden"><i class="fa-solid fa-circle-check"></i> Jste na startovní listině</div>
+                        <a id="campLoginLink" href="/members" class="btn-primary camp-join-button hidden"><i class="fa-solid fa-lock"></i> Přihlásit se a připojit</a>
+                    </section>
 
                     <!-- Personal Stats for logged-in users -->
                     <div id="personalStatsPanel" class="personal-stats-panel hidden"></div>
@@ -1023,13 +1060,17 @@
                             <span class="stat-label">Rating</span>
                             <span class="stat-value puzzle-rating" id="puzzleRating">–</span>
                         </div>
+                        <div id="campLiveRankBox" class="stat-box camp-live-rank hidden">
+                            <span class="stat-label">Průběžně</span>
+                            <span class="stat-value" id="campLiveRank">#–</span>
+                        </div>
                     </div>
 
                     <!-- Status + ovládání NAD šachovnicí — pod boardem padaly pod fold (scroll je za hry zamčený) -->
                     <div class="controls" style="display: flex; gap: 0.75rem; justify-content: center; align-items: center; flex-wrap: wrap; margin: 0.4rem 0 0.6rem;">
                         <span id="toMove" style="color: var(--text-muted); font-size: 0.9rem; font-weight: 600;">Bílý na tahu</span>
                         <button class="btn-secondary" onclick="window.skipPuzzle()" style="font-size: 0.9rem;">
-                            <i class="fa-solid fa-forward"></i> Přeskočit (-5s)
+                            <i class="fa-solid fa-forward"></i> <span id="skipButtonLabel">Přeskočit (-5s)</span>
                         </button>
                         <a href="members.html" class="btn-secondary"
                             style="font-size: 0.9rem; background: rgba(255, 0, 0, 0.2); border-color: rgba(255, 0, 0, 0.3); color: #fca5a5; text-decoration: none; display: inline-flex; align-items: center;">
@@ -1052,6 +1093,8 @@
                     <h2>Konec hry!</h2>
                     <p>Váš výsledek:</p>
                     <div class="final-score" id="finalScore">0</div>
+
+                    <div id="campFinishSummary" class="camp-finish-summary hidden"></div>
 
                     <!-- New Record Banner -->
                     <div id="newRecordBanner" class="new-record-banner hidden">
@@ -1083,6 +1126,42 @@
 
                     </div>
                 </div>
+
+                <section id="campLeaderboardSection" class="camp-leaderboard hidden">
+                    <div class="camp-leaderboard__hero">
+                        <div>
+                            <span><i class="fa-solid fa-tent"></i> Soustředění Pardubice 2026</span>
+                            <h2>Celotýdenní liga rozcviček</h2>
+                            <p>Každý den se počítá. Body za správnost, rychlost i dlouhé série.</p>
+                        </div>
+                        <div class="camp-player-chip"><i class="fa-solid fa-user"></i><span id="campCurrentPlayer">Přihlášený hráč</span></div>
+                    </div>
+
+                    <div id="campWeekPodium" class="camp-week-podium"></div>
+
+                    <div class="camp-leaderboard__toolbar">
+                        <div>
+                            <span class="camp-section-kicker">Celkové pořadí</span>
+                            <h3><i class="fa-solid fa-trophy"></i> Pardubický pohár</h3>
+                        </div>
+                        <div id="campSessionTabs" class="camp-session-tabs"></div>
+                    </div>
+
+                    <div class="camp-table-wrap">
+                        <table class="camp-standings-table">
+                            <thead><tr><th>#</th><th>Hráč</th><th>Body</th><th>Vyřešeno</th><th>Účast</th><th>Výhry</th><th>Nej série</th></tr></thead>
+                            <tbody id="campStandingsBody"><tr><td colspan="7"><i class="fa-solid fa-spinner fa-spin"></i> Načítám ligu…</td></tr></tbody>
+                        </table>
+                    </div>
+
+                    <div class="camp-matrix-card">
+                        <div class="camp-matrix-card__heading">
+                            <div><span class="camp-section-kicker">Detail rozcvičky</span><h3 id="campMatrixTitle">Úloha po úloze</h3></div>
+                            <div class="camp-matrix-legend"><span><i class="camp-dot camp-dot--correct"></i> vyřešeno</span><span><i class="camp-dot camp-dot--wrong"></i> nevyřešeno</span><span><i class="camp-dot camp-dot--empty"></i> bez pokusu</span></div>
+                        </div>
+                        <div id="campPuzzleMatrix" class="camp-puzzle-matrix"><div class="camp-matrix-empty">Zatím nejsou žádné výsledky.</div></div>
+                    </div>
+                </section>
 
                 <!-- LEADERBOARD SECTION -->
                 <div id="leaderboardSection"
@@ -1150,7 +1229,7 @@
     <script src="js/config.js?v=4" defer></script>
     <script src="js/layout-loader.js?v=7" defer></script>
     <script src="js/main.js" defer></script>
-    <script src="js/puzzle-racer.js?v=2" defer></script>
+    <script src="js/puzzle-racer.js?v=pardubice1" defer></script>
 </body>
 
 </html>

@@ -1,7 +1,17 @@
 import express from 'express';
 import { PrismaClient } from '@prisma/client';
 import { getPragueWeekRange } from '../utils/weekRange.js';
-import { requireRole } from '../middleware/auth.js';
+import { authMiddleware, requireRole } from '../middleware/auth.js';
+import {
+    CAMP_CODE,
+    buildDifficultyPlan,
+    calculateAttemptSummary,
+    calculatePuzzlePoints,
+    getCampAchievements,
+    getCampLevel,
+    getCampSessionStatus,
+    normalizeCampConfig
+} from '../services/puzzleCampService.js';
 
 const router = express.Router();
 const prisma = new PrismaClient();
@@ -639,6 +649,498 @@ router.get('/leaderboard', async (req, res) => {
     } catch (error) {
         console.error('Error fetching leaderboard:', error);
         res.status(500).json({ error: 'Failed to fetch leaderboard' });
+    }
+});
+
+const campUserSelect = { id: true, username: true, realName: true };
+
+function campDisplayName(user) {
+    return user?.realName || user?.username || 'Hráč';
+}
+
+function campSessionPayload(session, now = new Date()) {
+    if (!session) return null;
+    const status = getCampSessionStatus(session, now);
+    const startsAt = new Date(session.startsAt);
+    return {
+        id: session.id,
+        campCode: session.campCode,
+        campName: session.campName,
+        title: session.title,
+        status,
+        startsAt,
+        endsAt: new Date(startsAt.getTime() + session.durationSeconds * 1000),
+        durationSeconds: session.durationSeconds,
+        puzzleCount: session.puzzleCount,
+        puzzleTheme: session.puzzleTheme,
+        livesEnabled: session.livesEnabled,
+        maxLives: session.maxLives,
+        penaltyEnabled: session.penaltyEnabled,
+        penaltySeconds: session.penaltySeconds,
+        skipOnMistake: session.skipOnMistake,
+        createdAt: session.createdAt
+    };
+}
+
+async function findRelevantCampSession(now = new Date()) {
+    const sessions = await prisma.puzzleCampSession.findMany({
+        where: { campCode: CAMP_CODE, status: { not: 'cancelled' } },
+        orderBy: { startsAt: 'desc' },
+        take: 20
+    });
+
+    const live = sessions.find(session => getCampSessionStatus(session, now) === 'live');
+    const scheduled = sessions
+        .filter(session => getCampSessionStatus(session, now) === 'scheduled')
+        .sort((a, b) => new Date(a.startsAt) - new Date(b.startsAt))[0];
+    return live || scheduled || sessions.find(session => getCampSessionStatus(session, now) === 'finished') || null;
+}
+
+async function fetchCampPuzzleSet(config) {
+    const unique = [];
+    const seen = new Set();
+
+    for (let round = 0; round < 3 && unique.length < config.puzzleCount; round++) {
+        const missing = config.puzzleCount - unique.length;
+        const batches = await Promise.all(buildDifficultyPlan(missing).map(async item => {
+            const batch = await fetchPuzzlesByDifficulty(item.difficulty, item.count, config.puzzleTheme);
+            return batch.map(puzzle => ({ ...puzzle, campDifficulty: item.difficulty }));
+        }));
+
+        for (const puzzle of batches.flat()) {
+            const puzzleId = puzzle?.puzzle?.id;
+            if (!puzzleId || seen.has(puzzleId)) continue;
+            seen.add(puzzleId);
+            unique.push(puzzle);
+        }
+    }
+
+    if (unique.length < config.puzzleCount) {
+        throw new Error(`Lichess vrátil pouze ${unique.length} z ${config.puzzleCount} úloh`);
+    }
+    return unique.slice(0, config.puzzleCount);
+}
+
+async function refreshCampAttempt(attemptId, status) {
+    const results = await prisma.puzzleCampPuzzleResult.findMany({
+        where: { attemptId },
+        orderBy: { puzzleIndex: 'asc' }
+    });
+    const summary = calculateAttemptSummary(results);
+
+    await Promise.all(summary.scoredResults.map(result => {
+        const stored = results.find(item => item.id === result.id);
+        if (!stored || stored.points === result.points) return Promise.resolve();
+        return prisma.puzzleCampPuzzleResult.update({ where: { id: result.id }, data: { points: result.points } });
+    }));
+
+    return prisma.puzzleCampAttempt.update({
+        where: { id: attemptId },
+        data: {
+            status,
+            finishedAt: status === 'finished' ? new Date() : undefined,
+            score: summary.score,
+            correctCount: summary.correctCount,
+            wrongCount: summary.wrongCount,
+            skippedCount: summary.skippedCount,
+            maxStreak: summary.maxStreak,
+            puzzleCount: summary.puzzleCount,
+            durationMs: summary.durationMs
+        }
+    });
+}
+
+// GET /api/racer/camp/active - Přihlášený hráč dostane společný serverový odpočet.
+router.get('/camp/active', authMiddleware, async (req, res) => {
+    try {
+        const now = new Date();
+        const session = await findRelevantCampSession(now);
+        let attempt = null;
+        let participantCount = 0;
+
+        if (session) {
+            [attempt, participantCount] = await Promise.all([
+                prisma.puzzleCampAttempt.findUnique({
+                    where: { sessionId_userId: { sessionId: session.id, userId: req.user.id } }
+                }),
+                prisma.puzzleCampAttempt.count({ where: { sessionId: session.id } })
+            ]);
+        }
+
+        res.json({
+            serverTime: now,
+            session: campSessionPayload(session, now),
+            attempt,
+            participantCount
+        });
+    } catch (error) {
+        console.error('Camp active state error:', error);
+        res.status(500).json({ error: 'Nepodařilo se načíst rozcvičku' });
+    }
+});
+
+// POST /api/racer/camp/sessions - Trenér vytvoří pevnou sadu a naplánuje hromadný start.
+router.post('/camp/sessions', requireRole('ADMIN'), async (req, res) => {
+    try {
+        const now = new Date();
+        const existing = await findRelevantCampSession(now);
+        if (existing && ['scheduled', 'live'].includes(getCampSessionStatus(existing, now))) {
+            return res.status(409).json({
+                error: 'Jiná rozcvička už čeká na start nebo právě probíhá',
+                session: campSessionPayload(existing, now)
+            });
+        }
+
+        const config = normalizeCampConfig(req.body);
+        const puzzles = await fetchCampPuzzleSet(config);
+        const startsAt = new Date(now.getTime() + config.startDelaySeconds * 1000);
+        const session = await prisma.puzzleCampSession.create({
+            data: {
+                campCode: config.campCode,
+                campName: config.campName,
+                title: config.title,
+                startsAt,
+                durationSeconds: config.durationSeconds,
+                puzzleCount: config.puzzleCount,
+                puzzleTheme: config.puzzleTheme,
+                livesEnabled: config.livesEnabled,
+                maxLives: config.maxLives,
+                penaltyEnabled: config.penaltyEnabled,
+                penaltySeconds: config.penaltySeconds,
+                skipOnMistake: config.skipOnMistake,
+                puzzles,
+                createdById: req.user.id
+            }
+        });
+
+        res.status(201).json({
+            serverTime: now,
+            session: campSessionPayload(session, now),
+            generatedPuzzles: puzzles.length
+        });
+    } catch (error) {
+        console.error('Camp session create error:', error);
+        res.status(500).json({ error: error.message || 'Rozcvičku se nepodařilo vytvořit' });
+    }
+});
+
+router.get('/camp/admin', requireRole('ADMIN'), async (req, res) => {
+    try {
+        const now = new Date();
+        const sessions = await prisma.puzzleCampSession.findMany({
+            where: { campCode: CAMP_CODE },
+            orderBy: { startsAt: 'desc' },
+            take: 12,
+            include: { _count: { select: { attempts: true } } }
+        });
+        res.json({
+            serverTime: now,
+            sessions: sessions.map(session => ({
+                ...campSessionPayload(session, now),
+                participantCount: session._count.attempts
+            }))
+        });
+    } catch (error) {
+        console.error('Camp admin state error:', error);
+        res.status(500).json({ error: 'Nepodařilo se načíst stav rozcviček' });
+    }
+});
+
+router.post('/camp/sessions/:id/cancel', requireRole('ADMIN'), async (req, res) => {
+    try {
+        const id = Number.parseInt(req.params.id, 10);
+        const session = await prisma.puzzleCampSession.update({
+            where: { id },
+            data: { status: 'cancelled' }
+        });
+        res.json({ session: campSessionPayload(session) });
+    } catch (error) {
+        console.error('Camp session cancel error:', error);
+        res.status(404).json({ error: 'Rozcvička nebyla nalezena' });
+    }
+});
+
+router.post('/camp/sessions/:id/start-now', requireRole('ADMIN'), async (req, res) => {
+    try {
+        const id = Number.parseInt(req.params.id, 10);
+        const session = await prisma.puzzleCampSession.update({
+            where: { id },
+            data: { startsAt: new Date(), status: 'live' }
+        });
+        res.json({ serverTime: new Date(), session: campSessionPayload(session) });
+    } catch (error) {
+        console.error('Camp session start error:', error);
+        res.status(404).json({ error: 'Rozcvička nebyla nalezena' });
+    }
+});
+
+router.post('/camp/sessions/:id/finish-now', requireRole('ADMIN'), async (req, res) => {
+    try {
+        const id = Number.parseInt(req.params.id, 10);
+        const session = await prisma.puzzleCampSession.update({
+            where: { id },
+            data: { status: 'finished' }
+        });
+        await prisma.puzzleCampAttempt.updateMany({
+            where: { sessionId: id, status: { not: 'finished' } },
+            data: { status: 'finished', finishedAt: new Date() }
+        });
+        res.json({ session: campSessionPayload(session) });
+    } catch (error) {
+        console.error('Camp session finish error:', error);
+        res.status(404).json({ error: 'Rozcvička nebyla nalezena' });
+    }
+});
+
+router.post('/camp/sessions/:id/join', authMiddleware, async (req, res) => {
+    try {
+        const id = Number.parseInt(req.params.id, 10);
+        const session = await prisma.puzzleCampSession.findUnique({ where: { id } });
+        if (!session) return res.status(404).json({ error: 'Rozcvička nebyla nalezena' });
+
+        const status = getCampSessionStatus(session);
+        if (!['scheduled', 'live'].includes(status)) {
+            return res.status(409).json({ error: 'Do této rozcvičky už se nelze připojit' });
+        }
+
+        const attempt = await prisma.puzzleCampAttempt.upsert({
+            where: { sessionId_userId: { sessionId: id, userId: req.user.id } },
+            create: {
+                sessionId: id,
+                userId: req.user.id,
+                status: status === 'live' ? 'playing' : 'waiting',
+                startedAt: status === 'live' ? session.startsAt : null
+            },
+            update: status === 'live' ? { status: 'playing', startedAt: session.startsAt } : {},
+            include: { puzzleResults: { orderBy: { puzzleIndex: 'asc' } } }
+        });
+
+        const participantCount = await prisma.puzzleCampAttempt.count({ where: { sessionId: id } });
+        res.json({ serverTime: new Date(), session: campSessionPayload(session), attempt, participantCount });
+    } catch (error) {
+        console.error('Camp join error:', error);
+        res.status(500).json({ error: 'Připojení k rozcvičce se nezdařilo' });
+    }
+});
+
+router.get('/camp/sessions/:id/play', authMiddleware, async (req, res) => {
+    try {
+        const id = Number.parseInt(req.params.id, 10);
+        const session = await prisma.puzzleCampSession.findUnique({ where: { id } });
+        if (!session) return res.status(404).json({ error: 'Rozcvička nebyla nalezena' });
+
+        const status = getCampSessionStatus(session);
+        if (status === 'scheduled') {
+            return res.status(425).json({ error: 'Rozcvička ještě nezačala', session: campSessionPayload(session) });
+        }
+        if (status !== 'live') {
+            return res.status(410).json({ error: 'Rozcvička už skončila', session: campSessionPayload(session) });
+        }
+
+        const attempt = await prisma.puzzleCampAttempt.upsert({
+            where: { sessionId_userId: { sessionId: id, userId: req.user.id } },
+            create: { sessionId: id, userId: req.user.id, status: 'playing', startedAt: session.startsAt },
+            update: { status: 'playing', startedAt: session.startsAt },
+            include: { puzzleResults: { orderBy: { puzzleIndex: 'asc' } } }
+        });
+
+        res.json({
+            serverTime: new Date(),
+            session: campSessionPayload(session),
+            attempt,
+            puzzles: session.puzzles
+        });
+    } catch (error) {
+        console.error('Camp play data error:', error);
+        res.status(500).json({ error: 'Nepodařilo se načíst společnou sadu úloh' });
+    }
+});
+
+router.put('/camp/sessions/:id/progress', authMiddleware, async (req, res) => {
+    try {
+        const sessionId = Number.parseInt(req.params.id, 10);
+        const session = await prisma.puzzleCampSession.findUnique({ where: { id: sessionId } });
+        if (!session) return res.status(404).json({ error: 'Rozcvička nebyla nalezena' });
+
+        const status = getCampSessionStatus(session);
+        const endsAt = new Date(session.startsAt).getTime() + session.durationSeconds * 1000;
+        if (status === 'scheduled' || session.status === 'cancelled' || Date.now() > endsAt + 30000) {
+            return res.status(409).json({ error: 'Výsledek už nelze zapsat' });
+        }
+
+        const attempt = await prisma.puzzleCampAttempt.findUnique({
+            where: { sessionId_userId: { sessionId, userId: req.user.id } }
+        });
+        if (!attempt) return res.status(409).json({ error: 'Nejprve se připojte k rozcvičce' });
+
+        const puzzleIndex = Number.parseInt(req.body.puzzleIndex, 10);
+        const puzzles = Array.isArray(session.puzzles) ? session.puzzles : [];
+        const expectedPuzzle = puzzles[puzzleIndex];
+        if (!expectedPuzzle || expectedPuzzle.puzzle?.id !== req.body.puzzleId) {
+            return res.status(400).json({ error: 'Úloha nepatří do této rozcvičky' });
+        }
+
+        const existing = await prisma.puzzleCampPuzzleResult.findUnique({
+            where: { attemptId_puzzleIndex: { attemptId: attempt.id, puzzleIndex } }
+        });
+        if (!existing?.correct) {
+            const correct = req.body.correct === true;
+            const skipped = req.body.skipped === true;
+            const wrongAttempts = Math.max(0, Math.min(50, Number.parseInt(req.body.wrongAttempts, 10) || 0));
+            const responseMs = Math.max(0, Math.min(session.durationSeconds * 1000, Number.parseInt(req.body.responseMs, 10) || 0));
+            const points = calculatePuzzlePoints({ correct, skipped, wrongAttempts, responseMs });
+
+            await prisma.puzzleCampPuzzleResult.upsert({
+                where: { attemptId_puzzleIndex: { attemptId: attempt.id, puzzleIndex } },
+                create: {
+                    attemptId: attempt.id,
+                    puzzleIndex,
+                    puzzleId: expectedPuzzle.puzzle.id,
+                    rating: expectedPuzzle.puzzle.rating || null,
+                    correct,
+                    skipped,
+                    wrongAttempts,
+                    responseMs,
+                    points
+                },
+                update: { correct, skipped, wrongAttempts, responseMs, points, answeredAt: new Date() }
+            });
+        }
+
+        const updatedAttempt = await refreshCampAttempt(attempt.id, 'playing');
+        const betterScores = await prisma.puzzleCampAttempt.count({
+            where: { sessionId, score: { gt: updatedAttempt.score } }
+        });
+        res.json({ attempt: updatedAttempt, rank: betterScores + 1 });
+    } catch (error) {
+        console.error('Camp progress error:', error);
+        res.status(500).json({ error: 'Průběžný výsledek se nepodařilo uložit' });
+    }
+});
+
+router.post('/camp/sessions/:id/finish', authMiddleware, async (req, res) => {
+    try {
+        const sessionId = Number.parseInt(req.params.id, 10);
+        const attempt = await prisma.puzzleCampAttempt.findUnique({
+            where: { sessionId_userId: { sessionId, userId: req.user.id } }
+        });
+        if (!attempt) return res.status(404).json({ error: 'Pokus nebyl nalezen' });
+
+        const updatedAttempt = await refreshCampAttempt(attempt.id, 'finished');
+        res.json({ attempt: updatedAttempt, achievements: getCampAchievements(updatedAttempt) });
+    } catch (error) {
+        console.error('Camp finish error:', error);
+        res.status(500).json({ error: 'Výsledek se nepodařilo uzavřít' });
+    }
+});
+
+router.get('/camp/leaderboard', authMiddleware, async (req, res) => {
+    try {
+        const now = new Date();
+        const sessions = await prisma.puzzleCampSession.findMany({
+            where: { campCode: CAMP_CODE, status: { not: 'cancelled' } },
+            orderBy: { startsAt: 'asc' },
+            include: {
+                attempts: {
+                    include: {
+                        user: { select: campUserSelect },
+                        puzzleResults: { orderBy: { puzzleIndex: 'asc' } }
+                    }
+                }
+            }
+        });
+
+        const relevant = await findRelevantCampSession(now);
+        const requestedId = Number.parseInt(req.query.sessionId, 10);
+        const selected = sessions.find(session => session.id === requestedId)
+            || sessions.find(session => session.id === relevant?.id)
+            || sessions.at(-1)
+            || null;
+
+        const standingsByUser = new Map();
+        for (const session of sessions) {
+            const ranked = [...session.attempts].sort((a, b) => b.score - a.score || b.correctCount - a.correctCount || a.durationMs - b.durationMs);
+            ranked.forEach((attempt, index) => {
+                if (attempt.puzzleResults.length === 0) return;
+                const row = standingsByUser.get(attempt.userId) || {
+                    userId: attempt.userId,
+                    playerName: campDisplayName(attempt.user),
+                    score: 0,
+                    correctCount: 0,
+                    wrongCount: 0,
+                    skippedCount: 0,
+                    maxStreak: 0,
+                    durationMs: 0,
+                    attendance: 0,
+                    wins: 0
+                };
+                row.score += attempt.score;
+                row.correctCount += attempt.correctCount;
+                row.wrongCount += attempt.wrongCount;
+                row.skippedCount += attempt.skippedCount;
+                row.maxStreak = Math.max(row.maxStreak, attempt.maxStreak);
+                row.durationMs += attempt.durationMs;
+                row.attendance++;
+                if (index === 0 && attempt.score > 0) row.wins++;
+                standingsByUser.set(attempt.userId, row);
+            });
+        }
+
+        const standings = [...standingsByUser.values()]
+            .sort((a, b) => b.score - a.score || b.correctCount - a.correctCount || a.durationMs - b.durationMs)
+            .map((row, index) => ({ ...row, rank: index + 1, level: getCampLevel(row.score) }));
+
+        let sessionDetail = null;
+        if (selected) {
+            const puzzles = Array.isArray(selected.puzzles) ? selected.puzzles : [];
+            const participants = [...selected.attempts]
+                .sort((a, b) => b.score - a.score || b.correctCount - a.correctCount || a.durationMs - b.durationMs)
+                .map((attempt, index) => ({
+                    rank: index + 1,
+                    userId: attempt.userId,
+                    playerName: campDisplayName(attempt.user),
+                    status: attempt.status,
+                    score: attempt.score,
+                    correctCount: attempt.correctCount,
+                    wrongCount: attempt.wrongCount,
+                    skippedCount: attempt.skippedCount,
+                    maxStreak: attempt.maxStreak,
+                    cells: attempt.puzzleResults.map(result => ({
+                        puzzleIndex: result.puzzleIndex,
+                        correct: result.correct,
+                        skipped: result.skipped,
+                        wrongAttempts: result.wrongAttempts,
+                        responseMs: result.responseMs,
+                        points: result.points
+                    }))
+                }));
+
+            sessionDetail = {
+                session: campSessionPayload(selected, now),
+                puzzles: puzzles.map((puzzle, index) => ({
+                    index,
+                    puzzleId: puzzle.puzzle?.id,
+                    rating: puzzle.puzzle?.rating || null,
+                    difficulty: puzzle.campDifficulty || null
+                })),
+                participants
+            };
+        }
+
+        res.json({
+            serverTime: now,
+            campCode: CAMP_CODE,
+            campName: 'Pardubice 2026',
+            sessions: sessions.map(session => ({
+                ...campSessionPayload(session, now),
+                participantCount: session.attempts.length
+            })),
+            standings,
+            sessionDetail
+        });
+    } catch (error) {
+        console.error('Camp leaderboard error:', error);
+        res.status(500).json({ error: 'Táborový žebříček se nepodařilo načíst' });
     }
 });
 
