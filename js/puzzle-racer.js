@@ -76,6 +76,15 @@ const VANILLA_DEFAULTS = {
     skipOnMistake: false
 };
 
+function setGameViewportLocked(locked) {
+    document.body.classList.toggle('game-active', locked);
+    document.documentElement.classList.toggle('game-active', locked);
+}
+
+document.addEventListener('touchmove', event => {
+    if (document.body.classList.contains('game-active')) event.preventDefault();
+}, { passive: false });
+
 // Detect mode from URL parameter
 function detectGameMode() {
     const urlParams = new URLSearchParams(window.location.search);
@@ -284,7 +293,7 @@ async function startRace() {
         document.getElementById('gameInterface').classList.remove('hidden');
 
         // Lock scroll on mobile
-        document.body.classList.add('game-active');
+        setGameViewportLocked(true);
 
         // Otočení/resize během hry: board drží fixní px → bez resize přeteče nebo zmenší mimo layout
         if (!window.__racerResizeHooked) {
@@ -828,7 +837,7 @@ function showEasterEgg() {
     }
     isGameActive = false;
     clearInterval(timerInterval);
-    document.body.classList.remove('game-active');
+    setGameViewportLocked(false);
 
     document.getElementById('gameInterface').classList.add('hidden');
     document.getElementById('gameOverScreen').classList.remove('hidden');
@@ -1107,7 +1116,7 @@ function endGame() {
     }
 
     // Unlock scroll
-    document.body.classList.remove('game-active');
+    setGameViewportLocked(false);
 
     document.getElementById('gameInterface').classList.add('hidden');
     document.getElementById('gameOverScreen').classList.remove('hidden');
@@ -1769,7 +1778,7 @@ async function startPuzzleCampRace() {
 
         document.getElementById('startScreen').classList.add('hidden');
         document.getElementById('gameInterface').classList.remove('hidden');
-        document.body.classList.add('game-active');
+        setGameViewportLocked(true);
         document.getElementById('campLiveRankBox')?.classList.remove('hidden');
         const scoreLabel = document.querySelector('#score')?.previousElementSibling;
         if (scoreLabel) scoreLabel.textContent = 'Vyřešeno';

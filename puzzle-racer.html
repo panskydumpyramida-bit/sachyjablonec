@@ -73,6 +73,14 @@
         /* Global game-active styles - prevent scroll */
         body.game-active {
             overflow: hidden;
+            overscroll-behavior: none;
+        }
+
+        html.game-active {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            overscroll-behavior: none;
         }
 
         /* Board se vejde do výšky okna i na desktopu (např. 1280×720 bez fullscreenu) —
@@ -133,6 +141,7 @@
                 position: fixed;
                 width: 100%;
                 height: 100%;
+                height: 100dvh;
                 top: 0;
                 left: 0;
             }
@@ -140,6 +149,7 @@
             body.game-active main {
                 padding-top: 5px !important;
                 height: 100vh;
+                height: 100dvh;
                 overflow: hidden;
             }
 
@@ -154,6 +164,7 @@
                 padding: 0.5rem !important;
                 border-radius: 0 !important;
                 height: 100vh;
+                height: 100dvh;
                 display: flex;
                 flex-direction: column;
             }
@@ -273,13 +284,17 @@
             }
         }
 
-        /* Ensure board is touchable */
-        #board {
-            touch-action: manipulation;
+        /* Tah prstem musí zůstat šachovým tahem, nikdy gestem pro posun stránky. */
+        body.game-active #board,
+        body.game-active #board * {
+            touch-action: none !important;
+            -webkit-user-select: none !important;
+            user-select: none !important;
+            -webkit-touch-callout: none;
         }
 
-        #board * {
-            touch-action: manipulation;
+        body.game-active #board .piece-417db {
+            -webkit-user-drag: none;
         }
 
         .game-header {
