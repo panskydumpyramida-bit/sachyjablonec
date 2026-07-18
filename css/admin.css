@@ -2072,6 +2072,76 @@ input:checked+.slider:before {
 .camp-racer-history__summary strong { color: #f8cc6a; font-size: 1.05rem; }
 .camp-racer-history__summary span { margin-top: 0.15rem; color: #8494a8; font-size: 0.62rem; text-transform: uppercase; }
 
+.camp-racer-makeup {
+    display: grid;
+    grid-template-columns: minmax(180px, 0.8fr) minmax(300px, 1.2fr);
+    gap: 0.75rem 1rem;
+    margin-bottom: 0.8rem;
+    padding: 0.8rem;
+    border: 1px solid rgba(96, 165, 250, 0.16);
+    border-radius: 12px;
+    background: rgba(30, 64, 175, 0.07);
+}
+
+.camp-racer-makeup__heading { display: flex; align-items: center; gap: 0.65rem; }
+.camp-racer-makeup__icon {
+    display: grid;
+    width: 36px;
+    height: 36px;
+    flex: 0 0 36px;
+    border-radius: 10px;
+    color: #93c5fd;
+    background: rgba(59, 130, 246, 0.13);
+    place-items: center;
+}
+.camp-racer-makeup__heading h4 { margin: 0; color: #e0ecff; font-size: 0.82rem; }
+.camp-racer-makeup__heading p { margin: 0.16rem 0 0; color: #7f91aa; font-size: 0.64rem; line-height: 1.35; }
+.camp-racer-makeup__controls { display: flex; align-items: flex-end; gap: 0.5rem; }
+.camp-racer-makeup__controls label { display: grid; min-width: 0; flex: 1; gap: 0.3rem; color: #8ba0ba; font-size: 0.62rem; font-weight: 750; }
+.camp-racer-makeup__controls select {
+    width: 100%;
+    min-height: 44px;
+    padding: 0.62rem 2rem 0.62rem 0.7rem;
+    border: 1px solid rgba(96, 165, 250, 0.22);
+    border-radius: 9px;
+    color: #e2e8f0;
+    background: #111b2b;
+    font: inherit;
+    font-size: 0.75rem;
+}
+.camp-racer-makeup__controls .btn-secondary { padding-inline: 0.8rem; }
+.camp-racer-makeup__notice { grid-column: 1 / -1; color: #94a3b8; font-size: 0.68rem; }
+.camp-racer-makeup__notice:empty { display: none; }
+.camp-racer-makeup__list { display: flex; grid-column: 1 / -1; flex-wrap: wrap; gap: 0.4rem; }
+.camp-racer-makeup__empty { color: #64748b; font-size: 0.64rem; }
+.camp-racer-makeup-player {
+    display: inline-flex;
+    min-height: 44px;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.35rem 0.45rem 0.35rem 0.65rem;
+    border: 1px solid rgba(96, 165, 250, 0.2);
+    border-radius: 999px;
+    color: #dbeafe;
+    background: rgba(30, 64, 175, 0.14);
+    font-size: 0.68rem;
+    font-weight: 750;
+}
+.camp-racer-makeup-player small { color: #93c5fd; font-size: 0.58rem; font-weight: 650; }
+.camp-racer-makeup-player button {
+    display: grid;
+    width: 44px;
+    height: 44px;
+    flex: 0 0 44px;
+    border: 0;
+    border-radius: 50%;
+    color: #fca5a5;
+    background: rgba(127, 29, 29, 0.2);
+    cursor: pointer;
+    place-items: center;
+}
+.camp-racer-makeup-player button:disabled { opacity: 0.4; cursor: not-allowed; }
+
 .camp-racer-history__players { display: grid; gap: 0.45rem; }
 .camp-racer-history__players[aria-busy="true"] { opacity: 0.6; }
 
@@ -2157,6 +2227,11 @@ input:checked+.slider:before {
     .camp-racer-history__picker { width: 100%; min-width: 0; }
     .camp-racer-history__delete { width: 100%; }
     .camp-racer-history__summary { grid-template-columns: repeat(2, 1fr); }
+    .camp-racer-makeup { grid-template-columns: 1fr; }
+    .camp-racer-makeup__controls { align-items: stretch; flex-direction: column; }
+    .camp-racer-makeup__controls .btn-secondary { width: 100%; }
+    .camp-racer-makeup__notice,
+    .camp-racer-makeup__list { grid-column: auto; }
     .camp-racer-history-player summary { grid-template-columns: 26px minmax(0, 1fr) 60px 16px; gap: 0.45rem; min-height: 62px; padding-inline: 0.55rem; }
     .camp-racer-history-player__metric:nth-of-type(4) { display: none; }
     .camp-racer-puzzles { grid-template-columns: repeat(auto-fill, minmax(62px, 1fr)); }

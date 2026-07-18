@@ -1743,6 +1743,8 @@ function renderCampLobby() {
     joinedBadge.classList.add('hidden');
     loginLink.classList.add('hidden');
     countdown.classList.add('hidden');
+    joinButton.innerHTML = '<i class="fa-solid fa-right-to-bracket"></i> Připojit se k rozcvičce';
+    joinedBadge.innerHTML = '<i class="fa-solid fa-circle-check"></i> Jste na startovní listině';
 
     if (!loggedInUser) {
         setCampLobbyElement('campLobbyStatus', 'Pouze pro přihlášené');
@@ -1764,7 +1766,18 @@ function renderCampLobby() {
     setCampLobbyElement('campLobbyPuzzles', campSession.puzzleCount);
     setCampLobbyElement('campLobbyDuration', formatCampClock(campSession.durationSeconds * 1000));
 
-    if (campSession.status === 'scheduled') {
+    if (campSession.status === 'makeup_ready') {
+        setCampLobbyElement('campLobbyStatus', 'Náhradní termín povolen');
+        setCampLobbyElement('campLobbyMessage', `Trenér vám zpřístupnil původní sadu. Čas ${formatCampClock(campSession.durationSeconds * 1000)} se spustí až po stisknutí tlačítka.`);
+        joinButton.innerHTML = '<i class="fa-solid fa-play"></i> Spustit náhradní rozcvičku';
+        joinButton.classList.remove('hidden');
+    } else if (campSession.status === 'makeup_live') {
+        setCampLobbyElement('campLobbyStatus', 'Náhradní rozcvička běží');
+        setCampLobbyElement('campLobbyMessage', 'Hrajete stejnou sadu jako ostatní. Váš osobní čas už běží.');
+        joinedBadge.innerHTML = '<i class="fa-solid fa-user-clock"></i> Individuální dohrání';
+        joinedBadge.classList.remove('hidden');
+        countdown.classList.remove('hidden');
+    } else if (campSession.status === 'scheduled') {
         setCampLobbyElement('campLobbyStatus', 'Čekárna otevřena');
         setCampLobbyElement('campLobbyMessage', campAttempt
             ? 'Jste připojeni. Nechte stránku otevřenou — šachovnice se všem spustí automaticky.'
@@ -1806,11 +1819,11 @@ function tickCampCountdown() {
         value.textContent = formatCampClock(remaining);
         pulse.innerHTML = '<i class="fa-solid fa-circle"></i> čekárna otevřena';
         if (remaining <= 0 && campAttempt && !campRaceStarting && !isGameActive) loadPuzzleCampState();
-    } else if (campSession.status === 'live') {
+    } else if (campSession.status === 'live' || campSession.status === 'makeup_live') {
         const remaining = new Date(campSession.endsAt).getTime() - now;
-        label.textContent = 'Do konce zbývá';
+        label.textContent = campSession.status === 'makeup_live' ? 'Váš čas do konce' : 'Do konce zbývá';
         value.textContent = formatCampClock(remaining);
-        pulse.innerHTML = '<i class="fa-solid fa-circle"></i> závod běží';
+        pulse.innerHTML = `<i class="fa-solid fa-circle"></i> ${campSession.status === 'makeup_live' ? 'náhradní termín běží' : 'závod běží'}`;
         if (remaining <= 0 && isGameActive) endGame();
     }
 }
@@ -1830,7 +1843,7 @@ async function pollLivePuzzleCampState() {
         if (!res.ok) return;
         const data = await res.json();
         campServerOffset = new Date(data.serverTime).getTime() - Date.now();
-        if (!data.session || data.session.id !== playingSessionId || data.session.status !== 'live') {
+        if (!data.session || data.session.id !== playingSessionId || !['live', 'makeup_live'].includes(data.session.status)) {
             endGame();
         }
     } catch (error) {
@@ -1857,7 +1870,7 @@ async function loadPuzzleCampState() {
         clearInterval(campCountdownTimer);
         campCountdownTimer = setInterval(tickCampCountdown, 250);
 
-        if (campSession?.status === 'live' && campAttempt && campAttempt.status !== 'finished' && !isGameActive) {
+        if (['live', 'makeup_live'].includes(campSession?.status) && campAttempt && campAttempt.status !== 'finished' && !isGameActive) {
             await startPuzzleCampRace();
         }
         if (!puzzleCampLeaderboardData || campSession?.status === 'finished') {
@@ -1878,9 +1891,13 @@ async function joinPuzzleCamp() {
     if (!campSession || !loggedInUser || !button) return;
     const original = button.innerHTML;
     button.disabled = true;
-    button.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Připojuji…';
+    button.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> ${campSession.status === 'makeup_ready' ? 'Spouštím…' : 'Připojuji…'}`;
 
     try {
+        if (campSession.status === 'makeup_ready') {
+            await startPuzzleCampRace();
+            return;
+        }
         const res = await fetch(`${API_URL}/racer/camp/sessions/${campSession.id}/join`, {
             method: 'POST',
             headers: campAuthHeaders()
@@ -1891,7 +1908,7 @@ async function joinPuzzleCamp() {
         campSession = { ...data.session, participantCount: data.participantCount };
         campAttempt = data.attempt;
         renderCampLobby();
-        if (campSession.status === 'live') await startPuzzleCampRace();
+        if (['live', 'makeup_live'].includes(campSession.status)) await startPuzzleCampRace();
     } catch (error) {
         alert(error.message);
     } finally {

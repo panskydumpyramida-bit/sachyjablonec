@@ -1,6 +1,7 @@
 export const CAMP_CODE = 'pardubice-2026';
 export const CAMP_NAME = 'Pardubice 2026';
 export const CAMP_DIFFICULTIES = ['easiest', 'easier', 'normal', 'harder', 'hardest'];
+export const CAMP_MAKEUP_STATUSES = ['makeup_ready', 'makeup_playing'];
 export const CAMP_LEVELS = [
     { min: 0, name: 'Pěšec výpravy', icon: '♟' },
     { min: 3000, name: 'Jezdec výpravy', icon: '♞' },
@@ -56,6 +57,19 @@ export function getCampSessionStatus(session, now = new Date()) {
     if (now < startsAt) return 'scheduled';
     if (now < endsAt) return 'live';
     return 'finished';
+}
+
+export function getCampMakeupState(attempt, durationSeconds, now = new Date()) {
+    if (attempt?.status === 'makeup_ready') return { status: 'makeup_ready', startsAt: null, endsAt: null };
+    if (attempt?.status !== 'makeup_playing' || !attempt.startedAt) return null;
+
+    const startsAt = new Date(attempt.startedAt);
+    const endsAt = new Date(startsAt.getTime() + Math.max(0, Number(durationSeconds) || 0) * 1000);
+    return {
+        status: now < endsAt ? 'makeup_live' : 'finished',
+        startsAt,
+        endsAt
+    };
 }
 
 export function getCampLevel(score = 0) {

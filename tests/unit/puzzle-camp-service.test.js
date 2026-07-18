@@ -6,6 +6,7 @@ import {
     calculatePuzzlePoints,
     getCampAchievements,
     getCampLevel,
+    getCampMakeupState,
     getCampSessionStatus,
     normalizeCampConfig,
     normalizeCampMove
@@ -45,6 +46,18 @@ describe('Pardubice 2026 puzzle camp service', () => {
         expect(getCampSessionStatus(session, new Date('2026-07-18T07:59:59.000Z'))).toBe('scheduled');
         expect(getCampSessionStatus(session, new Date('2026-07-18T08:02:00.000Z'))).toBe('live');
         expect(getCampSessionStatus(session, new Date('2026-07-18T08:04:00.000Z'))).toBe('finished');
+    });
+
+    it('gives an individually released player a fresh personal time window', () => {
+        expect(getCampMakeupState({ status: 'makeup_ready' }, 240)).toEqual({
+            status: 'makeup_ready',
+            startsAt: null,
+            endsAt: null
+        });
+
+        const playing = { status: 'makeup_playing', startedAt: '2026-07-18T10:00:00.000Z' };
+        expect(getCampMakeupState(playing, 240, new Date('2026-07-18T10:03:59.000Z')).status).toBe('makeup_live');
+        expect(getCampMakeupState(playing, 240, new Date('2026-07-18T10:04:00.000Z')).status).toBe('finished');
     });
 
     it('rewards speed and penalizes wrong attempts without negative solved points', () => {

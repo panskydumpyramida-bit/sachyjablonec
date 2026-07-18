@@ -210,6 +210,7 @@ let puzzleCampPollTimer = null;
 let selectedPuzzleCampHistoryId = null;
 let loadedPuzzleCampHistoryId = null;
 let puzzleCampAdminSessions = [];
+let puzzleCampAdminPlayers = [];
 
 function campAdminEscape(value) {
     const div = document.createElement('div');
@@ -247,11 +248,12 @@ function renderCampAdminBadges(badges = []) {
     `).join('')}</span>`;
 }
 
-function renderPuzzleCampHistorySelector(sessions = []) {
+function renderPuzzleCampHistorySelector(sessions = [], players = []) {
     const select = document.getElementById('prCampHistorySelect');
     const deleteButton = document.getElementById('prCampDeleteBtn');
     if (!select) return;
     puzzleCampAdminSessions = sessions;
+    puzzleCampAdminPlayers = players;
     if (!sessions.length) {
         selectedPuzzleCampHistoryId = null;
         select.innerHTML = '<option value="">Zatím žádná rozcvička</option>';
@@ -260,6 +262,7 @@ function renderPuzzleCampHistorySelector(sessions = []) {
             deleteButton.disabled = true;
             deleteButton.title = 'Zatím není co smazat';
         }
+        renderPuzzleCampMakeup();
         return;
     }
 
@@ -274,6 +277,7 @@ function renderPuzzleCampHistorySelector(sessions = []) {
         </option>
     `).join('');
     updatePuzzleCampDeleteButton();
+    renderPuzzleCampMakeup();
 }
 
 function updatePuzzleCampDeleteButton() {
@@ -285,6 +289,61 @@ function updatePuzzleCampDeleteButton() {
     button.title = canDelete
         ? 'Trvale smaže rozcvičku včetně všech výsledků'
         : 'Smazat lze pouze ukončenou rozcvičku';
+}
+
+function updatePuzzleCampMakeupButton() {
+    const session = puzzleCampAdminSessions.find(item => item.id === selectedPuzzleCampHistoryId);
+    const select = document.getElementById('prCampMakeupPlayer');
+    const button = document.getElementById('prCampMakeupGrantBtn');
+    if (!button) return;
+    button.disabled = session?.status !== 'finished' || !Number.parseInt(select?.value, 10);
+}
+
+function renderPuzzleCampMakeup() {
+    const session = puzzleCampAdminSessions.find(item => item.id === selectedPuzzleCampHistoryId);
+    const select = document.getElementById('prCampMakeupPlayer');
+    const list = document.getElementById('prCampMakeupList');
+    if (!select || !list) return;
+
+    const access = session?.makeupPlayers || [];
+    const unavailableIds = new Set([
+        ...access.map(player => player.userId),
+        ...(session?.completedUserIds || [])
+    ]);
+    const eligible = puzzleCampAdminPlayers.filter(player => !unavailableIds.has(player.id));
+
+    if (session?.status !== 'finished') {
+        select.innerHTML = '<option value="">Nejprve vyberte ukončenou rozcvičku</option>';
+        select.disabled = true;
+    } else if (!eligible.length) {
+        select.innerHTML = '<option value="">Všichni dostupní hráči už mají výsledek nebo povolení</option>';
+        select.disabled = true;
+    } else {
+        select.disabled = false;
+        select.innerHTML = '<option value="">Vyberte hráče…</option>' + eligible.map(player => {
+            const account = player.playerName === player.username ? '' : ` · ${player.username}`;
+            return `<option value="${player.id}">${campAdminEscape(player.playerName)}${campAdminEscape(account)}</option>`;
+        }).join('');
+    }
+
+    if (!access.length) {
+        list.innerHTML = '<span class="camp-racer-makeup__empty">Nikdo zatím nemá povolený náhradní termín.</span>';
+    } else {
+        list.innerHTML = access.map(player => {
+            const playing = player.status === 'makeup_playing';
+            return `
+                <span class="camp-racer-makeup-player">
+                    <i class="fa-solid ${playing ? 'fa-bolt' : 'fa-clock'}"></i>
+                    ${campAdminEscape(player.playerName)}
+                    <small>${playing ? 'právě hraje' : 'čeká na spuštění'}</small>
+                    <button type="button" title="${playing ? 'Rozehraný pokus už nelze odebrat' : 'Odebrat povolení'}" onclick="revokePuzzleCampMakeup(${player.userId})" ${playing ? 'disabled' : ''}>
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                </span>
+            `;
+        }).join('');
+    }
+    updatePuzzleCampMakeupButton();
 }
 
 function renderPuzzleCampHistory(detail) {
@@ -370,7 +429,64 @@ async function loadPuzzleCampHistory(sessionId) {
 function selectPuzzleCampHistory(value) {
     selectedPuzzleCampHistoryId = Number.parseInt(value, 10) || null;
     updatePuzzleCampDeleteButton();
+    renderPuzzleCampMakeup();
+    const notice = document.getElementById('prCampMakeupNotice');
+    if (notice) notice.textContent = '';
     return loadPuzzleCampHistory(selectedPuzzleCampHistoryId);
+}
+
+async function grantPuzzleCampMakeup() {
+    const session = puzzleCampAdminSessions.find(item => item.id === selectedPuzzleCampHistoryId);
+    const select = document.getElementById('prCampMakeupPlayer');
+    const button = document.getElementById('prCampMakeupGrantBtn');
+    const notice = document.getElementById('prCampMakeupNotice');
+    const userId = Number.parseInt(select?.value, 10);
+    const player = puzzleCampAdminPlayers.find(item => item.id === userId);
+    if (!session || session.status !== 'finished' || !player) return;
+    if (!confirm(`Povolit hráči ${player.playerName} dodatečně odehrát „${session.title}“ se stejnou sadou a plným časem?`)) return;
+
+    const original = button?.innerHTML || '';
+    if (button) {
+        button.disabled = true;
+        button.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Povolujeme…';
+    }
+    try {
+        const res = await fetch(`${API_URL}/racer/camp/sessions/${session.id}/makeup`, {
+            method: 'POST',
+            headers: campAdminTokenHeaders(true),
+            body: JSON.stringify({ userId })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Náhradní termín se nepodařilo povolit');
+        await loadPuzzleCampAdmin(true);
+        if (notice) notice.innerHTML = `<span style="color:#4ade80"><i class="fa-solid fa-circle-check"></i> ${campAdminEscape(data.access.playerName)} může rozcvičku dodatečně spustit.</span>`;
+    } catch (error) {
+        if (notice) notice.innerHTML = `<span style="color:#fca5a5"><i class="fa-solid fa-triangle-exclamation"></i> ${campAdminEscape(error.message)}</span>`;
+    } finally {
+        if (button) button.innerHTML = original;
+        updatePuzzleCampMakeupButton();
+    }
+}
+
+async function revokePuzzleCampMakeup(userId) {
+    const session = puzzleCampAdminSessions.find(item => item.id === selectedPuzzleCampHistoryId);
+    const access = session?.makeupPlayers?.find(player => player.userId === userId);
+    const notice = document.getElementById('prCampMakeupNotice');
+    if (!session || !access || access.status === 'makeup_playing') return;
+    if (!confirm(`Odebrat hráči ${access.playerName} možnost dodatečného dohrání?`)) return;
+
+    try {
+        const res = await fetch(`${API_URL}/racer/camp/sessions/${session.id}/makeup/${userId}`, {
+            method: 'DELETE',
+            headers: campAdminTokenHeaders()
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Povolení se nepodařilo odebrat');
+        await loadPuzzleCampAdmin(true);
+        if (notice) notice.innerHTML = `<span style="color:#94a3b8"><i class="fa-solid fa-lock"></i> Povolení pro ${campAdminEscape(access.playerName)} bylo odebráno.</span>`;
+    } catch (error) {
+        if (notice) notice.innerHTML = `<span style="color:#fca5a5"><i class="fa-solid fa-triangle-exclamation"></i> ${campAdminEscape(error.message)}</span>`;
+    }
 }
 
 async function deleteSelectedPuzzleCampHistory() {
@@ -523,7 +639,7 @@ async function loadPuzzleCampAdmin(scheduleNext = true) {
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data = await res.json();
         puzzleCampServerOffset = new Date(data.serverTime).getTime() - Date.now();
-        renderPuzzleCampHistorySelector(data.sessions);
+        renderPuzzleCampHistorySelector(data.sessions, data.players);
         const session = data.sessions.find(item => ['scheduled', 'live'].includes(item.status)) || data.sessions[0] || null;
         const selectedHistory = data.sessions.find(item => item.id === selectedPuzzleCampHistoryId);
         const shouldRefreshHistory = loadedPuzzleCampHistoryId !== selectedPuzzleCampHistoryId
@@ -632,3 +748,6 @@ window.finishPuzzleCampNow = finishPuzzleCampNow;
 window.cancelPuzzleCampSession = cancelPuzzleCampSession;
 window.selectPuzzleCampHistory = selectPuzzleCampHistory;
 window.deleteSelectedPuzzleCampHistory = deleteSelectedPuzzleCampHistory;
+window.updatePuzzleCampMakeupButton = updatePuzzleCampMakeupButton;
+window.grantPuzzleCampMakeup = grantPuzzleCampMakeup;
+window.revokePuzzleCampMakeup = revokePuzzleCampMakeup;

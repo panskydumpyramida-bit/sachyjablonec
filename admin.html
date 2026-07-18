@@ -10,7 +10,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="css/style.css?v=ux12">
-    <link rel="stylesheet" href="css/admin.css?v=pardubice2">
+    <link rel="stylesheet" href="css/admin.css?v=pardubice4">
     <link rel="stylesheet" href="css/admin-sidebar.css?v=ux3">
     <script src="js/version.js?v=ux12"></script>
     <script src="js/modal-manager.js?v=ux12"></script>
@@ -1264,6 +1264,26 @@
                     <div><strong>–</strong><span>úloh v sadě</span></div>
                     <div><strong>–</strong><span>nejvyšší skóre</span></div>
                 </div>
+                <section class="camp-racer-makeup" aria-labelledby="prCampMakeupHeading">
+                    <div class="camp-racer-makeup__heading">
+                        <div class="camp-racer-makeup__icon"><i class="fa-solid fa-user-clock"></i></div>
+                        <div>
+                            <h4 id="prCampMakeupHeading">Náhradní dohrání</h4>
+                            <p>Povolte konkrétnímu hráči stejnou sadu s vlastním plným časem.</p>
+                        </div>
+                    </div>
+                    <div class="camp-racer-makeup__controls">
+                        <label for="prCampMakeupPlayer">
+                            <span>Hráč, který rozcvičku nestihl</span>
+                            <select id="prCampMakeupPlayer" onchange="updatePuzzleCampMakeupButton()"></select>
+                        </label>
+                        <button id="prCampMakeupGrantBtn" type="button" class="btn-secondary" onclick="grantPuzzleCampMakeup()" disabled>
+                            <i class="fa-solid fa-unlock-keyhole"></i> Povolit dohrání
+                        </button>
+                    </div>
+                    <div id="prCampMakeupNotice" class="camp-racer-makeup__notice" aria-live="polite"></div>
+                    <div id="prCampMakeupList" class="camp-racer-makeup__list"></div>
+                </section>
                 <div id="prCampHistoryPlayers" class="camp-racer-history__players">
                     <div class="camp-racer-empty"><i class="fa-solid fa-list-check"></i><span>Vyberte rozcvičku pro zobrazení detailu.</span></div>
                 </div>
@@ -2846,7 +2866,7 @@
     <script src="js/admin/admin-sidebar.js?v=ux3"></script>
     <script src="js/admin/admin-users.js?v=ux12"></script>
     <script src="js/admin/admin-blicak.js?v=ux12"></script>
-    <script src="js/admin/admin-puzzle-racer.js?v=pardubice2"></script>
+    <script src="js/admin/admin-puzzle-racer.js?v=pardubice4"></script>
     <script src="js/admin/admin-chessdb.js?v=ux12"></script>
     <script src="js/admin/admin-weekly-puzzles.js?v=ux15"></script>
     <script src="js/admin/admin-home-tiles.js?v=1"></script>
