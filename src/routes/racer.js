@@ -10,7 +10,8 @@ import {
     getCampAchievements,
     getCampLevel,
     getCampSessionStatus,
-    normalizeCampConfig
+    normalizeCampConfig,
+    normalizeCampMove
 } from '../services/puzzleCampService.js';
 
 const router = express.Router();
@@ -987,6 +988,7 @@ router.put('/camp/sessions/:id/progress', authMiddleware, async (req, res) => {
             const correct = req.body.correct === true;
             const skipped = req.body.skipped === true;
             const wrongAttempts = Math.max(0, Math.min(50, Number.parseInt(req.body.wrongAttempts, 10) || 0));
+            const wrongMove = normalizeCampMove(req.body.wrongMove);
             const responseMs = Math.max(0, Math.min(session.durationSeconds * 1000, Number.parseInt(req.body.responseMs, 10) || 0));
             const points = calculatePuzzlePoints({ correct, skipped, wrongAttempts, responseMs });
 
@@ -1000,10 +1002,11 @@ router.put('/camp/sessions/:id/progress', authMiddleware, async (req, res) => {
                     correct,
                     skipped,
                     wrongAttempts,
+                    wrongMove,
                     responseMs,
                     points
                 },
-                update: { correct, skipped, wrongAttempts, responseMs, points, answeredAt: new Date() }
+                update: { correct, skipped, wrongAttempts, wrongMove, responseMs, points, answeredAt: new Date() }
             });
         }
 
@@ -1093,6 +1096,7 @@ router.get('/camp/leaderboard', authMiddleware, async (req, res) => {
         let sessionDetail = null;
         if (selected) {
             const puzzles = Array.isArray(selected.puzzles) ? selected.puzzles : [];
+            const canPreviewPuzzles = getCampSessionStatus(selected, now) === 'finished';
             const participants = [...selected.attempts]
                 .sort((a, b) => b.score - a.score || b.correctCount - a.correctCount || a.durationMs - b.durationMs)
                 .map((attempt, index) => ({
@@ -1110,6 +1114,7 @@ router.get('/camp/leaderboard', authMiddleware, async (req, res) => {
                         correct: result.correct,
                         skipped: result.skipped,
                         wrongAttempts: result.wrongAttempts,
+                        wrongMove: result.wrongMove,
                         responseMs: result.responseMs,
                         points: result.points
                     }))
@@ -1121,7 +1126,12 @@ router.get('/camp/leaderboard', authMiddleware, async (req, res) => {
                     index,
                     puzzleId: puzzle.puzzle?.id,
                     rating: puzzle.puzzle?.rating || null,
-                    difficulty: puzzle.campDifficulty || null
+                    difficulty: puzzle.campDifficulty || null,
+                    preview: canPreviewPuzzles ? {
+                        pgn: puzzle.game?.pgn || '',
+                        initialPly: puzzle.puzzle?.initialPly || 0,
+                        solution: Array.isArray(puzzle.puzzle?.solution) ? puzzle.puzzle.solution : []
+                    } : null
                 })),
                 participants
             };

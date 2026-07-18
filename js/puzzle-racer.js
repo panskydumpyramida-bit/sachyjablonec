@@ -62,7 +62,12 @@ let campRaceFinished = false;
 let campProgressQueue = Promise.resolve();
 let currentPuzzleStartedAt = 0;
 let currentCampWrongAttempts = 0;
+let currentPuzzleWrongMove = null;
 let campTimePenaltySeconds = 0;
+let puzzlePreviewBoard = null;
+let activePuzzlePreview = null;
+let puzzlePreviewTimers = [];
+let puzzlePreviewRun = 0;
 
 // Vanilla defaults (fixed, not affected by admin settings)
 const VANILLA_DEFAULTS = {
@@ -396,6 +401,7 @@ function loadPuzzle(puzzleData) {
 
     currentPuzzleStartedAt = performance.now();
     currentCampWrongAttempts = 0;
+    currentPuzzleWrongMove = null;
     if (gameMode === 'pardubice2026' && puzzleData.campDifficulty) {
         const campDifficultyIndex = DIFFICULTIES.indexOf(puzzleData.campDifficulty);
         if (campDifficultyIndex >= 0) currentDifficultyIndex = campDifficultyIndex;
@@ -702,7 +708,7 @@ function handleMove(source, target, isDrop) {
         // BUGFIX: Force board to sync with game state (ensures snapback works)
         board.position(game.fen(), false);
 
-        handleWrongMove();
+        handleWrongMove(uciMove);
         return false; // BUGFIX: Return false, not 'snapback' - onDrop checks for falsy value
     }
 
@@ -778,7 +784,8 @@ function handleCorrectPuzzle() {
             correct: true,
             skipped: false,
             responseMs: Math.max(0, Math.round(performance.now() - currentPuzzleStartedAt)),
-            wrongAttempts: currentCampWrongAttempts
+            wrongAttempts: currentCampWrongAttempts,
+            wrongMove: currentPuzzleWrongMove
         };
         const previousEntry = gameMode === 'pardubice2026'
             ? puzzleHistory.find(entry => entry.puzzleId === currentPuzzle.puzzle.id)
@@ -881,10 +888,11 @@ function loadNextPuzzleOrWait() {
     }
 }
 
-function handleWrongMove() {
+function handleWrongMove(wrongMove = null) {
     mistakeCount++;
     gameWrongCount++;
     if (gameMode === 'pardubice2026') currentCampWrongAttempts++;
+    if (!currentPuzzleWrongMove && wrongMove) currentPuzzleWrongMove = wrongMove;
     currentStreak = 0;
     updateLivesDisplay();
     showFeedback('wrong');
@@ -904,7 +912,8 @@ function handleWrongMove() {
                 correct: false,
                 skipped: false,
                 responseMs: Math.max(0, Math.round(performance.now() - currentPuzzleStartedAt)),
-                wrongAttempts: currentCampWrongAttempts
+                wrongAttempts: currentCampWrongAttempts,
+                wrongMove: currentPuzzleWrongMove
             });
         }
     }
@@ -917,7 +926,8 @@ function handleWrongMove() {
                 correct: false,
                 skipped: false,
                 responseMs: Math.max(0, Math.round(performance.now() - currentPuzzleStartedAt)),
-                wrongAttempts: currentCampWrongAttempts
+                wrongAttempts: currentCampWrongAttempts,
+                wrongMove: currentPuzzleWrongMove
             });
         }
         setTimeout(() => {
@@ -949,7 +959,8 @@ function handleWrongMove() {
                 correct: false,
                 skipped: false,
                 responseMs: Math.max(0, Math.round(performance.now() - currentPuzzleStartedAt)),
-                wrongAttempts: currentCampWrongAttempts
+                wrongAttempts: currentCampWrongAttempts,
+                wrongMove: currentPuzzleWrongMove
             });
         }
         setTimeout(() => {
@@ -1024,7 +1035,8 @@ function skipPuzzle() {
             correct: false,
             skipped: true,
             responseMs: Math.max(0, Math.round(performance.now() - currentPuzzleStartedAt)),
-            wrongAttempts: currentCampWrongAttempts
+            wrongAttempts: currentCampWrongAttempts,
+            wrongMove: currentPuzzleWrongMove
         };
         const previousEntry = puzzleHistory.find(item => item.puzzleId === entry.puzzleId);
         if (previousEntry) Object.assign(previousEntry, entry);
@@ -1106,7 +1118,8 @@ function endGame() {
                 correct: false,
                 skipped: false,
                 responseMs: Math.max(0, Math.round(performance.now() - currentPuzzleStartedAt)),
-                wrongAttempts: currentCampWrongAttempts
+                wrongAttempts: currentCampWrongAttempts,
+                wrongMove: currentPuzzleWrongMove
             };
             const existingEntry = puzzleHistory.find(item => item.puzzleId === entry.puzzleId);
             if (existingEntry) Object.assign(existingEntry, entry);
@@ -1276,79 +1289,206 @@ function renderPuzzleReview() {
     });
 
     html += '</div>';
-    html += '<div id="puzzleDetailView" class="puzzle-detail hidden"></div>';
     container.innerHTML = html;
     container.classList.remove('hidden');
 }
 
-// Show individual puzzle detail with mini board
 function showPuzzleDetail(idx) {
     const puzzle = puzzleHistory[idx];
     if (!puzzle) return;
+    openPuzzlePreview({ ...puzzle, number: idx + 1 });
+}
 
-    const detailEl = document.getElementById('puzzleDetailView');
-    if (!detailEl) return;
+function translateSan(san) {
+    return String(san || '')
+        .replace(/^N/, 'J')
+        .replace(/^B/, 'S')
+        .replace(/^R/, 'V')
+        .replace(/^Q/, 'D');
+}
 
-    // Determine player color from FEN
-    const fenParts = puzzle.initialFen.split(' ');
-    const playerColor = fenParts[1] === 'w' ? 'white' : 'black';
+function describeUciMove(initialFen, uci) {
+    if (!/^[a-h][1-8][a-h][1-8][qrbn]?$/.test(uci || '')) return String(uci || '—');
+    try {
+        const previewGame = new Chess(initialFen);
+        const move = previewGame.move({
+            from: uci.slice(0, 2),
+            to: uci.slice(2, 4),
+            promotion: uci.slice(4) || undefined
+        });
+        if (move) return `${translateSan(move.san)} (${uci.slice(0, 2)}–${uci.slice(2, 4)})`;
+    } catch (error) {
+        // UCI souřadnice níže zůstanou čitelné i u neúplné pozice.
+    }
+    return `${uci.slice(0, 2)}–${uci.slice(2, 4)}`;
+}
 
-    // Format solution moves using chess.js for proper algebraic notation
-    const solutionMoves = (() => {
-        try {
-            const tempGame = new Chess(puzzle.initialFen);
-            return puzzle.solution.map((uci) => {
-                const from = uci.substring(0, 2);
-                const to = uci.substring(2, 4);
-                const promotion = uci.length > 4 ? uci.charAt(4) : undefined;
-                const moveObj = tempGame.move({ from, to, promotion });
-                if (!moveObj) return uci; // fallback to UCI if move fails
-                // Convert English piece letters to Czech: N→J, B→S, R→V, Q→D, K→K
-                return moveObj.san
-                    .replace(/^N/, 'J')
-                    .replace(/^B/, 'S')
-                    .replace(/^R/, 'V')
-                    .replace(/^Q/, 'D');
-            }).join(', ');
-        } catch (e) {
-            // Fallback: plain UCI
-            return puzzle.solution.map(uci => {
-                const from = uci.substring(0, 2);
-                const to = uci.substring(2, 4);
-                return `${from}-${to}`;
-            }).join(', ');
+function describeSolution(initialFen, solution) {
+    try {
+        const previewGame = new Chess(initialFen);
+        return solution.map((uci, index) => {
+            const move = previewGame.move({
+                from: uci.slice(0, 2),
+                to: uci.slice(2, 4),
+                promotion: uci.slice(4) || undefined
+            });
+            return { index, uci, label: move ? translateSan(move.san) : `${uci.slice(0, 2)}–${uci.slice(2, 4)}` };
+        });
+    } catch (error) {
+        return solution.map((uci, index) => ({ index, uci, label: `${uci.slice(0, 2)}–${uci.slice(2, 4)}` }));
+    }
+}
+
+function clearPuzzlePreviewAnimation() {
+    puzzlePreviewRun++;
+    puzzlePreviewTimers.forEach(clearTimeout);
+    puzzlePreviewTimers = [];
+}
+
+function markPuzzlePreviewMove(uci, type) {
+    const boardEl = document.getElementById('puzzlePreviewBoard');
+    if (!boardEl) return;
+    boardEl.querySelectorAll('.square-55d63').forEach(square => {
+        square.classList.remove('preview-square--wrong', 'preview-square--solution');
+    });
+    [uci?.slice(0, 2), uci?.slice(2, 4)].forEach(square => {
+        if (square) boardEl.querySelector(`.square-${square}`)?.classList.add(`preview-square--${type}`);
+    });
+}
+
+function setPuzzlePreviewPhase(html, type = '') {
+    const phase = document.getElementById('puzzlePreviewPhase');
+    if (!phase) return;
+    phase.className = `puzzle-preview-phase ${type ? `puzzle-preview-phase--${type}` : ''}`;
+    phase.innerHTML = html;
+}
+
+function playPuzzlePreview() {
+    if (!activePuzzlePreview || !puzzlePreviewBoard) return;
+    clearPuzzlePreviewAnimation();
+    const run = puzzlePreviewRun;
+    const preview = activePuzzlePreview;
+    puzzlePreviewBoard.position(preview.initialFen, false);
+    markPuzzlePreviewMove(null, 'solution');
+    document.getElementById('puzzlePreviewFinish')?.classList.remove('is-visible', 'is-success');
+    document.querySelectorAll('.puzzle-preview-move').forEach(chip => chip.classList.remove('is-active'));
+    setPuzzlePreviewPhase('<i class="fa-solid fa-circle-play"></i> Sledujte pozici', 'neutral');
+
+    const later = (delay, callback) => {
+        puzzlePreviewTimers.push(setTimeout(() => {
+            if (run === puzzlePreviewRun) callback();
+        }, delay));
+    };
+
+    let delay = 300;
+    if (preview.wrongMove) {
+        later(delay, () => {
+            puzzlePreviewBoard.move(`${preview.wrongMove.slice(0, 2)}-${preview.wrongMove.slice(2, 4)}`);
+            markPuzzlePreviewMove(preview.wrongMove, 'wrong');
+            setPuzzlePreviewPhase(`<i class="fa-solid fa-xmark"></i> Chybný tah: <strong>${escapeHtml(describeUciMove(preview.initialFen, preview.wrongMove))}</strong>`, 'wrong');
+        });
+        delay += 1100;
+        later(delay, () => {
+            puzzlePreviewBoard.position(preview.initialFen, false);
+            markPuzzlePreviewMove(null, 'solution');
+            setPuzzlePreviewPhase('<i class="fa-solid fa-lightbulb"></i> Správné řešení', 'solution');
+        });
+        delay += 450;
+    } else {
+        later(delay, () => setPuzzlePreviewPhase('<i class="fa-solid fa-lightbulb"></i> Správné řešení', 'solution'));
+        delay += 250;
+    }
+
+    preview.solution.forEach((uci, index) => {
+        later(delay, () => {
+            puzzlePreviewBoard.move(`${uci.slice(0, 2)}-${uci.slice(2, 4)}`);
+            markPuzzlePreviewMove(uci, 'solution');
+            document.querySelectorAll('.puzzle-preview-move').forEach(chip => chip.classList.toggle('is-active', Number(chip.dataset.index) === index));
+        });
+        delay += 650;
+    });
+
+    later(delay, () => {
+        document.querySelectorAll('.puzzle-preview-move').forEach(chip => chip.classList.remove('is-active'));
+        const finish = document.getElementById('puzzlePreviewFinish');
+        if (!finish) return;
+        finish.classList.add('is-visible');
+        if (preview.correct === true) {
+            finish.classList.add('is-success');
+            finish.innerHTML = '<i class="fa-solid fa-check"></i>';
+            setPuzzlePreviewPhase('<i class="fa-solid fa-circle-check"></i> Úloha vyřešena', 'correct');
+        } else {
+            finish.innerHTML = '<i class="fa-solid fa-lightbulb"></i>';
+            setPuzzlePreviewPhase('<i class="fa-solid fa-lightbulb"></i> Takto vypadá správné řešení', 'solution');
         }
-    })();
+    });
+}
 
-    const statusText = puzzle.correct
-        ? '<span style="color: #4ade80;"><i class="fa-solid fa-check-circle"></i> Správně</span>'
-        : '<span style="color: #f87171;"><i class="fa-solid fa-times-circle"></i> Chybně</span>';
+function openPuzzlePreview(preview) {
+    const modal = document.getElementById('puzzlePreviewModal');
+    const content = document.getElementById('puzzlePreviewContent');
+    if (!modal || !content || !preview?.initialFen || !Array.isArray(preview.solution)) return;
+    clearPuzzlePreviewAnimation();
+    activePuzzlePreview = preview;
+    if (puzzlePreviewBoard?.destroy) puzzlePreviewBoard.destroy();
 
-    detailEl.innerHTML = `
-        <div class="puzzle-detail-header">
-            <span>${statusText}</span>
-            <span style="color: var(--text-muted); font-size: 0.85rem;">Rating: ${puzzle.rating || '?'}</span>
-            <button onclick="document.getElementById('puzzleDetailView').classList.add('hidden')" 
-                    style="background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 1.2rem;">
-                <i class="fa-solid fa-times"></i>
-            </button>
+    const moves = describeSolution(preview.initialFen, preview.solution);
+    const statusClass = preview.correct === true ? 'correct' : preview.skipped ? 'skipped' : preview.correct === false ? 'wrong' : 'solution';
+    const statusLabel = preview.correct === true
+        ? (preview.wrongMove ? 'Vyřešeno po opravě' : 'Správně')
+        : preview.skipped ? 'Přeskočeno' : preview.correct === false ? 'Nevyřešeno' : 'Náhled úlohy';
+    const player = preview.playerName ? `<span><i class="fa-solid fa-user"></i> ${escapeHtml(preview.playerName)}</span>` : '';
+    const response = preview.responseMs ? `<span><i class="fa-solid fa-stopwatch"></i> ${campFormatSeconds(preview.responseMs)}</span>` : '';
+    const wrong = preview.wrongMove ? `
+        <div class="puzzle-preview-wrong">
+            <span>Váš chybný tah</span>
+            <strong>${escapeHtml(describeUciMove(preview.initialFen, preview.wrongMove))}</strong>
+        </div>` : '';
+
+    content.innerHTML = `
+        <div class="puzzle-preview-heading">
+            <div>
+                <span class="puzzle-preview-kicker">Úloha ${preview.number ? `#${preview.number}` : ''}</span>
+                <h2 id="puzzlePreviewTitle">Rozbor pozice</h2>
+            </div>
+            <span class="puzzle-preview-status puzzle-preview-status--${statusClass}">${statusLabel}</span>
         </div>
-        <div id="reviewBoard" style="width: 280px; max-width: 100%; margin: 0.5rem auto;"></div>
-        <div style="text-align: center; margin-top: 0.5rem; color: var(--text-muted); font-size: 0.85rem;">
-            <strong>Řešení:</strong> ${solutionMoves}
+        <div class="puzzle-preview-meta">${player}${response}<span><i class="fa-solid fa-signal"></i> ${preview.rating || '–'}</span></div>
+        <div class="puzzle-preview-layout">
+            <div class="puzzle-preview-board-wrap">
+                <div id="puzzlePreviewBoard"></div>
+                <div id="puzzlePreviewFinish" class="puzzle-preview-finish"></div>
+            </div>
+            <div class="puzzle-preview-analysis">
+                <div id="puzzlePreviewPhase" class="puzzle-preview-phase"></div>
+                ${wrong}
+                <div class="puzzle-preview-line">
+                    <span>Správná varianta</span>
+                    <div>${moves.map(move => `<b class="puzzle-preview-move" data-index="${move.index}">${move.index + 1}. ${escapeHtml(move.label)}</b>`).join('')}</div>
+                </div>
+                <button type="button" class="puzzle-preview-replay" onclick="window.playPuzzlePreview()"><i class="fa-solid fa-rotate-right"></i> Přehrát znovu</button>
+            </div>
         </div>
     `;
-    detailEl.classList.remove('hidden');
 
-    // Render mini board
-    setTimeout(() => {
-        Chessboard('reviewBoard', {
-            position: puzzle.initialFen,
-            orientation: playerColor,
-            draggable: false,
-            pieceTheme: 'https://chessboardjs.com/img/chesspieces/wikipedia/{piece}.png'
-        });
-    }, 50);
+    modal.classList.remove('hidden');
+    document.body.classList.add('puzzle-preview-open');
+    puzzlePreviewBoard = Chessboard('puzzlePreviewBoard', {
+        position: preview.initialFen,
+        orientation: preview.initialFen.split(' ')[1] === 'w' ? 'white' : 'black',
+        draggable: false,
+        pieceTheme: 'https://chessboardjs.com/img/chesspieces/wikipedia/{piece}.png'
+    });
+    requestAnimationFrame(() => puzzlePreviewBoard?.resize());
+    playPuzzlePreview();
+}
+
+function closePuzzlePreview(event) {
+    if (event && event.target !== event.currentTarget) return;
+    clearPuzzlePreviewAnimation();
+    document.getElementById('puzzlePreviewModal')?.classList.add('hidden');
+    document.body.classList.remove('puzzle-preview-open');
+    activePuzzlePreview = null;
 }
 
 async function saveScore() {
@@ -1823,6 +1963,7 @@ async function saveCampPuzzleOutcome(puzzleIndex, result) {
                     correct: result.correct === true,
                     skipped: result.skipped === true,
                     wrongAttempts: result.wrongAttempts || 0,
+                    wrongMove: result.wrongMove || null,
                     responseMs: result.responseMs || 0
                 })
             });
@@ -1952,22 +2093,53 @@ function renderPuzzleCampMatrix(detail) {
         return;
     }
 
-    const head = detail.puzzles.map(puzzle => `<th title="Rating ${puzzle.rating || '–'}">${puzzle.index + 1}</th>`).join('');
+    const head = detail.puzzles.map(puzzle => {
+        if (!puzzle.preview) return `<th title="Náhled bude dostupný po skončení rozcvičky">${puzzle.index + 1}</th>`;
+        return `<th><button type="button" class="camp-matrix-puzzle-button" onclick="window.showCampPuzzlePreview(null, ${puzzle.index})" title="Zobrazit úlohu ${puzzle.index + 1}">${puzzle.index + 1}</button></th>`;
+    }).join('');
     const rows = detail.participants.map(player => {
         const cellsByIndex = new Map(player.cells.map(cell => [cell.puzzleIndex, cell]));
         const cells = detail.puzzles.map(puzzle => {
             const cell = cellsByIndex.get(puzzle.index);
             if (!cell) return '<td><span class="camp-matrix-cell camp-matrix-cell--empty">—</span></td>';
+            const canPreview = Boolean(puzzle.preview);
+            const open = canPreview ? ` onclick="window.showCampPuzzlePreview(${player.userId}, ${puzzle.index})"` : '';
+            const disabled = canPreview ? '' : ' disabled';
+            const buttonClass = canPreview ? ' camp-matrix-cell--clickable' : '';
             if (cell.correct) {
-                return `<td><span class="camp-matrix-cell camp-matrix-cell--correct" title="Správně · ${cell.wrongAttempts} chyb · ${cell.points} bodů">${campFormatSeconds(cell.responseMs)}</span></td>`;
+                return `<td><button type="button" class="camp-matrix-cell camp-matrix-cell--correct${buttonClass}"${open}${disabled} title="Správně · ${cell.wrongAttempts} chyb · ${cell.points} bodů">${campFormatSeconds(cell.responseMs)}</button></td>`;
             }
             const label = cell.skipped ? '↷' : '×';
-            return `<td><span class="camp-matrix-cell camp-matrix-cell--wrong" title="${cell.skipped ? 'Přeskočeno' : 'Nevyřešeno'} · ${cell.wrongAttempts} chyb">${label}</span></td>`;
+            return `<td><button type="button" class="camp-matrix-cell camp-matrix-cell--wrong${buttonClass}"${open}${disabled} title="${cell.skipped ? 'Přeskočeno' : 'Nevyřešeno'} · ${cell.wrongAttempts} chyb">${label}</button></td>`;
         }).join('');
         return `<tr><td>${player.rank}. ${escapeHtml(player.playerName)}</td>${cells}</tr>`;
     }).join('');
 
     matrix.innerHTML = `<table class="camp-matrix-table"><thead><tr><th>Hráč / úloha</th>${head}</tr></thead><tbody>${rows}</tbody></table>`;
+}
+
+function showCampPuzzlePreview(userId, puzzleIndex) {
+    const detail = puzzleCampLeaderboardData?.sessionDetail;
+    const puzzle = detail?.puzzles?.find(item => item.index === Number(puzzleIndex));
+    if (!puzzle?.preview) return;
+    const player = userId == null ? null : detail.participants.find(item => item.userId === Number(userId));
+    const cell = player?.cells?.find(item => item.puzzleIndex === Number(puzzleIndex));
+    openPuzzlePreview({
+        number: puzzle.index + 1,
+        puzzleId: puzzle.puzzleId,
+        rating: puzzle.rating,
+        initialFen: getInitialFen({
+            game: { pgn: puzzle.preview.pgn },
+            puzzle: { initialPly: puzzle.preview.initialPly }
+        }),
+        solution: puzzle.preview.solution,
+        playerName: player?.playerName || null,
+        correct: cell ? cell.correct === true : null,
+        skipped: cell?.skipped === true,
+        responseMs: cell?.responseMs || 0,
+        wrongAttempts: cell?.wrongAttempts || 0,
+        wrongMove: cell?.wrongMove || null
+    });
 }
 
 async function loadPuzzleCampLeaderboard(sessionId) {
@@ -2328,8 +2500,17 @@ document.addEventListener('DOMContentLoaded', () => {
     window.skipPuzzle = skipPuzzle;
     window.switchLeaderboard = switchLeaderboard;
     window.showPuzzleDetail = showPuzzleDetail;
+    window.showCampPuzzlePreview = showCampPuzzlePreview;
+    window.closePuzzlePreview = closePuzzlePreview;
+    window.playPuzzlePreview = playPuzzlePreview;
     window.joinPuzzleCamp = joinPuzzleCamp;
     window.switchPuzzleCampSession = switchPuzzleCampSession;
+
+    document.addEventListener('keydown', event => {
+        if (event.key === 'Escape' && !document.getElementById('puzzlePreviewModal')?.classList.contains('hidden')) {
+            closePuzzlePreview();
+        }
+    });
 
     // Detect logged-in user
     loggedInUser = detectLoggedInUser();

@@ -484,6 +484,7 @@ model PuzzleCampPuzzleResult {
   correct       Boolean  @default(false)
   skipped       Boolean  @default(false)
   wrongAttempts Int      @default(0) @map("wrong_attempts")
+  wrongMove     String?  @map("wrong_move")
   responseMs    Int      @default(0) @map("response_ms")
   points        Int      @default(0)
   answeredAt    DateTime @default(now()) @map("answered_at")

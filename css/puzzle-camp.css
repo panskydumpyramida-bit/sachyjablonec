@@ -410,7 +410,13 @@ body.camp-mode-active #gameOverScreen {
 
 .camp-matrix-cell {
     min-width: 48px;
+    min-height: 30px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 0;
     border-radius: 7px;
+    font-family: inherit;
     font-variant-numeric: tabular-nums;
     font-size: 0.64rem;
     font-weight: 800;
@@ -419,7 +425,118 @@ body.camp-mode-active #gameOverScreen {
 .camp-matrix-cell--correct { color: #86efac; background: rgba(74, 222, 128, 0.13); }
 .camp-matrix-cell--wrong { color: #fca5a5; background: rgba(248, 113, 113, 0.12); }
 .camp-matrix-cell--empty { color: #64748b; background: rgba(71, 85, 105, 0.1); }
+.camp-matrix-cell--clickable { cursor: pointer; transition: transform 0.18s ease, filter 0.18s ease, box-shadow 0.18s ease; }
+.camp-matrix-cell--clickable:hover,
+.camp-matrix-cell--clickable:focus-visible { transform: translateY(-2px); filter: brightness(1.2); box-shadow: 0 5px 14px rgba(0, 0, 0, 0.25); outline: 2px solid rgba(242, 197, 82, 0.8); outline-offset: 1px; }
+.camp-matrix-puzzle-button {
+    min-width: 30px;
+    min-height: 30px;
+    border: 1px solid rgba(242, 197, 82, 0.25);
+    border-radius: 8px;
+    color: #f8d477;
+    background: rgba(242, 197, 82, 0.08);
+    font: inherit;
+    font-weight: 800;
+    cursor: pointer;
+}
+.camp-matrix-puzzle-button:hover,
+.camp-matrix-puzzle-button:focus-visible { background: #f2c552; color: #17120a; outline: none; }
 .camp-matrix-empty { padding: 2rem; color: #64748b; text-align: center; }
+
+body.puzzle-preview-open { overflow: hidden; }
+
+.puzzle-preview-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 3000;
+    display: grid;
+    place-items: center;
+    padding: 1rem;
+    background: rgba(2, 6, 11, 0.82);
+    backdrop-filter: blur(12px);
+}
+
+.puzzle-preview-modal.hidden { display: none; }
+
+.puzzle-preview-dialog {
+    position: relative;
+    width: min(720px, 100%);
+    max-height: calc(100dvh - 2rem);
+    overflow-y: auto;
+    padding: 1.35rem;
+    border: 1px solid rgba(242, 197, 82, 0.24);
+    border-radius: 22px;
+    color: #e8edf3;
+    background:
+        radial-gradient(circle at 92% 8%, rgba(242, 197, 82, 0.13), transparent 34%),
+        linear-gradient(145deg, #141b23, #0b1016);
+    box-shadow: 0 28px 80px rgba(0, 0, 0, 0.62);
+}
+
+.puzzle-preview-close {
+    position: absolute;
+    top: 0.75rem;
+    right: 0.75rem;
+    z-index: 4;
+    width: 38px;
+    height: 38px;
+    border: 1px solid rgba(148, 163, 184, 0.2);
+    border-radius: 50%;
+    color: #cbd5e1;
+    background: rgba(2, 8, 15, 0.72);
+    cursor: pointer;
+}
+
+.puzzle-preview-close:hover,
+.puzzle-preview-close:focus-visible { color: #fff; border-color: rgba(242, 197, 82, 0.65); outline: none; }
+
+.puzzle-preview-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; padding-right: 2.8rem; }
+.puzzle-preview-kicker { color: #f2c552; font-size: 0.68rem; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; }
+.puzzle-preview-heading h2 { margin: 0.15rem 0 0; color: #fff; font-size: clamp(1.25rem, 3vw, 1.7rem); }
+.puzzle-preview-status { margin-top: 0.15rem; padding: 0.38rem 0.65rem; border-radius: 999px; font-size: 0.68rem; font-weight: 800; white-space: nowrap; }
+.puzzle-preview-status--correct { color: #86efac; background: rgba(74, 222, 128, 0.12); }
+.puzzle-preview-status--wrong { color: #fca5a5; background: rgba(248, 113, 113, 0.12); }
+.puzzle-preview-status--skipped { color: #fdba74; background: rgba(251, 146, 60, 0.12); }
+.puzzle-preview-status--solution { color: #f8d477; background: rgba(242, 197, 82, 0.1); }
+
+.puzzle-preview-meta { display: flex; flex-wrap: wrap; gap: 0.45rem 0.9rem; margin: 0.7rem 0 1rem; color: #94a3b8; font-size: 0.72rem; }
+.puzzle-preview-meta span { display: inline-flex; align-items: center; gap: 0.3rem; }
+.puzzle-preview-layout { display: grid; grid-template-columns: minmax(250px, 320px) 1fr; align-items: center; gap: 1.25rem; }
+.puzzle-preview-board-wrap { position: relative; width: 100%; max-width: 320px; margin: 0 auto; border-radius: 8px; overflow: hidden; box-shadow: 0 14px 32px rgba(0, 0, 0, 0.42); }
+#puzzlePreviewBoard { width: 100%; }
+#puzzlePreviewBoard .square-55d63 { position: relative; transition: box-shadow 0.18s ease, filter 0.18s ease; }
+#puzzlePreviewBoard .preview-square--wrong { box-shadow: inset 0 0 0 5px #ef4444; filter: saturate(1.25); }
+#puzzlePreviewBoard .preview-square--solution { box-shadow: inset 0 0 0 4px #22c55e; }
+.puzzle-preview-finish {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    color: #f2c552;
+    background: rgba(2, 8, 15, 0.3);
+    font-size: 4rem;
+    opacity: 0;
+    pointer-events: none;
+    transform: scale(0.72);
+    transition: opacity 0.22s ease, transform 0.22s ease;
+}
+.puzzle-preview-finish.is-visible { opacity: 1; transform: scale(1); }
+.puzzle-preview-finish.is-success { color: #fff; background: rgba(22, 163, 74, 0.48); text-shadow: 0 4px 18px rgba(0, 0, 0, 0.4); }
+.puzzle-preview-analysis { display: grid; gap: 0.8rem; min-width: 0; }
+.puzzle-preview-phase { min-height: 42px; display: flex; align-items: center; gap: 0.45rem; padding: 0.7rem 0.8rem; border-radius: 10px; color: #cbd5e1; background: rgba(148, 163, 184, 0.08); font-size: 0.78rem; }
+.puzzle-preview-phase--wrong { color: #fecaca; background: rgba(239, 68, 68, 0.14); }
+.puzzle-preview-phase--solution { color: #fde68a; background: rgba(242, 197, 82, 0.1); }
+.puzzle-preview-phase--correct { color: #bbf7d0; background: rgba(34, 197, 94, 0.13); }
+.puzzle-preview-wrong { padding: 0.75rem 0.8rem; border: 1px solid rgba(248, 113, 113, 0.25); border-radius: 11px; background: rgba(127, 29, 29, 0.17); }
+.puzzle-preview-wrong span,
+.puzzle-preview-line > span { display: block; margin-bottom: 0.35rem; color: #94a3b8; font-size: 0.64rem; font-weight: 800; letter-spacing: 0.07em; text-transform: uppercase; }
+.puzzle-preview-wrong strong { color: #fca5a5; font-size: 0.86rem; }
+.puzzle-preview-line > div { display: flex; flex-wrap: wrap; gap: 0.35rem; }
+.puzzle-preview-move { padding: 0.38rem 0.5rem; border-radius: 7px; color: #cbd5e1; background: rgba(255, 255, 255, 0.055); font-size: 0.72rem; transition: color 0.18s ease, background 0.18s ease, transform 0.18s ease; }
+.puzzle-preview-move.is-active { color: #102015; background: #86efac; transform: translateY(-2px); }
+.puzzle-preview-replay { justify-self: start; padding: 0.62rem 0.82rem; border: 1px solid rgba(242, 197, 82, 0.28); border-radius: 10px; color: #f8d477; background: rgba(242, 197, 82, 0.07); font: inherit; font-size: 0.74rem; font-weight: 800; cursor: pointer; }
+.puzzle-preview-replay:hover,
+.puzzle-preview-replay:focus-visible { color: #17120a; background: #f2c552; outline: none; }
 
 @media (max-width: 760px) {
     body.camp-mode-active .game-container { padding-inline: 0.65rem; }
@@ -440,6 +557,12 @@ body.camp-mode-active #gameOverScreen {
     .camp-session-tabs { max-width: 100%; width: 100%; }
     .camp-matrix-card { padding: 0.7rem; }
     .camp-finish-summary { grid-template-columns: 1fr; }
+    .puzzle-preview-layout { grid-template-columns: 1fr; gap: 0.9rem; }
+    .puzzle-preview-board-wrap { width: min(68vw, 300px); }
+    .puzzle-preview-analysis { grid-template-columns: 1fr 1fr; align-items: start; }
+    .puzzle-preview-phase,
+    .puzzle-preview-line,
+    .puzzle-preview-replay { grid-column: 1 / -1; }
 }
 
 @media (max-width: 480px) {
@@ -447,4 +570,15 @@ body.camp-mode-active #gameOverScreen {
     #modeIndicator .mode-badge { padding: 0.45rem 0.62rem; font-size: 0.72rem; }
     .camp-lobby__topline { align-items: flex-start; flex-direction: column; gap: 0.35rem; }
     .camp-leaderboard { margin-top: 1rem; padding-top: 1rem; }
+    .puzzle-preview-modal { padding: 0.4rem; align-items: end; }
+    .puzzle-preview-dialog { width: 100%; max-height: calc(100dvh - 0.4rem); padding: 1rem; padding-bottom: max(1rem, env(safe-area-inset-bottom)); border-radius: 20px 20px 8px 8px; }
+    .puzzle-preview-heading { display: block; padding-right: 2.5rem; }
+    .puzzle-preview-status { display: inline-flex; margin-top: 0.55rem; }
+    .puzzle-preview-meta { margin-bottom: 0.7rem; }
+    .puzzle-preview-board-wrap { width: min(76vw, 290px); }
+    .puzzle-preview-analysis { grid-template-columns: 1fr; gap: 0.55rem; }
+    .puzzle-preview-wrong { grid-column: 1; }
+    .puzzle-preview-phase { min-height: 38px; padding: 0.55rem 0.65rem; }
+    .camp-matrix-cell { min-height: 38px; }
+    .camp-matrix-puzzle-button { min-width: 38px; min-height: 38px; }
 }

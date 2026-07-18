@@ -10,7 +10,7 @@
         rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="css/style.css">
-    <link rel="stylesheet" href="css/puzzle-camp.css?v=1">
+    <link rel="stylesheet" href="css/puzzle-camp.css?v=2">
 
     <!-- Chess Libraries -->
     <link rel="stylesheet" href="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.css">
@@ -1239,12 +1239,21 @@
         </div>
     </main>
 
+    <div id="puzzlePreviewModal" class="puzzle-preview-modal hidden" role="dialog" aria-modal="true" aria-labelledby="puzzlePreviewTitle" onclick="window.closePuzzlePreview(event)">
+        <div class="puzzle-preview-dialog">
+            <button type="button" class="puzzle-preview-close" onclick="window.closePuzzlePreview()" aria-label="Zavřít náhled úlohy">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+            <div id="puzzlePreviewContent"></div>
+        </div>
+    </div>
+
     <footer id="global-footer"></footer>
 
     <script src="js/config.js?v=4" defer></script>
     <script src="js/layout-loader.js?v=7" defer></script>
     <script src="js/main.js" defer></script>
-    <script src="js/puzzle-racer.js?v=pardubice1" defer></script>
+    <script src="js/puzzle-racer.js?v=pardubice2" defer></script>
 </body>
 
 </html>

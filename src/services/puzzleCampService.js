@@ -98,6 +98,11 @@ export function calculatePuzzlePoints({ correct, skipped, responseMs, wrongAttem
     return Math.max(25, 100 + speedBonus - safeWrong * 15);
 }
 
+export function normalizeCampMove(value) {
+    const move = String(value || '').trim().toLowerCase();
+    return /^[a-h][1-8][a-h][1-8][qrbn]?$/.test(move) ? move : null;
+}
+
 export function calculateAttemptSummary(results = []) {
     const ordered = [...results].sort((a, b) => a.puzzleIndex - b.puzzleIndex);
     let score = 0;

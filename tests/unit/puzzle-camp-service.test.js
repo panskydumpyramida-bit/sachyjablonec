@@ -6,7 +6,8 @@ import {
     getCampAchievements,
     getCampLevel,
     getCampSessionStatus,
-    normalizeCampConfig
+    normalizeCampConfig,
+    normalizeCampMove
 } from '../../src/services/puzzleCampService.js';
 
 describe('Pardubice 2026 puzzle camp service', () => {
@@ -49,6 +50,13 @@ describe('Pardubice 2026 puzzle camp service', () => {
         expect(calculatePuzzlePoints({ correct: true, skipped: false, responseMs: 2000, wrongAttempts: 0 })).toBe(180);
         expect(calculatePuzzlePoints({ correct: true, skipped: false, responseMs: 15000, wrongAttempts: 10 })).toBe(25);
         expect(calculatePuzzlePoints({ correct: false, skipped: false, responseMs: 1000, wrongAttempts: 0 })).toBe(0);
+    });
+
+    it('accepts only normalized UCI moves for result previews', () => {
+        expect(normalizeCampMove(' H5F7 ')).toBe('h5f7');
+        expect(normalizeCampMove('a7a8q')).toBe('a7a8q');
+        expect(normalizeCampMove('h5-f7')).toBeNull();
+        expect(normalizeCampMove('<script>')).toBeNull();
     });
 
     it('calculates streak bonuses and complete attempt statistics', () => {
