@@ -209,6 +209,7 @@ let puzzleCampClockTimer = null;
 let puzzleCampPollTimer = null;
 let selectedPuzzleCampHistoryId = null;
 let loadedPuzzleCampHistoryId = null;
+let puzzleCampAdminSessions = [];
 
 function campAdminEscape(value) {
     const div = document.createElement('div');
@@ -248,11 +249,17 @@ function renderCampAdminBadges(badges = []) {
 
 function renderPuzzleCampHistorySelector(sessions = []) {
     const select = document.getElementById('prCampHistorySelect');
+    const deleteButton = document.getElementById('prCampDeleteBtn');
     if (!select) return;
+    puzzleCampAdminSessions = sessions;
     if (!sessions.length) {
         selectedPuzzleCampHistoryId = null;
         select.innerHTML = '<option value="">Zatím žádná rozcvička</option>';
         select.disabled = true;
+        if (deleteButton) {
+            deleteButton.disabled = true;
+            deleteButton.title = 'Zatím není co smazat';
+        }
         return;
     }
 
@@ -266,6 +273,18 @@ function renderPuzzleCampHistorySelector(sessions = []) {
             ${formatCampAdminDate(session.startsAt)} · ${campAdminEscape(session.title)} · ${labels[session.status] || session.status}
         </option>
     `).join('');
+    updatePuzzleCampDeleteButton();
+}
+
+function updatePuzzleCampDeleteButton() {
+    const button = document.getElementById('prCampDeleteBtn');
+    if (!button) return;
+    const selected = puzzleCampAdminSessions.find(session => session.id === selectedPuzzleCampHistoryId);
+    const canDelete = selected?.status === 'finished';
+    button.disabled = !canDelete;
+    button.title = canDelete
+        ? 'Trvale smaže rozcvičku včetně všech výsledků'
+        : 'Smazat lze pouze ukončenou rozcvičku';
 }
 
 function renderPuzzleCampHistory(detail) {
@@ -350,7 +369,47 @@ async function loadPuzzleCampHistory(sessionId) {
 
 function selectPuzzleCampHistory(value) {
     selectedPuzzleCampHistoryId = Number.parseInt(value, 10) || null;
+    updatePuzzleCampDeleteButton();
     return loadPuzzleCampHistory(selectedPuzzleCampHistoryId);
+}
+
+async function deleteSelectedPuzzleCampHistory() {
+    const session = puzzleCampAdminSessions.find(item => item.id === selectedPuzzleCampHistoryId);
+    if (!session || session.status !== 'finished') return;
+
+    const count = session.participantCount || 0;
+    const players = count === 1 ? '1 hráče' : `${count} hráčů`;
+    const confirmed = confirm(
+        `Opravdu trvale smazat „${session.title}“ a výsledky ${players}?\n\nTuto akci nelze vrátit.`
+    );
+    if (!confirmed) return;
+
+    const button = document.getElementById('prCampDeleteBtn');
+    const notice = document.getElementById('prCampHistoryNotice');
+    const original = button?.innerHTML || '';
+    if (button) {
+        button.disabled = true;
+        button.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Mažu…';
+    }
+
+    try {
+        const res = await fetch(`${API_URL}/racer/camp/sessions/${session.id}`, {
+            method: 'DELETE',
+            headers: campAdminTokenHeaders()
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Rozcvičku se nepodařilo smazat');
+
+        selectedPuzzleCampHistoryId = null;
+        loadedPuzzleCampHistoryId = null;
+        await loadPuzzleCampAdmin(true);
+        if (notice) notice.innerHTML = `<span style="color:#4ade80"><i class="fa-solid fa-circle-check"></i> „${campAdminEscape(data.title)}“ byla trvale smazána.</span>`;
+    } catch (error) {
+        if (notice) notice.innerHTML = `<span style="color:#fca5a5"><i class="fa-solid fa-triangle-exclamation"></i> ${campAdminEscape(error.message)}</span>`;
+    } finally {
+        if (button) button.innerHTML = original;
+        updatePuzzleCampDeleteButton();
+    }
 }
 
 function renderPuzzleCampClock() {
@@ -572,3 +631,4 @@ window.startPuzzleCampNow = startPuzzleCampNow;
 window.finishPuzzleCampNow = finishPuzzleCampNow;
 window.cancelPuzzleCampSession = cancelPuzzleCampSession;
 window.selectPuzzleCampHistory = selectPuzzleCampHistory;
+window.deleteSelectedPuzzleCampHistory = deleteSelectedPuzzleCampHistory;

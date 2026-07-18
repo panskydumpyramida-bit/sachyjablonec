@@ -2006,6 +2006,12 @@ input:checked+.slider:before {
 .camp-racer-history__header h3 { margin: 0.55rem 0 0.25rem; color: #fff; }
 .camp-racer-history__header p { margin: 0; color: #94a3b8; font-size: 0.78rem; }
 
+.camp-racer-history__controls {
+    display: flex;
+    align-items: flex-end;
+    gap: 0.55rem;
+}
+
 .camp-racer-history__picker {
     display: grid;
     min-width: min(330px, 100%);
@@ -2030,6 +2036,22 @@ input:checked+.slider:before {
     letter-spacing: normal;
     text-transform: none;
 }
+
+.camp-racer-history__delete {
+    border: 1px solid rgba(248, 113, 113, 0.34);
+    color: #fecaca;
+    background: rgba(127, 29, 29, 0.22);
+}
+
+.camp-racer-history__delete:not(:disabled):hover {
+    border-color: rgba(248, 113, 113, 0.62);
+    color: #fff;
+    background: rgba(153, 27, 27, 0.45);
+}
+
+.camp-racer-history__delete:disabled { opacity: 0.42; cursor: not-allowed; }
+.camp-racer-history__notice { min-height: 1.1rem; margin-top: 0.55rem; color: #94a3b8; font-size: 0.7rem; }
+.camp-racer-history__notice:empty { display: none; }
 
 .camp-racer-history__summary {
     display: grid;
@@ -2131,7 +2153,9 @@ input:checked+.slider:before {
     .camp-racer-actions .btn-danger { margin-left: 0; }
     .camp-racer-history { padding: 0.8rem; }
     .camp-racer-history__header { align-items: stretch; flex-direction: column; }
+    .camp-racer-history__controls { align-items: stretch; flex-direction: column; }
     .camp-racer-history__picker { width: 100%; min-width: 0; }
+    .camp-racer-history__delete { width: 100%; }
     .camp-racer-history__summary { grid-template-columns: repeat(2, 1fr); }
     .camp-racer-history-player summary { grid-template-columns: 26px minmax(0, 1fr) 60px 16px; gap: 0.45rem; min-height: 62px; padding-inline: 0.55rem; }
     .camp-racer-history-player__metric:nth-of-type(4) { display: none; }

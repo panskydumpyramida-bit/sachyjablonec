@@ -847,6 +847,37 @@ router.get('/camp/admin', requireRole('ADMIN'), async (req, res) => {
     }
 });
 
+router.delete('/camp/sessions/:id', requireRole('ADMIN'), async (req, res) => {
+    try {
+        const id = Number.parseInt(req.params.id, 10);
+        if (!Number.isInteger(id)) return res.status(400).json({ error: 'Neplatné ID rozcvičky' });
+
+        const session = await prisma.puzzleCampSession.findUnique({
+            where: { id },
+            include: { _count: { select: { attempts: true } } }
+        });
+        if (!session || session.campCode !== CAMP_CODE) {
+            return res.status(404).json({ error: 'Rozcvička nebyla nalezena' });
+        }
+
+        const status = getCampSessionStatus(session);
+        if (status !== 'finished' && status !== 'cancelled') {
+            return res.status(409).json({ error: 'Naplánovanou nebo probíhající rozcvičku nejprve ukončete či zrušte' });
+        }
+
+        await prisma.puzzleCampSession.delete({ where: { id } });
+        res.json({
+            deleted: true,
+            id: session.id,
+            title: session.title,
+            participantCount: session._count.attempts
+        });
+    } catch (error) {
+        console.error('Camp session delete error:', error);
+        res.status(500).json({ error: 'Rozcvičku se nepodařilo smazat' });
+    }
+});
+
 router.post('/camp/sessions/:id/cancel', requireRole('ADMIN'), async (req, res) => {
     try {
         const id = Number.parseInt(req.params.id, 10);

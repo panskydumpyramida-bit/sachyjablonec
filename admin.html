@@ -10,7 +10,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="css/style.css?v=ux12">
-    <link rel="stylesheet" href="css/admin.css?v=timeline2">
+    <link rel="stylesheet" href="css/admin.css?v=pardubice2">
     <link rel="stylesheet" href="css/admin-sidebar.css?v=ux3">
     <script src="js/version.js?v=ux12"></script>
     <script src="js/modal-manager.js?v=ux12"></script>
@@ -1247,11 +1247,17 @@
                         <h3 id="prCampHistoryHeading">Všechny dny a všichni hráči</h3>
                         <p>Vyberte den a rozbalte hráče. Uvidíte skóre, odznaky i každou jednotlivou úlohu.</p>
                     </div>
-                    <label class="camp-racer-history__picker" for="prCampHistorySelect">
-                        <span>Den rozcvičky</span>
-                        <select id="prCampHistorySelect" onchange="selectPuzzleCampHistory(this.value)"></select>
-                    </label>
+                    <div class="camp-racer-history__controls">
+                        <label class="camp-racer-history__picker" for="prCampHistorySelect">
+                            <span>Den rozcvičky</span>
+                            <select id="prCampHistorySelect" onchange="selectPuzzleCampHistory(this.value)"></select>
+                        </label>
+                        <button id="prCampDeleteBtn" type="button" class="btn-danger camp-racer-history__delete" onclick="deleteSelectedPuzzleCampHistory()" disabled>
+                            <i class="fa-solid fa-trash-can"></i> Smazat vybranou
+                        </button>
+                    </div>
                 </div>
+                <div id="prCampHistoryNotice" class="camp-racer-history__notice" aria-live="polite"></div>
                 <div id="prCampHistorySummary" class="camp-racer-history__summary">
                     <div><strong>–</strong><span>účastníků</span></div>
                     <div><strong>–</strong><span>průměrně vyřešeno</span></div>
@@ -2840,7 +2846,7 @@
     <script src="js/admin/admin-sidebar.js?v=ux3"></script>
     <script src="js/admin/admin-users.js?v=ux12"></script>
     <script src="js/admin/admin-blicak.js?v=ux12"></script>
-    <script src="js/admin/admin-puzzle-racer.js?v=pardubice1"></script>
+    <script src="js/admin/admin-puzzle-racer.js?v=pardubice2"></script>
     <script src="js/admin/admin-chessdb.js?v=ux12"></script>
     <script src="js/admin/admin-weekly-puzzles.js?v=ux15"></script>
     <script src="js/admin/admin-home-tiles.js?v=1"></script>
