@@ -1135,6 +1135,16 @@ function endGame() {
     document.getElementById('gameOverScreen').classList.remove('hidden');
     document.getElementById('finalScore').innerText = score;
 
+    const gameOverTitle = document.getElementById('gameOverTitle');
+    const gameOverActionButton = document.getElementById('gameOverActionButton');
+    if (gameOverTitle) gameOverTitle.textContent = gameMode === 'pardubice2026' ? 'Rozcvička dokončena' : 'Konec hry!';
+    if (gameOverActionButton) {
+        gameOverActionButton.classList.toggle('camp-return-button', gameMode === 'pardubice2026');
+        gameOverActionButton.innerHTML = gameMode === 'pardubice2026'
+            ? '<i class="fa-solid fa-arrow-left"></i> Zpět na přehled soustředění'
+            : '<i class="fa-solid fa-rotate-right"></i> Hrát znovu';
+    }
+
     if (gameMode === 'pardubice2026') {
         const recordBanner = document.getElementById('newRecordBanner');
         const nameWrapper = document.getElementById('nameInputWrapper');
@@ -1171,6 +1181,19 @@ function endGame() {
 
     // Render post-solve review
     renderPuzzleReview();
+}
+
+function handleGameOverAction() {
+    if (gameMode !== 'pardubice2026') {
+        location.reload();
+        return;
+    }
+
+    document.getElementById('gameOverScreen')?.classList.add('hidden');
+    document.getElementById('startScreen')?.classList.remove('hidden');
+    renderCampLobby();
+    loadPuzzleCampState();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 // Auto-save score for logged-in users (every game, not just records)
@@ -1466,7 +1489,7 @@ function openPuzzlePreview(preview) {
                     <span>Správná varianta</span>
                     <div>${moves.map(move => `<b class="puzzle-preview-move" data-index="${move.index}">${move.index + 1}. ${escapeHtml(move.label)}</b>`).join('')}</div>
                 </div>
-                <button type="button" class="puzzle-preview-replay" onclick="window.playPuzzlePreview()"><i class="fa-solid fa-rotate-right"></i> Přehrát znovu</button>
+                <button type="button" class="puzzle-preview-replay" onclick="window.playPuzzlePreview()"><i class="fa-solid fa-rotate-right"></i> Přehrát rozbor</button>
             </div>
         </div>
     `;
@@ -2503,6 +2526,7 @@ document.addEventListener('DOMContentLoaded', () => {
     window.showCampPuzzlePreview = showCampPuzzlePreview;
     window.closePuzzlePreview = closePuzzlePreview;
     window.playPuzzlePreview = playPuzzlePreview;
+    window.handleGameOverAction = handleGameOverAction;
     window.joinPuzzleCamp = joinPuzzleCamp;
     window.switchPuzzleCampSession = switchPuzzleCampSession;
 

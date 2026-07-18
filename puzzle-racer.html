@@ -1105,7 +1105,7 @@
 
                 <!-- GAME OVER SCREEN -->
                 <div id="gameOverScreen" class="game-over-screen hidden">
-                    <h2>Konec hry!</h2>
+                    <h2 id="gameOverTitle">Konec hry!</h2>
                     <p>Váš výsledek:</p>
                     <div class="final-score" id="finalScore">0</div>
 
@@ -1135,7 +1135,7 @@
 
                     <div
                         style="margin-top: 1rem; display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap;">
-                        <button class="btn-secondary" onclick="location.reload()">
+                        <button id="gameOverActionButton" class="btn-secondary" onclick="window.handleGameOverAction()">
                             <i class="fa-solid fa-rotate-right"></i> Hrát znovu
                         </button>
 

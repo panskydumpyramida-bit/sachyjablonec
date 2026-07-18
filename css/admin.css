@@ -1760,6 +1760,24 @@ input:checked+.slider:before {
     color: var(--text-muted);
 }
 
+.camp-racer-admin .btn-primary,
+.camp-racer-admin .btn-secondary,
+.camp-racer-admin .btn-danger {
+    display: inline-flex;
+    min-height: 44px;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.7rem 1rem;
+    border-radius: 10px;
+    font: inherit;
+    font-size: 0.8rem;
+    font-weight: 750;
+    line-height: 1.15;
+    text-decoration: none;
+    white-space: nowrap;
+}
+
 .camp-racer-status {
     display: flex;
     align-items: center;
@@ -1890,6 +1908,7 @@ input:checked+.slider:before {
 
 .camp-racer-create {
     width: 100%;
+    min-height: 50px !important;
     margin-top: 1rem;
     justify-content: center;
     background: linear-gradient(135deg, #d5a52f, #f2c75c);
@@ -1975,11 +1994,14 @@ input:checked+.slider:before {
 
 @media (max-width: 700px) {
     .camp-racer-admin__header { flex-direction: column; }
+    .camp-racer-admin__header .btn-secondary { width: 100%; }
     .camp-racer-form-grid { grid-template-columns: 1fr; }
     .camp-racer-form-grid__wide { grid-column: auto; }
     .camp-racer-rules { grid-template-columns: minmax(0, 1fr) auto; }
     .camp-racer-rules > label:nth-of-type(2) { grid-column: 1 / -1; }
     .camp-racer-admin { padding: 1rem; }
+    .camp-racer-actions > button { flex: 1 1 120px; }
+    .camp-racer-actions .btn-danger { margin-left: 0; }
 }
 .settings-grid {
     display: grid;

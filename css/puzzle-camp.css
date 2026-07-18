@@ -4,6 +4,36 @@
     box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.38);
 }
 
+.game-container .btn-primary {
+    display: inline-flex;
+    min-height: 46px;
+    align-items: center;
+    justify-content: center;
+    gap: 0.55rem;
+    padding: 0.75rem 1.35rem;
+    border: 0;
+    border-radius: 12px;
+    color: #17120a;
+    background: linear-gradient(135deg, #d7aa3b, #f3cf6a);
+    box-shadow: 0 8px 22px rgba(212, 175, 55, 0.2);
+    font: inherit;
+    font-weight: 800;
+    line-height: 1.15;
+    cursor: pointer;
+    transition: transform 0.18s ease, filter 0.18s ease, box-shadow 0.18s ease;
+}
+
+.game-container .btn-primary:hover,
+.game-container .btn-primary:focus-visible {
+    transform: translateY(-2px);
+    filter: brightness(1.06);
+    box-shadow: 0 11px 26px rgba(212, 175, 55, 0.28);
+    outline: 2px solid rgba(255, 224, 139, 0.8);
+    outline-offset: 2px;
+}
+
+.game-container .btn-primary:disabled { cursor: wait; opacity: 0.72; transform: none; }
+
 body.camp-mode-active .game-container {
     max-width: 1180px;
     border-color: rgba(241, 193, 73, 0.32);
@@ -169,14 +199,22 @@ body.camp-mode-active #gameOverScreen {
 .camp-lobby__stats strong { color: #fff; font-size: 1.05rem; }
 .camp-lobby__stats span { color: #8ea0b2; font-size: 0.65rem; text-transform: uppercase; }
 
-.camp-join-button {
+.game-container .camp-join-button {
     display: flex;
     width: 100%;
+    min-height: 50px;
     margin-top: 1rem;
+    padding: 0.85rem 1.1rem;
     justify-content: center;
+    gap: 0.55rem;
+    border: 1px solid rgba(255, 240, 172, 0.42);
+    border-radius: 13px;
     color: #17120a !important;
     text-decoration: none;
     background: linear-gradient(135deg, #e0aa2f, #ffe08b);
+    box-shadow: 0 10px 24px rgba(224, 170, 47, 0.18);
+    font-size: 0.86rem;
+    font-weight: 850;
 }
 
 .camp-joined-badge {
@@ -333,15 +371,25 @@ body.camp-mode-active #gameOverScreen {
 }
 
 .camp-session-tab {
-    padding: 0.45rem 0.7rem;
+    display: inline-flex;
+    min-height: 36px;
+    align-items: center;
+    justify-content: center;
+    padding: 0.5rem 0.8rem;
     border: 1px solid rgba(148, 163, 184, 0.18);
     border-radius: 999px;
     color: #94a3b8;
     background: rgba(255, 255, 255, 0.04);
     white-space: nowrap;
+    font-family: inherit;
     cursor: pointer;
     font-size: 0.7rem;
+    font-weight: 750;
+    transition: color 0.18s ease, background 0.18s ease, border-color 0.18s ease, transform 0.18s ease;
 }
+
+.camp-session-tab:hover,
+.camp-session-tab:focus-visible { border-color: rgba(242, 197, 82, 0.55); color: #f8d477; transform: translateY(-1px); outline: none; }
 
 .camp-session-tab.active {
     border-color: rgba(242, 197, 82, 0.45);
@@ -410,11 +458,11 @@ body.camp-mode-active #gameOverScreen {
 
 .camp-matrix-cell {
     min-width: 48px;
-    min-height: 30px;
+    min-height: 36px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    border: 0;
+    border: 1px solid transparent;
     border-radius: 7px;
     font-family: inherit;
     font-variant-numeric: tabular-nums;
@@ -425,17 +473,23 @@ body.camp-mode-active #gameOverScreen {
 .camp-matrix-cell--correct { color: #86efac; background: rgba(74, 222, 128, 0.13); }
 .camp-matrix-cell--wrong { color: #fca5a5; background: rgba(248, 113, 113, 0.12); }
 .camp-matrix-cell--empty { color: #64748b; background: rgba(71, 85, 105, 0.1); }
+.camp-matrix-cell--clickable.camp-matrix-cell--correct { border-color: rgba(74, 222, 128, 0.24); }
+.camp-matrix-cell--clickable.camp-matrix-cell--wrong { border-color: rgba(248, 113, 113, 0.22); }
 .camp-matrix-cell--clickable { cursor: pointer; transition: transform 0.18s ease, filter 0.18s ease, box-shadow 0.18s ease; }
 .camp-matrix-cell--clickable:hover,
 .camp-matrix-cell--clickable:focus-visible { transform: translateY(-2px); filter: brightness(1.2); box-shadow: 0 5px 14px rgba(0, 0, 0, 0.25); outline: 2px solid rgba(242, 197, 82, 0.8); outline-offset: 1px; }
 .camp-matrix-puzzle-button {
-    min-width: 30px;
-    min-height: 30px;
+    display: inline-grid;
+    min-width: 36px;
+    min-height: 36px;
+    padding: 0.35rem;
+    place-items: center;
     border: 1px solid rgba(242, 197, 82, 0.25);
     border-radius: 8px;
     color: #f8d477;
     background: rgba(242, 197, 82, 0.08);
     font: inherit;
+    font-size: 0.68rem;
     font-weight: 800;
     cursor: pointer;
 }
@@ -534,9 +588,19 @@ body.puzzle-preview-open { overflow: hidden; }
 .puzzle-preview-line > div { display: flex; flex-wrap: wrap; gap: 0.35rem; }
 .puzzle-preview-move { padding: 0.38rem 0.5rem; border-radius: 7px; color: #cbd5e1; background: rgba(255, 255, 255, 0.055); font-size: 0.72rem; transition: color 0.18s ease, background 0.18s ease, transform 0.18s ease; }
 .puzzle-preview-move.is-active { color: #102015; background: #86efac; transform: translateY(-2px); }
-.puzzle-preview-replay { justify-self: start; padding: 0.62rem 0.82rem; border: 1px solid rgba(242, 197, 82, 0.28); border-radius: 10px; color: #f8d477; background: rgba(242, 197, 82, 0.07); font: inherit; font-size: 0.74rem; font-weight: 800; cursor: pointer; }
+.puzzle-preview-replay { display: inline-flex; min-height: 42px; align-items: center; justify-content: center; gap: 0.45rem; justify-self: start; padding: 0.65rem 0.9rem; border: 1px solid rgba(242, 197, 82, 0.34); border-radius: 10px; color: #f8d477; background: rgba(242, 197, 82, 0.08); font: inherit; font-size: 0.76rem; font-weight: 800; cursor: pointer; }
 .puzzle-preview-replay:hover,
 .puzzle-preview-replay:focus-visible { color: #17120a; background: #f2c552; outline: none; }
+
+.camp-return-button {
+    min-height: 48px;
+    padding-inline: 1.2rem;
+    border-color: rgba(242, 197, 82, 0.42);
+    border-radius: 12px;
+    color: #f8d477;
+    background: rgba(242, 197, 82, 0.09);
+    box-shadow: 0 8px 22px rgba(0, 0, 0, 0.18);
+}
 
 @media (max-width: 760px) {
     body.camp-mode-active .game-container { padding-inline: 0.65rem; }
@@ -555,6 +619,7 @@ body.puzzle-preview-open { overflow: hidden; }
     .camp-leaderboard__toolbar,
     .camp-matrix-card__heading { align-items: flex-start; flex-direction: column; }
     .camp-session-tabs { max-width: 100%; width: 100%; }
+    .camp-session-tab { min-height: 42px; }
     .camp-matrix-card { padding: 0.7rem; }
     .camp-finish-summary { grid-template-columns: 1fr; }
     .puzzle-preview-layout { grid-template-columns: 1fr; gap: 0.9rem; }
@@ -579,6 +644,8 @@ body.puzzle-preview-open { overflow: hidden; }
     .puzzle-preview-analysis { grid-template-columns: 1fr; gap: 0.55rem; }
     .puzzle-preview-wrong { grid-column: 1; }
     .puzzle-preview-phase { min-height: 38px; padding: 0.55rem 0.65rem; }
-    .camp-matrix-cell { min-height: 38px; }
-    .camp-matrix-puzzle-button { min-width: 38px; min-height: 38px; }
+    .puzzle-preview-replay { width: 100%; min-height: 46px; justify-self: stretch; }
+    .camp-return-button { width: 100%; min-height: 50px; justify-content: center; }
+    .camp-matrix-cell { min-height: 42px; }
+    .camp-matrix-puzzle-button { min-width: 42px; min-height: 42px; }
 }
