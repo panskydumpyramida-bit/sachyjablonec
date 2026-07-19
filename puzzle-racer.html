@@ -10,7 +10,7 @@
         rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="css/style.css">
-    <link rel="stylesheet" href="css/puzzle-camp.css?v=2">
+    <link rel="stylesheet" href="css/puzzle-camp.css?v=3">
 
     <!-- Chess Libraries -->
     <link rel="stylesheet" href="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.css">
@@ -118,6 +118,7 @@
 
         /* Hide leaderboard during active gameplay (all screens) */
         body.game-active #leaderboardSection,
+        body.game-active #campLeaderboardSection,
         body.game-active #hallOfFameSection {
             display: none !important;
         }
@@ -185,6 +186,20 @@
 
             body.game-active .controls {
                 margin-top: 0.5rem;
+            }
+        }
+
+        @media (max-width: 340px) and (max-height: 600px) and (orientation: portrait) {
+            body.game-active #board {
+                width: min(100vw - 1rem, calc(100vh - 270px)) !important;
+                width: min(100vw - 1rem, calc(100dvh - 270px)) !important;
+            }
+
+            body.game-active .camp-live-pulse {
+                min-height: 28px;
+                margin-top: 0.2rem;
+                padding-block: 0.2rem;
+                font-size: 0.6rem;
             }
         }
 
@@ -1101,6 +1116,11 @@
 
                         <div id="board"></div>
                     </div>
+
+                    <div id="campLivePulse" class="camp-live-pulse hidden" aria-live="polite">
+                        <i class="fa-solid fa-trophy"></i>
+                        <span id="campLivePulseText">Průběžný lídr zatím čeká na první tah</span>
+                    </div>
                 </div>
 
                 <!-- GAME OVER SCREEN -->
@@ -1253,7 +1273,7 @@
     <script src="js/config.js?v=4" defer></script>
     <script src="js/layout-loader.js?v=7" defer></script>
     <script src="js/main.js" defer></script>
-    <script src="js/puzzle-racer.js?v=pardubice4" defer></script>
+    <script src="js/puzzle-racer.js?v=pardubice5" defer></script>
 </body>
 
 </html>

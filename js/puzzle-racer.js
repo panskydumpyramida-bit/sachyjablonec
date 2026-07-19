@@ -1960,6 +1960,7 @@ async function startPuzzleCampRace() {
         document.getElementById('gameInterface').classList.remove('hidden');
         setGameViewportLocked(true);
         document.getElementById('campLiveRankBox')?.classList.remove('hidden');
+        renderCampLivePulse();
         const scoreLabel = document.querySelector('#score')?.previousElementSibling;
         if (scoreLabel) scoreLabel.textContent = 'Vyřešeno';
         setCampLobbyElement('skipButtonLabel', 'Přeskočit úlohu');
@@ -2025,6 +2026,7 @@ function reportCampPuzzleOutcome(puzzleIndex, result) {
         const data = await saveCampPuzzleOutcome(puzzleIndex, result);
         campAttempt = data.attempt;
         setCampLobbyElement('campLiveRank', `#${data.rank}`);
+        renderCampLivePulse(data.leader);
         return data;
     }).catch(error => {
         console.error('Camp progress save error:', error);
@@ -2070,6 +2072,28 @@ async function finishCampAttempt() {
 
 let puzzleCampLeaderboardData = null;
 
+function renderCampLivePulse(liveLeader = null) {
+    const pulse = document.getElementById('campLivePulse');
+    const text = document.getElementById('campLivePulseText');
+    if (!pulse || !text || gameMode !== 'pardubice2026') return;
+
+    const detail = puzzleCampLeaderboardData?.sessionDetail;
+    const fallbackLeader = detail?.participants?.[0];
+    const leader = liveLeader || (fallbackLeader ? {
+        playerName: fallbackLeader.playerName,
+        puzzleCount: fallbackLeader.cells?.length || fallbackLeader.correctCount || 0
+    } : null);
+    const total = Math.max(1, campSession?.puzzleCount || detail?.session?.puzzleCount || puzzles.length || 1);
+    const leaderPuzzle = leader
+        ? Math.min(total, Math.max(1, Number(leader.puzzleCount || 0) + 1))
+        : Math.min(total, Math.max(1, currentPuzzleIndex + 1));
+
+    text.textContent = leader
+        ? `Lídr ${leader.playerName} · úloha ${leaderPuzzle}/${total}`
+        : `Společná sada · úloha ${leaderPuzzle}/${total}`;
+    pulse.classList.remove('hidden');
+}
+
 function campFormatSeconds(milliseconds) {
     if (!milliseconds) return '—';
     return `${(milliseconds / 1000).toFixed(milliseconds < 10000 ? 1 : 0)} s`;
@@ -2107,8 +2131,8 @@ function renderPuzzleCampLeaderboard(data) {
     standingsBody.innerHTML = data.standings.map(player => `
         <tr class="${player.userId === loggedInUser?.id ? 'is-current-player' : ''}">
             <td>${player.rank}</td>
-            <td>${escapeHtml(player.playerName)}${player.userId === loggedInUser?.id ? ' · vy' : ''}<small class="camp-level-tag">${player.level.icon} ${escapeHtml(player.level.name)}</small>${renderCampMotivationalBadges(player.badges)}</td>
-            <td><strong>${player.score}</strong></td>
+            <td>${escapeHtml(player.playerName)}${player.userId === loggedInUser?.id ? ' · vy' : ''}<small class="camp-level-tag">${player.level.icon} ${escapeHtml(player.level.name)}</small>${renderCampMotivationalBadges(player.badges)}<span class="camp-mobile-stats"><span>${player.correctCount} úloh</span><span>${player.attendance}× účast</span><span>${player.wins}× výhra</span><span>série ${player.maxStreak}</span></span></td>
+            <td class="camp-score-cell"><strong>${player.score}</strong><small>bodů</small></td>
             <td>${player.correctCount}</td>
             <td>${player.attendance}×</td>
             <td>${player.wins}</td>
@@ -2123,6 +2147,7 @@ function renderPuzzleCampLeaderboard(data) {
     }).join('');
 
     renderPuzzleCampMatrix(data.sessionDetail);
+    renderCampLivePulse();
 }
 
 function renderPuzzleCampMatrix(detail) {

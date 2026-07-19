@@ -230,6 +230,32 @@ body.camp-mode-active #gameOverScreen {
 
 .camp-live-rank .stat-value { color: #f8d477; }
 
+.camp-live-pulse {
+    display: flex;
+    width: fit-content;
+    min-height: 34px;
+    max-width: min(500px, 100%);
+    align-items: center;
+    justify-content: center;
+    gap: 0.45rem;
+    margin: 0.45rem auto 0;
+    padding: 0.35rem 0.75rem;
+    border: 1px solid rgba(242, 197, 82, 0.18);
+    border-radius: 999px;
+    box-sizing: border-box;
+    color: #a9b8c7;
+    background: rgba(2, 8, 15, 0.48);
+    font-size: 0.7rem;
+    font-weight: 700;
+    line-height: 1.2;
+    white-space: nowrap;
+}
+
+.camp-live-pulse i { color: #f2c552; }
+.camp-live-pulse span { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.camp-live-pulse strong { color: #fff2c4; }
+body:not(.game-active) .camp-live-pulse { display: none !important; }
+
 .camp-finish-summary {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
@@ -461,6 +487,8 @@ body.camp-mode-active #gameOverScreen {
 
 .camp-standings-table td:nth-child(2) { min-width: 150px; font-weight: 700; }
 .camp-level-tag { display: block; margin-top: 0.15rem; color: #8ea0b2; font-size: 0.62rem; font-weight: 500; }
+.camp-score-cell small { display: block; margin-top: 0.08rem; color: #64748b; font-size: 0.55rem; font-weight: 650; text-transform: uppercase; }
+.camp-mobile-stats { display: none; }
 .camp-standings-table tr.is-current-player td { background-color: rgba(242, 197, 82, 0.075); }
 .camp-standings-table tr.is-current-player td:nth-child(2) { color: #f8d477; }
 
@@ -636,15 +664,52 @@ body.puzzle-preview-open { overflow: hidden; }
     .camp-countdown__label,
     .camp-countdown__pulse { grid-column: 1; }
     .camp-countdown > strong { grid-row: 2; }
-    .camp-leaderboard__hero { align-items: flex-start; flex-direction: column; }
-    .camp-player-chip { align-self: stretch; justify-content: center; }
-    .camp-week-podium { grid-template-columns: 1fr; }
+    .camp-leaderboard__hero { align-items: flex-start; flex-direction: column; gap: 0.7rem; padding: 0.9rem; border-radius: 16px; }
+    .camp-leaderboard__hero h2 { margin-top: 0.25rem; font-size: 1.35rem; }
+    .camp-leaderboard__hero p { font-size: 0.75rem; line-height: 1.45; }
+    .camp-player-chip { max-width: 100%; align-self: flex-start; padding: 0.42rem 0.65rem; overflow: hidden; text-overflow: ellipsis; }
+    .camp-week-podium { grid-template-columns: 1fr; gap: 0.45rem; margin: 0.65rem 0 1rem; }
+    .camp-podium-card { display: grid; grid-template-columns: 32px minmax(0, 1fr); gap: 0.15rem 0.55rem; padding: 0.68rem 0.75rem; border-radius: 13px; }
+    .camp-podium-card__rank { grid-row: 1 / span 3; align-self: center; font-size: 1.15rem; }
+    .camp-podium-card strong { min-width: 0; margin: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .camp-podium-card__meta { margin: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .camp-podium-card .camp-motivation-badges { grid-column: 2; margin-top: 0.2rem; }
     .camp-leaderboard__toolbar,
-    .camp-matrix-card__heading { align-items: flex-start; flex-direction: column; }
+    .camp-matrix-card__heading { align-items: flex-start; flex-direction: column; gap: 0.55rem; }
+    .camp-leaderboard__toolbar h3,
+    .camp-matrix-card__heading h3 { font-size: 1.1rem; }
     .camp-session-tabs { max-width: 100%; width: 100%; }
     .camp-session-tab { min-height: 42px; }
-    .camp-matrix-card { padding: 0.7rem; }
-    .camp-finish-summary { grid-template-columns: 1fr; }
+    .camp-table-wrap { overflow: visible; border: 0; border-radius: 0; }
+    .camp-standings-table,
+    .camp-standings-table tbody { display: block; width: 100%; }
+    .camp-standings-table thead { display: none; }
+    .camp-standings-table tbody { display: grid; gap: 0.5rem; }
+    .camp-standings-table tbody tr {
+        display: grid;
+        grid-template-columns: 28px minmax(0, 1fr) auto;
+        align-items: center;
+        gap: 0.25rem 0.55rem;
+        padding: 0.7rem 0.65rem;
+        border: 1px solid rgba(148, 163, 184, 0.13);
+        border-radius: 13px;
+        background: rgba(255, 255, 255, 0.028);
+    }
+    .camp-standings-table tbody tr.is-current-player { border-color: rgba(242, 197, 82, 0.34); background: rgba(242, 197, 82, 0.075); }
+    .camp-standings-table tbody td { display: block; padding: 0; border: 0; background: transparent !important; white-space: normal; }
+    .camp-standings-table tbody td:first-child { grid-column: 1; grid-row: 1; color: #f2c552; font-size: 0.9rem; font-weight: 850; }
+    .camp-standings-table tbody td:nth-child(2) { position: static; grid-column: 2; grid-row: 1; min-width: 0; }
+    .camp-standings-table tbody td:nth-child(3) { grid-column: 3; grid-row: 1; color: #fff; text-align: right; }
+    .camp-standings-table tbody td:nth-child(n + 4) { display: none; }
+    .camp-mobile-stats { display: flex; flex-wrap: wrap; gap: 0.2rem 0.45rem; margin-top: 0.32rem; color: #8494a8; font-size: 0.57rem; font-weight: 600; }
+    .camp-mobile-stats span { white-space: nowrap; }
+    .camp-score-cell strong { display: block; color: #f8d477; font-size: 0.9rem; }
+    .camp-matrix-card { margin-top: 1rem; padding: 0.7rem; }
+    .camp-matrix-legend { gap: 0.4rem 0.65rem; }
+    .camp-finish-summary { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.4rem; }
+    .camp-finish-summary > div { padding: 0.58rem 0.35rem; }
+    .camp-finish-summary strong { font-size: 1.05rem; }
+    .camp-finish-summary span { font-size: 0.56rem; }
     .puzzle-preview-layout { grid-template-columns: 1fr; gap: 0.9rem; }
     .puzzle-preview-board-wrap { width: min(68vw, 300px); }
     .puzzle-preview-analysis { grid-template-columns: 1fr 1fr; align-items: start; }
@@ -657,7 +722,14 @@ body.puzzle-preview-open { overflow: hidden; }
     #modeIndicator { gap: 0.45rem !important; }
     #modeIndicator .mode-badge { padding: 0.45rem 0.62rem; font-size: 0.72rem; }
     .camp-lobby__topline { align-items: flex-start; flex-direction: column; gap: 0.35rem; }
-    .camp-leaderboard { margin-top: 1rem; padding-top: 1rem; }
+    .camp-leaderboard { margin-top: 0.8rem; padding-top: 0.8rem; }
+    .camp-leaderboard__hero { padding: 0.8rem; }
+    .camp-leaderboard__hero > div:first-child > span { font-size: 0.6rem; }
+    .camp-leaderboard__hero h2 { font-size: 1.22rem; }
+    .camp-player-chip { font-size: 0.7rem; }
+    .camp-matrix-table th:first-child,
+    .camp-matrix-table td:first-child { min-width: 108px; max-width: 108px; overflow: hidden; text-overflow: ellipsis; }
+    body.game-active .camp-live-pulse { min-height: 32px; margin-top: 0.35rem; padding: 0.3rem 0.6rem; font-size: 0.64rem; }
     .puzzle-preview-modal { padding: 0.4rem; align-items: end; }
     .puzzle-preview-dialog { width: 100%; max-height: calc(100dvh - 0.4rem); padding: 1rem; padding-bottom: max(1rem, env(safe-area-inset-bottom)); border-radius: 20px 20px 8px 8px; }
     .puzzle-preview-heading { display: block; padding-right: 2.5rem; }

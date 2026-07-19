@@ -1234,10 +1234,27 @@ router.put('/camp/sessions/:id/progress', authMiddleware, async (req, res) => {
 
         const progressStatus = attempt.status === 'makeup_playing' ? 'makeup_playing' : 'playing';
         const updatedAttempt = await refreshCampAttempt(attempt.id, progressStatus);
-        const betterScores = await prisma.puzzleCampAttempt.count({
-            where: { sessionId, score: { gt: updatedAttempt.score } }
+        const [betterScores, leader] = await Promise.all([
+            prisma.puzzleCampAttempt.count({
+                where: { sessionId, score: { gt: updatedAttempt.score } }
+            }),
+            prisma.puzzleCampAttempt.findFirst({
+                where: { sessionId, puzzleCount: { gt: 0 } },
+                orderBy: [{ score: 'desc' }, { correctCount: 'desc' }, { durationMs: 'asc' }],
+                select: {
+                    puzzleCount: true,
+                    user: { select: campUserSelect }
+                }
+            })
+        ]);
+        res.json({
+            attempt: updatedAttempt,
+            rank: betterScores + 1,
+            leader: leader ? {
+                playerName: campDisplayName(leader.user),
+                puzzleCount: leader.puzzleCount
+            } : null
         });
-        res.json({ attempt: updatedAttempt, rank: betterScores + 1 });
     } catch (error) {
         console.error('Camp progress error:', error);
         res.status(500).json({ error: 'Průběžný výsledek se nepodařilo uložit' });
