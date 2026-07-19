@@ -1253,7 +1253,7 @@
                             <select id="prCampHistorySelect" onchange="selectPuzzleCampHistory(this.value)"></select>
                         </label>
                         <button id="prCampDeleteBtn" type="button" class="btn-danger camp-racer-history__delete" onclick="deleteSelectedPuzzleCampHistory()" disabled>
-                            <i class="fa-solid fa-trash-can"></i> Smazat vybranou
+                            <i class="fa-solid fa-trash-can"></i> Smazat den
                         </button>
                     </div>
                 </div>
@@ -1269,12 +1269,12 @@
                         <div class="camp-racer-makeup__icon"><i class="fa-solid fa-user-clock"></i></div>
                         <div>
                             <h4 id="prCampMakeupHeading">Náhradní dohrání</h4>
-                            <p>Povolte konkrétnímu hráči stejnou sadu s vlastním plným časem.</p>
+                            <p>Povolte vybranému hráči stejnou sadu a plný čas.</p>
                         </div>
                     </div>
                     <div class="camp-racer-makeup__controls">
                         <label for="prCampMakeupPlayer">
-                            <span>Hráč, který rozcvičku nestihl</span>
+                            <span>Hráč bez výsledku</span>
                             <select id="prCampMakeupPlayer" onchange="updatePuzzleCampMakeupButton()"></select>
                         </label>
                         <button id="prCampMakeupGrantBtn" type="button" class="btn-secondary" onclick="grantPuzzleCampMakeup()" disabled>
