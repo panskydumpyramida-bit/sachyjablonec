@@ -1395,7 +1395,7 @@ function playPuzzlePreview() {
     markPuzzlePreviewMove(null, 'solution');
     document.getElementById('puzzlePreviewFinish')?.classList.remove('is-visible', 'is-success');
     document.querySelectorAll('.puzzle-preview-move').forEach(chip => chip.classList.remove('is-active'));
-    setPuzzlePreviewPhase('<i class="fa-solid fa-circle-play"></i> Sledujte pozici', 'neutral');
+    setPuzzlePreviewPhase('<i class="fa-solid fa-eye"></i> Prohlédněte si výchozí pozici', 'neutral');
 
     const later = (delay, callback) => {
         puzzlePreviewTimers.push(setTimeout(() => {
@@ -1403,23 +1403,23 @@ function playPuzzlePreview() {
         }, delay));
     };
 
-    let delay = 300;
+    let delay = 1400;
     if (preview.wrongMove) {
         later(delay, () => {
             puzzlePreviewBoard.move(`${preview.wrongMove.slice(0, 2)}-${preview.wrongMove.slice(2, 4)}`);
             markPuzzlePreviewMove(preview.wrongMove, 'wrong');
             setPuzzlePreviewPhase(`<i class="fa-solid fa-xmark"></i> Chybný tah: <strong>${escapeHtml(describeUciMove(preview.initialFen, preview.wrongMove))}</strong>`, 'wrong');
         });
-        delay += 1100;
+        delay += 1400;
         later(delay, () => {
             puzzlePreviewBoard.position(preview.initialFen, false);
             markPuzzlePreviewMove(null, 'solution');
             setPuzzlePreviewPhase('<i class="fa-solid fa-lightbulb"></i> Správné řešení', 'solution');
         });
-        delay += 450;
+        delay += 700;
     } else {
         later(delay, () => setPuzzlePreviewPhase('<i class="fa-solid fa-lightbulb"></i> Správné řešení', 'solution'));
-        delay += 250;
+        delay += 450;
     }
 
     preview.solution.forEach((uci, index) => {
@@ -1428,7 +1428,7 @@ function playPuzzlePreview() {
             markPuzzlePreviewMove(uci, 'solution');
             document.querySelectorAll('.puzzle-preview-move').forEach(chip => chip.classList.toggle('is-active', Number(chip.dataset.index) === index));
         });
-        delay += 650;
+        delay += 850;
     });
 
     later(delay, () => {
