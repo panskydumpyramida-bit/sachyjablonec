@@ -877,9 +877,9 @@ router.post('/camp/sessions', requireRole('ADMIN'), async (req, res) => {
 router.get('/camp/admin', requireRole('ADMIN'), async (req, res) => {
     try {
         const now = new Date();
-        const [sessions, players] = await Promise.all([
+        const [allSessions, players] = await Promise.all([
             prisma.puzzleCampSession.findMany({
-                where: { campCode: CAMP_CODE, status: { not: 'cancelled' } },
+                where: { campCode: CAMP_CODE },
                 orderBy: { startsAt: 'desc' },
                 include: {
                     _count: { select: { attempts: true } },
@@ -897,6 +897,7 @@ router.get('/camp/admin', requireRole('ADMIN'), async (req, res) => {
                 select: campUserSelect
             })
         ]);
+        const sessions = allSessions.filter(session => session.status !== 'cancelled');
         res.json({
             serverTime: now,
             sessions: sessions.map(session => ({
@@ -916,7 +917,14 @@ router.get('/camp/admin', requireRole('ADMIN'), async (req, res) => {
                 id: player.id,
                 playerName: campDisplayName(player),
                 username: player.username
-            }))
+            })),
+            resetSummary: {
+                sessionCount: allSessions.length,
+                attemptCount: allSessions.reduce((sum, session) => sum + session._count.attempts, 0),
+                resultCount: allSessions.reduce((sum, session) => (
+                    sum + session.attempts.reduce((attemptSum, attempt) => attemptSum + attempt._count.puzzleResults, 0)
+                ), 0)
+            }
         });
     } catch (error) {
         console.error('Camp admin state error:', error);
@@ -952,6 +960,60 @@ router.delete('/camp/sessions/:id', requireRole('ADMIN'), async (req, res) => {
     } catch (error) {
         console.error('Camp session delete error:', error);
         res.status(500).json({ error: 'Rozcvičku se nepodařilo smazat' });
+    }
+});
+
+router.delete('/camp/data', requireRole('ADMIN'), async (req, res) => {
+    try {
+        if (String(req.body?.confirmation || '').trim().toUpperCase() !== 'VYNULOVAT') {
+            return res.status(400).json({ error: 'Pro vynulování soutěže je nutné potvrzení VYNULOVAT' });
+        }
+
+        const now = new Date();
+        const result = await prisma.$transaction(async tx => {
+            const sessions = await tx.puzzleCampSession.findMany({
+                where: { campCode: CAMP_CODE },
+                select: { id: true, title: true, status: true, startsAt: true, durationSeconds: true }
+            });
+            const active = sessions.find(session => ['scheduled', 'live'].includes(getCampSessionStatus(session, now)));
+            if (active) return { blockedBy: active.title, blockedReason: 'active' };
+
+            const makeupAttempts = await tx.puzzleCampAttempt.findMany({
+                where: { status: 'makeup_playing', session: { campCode: CAMP_CODE } },
+                include: {
+                    user: { select: campUserSelect },
+                    session: { select: { durationSeconds: true } }
+                }
+            });
+            const activeMakeup = makeupAttempts.find(attempt => (
+                getCampMakeupState(attempt, attempt.session.durationSeconds, now)?.status !== 'finished'
+            ));
+            if (activeMakeup) {
+                return { blockedBy: campDisplayName(activeMakeup.user), blockedReason: 'makeup' };
+            }
+
+            const sessionIds = sessions.map(session => session.id);
+            if (!sessionIds.length) return { sessionCount: 0, attemptCount: 0, resultCount: 0 };
+
+            const [attemptCount, resultCount] = await Promise.all([
+                tx.puzzleCampAttempt.count({ where: { sessionId: { in: sessionIds } } }),
+                tx.puzzleCampPuzzleResult.count({ where: { attempt: { sessionId: { in: sessionIds } } } })
+            ]);
+            const deleted = await tx.puzzleCampSession.deleteMany({ where: { id: { in: sessionIds } } });
+            return { sessionCount: deleted.count, attemptCount, resultCount };
+        });
+
+        if (result.blockedReason === 'active') {
+            return res.status(409).json({ error: `Rozcvička „${result.blockedBy}“ právě čeká nebo běží. Nejdříve ji ukončete či zrušte.` });
+        }
+        if (result.blockedReason === 'makeup') {
+            return res.status(409).json({ error: `${result.blockedBy} právě dohrává náhradní termín. Počkejte na dokončení.` });
+        }
+
+        res.json({ reset: true, ...result });
+    } catch (error) {
+        console.error('Camp competition reset error:', error);
+        res.status(500).json({ error: 'Soutěž se nepodařilo vynulovat' });
     }
 });
 

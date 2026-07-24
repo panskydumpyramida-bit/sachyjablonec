@@ -2160,6 +2160,38 @@ input:checked+.slider:before {
 .camp-racer-history__players { display: grid; gap: 0.45rem; }
 .camp-racer-history__players[aria-busy="true"] { opacity: 0.6; }
 
+.camp-racer-reset {
+    display: grid;
+    grid-template-columns: 40px minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 0.75rem;
+    margin-top: 0.9rem;
+    padding: 0.8rem;
+    border: 1px solid rgba(248, 113, 113, 0.2);
+    border-radius: 12px;
+    background: rgba(127, 29, 29, 0.08);
+}
+
+.camp-racer-reset__icon {
+    display: grid;
+    width: 40px;
+    height: 40px;
+    place-items: center;
+    border-radius: 10px;
+    color: #fca5a5;
+    background: rgba(248, 113, 113, 0.12);
+}
+
+.camp-racer-reset__copy { min-width: 0; }
+.camp-racer-reset__copy h4 { margin: 0; color: #fee2e2; font-size: 0.82rem; }
+.camp-racer-reset__copy p { margin: 0.18rem 0 0; color: #94a3b8; font-size: 0.65rem; line-height: 1.4; }
+.camp-racer-reset__copy > span { display: block; margin-top: 0.3rem; color: #fca5a5; font-size: 0.62rem; font-weight: 750; }
+.camp-racer-reset .btn-danger { min-width: 170px; border: 1px solid rgba(248, 113, 113, 0.38); color: #fee2e2; background: rgba(153, 27, 27, 0.4); }
+.camp-racer-reset .btn-danger:not(:disabled):hover { border-color: rgba(248, 113, 113, 0.7); background: rgba(185, 28, 28, 0.58); }
+.camp-racer-reset .btn-danger:disabled { opacity: 0.42; cursor: not-allowed; }
+.camp-racer-reset__notice { grid-column: 2 / -1; color: #94a3b8; font-size: 0.68rem; }
+.camp-racer-reset__notice:empty { display: none; }
+
 .camp-racer-history-player {
     overflow: hidden;
     border: 1px solid rgba(148, 163, 184, 0.13);
@@ -2260,6 +2292,10 @@ input:checked+.slider:before {
     .camp-racer-makeup__controls .btn-secondary { width: 100%; }
     .camp-racer-makeup__notice,
     .camp-racer-makeup__list { grid-column: auto; }
+    .camp-racer-reset { grid-template-columns: 36px minmax(0, 1fr); }
+    .camp-racer-reset__icon { width: 36px; height: 36px; }
+    .camp-racer-reset .btn-danger { width: 100%; grid-column: 1 / -1; }
+    .camp-racer-reset__notice { grid-column: 1 / -1; }
     .camp-racer-history-player summary { grid-template-columns: 26px minmax(0, 1fr) 60px 16px; gap: 0.45rem; min-height: 62px; padding-inline: 0.55rem; }
     .camp-racer-history-player__metric:nth-of-type(4) { display: none; }
     .camp-racer-puzzles { grid-template-columns: repeat(auto-fill, minmax(62px, 1fr)); }

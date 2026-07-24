@@ -604,9 +604,9 @@ document.addEventListener('DOMContentLoaded', () => {
         showLogin();
     }
 
-    // Enter key for login
-    document.getElementById('password')?.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') login();
+    document.getElementById('loginForm')?.addEventListener('submit', (event) => {
+        event.preventDefault();
+        login();
     });
 
     // Password visibility toggle
