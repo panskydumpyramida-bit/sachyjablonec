@@ -1874,8 +1874,7 @@ async function loadPuzzleCampState() {
             await startPuzzleCampRace();
         }
         if (!puzzleCampLeaderboardData || campSession?.status === 'finished') {
-            if (campSession) loadPuzzleCampLeaderboard(campSession.id);
-            else loadPuzzleCampLeaderboard();
+            loadPuzzleCampLeaderboard(selectedPuzzleCampSessionId || campSession?.id);
         }
     } catch (error) {
         console.error('Camp state error:', error);
@@ -2071,6 +2070,8 @@ async function finishCampAttempt() {
 }
 
 let puzzleCampLeaderboardData = null;
+let selectedPuzzleCampSessionId = null;
+let puzzleCampLeaderboardRequestId = 0;
 
 function renderCampLivePulse(liveLeader = null) {
     const pulse = document.getElementById('campLivePulse');
@@ -2141,10 +2142,28 @@ function renderPuzzleCampLeaderboard(data) {
     `).join('') || '<tr><td colspan="7">Zatím nejsou zapsané žádné výsledky.</td></tr>';
 
     const selectedId = data.sessionDetail?.session?.id;
-    tabs.innerHTML = data.sessions.map((session, index) => {
-        const date = new Date(session.startsAt).toLocaleDateString('cs-CZ', { weekday: 'short', day: 'numeric', month: 'numeric' });
-        return `<button class="camp-session-tab ${session.id === selectedId ? 'active' : ''}" onclick="window.switchPuzzleCampSession(${session.id})">${index + 1}. ${date}</button>`;
+    if (selectedId) selectedPuzzleCampSessionId = selectedId;
+    const selectedIndex = Math.max(0, data.sessions.findIndex(session => session.id === selectedId));
+    const olderSession = data.sessions[selectedIndex - 1];
+    const newerSession = data.sessions[selectedIndex + 1];
+    const options = data.sessions.map((session, index) => {
+        const date = new Date(session.startsAt).toLocaleDateString('cs-CZ', {
+            weekday: 'short', day: 'numeric', month: 'numeric', year: 'numeric'
+        });
+        return `<option value="${session.id}" ${session.id === selectedId ? 'selected' : ''}>${index + 1}. ${escapeHtml(date)} · ${escapeHtml(session.title)}</option>`;
     }).join('');
+    tabs.innerHTML = data.sessions.length ? `
+        <button type="button" class="camp-day-nav" onclick="window.switchPuzzleCampSession(${olderSession?.id || 0})" ${olderSession ? '' : 'disabled'} aria-label="Starší sada" title="Starší sada">
+            <i class="fa-solid fa-chevron-left"></i><span>Starší</span>
+        </button>
+        <label class="camp-day-browser__picker" for="campSessionSelect">
+            <span>Den testu · ${selectedIndex + 1}/${data.sessions.length}</span>
+            <select id="campSessionSelect" onchange="window.switchPuzzleCampSession(Number(this.value))">${options}</select>
+        </label>
+        <button type="button" class="camp-day-nav" onclick="window.switchPuzzleCampSession(${newerSession?.id || 0})" ${newerSession ? '' : 'disabled'} aria-label="Novější sada" title="Novější sada">
+            <span>Novější</span><i class="fa-solid fa-chevron-right"></i>
+        </button>
+    ` : '<div class="camp-matrix-empty">Zatím není uložený žádný den testu.</div>';
 
     renderPuzzleCampMatrix(data.sessionDetail);
     renderCampLivePulse();
@@ -2217,17 +2236,21 @@ function showCampPuzzlePreview(userId, puzzleIndex) {
 
 async function loadPuzzleCampLeaderboard(sessionId) {
     if (!loggedInUser) return;
+    const requestId = ++puzzleCampLeaderboardRequestId;
+    const selectedSessionId = sessionId || selectedPuzzleCampSessionId;
     try {
-        const query = sessionId ? `?sessionId=${sessionId}` : '';
+        const query = selectedSessionId ? `?sessionId=${selectedSessionId}` : '';
         const res = await fetch(`${API_URL}/racer/camp/leaderboard${query}`, { headers: campAuthHeaders() });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        renderPuzzleCampLeaderboard(await res.json());
+        const data = await res.json();
+        if (requestId === puzzleCampLeaderboardRequestId) renderPuzzleCampLeaderboard(data);
     } catch (error) {
         console.error('Camp leaderboard error:', error);
     }
 }
 
 function switchPuzzleCampSession(sessionId) {
+    selectedPuzzleCampSessionId = sessionId;
     return loadPuzzleCampLeaderboard(sessionId);
 }
 
