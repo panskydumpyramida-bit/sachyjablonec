@@ -22,28 +22,79 @@ const prisma = new PrismaClient();
 
 // Valid difficulty levels in order
 const DIFFICULTIES = ['easiest', 'easier', 'normal', 'harder', 'hardest'];
+const PUZZLE_CACHE_TTL_MS = 15 * 60 * 1000;
+const LICHESS_BACKOFF_MS = 5 * 60 * 1000;
+const puzzleBatchCache = new Map();
+const puzzleBatchRequests = new Map();
+let lichessBackoffUntil = 0;
+
+function puzzleId(puzzle) {
+    return puzzle?.puzzle?.id || null;
+}
+
+function shuffledPuzzles(puzzles = []) {
+    const copy = [...puzzles];
+    for (let index = copy.length - 1; index > 0; index--) {
+        const swapIndex = Math.floor(Math.random() * (index + 1));
+        [copy[index], copy[swapIndex]] = [copy[swapIndex], copy[index]];
+    }
+    return copy;
+}
 
 // Fetch puzzles from Lichess API by difficulty and theme
 // NO Authorization header required - this gives us correct difficulty ranges
 async function fetchPuzzlesByDifficulty(difficulty, count = 3, theme = 'mix') {
-    try {
-        // Lichess API: /api/puzzle/batch/{theme}?nb={count}&difficulty={difficulty}
-        const res = await fetch(`https://lichess.org/api/puzzle/batch/${theme}?nb=${count}&difficulty=${difficulty}`, {
+    const cacheKey = `${theme}:${difficulty}`;
+    const cached = puzzleBatchCache.get(cacheKey);
+    if (cached && cached.expiresAt > Date.now() && cached.puzzles.length >= count) {
+        return shuffledPuzzles(cached.puzzles).slice(0, count);
+    }
+    if (lichessBackoffUntil > Date.now()) {
+        return shuffledPuzzles(cached?.puzzles || []).slice(0, count);
+    }
+
+    if (puzzleBatchRequests.has(cacheKey)) {
+        const pending = await puzzleBatchRequests.get(cacheKey);
+        return shuffledPuzzles(pending).slice(0, count);
+    }
+
+    const request = (async () => {
+        const batchSize = Math.min(50, Math.max(40, count));
+        const res = await fetch(`https://lichess.org/api/puzzle/batch/${theme}?nb=${batchSize}&difficulty=${difficulty}`, {
             headers: { 'Accept': 'application/json' }
         });
 
-        if (res.ok) {
-            const data = await res.json();
-            const puzzles = data.puzzles || [];
-            console.log(`Fetched ${puzzles.length} ${difficulty} puzzles (theme: ${theme})`);
-            return puzzles;
-        } else {
-            console.warn(`Lichess ${difficulty}/${theme} returned ${res.status}`);
-            return [];
+        if (!res.ok) {
+            const retryAfter = res.headers.get('retry-after');
+            if (res.status === 429) {
+                const retrySeconds = Number.parseInt(retryAfter, 10);
+                lichessBackoffUntil = Date.now() + (Number.isFinite(retrySeconds) ? retrySeconds * 1000 : LICHESS_BACKOFF_MS);
+            }
+            console.warn(`Lichess ${difficulty}/${theme} returned ${res.status}${retryAfter ? ` (retry after ${retryAfter}s)` : ''}`);
+            return cached?.puzzles || [];
         }
+
+        const data = await res.json();
+        const puzzles = Array.isArray(data.puzzles) ? data.puzzles : [];
+        if (puzzles.length) {
+            puzzleBatchCache.set(cacheKey, {
+                puzzles,
+                expiresAt: Date.now() + PUZZLE_CACHE_TTL_MS
+            });
+        }
+        console.log(`Fetched ${puzzles.length} ${difficulty} puzzles (theme: ${theme})`);
+        return puzzles;
+    })();
+    puzzleBatchRequests.set(cacheKey, request);
+
+    try {
+        const puzzles = await request;
+        return shuffledPuzzles(puzzles).slice(0, count);
     } catch (e) {
         console.error(`Failed to fetch ${difficulty}/${theme}:`, e.message);
-        return [];
+        return shuffledPuzzles(cached?.puzzles || []).slice(0, count);
+    } finally {
+        puzzleBatchRequests.delete(cacheKey);
     }
 }
 
@@ -715,24 +766,74 @@ async function findRelevantCampSession(now = new Date()) {
 async function fetchCampPuzzleSet(config) {
     const unique = [];
     const seen = new Set();
+    const [settings, previousSessions] = await Promise.all([
+        prisma.puzzleRacerSettings.findFirst({ select: { fixedPuzzleSet: true } }),
+        prisma.puzzleCampSession.findMany({
+            where: { campCode: CAMP_CODE },
+            orderBy: { startsAt: 'desc' },
+            take: 20,
+            select: { puzzleTheme: true, puzzles: true }
+        })
+    ]);
+    const storedSet = settings?.fixedPuzzleSet && typeof settings.fixedPuzzleSet === 'object'
+        ? settings.fixedPuzzleSet
+        : {};
+    const matchingHistory = previousSessions.filter(session => session.puzzleTheme === config.puzzleTheme);
+    const historicalIds = new Set(matchingHistory.flatMap(session => (
+        Array.isArray(session.puzzles) ? session.puzzles.map(puzzleId).filter(Boolean) : []
+    )));
 
-    for (let round = 0; round < 3 && unique.length < config.puzzleCount; round++) {
-        const missing = config.puzzleCount - unique.length;
-        const batches = await Promise.all(buildDifficultyPlan(missing).map(async item => {
-            const batch = await fetchPuzzlesByDifficulty(item.difficulty, item.count, config.puzzleTheme);
-            return batch.map(puzzle => ({ ...puzzle, campDifficulty: item.difficulty }));
-        }));
+    for (const item of buildDifficultyPlan(config.puzzleCount)) {
+        const selected = [];
+        const addCandidates = candidates => {
+            for (const candidate of shuffledPuzzles(candidates)) {
+                const id = puzzleId(candidate);
+                if (!id || seen.has(id) || selected.length >= item.count) continue;
+                seen.add(id);
+                selected.push({ ...candidate, campDifficulty: item.difficulty });
+            }
+        };
 
-        for (const puzzle of batches.flat()) {
-            const puzzleId = puzzle?.puzzle?.id;
-            if (!puzzleId || seen.has(puzzleId)) continue;
-            seen.add(puzzleId);
-            unique.push(puzzle);
+        const storedDifficulty = config.puzzleTheme === 'mix' && Array.isArray(storedSet[item.difficulty])
+            ? storedSet[item.difficulty]
+            : [];
+        const historicalDifficulty = matchingHistory.flatMap(session => (
+            Array.isArray(session.puzzles)
+                ? session.puzzles.filter(puzzle => puzzle.campDifficulty === item.difficulty)
+                : []
+        ));
+
+        addCandidates(storedDifficulty.filter(puzzle => !historicalIds.has(puzzleId(puzzle))));
+        if (selected.length < item.count) {
+            const fetched = await fetchPuzzlesByDifficulty(
+                item.difficulty,
+                item.count - selected.length,
+                config.puzzleTheme
+            );
+            addCandidates(fetched.filter(puzzle => !historicalIds.has(puzzleId(puzzle))));
+            addCandidates(fetched);
+        }
+        addCandidates(storedDifficulty);
+        addCandidates(historicalDifficulty);
+        unique.push(...selected);
+    }
+
+    if (unique.length < config.puzzleCount) {
+        const fallback = [
+            ...DIFFICULTIES.flatMap(difficulty => Array.isArray(storedSet[difficulty]) ? storedSet[difficulty] : []),
+            ...matchingHistory.flatMap(session => Array.isArray(session.puzzles) ? session.puzzles : [])
+        ];
+        for (const puzzle of shuffledPuzzles(fallback)) {
+            const id = puzzleId(puzzle);
+            if (!id || seen.has(id)) continue;
+            seen.add(id);
+            unique.push({ ...puzzle, campDifficulty: puzzle.campDifficulty || 'normal' });
+            if (unique.length >= config.puzzleCount) break;
         }
     }
 
     if (unique.length < config.puzzleCount) {
-        throw new Error(`Lichess vrátil pouze ${unique.length} z ${config.puzzleCount} úloh`);
+        throw new Error(`Zdroj úloh je dočasně vytížený. Připraveno ${unique.length} z ${config.puzzleCount} úloh; zkuste to znovu za chvíli.`);
     }
     return unique.slice(0, config.puzzleCount);
 }

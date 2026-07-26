@@ -225,6 +225,17 @@ function campAdminTokenHeaders(json = false) {
     return headers;
 }
 
+async function readCampAdminJson(response) {
+    const text = await response.text();
+    try {
+        return text ? JSON.parse(text) : {};
+    } catch {
+        throw new Error(response.ok
+            ? 'Server vrátil neplatnou odpověď. Obnovte admin a zkuste to znovu.'
+            : `Server odpověděl chybou HTTP ${response.status}. Obnovte admin a zkuste to znovu.`);
+    }
+}
+
 function formatCampCountdown(milliseconds) {
     const totalSeconds = Math.max(0, Math.ceil(milliseconds / 1000));
     const minutes = Math.floor(totalSeconds / 60);
@@ -796,7 +807,7 @@ async function createPuzzleCampSession() {
             headers: campAdminTokenHeaders(true),
             body: JSON.stringify(body)
         });
-        const data = await res.json();
+        const data = await readCampAdminJson(res);
         if (!res.ok) throw new Error(data.error || 'Rozcvičku se nepodařilo vytvořit');
 
         if (result) result.innerHTML = `<span style="color:#4ade80"><i class="fa-solid fa-circle-check"></i> Připraveno ${data.generatedPuzzles} úloh. Odpočet běží.</span>`;
