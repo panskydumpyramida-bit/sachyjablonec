@@ -326,6 +326,14 @@ export const createNews = async (req, res) => {
             return res.status(400).json({ error: 'Nadpis je povinný' });
         }
 
+        // Kdo smí psát: AUTHOR a výš. AUTHOR smí zakládat POUZE koncepty
+        // (publikuje až admin) — proto se isPublished pro něj ignoruje.
+        const role = req.user?.role;
+        const isEditor = role === 'ADMIN' || role === 'SUPERADMIN';
+        if (!isEditor && role !== 'AUTHOR') {
+            return res.status(403).json({ error: 'Nemáte oprávnění vytvářet články.' });
+        }
+
         // Smart defaults for optional fields
         const finalCategory = category || 'Novinky';
         const finalExcerpt = excerpt || '';
@@ -349,7 +357,7 @@ export const createNews = async (req, res) => {
                 galleryJson,
                 introJson,
                 publishedDate: finalPublishedDate,
-                isPublished: isPublished || false,
+                isPublished: isEditor ? (isPublished || false) : false,
                 authorId: req.user ? req.user.id : null,
                 authorName: authorName || null,
                 coAuthorId: coAuthorId ? parseInt(coAuthorId) : null,
@@ -377,6 +385,24 @@ export const createNews = async (req, res) => {
 
 export const updateNews = async (req, res) => {
     try {
+        {
+            // AUTHOR smí upravovat jen vlastní dosud nepublikovaný článek;
+            // publikovat / měnit cizí může jen admin.
+            const role = req.user?.role;
+            const isEditor = role === 'ADMIN' || role === 'SUPERADMIN';
+            if (!isEditor) {
+                if (role !== 'AUTHOR') return res.status(403).json({ error: 'Nemáte oprávnění upravovat články.' });
+                const existing = await prisma.news.findUnique({
+                    where: { id: parseInt(req.params.id) },
+                    select: { authorId: true, isPublished: true },
+                });
+                if (!existing) return res.status(404).json({ error: 'Článek nenalezen' });
+                if (existing.authorId !== req.user.id) return res.status(403).json({ error: 'Můžete upravovat jen své články.' });
+                if (existing.isPublished) return res.status(403).json({ error: 'Publikovaný článek už upravuje jen admin.' });
+                delete req.body.isPublished;
+                delete req.body.authorId;
+            }
+        }
         const { id } = req.params;
         const { title, category, excerpt, content, thumbnailUrl, linkUrl, publishedDate, isPublished, gamesJson, teamsJson, galleryJson, introJson, authorId, authorName, coAuthorId, coAuthorName, facebookMessage } = req.body;
 

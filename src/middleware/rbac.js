@@ -9,8 +9,9 @@
 const ROLE_HIERARCHY = {
     USER: 1,
     MEMBER: 2,
-    ADMIN: 3,
-    SUPERADMIN: 4
+    AUTHOR: 3,      // píše vlastní články (koncepty), nepublikuje ani nemaže
+    ADMIN: 4,
+    SUPERADMIN: 5
 };
 
 /**
@@ -50,6 +51,7 @@ export const requireMember = requireRole('MEMBER');
 /**
  * Convenience middleware for admin-only routes
  */
+export const requireAuthor = requireRole('AUTHOR');
 export const requireAdmin = requireRole('ADMIN');
 
 /**
@@ -70,5 +72,5 @@ export function hasRole(user, minRole) {
     return userLevel >= requiredLevel;
 }
 
-export default { requireRole, requireMember, requireAdmin, requireSuperadmin, hasRole };
+export default { requireRole, requireMember, requireAuthor, requireAdmin, requireSuperadmin, hasRole };
 

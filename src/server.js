@@ -204,6 +204,7 @@ app.use('/images', express.static(path.join(__dirname, '../images'), imageOption
 app.use('/prototypes', express.static(path.join(__dirname, '../prototypes'), staticOptions));
 
 // SEO Files - Explicit rules to ensure they are served correctly
+app.get('/sw-pardubice.js', (req, res) => { res.set('Service-Worker-Allowed','/'); res.sendFile(path.join(__dirname, '../sw-pardubice.js')); });
 app.get('/robots.txt', (req, res) => res.sendFile(path.join(__dirname, '../robots.txt')));
 // Dynamická sitemap: statické stránky + publikované články se slugy
 app.get('/sitemap.xml', serveSitemap);
@@ -335,6 +336,9 @@ app.get('/propozice_rapidy_tisk.html', servePage('propozice_rapidy_tisk.html'));
 app.get('/index', servePage('index.html'));
 app.get('/index.html', servePage('index.html'));
 
+app.get('/napsat-partii', servePage('napsat-partii.html'));
+app.get('/napsat-partii.html', servePage('napsat-partii.html'));
+
 app.get('/pardubice', servePage('pardubice.html'));
 app.get('/pardubice.html', servePage('pardubice.html'));
 
@@ -434,7 +438,7 @@ const allowedHtmlFiles = [
     'blunder-grid.html', 'member-games.html', 'training.html', 'account.html',
     '404.html', 'reset-password.html', 'member-bulletin.html', 
     'member-wishlist.html', 'member-gallery.html', 'member-transfer-vacek.html',
-    'registrace.html', 'member-registrations.html', 'prestup.html', 'pardubice.html'
+    'registrace.html', 'member-registrations.html', 'prestup.html', 'pardubice.html', 'napsat-partii.html'
 ];
 
 // --- Blicak Registration Endpoints ---

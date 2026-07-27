@@ -152,7 +152,7 @@ function showAdmin() {
     console.log('[RBAC] isAdmin:', isAdmin, 'isSuperadmin:', isSuperadmin);
 
     // Tabs visible to ADMIN and SUPERADMIN
-    const adminTabs = ['galleryTab', 'usersTab', 'competitionsTab'];
+    const adminTabs = ['galleryTab', 'usersTab', 'competitionsTab', 'privateTrainingTab'];
     adminTabs.forEach(tabId => {
         const tab = document.getElementById(tabId);
         if (tab) {
@@ -236,7 +236,7 @@ function switchTab(tab) {
     if (activeTab) activeTab.classList.add('active');
 
     // Hide all views
-    ['dashboard', 'editor', 'members', 'users', 'messages', 'blicak', 'competitions', 'gallery', 'games', 'events', 'timeline', 'settings', 'puzzleRacer', 'chessdb', 'changelog', 'weeklyPuzzle', 'facebook'].forEach(v => {
+    ['dashboard', 'editor', 'members', 'users', 'messages', 'blicak', 'competitions', 'gallery', 'games', 'events', 'timeline', 'settings', 'puzzleRacer', 'chessdb', 'changelog', 'weeklyPuzzle', 'facebook', 'privateTraining'].forEach(v => {
         const el = document.getElementById(v + 'View');
         if (el) el.classList.add('hidden');
     });
@@ -272,6 +272,7 @@ function switchTab(tab) {
     else if (tab === 'chessdb' && window.loadChessDBStats) loadChessDBStats();
     else if (tab === 'weeklyPuzzle' && window.loadWeeklyPuzzles) loadWeeklyPuzzles();
     else if (tab === 'facebook' && window.loadFacebookDashboard) loadFacebookDashboard();
+    else if (tab === 'privateTraining' && window.loadPrivateTrainings) loadPrivateTrainings();
 }
 
 /**

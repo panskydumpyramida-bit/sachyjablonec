@@ -16,6 +16,7 @@
         community: [
             { tab: 'events',      label: 'Události',     icon: 'fa-calendar-days' },
             { tab: 'members',     label: 'Členové',      icon: 'fa-address-book' },
+            { tab: 'privateTraining', label: 'Soukromé tréninky', icon: 'fa-user-clock' },
             { tab: 'blicak',      label: 'Blicák',       icon: 'fa-bolt' },
             { tab: 'users',       label: 'Uživatelé',    icon: 'fa-users' },
             { tab: 'competitions', label: 'Soutěže',     icon: 'fa-trophy' },

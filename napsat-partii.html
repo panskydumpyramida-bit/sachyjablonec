@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="cs">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Napsat o partii – Šachy Jablonec</title>
+    <meta name="robots" content="noindex">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@400;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/member.css">
+    <link rel="icon" type="image/png" href="images/favicon.png">
+    <style>
+        .np-wrap { max-width: 760px; margin: 0 auto; padding: 100px 1rem 4rem; }
+        .np-card { background: var(--surface-color, #1e1e1e); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 1.4rem; margin-bottom: 1.1rem; }
+        .np-step { display: flex; align-items: center; gap: 0.6rem; margin-bottom: 1rem; }
+        .np-num { width: 30px; height: 30px; border-radius: 6px; background: var(--primary-color); color: #1a1a1a; font-weight: 800; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+        .np-step h2 { font-size: 1.15rem; margin: 0; color: #fff; font-family: 'Playfair Display', serif; }
+        .np-hint { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.8rem; line-height: 1.5; }
+        .np-field { margin-bottom: 1rem; }
+        .np-field label { display: block; font-size: 0.85rem; color: #cbd5e1; margin-bottom: 0.35rem; font-weight: 500; }
+        .np-field input, .np-field textarea {
+            width: 100%; box-sizing: border-box; padding: 0.7rem 0.85rem;
+            background: rgba(0,0,0,0.35); border: 1px solid rgba(255,255,255,0.12);
+            border-radius: 8px; color: #fff; font-family: inherit; font-size: 0.95rem;
+        }
+        .np-field textarea { min-height: 90px; resize: vertical; line-height: 1.5; }
+        .np-field input:focus, .np-field textarea:focus { outline: none; border-color: var(--primary-color); box-shadow: 0 0 0 3px rgba(212,175,55,0.15); }
+        .btn-primary, .btn-secondary { border-radius: 6px; }
+        .np-pgnbox { background: rgba(0,0,0,0.3); border: 1px dashed rgba(255,255,255,0.15); border-radius: 8px; padding: 0.9rem; font-size: 0.82rem; color: var(--text-muted); }
+        .np-ok { color: #34d399; }
+        .np-done { text-align: center; padding: 2.5rem 1rem; }
+    </style>
+</head>
+
+<body>
+    <header id="global-header"></header>
+
+    <main>
+        <div class="np-wrap">
+            <p style="font-size:0.8rem; color:var(--text-muted); margin-bottom:0.75rem;">
+                <a href="/members.html" style="color:#93c5fd;">Členská sekce</a>
+                <span style="opacity:0.5;"> / </span> Napsat o partii
+            </p>
+
+            <h1 style="font-family:'Playfair Display',serif; font-size:1.9rem; margin-bottom:0.3rem;">Napiš o své partii</h1>
+            <p style="color:var(--text-muted); margin-bottom:1.6rem;">Zapiš partii s komentáři, přidej pár vět a pošli to ke schválení. Až to trenér projde, objeví se to na webu jako článek.</p>
+
+            <div id="npGuard" class="np-card" style="display:none; text-align:center;">
+                <i class="fa-solid fa-lock" style="font-size:1.6rem; color:#fbbf24;"></i>
+                <p style="margin-top:0.8rem;">Tahle stránka je pro autory článků.</p>
+                <p style="color:var(--text-muted); font-size:0.9rem;">Napiš trenérovi, ať ti právo psaní zapne.</p>
+            </div>
+
+            <div id="npDone" class="np-card np-done" style="display:none;">
+                <i class="fa-solid fa-paper-plane" style="font-size:2.2rem; color:#34d399;"></i>
+                <h2 style="margin-top:1rem;">Odesláno ke schválení!</h2>
+                <p style="color:var(--text-muted);">Trenér to projde a pak to pustí na web. Díky!</p>
+                <a href="/napsat-partii.html" class="btn-secondary" style="display:inline-flex; margin-top:1.2rem;">Napsat další</a>
+            </div>
+
+            <form id="npForm" style="display:none;">
+                <!-- 1. PARTIE -->
+                <div class="np-card">
+                    <div class="np-step"><span class="np-num">1</span><h2>Partie</h2></div>
+                    <p class="np-hint">Nejjednodušší je zapsat partii v editoru — můžeš u tahů rovnou psát komentáře („tady jsem se přepočítal", „tenhle tah mě napadl hned"). Když máš partii jako text (PGN), vlož ji rovnou sem.</p>
+                    <a href="/game-recorder?from=napsat-partii" class="btn-primary" style="display:inline-flex; margin-bottom:0.9rem;">
+                        <i class="fa-solid fa-chess-board"></i> Zapsat partii v editoru
+                    </a>
+                    <div class="np-field">
+                        <label>Partie (PGN) — vlož sem, nebo se sem doplní z editoru</label>
+                        <textarea name="pgn" id="npPgn" placeholder="[White &quot;Tsantsala, Kostiantyn&quot;]&#10;[Black &quot;...&quot;]&#10;&#10;1. e4 e5 {tady jsem si věřil} 2. Nf3 ..."></textarea>
+                    </div>
+                    <div id="npPgnInfo" class="np-pgnbox" style="display:none;"></div>
+                    <div class="reg-grid" style="display:grid; grid-template-columns:1fr 1fr; gap:0.8rem; margin-top:0.8rem;">
+                        <div class="np-field" style="margin:0;"><label>Bílý</label><input type="text" name="white" id="npWhite" placeholder="Příjmení, Jméno"></div>
+                        <div class="np-field" style="margin:0;"><label>Černý</label><input type="text" name="black" id="npBlack" placeholder="Příjmení, Jméno"></div>
+                    </div>
+                </div>
+
+                <!-- 2. POVÍDÁNÍ -->
+                <div class="np-card">
+                    <div class="np-step"><span class="np-num">2</span><h2>Co k tomu řekneš?</h2></div>
+                    <p class="np-hint">Nemusí to být dlouhé. Piš, jako bys to vyprávěl kamarádovi.</p>
+                    <div class="np-field">
+                        <label>Nadpis *</label>
+                        <input type="text" name="title" id="npTitle" required placeholder="Např. Jak jsem v Pardubicích porazil hráče o 200 bodů silnějšího">
+                    </div>
+                    <div class="np-field">
+                        <label>O co šlo? <span style="color:var(--text-muted); font-weight:400;">(turnaj, kolo, soupeř)</span></label>
+                        <textarea name="intro" id="npIntro" placeholder="Ve 3. kole Czech Open jsem dostal černé proti…"></textarea>
+                    </div>
+                    <div class="np-field">
+                        <label>Jak partie probíhala? <span style="color:var(--text-muted); font-weight:400;">(kde se to zlomilo)</span></label>
+                        <textarea name="story" id="npStory" placeholder="Do 15. tahu to bylo vyrovnané, pak jsem si všiml…"></textarea>
+                    </div>
+                    <div class="np-field">
+                        <label>Co sis z toho odnesl? <span style="color:var(--text-muted); font-weight:400;">(nepovinné)</span></label>
+                        <textarea name="lesson" id="npLesson" placeholder="Příště si dám pozor na…"></textarea>
+                    </div>
+                </div>
+
+                <!-- 3. ODESLAT -->
+                <div class="np-card">
+                    <div class="np-step"><span class="np-num">3</span><h2>Poslat ke schválení</h2></div>
+                    <p class="np-hint">Článek se uloží jako koncept. Publikuje ho až trenér — do té doby ho nikdo cizí neuvidí.</p>
+                    <div id="npError" style="display:none; margin-bottom:0.9rem; padding:0.7rem 0.9rem; background:rgba(248,113,113,0.1); border:1px solid rgba(248,113,113,0.3); border-radius:8px; color:#fca5a5; font-size:0.9rem;"></div>
+                    <button type="submit" id="npSubmit" class="btn-primary" style="width:100%; justify-content:center; padding:0.9rem; font-size:1.02rem;">
+                        <i class="fa-solid fa-paper-plane"></i> Poslat trenérovi ke schválení
+                    </button>
+                </div>
+            </form>
+        </div>
+    </main>
+
+    <footer id="global-footer"></footer>
+
+    <script src="js/config.js"></script>
+    <script src="js/layout-loader.js"></script>
+    <script src="js/member-auth.js"></script>
+    <script src="js/napsat-partii.js"></script>
+</body>
+
+</html>

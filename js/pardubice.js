@@ -40,6 +40,9 @@
     // příprava na soupeře: jeho partie v barvě, kterou má proti nám
     function prepLink(p) {
         if (!p.opponent) return '';
+        // příprava dává smysl jen na kolo, které se teprve bude hrát
+        const played = p.result && !/^\s*-\s*$/.test(String(p.result).trim());
+        if (played) return '';
         const url = `/chess-database.html?player=${encodeURIComponent(p.opponent)}&color=${p.opponentColor}`;
         return `<a class="pd-prep" href="${url}" title="Soupeřovy partie za ${p.opponentColor === 'black' ? 'černé' : 'bílé'} v naší databázi"><i class="fa-solid fa-magnifying-glass"></i> Příprava</a>`;
     }
@@ -89,8 +92,11 @@
                     <div style="font-size:0.75rem; color:var(--text-muted);">${nextRoundInfo()}</div>
                 </div>
             </div>
+            ${(s.milestones || []).length ? `<div class="pd-miles">${s.milestones.map(m => `<span class="pd-mile"><b>${m.icon}</b> ${esc(m.player.split(' ')[0])} — ${esc(m.text)}</span>`).join('')}</div>` : ''}
             <div class="pd-kpis">
-                <div class="pd-kpi"><b>${fmtPts(s.points)}</b><span>${bodySlovo(s.points)} celkem</span></div>
+                <div class="pd-kpi"><b>${fmtPts(s.points)}</b><span>${bodySlovo(s.points)} z ${s.maxPoints || 0} možných</span>
+                    <div class="pd-bar"><i style="width:${Math.min(100, Math.round((s.points / Math.max(s.maxPoints || 1, 1)) * 100))}%"></i></div>
+                </div>
                 <div class="pd-kpi"><b>${s.games || 0}</b><span>${s.games === 1 ? 'odehraná partie' : (s.games >= 2 && s.games <= 4 ? 'odehrané partie' : 'odehraných partií')}</span></div>
                 <div class="pd-kpi"><b>${s.scorePct ?? '–'} %</b><span>úspěšnost výpravy</span></div>
                 ${s.bestScalp ? `<div class="pd-kpi"><b style="font-size:1rem; line-height:1.3;">${esc(s.bestScalp.player.split(' ')[0])}</b><span>skalp ${s.bestScalp.opponentRating}</span></div>` : ''}
@@ -107,7 +113,7 @@
                 <div class="pd-card" style="text-align:center; padding:2rem 1rem; border-style:dashed;">
                     <i class="fa-regular fa-clock" style="font-size:1.6rem; color:var(--text-muted);"></i>
                     <p style="margin-top:0.7rem; color:var(--text-muted);">Los ještě není venku. Stránka si ho hlídá sama — nemusíte mačkat F5.</p>
-                </div></div>`;
+                </div>${renderSubscribe()}</div>`;
         }
 
         const anyPending = pending.length
@@ -128,17 +134,74 @@
                 </div>`;
         }).join('')}
             ${anyPending}
-            ${renderShare(rows)}
+            ${renderSubscribe()}
         </div>`;
     }
 
-    function renderShare(rows) {
-        const lines = rows.map(p => `${p.name} — deska ${p.board}, ${p.color === 'white' ? 'bílé' : 'černé'}, soupeř ${p.opponent || 'volno'}`);
-        const msg = `Soustředění Pardubice — ${rows[0].state === 'finished' ? 'výsledky' : 'los'} ${rows[0].round}. kola:\n\n${lines.join('\n')}\n\nhttps://www.sachyjablonec.cz/pardubice`;
-        return `<div class="pd-share">
-            <a class="pd-wa" href="https://wa.me/?text=${encodeURIComponent(msg)}" target="_blank" rel="noopener"><i class="fa-brands fa-whatsapp" style="font-size:1.2rem;"></i> Poslat do WhatsApp</a>
-            <span style="color:var(--text-muted); font-size:0.82rem;">Otevře WhatsApp s hotovou zprávou — vyberete skupinu a odešlete.</span>
+    // Odběr upozornění na nový los — jedno klepnutí, žádný e-mail ani telefon
+    function renderSubscribe() {
+        return `<div class="pd-share" id="pdSub">
+            <button class="pd-wa" id="pdSubBtn" style="border:none; cursor:pointer; font-family:inherit;">
+                <i class="fa-solid fa-bell" style="font-size:1.1rem;"></i> <span id="pdSubLabel">Upozornit na nový los</span>
+            </button>
+            <span style="color:var(--text-muted); font-size:0.82rem;" id="pdSubHint">Jakmile bude venku los dalšího kola, přijde vám upozornění do telefonu. Bez e-mailu, odhlásit jde jedním klepnutím.</span>
         </div>`;
+    }
+
+    async function initSubscribe() {
+        const btn = document.getElementById('pdSubBtn');
+        if (!btn) return;
+        const label = document.getElementById('pdSubLabel');
+        const hint = document.getElementById('pdSubHint');
+        const supported = 'serviceWorker' in navigator && 'PushManager' in window;
+        if (!supported) {
+            btn.style.display = 'none';
+            hint.textContent = 'Tenhle prohlížeč upozornění neumí. Na iPhonu je zapnete tak, že si stránku přidáte na plochu a otevřete ji odtud.';
+            return;
+        }
+        let reg, sub;
+        try {
+            reg = await navigator.serviceWorker.register('/sw-pardubice.js');
+            sub = await reg.pushManager.getSubscription();
+        } catch (e) { /* registrace selhala */ }
+        const setState = (on) => {
+            label.textContent = on ? 'Upozornění zapnutá — vypnout' : 'Upozornit na nový los';
+            btn.style.background = on ? 'rgba(255,255,255,0.1)' : '#25d366';
+            btn.style.color = on ? '#e0e0e0' : '#06301a';
+        };
+        setState(!!sub);
+
+        btn.addEventListener('click', async () => {
+            btn.disabled = true;
+            try {
+                if (sub) {
+                    await fetch(`${API}/camp/push/unsubscribe`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ endpoint: sub.endpoint }) });
+                    await sub.unsubscribe();
+                    sub = null;
+                    setState(false);
+                    hint.textContent = 'Upozornění vypnutá.';
+                } else {
+                    const perm = await Notification.requestPermission();
+                    if (perm !== 'granted') { hint.textContent = 'Upozornění jste zamítli — zapnout je jde v nastavení prohlížeče.'; return; }
+                    const { key } = await (await fetch(`${API}/camp/push/key`)).json();
+                    sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: urlB64ToUint8(key) });
+                    await fetch(`${API}/camp/push/subscribe`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ subscription: sub.toJSON() }) });
+                    setState(true);
+                    hint.textContent = 'Hotovo — dáme vědět, jakmile bude los venku.';
+                }
+            } catch (e) {
+                hint.textContent = 'Nepodařilo se to zapnout: ' + e.message;
+            } finally {
+                btn.disabled = false;
+            }
+        });
+    }
+
+    function urlB64ToUint8(base64) {
+        const pad = '='.repeat((4 - base64.length % 4) % 4);
+        const b64 = (base64 + pad).replace(/-/g, '+').replace(/_/g, '/');
+        const raw = atob(b64);
+        return Uint8Array.from([...raw].map(c => c.charCodeAt(0)));
     }
 
     function renderPlayers(d) {
@@ -201,6 +264,7 @@
                 + `<p style="text-align:center; color:var(--text-muted); font-size:0.75rem; margin-top:2rem;">
                      Data z chess-results.com${d.generatedAt ? `, aktualizováno ${new Date(d.generatedAt).toLocaleTimeString('cs-CZ', { hour: '2-digit', minute: '2-digit' })}` : ''}${d.warning ? ` · ${esc(d.warning)}` : ''}
                    </p>`;
+            initSubscribe();
         } catch (e) {
             root.innerHTML = `<div class="pd-card" style="text-align:center; padding:2.5rem 1rem;">
                 <i class="fa-solid fa-triangle-exclamation" style="font-size:1.6rem; color:#fbbf24;"></i>

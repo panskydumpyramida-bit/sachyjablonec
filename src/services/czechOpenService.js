@@ -10,6 +10,7 @@ import { PrismaClient } from '@prisma/client';
 import {
     normalizeUrl, fetchPage, parseStandings, parsePlayerCard, parseRoundPairings,
 } from './chessResultsService.js';
+import { notify } from './pushService.js';
 
 const prisma = new PrismaClient();
 
@@ -159,7 +160,9 @@ async function loadWarmup() {
                 correct: a.correctCount ?? 0,
                 wrong: a.wrongCount ?? 0,
                 streak: a.maxStreak ?? 0,
-                inProgress: a.status === 'playing',
+                // 'playing' zůstane viset, když hráč session nedohraje a odejde —
+                // za běžící ho považujeme jen chvíli po poslední aktivitě
+                inProgress: a.status === 'playing' && (Date.now() - new Date(a.updatedAt || a.joinedAt).getTime()) < 30 * 60 * 1000,
             })),
         };
     } catch (e) {
@@ -182,12 +185,39 @@ function buildStats(tournaments) {
             }
         }
     }
+    // motivační milníky — každý má co slavit, i kdo je v dolní polovině
+    const milestones = [];
+    for (const p of all) {
+        const gs = (p.games || []).filter(g => !g.bye);
+        const wins = gs.filter(g => /^(1|\+)$/.test(String(g.result || '').trim()));
+        const draws = gs.filter(g => /½|0[.,]5/.test(String(g.result || '')));
+        if (wins.length === 1) {
+            const w = wins[0];
+            milestones.push({ icon: '🎉', player: p.name, text: `první výhra turnaje${w.opponentRating ? ` (soupeř ${w.opponentRating})` : ''}` });
+        } else if (wins.length > 1) {
+            milestones.push({ icon: '💪', player: p.name, text: `${wins.length} výhry v turnaji` });
+        }
+        // remíza se silnějším soupeřem je taky úspěch
+        const bigDraw = draws.filter(d => d.opponentRating && p.rating && d.opponentRating - p.rating >= 150)
+            .sort((a, b) => b.opponentRating - a.opponentRating)[0];
+        if (bigDraw) milestones.push({ icon: '🛡️', player: p.name, text: `remíza s hráčem o ${bigDraw.opponentRating - p.rating} bodů silnějším` });
+        // série bez porážky na konci
+        let streak = 0;
+        for (let i = gs.length - 1; i >= 0; i--) {
+            if (/^0$|^-$/.test(String(gs[i].result || '').trim())) break;
+            streak++;
+        }
+        if (streak >= 2) milestones.push({ icon: '🔥', player: p.name, text: `${streak} kola bez porážky` });
+    }
+
     return {
         players: all.length,
         points: Math.round(points * 10) / 10,
         games,
         scorePct: games ? Math.round((points / games) * 100) : null,
         bestScalp: best,
+        milestones: milestones.slice(0, 8),
+        maxPoints: games,
     };
 }
 
@@ -227,6 +257,32 @@ export async function buildSnapshot() {
     };
 }
 
+/**
+ * Pošle upozornění, jakmile je venku los kola, o kterém jsme ještě nedali vědět.
+ * Klíčem je (turnaj, kolo) v čerstvém stavu — po restartu kontejneru se stav
+ * dopočítá z předchozího snapshotu, takže se neposílá dvakrát.
+ */
+async function announceNewPairings(previous, current) {
+    const freshNow = current.tournaments.filter(t => t.roundState === 'fresh' && (t.pairings || []).length);
+    if (!freshNow.length) return;
+
+    const wasFresh = new Set((previous?.tournaments || [])
+        .filter(t => t.roundState === 'fresh' && (t.pairings || []).length)
+        .map(t => `${t.tnr}:${t.currentRound}`));
+
+    const brandNew = freshNow.filter(t => !wasFresh.has(`${t.tnr}:${t.currentRound}`));
+    if (!brandNew.length) return;
+
+    const round = brandNew[0].currentRound;
+    const lines = brandNew.flatMap(t => (t.pairings || []).map(p =>
+        `${p.name}: deska ${p.board}, ${p.color === 'white' ? 'bílé' : 'černé'}, ${p.opponent || 'volno'}`));
+    await notify(CAMP_CODE, {
+        title: `Los ${round}. kola je venku`,
+        body: lines.slice(0, 6).join('\n') + (lines.length > 6 ? `\n…a další (${lines.length} celkem)` : ''),
+        url: '/pardubice',
+    });
+}
+
 /** Vrátí snapshot z cache; obnoví, jen když je starší než REFRESH_MS. */
 export async function getSnapshot({ force = false } = {}) {
     const row = await prisma.campSnapshot.findUnique({ where: { id: CAMP_CODE } }).catch(() => null);
@@ -238,11 +294,14 @@ export async function getSnapshot({ force = false } = {}) {
 
     try {
         const payload = await buildSnapshot();
+        const previous = row ? JSON.parse(row.payloadJson) : null;
         await prisma.campSnapshot.upsert({
             where: { id: CAMP_CODE },
             update: { payloadJson: JSON.stringify(payload), fetchedAt: new Date() },
             create: { id: CAMP_CODE, payloadJson: JSON.stringify(payload), fetchedAt: new Date() },
         });
+        // je venku los, který jsme ještě neoznámili?
+        announceNewPairings(previous, payload).catch(e => console.error('[Camp] notify:', e.message));
         return { ...payload, cached: false, ageMs: 0 };
     } catch (e) {
         // chess-results je dole → radši stará data než prázdná stránka

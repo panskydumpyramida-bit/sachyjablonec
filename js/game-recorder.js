@@ -808,6 +808,15 @@ async function saveGame() {
     const result = document.getElementById('result').value;
 
     // Article edit mode — send PGN back to admin editor
+    // Předání do průvodce „Napiš o své partii" (mladí autoři)
+    if (new URLSearchParams(location.search).get('from') === 'napsat-partii') {
+        let fenHeader = startingFen ? `[SetUp "1"]\n[FEN "${startingFen}"]\n` : '';
+        const pgn = `[White "${white}"]\n[Black "${black}"]\n[Result "${result}"]\n${fenHeader}\n` + generateAnnotatedPgn();
+        localStorage.setItem('napsat_partii_pgn', pgn);
+        window.location.href = '/napsat-partii.html';
+        return;
+    }
+
     if (articleEditMode) {
         let fenHeader = '';
         if (startingFen) {

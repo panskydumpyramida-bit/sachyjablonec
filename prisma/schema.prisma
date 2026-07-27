@@ -13,6 +13,7 @@ datasource db {
 enum Role {
   USER
   MEMBER
+  AUTHOR
   ADMIN
   SUPERADMIN
 }
@@ -758,6 +759,21 @@ model CampPlayer {
   @@unique([campCode, tnr, startNo])
   @@index([campCode, active])
   @@map("camp_players")
+}
+
+// Odběratelé upozornění na nový los (web push — bez e-mailu a telefonu)
+model PushSubscriber {
+  id        Int      @id @default(autoincrement())
+  campCode  String   @map("camp_code")
+  endpoint  String   @unique
+  p256dh    String
+  auth      String
+  label     String?
+  createdAt DateTime @default(now()) @map("created_at")
+  failCount Int      @default(0) @map("fail_count")
+
+  @@index([campCode])
+  @@map("push_subscribers")
 }
 
 // Cache poslední stažené podoby dashboardu (web nikdy nesahá na chess-results přímo)
