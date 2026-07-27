@@ -742,6 +742,33 @@ model BlunderScanLog {
 
 /// Sledovaní hráči pro scraping chess-results.com — lidé, které chceme mít
 /// ve výsledcích i když nejsou registrovaní za náš klub (např. trenéři).
+// Soustředění Pardubice: mapa našich hráčů na startovní čísla v chess-results
+model CampPlayer {
+  id             Int     @id @default(autoincrement())
+  campCode       String  @map("camp_code")
+  tnr            String
+  tournamentCode String  @map("tournament_code")
+  startNo        Int     @map("start_no")
+  displayName    String  @map("display_name")
+  birthYear      Int?    @map("birth_year")
+  role           String? // 'trener' apod.
+  active         Boolean @default(true)
+  sortOrder      Int     @default(0) @map("sort_order")
+
+  @@unique([campCode, tnr, startNo])
+  @@index([campCode, active])
+  @@map("camp_players")
+}
+
+// Cache poslední stažené podoby dashboardu (web nikdy nesahá na chess-results přímo)
+model CampSnapshot {
+  id           String   @id
+  payloadJson  String   @map("payload_json")
+  fetchedAt    DateTime @default(now()) @map("fetched_at")
+
+  @@map("camp_snapshots")
+}
+
 model TrackedPlayer {
   id        Int      @id @default(autoincrement())
   fullName  String   @map("full_name")   // "Příjmení, Jméno" — formát chess-results

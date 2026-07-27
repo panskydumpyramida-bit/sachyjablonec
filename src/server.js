@@ -34,6 +34,7 @@ import announcementRoutes from './routes/api-announcements.js';
 import documentRoutes from './routes/api-documents.js';
 import transferFormRoutes from './routes/api-transfer-forms.js';
 import registrationRoutes from './routes/api-registrations.js';
+import campRoutes from './routes/api-camp.js';
 import memberTransferRoutes from './routes/api-member-transfers.js';
 import travelReportRoutes from './routes/api-travel-reports.js';
 import forumRoutes from './routes/api-forum.js';
@@ -334,6 +335,9 @@ app.get('/propozice_rapidy_tisk.html', servePage('propozice_rapidy_tisk.html'));
 app.get('/index', servePage('index.html'));
 app.get('/index.html', servePage('index.html'));
 
+app.get('/pardubice', servePage('pardubice.html'));
+app.get('/pardubice.html', servePage('pardubice.html'));
+
 app.get('/registrace', servePage('registrace.html'));
 app.get('/registrace.html', servePage('registrace.html'));
 
@@ -395,6 +399,7 @@ app.use('/api/announcements', announcementRoutes);
 app.use('/api/documents', documentRoutes);
 app.use('/api/transfer-forms', transferFormRoutes);
 app.use('/api/registrations', registrationRoutes);
+app.use('/api/camp', campRoutes);
 app.use('/api/transfers', memberTransferRoutes);
 app.use('/api/travel-reports', travelReportRoutes);
 app.use('/api/forum', forumRoutes);
@@ -429,7 +434,7 @@ const allowedHtmlFiles = [
     'blunder-grid.html', 'member-games.html', 'training.html', 'account.html',
     '404.html', 'reset-password.html', 'member-bulletin.html', 
     'member-wishlist.html', 'member-gallery.html', 'member-transfer-vacek.html',
-    'registrace.html', 'member-registrations.html', 'prestup.html'
+    'registrace.html', 'member-registrations.html', 'prestup.html', 'pardubice.html'
 ];
 
 // --- Blicak Registration Endpoints ---
