@@ -1,5 +1,6 @@
 // API_URL is defined in js/config.js
-const MEMBER_ROLES = ['MEMBER', 'ADMIN', 'SUPERADMIN'];
+// AUTHOR stojí nad MEMBER — má všechna členská práva a navíc píše koncepty článků
+const MEMBER_ROLES = ['MEMBER', 'AUTHOR', 'ADMIN', 'SUPERADMIN'];
 
 let currentUserRole = 'USER';
 

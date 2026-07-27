@@ -16,7 +16,7 @@ const ROLE_HIERARCHY = {
 
 /**
  * Middleware factory that requires a minimum role level
- * @param {string} minRole - Minimum required role ('USER', 'MEMBER', 'ADMIN', 'SUPERADMIN')
+ * @param {string} minRole - Minimum required role ('USER', 'MEMBER', 'AUTHOR', 'ADMIN', 'SUPERADMIN')
  * @returns {Function} Express middleware
  */
 export function requireRole(minRole) {

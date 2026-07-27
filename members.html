@@ -213,7 +213,7 @@
                 }
 
                 // Logged in but not a member yet → explain why the member tiles won't open.
-                if (!['MEMBER', 'ADMIN', 'SUPERADMIN'].includes(user.role)) {
+                if (!MEMBER_ROLES.includes(user.role)) {
                     const hub = document.getElementById('hubView');
                     const banner = document.createElement('div');
                     banner.style.cssText = 'background:rgba(212,175,55,0.12);border:1px solid rgba(212,175,55,0.4);border-radius:12px;padding:1rem 1.25rem;margin:0 0 1.5rem;color:#f1d36b;';

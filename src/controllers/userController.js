@@ -51,7 +51,7 @@ export const createUser = async (req, res) => {
                 username,
                 email,
                 passwordHash: hashedPassword,
-                role: role || 'admin'
+                role: role || 'USER'
             },
             select: {
                 id: true,
@@ -101,7 +101,7 @@ export const updateUser = async (req, res) => {
         // Privilege-escalation guard: a non-superadmin must not grant a role at/above
         // their own level, nor modify a user who already outranks them (otherwise any
         // admin could promote themselves or anyone to SUPERADMIN).
-        const ROLE_LEVEL = { USER: 1, MEMBER: 2, ADMIN: 3, SUPERADMIN: 4 };
+        const ROLE_LEVEL = { USER: 1, MEMBER: 2, AUTHOR: 3, ADMIN: 4, SUPERADMIN: 5 };
         const newLevel = ROLE_LEVEL[role];
         if (!newLevel) {
             return res.status(400).json({ error: 'Neplatná role' });

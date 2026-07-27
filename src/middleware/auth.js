@@ -29,8 +29,9 @@ export const authMiddleware = async (req, res, next) => {
     }
 };
 
-// Role hierarchy: USER < MEMBER < ADMIN < SUPERADMIN
-const ROLE_HIERARCHY = { 'USER': 0, 'MEMBER': 1, 'ADMIN': 2, 'SUPERADMIN': 3 };
+// Role hierarchy: USER < MEMBER < AUTHOR < ADMIN < SUPERADMIN
+// Čísla schválně stejná jako v src/middleware/rbac.js, ať jdou obě mapy porovnat okem.
+const ROLE_HIERARCHY = { 'USER': 1, 'MEMBER': 2, 'AUTHOR': 3, 'ADMIN': 4, 'SUPERADMIN': 5 };
 
 /**
  * Middleware factory to require a minimum role

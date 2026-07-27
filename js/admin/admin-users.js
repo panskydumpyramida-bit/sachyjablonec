@@ -37,6 +37,7 @@ async function loadUsers() {
                     <select onchange="updateUserRole(${u.id}, this.value)" style="padding: 0.25rem;">
                         <option value="USER" ${u.role === 'USER' ? 'selected' : ''}>User</option>
                         <option value="MEMBER" ${u.role === 'MEMBER' ? 'selected' : ''}>Member</option>
+                        <option value="AUTHOR" ${u.role === 'AUTHOR' ? 'selected' : ''}>Autor</option>
                         <option value="ADMIN" ${u.role === 'ADMIN' ? 'selected' : ''}>Admin</option>
                         <option value="SUPERADMIN" ${u.role === 'SUPERADMIN' ? 'selected' : ''}>Superadmin</option>
                     </select>

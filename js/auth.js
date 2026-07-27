@@ -223,7 +223,8 @@ if (typeof AuthManager === 'undefined') {
             if (this.user) {
                 const roleBadge = this.user.role === 'SUPERADMIN' ? '<span class="badge-admin">Superadmin</span>'
                     : this.user.role === 'ADMIN' ? '<span class="badge-admin">Admin</span>'
-                        : this.user.role === 'MEMBER' ? '<span class="badge-member">Člen</span>' : '';
+                        : this.user.role === 'AUTHOR' ? '<span class="badge-member">Autor</span>'
+                            : this.user.role === 'MEMBER' ? '<span class="badge-member">Člen</span>' : '';
 
                 authContainer.innerHTML = `
                 <div class="user-menu">
