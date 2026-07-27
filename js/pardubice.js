@@ -29,10 +29,16 @@
         return { cls: 'n', txt: '·', word: '' };
     }
 
-    // výsledek z tabulky párování ("1 - 0" apod.) z pohledu našeho hráče
-    function pairingResult(p) {
+    // výsledek z tabulky párování ("1 - 0" apod.) z pohledu našeho hráče.
+    // Bez výsledku záleží na fázi kola: čerstvý los se teprve BUDE hrát (často
+    // až druhý den), rozehrané kolo se hraje teď.
+    function pairingResult(p, roundState) {
         const r = String(p.result || '').trim();
-        if (!r || /^\s*-\s*$/.test(r)) return { cls: 'n', txt: 'hraje se' };
+        if (!r || /^\s*-\s*$/.test(r)) {
+            return roundState === 'fresh'
+                ? { cls: 'n', txt: startLabel(), pending: true }
+                : { cls: 'n', txt: 'hraje se', pending: true };
+        }
         const [a, b] = r.split('-').map(x => x.trim());
         const mine = p.color === 'white' ? a : b;
         const theirs = p.color === 'white' ? b : a;
@@ -68,6 +74,8 @@
         return secs;
     }
     const pad2 = (n) => String(n).padStart(2, '0');
+    // Los bývá venku po dohrání večerního kola — hraje se pak až nazítří.
+    const startLabel = () => (pragueNow().h < 15 ? 'dnes 15:00' : 'zítra 15:00');
 
     function renderClock(label) {
         const t = secsToNextRound();
@@ -198,14 +206,16 @@
         }
 
         // příprava se nabízí jen na kolo, které se teprve bude hrát
-        const anyPrep = withPairs.some(t => t.pairings.some(p => p.opponent && pairingResult(p).txt === 'hraje se'));
+        const anyPrep = withPairs.some(t => t.roundState === 'fresh' && t.pairings.some(p => p.opponent));
 
         const groups = withPairs.map(t => {
             const link = `<a class="pd-cr" href="${crRound(t.tnr, t.currentRound)}" target="_blank" rel="noopener">
                 <i class="fa-solid fa-table-list"></i> Celý los ${t.currentRound}. kola</a>`;
             const cards = t.pairings.map(p => {
-                const res = pairingResult(p);
-                const played = res.txt !== 'hraje se';
+                const res = pairingResult(p, t.roundState);
+                // příprava (lupa) jen na kolo, které se teprve bude hrát — u rozehraného
+                // ani dohraného kola už není na co se připravovat
+                const played = t.roundState !== 'fresh';
                 return `<div class="pd-board">
                     <div class="pd-bhead">
                         <span class="pd-chip">DESKA ${p.board || '?'}</span>
@@ -222,9 +232,16 @@
                     </div>
                 </div>`;
             }).join('');
+            // každý turnaj může být v jiné fázi — ať je vidět, na co se zrovna kouká
+            const stav = t.roundState === 'fresh'
+                ? `<span class="pd-pill gold"><span class="pd-dot"></span>Los ${t.currentRound}. kola · ${startLabel()}</span>`
+                : t.roundState === 'playing'
+                    ? `<span class="pd-pill"><span class="pd-dot live"></span>${t.currentRound}. kolo se hraje</span>`
+                    : `<span class="pd-pill">${t.currentRound}. kolo dohráno${t.nextRoundPending ? ` · čekáme na los ${t.nextRoundPending}.` : ''}</span>`;
+
             return `<div class="pd-thead">
                     <div class="pd-tname"><b>Turnaj ${esc(t.code)}</b><span>${esc(shortName(t))}</span></div>
-                    ${link}
+                    <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">${stav}${link}</div>
                 </div>
                 <div class="pd-grid">${cards}</div>`;
         }).join('');
