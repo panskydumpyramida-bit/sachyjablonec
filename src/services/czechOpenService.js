@@ -12,6 +12,7 @@ import {
 } from './chessResultsService.js';
 import { notify } from './pushService.js';
 import { sendWhatsapp, claimNotify, markNotified, isConfigured as isWaConfigured } from './whatsappService.js';
+import { cleanOpponentName, normalizePlayerName } from '../utils/playerName.js';
 
 const prisma = new PrismaClient();
 
@@ -39,6 +40,69 @@ const num = (v) => {
     const n = parseFloat(String(v).replace(',', '.').replace(/[^\d.\-]/g, ''));
     return Number.isFinite(n) ? n : null;
 };
+
+/**
+ * Rejstřík jmen z naší databáze partií.
+ *
+ * Odkaz „příprava na soupeře" má vzniknout jen tam, kde za ním opravdu partie
+ * jsou — jinak dítě klikne a uvidí prázdno. Zjišťovat to dotazem na každého
+ * soupeře při každém načtení stránky by bylo drahé, tak si jména jednou za čas
+ * načteme do paměti a párujeme proti nim.
+ */
+let nameIndex = null;
+let nameIndexAt = 0;
+const NAME_INDEX_TTL = 6 * 60 * 60 * 1000;
+
+async function getNameIndex() {
+    if (nameIndex && Date.now() - nameIndexAt < NAME_INDEX_TTL) return nameIndex;
+    const [white, black] = await Promise.all([
+        prisma.chessGame.groupBy({ by: ['whitePlayer'], _count: { _all: true } }),
+        prisma.chessGame.groupBy({ by: ['blackPlayer'], _count: { _all: true } }),
+    ]);
+    // klíč bez diakritiky → { celkem partií, počty jednotlivých zápisů }
+    const map = new Map();
+    const add = (name, count) => {
+        if (!name || name === '?') return;
+        const key = normalizePlayerName(name);
+        if (!key) return;
+        const rec = map.get(key) || { games: 0, variants: new Map() };
+        rec.games += count;
+        rec.variants.set(name, (rec.variants.get(name) || 0) + count);
+        map.set(key, rec);
+    };
+    for (const r of white) add(r.whitePlayer, r._count._all);
+    for (const r of black) add(r.blackPlayer, r._count._all);
+    // z variant téhož jména vybereme tu s nejvíc partiemi — na tu odkazujeme,
+    // protože /tree hledá přesnou shodu
+    for (const rec of map.values()) {
+        rec.name = [...rec.variants.entries()].sort((a, b) => b[1] - a[1])[0][0];
+        delete rec.variants;
+    }
+    nameIndex = map;
+    nameIndexAt = Date.now();
+    return map;
+}
+
+/** Jméno ze chess-results → přesný zápis v naší databázi, nebo null. */
+async function resolveDbPlayer(name) {
+    if (!name) return { dbName: null, dbGames: 0 };
+    let idx;
+    try {
+        idx = await getNameIndex();
+    } catch (e) {
+        console.error('[Camp] rejstřík jmen:', e.message);
+        return { dbName: null, dbGames: 0 };
+    }
+    const key = normalizePlayerName(name);
+    const hit = idx.get(key);
+    if (hit) return { dbName: hit.name, dbGames: hit.games };
+    // v databázi bývá ročník navíc: „Klimes, Martin" → „Klimes, Martin 2008"
+    let best = null;
+    for (const [k, v] of idx) {
+        if (k.startsWith(key + ' ') && (!best || v.games > best.games)) best = v;
+    }
+    return best ? { dbName: best.name, dbGames: best.games } : { dbName: null, dbGames: 0 };
+}
 
 /** Kolik kol je odehráno a jestli je venku los dalšího kola. */
 function roundState(pairings) {
@@ -68,7 +132,7 @@ async function loadTournament(tnr, players) {
             const games = (card.games || []).map(g => ({
                 round: g.round ?? null,
                 board: g.board ?? null,
-                opponent: g.opponent || null,
+                opponent: cleanOpponentName(g.opponent),
                 opponentRating: num(g.opponentRating),
                 opponentFed: g.opponentFed || null,
                 color: g.color || null,
@@ -124,7 +188,7 @@ async function loadTournament(tnr, players) {
                         name: mePlayer?.name || null,
                         rating: mePlayer?.rating ?? null,
                         color: iAmWhite ? 'white' : 'black',
-                        opponent: (iAmWhite ? p.blackName : p.whiteName) || null,
+                        opponent: cleanOpponentName(iAmWhite ? p.blackName : p.whiteName),
                         opponentStartNo: iAmWhite ? p.blackStartNo : p.whiteStartNo,
                         opponentRating: card?.opponentRating ?? null,
                         // barva SOUPEŘE — pro přípravu v naší databázi partií
@@ -154,6 +218,19 @@ async function loadTournament(tnr, players) {
                 // body z karty tenhle výsledek ještě nezahrnují
                 player.points = (player.points || 0) + (mine === '1' ? 1 : mine === '½' ? 0.5 : 0);
                 player.pointsLive = true;
+            }
+
+            // Máme soupeře v naší databázi partií? Podle toho se rozhodne, jestli
+            // se na něj vůbec nabídne odkaz na přípravu.
+            const seen = new Map();
+            for (const list of [out.pairings, ...out.players.map(p => p.games || [])]) {
+                for (const g of list) {
+                    if (!g.opponent) continue;
+                    if (!seen.has(g.opponent)) seen.set(g.opponent, await resolveDbPlayer(g.opponent));
+                    const r = seen.get(g.opponent);
+                    g.opponentDbName = r.dbName;
+                    g.opponentDbGames = r.dbGames;
+                }
             }
 
             out.currentRound = rd;

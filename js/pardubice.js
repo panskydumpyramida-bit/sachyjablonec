@@ -49,15 +49,26 @@
         return { cls: 'd', txt: 'remíza' };
     }
 
-    // Odkaz na soupeře v naší databázi partií. Vede tam vždycky, ale jako „příprava"
-    // (s lupou, zvýrazněně) jen u kola, které se teprve bude hrát — u dohrané partie
-    // už není na co se připravovat, jen si soupeře prohlédnout.
-    function oppCell(name, color, played) {
+    // chess-results připisuje ke jménu " *)" (hráč na stálé šachovnici). Server to
+    // odstraňuje, tohle je pojistka na dobu, než se přestaví uložený snapshot.
+    const cleanName = (s) => String(s || '').replace(/ /g, ' ').replace(/\s*\*\)\s*$/, '').replace(/\s+/g, ' ').trim();
+
+    /**
+     * Soupeř. Odkaz do databáze partií vznikne, jen když v ní opravdu nějaké má —
+     * jinak by kliknutí skončilo prázdnou stránkou. Jako „příprava" (s lupou) se
+     * nabízí u kola, které se teprve bude hrát; u dohrané partie je to už jen
+     * prohlédnutí soupeře.
+     */
+    function oppCell(g, color, played) {
+        const name = cleanName(g?.opponent);
         if (!name) return '<span class="pd-opp">volno</span>';
-        const url = `/chess-database.html?player=${encodeURIComponent(name)}&color=${color}`;
+        if (!g.opponentDbGames) return `<span class="pd-opp">${esc(name)}</span>`;
+
+        const url = `/chess-database.html?player=${encodeURIComponent(g.opponentDbName || name)}&color=${color}`;
         const barva = color === 'black' ? 'černé' : 'bílé';
-        if (played) return `<a class="pd-oppl" href="${url}" title="Partie tohohle soupeře za ${barva} v naší databázi">${esc(name)}</a>`;
-        return `<a class="pd-prep" href="${url}" title="Příprava — soupeřovy partie za ${barva} v naší databázi">${esc(name)}<i class="fa-solid fa-magnifying-glass"></i></a>`;
+        const kolik = `${g.opponentDbGames} ${g.opponentDbGames === 1 ? 'partie' : (g.opponentDbGames < 5 ? 'partie' : 'partií')} v naší databázi`;
+        if (played) return `<a class="pd-oppl" href="${url}" title="${kolik}">${esc(name)}</a>`;
+        return `<a class="pd-prep" href="${url}" title="Příprava — jeho partie za ${barva} (${kolik})">${esc(name)}<i class="fa-solid fa-magnifying-glass"></i></a>`;
     }
 
     // ---------- čas ----------
@@ -206,7 +217,8 @@
         }
 
         // příprava se nabízí jen na kolo, které se teprve bude hrát
-        const anyPrep = withPairs.some(t => t.roundState === 'fresh' && t.pairings.some(p => p.opponent));
+        // text o přípravě jen když je opravdu na co kliknout
+        const anyPrep = withPairs.some(t => t.roundState === 'fresh' && t.pairings.some(p => p.opponentDbGames));
 
         const groups = withPairs.map(t => {
             const link = `<a class="pd-cr" href="${crRound(t.tnr, t.currentRound)}" target="_blank" rel="noopener">
@@ -225,7 +237,7 @@
                     <div class="pd-bme">${esc(p.name)}</div>
                     <div class="pd-bvs">
                         <span class="pd-vslab">VS</span>
-                        ${oppCell(p.opponent, p.opponentColor, played)}
+                        ${oppCell(p, p.opponentColor, played)}
                         ${p.opponentRating ? `<span class="pd-orat">${p.opponentRating}</span>` : ''}
                         <span style="flex:1;"></span>
                         <span class="pd-r ${res.cls}">${res.txt}</span>
@@ -292,7 +304,7 @@
                             <span class="pd-disc sm${white ? '' : ' b'}"></span>
                             <span style="font:600 10px Inter,sans-serif; color:#8d8d95;">${white ? 'b' : 'č'}</span>
                         </span>
-                        <span class="op">${oppCell(g.opponent, white ? 'black' : 'white', true)}</span>
+                        <span class="op">${oppCell(g, white ? 'black' : 'white', true)}</span>
                         ${g.opponentRating ? `<span class="rt">${g.opponentRating}</span>` : ''}
                         <span class="pd-r ${r.cls}">${r.txt}</span>
                     </div>`;
