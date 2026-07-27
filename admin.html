@@ -132,6 +132,8 @@
 
                 <div class="nav-tab" onclick="switchTab('members')" style="display: none;"><i
                         class="fa-solid fa-address-book"></i>Členové </div>
+                <div class="nav-tab" onclick="switchTab('privateTraining')" id="privateTrainingTab" style="display: none;"><i
+                        class="fa-solid fa-user-clock"></i>Soukromé tréninky</div>
                 <div class="nav-tab" onclick="switchTab('users')" id="usersTab" style="display: none;"><i
                         class="fa-solid fa-users"></i>Uživatelé <i class="fa-solid fa-lock"
                         style="font-size: 0.7em; margin-left: 0.4rem; color: #fbbf24; opacity: 0.8;"
@@ -336,8 +338,8 @@
                                             <button type="button" onclick="insertCollapsibleBlock(); this.parentElement.style.display='none'" title="Rozbalovací sekce" style="text-align: left; justify-content: flex-start; width: 100%; color: #8b5cf6;"><i class="fa-solid fa-layer-group" style="margin-right:8px; width: 16px; text-align: center;"></i>Rozbalovací sekce</button>
                                         </div>
                                     </div>
-                                    <button type="button" onmousedown="event.preventDefault()" onclick="window.showResultsTableModal && window.showResultsTableModal()"
-                                        title="Tabulka výsledků z chess-results.com" class="tb-chess-results"><span class="tb-cr-badge">CH-R</span><span class="tb-label">Tabulka</span></button>
+                                    <button type="button" onmousedown="event.preventDefault()" onclick="window.showChessResultsModal ? window.showChessResultsModal() : (window.showResultsTableModal && window.showResultsTableModal())"
+                                        title="Tabulka výsledků z chess-results.com — najde naše hráče i ve velkých festivalech" class="tb-chess-results"><span class="tb-cr-badge">CH-R</span><span class="tb-label">Tabulka</span></button>
                                     <button type="button" onclick="aiSpellCheck()" title="AI Oprava pravopisu (Ctrl+Shift+S)" style="color: #10b981;"><i class="fa-solid fa-spell-check"></i>AI</button>
                                     <button type="button" onclick="aiTextToTable()" title="AI Převod na tabulku (vyberte text)" style="color: #06b6d4;"><i class="fa-solid fa-table"></i></button>
                                     <button type="button" onclick="showMatchTableModal()" title="Vložit tabulku zápasu (Soutěže družstev)" style="color: #f59e0b;"><i class="fa-solid fa-users"></i></button>
@@ -692,6 +694,34 @@
             </thead>
             <tbody id="membersTableBody"></tbody>
         </table>
+    </div>
+    <div id="privateTrainingView" class="hidden">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:1rem;flex-wrap:wrap;margin-bottom:1rem;">
+            <div>
+                <h2 style="margin:0;"><i class="fa-solid fa-user-clock" style="color:var(--primary-color);"></i> Soukromé tréninky</h2>
+                <p style="color:var(--text-muted);margin:.35rem 0 0;font-size:.9rem;">Evidence je pouze pro administrátory. Příspěvek rodiče se počítá jako sazba tréninku dělená počtem účastníků.</p>
+            </div>
+            <button class="btn-secondary" onclick="importPrivateTrainingHistory()"><i class="fa-solid fa-file-import"></i> Nahrát výkazy 2025/2026</button>
+        </div>
+        <div id="privateTrainingSummary" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:.75rem;margin-bottom:1rem;"></div>
+        <div class="editor-layout" style="align-items:start;">
+            <form onsubmit="savePrivateTraining(event)" style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.09);border-radius:8px;padding:1rem;">
+                <h3 style="margin-top:0;">Přidat trénink</h3>
+                <div class="form-group"><label>Datum</label><input id="privateTrainingDate" type="date" required></div>
+                <div class="form-group"><label>Trenér</label><select id="privateTrainingTrainer"><option>Tsantsala</option><option>Brehmová</option></select></div>
+                <div class="form-group"><label>Hodiny</label><input id="privateTrainingHours" type="number" min="0.25" max="12" step="0.25" value="1" required></div>
+                <div class="form-group"><label>Sazba za hodinu (Kč)</label><input id="privateTrainingRate" type="number" min="0" max="10000" value="100" required></div>
+                <div class="form-group"><label>Účastníci a plátci</label><textarea id="privateTrainingAttendance" rows="5" placeholder="Jméno dítěte | Jméno rodiče\nDalší dítě | Stejný nebo jiný rodič"></textarea><small style="color:var(--text-muted);">Každý řádek = jeden podíl. Bez účastníků se trénink uloží, ale nelze jej rozúčtovat.</small></div>
+                <div class="form-group"><label>Poznámka</label><input id="privateTrainingNote" maxlength="500" placeholder="nepovinné"></div>
+                <button class="btn-primary" type="submit"><i class="fa-solid fa-plus"></i> Uložit trénink</button>
+            </form>
+            <div>
+                <h3 style="margin-top:0;">Vyúčtování rodičům</h3>
+                <div id="privateTrainingPayers" style="margin-bottom:1.25rem;"></div>
+                <h3>Tréninky</h3>
+                <div style="overflow-x:auto;"><table class="data-table"><thead><tr><th>Datum</th><th>Trenér</th><th>Hodiny</th><th>Náklad</th><th>Účastníci</th><th>Podíl / dítě</th><th></th></tr></thead><tbody id="privateTrainingRows"></tbody></table></div>
+            </div>
+        </div>
     </div>
     <div id="weeklyPuzzleView" class="hidden">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; flex-wrap: wrap; gap: 0.75rem;">
@@ -2865,6 +2895,7 @@
     <script src="js/admin/admin-gallery.js?v=ux12"></script>
     <script src="js/admin/admin-wysiwyg.js?v=ux20"></script>
     <script src="js/admin/admin-slash-commands.js?v=ux5"></script>
+    <script src="js/admin/admin-chess-results.js?v=1"></script>
     <script src="js/admin/admin-content-images.js?v=ux13"></script>
     <script src="js/admin/admin-thumbnail.js?v=ux12"></script>
     <script src="js/admin/admin-news.js?v=ux15"></script>
@@ -2883,6 +2914,7 @@
     <script src="js/admin/admin-weekly-puzzles.js?v=ux15"></script>
     <script src="js/admin/admin-home-tiles.js?v=1"></script>
     <script src="js/admin/admin-facebook.js?v=1"></script>
+    <script src="js/admin/admin-private-trainings.js?v=1"></script>
     <script src="js/admin/admin-dashboard.js?v=ux12"></script>
     <!-- All admin functionality moved to modular JS files in js/admin/ -->
 

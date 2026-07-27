@@ -18,6 +18,7 @@ export default [
                 clearInterval: 'readonly',
                 Buffer: 'readonly',
                 URL: 'readonly',
+                URLSearchParams: 'readonly',
                 __dirname: 'readonly',
                 __filename: 'readonly',
             },
@@ -79,6 +80,10 @@ export default [
                 getAuthToken: 'readonly',
                 checkAuth: 'readonly',
                 currentUserRole: 'readonly',
+                // Sdílené mezi admin moduly (klasické skripty, ne ESM)
+                updatePreview: 'readonly',
+                buildResultsTableHtml: 'readonly',
+                buildChessResultsLinkHtml: 'readonly',
             },
         },
     },

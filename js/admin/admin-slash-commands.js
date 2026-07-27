@@ -788,19 +788,29 @@ function isEssentialHeader(header, index) {
     return RT_ESSENTIAL_PATTERNS.some(r => r.test(header));
 }
 
-function buildResultsTableHtml({ headers, rows, keyword, topN, colMask }) {
+function buildResultsTableHtml({ headers, rows, keyword, topN, colMask, highlightRows }) {
     // topN: 1 (vítěz), 3 (top 3), 10 (top 10), 0/null (všichni)
     // colMask: bool[] stejné délky jako headers; true = zobrazit sloupec. Pokud null → všechny.
+    // highlightRows: Set|Array indexů řádků k zvýraznění. Když je zadaný, keyword se
+    //   pro zvýraznění ignoruje — server už hráče našel spolehlivě (klub / karta / watchlist)
+    //   a fuzzy substring match by dělal false positives („Červeň" → „Cerveny").
+    const hlSet = (highlightRows && typeof highlightRows.has === 'function')
+        ? highlightRows
+        : (Array.isArray(highlightRows) ? new Set(highlightRows) : null);
+    const isRowHighlighted = (row, idx) => (hlSet
+        ? hlSet.has(idx)
+        : row.some(cell => containsKeyword(cell, keyword)));
+
     const showCol = headers.map((_h, i) => !colMask || colMask[i]);
     const mobileHide = headers.map((h, i) => showCol[i] && !isEssentialHeader(h, i));
 
-    // Row filtering
-    let visibleRows = rows;
+    // Row filtering — entries drží původní index kvůli zvýraznění
+    let visibleRows = rows.map((row, idx) => ({ row, idx }));
     if (topN && topN > 0) {
         const keepIdx = new Set();
         for (let i = 0; i < Math.min(topN, rows.length); i++) keepIdx.add(i);
         rows.forEach((row, i) => {
-            if (row.some(cell => containsKeyword(cell, keyword))) keepIdx.add(i);
+            if (isRowHighlighted(row, i)) keepIdx.add(i);
         });
         const sortedIdx = Array.from(keepIdx).sort((a, b) => a - b);
         visibleRows = [];
@@ -809,7 +819,7 @@ function buildResultsTableHtml({ headers, rows, keyword, topN, colMask }) {
             if (prev !== -1 && idx > prev + 1) {
                 visibleRows.push({ __gap: true });
             }
-            visibleRows.push(rows[idx]);
+            visibleRows.push({ row: rows[idx], idx });
             prev = idx;
         });
     }
@@ -817,11 +827,12 @@ function buildResultsTableHtml({ headers, rows, keyword, topN, colMask }) {
     const visibleColCount = showCol.filter(Boolean).length;
     const headerHtml = headers.map((h, i) => showCol[i]
         ? `<th${mobileHide[i] ? ' class="hide-mobile"' : ''}>${escapeHtml(h)}</th>` : '').join('');
-    const bodyHtml = visibleRows.map(row => {
-        if (row.__gap) {
+    const bodyHtml = visibleRows.map(entry => {
+        if (entry.__gap) {
             return `<tr class="results-gap"><td colspan="${visibleColCount}" style="text-align:center; color:#64748b; padding:0.4rem; font-size:0.85em; background:rgba(255,255,255,0.02);">⋯</td></tr>`;
         }
-        const isHighlight = row.some(cell => containsKeyword(cell, keyword));
+        const row = entry.row;
+        const isHighlight = isRowHighlighted(row, entry.idx);
         const trStyle = isHighlight ? ' style="background-color:rgba(212,175,55,0.08);"' : '';
         const cellStyle = isHighlight ? ' style="color:#fbbf24; font-weight:700;"' : '';
         const cells = row.map((c, i) => showCol[i]

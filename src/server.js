@@ -40,6 +40,8 @@ import forumRoutes from './routes/api-forum.js';
 import diagramsRoutes from './routes/api-diagrams.js';
 import blunderRoutes from './routes/blunder.js';
 import weeklyPuzzlesRoutes from './routes/weekly-puzzles.js';
+import privateTrainingRoutes from './routes/private-trainings.js';
+import trackedPlayerRoutes from './routes/api-tracked-players.js';
 import passport from './config/passport.js';
 import { PrismaClient } from '@prisma/client';
 
@@ -398,6 +400,8 @@ app.use('/api/forum', forumRoutes);
 app.use('/api', diagramsRoutes);
 app.use('/api/blunder', blunderRoutes);
 app.use('/api/weekly-puzzles', weeklyPuzzlesRoutes);
+app.use('/api/private-trainings', privateTrainingRoutes);
+app.use('/api/tracked-players', trackedPlayerRoutes);
 
 // Import helpers from utils
 import { clean, isElo, simplify, isMatch, fetchWithHeaders, isChessResultsUrl } from './utils/helpers.js';

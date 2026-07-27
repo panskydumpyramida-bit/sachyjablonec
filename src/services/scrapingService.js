@@ -3,7 +3,7 @@
  * Extracted from server.js to reduce monolithic file size
  */
 
-import { clean, isElo, simplify, isMatch, fetchWithHeaders } from '../utils/helpers.js';
+import { clean, isElo, simplify, isMatch, fetchWithHeaders, isChessResultsUrl } from '../utils/helpers.js';
 
 /**
  * Scrape match details (board pairings) for a specific match
@@ -292,7 +292,8 @@ function decodeEntities(s) {
 }
 
 export async function scrapeStandings(url) {
-    if (!url || !/chess-results\.com/i.test(url)) {
+    // SSRF guard — substring test nad celou URL by pustil i https://169.254.169.254/?x=chess-results.com
+    if (!isChessResultsUrl(url)) {
         throw new Error('URL musí být z chess-results.com');
     }
 

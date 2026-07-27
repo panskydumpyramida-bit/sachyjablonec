@@ -739,3 +739,19 @@ model BlunderScanLog {
   @@index([playerName])
   @@map("blunder_scan_logs")
 }
+
+/// Sledovaní hráči pro scraping chess-results.com — lidé, které chceme mít
+/// ve výsledcích i když nejsou registrovaní za náš klub (např. trenéři).
+model TrackedPlayer {
+  id        Int      @id @default(autoincrement())
+  fullName  String   @map("full_name")   // "Příjmení, Jméno" — formát chess-results
+  sscrId    String?  @map("sscr_id")     // Ident-číslo ŠSČR z karty hráče (nejspolehlivější identifikátor)
+  club      String?                      // za koho je registrovaný (proč je ve watchlistu)
+  note      String?
+  active    Boolean  @default(true)
+  createdBy Int?     @map("created_by")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([active])
+  @@map("tracked_players")
+}

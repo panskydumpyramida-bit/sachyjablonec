@@ -1,9 +1,13 @@
 import express from 'express';
 import fetch from 'node-fetch';
+import { PrismaClient } from '@prisma/client';
 import { clean, isChessResultsUrl } from '../utils/helpers.js';
 import { scrapeStandings } from '../services/scrapingService.js';
+import { getTournamentIndex, scanTournament, extractTnr } from '../services/chessResultsService.js';
 import { authMiddleware } from '../middleware/auth.js';
+import { requireMember } from '../middleware/rbac.js';
 
+const prisma = new PrismaClient();
 const router = express.Router();
 
 /**
@@ -23,6 +27,112 @@ router.post('/standings', authMiddleware, async (req, res) => {
         console.error('[scrape standings] error:', e.message);
         res.status(502).json({ error: e.message });
     }
+});
+
+/* ================================================================== *
+ * Dvoufázový import výsledků z chess-results.com
+ *  fáze 1: GET  /chess-results/tournaments — rozpozná festival a nabídne turnaje
+ *  fáze 2: POST /chess-results/scan        — najde naše hráče a vrátí tabulku
+ * ================================================================== */
+
+const MAX_TNRS_PER_SCAN = 30;
+const VIEWS = new Set(['standings', 'rankAfterRound', 'crosstable', 'round']);
+
+/** Číslo turnaje z čísla nebo z URL (URL musí projít SSRF guardem). */
+function safeTnr(value) {
+    const raw = String(value ?? '').trim();
+    if (!raw) return null;
+    if (/^\d{1,10}$/.test(raw)) return raw;
+    if (!isChessResultsUrl(raw)) return null;
+    return extractTnr(raw);
+}
+
+/**
+ * GET /api/scraping/chess-results/tournaments?url=…&lan=5
+ * Fáze 1 — vrátí seznam dílčích turnajů festivalu (nebo jediný turnaj).
+ */
+router.get('/chess-results/tournaments', authMiddleware, requireMember, async (req, res) => {
+    const { url, lan } = req.query;
+    if (!url) return res.status(400).json({ error: 'URL parameter is required' });
+    if (!isChessResultsUrl(url)) {
+        return res.status(400).json({ error: 'URL musí být z chess-results.com' });
+    }
+
+    try {
+        const index = await getTournamentIndex(url, { lan: /^[0-9]$/.test(String(lan)) ? lan : 5 });
+        res.json(index);
+    } catch (error) {
+        console.error('[chess-results tournaments]', error.message);
+        res.status(502).json({ error: error.message });
+    }
+});
+
+/**
+ * POST /api/scraping/chess-results/scan
+ * Body: { tnrs:string[], view, round?, clubQuery?, fedFilter?, useWatchlist?, lan? }
+ * Fáze 2 — pro každý turnaj najde naše hráče (klub ∪ karta ∪ watchlist).
+ * Chyba jednoho turnaje nesmí shodit celý request.
+ */
+router.post('/chess-results/scan', authMiddleware, requireMember, async (req, res) => {
+    const body = req.body || {};
+
+    const tnrs = [...new Set((Array.isArray(body.tnrs) ? body.tnrs : []).map(safeTnr).filter(Boolean))];
+    if (!tnrs.length) return res.status(400).json({ error: 'Zadejte alespoň jeden turnaj (tnrs).' });
+    if (tnrs.length > MAX_TNRS_PER_SCAN) {
+        return res.status(400).json({ error: `Najednou lze skenovat nejvýše ${MAX_TNRS_PER_SCAN} turnajů.` });
+    }
+
+    const view = VIEWS.has(body.view) ? body.view : 'standings';
+    const round = Number.isInteger(Number(body.round)) && Number(body.round) > 0 ? Number(body.round) : null;
+    if (view !== 'standings' && !round) {
+        return res.status(400).json({ error: 'Pro pohled po kole je nutné zadat číslo kola.' });
+    }
+
+    const clubQuery = String(body.clubQuery ?? 'Bižuterie').trim().slice(0, 60) || 'Bižuterie';
+    const fedFilter = Array.isArray(body.fedFilter)
+        ? body.fedFilter.map((f) => String(f).toUpperCase().slice(0, 3)).filter((f) => /^[A-Z]{3}$/.test(f))
+        : ['CZE'];
+    const lan = /^[0-9]$/.test(String(body.lan)) ? Number(body.lan) : 5;
+
+    let watchlist = [];
+    if (body.useWatchlist !== false) {
+        try {
+            watchlist = await prisma.trackedPlayer.findMany({ where: { active: true } });
+        } catch (error) {
+            console.error('[chess-results scan] watchlist:', error.message);
+        }
+    }
+
+    const started = Date.now();
+    const results = new Array(tnrs.length);
+    let cursor = 0;
+    // Turnaje po dvou — každý sken si uvnitř bere až 6 karet paralelně.
+    const runners = Array.from({ length: Math.min(2, tnrs.length) }, async () => {
+        for (;;) {
+            const index = cursor++;
+            if (index >= tnrs.length) return;
+            const tnr = tnrs[index];
+            try {
+                results[index] = await scanTournament(tnr, {
+                    view, round, lan, clubQuery, fedFilter, watchlist, concurrency: 6,
+                    forceCards: body.forceCards === true
+                });
+            } catch (error) {
+                console.error(`[chess-results scan] tnr${tnr}:`, error.message);
+                results[index] = { tnr, name: '', players: [], table: null, stats: null, warnings: [], error: error.message };
+            }
+        }
+    });
+    await Promise.all(runners);
+
+    res.json({
+        tournaments: results,
+        view,
+        round,
+        clubQuery,
+        watchlistCount: watchlist.length,
+        durationMs: Date.now() - started
+    });
 });
 
 router.get('/chess-results', async (req, res) => {
