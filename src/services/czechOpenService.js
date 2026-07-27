@@ -132,6 +132,29 @@ async function loadTournament(tnr, players) {
                         bye: !!p.bye,
                     };
                 });
+            // Karta hráče (art=9) dostane výsledek až po dohrání CELÉHO kola, kdežto
+            // párovací tabulka ho ukáže hned po partii. Tak si ho z ní přebereme,
+            // ať průběh kola není hodiny prázdný. Kartu nikdy nepřepisujeme — ta je
+            // zdroj pravdy, kdyby rozhodčí výsledek opravil.
+            for (const pr of out.pairings) {
+                if (pr.bye || !pr.result) continue;
+                const [a, b] = String(pr.result).split('-').map(s => s.trim());
+                const mine = pr.color === 'white' ? a : b;
+                if (!/^(1|0|½)$/.test(mine || '')) continue;
+                const player = out.players.find(x => x.startNo === pr.startNo);
+                if (!player) continue;
+                const g = (player.games || []).find(x => Number(x.round) === rd);
+                if (g?.result) continue;
+                if (g) g.result = mine;
+                else (player.games ||= []).push({
+                    round: rd, board: pr.board, opponent: pr.opponent, opponentRating: null,
+                    opponentFed: null, color: pr.color, result: mine, bye: false,
+                });
+                // body z karty tenhle výsledek ještě nezahrnují
+                player.points = (player.points || 0) + (mine === '1' ? 1 : mine === '½' ? 0.5 : 0);
+                player.pointsLive = true;
+            }
+
             out.currentRound = rd;
             out.roundState = st.state;
             out.roundStats = st;

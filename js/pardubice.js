@@ -43,13 +43,15 @@
         return { cls: 'd', txt: 'remíza' };
     }
 
-    // příprava na soupeře: jeho partie v barvě, kterou má proti nám
+    // Odkaz na soupeře v naší databázi partií. Vede tam vždycky, ale jako „příprava"
+    // (s lupou, zvýrazněně) jen u kola, které se teprve bude hrát — u dohrané partie
+    // už není na co se připravovat, jen si soupeře prohlédnout.
     function oppCell(name, color, played) {
         if (!name) return '<span class="pd-opp">volno</span>';
-        // příprava dává smysl jen na kolo, které se teprve bude hrát
-        if (played) return `<span class="pd-opp">${esc(name)}</span>`;
         const url = `/chess-database.html?player=${encodeURIComponent(name)}&color=${color}`;
-        return `<a class="pd-prep" href="${url}" title="Soupeřovy partie za ${color === 'black' ? 'černé' : 'bílé'} v naší databázi">${esc(name)}<i class="fa-solid fa-magnifying-glass"></i></a>`;
+        const barva = color === 'black' ? 'černé' : 'bílé';
+        if (played) return `<a class="pd-oppl" href="${url}" title="Partie tohohle soupeře za ${barva} v naší databázi">${esc(name)}</a>`;
+        return `<a class="pd-prep" href="${url}" title="Příprava — soupeřovy partie za ${barva} v naší databázi">${esc(name)}<i class="fa-solid fa-magnifying-glass"></i></a>`;
     }
 
     // ---------- čas ----------
@@ -98,10 +100,11 @@
             || d.tournaments.find(t => t.currentRound) || {};
         const rd = cur.currentRound || 0;
         const pending = d.tournaments.find(t => t.nextRoundPending);
-        const anyFresh = d.tournaments.some(t => t.roundState === 'fresh' && (t.pairings || []).length);
+        // turnaje se losují nezávisle — čerstvý los hlas s JEHO číslem kola, ne s číslem toho, co se hraje
+        const fresh = d.tournaments.find(t => t.roundState === 'fresh' && (t.pairings || []).length);
 
-        const state = anyFresh
-            ? { txt: `Los ${rd}. kola je venku`, live: true }
+        const state = fresh
+            ? { txt: `Los ${fresh.currentRound}. kola je venku`, live: true }
             : cur.roundState === 'playing'
                 ? { txt: `Právě se hraje ${rd}. kolo`, live: true }
                 : pending
@@ -110,7 +113,12 @@
 
         const nextRd = pending?.nextRoundPending || (rd ? Math.min(rd + 1, TOTAL_ROUNDS) : 1);
         const avg = s.players ? (s.points / s.players) : 0;
-        const best = d.tournaments.flatMap(t => t.players || []).filter(p => p.rank).sort((a, b) => a.rank - b.rank)[0];
+        // pozice se porovnávají napříč různě velkými turnaji — proto k ní patří i turnaj
+        const best = d.tournaments
+            .flatMap(t => (t.players || []).map(p => ({ ...p, code: t.code, field: t.fieldSize })))
+            .filter(p => p.rank).sort((a, b) => a.rank - b.rank)[0];
+        // pill ukazuje kolo, o kterém se zrovna mluví
+        const pillRd = fresh?.currentRound || rd;
 
         return `<section class="pd-hero">
             <div class="pd-heroin">
@@ -127,7 +135,7 @@
 
                 <div style="display:flex; flex-wrap:wrap; align-items:center; gap:10px; margin-top:22px;">
                     <div class="pd-pill gold"><span class="pd-dot${state.live ? ' live' : ''}"></span>${esc(state.txt)}</div>
-                    ${rd ? `<div class="pd-pill">${rd}. kolo z ${TOTAL_ROUNDS} · začátek 15:00</div>` : ''}
+                    ${pillRd ? `<div class="pd-pill">${pillRd}. kolo z ${TOTAL_ROUNDS} · začátek 15:00</div>` : ''}
                     <a class="pd-cr" href="/puzzle-racer"><i class="fa-solid fa-bolt"></i> Zahrát si rozcvičku</a>
                 </div>
 
@@ -142,14 +150,14 @@
                         <div class="pd-stat">
                             <div class="pd-label">Průměr / hráč</div>
                             <div class="pd-num">${fmtPts(Math.round(avg * 10) / 10)}</div>
-                            <div class="pd-note">${rd ? `po ${rd - (cur.roundState === 'finished' ? 0 : 1)} kolech` : 'před startem'}</div>
+                            <div class="pd-note">${s.players ? `napříč ${s.players} hráči` : 'před startem'}</div>
                         </div>
                     </div>
                     <div class="pd-duo">
                         <div class="pd-stat">
                             <div class="pd-label">Nejlepší pozice</div>
                             <div class="pd-num">${best ? best.rank + '.' : '–'}</div>
-                            <div class="pd-note">${best ? esc(best.name) : ''}</div>
+                            <div class="pd-note">${best ? `${esc(best.name)}${best.field ? ` · z ${best.field}` : ''}` : ''}</div>
                         </div>
                         <div class="pd-stat">
                             <div class="pd-label">Úspěšnost</div>
@@ -168,9 +176,13 @@
         const pending = d.tournaments.filter(t => t.nextRoundPending);
         const rd = withPairs[0]?.currentRound || pending[0]?.nextRoundPending || 0;
         const allFinished = withPairs.length && withPairs.every(t => t.roundState === 'finished');
+        // turnaje se losují nezávisle — číslo kola do nadpisu jen když je všude stejné
+        const sameRound = withPairs.length && withPairs.every(t => t.currentRound === rd);
 
         const head = `<div class="pd-eyebrow">${allFinished ? 'Poslední kolo' : 'Los dalšího kola'}</div>
-            <h2 class="pd-h2">${allFinished ? `Jak dopadlo ${rd}. kolo` : `Kdo hraje s kým v ${rd}. kole`}</h2>`;
+            <h2 class="pd-h2">${allFinished
+                ? (sameRound ? `Jak dopadlo ${rd}. kolo` : 'Jak dopadlo poslední kolo')
+                : (sameRound ? `Kdo hraje s kým v ${rd}. kole` : 'Kdo hraje s kým')}</h2>`;
 
         if (!withPairs.length) {
             return `<section class="pd-sec">${head}
@@ -194,7 +206,6 @@
             const cards = t.pairings.map(p => {
                 const res = pairingResult(p);
                 const played = res.txt !== 'hraje se';
-                const diff = (p.opponentRating && p.rating) ? p.opponentRating - p.rating : null;
                 return `<div class="pd-board">
                     <div class="pd-bhead">
                         <span class="pd-chip">DESKA ${p.board || '?'}</span>
@@ -206,7 +217,6 @@
                         <span class="pd-vslab">VS</span>
                         ${oppCell(p.opponent, p.opponentColor, played)}
                         ${p.opponentRating ? `<span class="pd-orat">${p.opponentRating}</span>` : ''}
-                        ${diff !== null ? `<span class="pd-odif">${diff > 0 ? '+' : ''}${diff}</span>` : ''}
                         <span style="flex:1;"></span>
                         <span class="pd-r ${res.cls}">${res.txt}</span>
                     </div>
@@ -450,7 +460,6 @@
                 ${rows}
                 <div style="display:flex; flex-wrap:wrap; align-items:center; gap:12px; margin-top:16px; padding-top:14px; border-top:1px solid #26262c;">
                     <a class="pd-btn ghost" href="/puzzle-racer"><i class="fa-solid fa-bolt"></i> Zahrát si rozcvičku</a>
-                    <span class="pd-note" style="flex:1 1 200px; margin:0;">Kdo si zahraje později, do žebříčku se stejně dostane.</span>
                 </div>
             </div>
         </section>`;

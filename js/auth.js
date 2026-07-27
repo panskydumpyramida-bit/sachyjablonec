@@ -186,9 +186,14 @@ if (typeof AuthManager === 'undefined') {
             return this.user && ['ADMIN', 'SUPERADMIN'].includes(this.user.role);
         }
 
-        // Check if user is member or higher
+        // Check if user is member or higher (AUTHOR je nad MEMBER — musí tu být taky)
         isMember() {
-            return this.user && ['MEMBER', 'ADMIN', 'SUPERADMIN'].includes(this.user.role);
+            return this.user && ['MEMBER', 'AUTHOR', 'ADMIN', 'SUPERADMIN'].includes(this.user.role);
+        }
+
+        // Smí psát články (koncepty)
+        isAuthor() {
+            return this.user && ['AUTHOR', 'ADMIN', 'SUPERADMIN'].includes(this.user.role);
         }
 
         // Update header UI
@@ -240,6 +245,11 @@ if (typeof AuthManager === 'undefined') {
                         ${this.isMember() ? `
                         <a href="/members.html" class="dropdown-item">
                             <i class="fa-solid fa-users"></i> Členská sekce
+                        </a>
+                        ` : ''}
+                        ${this.isAuthor() ? `
+                        <a href="/napsat-partii.html" class="dropdown-item">
+                            <i class="fa-solid fa-pen-nib"></i> Napsat o partii
                         </a>
                         ` : ''}
                         ${this.isAdmin() ? `

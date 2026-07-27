@@ -499,14 +499,23 @@
             border-color: var(--primary-color);
         }
 
+        /* soupeř z dohrané partie — odkaz do databáze, ale bez důrazu „příprava" */
+        .pd-oppl {
+            font-size: 15px;
+            color: var(--text-color);
+            text-decoration: none;
+            border-bottom: 1px dotted #45454e;
+            transition: color 0.18s cubic-bezier(.2, .7, .3, 1), border-color 0.18s cubic-bezier(.2, .7, .3, 1);
+        }
+
+        .pd-oppl:hover {
+            color: #e6c565;
+            border-bottom-color: var(--primary-color);
+        }
+
         .pd-orat {
             font: 600 13px 'Inter', sans-serif;
             color: var(--primary-color);
-        }
-
-        .pd-odif {
-            font: 500 11px 'Inter', sans-serif;
-            color: #8d8d95;
         }
 
         /* výsledek partie */
@@ -693,6 +702,7 @@
         }
 
         .pd-g .pd-prep,
+        .pd-g .pd-oppl,
         .pd-g .pd-opp {
             font-size: 13px;
         }
