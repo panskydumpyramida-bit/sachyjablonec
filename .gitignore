@@ -1,8 +1,10 @@
 # Dependencies
 node_modules/
 
-# Environment variables
-.env
+# Environment variables — repo je veřejné, .env bez hvězdičky nechytí
+# .env.local / .env.production a stačí jedno zapomenutí
+.env*
+!.env.example
 
 # Prisma
 

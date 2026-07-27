@@ -5,8 +5,9 @@
  */
 
 import express from 'express';
-import { getSnapshot, CAMP_CODE } from '../services/czechOpenService.js';
+import { getSnapshot, CAMP_CODE, buildWaText } from '../services/czechOpenService.js';
 import { publicKey, subscribe, unsubscribe, countSubscribers } from '../services/pushService.js';
+import { sendWhatsapp, buildWaLink, isConfigured as isWaConfigured } from '../services/whatsappService.js';
 import { authMiddleware } from '../middleware/auth.js';
 import { requireAdmin } from '../middleware/rbac.js';
 
@@ -49,6 +50,30 @@ router.post('/pardubice/refresh', authMiddleware, requireAdmin, async (req, res)
     try {
         const data = await getSnapshot({ force: true });
         res.json({ ok: true, generatedAt: data.generatedAt, campCode: CAMP_CODE });
+    } catch (e) {
+        res.status(503).json({ error: e.message });
+    }
+});
+
+// Zkušební zpráva — jediný způsob, jak si ověřit, že brána opravdu doručuje
+router.post('/pardubice/test-whatsapp', authMiddleware, requireAdmin, async (req, res) => {
+    const r = await sendWhatsapp('Test z webu Bižuterie — když tohle vidíš, upozornění na los fungují.');
+    res.json({ ok: !!r.sent, ...r });
+});
+
+/**
+ * Odkaz pro ruční odeslání losu, když brána nefunguje.
+ * Za autorizací, protože obsahuje telefonní číslo — do veřejného frontendu nepatří.
+ */
+router.get('/pardubice/wa-link', authMiddleware, requireAdmin, async (req, res) => {
+    try {
+        const data = await getSnapshot();
+        const t = data.tournaments.find(x => x.roundState === 'fresh' && (x.pairings || []).length)
+            || data.tournaments.find(x => (x.pairings || []).length);
+        if (!t) return res.status(404).json({ error: 'Žádný los k odeslání' });
+        const url = buildWaLink(buildWaText(t));
+        if (!url) return res.status(503).json({ error: 'Chybí CALLMEBOT_PHONE' });
+        res.json({ url, tournament: t.code, round: t.currentRound, gateway: isWaConfigured() });
     } catch (e) {
         res.status(503).json({ error: e.message });
     }

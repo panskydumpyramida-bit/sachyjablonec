@@ -11,6 +11,7 @@ import {
     normalizeUrl, fetchPage, parseStandings, parsePlayerCard, parseRoundPairings,
 } from './chessResultsService.js';
 import { notify } from './pushService.js';
+import { sendWhatsapp, claimNotify, markNotified, isConfigured as isWaConfigured } from './whatsappService.js';
 
 const prisma = new PrismaClient();
 
@@ -290,6 +291,22 @@ export async function buildSnapshot() {
     };
 }
 
+/** Řádek losu pro jednoho hráče — stejný zdroj pro push i WhatsApp. */
+const pairingLine = (p) =>
+    `${p.name}: deska ${p.board}, ${p.color === 'white' ? 'bílé' : 'černé'}, ${p.opponent || 'volno'}`;
+
+/** Zpráva do WhatsAppu — celý los turnaje, ne useknutých šest řádků jako u push. */
+export function buildWaText(t) {
+    return [
+        `*Bižuterie — los ${t.currentRound}. kola*`,
+        t.name ? `_${t.name}_` : null,
+        '',
+        ...(t.pairings || []).map(pairingLine),
+        '',
+        'https://www.sachyjablonec.cz/pardubice',
+    ].filter(x => x !== null).join('\n');
+}
+
 /**
  * Pošle upozornění, jakmile je venku los kola, o kterém jsme ještě nedali vědět.
  * Klíčem je (turnaj, kolo) v čerstvém stavu — po restartu kontejneru se stav
@@ -306,14 +323,30 @@ async function announceNewPairings(previous, current) {
     const brandNew = freshNow.filter(t => !wasFresh.has(`${t.tnr}:${t.currentRound}`));
     if (!brandNew.length) return;
 
+    // Studený start (prázdná cache po deployi nebo resetu DB): všechno je „nové",
+    // ale rozesílat starý los nedává smysl. Klíče jen zapíšeme jako vyřízené.
+    if (!previous) {
+        for (const t of brandNew) await markNotified(CAMP_CODE, 'whatsapp', `${t.tnr}:${t.currentRound}`);
+        return;
+    }
+
+    // web-push: jeden souhrn přes všechny turnaje, krátký (vejde se do notifikace)
     const round = brandNew[0].currentRound;
-    const lines = brandNew.flatMap(t => (t.pairings || []).map(p =>
-        `${p.name}: deska ${p.board}, ${p.color === 'white' ? 'bílé' : 'černé'}, ${p.opponent || 'volno'}`));
+    const lines = brandNew.flatMap(t => (t.pairings || []).map(pairingLine));
     await notify(CAMP_CODE, {
         title: `Los ${round}. kola je venku`,
         body: lines.slice(0, 6).join('\n') + (lines.length > 6 ? `\n…a další (${lines.length} celkem)` : ''),
         url: '/pardubice',
     });
+
+    // WhatsApp: zvlášť za každý turnaj — losují se nezávisle a zpráva má být
+    // rovnou přeposlatelná do skupiny, tedy celá.
+    if (!isWaConfigured()) return;
+    for (const t of brandNew) {
+        const key = `${t.tnr}:${t.currentRound}`;
+        if (!await claimNotify(CAMP_CODE, 'whatsapp', key)) continue;
+        await sendWhatsapp(buildWaText(t));
+    }
 }
 
 /** Vrátí snapshot z cache; obnoví, jen když je starší než REFRESH_MS. */

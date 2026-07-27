@@ -22,32 +22,32 @@ model User {
   id               Int       @id @default(autoincrement())
   username         String    @unique
   email            String    @unique
-  passwordHash     String?   @map("password_hash")  // Optional for OAuth users
-  googleId         String?   @unique @map("google_id")  // Google OAuth ID
-  realName         String?   @map("real_name")  // Actual name (editable)
-  club             String?   // Club affiliation (editable)
+  passwordHash     String?   @map("password_hash") // Optional for OAuth users
+  googleId         String?   @unique @map("google_id") // Google OAuth ID
+  realName         String?   @map("real_name") // Actual name (editable)
+  club             String? // Club affiliation (editable)
   useRealName      Boolean   @default(false) @map("use_real_name") // Show real name in comments?
   role             Role      @default(USER)
-  resetToken       String?   @map("reset_token")  // Password reset token
-  resetTokenExpiry DateTime? @map("reset_token_expiry")  // Token expiration
-  lastLogin        DateTime? @map("last_login")  // Last login timestamp
+  resetToken       String?   @map("reset_token") // Password reset token
+  resetTokenExpiry DateTime? @map("reset_token_expiry") // Token expiration
+  lastLogin        DateTime? @map("last_login") // Last login timestamp
   createdAt        DateTime  @default(now()) @map("created_at")
-  
-  authoredNews    News[]   @relation("NewsAuthor")
-  coAuthoredNews  News[]   @relation("NewsCoAuthor")
+
+  authoredNews              News[]              @relation("NewsAuthor")
+  coAuthoredNews            News[]              @relation("NewsCoAuthor")
   puzzleResults             PuzzleRaceResult[]
   puzzleCampAttempts        PuzzleCampAttempt[]
   createdPuzzleCampSessions PuzzleCampSession[] @relation("PuzzleCampCreator")
-  recordedGames   GameRecorded[]
-  comments        Comment[]
-  announcements   Announcement[]
-  documents       Document[]
-  travelReports   TravelReport[]
-  forumTopics     ForumTopic[]
-  forumPosts      ForumPost[]
-  diagrams        Diagram[]
-  fragments       Fragment[]
-  
+  recordedGames             GameRecorded[]
+  comments                  Comment[]
+  announcements             Announcement[]
+  documents                 Document[]
+  travelReports             TravelReport[]
+  forumTopics               ForumTopic[]
+  forumPosts                ForumPost[]
+  diagrams                  Diagram[]
+  fragments                 Fragment[]
+
   @@map("users")
 }
 
@@ -62,11 +62,11 @@ model Comment {
   deletedBy Int?     @map("deleted_by") // user ID who deleted it
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
-  
-  news      News     @relation(fields: [newsId], references: [id], onDelete: Cascade)
-  author    User     @relation(fields: [authorId], references: [id])
-  parent    Comment? @relation("CommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
-  replies   Comment[] @relation("CommentReplies")
+
+  news    News      @relation(fields: [newsId], references: [id], onDelete: Cascade)
+  author  User      @relation(fields: [authorId], references: [id])
+  parent  Comment?  @relation("CommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
+  replies Comment[] @relation("CommentReplies")
 
   @@index([newsId])
   @@index([authorId])
@@ -83,50 +83,50 @@ model Message {
 }
 
 model News {
-  id            Int       @id @default(autoincrement())
+  id            Int      @id @default(autoincrement())
   title         String
-  slug          String    @unique
+  slug          String   @unique
   category      String
   excerpt       String
   content       String?
-  thumbnailUrl  String?   @map("thumbnail_url")
-  linkUrl       String?   @map("link_url")
-  gamesJson     String?   @map("games_json")
-  teamsJson     String?   @map("teams_json")
-  galleryJson   String?   @map("gallery_json")
-  introJson     String?   @map("intro_json")
-  publishedDate DateTime  @map("published_date")
-  createdAt     DateTime  @default(now()) @map("created_at")
-  updatedAt     DateTime  @updatedAt @map("updated_at")
-  isPublished   Boolean   @default(false) @map("is_published")
-  
+  thumbnailUrl  String?  @map("thumbnail_url")
+  linkUrl       String?  @map("link_url")
+  gamesJson     String?  @map("games_json")
+  teamsJson     String?  @map("teams_json")
+  galleryJson   String?  @map("gallery_json")
+  introJson     String?  @map("intro_json")
+  publishedDate DateTime @map("published_date")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+  isPublished   Boolean  @default(false) @map("is_published")
+
   // Author - defaults to creator, can be overridden
-  authorId      Int?      @map("author_id")
-  authorName    String?   @map("author_name")  // Custom name if not from user
-  
+  authorId   Int?    @map("author_id")
+  authorName String? @map("author_name") // Custom name if not from user
+
   // Co-author (optional)
-  coAuthorId    Int?      @map("co_author_id")
-  coAuthorName  String?   @map("co_author_name")  // Custom name if not from user
-  
-  author        User?     @relation("NewsAuthor", fields: [authorId], references: [id])
-  coAuthor      User?     @relation("NewsCoAuthor", fields: [coAuthorId], references: [id])
-  matchReport   MatchReport?
-  games         Game[]
-  comments      Comment[]
-  
+  coAuthorId   Int?    @map("co_author_id")
+  coAuthorName String? @map("co_author_name") // Custom name if not from user
+
+  author      User?        @relation("NewsAuthor", fields: [authorId], references: [id])
+  coAuthor    User?        @relation("NewsCoAuthor", fields: [coAuthorId], references: [id])
+  matchReport MatchReport?
+  games       Game[]
+  comments    Comment[]
+
   // Stats
-  viewCount     Int       @default(0) @map("view_count")
+  viewCount Int @default(0) @map("view_count")
 
   // Facebook sharing
-  facebookPostId    String?   @map("facebook_post_id")
-  facebookSharedAt  DateTime? @map("facebook_shared_at")
-  facebookMessage   String?   @map("facebook_message")
+  facebookPostId   String?   @map("facebook_post_id")
+  facebookSharedAt DateTime? @map("facebook_shared_at")
+  facebookMessage  String?   @map("facebook_message")
 
   // Instagram Stories sharing
-  instagramStoryIds   String?   @map("instagram_story_ids")   // JSON array of IG media IDs
-  instagramSharedAt   DateTime? @map("instagram_shared_at")
+  instagramStoryIds String?   @map("instagram_story_ids") // JSON array of IG media IDs
+  instagramSharedAt DateTime? @map("instagram_shared_at")
 
-  images        Image[]
+  images Image[]
 
   @@index([isPublished, publishedDate])
   @@index([category])
@@ -134,46 +134,46 @@ model News {
 }
 
 model MatchReport {
-  id          Int      @id @default(autoincrement())
-  newsId      Int      @unique @map("news_id")
-  matchDate   DateTime @map("match_date")
-  teamAName   String   @map("team_a_name")
-  teamBName   String   @map("team_b_name")
-  scoreA      Int?     @map("score_a")
-  scoreB      Int?     @map("score_b")
-  reportText  String?  @map("report_text")
-  createdAt   DateTime @default(now()) @map("created_at")
-  
-  news        News     @relation(fields: [newsId], references: [id], onDelete: Cascade)
-  games       Game[]
-  
+  id         Int      @id @default(autoincrement())
+  newsId     Int      @unique @map("news_id")
+  matchDate  DateTime @map("match_date")
+  teamAName  String   @map("team_a_name")
+  teamBName  String   @map("team_b_name")
+  scoreA     Int?     @map("score_a")
+  scoreB     Int?     @map("score_b")
+  reportText String?  @map("report_text")
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  news  News   @relation(fields: [newsId], references: [id], onDelete: Cascade)
+  games Game[]
+
   @@map("match_reports")
 }
 
 model Game {
-  id            Int      @id @default(autoincrement())
-  gameTitle     String   @map("game_title")
-  chessComId    String   @map("chess_com_id")
-  whitePlayer   String?  @map("white_player")
-  blackPlayer   String?  @map("black_player")
+  id            Int     @id @default(autoincrement())
+  gameTitle     String  @map("game_title")
+  chessComId    String  @map("chess_com_id")
+  whitePlayer   String? @map("white_player")
+  blackPlayer   String? @map("black_player")
   team          String?
-  positionOrder Int?     @map("position_order")
-  isCommented   Boolean  @default(false) @map("is_commented")
-  
+  positionOrder Int?    @map("position_order")
+  isCommented   Boolean @default(false) @map("is_commented")
+
   // Flexible relations - game can belong to report OR news
-  reportId      Int?     @map("report_id")
-  newsId        Int?     @map("news_id")
-  
-  report        MatchReport? @relation(fields: [reportId], references: [id], onDelete: Cascade)
-  news          News?        @relation(fields: [newsId], references: [id], onDelete: Cascade)
-  
-  pgn           String?  @map("pgn")
+  reportId Int? @map("report_id")
+  newsId   Int? @map("news_id")
+
+  report MatchReport? @relation(fields: [reportId], references: [id], onDelete: Cascade)
+  news   News?        @relation(fields: [newsId], references: [id], onDelete: Cascade)
+
+  pgn             String?   @map("pgn")
   puzzleScannedAt DateTime? @map("puzzle_scanned_at")
 
   puzzleCandidates PuzzleCandidate[]
 
-  @@map("games")
   @@index([chessComId])
+  @@map("games")
 }
 
 model PuzzleCandidate {
@@ -199,16 +199,16 @@ model PuzzleCandidate {
   motifs       String?
   forcingLen   Int?      @map("forcing_len")
   cpGap        Int?      @map("cp_gap")
-  solutionLine String?   @map("solution_line")  // celá vynucená varianta (UCI, CSV)
-  solutionSan  String?   @map("solution_san")   // varianta v SAN pro zobrazení
-  rating       Int       @default(0)             // agregát hlasů (suma value)
+  solutionLine String?   @map("solution_line") // celá vynucená varianta (UCI, CSV)
+  solutionSan  String?   @map("solution_san") // varianta v SAN pro zobrazení
+  rating       Int       @default(0) // agregát hlasů (suma value)
   voteCount    Int       @default(0) @map("vote_count")
   dismissed    Boolean   @default(false)
   usedInNewsId Int?      @map("used_in_news_id")
   createdAt    DateTime  @default(now()) @map("created_at")
 
-  game         Game      @relation(fields: [gameId], references: [id], onDelete: Cascade)
-  votes        PuzzleVote[]
+  game  Game         @relation(fields: [gameId], references: [id], onDelete: Cascade)
+  votes PuzzleVote[]
 
   @@unique([gameId, ply])
   @@index([score])
@@ -216,14 +216,14 @@ model PuzzleCandidate {
 }
 
 model PuzzleVote {
-  id          Int             @id @default(autoincrement())
-  candidateId Int             @map("candidate_id")
-  userId      Int?            @map("user_id")
-  value       Int             // -1 špatná, 1 dobrá, 2 skvělá
-  source      String          @default("admin") // admin / member / solver
-  createdAt   DateTime        @default(now()) @map("created_at")
+  id          Int      @id @default(autoincrement())
+  candidateId Int      @map("candidate_id")
+  userId      Int?     @map("user_id")
+  value       Int // -1 špatná, 1 dobrá, 2 skvělá
+  source      String   @default("admin") // admin / member / solver
+  createdAt   DateTime @default(now()) @map("created_at")
 
-  candidate   PuzzleCandidate @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+  candidate PuzzleCandidate @relation(fields: [candidateId], references: [id], onDelete: Cascade)
 
   @@unique([candidateId, userId])
   @@index([candidateId])
@@ -237,7 +237,7 @@ model PuzzleSolve {
   userId      Int?     @map("user_id")
   username    String?
   candidateId Int      @map("candidate_id")
-  dateKey     String   @map("date_key")   // YYYY-MM-DD dne hádanky
+  dateKey     String   @map("date_key") // YYYY-MM-DD dne hádanky
   solvedAt    DateTime @default(now()) @map("solved_at")
 
   @@unique([userId, dateKey])
@@ -256,8 +256,8 @@ model Image {
   sortOrder    Int      @default(0) @map("sort_order")
   isPublic     Boolean  @default(false) @map("is_public")
   uploadedAt   DateTime @default(now()) @map("uploaded_at")
-  
-  news         News?    @relation(fields: [newsId], references: [id], onDelete: SetNull)
+
+  news News? @relation(fields: [newsId], references: [id], onDelete: SetNull)
 
   @@map("images")
 }
@@ -267,9 +267,9 @@ model MemberRegistration {
   id          Int       @id @default(autoincrement())
   token       String    @unique
   status      String    @default("pending") // pending | submitted
-  note        String?   // pro koho odkaz je (interní poznámka)
-  data        Json?     // vyplněná pole žadatele
-  pdf         Bytes?    // vygenerovaná žádost (PDF)
+  note        String? // pro koho odkaz je (interní poznámka)
+  data        Json? // vyplněná pole žadatele
+  pdf         Bytes? // vygenerovaná žádost (PDF)
   createdBy   Int?      @map("created_by")
   createdAt   DateTime  @default(now()) @map("created_at")
   submittedAt DateTime? @map("submitted_at")
@@ -285,8 +285,8 @@ model MemberTransfer {
   status      String    @default("pending") // pending | filled | completed
   note        String?
   data        Json?
-  pdf         Bytes?    // vygenerované ohlášení (podpis hráče + razítko Bižuterie)
-  scan        Bytes?    // sken potvrzený mateřským oddílem
+  pdf         Bytes? // vygenerované ohlášení (podpis hráče + razítko Bižuterie)
+  scan        Bytes? // sken potvrzený mateřským oddílem
   scanMime    String?   @map("scan_mime")
   createdBy   Int?      @map("created_by")
   createdAt   DateTime  @default(now()) @map("created_at")
@@ -304,23 +304,23 @@ model Member {
   title     String?
   birthYear Int?    @map("birth_year")
   role      String?
-  
+
   @@map("members")
 }
 
 model Competition {
-  id        String   @id @default(uuid())
-  name      String
-  type      String   @default("chess-results")
-  url       String
-  category  String
+  id         String   @id @default(uuid())
+  name       String
+  type       String   @default("chess-results")
+  url        String
+  category   String
   chessczUrl String?  @map("chesscz_url")
   sortOrder  Int      @default(0) @map("sort_order")
-  active    Boolean  @default(true)
-  createdAt DateTime @default(now()) @map("created_at")
-  
+  active     Boolean  @default(true)
+  createdAt  DateTime @default(now()) @map("created_at")
+
   standings Standing[]
-  
+
   @@map("competitions")
 }
 
@@ -329,7 +329,7 @@ model Standing {
   competitionId String   @map("competition_id")
   team          String
   rank          Int
-  snr           Int?     // chess-results serial number (different from rank)
+  snr           Int? // chess-results serial number (different from rank)
   points        Float?
   wins          Int?
   draws         Int?
@@ -338,9 +338,9 @@ model Standing {
   score         Float?
   scheduleJson  String?  @map("schedule_json") @db.Text
   updatedAt     DateTime @updatedAt @map("updated_at")
-  
-  competition   Competition @relation(fields: [competitionId], references: [id], onDelete: Cascade)
-  
+
+  competition Competition @relation(fields: [competitionId], references: [id], onDelete: Cascade)
+
   @@unique([competitionId, team])
   @@map("standings")
 }
@@ -356,10 +356,9 @@ model BlicakRegistration {
   createdAt    DateTime @default(now()) @map("created_at")
   tournamentId String   @default("vanocni-2025") @map("tournament_id")
 
-  @@map("blicak_registrations")
   @@index([tournamentId])
+  @@map("blicak_registrations")
 }
-
 
 model SystemSetting {
   key   String @id
@@ -380,7 +379,7 @@ model PuzzleRaceResult {
   maxStreak    Int?     @default(0) @map("max_streak")
   puzzleCount  Int?     @default(0) @map("puzzle_count")
 
-  user         User?    @relation(fields: [userId], references: [id])
+  user User? @relation(fields: [userId], references: [id])
 
   @@index([createdAt])
   @@index([mode, createdAt])
@@ -389,34 +388,34 @@ model PuzzleRaceResult {
 }
 
 model GameRecorded {
-  id          Int      @id @default(autoincrement())
-  white       String
-  black       String
-  result      String   // "1-0", "0-1", "1/2-1/2", "*"
-  date        DateTime @default(now())
-  event       String?
-  pgn         String   @map("pgn_text")
-  uploadedBy  Int?     @map("uploaded_by")
-  createdAt   DateTime @default(now()) @map("created_at")
-  
-  user        User?    @relation(fields: [uploadedBy], references: [id])
+  id         Int      @id @default(autoincrement())
+  white      String
+  black      String
+  result     String // "1-0", "0-1", "1/2-1/2", "*"
+  date       DateTime @default(now())
+  event      String?
+  pgn        String   @map("pgn_text")
+  uploadedBy Int?     @map("uploaded_by")
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  user User? @relation(fields: [uploadedBy], references: [id])
 
   @@map("games_recorded")
 }
 
 model PuzzleRacerSettings {
-  id                    Int      @id @default(1)
-  puzzleTheme           String   @default("mix") @map("puzzle_theme")
-  timeLimitSeconds      Int      @default(180) @map("time_limit_seconds")
-  livesEnabled          Boolean  @default(true) @map("lives_enabled")
-  maxLives              Int      @default(3) @map("max_lives")
-  puzzlesPerDifficulty  Int      @default(6) @map("puzzles_per_difficulty")
-  penaltyEnabled        Boolean  @default(false) @map("penalty_enabled")
-  penaltySeconds        Int      @default(5) @map("penalty_seconds")
-  skipOnMistake         Boolean  @default(false) @map("skip_on_mistake")
-  randomizePuzzles      Boolean  @default(true) @map("randomize_puzzles")
-  fixedPuzzleSet        Json?    @map("fixed_puzzle_set")
-  updatedAt             DateTime @updatedAt @map("updated_at")
+  id                   Int      @id @default(1)
+  puzzleTheme          String   @default("mix") @map("puzzle_theme")
+  timeLimitSeconds     Int      @default(180) @map("time_limit_seconds")
+  livesEnabled         Boolean  @default(true) @map("lives_enabled")
+  maxLives             Int      @default(3) @map("max_lives")
+  puzzlesPerDifficulty Int      @default(6) @map("puzzles_per_difficulty")
+  penaltyEnabled       Boolean  @default(false) @map("penalty_enabled")
+  penaltySeconds       Int      @default(5) @map("penalty_seconds")
+  skipOnMistake        Boolean  @default(false) @map("skip_on_mistake")
+  randomizePuzzles     Boolean  @default(true) @map("randomize_puzzles")
+  fixedPuzzleSet       Json?    @map("fixed_puzzle_set")
+  updatedAt            DateTime @updatedAt @map("updated_at")
 
   @@map("puzzle_racer_settings")
 }
@@ -504,29 +503,29 @@ model Event {
   startDate   DateTime  @map("start_date")
   endDate     DateTime? @map("end_date")
   location    String?
-  
+
   // Event categorization
-  category    String    @default("tournament") // tournament, training, camp, meeting, other
-  ageGroup    String?   @map("age_group")      // youth, adults, all
-  eventType   String?   @map("event_type")     // individual, team
-  timeControl String?   @map("time_control")   // blitz, rapid, classical
-  
+  category    String  @default("tournament") // tournament, training, camp, meeting, other
+  ageGroup    String? @map("age_group") // youth, adults, all
+  eventType   String? @map("event_type") // individual, team
+  timeControl String? @map("time_control") // blitz, rapid, classical
+
   // Tournament-specific fields
   registrationDeadline DateTime? @map("registration_deadline") // přihlášky do
-  presentationEnd      DateTime? @map("presentation_end")      // konec prezentace
-  entryFee             String?   @map("entry_fee")             // startovné
-  organizerContact     String?   @map("organizer_contact")     // kontakt na pořadatele
-  url                  String?                                  // odkaz na stránky akce
-  
+  presentationEnd      DateTime? @map("presentation_end") // konec prezentace
+  entryFee             String?   @map("entry_fee") // startovné
+  organizerContact     String?   @map("organizer_contact") // kontakt na pořadatele
+  url                  String? // odkaz na stránky akce
+
   // Visibility
-  isInternal  Boolean   @default(false) @map("is_internal") // true = only MEMBER+
-  isPublic    Boolean   @default(true) @map("is_public")
-  isFeatured  Boolean   @default(false) @map("is_featured") // Shown in featured banner
-  
-  createdBy   Int?      @map("created_by")
-  createdAt   DateTime  @default(now()) @map("created_at")
-  updatedAt   DateTime  @updatedAt @map("updated_at")
-  
+  isInternal Boolean @default(false) @map("is_internal") // true = only MEMBER+
+  isPublic   Boolean @default(true) @map("is_public")
+  isFeatured Boolean @default(false) @map("is_featured") // Shown in featured banner
+
+  createdBy Int?     @map("created_by")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
   @@map("events")
 }
 
@@ -556,35 +555,34 @@ model TimelineEntry {
 // ==========================================
 
 model ChessGame {
-  id          Int       @id @default(autoincrement())
-  event       String?
-  site        String?
-  date        DateTime?
-  round       String?
-  whitePlayer String    @map("white_player")
-  blackPlayer String    @map("black_player")
-  result      String    // "1-0", "0-1", "1/2-1/2", "*"
-  eco         String?
-  whiteElo    Int?      @map("white_elo")
-  blackElo    Int?      @map("black_elo")
-  plyCount    Int?      @map("ply_count")
-  moves       String    @db.Text // SAN moves as string
-  
+  id              Int               @id @default(autoincrement())
+  event           String?
+  site            String?
+  date            DateTime?
+  round           String?
+  whitePlayer     String            @map("white_player")
+  blackPlayer     String            @map("black_player")
+  result          String // "1-0", "0-1", "1/2-1/2", "*"
+  eco             String?
+  whiteElo        Int?              @map("white_elo")
+  blackElo        Int?              @map("black_elo")
+  plyCount        Int?              @map("ply_count")
+  moves           String            @db.Text // SAN moves as string
+  blunderAnalyses BlunderAnalysis[]
+
   @@index([whitePlayer])
   @@index([blackPlayer])
   @@index([eco])
-  blunderAnalyses BlunderAnalysis[]
-
   @@index([date])
   @@map("chess_games")
 }
 
 model ChessMove {
-  id       Int    @id @default(autoincrement())
-  gameId   Int    @map("game_id")
-  plyNum   Int    @map("ply_num")  // 1 = first white move, 2 = first black, etc.
-  san      String // "e4", "Nf3", etc.
-  
+  id     Int    @id @default(autoincrement())
+  gameId Int    @map("game_id")
+  plyNum Int    @map("ply_num") // 1 = first white move, 2 = first black, etc.
+  san    String // "e4", "Nf3", etc.
+
   @@index([san, plyNum])
   @@index([gameId])
   @@map("chess_moves")
@@ -597,9 +595,9 @@ model Announcement {
   authorId  Int      @map("author_id")
   isPinned  Boolean  @default(false) @map("is_pinned")
   createdAt DateTime @default(now()) @map("created_at")
-  
-  author    User     @relation(fields: [authorId], references: [id])
-  
+
+  author User @relation(fields: [authorId], references: [id])
+
   @@map("announcements")
 }
 
@@ -612,9 +610,9 @@ model Document {
   visibility   String   @default("members") // members, admin
   uploadedById Int      @map("uploaded_by_id")
   createdAt    DateTime @default(now()) @map("created_at")
-  
-  uploadedBy   User     @relation(fields: [uploadedById], references: [id])
-  
+
+  uploadedBy User @relation(fields: [uploadedById], references: [id])
+
   @@map("documents")
 }
 
@@ -626,33 +624,33 @@ model TravelReport {
   to           String
   purpose      String
   distance     Int
-  vehicle      String   // car, bus, other
+  vehicle      String // car, bus, other
   licensePlate String?  @map("license_plate") // SPZ vozidla
-  passengers   String?  // Spolucestující (čárkou oddělená jména)
+  passengers   String? // Spolucestující (čárkou oddělená jména)
   status       String   @default("pending") // pending, approved, rejected
-  note         String?  // Admin note for approval/rejection
+  note         String? // Admin note for approval/rejection
   createdAt    DateTime @default(now()) @map("created_at")
-  
-  user         User     @relation(fields: [userId], references: [id])
-  
+
+  user User @relation(fields: [userId], references: [id])
+
   @@map("travel_reports")
 }
 
 // Discussion Forum
 model ForumTopic {
-  id          Int      @id @default(autoincrement())
-  title       String
-  content     String
-  authorId    Int      @map("author_id")
-  isPinned    Boolean  @default(false) @map("is_pinned")
-  isLocked    Boolean  @default(false) @map("is_locked")
-  viewCount   Int      @default(0) @map("view_count")
-  createdAt   DateTime @default(now()) @map("created_at")
-  updatedAt   DateTime @updatedAt @map("updated_at")
-  
-  author      User        @relation(fields: [authorId], references: [id])
-  posts       ForumPost[]
-  
+  id        Int      @id @default(autoincrement())
+  title     String
+  content   String
+  authorId  Int      @map("author_id")
+  isPinned  Boolean  @default(false) @map("is_pinned")
+  isLocked  Boolean  @default(false) @map("is_locked")
+  viewCount Int      @default(0) @map("view_count")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  author User        @relation(fields: [authorId], references: [id])
+  posts  ForumPost[]
+
   @@map("forum_topics")
 }
 
@@ -663,9 +661,9 @@ model ForumPost {
   authorId  Int      @map("author_id")
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
-  
-  topic     ForumTopic @relation(fields: [topicId], references: [id], onDelete: Cascade)
-  author    User       @relation(fields: [authorId], references: [id])
+
+  topic  ForumTopic @relation(fields: [topicId], references: [id], onDelete: Cascade)
+  author User       @relation(fields: [authorId], references: [id])
 
   @@index([topicId])
   @@map("forum_posts")
@@ -674,15 +672,15 @@ model ForumPost {
 model Diagram {
   id          Int      @id @default(autoincrement())
   fen         String
-  annotations Json     // Stores arrows, squares as JSON object
-  solution    Json?    // Interactive solver data (correct moves, comments)
+  annotations Json // Stores arrows, squares as JSON object
+  solution    Json? // Interactive solver data (correct moves, comments)
   name        String?
   description String?
   userId      Int?     @map("user_id") // Optional link to creator
   createdAt   DateTime @default(now()) @map("created_at")
-  
-  user        User?    @relation(fields: [userId], references: [id])
-  
+
+  user User? @relation(fields: [userId], references: [id])
+
   @@map("diagrams")
 }
 
@@ -699,7 +697,7 @@ model Fragment {
   userId       Int?     @map("user_id")
   createdAt    DateTime @default(now()) @map("created_at")
 
-  user         User?    @relation(fields: [userId], references: [id])
+  user User? @relation(fields: [userId], references: [id])
 
   @@map("fragments")
 }
@@ -708,7 +706,7 @@ model BlunderAnalysis {
   id            Int      @id @default(autoincrement())
   playerName    String   @map("player_name")
   gameId        Int      @map("game_id")
-  type          String   // "blunder" | "miss"
+  type          String // "blunder" | "miss"
   fenBefore     String   @map("fen_before")
   movePlayed    String   @map("move_played")
   movePlayedLAN String   @map("move_played_lan")
@@ -722,7 +720,7 @@ model BlunderAnalysis {
   isFeatured    Boolean  @default(false) @map("is_featured")
   createdAt     DateTime @default(now()) @map("created_at")
 
-  game          ChessGame @relation(fields: [gameId], references: [id], onDelete: Cascade)
+  game ChessGame @relation(fields: [gameId], references: [id], onDelete: Cascade)
 
   @@index([playerName])
   @@index([gameId])
@@ -776,20 +774,35 @@ model PushSubscriber {
   @@map("push_subscribers")
 }
 
+// Co už jsme kam ohlásili. Unikátní klíč je pojistka proti dvojímu odeslání —
+// snapshot se přestavuje jako vedlejší efekt požadavku, takže dva souběžné
+// požadavky by jinak poslaly tutéž zprávu dvakrát.
+model CampNotifyLog {
+  id       Int      @id @default(autoincrement())
+  campCode String   @map("camp_code")
+  channel  String
+  key      String
+  sentAt   DateTime @default(now()) @map("sent_at")
+
+  @@unique([campCode, channel, key])
+  @@index([campCode, channel, sentAt])
+  @@map("camp_notify_log")
+}
+
 // Cache poslední stažené podoby dashboardu (web nikdy nesahá na chess-results přímo)
 model CampSnapshot {
-  id           String   @id
-  payloadJson  String   @map("payload_json")
-  fetchedAt    DateTime @default(now()) @map("fetched_at")
+  id          String   @id
+  payloadJson String   @map("payload_json")
+  fetchedAt   DateTime @default(now()) @map("fetched_at")
 
   @@map("camp_snapshots")
 }
 
 model TrackedPlayer {
   id        Int      @id @default(autoincrement())
-  fullName  String   @map("full_name")   // "Příjmení, Jméno" — formát chess-results
-  sscrId    String?  @map("sscr_id")     // Ident-číslo ŠSČR z karty hráče (nejspolehlivější identifikátor)
-  club      String?                      // za koho je registrovaný (proč je ve watchlistu)
+  fullName  String   @map("full_name") // "Příjmení, Jméno" — formát chess-results
+  sscrId    String?  @map("sscr_id") // Ident-číslo ŠSČR z karty hráče (nejspolehlivější identifikátor)
+  club      String? // za koho je registrovaný (proč je ve watchlistu)
   note      String?
   active    Boolean  @default(true)
   createdBy Int?     @map("created_by")
