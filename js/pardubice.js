@@ -4,6 +4,14 @@
     const root = document.getElementById('pdRoot');
     const esc = (s) => { const d = document.createElement('div'); d.textContent = s ?? ''; return d.innerHTML; };
     const fmtPts = (n) => (n === null || n === undefined) ? '?' : String(n).replace('.', ',');
+    // české skloňování: 1 bod · 2-4 body · 5+ bodů · desetinné 2,5 bodu
+    const bodySlovo = (n) => {
+        if (n === null || n === undefined) return 'bodů';
+        if (!Number.isInteger(n)) return 'bodu';
+        if (n === 1) return 'bod';
+        if (n >= 2 && n <= 4) return 'body';
+        return 'bodů';
+    };
 
     // výsledek partie z pohledu našeho hráče
     function myResult(g) {
@@ -82,8 +90,8 @@
                 </div>
             </div>
             <div class="pd-kpis">
-                <div class="pd-kpi"><b>${fmtPts(s.points)}</b><span>bodů celkem</span></div>
-                <div class="pd-kpi"><b>${s.games || 0}</b><span>odehraných partií</span></div>
+                <div class="pd-kpi"><b>${fmtPts(s.points)}</b><span>${bodySlovo(s.points)} celkem</span></div>
+                <div class="pd-kpi"><b>${s.games || 0}</b><span>${s.games === 1 ? 'odehraná partie' : (s.games >= 2 && s.games <= 4 ? 'odehrané partie' : 'odehraných partií')}</span></div>
                 <div class="pd-kpi"><b>${s.scorePct ?? '–'} %</b><span>úspěšnost výpravy</span></div>
                 ${s.bestScalp ? `<div class="pd-kpi"><b style="font-size:1rem; line-height:1.3;">${esc(s.bestScalp.player.split(' ')[0])}</b><span>skalp ${s.bestScalp.opponentRating}</span></div>` : ''}
             </div>
@@ -151,7 +159,7 @@
                 return `<div class="pd-player">
                         <div class="pd-pname">${esc(p.name)} ${p.role ? `<span style="font-size:0.68rem; color:var(--primary-color); font-weight:400;">${esc(p.role)}</span>` : ''}</div>
                         <div class="pd-pmeta">${p.birthYear ? `roč. ${p.birthYear}` : ''}${p.rating ? ` · ELO ${p.rating}` : ''}</div>
-                        <div class="pd-prow"><span class="pd-pts">${fmtPts(p.points)}</span><span class="pd-rank">bodů · ${p.rank}. místo</span></div>
+                        <div class="pd-prow"><span class="pd-pts">${fmtPts(p.points)}</span><span class="pd-rank">${bodySlovo(p.points)} · ${p.rank}. místo</span></div>
                         <div class="pd-games">${games}</div>
                         <div class="pd-tag">${tag}</div>
                     </div>`;
