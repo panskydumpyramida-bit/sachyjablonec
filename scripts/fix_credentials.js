@@ -6,8 +6,13 @@ const prisma = new PrismaClient();
 async function main() {
     console.log('Starting credential fix...');
 
-    // Default password for all admins
-    const password = 'sachy2025';
+    // Password for all admins — nikdy nezapisovat natvrdo, repo je veřejné
+    const password = process.env.SEED_PASSWORD;
+    if (!password) {
+        console.error('❌ Chybí proměnná SEED_PASSWORD.');
+        console.error('   Spusť skript takto: SEED_PASSWORD="<heslo>" node scripts/fix_credentials.js');
+        process.exit(1);
+    }
     const hash = await bcrypt.hash(password, 10);
 
     const admins = [
@@ -31,7 +36,7 @@ async function main() {
                     role: 'ADMIN'
                 }
             });
-            console.log(`✅ Fixed credentials for: ${admin.username} (Password: ${password})`);
+            console.log(`✅ Fixed credentials for: ${admin.username}`);
         } catch (e) {
             console.error(`❌ Failed to fix ${admin.username}:`, e.message);
         }
