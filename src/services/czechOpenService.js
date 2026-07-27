@@ -22,8 +22,10 @@ function pragueHour() {
 }
 function refreshMs() {
     const h = pragueHour();
-    if (h >= 20 && h <= 23) return 3 * 60 * 1000;   // okno losu — nejhustěji
-    if (h >= 13 && h < 20) return 6 * 60 * 1000;    // hraje se, průběžné výsledky
+    // Los může padnout dřív, když se turnaj dohraje rychle (od ~19:00), a každý
+    // dílčí turnaj se losuje nezávisle — proto široké husté okno.
+    if (h >= 18 && h <= 23) return 3 * 60 * 1000;   // okno losu
+    if (h >= 13 && h < 18) return 6 * 60 * 1000;    // hraje se
     if (h >= 8 && h < 13) return 15 * 60 * 1000;    // dopoledne klid
     return 45 * 60 * 1000;                          // noc
 }
@@ -111,13 +113,19 @@ async function loadTournament(tnr, players) {
                 .map(p => {
                     const iAmWhite = mine.has(p.whiteStartNo);
                     const me = iAmWhite ? p.whiteStartNo : p.blackStartNo;
+                    const mePlayer = out.players.find(x => x.startNo === me);
+                    // rating soupeře párování nenese — dohledáme ho v kartě hráče,
+                    // ale ta má partii až po odehrání (u čerstvého losu tedy chybí)
+                    const card = (mePlayer?.games || []).find(g => Number(g.round) === rd);
                     return {
                         board: p.board ?? null,
                         startNo: me,
-                        name: out.players.find(x => x.startNo === me)?.name || null,
+                        name: mePlayer?.name || null,
+                        rating: mePlayer?.rating ?? null,
                         color: iAmWhite ? 'white' : 'black',
                         opponent: (iAmWhite ? p.blackName : p.whiteName) || null,
                         opponentStartNo: iAmWhite ? p.blackStartNo : p.whiteStartNo,
+                        opponentRating: card?.opponentRating ?? null,
                         // barva SOUPEŘE — pro přípravu v naší databázi partií
                         opponentColor: iAmWhite ? 'black' : 'white',
                         result: p.result || null,
@@ -160,9 +168,11 @@ async function loadWarmup() {
                 correct: a.correctCount ?? 0,
                 wrong: a.wrongCount ?? 0,
                 streak: a.maxStreak ?? 0,
-                // 'playing' zůstane viset, když hráč session nedohraje a odejde —
-                // za běžící ho považujeme jen chvíli po poslední aktivitě
-                inProgress: a.status === 'playing' && (Date.now() - new Date(a.updatedAt || a.joinedAt).getTime()) < 30 * 60 * 1000,
+                // 'playing' zůstane viset dvěma způsoby: hráč odejde, nebo mu DOJDOU úlohy
+                // (vyřeší celou sadu a klient konec neohlásí). Ani jedno není „právě hraje".
+                inProgress: a.status === 'playing'
+                    && !(a.puzzleCount && (a.correctCount + a.wrongCount) >= a.puzzleCount)
+                    && (Date.now() - new Date(a.updatedAt || a.joinedAt).getTime()) < 30 * 60 * 1000,
             })),
         };
     } catch (e) {
