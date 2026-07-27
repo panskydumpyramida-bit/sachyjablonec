@@ -159,6 +159,10 @@ async function loadTournament(tnr, players) {
             out.currentRound = rd;
             out.roundState = st.state;
             out.roundStats = st;
+            // Karta hráče nese i nedohranou partii, takže `played` může ukazovat na kolo,
+            // které se teprve bude hrát — pak se marně ptáme na los toho následujícího.
+            // Na los dalšího kola se čeká, jen když je tohle dohrané.
+            if (st.state !== 'finished') delete out.nextRoundPending;
             break;
         } catch (e) { /* kolo ještě není */ }
     }
