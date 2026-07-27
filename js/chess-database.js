@@ -84,6 +84,14 @@ const ChessDB = {
         // Restore player from URL if present
         const urlParams = new URLSearchParams(window.location.search);
         const playerFromUrl = urlParams.get('player');
+        // ?color=white|black — příprava na soupeře v barvě, kterou bude mít v partii
+        const colorFromUrl = urlParams.get('color');
+        if (colorFromUrl && ['white', 'black', 'both'].includes(colorFromUrl)) {
+            this.currentColor = colorFromUrl;
+            document.querySelectorAll('.filter-btn[data-color]').forEach(b => {
+                b.classList.toggle('active', b.dataset.color === colorFromUrl);
+            });
+        }
         if (playerFromUrl) {
             this.selectPlayer(playerFromUrl);
         }
@@ -183,6 +191,8 @@ const ChessDB = {
         // Update URL with player name for persistence
         const url = new URL(window.location);
         url.searchParams.set('player', name);
+        if (this.currentColor && this.currentColor !== 'both') url.searchParams.set('color', this.currentColor);
+        else url.searchParams.delete('color');
         window.history.replaceState({}, '', url);
 
         await Promise.all([this.loadGames(), this.loadOpeningTree()]);
