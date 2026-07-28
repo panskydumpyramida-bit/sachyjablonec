@@ -434,6 +434,7 @@
 
     // ---------- ROZCVIČKA ----------
     const hracSlovo = (n) => n === 1 ? 'hráč' : (n < 5 ? 'hráči' : 'hráčů');
+    const denSlovo = (n) => n === 1 ? 'den' : (n < 5 ? 'dny' : 'dnů');
 
     // který žebříček je zrovna vybraný: 'total' nebo id dne
     let warmupTab = 'total';
@@ -453,7 +454,7 @@
             </div>
             <div class="pd-prog">
                 <span class="tr"><i style="width:${Math.round((x.score || 0) / maxScore * 100)}%"></i></span>
-                <span>${x.correct} správně · série ${x.streak}${celkovy ? ` · ${x.days}× ${hracSlovo(x.days) === 'hráč' ? 'den' : 'dnů'}` : ''}</span>
+                <span>${x.correct} správně · série ${x.streak}${celkovy ? ` · ${x.days} ${denSlovo(x.days)}` : ''}</span>
             </div>
         </div>`).join('');
     }
@@ -468,7 +469,7 @@
         if (!list.length) return '<div class="pd-row"><div class="pd-note">Z téhle rozcvičky zatím výsledky nemáme.</div></div>';
 
         const nadpis = celkovy
-            ? `Celkem za ${(w.days || []).length} ${(w.days || []).length === 1 ? 'den' : ((w.days || []).length < 5 ? 'dny' : 'dnů')}`
+            ? `Celkem za ${(w.days || []).length} ${denSlovo((w.days || []).length)}`
             : `${den.label} · ${den.title}`;
         return `<div class="pd-lbhead">
                 <div class="pd-label">${esc(nadpis)} · ${list.length} ${hracSlovo(list.length)}</div>
@@ -529,7 +530,7 @@
                 <div>
                     <div class="pd-label">Výprava dohromady</div>
                     <h4>${totalPuzzles} úloh · ${totalScore.toLocaleString('cs-CZ')} b.</h4>
-                    <p>${total.length} ${hracSlovo(total.length)} za ${days.length} ${days.length === 1 ? 'den' : (days.length < 5 ? 'dny' : 'dnů')}.</p>
+                    <p>${total.length} ${hracSlovo(total.length)} za ${days.length} ${denSlovo(days.length)}.</p>
                 </div>
             </div>
 
