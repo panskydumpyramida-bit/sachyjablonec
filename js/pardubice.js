@@ -433,16 +433,15 @@
     }
 
     // ---------- ROZCVIČKA ----------
-    function renderWarmup(d) {
-        if (!d.warmup?.results?.length) return '';
-        const r = d.warmup.results;
-        const noMiss = r.find(x => x.wrong === 0 && x.correct > 5);
-        const bestStreak = [...r].sort((a, b) => b.streak - a.streak)[0];
-        const totalPuzzles = r.reduce((s, x) => s + x.correct + x.wrong, 0);
-        const totalScore = r.reduce((s, x) => s + (x.score || 0), 0);
-        const maxScore = Math.max(1, ...r.map(x => x.score || 0));
+    const hracSlovo = (n) => n === 1 ? 'hráč' : (n < 5 ? 'hráči' : 'hráčů');
 
-        const rows = r.map(x => `<div class="pd-row">
+    // který žebříček je zrovna vybraný: 'total' nebo id dne
+    let warmupTab = 'total';
+    let warmupData = null;
+
+    function warmupRows(list, celkovy) {
+        const maxScore = Math.max(1, ...list.map(x => x.score || 0));
+        return list.map(x => `<div class="pd-row">
             <div class="pd-rowin">
                 <div class="pd-pos">${x.order}</div>
                 <div class="pd-av sm">${esc(initials(x.name))}</div>
@@ -454,14 +453,67 @@
             </div>
             <div class="pd-prog">
                 <span class="tr"><i style="width:${Math.round((x.score || 0) / maxScore * 100)}%"></i></span>
-                <span>${x.correct} správně · série ${x.streak}</span>
+                <span>${x.correct} správně · série ${x.streak}${celkovy ? ` · ${x.days}× ${hracSlovo(x.days) === 'hráč' ? 'den' : 'dnů'}` : ''}</span>
             </div>
         </div>`).join('');
+    }
+
+    /** Obsah vybrané záložky — přepíná se bez načítání stránky. */
+    function renderWarmupPanel() {
+        const w = warmupData;
+        if (!w) return '';
+        const celkovy = warmupTab === 'total';
+        const den = celkovy ? null : (w.days || []).find(x => String(x.id) === String(warmupTab));
+        const list = celkovy ? (w.total || []) : (den?.results || []);
+        if (!list.length) return '<div class="pd-row"><div class="pd-note">Z téhle rozcvičky zatím výsledky nemáme.</div></div>';
+
+        const nadpis = celkovy
+            ? `Celkem za ${(w.days || []).length} ${(w.days || []).length === 1 ? 'den' : ((w.days || []).length < 5 ? 'dny' : 'dnů')}`
+            : `${den.label} · ${den.title}`;
+        return `<div class="pd-lbhead">
+                <div class="pd-label">${esc(nadpis)} · ${list.length} ${hracSlovo(list.length)}</div>
+                <div style="font:500 12px Inter,sans-serif; color:#75757e;">body · správně · nejdelší série</div>
+            </div>
+            ${warmupRows(list, celkovy)}`;
+    }
+
+    function bindWarmupTabs() {
+        document.querySelectorAll('[data-wtab]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                warmupTab = btn.dataset.wtab;
+                document.querySelectorAll('[data-wtab]').forEach(b => b.classList.toggle('on', b === btn));
+                const panel = document.getElementById('pdWarmupPanel');
+                if (panel) panel.innerHTML = renderWarmupPanel();
+            });
+        });
+    }
+
+    function renderWarmup(d) {
+        const w = d.warmup;
+        if (!w) return '';
+        // starší snapshot zná jen jeden den — dorovnáme ho do nové podoby
+        const days = w.days?.length ? w.days
+            : (w.results?.length ? [{ id: 'x', title: w.title || 'Rozcvička', label: 'Rozcvička', results: w.results }] : []);
+        if (!days.length) return '';
+        const total = w.total?.length ? w.total : days[0].results.map(r => ({ ...r, days: 1 }));
+        warmupData = { days, total };
+        if (warmupTab !== 'total' && !days.some(x => String(x.id) === String(warmupTab))) warmupTab = 'total';
+
+        // ukazatele počítáme přes celý pobyt, ne jen přes poslední den
+        const vsechny = days.flatMap(x => x.results);
+        const noMiss = vsechny.filter(x => x.wrong === 0 && x.correct > 5).sort((a, b) => b.correct - a.correct)[0];
+        const bestStreak = [...vsechny].sort((a, b) => b.streak - a.streak)[0];
+        const totalPuzzles = vsechny.reduce((s, x) => s + x.correct + x.wrong, 0);
+        const totalScore = vsechny.reduce((s, x) => s + (x.score || 0), 0);
+
+        const tabs = [`<button type="button" class="pd-tab${warmupTab === 'total' ? ' on' : ''}" data-wtab="total">Celkem</button>`]
+            .concat(days.map(x => `<button type="button" class="pd-tab${String(warmupTab) === String(x.id) ? ' on' : ''}" data-wtab="${esc(x.id)}" title="${esc(x.title)}">${esc(x.label)}</button>`))
+            .join('');
 
         return `<section class="pd-sec">
             <div class="pd-eyebrow">Rozcvička · Puzzle Racer Pardubice 2026</div>
             <h2 class="pd-h2">Žebříček denní rozcvičky</h2>
-            <p class="pd-lead">Pár minut úloh před kolem — a hrát se dá kdykoli znovu. Tady jsou výsledky z rozcvičky „${esc(d.warmup.title)}".</p>
+            <p class="pd-lead">Pár minut úloh před kolem. Přepni si celkové pořadí za celý pobyt, nebo jednotlivý den.</p>
 
             <div class="pd-hl">
                 ${noMiss ? `<div class="gold">
@@ -477,16 +529,14 @@
                 <div>
                     <div class="pd-label">Výprava dohromady</div>
                     <h4>${totalPuzzles} úloh · ${totalScore.toLocaleString('cs-CZ')} b.</h4>
-                    <p>${r.length} ${r.length === 1 ? 'hráč' : (r.length < 5 ? 'hráči' : 'hráčů')} v téhle rozcvičce.</p>
+                    <p>${total.length} ${hracSlovo(total.length)} za ${days.length} ${days.length === 1 ? 'den' : (days.length < 5 ? 'dny' : 'dnů')}.</p>
                 </div>
             </div>
 
+            <div class="pd-tabs" role="tablist">${tabs}</div>
+
             <div class="pd-lb">
-                <div class="pd-lbhead">
-                    <div class="pd-label">${esc(d.warmup.title)} · ${r.length} ${r.length === 1 ? 'hráč' : (r.length < 5 ? 'hráči' : 'hráčů')}</div>
-                    <div style="font:500 12px Inter,sans-serif; color:#75757e;">body · správně · nejdelší série</div>
-                </div>
-                ${rows}
+                <div id="pdWarmupPanel">${renderWarmupPanel()}</div>
                 <div style="display:flex; flex-wrap:wrap; align-items:center; gap:12px; margin-top:16px; padding-top:14px; border-top:1px solid #26262c;">
                     <a class="pd-btn ghost" href="/puzzle-racer"><i class="fa-solid fa-bolt"></i> Zahrát si rozcvičku</a>
                 </div>
@@ -577,6 +627,7 @@
             root.innerHTML = renderHero(d) + renderPairings(d) + renderPlayers(d) + renderCharts(d)
                 + renderWarmup(d) + renderSubscribe(d);
             startClock();
+            bindWarmupTabs();
             initSubscribe();
         } catch (e) {
             root.innerHTML = `<div class="pd-sec"><div class="pd-card" style="text-align:center; padding:2.5rem 1rem;">

@@ -2071,6 +2071,8 @@ async function finishCampAttempt() {
 
 let puzzleCampLeaderboardData = null;
 let selectedPuzzleCampSessionId = null;
+// která záložka žebříčku je vybraná: 'total' nebo id dne
+let campLeaderTab = 'total';
 let puzzleCampLeaderboardRequestId = 0;
 
 function renderCampLivePulse(liveLeader = null) {
@@ -2129,44 +2131,99 @@ function renderPuzzleCampLeaderboard(data) {
         </div>
     `).join('') || '<div class="camp-matrix-empty" style="grid-column:1/-1">První body teprve čekají na svého majitele.</div>';
 
-    standingsBody.innerHTML = data.standings.map(player => `
-        <tr class="${player.userId === loggedInUser?.id ? 'is-current-player' : ''}">
-            <td>${player.rank}</td>
-            <td>${escapeHtml(player.playerName)}${player.userId === loggedInUser?.id ? ' · vy' : ''}<small class="camp-level-tag">${player.level.icon} ${escapeHtml(player.level.name)}</small>${renderCampMotivationalBadges(player.badges)}<span class="camp-mobile-stats"><span>${player.correctCount} úloh</span><span>${player.attendance}× účast</span><span>${player.wins}× výhra</span><span>série ${player.maxStreak}</span></span></td>
-            <td class="camp-score-cell"><strong>${player.score}</strong><small>bodů</small></td>
-            <td>${player.correctCount}</td>
-            <td>${player.attendance}×</td>
-            <td>${player.wins}</td>
-            <td>${player.maxStreak}</td>
-        </tr>
-    `).join('') || '<tr><td colspan="7">Zatím nejsou zapsané žádné výsledky.</td></tr>';
-
     const selectedId = data.sessionDetail?.session?.id;
     if (selectedId) selectedPuzzleCampSessionId = selectedId;
-    const selectedIndex = Math.max(0, data.sessions.findIndex(session => session.id === selectedId));
-    const olderSession = data.sessions[selectedIndex - 1];
-    const newerSession = data.sessions[selectedIndex + 1];
-    const options = data.sessions.map((session, index) => {
-        const date = new Date(session.startsAt).toLocaleDateString('cs-CZ', {
-            weekday: 'short', day: 'numeric', month: 'numeric', year: 'numeric'
-        });
-        return `<option value="${session.id}" ${session.id === selectedId ? 'selected' : ''}>${index + 1}. ${escapeHtml(date)} · ${escapeHtml(session.title)}</option>`;
-    }).join('');
-    tabs.innerHTML = data.sessions.length ? `
-        <button type="button" class="camp-day-nav" onclick="window.switchPuzzleCampSession(${olderSession?.id || 0})" ${olderSession ? '' : 'disabled'} aria-label="Starší sada" title="Starší sada">
-            <i class="fa-solid fa-chevron-left"></i><span>Starší</span>
-        </button>
-        <label class="camp-day-browser__picker" for="campSessionSelect">
-            <span>Den testu · ${selectedIndex + 1}/${data.sessions.length}</span>
-            <select id="campSessionSelect" onchange="window.switchPuzzleCampSession(Number(this.value))">${options}</select>
-        </label>
-        <button type="button" class="camp-day-nav" onclick="window.switchPuzzleCampSession(${newerSession?.id || 0})" ${newerSession ? '' : 'disabled'} aria-label="Novější sada" title="Novější sada">
-            <span>Novější</span><i class="fa-solid fa-chevron-right"></i>
-        </button>
+
+    // Den, který se nerozeběhl (nikdo ho nehrál), do přepínače nepatří — jen mate.
+    const played = data.sessions.filter(session => session.participantCount > 0);
+    if (campLeaderTab !== 'total' && !played.some(session => session.id === campLeaderTab)) {
+        campLeaderTab = selectedId && played.some(s => s.id === selectedId) ? selectedId : 'total';
+    }
+
+    tabs.innerHTML = played.length ? `
+        <div class="camp-tabs" role="tablist">
+            <button type="button" class="camp-tab${campLeaderTab === 'total' ? ' is-on' : ''}"
+                onclick="window.switchCampLeaderTab('total')" role="tab">Celkem</button>
+            ${played.map(session => `<button type="button" class="camp-tab${campLeaderTab === session.id ? ' is-on' : ''}"
+                onclick="window.switchCampLeaderTab(${session.id})" role="tab"
+                title="${escapeHtml(session.title)}">${escapeHtml(campDayLabel(session.startsAt))}</button>`).join('')}
+        </div>
     ` : '<div class="camp-matrix-empty">Zatím není uložený žádný den testu.</div>';
 
+    renderCampStandings(data);
     renderPuzzleCampMatrix(data.sessionDetail);
     renderCampLivePulse();
+}
+
+/** Krátký popisek dne pro záložku: „út 28. 7." */
+function campDayLabel(startsAt) {
+    return new Date(startsAt).toLocaleDateString('cs-CZ', { weekday: 'short', day: 'numeric', month: 'numeric' });
+}
+
+/**
+ * Žebříček — buď celkový součet za celý pobyt, nebo pořadí jednoho dne.
+ * Sloupce se mění spolu s tím: účast a výhry dávají smysl jen u součtu.
+ */
+function renderCampStandings(data) {
+    const head = document.getElementById('campStandingsHead');
+    const body = document.getElementById('campStandingsBody');
+    if (!body) return;
+
+    const denni = campLeaderTab !== 'total';
+    const detail = data.sessionDetail;
+
+    if (denni && detail?.session?.id !== campLeaderTab) {
+        body.innerHTML = '<tr><td colspan="7"><i class="fa-solid fa-spinner fa-spin"></i> Načítám den…</td></tr>';
+        return;
+    }
+
+    if (head) {
+        head.innerHTML = denni
+            ? '<tr><th>#</th><th>Hráč</th><th>Body</th><th>Vyřešeno</th><th>Chyby</th><th>Čas</th><th>Nej série</th></tr>'
+            : '<tr><th>#</th><th>Hráč</th><th>Body</th><th>Vyřešeno</th><th>Účast</th><th>Výhry</th><th>Nej série</th></tr>';
+    }
+
+    const jaSam = (id) => id === loggedInUser?.id ? ' · vy' : '';
+    const rows = denni
+        ? (detail?.participants || []).map(p => `
+            <tr class="${p.userId === loggedInUser?.id ? 'is-current-player' : ''}">
+                <td>${p.rank}</td>
+                <td>${escapeHtml(p.playerName)}${jaSam(p.userId)}${renderCampMotivationalBadges(p.badges)}<span class="camp-mobile-stats"><span>${p.correctCount} úloh</span><span>${p.wrongCount} chyb</span><span>${campFormatSeconds(p.durationMs)}</span><span>série ${p.maxStreak}</span></span></td>
+                <td class="camp-score-cell"><strong>${p.score}</strong><small>bodů</small></td>
+                <td>${p.correctCount}</td>
+                <td>${p.wrongCount}</td>
+                <td>${campFormatSeconds(p.durationMs)}</td>
+                <td>${p.maxStreak}</td>
+            </tr>`).join('')
+        : data.standings.map(player => `
+            <tr class="${player.userId === loggedInUser?.id ? 'is-current-player' : ''}">
+                <td>${player.rank}</td>
+                <td>${escapeHtml(player.playerName)}${jaSam(player.userId)}<small class="camp-level-tag">${player.level.icon} ${escapeHtml(player.level.name)}</small>${renderCampMotivationalBadges(player.badges)}<span class="camp-mobile-stats"><span>${player.correctCount} úloh</span><span>${player.attendance}× účast</span><span>${player.wins}× výhra</span><span>série ${player.maxStreak}</span></span></td>
+                <td class="camp-score-cell"><strong>${player.score}</strong><small>bodů</small></td>
+                <td>${player.correctCount}</td>
+                <td>${player.attendance}×</td>
+                <td>${player.wins}</td>
+                <td>${player.maxStreak}</td>
+            </tr>`).join('');
+
+    body.innerHTML = rows || `<tr><td colspan="7">${denni ? 'Z tohohle dne zatím výsledky nemáme.' : 'Zatím nejsou zapsané žádné výsledky.'}</td></tr>`;
+
+    const kicker = document.querySelector('.camp-leaderboard__toolbar .camp-section-kicker');
+    if (kicker) kicker.textContent = denni ? `Pořadí dne · ${escapeHtml(detail?.session?.title || '')}` : 'Celkové pořadí';
+}
+
+/** Přepnutí záložky. Den se musí dotáhnout ze serveru, celkové pořadí už máme. */
+function switchCampLeaderTab(tab) {
+    campLeaderTab = tab;
+    if (tab === 'total') {
+        if (puzzleCampLeaderboardData) renderPuzzleCampLeaderboard(puzzleCampLeaderboardData);
+        return;
+    }
+    if (puzzleCampLeaderboardData?.sessionDetail?.session?.id === tab) {
+        renderPuzzleCampLeaderboard(puzzleCampLeaderboardData);
+        return;
+    }
+    return switchPuzzleCampSession(tab);
 }
 
 function renderPuzzleCampMatrix(detail) {
@@ -2602,6 +2659,7 @@ document.addEventListener('DOMContentLoaded', () => {
     window.handleGameOverAction = handleGameOverAction;
     window.joinPuzzleCamp = joinPuzzleCamp;
     window.switchPuzzleCampSession = switchPuzzleCampSession;
+    window.switchCampLeaderTab = switchCampLeaderTab;
 
     document.addEventListener('keydown', event => {
         if (event.key === 'Escape' && !document.getElementById('puzzlePreviewModal')?.classList.contains('hidden')) {

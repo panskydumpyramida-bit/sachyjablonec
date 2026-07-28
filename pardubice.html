@@ -923,6 +923,61 @@
             margin: 7px 0 0;
         }
 
+        /* přepínač dnů rozcvičky */
+        .pd-tabs {
+            display: flex;
+            gap: 6px;
+            padding: 5px;
+            margin-top: 18px;
+            background: #15151a;
+            border: 1px solid #2b2b31;
+            border-radius: 6px;
+            overflow-x: auto;
+            scrollbar-width: none;
+        }
+
+        .pd-tabs::-webkit-scrollbar {
+            display: none;
+        }
+
+        .pd-tab {
+            flex: 0 0 auto;
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            min-height: 40px;
+            padding: 9px 15px;
+            border-radius: 6px;
+            border: 1px solid transparent;
+            background: transparent;
+            color: var(--text-muted);
+            font: 600 12.5px 'Inter', sans-serif;
+            font-variant-caps: normal;
+            text-transform: capitalize;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: color 0.18s cubic-bezier(.2, .7, .3, 1), border-color 0.18s cubic-bezier(.2, .7, .3, 1), background 0.18s cubic-bezier(.2, .7, .3, 1);
+        }
+
+        .pd-tab:hover {
+            color: var(--text-color);
+            border-color: #3a3a44;
+        }
+
+        .pd-tab.on {
+            background: rgba(212, 175, 55, 0.13);
+            border-color: rgba(212, 175, 55, 0.4);
+            color: #e8ce74;
+        }
+
+        .pd-tab.on::before {
+            content: '';
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--primary-color);
+        }
+
         .pd-lb {
             background: var(--surface-color);
             border: 1px solid #2b2b31;

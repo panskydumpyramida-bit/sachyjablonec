@@ -246,12 +246,23 @@ async function loadTournament(tnr, players) {
     return out;
 }
 
-/** Žebříček rozcvičky (Puzzle Racer camp) — jen dokončené pokusy, bez e-mailů. */
+/** Krátký popisek dne pro přepínač: „Po 27. 7." */
+function dayLabel(date) {
+    const f = new Intl.DateTimeFormat('cs-CZ', {
+        timeZone: 'Europe/Prague', weekday: 'short', day: 'numeric', month: 'numeric',
+    });
+    return f.format(new Date(date)).replace(/\s+/g, ' ').trim();
+}
+
+/**
+ * Žebříčky rozcvičky (Puzzle Racer camp) — jeden za každý den plus celkový součet.
+ * Bez e-mailů, jen jméno a čísla.
+ */
 async function loadWarmup() {
     try {
         const sessions = await prisma.puzzleCampSession.findMany({
             where: { campCode: CAMP_CODE, status: { not: 'cancelled' } },
-            orderBy: { id: 'desc' },
+            orderBy: { startsAt: 'asc' },
             include: {
                 attempts: {
                     where: { status: { in: ['finished', 'playing'] } },
@@ -260,27 +271,62 @@ async function loadWarmup() {
                 },
             },
         });
-        const s = sessions.find(x => x.attempts.length) || null;
-        if (!s) return null;
-        const attempts = s.attempts;
-        if (!attempts.length) return null;
-        return {
+
+        const withResults = sessions.filter(s => s.attempts.length);
+        if (!withResults.length) return null;
+
+        const jmeno = (a) => a.user?.realName || a.user?.username || 'Hráč';
+        // 'playing' zůstane viset dvěma způsoby: hráč odejde, nebo mu DOJDOU úlohy
+        // (vyřeší celou sadu a klient konec neohlásí). Ani jedno není „právě hraje".
+        const bezi = (a) => a.status === 'playing'
+            && !(a.puzzleCount && (a.correctCount + a.wrongCount) >= a.puzzleCount)
+            && (Date.now() - new Date(a.updatedAt || a.joinedAt).getTime()) < 30 * 60 * 1000;
+
+        const days = withResults.map(s => ({
+            id: s.id,
             title: s.title || 'Rozcvička',
-            results: attempts.map((a, i) => ({
+            label: dayLabel(s.startsAt),
+            startsAt: s.startsAt,
+            results: s.attempts.map((a, i) => ({
                 order: i + 1,
-                name: a.user?.realName || a.user?.username || 'Hráč',
+                name: jmeno(a),
                 score: a.score,
                 correct: a.correctCount ?? 0,
                 wrong: a.wrongCount ?? 0,
                 streak: a.maxStreak ?? 0,
-                // 'playing' zůstane viset dvěma způsoby: hráč odejde, nebo mu DOJDOU úlohy
-                // (vyřeší celou sadu a klient konec neohlásí). Ani jedno není „právě hraje".
-                inProgress: a.status === 'playing'
-                    && !(a.puzzleCount && (a.correctCount + a.wrongCount) >= a.puzzleCount)
-                    && (Date.now() - new Date(a.updatedAt || a.joinedAt).getTime()) < 30 * 60 * 1000,
+                inProgress: bezi(a),
             })),
+        }));
+
+        // celkové pořadí = součet přes všechny dny; kdo chyběl, o body nepřijde,
+        // jen jich má míň — proto je vidět i počet účastí
+        const soucty = new Map();
+        for (const s of withResults) {
+            for (const a of s.attempts) {
+                const key = jmeno(a);
+                const r = soucty.get(key) || { name: key, score: 0, correct: 0, wrong: 0, streak: 0, days: 0, wins: 0 };
+                r.score += a.score || 0;
+                r.correct += a.correctCount ?? 0;
+                r.wrong += a.wrongCount ?? 0;
+                r.streak = Math.max(r.streak, a.maxStreak ?? 0);
+                r.days++;
+                if (s.attempts[0] === a && (a.score || 0) > 0) r.wins++;
+                soucty.set(key, r);
+            }
+        }
+        const total = [...soucty.values()]
+            .sort((a, b) => b.score - a.score || b.correct - a.correct)
+            .map((r, i) => ({ ...r, order: i + 1 }));
+
+        return {
+            days,
+            total,
+            // starší podoba dat — ať stránka funguje i než se přestaví snapshot
+            title: days[days.length - 1].title,
+            results: days[days.length - 1].results,
         };
     } catch (e) {
+        console.error('[Camp] rozcvička:', e.message);
         return null;
     }
 }

@@ -419,6 +419,65 @@ body:not(.game-active) .camp-live-pulse { display: none !important; }
     gap: 0.4rem;
 }
 
+/* přepínač Celkem / jednotlivé dny */
+.camp-tabs {
+    display: flex;
+    gap: 0.35rem;
+    padding: 0.3rem;
+    background: rgba(0, 0, 0, 0.28);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 8px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    max-width: 100%;
+}
+
+.camp-tabs::-webkit-scrollbar {
+    display: none;
+}
+
+.camp-tab {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    min-height: 38px;
+    padding: 0.5rem 0.85rem;
+    border: 1px solid transparent;
+    border-radius: 6px;
+    background: transparent;
+    color: #8494a8;
+    font: 700 0.78rem/1 inherit;
+    text-transform: capitalize;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: color 0.18s cubic-bezier(.2, .7, .3, 1), border-color 0.18s cubic-bezier(.2, .7, .3, 1), background 0.18s cubic-bezier(.2, .7, .3, 1);
+}
+
+.camp-tab:hover {
+    color: #e8edf3;
+    border-color: rgba(255, 255, 255, 0.16);
+}
+
+.camp-tab.is-on {
+    background: rgba(212, 175, 55, 0.14);
+    border-color: rgba(212, 175, 55, 0.42);
+    color: #e8ce74;
+}
+
+.camp-tab.is-on::before {
+    content: '';
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #d4af37;
+}
+
+/* přepínač je teď mřížka s jedním prvkem, ne třísloupcový navigátor */
+.camp-day-browser:has(.camp-tabs) {
+    display: block;
+}
+
 .camp-day-browser__picker {
     display: grid;
     min-width: 0;
