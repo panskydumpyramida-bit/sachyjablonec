@@ -1327,7 +1327,7 @@ async function loadFeatured(playerName) {
                 try {
                     Chessboard(`featured-board-${index}`, {
                         position: data.fenBefore,
-                        pieceTheme: 'https://chessboardjs.com/img/chesspieces/wikipedia/{piece}.png',
+                        pieceTheme: '/img/chesspieces/wikipedia/{piece}.png',
                         draggable: false,
                         showNotation: false,
                         orientation: (data.white && data.white.toLowerCase().includes(playerName.toLowerCase())) ? 'white' : 'black'

@@ -1719,7 +1719,7 @@ function generateMiniBoard(fen, squareSize = 25) {
                 const bg = isLight ? '#f0d9b5' : '#b58863';
                 const color = char === char.toLowerCase() ? 'b' : 'w';
                 const piece = char.toUpperCase();
-                const pieceUrl = `https://chessboardjs.com/img/chesspieces/wikipedia/${color}${piece}.png`;
+                const pieceUrl = `/img/chesspieces/wikipedia/${color}${piece}.png`;
 
                 html += `<td style="width:12.5%;background:${bg};padding:0;">
                     <img src="${pieceUrl}" style="width:100%;display:block;">

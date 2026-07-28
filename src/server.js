@@ -203,6 +203,10 @@ app.use('/js', express.static(path.join(__dirname, '../js'), staticOptions));
 app.use('/css', express.static(path.join(__dirname, '../css'), staticOptions));
 app.use('/uploads', express.static(path.join(__dirname, '../uploads'), uploadOptions));
 app.use('/images', express.static(path.join(__dirname, '../images'), imageOptions));
+// Šachové figurky — načítají se při každé první úloze a nikdy se nemění.
+// Bez téhle route je servíroval fallback se čtyřhodinovou cache a Cloudflare
+// je pokaždé chodil ověřit na origin (cf-cache-status: REVALIDATED).
+app.use('/img', express.static(path.join(__dirname, '../img'), imageOptions));
 app.use('/prototypes', express.static(path.join(__dirname, '../prototypes'), staticOptions));
 
 // SEO Files - Explicit rules to ensure they are served correctly

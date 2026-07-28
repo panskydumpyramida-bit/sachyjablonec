@@ -7,7 +7,7 @@
     'use strict';
 
     const API = (typeof window.API_URL !== 'undefined') ? window.API_URL : '/api';
-    const PIECE_THEME = 'https://chessboardjs.com/img/chesspieces/wikipedia/{piece}.png';
+    const PIECE_THEME = '/img/chesspieces/wikipedia/{piece}.png';
 
     // Výchozí rozložení (když admin nic nenastavil): Hádanka dne nahradí featured dlaždici.
     const DEFAULT_TILES = [

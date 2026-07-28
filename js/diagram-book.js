@@ -51,7 +51,7 @@
                     const bg = isLight ? '#f0d9b5' : '#b58863';
                     const color = char === char.toLowerCase() ? 'b' : 'w';
                     const piece = char.toUpperCase();
-                    const pieceUrl = `https://chessboardjs.com/img/chesspieces/wikipedia/${color}${piece}.png`;
+                    const pieceUrl = `/img/chesspieces/wikipedia/${color}${piece}.png`;
 
                     tableHtml += `<td style="width:${squareSize}px;height:${squareSize}px;max-width:${squareSize}px;max-height:${squareSize}px;background:${bg};padding:0;margin:0;line-height:0;font-size:0;box-sizing:border-box;"><img src="${pieceUrl}" style="width:${squareSize}px;height:${squareSize}px;max-width:${squareSize}px;max-height:${squareSize}px;display:block;margin:0;padding:0;" alt="${piece}"></td>`;
                     colIdx++;

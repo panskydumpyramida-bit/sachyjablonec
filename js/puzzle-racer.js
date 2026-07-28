@@ -493,7 +493,7 @@ function loadPuzzle(puzzleData) {
             draggable: true,
             position: game.fen(),
             orientation: playerColor,
-            pieceTheme: 'https://chessboardjs.com/img/chesspieces/wikipedia/{piece}.png',
+            pieceTheme: '/img/chesspieces/wikipedia/{piece}.png',
             onDragStart: onDragStart,
             onDrop: onDrop,
             onSnapEnd: onSnapEnd,
@@ -1500,7 +1500,7 @@ function openPuzzlePreview(preview) {
         position: preview.initialFen,
         orientation: preview.initialFen.split(' ')[1] === 'w' ? 'white' : 'black',
         draggable: false,
-        pieceTheme: 'https://chessboardjs.com/img/chesspieces/wikipedia/{piece}.png'
+        pieceTheme: '/img/chesspieces/wikipedia/{piece}.png'
     });
     requestAnimationFrame(() => puzzlePreviewBoard?.resize());
     playPuzzlePreview();
@@ -2256,6 +2256,16 @@ function renderPuzzleCampMatrix(detail) {
         if (!puzzle.preview) return `<th title="Náhled bude dostupný po skončení rozcvičky">${puzzle.index + 1}</th>`;
         return `<th><button type="button" class="camp-matrix-puzzle-button" onclick="window.showCampPuzzlePreview(null, ${puzzle.index})" title="Zobrazit úlohu ${puzzle.index + 1}">${puzzle.index + 1}</button></th>`;
     }).join('');
+    // nejrychlejší správné řešení každé úlohy — v matici svítí zlatě
+    const nejlepsi = new Map();
+    for (const p of detail.participants) {
+        for (const c of p.cells) {
+            if (!c.correct || !c.responseMs) continue;
+            const stavajici = nejlepsi.get(c.puzzleIndex);
+            if (!stavajici || c.responseMs < stavajici) nejlepsi.set(c.puzzleIndex, c.responseMs);
+        }
+    }
+
     const rows = detail.participants.map(player => {
         const cellsByIndex = new Map(player.cells.map(cell => [cell.puzzleIndex, cell]));
         const cells = detail.puzzles.map(puzzle => {
@@ -2266,7 +2276,10 @@ function renderPuzzleCampMatrix(detail) {
             const disabled = canPreview ? '' : ' disabled';
             const buttonClass = canPreview ? ' camp-matrix-cell--clickable' : '';
             if (cell.correct) {
-                return `<td><button type="button" class="camp-matrix-cell camp-matrix-cell--correct${buttonClass}"${open}${disabled} title="Správně · ${cell.wrongAttempts} chyb · ${cell.points} bodů">${campFormatSeconds(cell.responseMs)}</button></td>`;
+                const jeNej = cell.responseMs && nejlepsi.get(puzzle.index) === cell.responseMs;
+                const nejClass = jeNej ? ' camp-matrix-cell--best' : '';
+                const nejTitle = jeNej ? ' · nejrychlejší z výpravy' : '';
+                return `<td><button type="button" class="camp-matrix-cell camp-matrix-cell--correct${buttonClass}${nejClass}"${open}${disabled} title="Správně · ${cell.wrongAttempts} chyb · ${cell.points} bodů${nejTitle}">${campFormatSeconds(cell.responseMs)}</button></td>`;
             }
             const label = cell.skipped ? '↷' : '×';
             return `<td><button type="button" class="camp-matrix-cell camp-matrix-cell--wrong${buttonClass}"${open}${disabled} title="${cell.skipped ? 'Přeskočeno' : 'Nevyřešeno'} · ${cell.wrongAttempts} chyb">${label}</button></td>`;

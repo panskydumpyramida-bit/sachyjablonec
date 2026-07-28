@@ -388,7 +388,7 @@ const ChessDB = {
 
         this.board = Chessboard('chessBoard', {
             position: 'start',
-            pieceTheme: 'https://chessboardjs.com/img/chesspieces/wikipedia/{piece}.png'
+            pieceTheme: '/img/chesspieces/wikipedia/{piece}.png'
         });
 
         this.currentMoveIndex = targetMoveIndex;

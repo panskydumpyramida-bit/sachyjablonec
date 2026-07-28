@@ -206,7 +206,7 @@ class DiagramViewer {
             onDragStart: (source, piece) => this.onDragStart(source, piece),
             onDrop: (source, target) => this.onDrop(source, target),
             onSnapEnd: () => this.onSnapEnd(),
-            pieceTheme: 'https://chessboardjs.com/img/chesspieces/wikipedia/{piece}.png'
+            pieceTheme: '/img/chesspieces/wikipedia/{piece}.png'
         };
 
         if (this.board) {
