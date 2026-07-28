@@ -1990,9 +1990,17 @@ async function startPuzzleCampRace() {
     }
 }
 
+/**
+ * Uloží výsledek jedné úlohy.
+ *
+ * Krátký výpadek (i pár sekund) znamenal ztracenou odpověď, protože se to zkoušelo
+ * jen třikrát během 1,2 s. Odpověď dítěte přitom neexistuje nikde jinde — když
+ * nedojde na server, je nenávratně pryč. Proto se to zkouší přes čtvrt minuty.
+ */
 async function saveCampPuzzleOutcome(puzzleIndex, result) {
     let lastError = null;
-    for (let retry = 0; retry < 3; retry++) {
+    const POKUSU = 6;
+    for (let retry = 0; retry < POKUSU; retry++) {
         try {
             const res = await fetch(`${API_URL}/racer/camp/sessions/${campSession.id}/progress`, {
                 method: 'PUT',
@@ -2014,7 +2022,7 @@ async function saveCampPuzzleOutcome(puzzleIndex, result) {
         } catch (error) {
             lastError = error;
         }
-        if (retry < 2) await new Promise(resolve => setTimeout(resolve, 400 * (retry + 1)));
+        if (retry < POKUSU - 1) await new Promise(resolve => setTimeout(resolve, Math.min(8000, 500 * 2 ** retry)));
     }
     throw lastError || new Error('Průběžný výsledek se nepodařilo uložit');
 }

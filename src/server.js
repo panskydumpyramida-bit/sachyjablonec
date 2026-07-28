@@ -123,7 +123,9 @@ app.get('/health', async (req, res) => {
     try {
         await Promise.race([
             prisma.$queryRaw`SELECT 1`,
-            new Promise((_, reject) => setTimeout(() => reject(new Error('DB ping timeout')), 2000))
+            // 2 s bylo málo — při hromadném startu rozcvičky stačilo, aby SELECT 1
+            // chvíli počkal ve frontě, a celý web se ohlásil jako nedostupný
+            new Promise((_, reject) => setTimeout(() => reject(new Error('DB ping timeout')), 5000))
         ]);
         res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });
     } catch (err) {

@@ -129,6 +129,23 @@ export default {
     async fetch(request, env, ctx) {
         const url = new URL(request.url);
 
+        // API se propouští rovnou, bez zdravotní kontroly.
+        //
+        // Kontrola se dělá na KAŽDÝ požadavek a je přísná: stačilo, aby /health
+        // jednou přeletěl svůj dvousekundový limit, a worker vrátil 503 úplně všem —
+        // včetně dětí, které zrovna odesílaly vyřešenou úlohu. Devět odpovědí
+        // z rozcvičky se takhle ztratilo nenávratně (viz commit).
+        //
+        // Navíc to zdvojnásobovalo provoz na origin: každý požadavek znamenal
+        // ještě jeden dotaz do databáze. Při hromadném startu závodu to samo
+        // pomáhalo výpadek vyrobit.
+        //
+        // Údržbová stránka dává smysl u HTML — tam ať zůstane. Klient, který volá
+        // API, si s chybou poradí líp sám: zopakuje to.
+        if (url.pathname.startsWith('/api/')) {
+            return proxyToRailway(request);
+        }
+
         // Check Railway health
         const isHealthy = await checkHealth();
 
