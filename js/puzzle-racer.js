@@ -2160,6 +2160,8 @@ function campDayLabel(startsAt) {
     return new Date(startsAt).toLocaleDateString('cs-CZ', { weekday: 'short', day: 'numeric', month: 'numeric' });
 }
 
+const campChybySlovo = (n) => n === 1 ? 'chyba' : (n < 5 ? 'chyby' : 'chyb');
+
 /**
  * Žebříček — buď celkový součet za celý pobyt, nebo pořadí jednoho dne.
  * Sloupce se mění spolu s tím: účast a výhry dávají smysl jen u součtu.
@@ -2188,7 +2190,7 @@ function renderCampStandings(data) {
         ? (detail?.participants || []).map(p => `
             <tr class="${p.userId === loggedInUser?.id ? 'is-current-player' : ''}">
                 <td>${p.rank}</td>
-                <td>${escapeHtml(p.playerName)}${jaSam(p.userId)}${renderCampMotivationalBadges(p.badges)}<span class="camp-mobile-stats"><span>${p.correctCount} úloh</span><span>${p.wrongCount} chyb</span><span>${campFormatSeconds(p.durationMs)}</span><span>série ${p.maxStreak}</span></span></td>
+                <td>${escapeHtml(p.playerName)}${jaSam(p.userId)}${renderCampMotivationalBadges(p.badges)}<span class="camp-mobile-stats"><span>${p.correctCount} úloh</span><span>${p.wrongCount} ${campChybySlovo(p.wrongCount)}</span><span>${campFormatSeconds(p.durationMs)}</span><span>série ${p.maxStreak}</span></span></td>
                 <td class="camp-score-cell"><strong>${p.score}</strong><small>bodů</small></td>
                 <td>${p.correctCount}</td>
                 <td>${p.wrongCount}</td>
