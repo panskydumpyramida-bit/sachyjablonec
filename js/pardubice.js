@@ -500,10 +500,12 @@
         warmupData = { days, total };
         if (warmupTab !== 'total' && !days.some(x => String(x.id) === String(warmupTab))) warmupTab = 'total';
 
-        // ukazatele počítáme přes celý pobyt, ne jen přes poslední den
+        // Ukazatele počítáme přes celý pobyt, ale jen z dětí výpravy — trenér ani ten,
+        // kdo si rozcvičku jen zkouší, sem nepatří. A jeden člověk nesvítí dvakrát.
         const vsechny = days.flatMap(x => x.results);
-        const noMiss = vsechny.filter(x => x.wrong === 0 && x.correct > 5).sort((a, b) => b.correct - a.correct)[0];
-        const bestStreak = [...vsechny].sort((a, b) => b.streak - a.streak)[0];
+        const vyprava = vsechny.some(x => x.zVypravy) ? vsechny.filter(x => x.zVypravy) : vsechny;
+        const noMiss = vyprava.filter(x => x.wrong === 0 && x.correct > 5).sort((a, b) => b.correct - a.correct)[0];
+        const bestStreak = [...vyprava].sort((a, b) => b.streak - a.streak).find(x => x.name !== noMiss?.name);
         const totalPuzzles = vsechny.reduce((s, x) => s + x.correct + x.wrong, 0);
         const totalScore = vsechny.reduce((s, x) => s + (x.score || 0), 0);
 

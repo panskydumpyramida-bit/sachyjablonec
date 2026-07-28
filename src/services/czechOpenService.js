@@ -12,7 +12,7 @@ import {
 } from './chessResultsService.js';
 import { notify } from './pushService.js';
 import { sendWhatsapp, claimNotify, markNotified, isConfigured as isWaConfigured } from './whatsappService.js';
-import { cleanOpponentName, normalizePlayerName } from '../utils/playerName.js';
+import { cleanOpponentName, normalizePlayerName, samePerson } from '../utils/playerName.js';
 
 const prisma = new PrismaClient();
 
@@ -276,6 +276,24 @@ async function loadWarmup() {
         if (!withResults.length) return null;
 
         const jmeno = (a) => a.user?.realName || a.user?.username || 'Hráč';
+
+        // Kdo z hráčů rozcvičky je dítě z výpravy. Ukazatele „bez chyby" a „nejdelší
+        // série" mají patřit jim — ne trenérovi a ne tomu, kdo si rozcvičku jen zkouší.
+        // Přihlašovací jména se s tou soupiskou rozcházejí („Ema_Brehmová", „MarekSýkora",
+        // „Hádek Vojtěch"), přezdívku jako „Řízeček" ale nepoznáme a poznat nemáme.
+        const roster = await prisma.campPlayer.findMany({
+            where: { campCode: CAMP_CODE, active: true },
+            select: { displayName: true, role: true },
+        }).catch(() => []);
+        const deti = roster.filter(r => !r.role);   // trenér má roli vyplněnou
+        const zVypravy = (jm) => {
+            if (deti.some(r => samePerson(jm, r.displayName))) return true;
+            // samotné křestní jméno bereme, jen když je na soupisce jediné takové
+            const slovo = normalizePlayerName(jm);
+            if (slovo.includes(' ')) return false;
+            const shody = deti.filter(r => normalizePlayerName(r.displayName).split(' ').includes(slovo));
+            return shody.length === 1;
+        };
         // 'playing' zůstane viset dvěma způsoby: hráč odejde, nebo mu DOJDOU úlohy
         // (vyřeší celou sadu a klient konec neohlásí). Ani jedno není „právě hraje".
         const bezi = (a) => a.status === 'playing'
@@ -295,6 +313,7 @@ async function loadWarmup() {
                 wrong: a.wrongCount ?? 0,
                 streak: a.maxStreak ?? 0,
                 inProgress: bezi(a),
+                zVypravy: zVypravy(jmeno(a)),
             })),
         }));
 

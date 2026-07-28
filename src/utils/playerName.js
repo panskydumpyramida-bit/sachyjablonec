@@ -38,7 +38,24 @@ export function normalizePlayerName(name) {
     return String(name || '')
         .normalize('NFD').replace(/[̀-ͯ]/g, '')
         .toLowerCase()
-        .replace(/[,`'.]/g, ' ')
+        .replace(/[,`'._-]/g, ' ')
         .replace(/\s+/g, ' ')
         .trim();
+}
+
+/**
+ * Jde o tutéž osobu? Uživatelská jména bývají zapsaná různě než na soupisce —
+ * „Ema_Brehmová", „MarekSýkora", „Hádek Vojtěch" místo „Ema Brehmová",
+ * „Marek Sýkora", „Vojtěch Hádek". Přezdívku („Řízeček") to nepozná a poznat nemá.
+ */
+export function samePerson(a, b) {
+    const x = normalizePlayerName(a);
+    const y = normalizePlayerName(b);
+    if (!x || !y) return false;
+    if (x === y) return true;
+    // zapsané bez mezer
+    if (x.replace(/ /g, '') === y.replace(/ /g, '')) return true;
+    // prohozené jméno a příjmení
+    const sort = (s) => s.split(' ').sort().join(' ');
+    return sort(x) === sort(y);
 }
