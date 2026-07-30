@@ -6,9 +6,13 @@ dotenv.config();
 // Local client (uses .env)
 const localPrisma = new PrismaClient();
 
-// Remote client
-// Use the "public" connection string provided by the user
-const REMOTE_DB_URL = "${REMOTE_DATABASE_URL}";
+// Remote client (never commit the production connection string)
+const REMOTE_DB_URL = process.env.REMOTE_DATABASE_URL;
+if (!REMOTE_DB_URL) {
+    console.error('❌ Chybí proměnná REMOTE_DATABASE_URL.');
+    console.error('   Načti ji z Railway a spusť skript znovu.');
+    process.exit(1);
+}
 
 const remotePrisma = new PrismaClient({
     datasources: {

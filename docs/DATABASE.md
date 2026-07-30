@@ -36,10 +36,11 @@ DATABASE_URL="postgresql://antoninduda@localhost:5432/sachyjablonec"
 
 ### Production (Railway)
 ```env
-DATABASE_URL="${REMOTE_DATABASE_URL}"
+DATABASE_URL="${{Postgres-aLtg.DATABASE_URL}}"
 ```
 
 > ⚠️ **DŮLEŽITÉ:** Nikdy necommituj `.env` soubor!  
+> Produkční hodnotu načítej pouze z Railway; nekopíruj ji do dokumentace ani skriptů.
 > Schema v `prisma/schema.prisma` MUSÍ mít `provider = "postgresql"`.  
 > SQLite (`provider = "sqlite"`) způsobí selhání deploy na Railway.
 
@@ -47,14 +48,19 @@ DATABASE_URL="${REMOTE_DATABASE_URL}"
 
 ## Synchronizace dat z Railway
 
-### 1. Stáhni dump z Railway
+### 1. Načti přístup bez vypsání do terminálu
+```bash
+export REMOTE_DATABASE_URL="$(railway variables --service sachyjablonec --json | jq -r .DATABASE_URL)"
+```
+
+### 2. Stáhni dump z Railway
 ```bash
 /opt/homebrew/opt/postgresql@17/bin/pg_dump \
   "${REMOTE_DATABASE_URL}" \
   --no-owner --no-acl > railway_dump.sql
 ```
 
-### 2. Importuj do lokální DB
+### 3. Importuj do lokální DB
 ```bash
 # Vymaž existující schéma a vytvoř nové
 /opt/homebrew/opt/postgresql@16/bin/psql sachyjablonec \
