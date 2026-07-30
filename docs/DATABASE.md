@@ -48,19 +48,25 @@ DATABASE_URL="${{Postgres-aLtg.DATABASE_URL}}"
 
 ## Synchronizace dat z Railway
 
-### 1. Načti přístup bez vypsání do terminálu
+### 1. Otevři šifrovaný tunel k databázi
 ```bash
-export REMOTE_DATABASE_URL="$(railway variables --service sachyjablonec --json | jq -r .DATABASE_URL)"
+railway connect Postgres-aLtg --tunnel-only
 ```
 
-### 2. Stáhni dump z Railway
+### 2. V druhém terminálu načti zobrazenou lokální URL bez uložení do historie
+```bash
+read -rs REMOTE_DATABASE_URL
+export REMOTE_DATABASE_URL
+```
+
+### 3. Stáhni dump z Railway
 ```bash
 /opt/homebrew/opt/postgresql@17/bin/pg_dump \
   "${REMOTE_DATABASE_URL}" \
   --no-owner --no-acl > railway_dump.sql
 ```
 
-### 3. Importuj do lokální DB
+### 4. Importuj do lokální DB
 ```bash
 # Vymaž existující schéma a vytvoř nové
 /opt/homebrew/opt/postgresql@16/bin/psql sachyjablonec \

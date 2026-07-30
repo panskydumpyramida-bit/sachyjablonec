@@ -10,7 +10,7 @@ const localPrisma = new PrismaClient();
 const REMOTE_DB_URL = process.env.REMOTE_DATABASE_URL;
 if (!REMOTE_DB_URL) {
     console.error('❌ Chybí proměnná REMOTE_DATABASE_URL.');
-    console.error('   Načti ji z Railway a spusť skript znovu.');
+    console.error('   Otevři Railway tunel, načti jeho lokální URL a spusť skript znovu.');
     process.exit(1);
 }
 
