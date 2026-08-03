@@ -29,7 +29,7 @@ let lastDstW = 1190;
 let lastDstH = 842;
 
 // Stejné oficiální razítko používá generátor členských přihlášek.
-const STAMP_DATA_URL = "/src/assets/razitko-oficialni.png?v=official-1";
+const STAMP_DATA_URL = "/src/assets/razitko-oficialni-transparent.png?v=transparent-1";
 
 // ============================================================
 // OpenCV – script se načte dřív než jeho WASM runtime (hlavně v Safari).
@@ -367,6 +367,7 @@ function createOverlays() {
         addOverlay('text', 'TJ Bižuterie Jablonec n.Nisou', 360, 268 + offset, { fontScale: 32 });
         addOverlay('text', '17052', 1020, 250 + offset, { fontScale: 38 });
         if (STAMP_DATA_URL) addOverlay('stamp', STAMP_DATA_URL, lastDstW / 2, lastDstH / 2 + offset, { w: 360, h: 120 });
+        addOverlay('signature', 'Duda', lastDstW / 2, lastDstH / 2 + 82 + offset, { fontScale: 62 });
         addOverlay('cross', '✕', lastDstW / 2, lastDstH * 0.72 + offset, { fontScale: 28 });
     });
 
@@ -381,9 +382,16 @@ function addOverlay(type, content, cx, cy, opts) {
     el.style.left = (cx / outputCanvas.width * 100) + '%';
     el.style.top = (cy / outputCanvas.height * 100) + '%';
 
-    if (type === 'text' || type === 'cross') {
+    if (type === 'text' || type === 'cross' || type === 'signature') {
         el.dataset.text = content;
         el.dataset.fontScale = opts.fontScale || 32;
+        if (type === 'signature') {
+            el.innerHTML =
+                '<span class="signature-text">' + content + '</span>' +
+                '<span class="delete-btn" title="Odstranit"><i class="fa-solid fa-xmark"></i></span>';
+            overlaysDiv.appendChild(el);
+            return;
+        }
         const isBold = type === 'cross';
         el.innerHTML =
             '<span class="draggable-text" style="' +
@@ -420,9 +428,9 @@ function updateScales() {
 
     document.querySelectorAll('.draggable-item').forEach((el) => {
         const type = el.dataset.type;
-        if (type === 'text' || type === 'cross') {
+        if (type === 'text' || type === 'cross' || type === 'signature') {
             const fs = parseFloat(el.dataset.fontScale);
-            const txt = el.querySelector('.draggable-text');
+            const txt = el.querySelector(type === 'signature' ? '.signature-text' : '.draggable-text');
             if (txt) txt.style.fontSize = Math.max(10, fs * scale) + 'px';
         } else if (type === 'stamp') {
             const w = parseFloat(el.dataset.w);
@@ -442,6 +450,24 @@ window.addEventListener('resize', updateScales);
 // ============================================================
 let dragging = null;
 let dragOx = 0, dragOy = 0;
+let dragScrollY = 0;
+
+function lockPageScroll() {
+    dragScrollY = window.scrollY;
+    document.documentElement.classList.add('scanner-drag-active');
+    document.body.classList.add('scanner-drag-active');
+    document.body.style.top = '-' + dragScrollY + 'px';
+}
+
+function finishDragging() {
+    if (!dragging) return;
+    if (dragging) dragging.classList.remove('dragging');
+    dragging = null;
+    document.documentElement.classList.remove('scanner-drag-active');
+    document.body.classList.remove('scanner-drag-active');
+    document.body.style.top = '';
+    window.scrollTo(0, dragScrollY);
+}
 
 if (overlaysDiv) {
     overlaysDiv.addEventListener('pointerdown', (e) => {
@@ -452,6 +478,8 @@ if (overlaysDiv) {
         const r = item.getBoundingClientRect();
         dragOx = e.clientX - (r.left + r.width / 2);
         dragOy = e.clientY - (r.top + r.height / 2);
+        if (typeof item.setPointerCapture === 'function') item.setPointerCapture(e.pointerId);
+        lockPageScroll();
         e.preventDefault();
     });
 
@@ -465,23 +493,29 @@ if (overlaysDiv) {
 // Pointermove/up na document – funguje i když kurzor opustí prvek
 document.addEventListener('pointermove', (e) => {
     if (!dragging) return;
+    if (e.cancelable) e.preventDefault();
     const pr = interactiveContainer.getBoundingClientRect();
     const nx = e.clientX - pr.left - dragOx;
     const ny = e.clientY - pr.top - dragOy;
     dragging.style.left = (nx / pr.width * 100) + '%';
     dragging.style.top = (ny / pr.height * 100) + '%';
-});
+}, { passive: false });
 
-document.addEventListener('pointerup', () => {
-    if (dragging) dragging.classList.remove('dragging');
-    dragging = null;
-});
+document.addEventListener('pointerup', finishDragging);
+document.addEventListener('pointercancel', finishDragging);
 
 // ============================================================
 // Zapečení + stažení
 // ============================================================
-function bakeAndDownload() {
+async function bakeAndDownload() {
     statusText.innerText = 'Zapékám a stahuji…';
+    if (document.fonts && document.fonts.load) {
+        try {
+            await document.fonts.load('600 62px Caveat');
+        } catch (err) {
+            console.warn('Podpisový font se nepodařilo načíst, používám náhradní.', err);
+        }
+    }
     const dctx = outputCanvas.getContext('2d');
 
     document.querySelectorAll('#overlays .draggable-item').forEach((el) => {
@@ -503,6 +537,16 @@ function bakeAndDownload() {
             dctx.textAlign = 'center';
             dctx.textBaseline = 'middle';
             dctx.fillText('✕', cx, cy);
+        } else if (type === 'signature') {
+            dctx.save();
+            dctx.translate(cx, cy);
+            dctx.rotate(-7 * Math.PI / 180);
+            dctx.font = '600 ' + el.dataset.fontScale + 'px Caveat, "Segoe Script", cursive';
+            dctx.fillStyle = '#1d3278';
+            dctx.textAlign = 'center';
+            dctx.textBaseline = 'middle';
+            dctx.fillText(el.dataset.text, 0, 0);
+            dctx.restore();
         } else if (type === 'stamp') {
             const img = el.querySelector('.stamp-img');
             if (img) {

@@ -7,7 +7,7 @@
     <title>Skenování přihlášek - TJ Bižuterie Jablonec</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@600&family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     
     <link rel="stylesheet" href="css/style.css">
@@ -159,6 +159,8 @@
             position: absolute;
             cursor: move;
             user-select: none;
+            -webkit-user-select: none;
+            touch-action: none;
             border: 2px dashed transparent;
             padding: 4px;
             pointer-events: auto;
@@ -196,6 +198,29 @@
         .stamp-img {
             display: block;
             pointer-events: none;
+        }
+
+        .signature-text {
+            display: block;
+            color: #1d3278;
+            font-family: 'Caveat', 'Segoe Script', cursive;
+            font-weight: 600;
+            line-height: 0.85;
+            white-space: nowrap;
+            pointer-events: none;
+            transform: rotate(-7deg);
+        }
+
+        html.scanner-drag-active,
+        body.scanner-drag-active {
+            overscroll-behavior: none;
+        }
+
+        body.scanner-drag-active {
+            position: fixed;
+            width: 100%;
+            overflow: hidden;
+            touch-action: none;
         }
 
         /* Hidden image for the final draw */
@@ -326,7 +351,7 @@
     <footer id="global-footer"></footer>
 
     <script src="js/layout-loader.js"></script>
-    <script src="js/form-scanner.js?v=20260803-3"></script>
+    <script src="js/form-scanner.js?v=20260804-1"></script>
     <!-- Zde nahrajeme OpenCV.js -->
     <script async src="https://docs.opencv.org/4.8.0/opencv.js" onload="onOpenCvScriptLoaded()" onerror="onOpenCvScriptError()" type="text/javascript"></script>
 </body>
