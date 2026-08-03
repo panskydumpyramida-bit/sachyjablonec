@@ -94,6 +94,19 @@ app.use(helmet({
     hsts: process.env.NODE_ENV === 'production' ? { maxAge: 31536000, includeSubDomains: true } : false,
 }));
 
+// OpenCV.js používá při startu eval. Povolíme ho pouze v dokumentu skeneru,
+// ostatní stránky zůstávají pod přísnější globální CSP.
+app.use(['/form-scanner', '/form-scanner.html'], (req, res, next) => {
+    const contentSecurityPolicy = res.getHeader('Content-Security-Policy');
+    if (typeof contentSecurityPolicy === 'string' && !contentSecurityPolicy.includes("'unsafe-eval'")) {
+        res.setHeader(
+            'Content-Security-Policy',
+            contentSecurityPolicy.replace('script-src ', "script-src 'unsafe-eval' ")
+        );
+    }
+    next();
+});
+
 // CORS
 const allowedOrigins = process.env.ALLOWED_ORIGINS
     ? process.env.ALLOWED_ORIGINS.split(',').map(o => o.trim())
